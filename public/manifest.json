@@ -1,0 +1,27 @@
+{
+  "name": "SIM-KASIR",
+  "short_name": "SIM-KASIR",
+  "description": "Sistem Informasi Manajemen Kasir - Aplikasi POS dan manajemen bisnis",
+  "start_url": "/login",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "id-ID",
+  "scope": "/"
+}

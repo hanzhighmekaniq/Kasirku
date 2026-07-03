@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+        @apply text-slate-800 bg-[#f8f9fb];
+    }
+
+    /* Scrollbar tipis di sidebar */
+    .sidebar-scroll::-webkit-scrollbar {
+        width: 4px;
+    }
+    .sidebar-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .sidebar-scroll::-webkit-scrollbar-thumb {
+        @apply bg-slate-200 rounded-full;
+    }
+}
+
+@layer components {
+    /* Card standar */
+    .card {
+        @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+    }
+
+    /* Input standar */
+    .input {
+        @apply block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition;
+    }
+
+    .input-error {
+        @apply border-red-300 focus:border-red-400 focus:ring-red-100;
+    }
+
+    /* Badge */
+    .badge {
+        @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+    }
+}

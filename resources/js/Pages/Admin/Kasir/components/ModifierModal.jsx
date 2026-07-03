@@ -1,0 +1,178 @@
+import { useState } from "react";
+import { fmt, fmtShort } from "./helpers";
+
+export default function ModifierModal({ product, onConfirm, onClose }) {
+    const groups = product.modifier_groups ?? [];
+    const [selections, setSelections] = useState(() => {
+        const init = {};
+        groups.forEach((g) => {
+            init[g.id] = g.selection_type === "single" ? null : [];
+        });
+        return init;
+    });
+    const [itemNote, setItemNote] = useState("");
+
+    const toggle = (groupId, modifier, type) => {
+        setSelections((prev) => {
+            if (type === "single") return { ...prev, [groupId]: modifier };
+            const cur = prev[groupId] ?? [];
+            const exists = cur.find((m) => m.id === modifier.id);
+            return {
+                ...prev,
+                [groupId]: exists
+                    ? cur.filter((m) => m.id !== modifier.id)
+                    : [...cur, modifier],
+            };
+        });
+    };
+
+    const isValid = groups.every(
+        (g) =>
+            !g.is_required ||
+            (g.selection_type === "single"
+                ? selections[g.id]
+                : (selections[g.id]?.length ?? 0) > 0),
+    );
+
+    const buildModifiers = () => {
+        const mods = [];
+        groups.forEach((g) => {
+            const sel = selections[g.id];
+            if (g.selection_type === "single" && sel)
+                mods.push({
+                    name: sel.name,
+                    price_addition: Number(sel.price_addition),
+                });
+            else if (Array.isArray(sel))
+                sel.forEach((m) =>
+                    mods.push({
+                        name: m.name,
+                        price_addition: Number(m.price_addition),
+                    }),
+                );
+        });
+        return mods;
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
+            <div
+                onClick={onClose}
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <div className="relative w-full max-w-md rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
+                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                    <div>
+                        <h3 className="font-semibold text-slate-900">
+                            {product.name}
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                            {fmt(product.sell_price)}
+                        </p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="text-slate-400 hover:text-slate-700"
+                    >
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
+                <div className="max-h-72 overflow-y-auto px-5 py-4 space-y-5">
+                    {groups.map((g) => (
+                        <div key={g.id}>
+                            <p className="mb-2 text-sm font-semibold text-slate-800">
+                                {g.name}
+                                {g.is_required && (
+                                    <span className="ml-1 text-red-500">*</span>
+                                )}
+                                <span className="ml-1 text-xs font-normal text-slate-400">
+                                    (
+                                    {g.selection_type === "single"
+                                        ? "Pilih 1"
+                                        : "Bisa banyak"}
+                                    )
+                                </span>
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                {(g.modifiers ?? [])
+                                    .filter((m) => m.is_active)
+                                    .map((m) => {
+                                        const sel = selections[g.id];
+                                        const active =
+                                            g.selection_type === "single"
+                                                ? sel?.id === m.id
+                                                : sel?.find(
+                                                      (x) => x.id === m.id,
+                                                  );
+                                        return (
+                                            <button
+                                                key={m.id}
+                                                type="button"
+                                                onClick={() =>
+                                                    toggle(
+                                                        g.id,
+                                                        m,
+                                                        g.selection_type,
+                                                    )
+                                                }
+                                                className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
+                                                    active
+                                                        ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                                                        : "border-slate-200 text-slate-600 hover:border-indigo-300"
+                                                }`}
+                                            >
+                                                {m.name}{" "}
+                                                {Number(m.price_addition) >
+                                                    0 && (
+                                                    <span className="text-slate-400">
+                                                        +
+                                                        {fmtShort(
+                                                            m.price_addition,
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                            </div>
+                        </div>
+                    ))}
+                    <div>
+                        <p className="mb-1 text-sm font-medium text-slate-700">
+                            Catatan Item
+                        </p>
+                        <input
+                            type="text"
+                            value={itemNote}
+                            onChange={(e) => setItemNote(e.target.value)}
+                            placeholder="cth. tanpa es, pedas"
+                            className="block w-full rounded-xl border-slate-300 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        />
+                    </div>
+                </div>
+                <div className="border-t border-slate-100 px-5 py-4">
+                    <button
+                        type="button"
+                        disabled={!isValid}
+                        onClick={() => onConfirm(buildModifiers(), itemNote)}
+                        className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50"
+                    >
+                        Tambah ke Keranjang
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}

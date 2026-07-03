@@ -1,0 +1,424 @@
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { Head, Link, useForm } from "@inertiajs/react";
+import { useMemo, useState } from "react";
+
+const fmtRp = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
+const inputCls =
+    "block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
+
+export default function Create({ sales }) {
+    const { data, setData, post, processing, errors } = useForm({
+        sale_id: "",
+        return_date: new Date().toISOString().split("T")[0],
+        notes: "",
+        items: [],
+    });
+
+    const [saleItems, setSaleItems] = useState([]);
+    const [loadingItems, setLoadingItems] = useState(false);
+
+    const selectedSale = sales.find(
+        (s) => String(s.id) === String(data.sale_id),
+    );
+
+    const fetchSaleItems = async (saleId) => {
+        if (!saleId) {
+            setSaleItems([]);
+            setData("items", []);
+            return;
+        }
+        setLoadingItems(true);
+        try {
+            const res = await fetch(
+                route("admin.sale-returns.getSaleItems", saleId),
+            );
+            const json = await res.json();
+            setSaleItems(
+                json.items.map((i) => ({
+                    ...i,
+                    selected: false,
+                    return_qty: "",
+                    reason: "",
+                })),
+            );
+            setData("items", []);
+        } catch (e) {
+            console.error(e);
+        }
+        setLoadingItems(false);
+    };
+
+    const selectedItems = useMemo(
+        () => saleItems.filter((i) => i.selected && i.return_qty > 0),
+        [saleItems],
+    );
+
+    const subtotal = useMemo(
+        () =>
+            selectedItems.reduce(
+                (sum, i) =>
+                    sum + parseFloat(i.return_qty || 0) * parseFloat(i.unit_price || 0),
+                0,
+            ),
+        [selectedItems],
+    );
+
+    const toggleItem = (item) => {
+        setSaleItems((prev) =>
+            prev.map((i) =>
+                i.id === item.id
+                    ? { ...i, selected: !i.selected, return_qty: "" }
+                    : i,
+            ),
+        );
+    };
+
+    const updateItem = (id, field, value) => {
+        setSaleItems((prev) =>
+            prev.map((i) => (i.id === id ? { ...i, [field]: value } : i)),
+        );
+    };
+
+    const submit = (e) => {
+        e.preventDefault();
+        const items = selectedItems.map((i) => ({
+            sale_item_id: i.id,
+            product_id: i.product_id,
+            quantity: parseFloat(i.return_qty),
+            unit_price: parseFloat(i.unit_price),
+            reason: i.reason || null,
+        }));
+        setData("items", items);
+        post(route("admin.sale-returns.store"));
+    };
+
+    return (
+        <AuthenticatedLayout
+            header={
+                <div className="flex items-center gap-3">
+                    <Link
+                        href={route("admin.sale-returns.index")}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        aria-label="Kembali"
+                    >
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.8}
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+                            />
+                        </svg>
+                    </Link>
+                    <div>
+                        <h2 className="text-lg font-semibold text-slate-800">
+                            Buat Retur Penjualan
+                        </h2>
+                        <p className="text-sm text-slate-400">
+                            Pilih penjualan yang akan diretur
+                        </p>
+                    </div>
+                </div>
+            }
+        >
+            <Head title="Buat Retur Penjualan" />
+
+            <form onSubmit={submit} className="space-y-5">
+                {/* Info Card */}
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
+                        <h3 className="text-base font-semibold text-slate-900">
+                            Informasi Retur
+                        </h3>
+                    </div>
+                    <div className="space-y-4 p-6">
+                        {/* Sale selector */}
+                        <div>
+                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                Penjualan Asal{" "}
+                                <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                                value={data.sale_id}
+                                onChange={(e) => {
+                                    setData("sale_id", e.target.value);
+                                    fetchSaleItems(e.target.value);
+                                }}
+                                className={inputCls}
+                            >
+                                <option value="">Pilih penjualan...</option>
+                                {sales.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.sale_no} — {fmtRp(s.grand_total)}
+                                        {s.customer
+                                            ? ` · ${s.customer.name}`
+                                            : ""}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.sale_id && (
+                                <p className="mt-1 text-xs text-red-500">
+                                    {errors.sale_id}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                    Tanggal Retur
+                                </label>
+                                <input
+                                    type="date"
+                                    value={data.return_date}
+                                    onChange={(e) =>
+                                        setData("return_date", e.target.value)
+                                    }
+                                    className={inputCls}
+                                />
+                                {errors.return_date && (
+                                    <p className="mt-1 text-xs text-red-500">
+                                        {errors.return_date}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                Catatan
+                            </label>
+                            <textarea
+                                rows={2}
+                                value={data.notes}
+                                onChange={(e) =>
+                                    setData("notes", e.target.value)
+                                }
+                                className={inputCls}
+                                placeholder="Opsional..."
+                            />
+                            {errors.notes && (
+                                <p className="mt-1 text-xs text-red-500">
+                                    {errors.notes}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Items Card */}
+                {data.sale_id && (
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
+                            <h3 className="text-base font-semibold text-slate-900">
+                                Item Penjualan
+                            </h3>
+                            {selectedSale && (
+                                <p className="mt-0.5 text-sm text-slate-500">
+                                    {selectedSale.sale_no} · Pelanggan:{" "}
+                                    {selectedSale.customer?.name ?? "-"}
+                                </p>
+                            )}
+                        </div>
+                        <div className="p-0">
+                            {loadingItems ? (
+                                <p className="px-6 py-8 text-center text-sm text-slate-400">
+                                    Memuat...
+                                </p>
+                            ) : saleItems.length === 0 ? (
+                                <p className="px-6 py-8 text-center text-sm text-slate-400">
+                                    Tidak ada item
+                                </p>
+                            ) : (
+                                <div className="divide-y divide-slate-100">
+                                    {saleItems.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className="px-6 py-4 transition hover:bg-slate-50/50"
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={item.selected}
+                                                    onChange={() =>
+                                                        toggleItem(item)
+                                                    }
+                                                    className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                />
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-medium text-slate-800">
+                                                        {item.product_name}
+                                                    </p>
+                                                    <p className="text-xs text-slate-400">
+                                                        SKU: {item.product_sku}{" "}
+                                                        · Qty: {item.quantity}{" "}
+                                                        · Harga:{" "}
+                                                        {fmtRp(item.unit_price)}
+                                                    </p>
+                                                    {item.returned_qty > 0 && (
+                                                        <p className="text-xs text-amber-600">
+                                                            Sudah diretur:{" "}
+                                                            {item.returned_qty}
+                                                        </p>
+                                                    )}
+                                                    <p className="text-xs text-slate-400">
+                                                        Bisa diretur:{" "}
+                                                        {item.returnable_qty}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {item.selected && (
+                                                <div className="mt-3 ml-8 space-y-2">
+                                                    <div className="flex gap-3">
+                                                        <div className="w-24">
+                                                            <label className="block text-xs text-slate-500 mb-1">
+                                                                Qty Retur
+                                                            </label>
+                                                            <input
+                                                                type="number"
+                                                                min="0.01"
+                                                                step="0.01"
+                                                                max={
+                                                                    item.returnable_qty
+                                                                }
+                                                                value={
+                                                                    item.return_qty
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateItem(
+                                                                        item.id,
+                                                                        "return_qty",
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="block w-full rounded-lg border-slate-300 py-1.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <label className="block text-xs text-slate-500 mb-1">
+                                                                Alasan
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={
+                                                                    item.reason
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateItem(
+                                                                        item.id,
+                                                                        "reason",
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                placeholder="Rusak / salah / lainnya..."
+                                                                className="block w-full rounded-lg border-slate-300 py-1.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {errors.items && (
+                    <p className="text-sm text-red-500">{errors.items}</p>
+                )}
+
+                {/* Summary */}
+                {selectedItems.length > 0 && (
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
+                            <h3 className="text-base font-semibold text-slate-900">
+                                Ringkasan Retur
+                            </h3>
+                        </div>
+                        <div className="p-6">
+                            <div className="space-y-3">
+                                {selectedItems.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        className="flex items-center justify-between text-sm"
+                                    >
+                                        <span className="text-slate-600">
+                                            {item.product_name} ×{" "}
+                                            {item.return_qty}
+                                        </span>
+                                        <span className="font-medium text-slate-700">
+                                            {fmtRp(
+                                                item.return_qty *
+                                                    item.unit_price,
+                                            )}
+                                        </span>
+                                    </div>
+                                ))}
+                                <hr className="border-slate-100" />
+                                <div className="flex items-center justify-between text-base">
+                                    <span className="font-semibold text-slate-800">
+                                        Total Retur
+                                    </span>
+                                    <span className="text-lg font-bold text-indigo-600">
+                                        {fmtRp(subtotal)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Link
+                        href={route("admin.sale-returns.index")}
+                        className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                        Batal
+                    </Link>
+                    <button
+                        type="submit"
+                        disabled={processing || selectedItems.length === 0}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                    >
+                        {processing ? (
+                            <>
+                                <svg
+                                    className="h-4 w-4 animate-spin"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    />
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                    />
+                                </svg>
+                                Menyimpan...
+                            </>
+                        ) : (
+                            "Simpan Retur"
+                        )}
+                    </button>
+                </div>
+            </form>
+        </AuthenticatedLayout>
+    );
+}
