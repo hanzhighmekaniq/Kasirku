@@ -298,6 +298,10 @@ class SaleController extends Controller
             "sale" => $sale,
             "paymentMethods" => $paymentMethods,
             "pgConfigs" => $pgConfigs,
+            "canUpdateServiceStatus" => in_array($sale->pos_mode, ["service", "laundry"]) &&
+                (request()->user()->can("sale.create") || request()->user()->can("sale.void")),
+            "canUpdateRentalStatus" => $sale->pos_mode === 'rental' &&
+                (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
         ]);
     }
 
@@ -452,9 +456,60 @@ class SaleController extends Controller
         }
     }
 
+    public function updateServiceStatus(Request $request, Sale $sale)
+    {
+        $storeId = session('current_store_id');
+        abort_if((int) $sale->store_id !== (int) $storeId, 404);
+        abort_unless(
+            $request->user()->can('sale.create') || $request->user()->can('sale.void'),
+            403
+        );
+
+        $validated = $request->validate([
+            'service_status' => ['required', 'in:waiting,in_progress,done'],
+        ]);
+
+        $update = ['service_status' => $validated['service_status']];
+
+        // Catat waktu mulai dan selesai otomatis
+        if ($validated['service_status'] === 'in_progress' && !$sale->service_started_at) {
+            $update['service_started_at'] = now();
+        }
+        if ($validated['service_status'] === 'done' && !$sale->service_finished_at) {
+            $update['service_finished_at'] = now();
+        }
+
+        $sale->update($update);
+
+        return back()->with('success', 'Status pengerjaan diperbarui.');
+    }
+
+    public function updateRentalStatus(Request $request, Sale $sale)
+    {
+        $storeId = session('current_store_id');
+        abort_if((int) $sale->store_id !== (int) $storeId, 404);
+        abort_unless(
+            $request->user()->can('sale.create') || $request->user()->can('sale.void'),
+            403
+        );
+
+        $validated = $request->validate([
+            'rental_status' => ['required', 'in:active,returned,overdue,cancelled'],
+        ]);
+
+        $update = ['rental_status' => $validated['rental_status']];
+
+        if ($validated['rental_status'] === 'returned') {
+            $update['actual_return_at'] = now();
+        }
+
+        $sale->update($update);
+
+        return back()->with('success', 'Status sewa diperbarui.');
+    }
+
     /**
-     * Ganti metode bayar penjualan.
-     *
+     * Ganti metode bayar penjualan.     *
      * Scenarios:
      * 1. Completed (tunai) → PG: reverse stock, delete payment, set pending
      * 2. Pending (PG) → Tunai: cancel PG, create payment, complete sale + deduct stock

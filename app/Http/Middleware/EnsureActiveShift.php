@@ -3,53 +3,67 @@
 namespace App\Http\Middleware;
 
 use App\Models\CashierShift;
+use App\Models\Store;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-// Middleware: pastikan kasir punya shift aktif sebelum transaksi.
-// Hanya berlaku untuk role "kasir". Admin tidak terkena pembatasan ini.
+/**
+ * Pastikan user punya shift aktif sebelum transaksi POS.
+ *
+ * Hanya berlaku jika:
+ * 1. User punya permission shift.open (artinya role yang perlu shift)
+ * 2. Store punya feature 'cashier_shift' aktif
+ * 3. User TIDAK punya shift.manage (owner/admin/supervisor bebas)
+ */
 class EnsureActiveShift
 {
     public function handle(Request $request, Closure $next)
     {
-        /** @var \App\Models\User|null $user */
         $user = Auth::user();
 
-        if (!$user || !$user->isKasir()) {
+        if (!$user) {
             return $next($request);
         }
 
-        $storeId =
-            session("current_store_id") ?? $user->stores()->get()->first()?->id;
+        // Developer dan user tanpa permission shift.open tidak kena enforce
+        if ($user->isDeveloper() || !$user->can('shift.open')) {
+            return $next($request);
+        }
 
+        // Owner/admin/supervisor (punya shift.manage) tidak kena enforce
+        if ($user->can('shift.manage')) {
+            return $next($request);
+        }
+
+        $storeId = session('current_store_id');
         if (!$storeId) {
             return $next($request);
         }
 
-        $activeShift = CashierShift::where("store_id", $storeId)
-            ->where("user_id", $user->id)
-            ->where("status", "open")
-            ->first();
+        // Cek apakah store ini mengaktifkan fitur shift
+        $store = Store::find($storeId);
+        if (!$store || !$store->hasFeature('cashier_shift')) {
+            return $next($request);
+        }
+
+        // Cek shift aktif
+        $activeShift = CashierShift::where('store_id', $storeId)
+            ->where('user_id', $user->id)
+            ->where('status', 'open')
+            ->exists();
 
         if (!$activeShift) {
-            if ($request->expectsJson() || $request->is("api/*")) {
-                return response()->json(
-                    [
-                        "success" => false,
-                        "message" =>
-                            "Anda harus membuka shift terlebih dahulu sebelum melakukan transaksi.",
-                    ],
-                    422,
-                );
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Buka shift kasir terlebih dahulu sebelum melakukan transaksi.',
+                ], 422);
             }
 
             return redirect()
-                ->route("admin.cashier-shifts.create")
-                ->with(
-                    "error",
-                    "Anda harus membuka shift terlebih dahulu sebelum melakukan transaksi.",
-                );
+                ->route('admin.cashier-shifts.create')
+                ->with('error', 'Buka shift kasir terlebih dahulu sebelum melakukan transaksi.');
         }
 
         return $next($request);

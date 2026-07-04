@@ -25,7 +25,7 @@ class ServiceSaleSeeder extends Seeder
         $br6 = Branch::where("code", "BR006")->firstOrFail();
 
         $kasir5 = User::where("email", "barber@gmail.com")->firstOrFail();
-        $kasir6 = User::where("email", "laundry@gmail.com")->firstOrFail();
+        $kasir6 = User::where("email", "sewa@gmail.com")->firstOrFail();
 
         $emp8 = Employee::where("employee_code", "EMP008")->firstOrFail(); // Eko
         $emp9 = Employee::where("employee_code", "EMP009")->firstOrFail(); // Fandi
@@ -50,10 +50,10 @@ class ServiceSaleSeeder extends Seeder
         $undercut = Product::where("sku", "S3-SV-003")->firstOrFail();
         $cukurJenggot = Product::where("sku", "S3-SV-004")->firstOrFail();
 
-        // Produk laundry
-        $cuciRegular = Product::where("sku", "S4-LN-001")->firstOrFail();
-        $cuciSetrika = Product::where("sku", "S4-LN-002")->firstOrFail();
-        $express = Product::where("sku", "S4-LN-003")->firstOrFail();
+        // Produk rental
+        $molen = Product::where("sku", "S4-RT-001")->firstOrFail();
+        $kamera = Product::where("sku", "S4-RT-003")->firstOrFail();
+        $tenda = Product::where("sku", "S4-RT-005")->firstOrFail();
 
         // ── BARBERSHOP: Antrian + Transaksi ───────────────────────────
 
@@ -108,9 +108,7 @@ class ServiceSaleSeeder extends Seeder
             "paid_at" => $sale1->sale_date,
             "amount" => 35000,
         ]);
-        // Update queue dengan sale_id
         $q1->update(["sale_id" => $sale1->id]);
-        // Komisi Fandi 15%
         EmployeeCommission::create([
             "employee_id" => $emp9->id,
             "store_id" => $store3->id,
@@ -217,98 +215,94 @@ class ServiceSaleSeeder extends Seeder
             "queue_date" => "2026-06-21",
         ]);
 
-        // ── LAUNDRY: Transaksi dengan status proses ───────────────────
+        // ── RENTAL: Transaksi sewa alat ─────────────────────────────
 
-        // Order 1 — Rini, sudah diambil
-        $lSale1 = Sale::create([
+        // Order 1 — Rini, sewa molen 3 hari, sudah dikembalikan
+        $rSale1 = Sale::create([
             "store_id" => $store4->id,
             "branch_id" => $br6->id,
             "customer_id" => $rini?->id,
             "user_id" => $kasir6->id,
-            "sale_no" => "LN-20260619-001",
+            "sale_no" => "RT-20260619-001",
             "sale_date" => "2026-06-19 09:00:00",
-            "pos_mode" => "service",
-            "subtotal" => 70000,
-            "grand_total" => 70000,
-            "paid_amount" => 70000,
+            "pos_mode" => "rental",
+            "subtotal" => 240000,
+            "grand_total" => 240000,
+            "paid_amount" => 240000,
             "change_amount" => 0,
             "status" => "completed",
             "payment_status" => "paid",
-            "laundry_status" => "picked_up",
-            "weight_kg" => 7.0,
-            "estimated_done_at" => "2026-06-20 17:00:00",
-            "picked_up_at" => "2026-06-20 18:30:00",
+            "rental_status" => "returned",
+            "deposit_amount" => 100000,
             "customer_name" => $rini?->name,
         ]);
         SaleItem::create([
-            "sale_id" => $lSale1->id,
-            "product_id" => $cuciSetrika->id,
-            "quantity" => 7,
-            "price" => 10000,
-            "subtotal" => 70000,
+            "sale_id" => $rSale1->id,
+            "product_id" => $molen->id,
+            "quantity" => 3,
+            "price" => 80000,
+            "subtotal" => 240000,
             "item_status" => "served",
         ]);
         SalePayment::create([
-            "sale_id" => $lSale1->id,
+            "sale_id" => $rSale1->id,
             "payment_method_id" => 1,
-            "paid_at" => $lSale1->sale_date,
-            "amount" => 70000,
+            "paid_at" => $rSale1->sale_date,
+            "amount" => 240000,
         ]);
 
-        // Order 2 — Yoga, sedang diproses
-        $lSale2 = Sale::create([
+        // Order 2 — Yoga, sewa kamera 2 hari, sedang aktif
+        $rSale2 = Sale::create([
             "store_id" => $store4->id,
             "branch_id" => $br6->id,
             "customer_id" => $yoga?->id,
             "user_id" => $kasir6->id,
-            "sale_no" => "LN-20260621-001",
+            "sale_no" => "RT-20260621-001",
             "sale_date" => "2026-06-21 08:00:00",
-            "pos_mode" => "service",
-            "subtotal" => 35000,
-            "grand_total" => 35000,
-            "paid_amount" => 35000,
+            "pos_mode" => "rental",
+            "subtotal" => 200000,
+            "grand_total" => 200000,
+            "paid_amount" => 200000,
             "change_amount" => 0,
             "status" => "processing",
             "payment_status" => "paid",
-            "laundry_status" => "washing",
-            "weight_kg" => 5.0,
-            "estimated_done_at" => "2026-06-21 17:00:00",
+            "rental_status" => "active",
+            "deposit_amount" => 50000,
             "customer_name" => $yoga?->name,
         ]);
         SaleItem::create([
-            "sale_id" => $lSale2->id,
-            "product_id" => $cuciRegular->id,
-            "quantity" => 5,
-            "price" => 7000,
-            "subtotal" => 35000,
+            "sale_id" => $rSale2->id,
+            "product_id" => $kamera->id,
+            "quantity" => 2,
+            "price" => 100000,
+            "subtotal" => 200000,
             "item_status" => "pending",
         ]);
         SalePayment::create([
-            "sale_id" => $lSale2->id,
+            "sale_id" => $rSale2->id,
             "payment_method_id" => 2,
-            "paid_at" => $lSale2->sale_date,
-            "amount" => 35000,
+            "paid_at" => $rSale2->sale_date,
+            "amount" => 200000,
         ]);
 
-        // Order 3 — Walk-in, ready diambil
+        // Order 3 — Walk-in, sewa tenda 1 hari, sudah dipesan
         Sale::create([
             "store_id" => $store4->id,
             "branch_id" => $br6->id,
             "customer_id" => null,
             "user_id" => $kasir6->id,
-            "sale_no" => "LN-20260620-001",
+            "sale_no" => "RT-20260620-001",
             "sale_date" => "2026-06-20 10:00:00",
-            "pos_mode" => "service",
-            "subtotal" => 45000,
-            "grand_total" => 45000,
-            "paid_amount" => 45000,
+            "pos_mode" => "rental",
+            "subtotal" => 200000,
+            "grand_total" => 200000,
+            "paid_amount" => 200000,
             "change_amount" => 0,
             "status" => "pending",
             "payment_status" => "paid",
-            "laundry_status" => "ready",
-            "weight_kg" => 3.0,
-            "estimated_done_at" => "2026-06-21 09:00:00",
-            "customer_name" => "Ahmad (walk-in)",
+            "rental_status" => "reserved",
+            "deposit_amount" => 150000,
+            "customer_name" => "Bapak Ahmad",
             "customer_phone" => "081288889999",
         ]);
     }

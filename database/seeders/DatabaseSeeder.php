@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
      * 10. CafeTableSeeder       — meja cafe (store FnB saja)
      * 11. ExpenseCategorySeeder — kategori pengeluaran
      * 12. ProductModifierSeeder — modifier group + modifier item (FnB)
-     * 13. ProductSeeder         — semua produk (bahan baku, jadi, jasa, laundry)
+     * 13. ProductSeeder         — semua produk (bahan baku, jadi, jasa, rental)
      * 14. ProductBatchSeeder    — batch / expired (retail saja)
      * 15. ProductStockSeeder    — stok awal per store/branch
      * 16. ProductRecipeSeeder   — resep bahan baku (FnB)
@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
      * 24. BranchDemoSeeder      — data demo branch 2 (UGM)
      * 25. DemoDataSeeder        — data demo store 2 multi-branch
      * 26. MembershipSeeder      — paket membership + assign ke customer
-     * 27. ServiceSaleSeeder     — transaksi service (barber) + laundry
+     * 27. ServiceSaleSeeder     — transaksi service (barber) + rental
      *                             + antrian + komisi karyawan
      */
     public function run(): void

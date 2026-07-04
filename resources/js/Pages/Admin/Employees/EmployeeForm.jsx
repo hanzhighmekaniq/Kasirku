@@ -188,6 +188,63 @@ export default function EmployeeForm({
                 </div>
             </div>
 
+            {/* Section Komisi */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <h3 className="mb-3 text-sm font-semibold text-slate-700">Komisi</h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label htmlFor="commission_type" className="block text-sm font-medium text-slate-700">
+                            Tipe Komisi
+                        </label>
+                        <select
+                            id="commission_type"
+                            value={data.commission_type}
+                            onChange={(e) => setData("commission_type", e.target.value)}
+                            className={inputClass(!!errors.commission_type)}
+                        >
+                            <option value="none">Tidak ada</option>
+                            <option value="percent">Persentase (%)</option>
+                            <option value="flat">Nominal Tetap (Rp)</option>
+                        </select>
+                        <FieldError message={errors.commission_type} />
+                    </div>
+
+                    {data.commission_type !== "none" && (
+                        <div>
+                            <label htmlFor="commission_value" className="block text-sm font-medium text-slate-700">
+                                {data.commission_type === "percent" ? "Persentase (%)" : "Nominal (Rp)"}
+                            </label>
+                            <div className="relative mt-1.5">
+                                {data.commission_type === "flat" && (
+                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                )}
+                                <input
+                                    id="commission_value"
+                                    type="number"
+                                    min="0"
+                                    step={data.commission_type === "percent" ? "0.1" : "1000"}
+                                    max={data.commission_type === "percent" ? "100" : undefined}
+                                    value={data.commission_value}
+                                    onChange={(e) => setData("commission_value", e.target.value)}
+                                    placeholder={data.commission_type === "percent" ? "contoh: 15" : "contoh: 50000"}
+                                    className={`${inputClass(!!errors.commission_value)} ${data.commission_type === "flat" ? "pl-10" : ""}`}
+                                />
+                                {data.commission_type === "percent" && (
+                                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-slate-400">%</span>
+                                )}
+                            </div>
+                            <FieldError message={errors.commission_value} />
+                            <p className="mt-1 text-xs text-slate-400">
+                                {data.commission_type === "percent"
+                                    ? "Komisi dihitung dari total transaksi."
+                                    : "Komisi tetap per transaksi."}
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Section Akun Login */}
             <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <label className="flex items-start gap-3">
                     <input

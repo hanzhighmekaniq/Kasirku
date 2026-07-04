@@ -69,11 +69,24 @@ class StoreSwitchController extends Controller
 
         $this->setStore($user, $store, $request);
 
-        // Auto-pilih branch pertama dari toko baru
-        $branch = $store->branches()->where("is_active", true)->first();
-        if ($branch) {
+        // Cek jumlah cabang aktif
+        $branchCount = $store->branches()->where("is_active", true)->count();
+
+        if ($branchCount === 1) {
+            // Hanya 1 cabang → auto-pick
+            $branch = $store->branches()->where("is_active", true)->first();
             $request->session()->put("current_branch_id", $branch->id);
+        } elseif ($branchCount > 1) {
+            // Banyak cabang → suruh pilih
+            $request->session()->forget(["current_branch_id", "branch_id"]);
+            return redirect()
+                ->route("admin.branch.select")
+                ->with(
+                    "success",
+                    "Beralih ke toko: {$store->name}. Silakan pilih cabang.",
+                );
         } else {
+            // Tidak ada cabang
             $request->session()->forget(["current_branch_id", "branch_id"]);
         }
 
@@ -100,10 +113,20 @@ class StoreSwitchController extends Controller
 
         $this->setStore($user, $store, $request);
 
-        // Auto-pilih branch pertama dari toko baru
-        $branch = $store->branches()->where("is_active", true)->first();
-        if ($branch) {
+        // Cek jumlah cabang aktif
+        $branchCount = $store->branches()->where("is_active", true)->count();
+
+        if ($branchCount === 1) {
+            $branch = $store->branches()->where("is_active", true)->first();
             $request->session()->put("current_branch_id", $branch->id);
+        } elseif ($branchCount > 1) {
+            $request->session()->forget(["current_branch_id", "branch_id"]);
+            return redirect()
+                ->route("admin.branch.select")
+                ->with(
+                    "success",
+                    "Beralih ke toko: {$store->name}. Silakan pilih cabang.",
+                );
         } else {
             $request->session()->forget(["current_branch_id", "branch_id"]);
         }

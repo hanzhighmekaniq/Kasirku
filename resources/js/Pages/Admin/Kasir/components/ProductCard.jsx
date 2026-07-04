@@ -59,9 +59,36 @@ export default function ProductCard({ product, onClick }) {
                 <p className="line-clamp-2 text-xs font-medium leading-tight text-slate-800">
                     {product.name}
                 </p>
-                <p className="mt-1 text-sm font-bold text-indigo-600">
-                    {fmt(product.sell_price)}
-                </p>
+                {/* Badge varian */}
+                {(product.variants ?? []).filter(v => v.is_active).length > 0 && (
+                    <div className="mb-1 flex flex-wrap gap-1">
+                        {(product.variants ?? []).filter(v => v.is_active).slice(0, 3).map((v) => (
+                            <span key={v.id} className="inline-flex rounded-full bg-indigo-50 px-1.5 py-0.5 text-[9px] font-medium text-indigo-600 ring-1 ring-indigo-100">
+                                {v.name}
+                            </span>
+                        ))}
+                        {(product.variants ?? []).filter(v => v.is_active).length > 3 && (
+                            <span className="inline-flex rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium text-slate-500">
+                                +{(product.variants ?? []).filter(v => v.is_active).length - 3}
+                            </span>
+                        )}
+                    </div>
+                )}
+                {/* Harga — range jika ada variant */}
+                {(product.variants ?? []).filter(v => v.is_active).length > 0 ? (() => {
+                    const prices = product.variants.filter(v => v.is_active).map(v => Number(v.price));
+                    const minP = Math.min(...prices);
+                    const maxP = Math.max(...prices);
+                    return (
+                        <p className="mt-1 text-sm font-bold text-indigo-600">
+                            {minP === maxP ? fmt(minP) : `${fmt(minP)} – ${fmt(maxP)}`}
+                        </p>
+                    );
+                })() : (
+                    <p className="mt-1 text-sm font-bold text-indigo-600">
+                        {fmt(product.sell_price)}
+                    </p>
+                )}
                 {hasRecipe ? (
                     <p className="text-xs text-amber-600">
                         🧪 {product.recipes.length} bahan

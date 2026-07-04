@@ -139,6 +139,21 @@ class KasirController extends Controller
                 ->get(["id", "table_number", "capacity", "status"]);
         }
 
+        // Hanya untuk mode service/ticket — kirim daftar karyawan aktif
+        $employees = [];
+        if (in_array($store?->store_type, ["service", "ticket"])) {
+            $employees = \App\Models\Employee::where("store_id", $storeId)
+                ->where("status", "active")
+                ->orderBy("name")
+                ->get([
+                    "id",
+                    "name",
+                    "position",
+                    "commission_type",
+                    "commission_value",
+                ]);
+        }
+
         // Today's transactions (last 20) for history panel
         $todaySales = Sale::where("store_id", $storeId)
             ->where("branch_id", $branchId)
@@ -184,6 +199,7 @@ class KasirController extends Controller
             "receiptFooter" => $store?->receipt_footer ?? "",
             "pgMethods" => $this->getActivePgMethods($storeId),
             "activeShift" => $activeShift,
+            "employees" => $employees,
         ]);
     }
 
@@ -228,9 +244,12 @@ class KasirController extends Controller
 
         switch ($storeType) {
             case "service":
-                if (!empty($validated["service_weight"])) {
-                    $data["service_weight"] =
-                        (float) $validated["service_weight"];
+            case "ticket":
+                if (!empty($validated["ticket_event"])) {
+                    $data["employee_name"] = $validated["ticket_event"];
+                }
+                if (!empty($validated["ticket_slot"])) {
+                    $data["booking_or_queue"] = $validated["ticket_slot"];
                 }
                 break;
 
@@ -241,24 +260,20 @@ class KasirController extends Controller
                     $data["rental_unit"] =
                         $validated["rental_unit"] ?? "per_hour";
                 }
-                break;
-
-            case "ticket":
-                if (!empty($validated["ticket_event"])) {
-                    $data["ticket_event"] = $validated["ticket_event"];
+                if (!empty($validated["room_number"])) {
+                    $data["rental_unit_name"] = $validated["room_number"];
                 }
-                if (!empty($validated["ticket_slot"])) {
-                    $data["ticket_slot"] = $validated["ticket_slot"];
-                }
+                $data["rental_status"] = "active";
                 break;
 
             case "hospitality":
                 if (!empty($validated["room_number"])) {
-                    $data["room_number"] = $validated["room_number"];
+                    $data["rental_unit_name"] = $validated["room_number"];
                 }
                 if (!empty($validated["guest_count"])) {
                     $data["guest_count"] = (int) $validated["guest_count"];
                 }
+                $data["rental_status"] = "active";
                 break;
         }
 
@@ -294,17 +309,18 @@ class KasirController extends Controller
             "shipping_amount" => "nullable|numeric|min:0",
             "customer_name" => "nullable|string|max:200",
             // ── Mode-specific fields ──────────────────────────────────────
-            // Service
+            // Service / Ticket
             "service_weight" => "nullable|numeric|min:0",
             // Rental
             "rental_duration" => "nullable|integer|min:1",
             "rental_unit" => "nullable|in:per_hour,per_day,per_week",
-            // Ticket
+            // Flexible mode fields: service booking, ticket, hospitality
             "ticket_event" => "nullable|string|max:200",
             "ticket_slot" => "nullable|string|max:100",
-            // Hospitality
             "room_number" => "nullable|string|max:50",
             "guest_count" => "nullable|integer|min:1",
+            // Employee for service/ticket mode
+            "employee_id" => "nullable|exists:employees,id",
         ]);
 
         // ── Idempotency check: jika key sudah pernah diproses, kembalikan data existing ──
@@ -442,6 +458,35 @@ class KasirController extends Controller
                     $store?->store_type,
                 ),
             ]);
+
+            // Simpan employee_id jika ada (mode service/ticket)
+            if (!empty($validated["employee_id"])) {
+                $sale->update(["employee_id" => $validated["employee_id"]]);
+            }
+
+            // Set tanggal sewa untuk mode rental
+            if (in_array($store?->store_type, ['rental']) && !empty($validated['rental_duration'])) {
+                $unit = $validated['rental_unit'] ?? 'per_day';
+                $duration = (int) $validated['rental_duration'];
+
+                $endAt = match($unit) {
+                    'per_hour' => $now->copy()->addHours($duration),
+                    'per_week' => $now->copy()->addWeeks($duration),
+                    default    => $now->copy()->addDays($duration), // per_day
+                };
+
+                $sale->update([
+                    'rent_start_at'  => $now,
+                    'rent_end_at'    => $endAt,
+                    'rental_status'  => 'active',
+                    'service_status' => null, // bukan service
+                ]);
+            }
+
+            // Set kitchen_status untuk mode FnB
+            if (in_array($store?->store_type, ['fnb']) && $saleStatus !== 'pending') {
+                $sale->update(['kitchen_status' => 'pending']);
+            }
 
             // Mark table as occupied
             if (!empty($validated["table_id"])) {
@@ -607,6 +652,43 @@ class KasirController extends Controller
             }
 
             DB::commit();
+
+            // Hitung komisi untuk mode service/ticket (setelah commit berhasil)
+            if (
+                !empty($validated["employee_id"]) &&
+                in_array($store?->store_type, ["service", "ticket"])
+            ) {
+                $employee = \App\Models\Employee::find(
+                    $validated["employee_id"],
+                );
+                if ($employee && $employee->commission_value > 0) {
+                    $baseAmount = $grandTotal;
+
+                    $commissionAmount = match ($employee->commission_type) {
+                        "percent" => round(
+                            $baseAmount * ($employee->commission_value / 100),
+                            2,
+                        ),
+                        "flat" => min($employee->commission_value, $baseAmount),
+                        default => 0,
+                    };
+
+                    if ($commissionAmount > 0) {
+                        \App\Models\EmployeeCommission::create([
+                            "employee_id" => $employee->id,
+                            "store_id" => $storeId,
+                            "sale_id" => $sale->id,
+                            "type" => $employee->commission_type ?? "percent",
+                            "commission_rate" => $employee->commission_value,
+                            "base_amount" => $baseAmount,
+                            "commission_amount" => $commissionAmount,
+                            "status" => "pending",
+                            "commission_date" => now()->toDateString(),
+                            "notes" => "Auto dari POS transaksi {$saleNo}",
+                        ]);
+                    }
+                }
+            }
 
             // Build PG info for frontend
             $pgInfo = null;

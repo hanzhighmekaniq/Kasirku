@@ -38,7 +38,7 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // ── Owner Store 1 (Kopi Senja) ────────────────────────────────
+        // ── Owner Store 1 (Minimarket / Retail) ──────────────────────
         $owner1 = User::updateOrCreate(
             ["email" => "owner@gmail.com"],
             [
@@ -47,7 +47,7 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // ── Owner Store 2 (Minimarket) ────────────────────────────────
+        // ── Owner Store 2 (Kopi Senja / FnB) ──────────────────────────
         $owner2 = User::updateOrCreate(
             ["email" => "owner2@gmail.com"],
             [
@@ -56,7 +56,7 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // ── Owner Store 3 (Barbershop) ────────────────────────────────
+        // ── Owner Store 3 (Barbershop / Service) ──────────────────────
         $owner3 = User::updateOrCreate(
             ["email" => "owner3@gmail.com"],
             [
@@ -65,7 +65,7 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // ── Owner Store 4 (Laundry) ───────────────────────────────────
+        // ── Owner Store 4 (Sewa Alat / Rental) ────────────────────────
         $owner4 = User::updateOrCreate(
             ["email" => "owner4@gmail.com"],
             [
@@ -74,7 +74,7 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // Owner Store 5 (Futsal Merdeka)
+        // Owner Store 5 (Futsal / Ticket)
         $owner5 = User::updateOrCreate(
             ["email" => "owner5@gmail.com"],
             [
@@ -83,7 +83,7 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // Owner Store 6 (Villa Sunrise)
+        // Owner Store 6 (Villa / Hospitality)
         $owner6 = User::updateOrCreate(
             ["email" => "owner6@gmail.com"],
             [
@@ -92,31 +92,15 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // ── Kasir Store 1 ─────────────────────────────────────────────
+        // ── Kasir Store 1 (Minimarket / Retail) ───────────────────────
         $kasir1 = User::updateOrCreate(
-            ["email" => "kasir@gmail.com"],
-            [
-                "name" => "Andi Prasetyo",
-                "password" => Hash::make("password"),
-            ],
-        );
-        $kasir2 = User::updateOrCreate(
-            ["email" => "dewi@gmail.com"],
-            [
-                "name" => "Dewi Lestari",
-                "password" => Hash::make("password"),
-            ],
-        );
-
-        // ── Kasir Store 2 ─────────────────────────────────────────────
-        $kasir3 = User::updateOrCreate(
             ["email" => "rizki@gmail.com"],
             [
                 "name" => "Rizki Firmansyah",
                 "password" => Hash::make("password"),
             ],
         );
-        $kasir4 = User::updateOrCreate(
+        $kasir2 = User::updateOrCreate(
             ["email" => "sari@gmail.com"],
             [
                 "name" => "Sari Indah",
@@ -124,7 +108,23 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // ── Kasir Store 3 (Barbershop) ────────────────────────────────
+        // ── Kasir Store 2 (Kopi Senja / FnB) ──────────────────────────
+        $kasir3 = User::updateOrCreate(
+            ["email" => "kasir@gmail.com"],
+            [
+                "name" => "Andi Prasetyo",
+                "password" => Hash::make("password"),
+            ],
+        );
+        $kasir4 = User::updateOrCreate(
+            ["email" => "dewi@gmail.com"],
+            [
+                "name" => "Dewi Lestari",
+                "password" => Hash::make("password"),
+            ],
+        );
+
+        // ── Kasir Store 3 (Barbershop / Service) ──────────────────────
         $kasir5 = User::updateOrCreate(
             ["email" => "barber@gmail.com"],
             [
@@ -133,16 +133,16 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // ── Kasir Store 4 (Laundry) ───────────────────────────────────
+        // ── Kasir Store 4 (Sewa Alat / Rental) ────────────────────────
         $kasir6 = User::updateOrCreate(
-            ["email" => "laundry@gmail.com"],
+            ["email" => "sewa@gmail.com"],
             [
                 "name" => "Yuni Astuti",
                 "password" => Hash::make("password"),
             ],
         );
 
-        // Kasir Store 5 (Futsal) — ticket
+        // Kasir Store 5 (Futsal / Ticket)
         $kasir7 = User::updateOrCreate(
             ["email" => "futsal@gmail.com"],
             [
@@ -151,7 +151,7 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // Kasir Store 6 (Villa) — hospitality
+        // Kasir Store 6 (Villa / Hospitality)
         $kasir8 = User::updateOrCreate(
             ["email" => "villa@gmail.com"],
             [
@@ -203,13 +203,19 @@ class UserSeeder extends Seeder
             [$owner5->id, $store5->id],
             [$owner6->id, $store6->id],
             // Kasir per store
+            // STORE001 (Retail): rizki + sari
             [$kasir1->id, $store1->id],
             [$kasir2->id, $store1->id],
+            // STORE002 (FnB): kasir + dewi
             [$kasir3->id, $store2->id],
             [$kasir4->id, $store2->id],
+            // STORE003 (Service): barber
             [$kasir5->id, $store3->id],
+            // STORE004 (Rental): sewa
             [$kasir6->id, $store4->id],
+            // STORE005 (Ticket): futsal
             [$kasir7->id, $store5->id],
+            // STORE006 (Hospitality): villa
             [$kasir8->id, $store6->id],
         ];
 

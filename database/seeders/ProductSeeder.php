@@ -583,61 +583,61 @@ class ProductSeeder extends Seeder
         ]);
 
         // ══════════════════════════════════════════════════════════════
-        // STORE 4 — Laundry Bersih (Laundry)
+        // STORE 4 — Sewa Alat Jaya (Rental)
         // ══════════════════════════════════════════════════════════════
         Product::create([
             "store_id" => $store4->id,
-            "category_id" => $cat("kiloan", $store4->id),
-            "sku" => "S4-LN-001",
-            "name" => "Cuci Reguler (per kg)",
+            "category_id" => $cat("alat-berat", $store4->id),
+            "sku" => "S4-RT-001",
+            "name" => "Sewa Molen Beton (per hari)",
             "type" => "service",
-            "unit" => "kg",
-            "cost_price" => 3000,
-            "sell_price" => 7000,
+            "unit" => "hari",
+            "cost_price" => 40000,
+            "sell_price" => 80000,
             "track_stock" => false,
         ]);
         Product::create([
             "store_id" => $store4->id,
-            "category_id" => $cat("kiloan", $store4->id),
-            "sku" => "S4-LN-002",
-            "name" => "Cuci + Setrika (per kg)",
+            "category_id" => $cat("alat-berat", $store4->id),
+            "sku" => "S4-RT-002",
+            "name" => "Sewa Scaffolding (per set/hari)",
             "type" => "service",
-            "unit" => "kg",
-            "cost_price" => 4500,
-            "sell_price" => 10000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store4->id,
-            "category_id" => $cat("express", $store4->id),
-            "sku" => "S4-LN-003",
-            "name" => "Express Kiloan (per kg)",
-            "type" => "service",
-            "unit" => "kg",
-            "cost_price" => 6000,
-            "sell_price" => 15000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store4->id,
-            "category_id" => $cat("satuan", $store4->id),
-            "sku" => "S4-LN-004",
-            "name" => "Cuci Sepatu (per pasang)",
-            "type" => "service",
-            "unit" => "pasang",
-            "cost_price" => 10000,
-            "sell_price" => 30000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store4->id,
-            "category_id" => $cat("satuan", $store4->id),
-            "sku" => "S4-LN-005",
-            "name" => "Dry Cleaning Jas (per pcs)",
-            "type" => "service",
-            "unit" => "pcs",
-            "cost_price" => 20000,
+            "unit" => "hari",
+            "cost_price" => 25000,
             "sell_price" => 50000,
+            "track_stock" => false,
+        ]);
+        Product::create([
+            "store_id" => $store4->id,
+            "category_id" => $cat("kamera-audio", $store4->id),
+            "sku" => "S4-RT-003",
+            "name" => "Sewa Kamera DSLR (per hari)",
+            "type" => "service",
+            "unit" => "hari",
+            "cost_price" => 50000,
+            "sell_price" => 100000,
+            "track_stock" => false,
+        ]);
+        Product::create([
+            "store_id" => $store4->id,
+            "category_id" => $cat("kamera-audio", $store4->id),
+            "sku" => "S4-RT-004",
+            "name" => "Sewa Sound System (per set/hari)",
+            "type" => "service",
+            "unit" => "hari",
+            "cost_price" => 75000,
+            "sell_price" => 150000,
+            "track_stock" => false,
+        ]);
+        Product::create([
+            "store_id" => $store4->id,
+            "category_id" => $cat("event-pesta", $store4->id),
+            "sku" => "S4-RT-005",
+            "name" => "Sewa Tenda Roder (per set/hari)",
+            "type" => "service",
+            "unit" => "hari",
+            "cost_price" => 100000,
+            "sell_price" => 200000,
             "track_stock" => false,
         ]);
 

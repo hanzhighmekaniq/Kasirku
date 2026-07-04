@@ -2,6 +2,12 @@ import axios from "axios";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { router } from "@inertiajs/react";
 import { enqueue } from "@/Services/mutationQueue";
+import {
+    getPosModeConfig,
+    modeHasFeature,
+    normalizePosMode,
+    POS_MODES,
+} from "./config/posModes";
 
 /* ── formatters ──────────────────────────────────────── */
 const fmt = (n) =>
@@ -14,45 +20,13 @@ const fmt = (n) =>
 const fmtShort = (n) =>
     new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(n ?? 0);
 
-/* ── ORDER TYPE options — 6 mode POS ─────────────────── */
-const ORDER_TYPES = {
-    // 1. Retail — jual barang
-    retail: [
-        { v: "takeaway", l: "Ambil" },
-        { v: "delivery", l: "Antar" },
-        { v: "wholesale", l: "Grosir" },
-    ],
-    // 2. F&B — pesan → siapkan → sajikan/antar
-    fnb: [
-        { v: "dine_in", l: "Dine-in" },
-        { v: "takeaway", l: "Takeaway" },
-        { v: "delivery", l: "Delivery" },
-    ],
-    // 3. Service — jual jasa (salon, laundry, bengkel)
-    service: [
-        { v: "walk_in", l: "Langsung" },
-        { v: "booking", l: "Booking" },
-        { v: "pickup_delivery", l: "Jemput & Antar" },
-    ],
-    // 4. Rental — sewa berbasis durasi (warnet, PS, sewa alat)
-    rental: [
-        { v: "per_hour", l: "Per Jam" },
-        { v: "per_day", l: "Per Hari" },
-        { v: "per_week", l: "Per Minggu" },
-    ],
-    // 5. Ticket — booking slot/jadwal (bioskop, futsal, event)
-    ticket: [
-        { v: "online", l: "Booking Online" },
-        { v: "walk_in", l: "Walk-in" },
-        { v: "group", l: "Group" },
-    ],
-    // 6. Hospitality — check-in/out (hotel, penginapan)
-    hospitality: [
-        { v: "check_in", l: "Check-in" },
-        { v: "reservation", l: "Reservasi" },
-        { v: "short_stay", l: "Short Stay" },
-    ],
-};
+/* ── ORDER TYPE options — 7 adaptive POS modes ─────────── */
+const ORDER_TYPES = Object.fromEntries(
+    Object.entries(POS_MODES).map(([code, config]) => [
+        code,
+        config.orderTypes,
+    ]),
+);
 
 const TIER_COLORS = {
     bronze: "bg-amber-100 text-amber-700",
@@ -103,21 +77,23 @@ export default function useKasir({
     promotions = [],
     activeShift = null,
     posMode,
+    employees = [],
 }) {
     /* ── mode detection ─────────────────────────────────── */
-    const isRetail = storeType === "retail";
-    const isFnb = storeType === "fnb";
-    const isService = storeType === "service";
-    const isRental = storeType === "rental";
-    const isTicket = storeType === "ticket";
-    const isHospitality = storeType === "hospitality";
+    const activeMode = normalizePosMode(posMode || storeType);
+    const modeConfig = getPosModeConfig(activeMode);
+    const isRetail = activeMode === "retail";
+    const isFnb = activeMode === "fnb";
+    const isService = activeMode === "service";
+    const isRental = activeMode === "rental";
+    const isTicket = activeMode === "ticket";
+    const isHospitality = activeMode === "hospitality";
 
-    // backward compat (old sub-types now merged)
+    // backward compat (old sub-types now mapped to final 6 modes)
     const isCafe = isFnb;
     const isBooth = isFnb;
-    const isLaundry = isService;
-    const isSession = isRental;
-    const orderOpts = ORDER_TYPES[storeType] ?? ORDER_TYPES.retail;
+    const orderOpts = modeConfig.orderTypes;
+    const hasModeFeature = (feature) => modeHasFeature(activeMode, feature);
 
     /* ── state ── */
     const [customers, setCustomers] = useState(initialCustomers || []);
@@ -169,9 +145,11 @@ export default function useKasir({
     const [ticketSlot, setTicketSlot] = useState("");
     const [roomNumber, setRoomNumber] = useState("");
     const [guestCount, setGuestCount] = useState(1);
+    const [selectedEmployee, setSelectedEmployee] = useState("");
 
     /* ── modal / UI state ── */
     const [modifierTarget, setModifierTarget] = useState(null);
+    const [variantTarget, setVariantTarget] = useState(null);
     const [showPayment, setShowPayment] = useState(false);
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState(null);
@@ -477,14 +455,22 @@ export default function useKasir({
         setQuickAddName("");
         setQuickAddPhone("");
         setOrderType(orderOpts[0].v);
+        setSelectedEmployee("");
     };
 
     /* ── click product ── */
     const handleProductClick = (product) => {
         const hasModifiers = (product.modifier_groups ?? []).length > 0;
+        const hasVariants = (product.variants ?? []).filter(v => v.is_active).length > 0;
+
         if (hasModifiers) {
+            // Produk dengan modifier — buka ModifierModal (behaviour lama)
             setModifierTarget(product);
+        } else if (hasVariants) {
+            // Produk dengan variant tapi tanpa modifier — buka VariantModal
+            setVariantTarget(product);
         } else {
+            // Produk biasa — langsung masuk cart
             addToCart(product);
         }
     };
@@ -659,6 +645,16 @@ export default function useKasir({
             setSubmitting(false);
             return;
         }
+        // Customer wajib untuk service
+        if (isService && !selectedCustomer) {
+            alert('Layanan service wajib memilih customer terlebih dahulu.\n\nTambahkan customer baru dari dropdown pelanggan di atas.');
+            return;
+        }
+        // Customer wajib untuk rental
+        if (isRental && !selectedCustomer) {
+            alert('Sewa barang wajib memilih customer.\n\nPilih atau tambahkan customer dari dropdown di atas.');
+            return;
+        }
         setSubmitting(true);
         const idempotencyKey = crypto.randomUUID();
         const payload = {
@@ -696,17 +692,31 @@ export default function useKasir({
             })),
             idempotency_key: idempotencyKey,
             // ── Mode-specific fields ──────────────────────────────────────
-            ...(isService && serviceWeight
-                ? { service_weight: Number(serviceWeight) }
-                : {}),
             ...(isRental && rentalDuration
-                ? { rental_duration: Number(rentalDuration), rental_unit: rentalUnit }
+                ? {
+                      rental_duration: Number(rentalDuration),
+                      rental_unit: rentalUnit,
+                      room_number: roomNumber || null,
+                  }
+                : {}),
+            ...(isService
+                ? {
+                      employee_id: selectedEmployee || null,
+                      ticket_slot: ticketSlot || null,
+                  }
                 : {}),
             ...(isTicket
-                ? { ticket_event: ticketEvent || null, ticket_slot: ticketSlot || null }
+                ? {
+                      ticket_event: ticketEvent || null,
+                      ticket_slot: ticketSlot || null,
+                      employee_id: selectedEmployee || null,
+                  }
                 : {}),
             ...(isHospitality
-                ? { room_number: roomNumber || null, guest_count: Number(guestCount) || 1 }
+                ? {
+                      room_number: roomNumber || null,
+                      guest_count: Number(guestCount) || 1,
+                  }
                 : {}),
         };
 
@@ -823,6 +833,20 @@ export default function useKasir({
                     orderType === "takeaway"
                         ? takeawayCustomerName || null
                         : null,
+                employeeName: selectedEmployee
+                    ? (employees.find(e => String(e.id) === String(selectedEmployee))?.name ?? null)
+                    : null,
+                rentalInfo: isRental && rentalDuration > 0 ? {
+                    duration: rentalDuration,
+                    unit: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_day' ? 'hari' : 'minggu',
+                    returnDate: (() => {
+                        const now = new Date();
+                        const ms = rentalUnit === 'per_hour' ? rentalDuration * 3600000
+                            : rentalUnit === 'per_day' ? rentalDuration * 86400000
+                            : rentalDuration * 604800000;
+                        return new Date(now.getTime() + ms).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                    })(),
+                } : null,
             });
 
             setShowReceipt(true);
@@ -925,6 +949,20 @@ export default function useKasir({
                             orderType === "takeaway"
                                 ? takeawayCustomerName || null
                                 : null,
+                        employeeName: selectedEmployee
+                            ? (employees.find(e => String(e.id) === String(selectedEmployee))?.name ?? null)
+                            : null,
+                        rentalInfo: isRental && rentalDuration > 0 ? {
+                            duration: rentalDuration,
+                            unit: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_day' ? 'hari' : 'minggu',
+                            returnDate: (() => {
+                                const now = new Date();
+                                const ms = rentalUnit === 'per_hour' ? rentalDuration * 3600000
+                                    : rentalUnit === 'per_day' ? rentalDuration * 86400000
+                                    : rentalDuration * 604800000;
+                                return new Date(now.getTime() + ms).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                            })(),
+                        } : null,
                         isOffline: true,
                     });
                     setShowReceipt(true);
@@ -1027,6 +1065,20 @@ export default function useKasir({
                                     ? deliveryCustomerName ||
                                       offlineCustomer?.name
                                     : null,
+                            employeeName: selectedEmployee
+                                ? (employees.find(e => String(e.id) === String(selectedEmployee))?.name ?? null)
+                                : null,
+                            rentalInfo: isRental && rentalDuration > 0 ? {
+                                duration: rentalDuration,
+                                unit: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_day' ? 'hari' : 'minggu',
+                                returnDate: (() => {
+                                    const now = new Date();
+                                    const ms = rentalUnit === 'per_hour' ? rentalDuration * 3600000
+                                        : rentalUnit === 'per_day' ? rentalDuration * 86400000
+                                        : rentalDuration * 604800000;
+                                    return new Date(now.getTime() + ms).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                                })(),
+                            } : null,
                             isOffline: true,
                         });
                         setShowReceipt(true);
@@ -1097,6 +1149,20 @@ export default function useKasir({
                 pgModalData.orderType === "takeaway"
                     ? takeawayCustomerName || null
                     : null,
+            employeeName: selectedEmployee
+                ? (employees.find(e => String(e.id) === String(selectedEmployee))?.name ?? null)
+                : null,
+            rentalInfo: isRental && rentalDuration > 0 ? {
+                duration: rentalDuration,
+                unit: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_day' ? 'hari' : 'minggu',
+                returnDate: (() => {
+                    const now = new Date();
+                    const ms = rentalUnit === 'per_hour' ? rentalDuration * 3600000
+                        : rentalUnit === 'per_day' ? rentalDuration * 86400000
+                        : rentalDuration * 604800000;
+                    return new Date(now.getTime() + ms).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                })(),
+            } : null,
         });
 
         setPgModalData(null);
@@ -1147,6 +1213,9 @@ export default function useKasir({
         findPgPaymentMethod,
 
         /* mode detection */
+        activeMode,
+        modeConfig,
+        hasModeFeature,
         isRetail,
         isFnb,
         isService,
@@ -1155,8 +1224,6 @@ export default function useKasir({
         isHospitality,
         isCafe,
         isBooth,
-        isLaundry,
-        isSession,
         orderOpts,
 
         /* state */
@@ -1232,10 +1299,15 @@ export default function useKasir({
         setRoomNumber,
         guestCount,
         setGuestCount,
+        selectedEmployee,
+        setSelectedEmployee,
+        employees,
 
         /* modal / UI state */
         modifierTarget,
         setModifierTarget,
+        variantTarget,
+        setVariantTarget,
         showPayment,
         setShowPayment,
         showReceipt,

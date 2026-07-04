@@ -64,6 +64,21 @@ export default function ReceiptModal({
                         Pelanggan: {receipt.customerName}
                     </p>
                 )}
+            {receipt.employeeName && (
+                <p className="text-center text-slate-600">
+                    Dikerjakan oleh: <span className="font-medium">{receipt.employeeName}</span>
+                </p>
+            )}
+            {receipt.rentalInfo && (
+                <>
+                    <p className="text-center text-slate-600">
+                        Sewa: <span className="font-medium">{receipt.rentalInfo.duration} {receipt.rentalInfo.unit}</span>
+                    </p>
+                    <p className="text-center text-slate-500">
+                        Kembali: {receipt.rentalInfo.returnDate}
+                    </p>
+                </>
+            )}
             {receipt.deliveryAddress && (
                 <>
                     {receipt.deliveryCustomerName && (
