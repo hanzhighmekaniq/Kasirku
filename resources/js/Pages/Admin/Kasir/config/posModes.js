@@ -1,6 +1,6 @@
 /**
- * Source of truth — 6 mode POS.
- * retail | fnb | service | rental | ticket | hospitality
+ * Source of truth — 8 mode POS.
+ * retail | fnb | service | rental | ticket | hospitality | parking | session
  */
 export const POS_MODES = {
     retail: {
@@ -8,7 +8,7 @@ export const POS_MODES = {
         label: "Retail",
         icon: "🏪",
         description:
-            "Transaksi barang cepat dengan stok, barcode, batch, dan retur.",
+            "Transaksi barang fisik: minimarket, toko, grosir, apotek.",
         pricingModel: "qty",
         requiredFields: ["items", "payments"],
         features: [
@@ -34,7 +34,7 @@ export const POS_MODES = {
         label: "F&B",
         icon: "☕",
         description:
-            "Order menu dengan meja, modifier, delivery, dapur, dan resep bahan baku.",
+            "Restoran, cafe, bakery: meja, modifier, kitchen display, resep.",
         pricingModel: "qty_modifier",
         requiredFields: ["items", "order_type", "payments"],
         features: [
@@ -68,7 +68,7 @@ export const POS_MODES = {
         label: "Service",
         icon: "✂️",
         description:
-            "Transaksi jasa dengan customer, pegawai, booking/antrian, dan komisi.",
+            "Salon, barbershop, bengkel, laundry, spa: antrian, komisi, booking.",
         pricingModel: "service_item",
         requiredFields: ["items", "customer", "payments"],
         features: [
@@ -94,14 +94,13 @@ export const POS_MODES = {
         label: "Rental",
         icon: "🔑",
         description:
-            "Penyewaan barang/unit dengan durasi, deposit, return, dan denda.",
+            "Sewa alat, kendaraan, kamera: durasi, deposit, return, denda.",
         pricingModel: "duration",
         requiredFields: ["customer", "items", "duration", "payments"],
         features: [
             "rental_items",
             "availability",
             "duration",
-            "start_end_datetime",
             "deposit",
             "condition_check",
             "late_fee",
@@ -127,7 +126,7 @@ export const POS_MODES = {
         label: "Ticket",
         icon: "🎟️",
         description:
-            "Ticketing & booking slot untuk bioskop, futsal, event, dan reservasi terjadwal.",
+            "Bioskop, futsal, event, konser: booking slot terjadwal, check-in, refund.",
         pricingModel: "service_item",
         requiredFields: ["items", "customer", "payments"],
         features: [
@@ -156,7 +155,7 @@ export const POS_MODES = {
         label: "Hospitality",
         icon: "🏨",
         description:
-            "Hotel, villa, penginapan, dan kost dengan check-in/out, deposit, dan tamu.",
+            "Hotel, villa, kost, guest house: check-in/out, deposit, tamu.",
         pricingModel: "duration",
         requiredFields: ["customer", "items", "check_in", "payments"],
         features: [
@@ -173,6 +172,61 @@ export const POS_MODES = {
             { v: "short_stay", l: "Short Stay" },
         ],
         statusFlow: ["reserved", "checked_in", "checked_out", "cancelled"],
+    },
+    parking: {
+        code: "parking",
+        label: "Parking",
+        icon: "🅿️",
+        description:
+            "Parkir kendaraan: tiket, plat nomor, jam masuk/keluar, tarif durasi.",
+        pricingModel: "entry_exit_duration",
+        requiredFields: [
+            "ticket_no",
+            "plate_no",
+            "vehicle_type",
+            "entry_time",
+            "payments",
+        ],
+        features: [
+            "ticket",
+            "plate_number",
+            "vehicle_type",
+            "entry_exit",
+            "duration_rate",
+            "lost_ticket_fee",
+            "grace_period",
+        ],
+        orderTypes: [
+            { v: "entry", l: "Masuk" },
+            { v: "exit", l: "Keluar" },
+            { v: "lost_ticket", l: "Tiket Hilang" },
+        ],
+        statusFlow: ["entered", "exited", "paid", "lost_ticket", "cancelled"],
+    },
+    session: {
+        code: "session",
+        label: "Session",
+        icon: "🎮",
+        description:
+            "Warnet, rental PS, karaoke, billiard: timer, prepaid/postpaid, extend.",
+        pricingModel: "running_timer",
+        requiredFields: ["unit", "session_start", "payments"],
+        features: [
+            "unit_grid",
+            "availability",
+            "timer",
+            "prepaid_postpaid",
+            "extend_session",
+            "pause_session",
+            "addon_items",
+            "booking",
+        ],
+        orderTypes: [
+            { v: "postpaid", l: "Postpaid" },
+            { v: "prepaid", l: "Prepaid" },
+            { v: "booking", l: "Booking" },
+        ],
+        statusFlow: ["running", "paused", "ended", "paid", "cancelled"],
     },
 };
 

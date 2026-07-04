@@ -3,7 +3,7 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import axios from "axios";
 import { useState } from "react";
 
-export default function Show({ sale, paymentMethods, pgConfigs, canUpdateServiceStatus, canUpdateRentalStatus }) {
+export default function Show({ sale, paymentMethods, pgConfigs, canUpdateServiceStatus, canUpdateRentalStatus, canCheckInTicket, canCheckOutHospitality, canExitParking, canEndSession }) {
     const { flash } = usePage().props;
     const [confirmingStatus, setConfirmingStatus] = useState(null);
     const [processing, setProcessing] = useState(false);
@@ -127,6 +127,42 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
             route("admin.sales.updateRentalStatus", sale.id),
             { rental_status: status },
             { preserveScroll: true, onFinish: () => setProcessing(false) }
+        );
+    };
+
+    const handleCheckOut = () => {
+        setProcessing(true);
+        router.patch(
+            route('admin.sales.checkOutHospitality', sale.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setProcessing(false),
+            }
+        );
+    };
+
+    const handleParkingExit = () => {
+        setProcessing(true);
+        router.patch(
+            route('admin.sales.exitParking', sale.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setProcessing(false),
+            }
+        );
+    };
+
+    const handleEndSession = () => {
+        setProcessing(true);
+        router.patch(
+            route('admin.sales.endSession', sale.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setProcessing(false),
+            }
         );
     };
 
@@ -519,6 +555,264 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     >
                                         {processing ? '...' : '✅ Sudah Dikembalikan (Terlambat)'}
                                     </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Info Menginap — hanya untuk pos_mode hospitality */}
+                    {sale.pos_mode === 'hospitality' && (
+                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3">
+                                <h3 className="text-sm font-semibold text-slate-800">🏨 Info Menginap</h3>
+                            </div>
+                            <div className="p-5 space-y-4">
+                                {/* Status badge */}
+                                <div className="flex items-center justify-between">
+                                    <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${
+                                        sale.rental_status === 'returned'
+                                            ? 'bg-slate-100 text-slate-600'
+                                            : sale.rental_status === 'overdue'
+                                            ? 'bg-red-100 text-red-700'
+                                            : 'bg-emerald-100 text-emerald-700'
+                                    }`}>
+                                        {sale.rental_status === 'returned' ? '✓ Check-out' :
+                                         sale.rental_status === 'overdue'  ? '⚠️ Terlambat Check-out' :
+                                         '🟢 Sedang Menginap'}
+                                    </span>
+                                    {canCheckOutHospitality && sale.rental_status === 'active' && (
+                                        <button
+                                            onClick={handleCheckOut}
+                                            disabled={processing}
+                                            className="rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-bold text-white shadow hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50"
+                                        >
+                                            {processing ? '...' : '🏨 Check-out Sekarang'}
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Grid info */}
+                                <div className="grid grid-cols-2 gap-3 text-xs">
+                                    {sale.extra_data?.room_number && (
+                                        <div className="rounded-xl bg-indigo-50 px-3 py-2.5">
+                                            <p className="text-indigo-400 mb-0.5">No. Kamar / Unit</p>
+                                            <p className="font-bold text-indigo-700 text-sm">🔑 {sale.extra_data.room_number}</p>
+                                        </div>
+                                    )}
+                                    {sale.extra_data?.guest_count && (
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                                            <p className="text-slate-400 mb-0.5">Jumlah Tamu</p>
+                                            <p className="font-semibold text-slate-700 text-sm">👥 {sale.extra_data.guest_count} tamu</p>
+                                        </div>
+                                    )}
+                                    {sale.rent_start_at && (
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                                            <p className="text-slate-400 mb-0.5">Check-in</p>
+                                            <p className="font-semibold text-slate-700">
+                                                {new Date(sale.rent_start_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {sale.rent_end_at && (
+                                        <div className={`rounded-xl px-3 py-2.5 ${
+                                            new Date(sale.rent_end_at) < new Date() && sale.rental_status === 'active'
+                                                ? 'bg-red-50' : 'bg-slate-50'
+                                        }`}>
+                                            <p className="text-slate-400 mb-0.5">Check-out (Rencana)</p>
+                                            <p className={`font-semibold ${
+                                                new Date(sale.rent_end_at) < new Date() && sale.rental_status === 'active'
+                                                    ? 'text-red-600' : 'text-slate-700'
+                                            }`}>
+                                                {new Date(sale.rent_end_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                            </p>
+                                            {new Date(sale.rent_end_at) < new Date() && sale.rental_status === 'active' && (
+                                                <p className="text-red-500 text-[10px] mt-0.5">⚠️ Sudah lewat batas!</p>
+                                            )}
+                                        </div>
+                                    )}
+                                    {sale.actual_return_at && (
+                                        <div className="rounded-xl bg-emerald-50 px-3 py-2.5 col-span-2">
+                                            <p className="text-emerald-500 mb-0.5">Check-out Aktual</p>
+                                            <p className="font-semibold text-emerald-700">
+                                                {new Date(sale.actual_return_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Info Parkir — hanya untuk pos_mode parking */}
+                    {sale.pos_mode === 'parking' && (
+                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3">
+                                <h3 className="text-sm font-semibold text-slate-800">🅿️ Info Parkir</h3>
+                            </div>
+                            <div className="p-5 space-y-4">
+                                {/* Plat Nomor — menonjol */}
+                                {sale.plate_number && (
+                                    <div className={`rounded-2xl border-2 p-4 text-center ${
+                                        sale.exit_at ? 'border-slate-200 bg-slate-50' : 'border-indigo-200 bg-indigo-50'
+                                    }`}>
+                                        <p className="text-xs font-medium text-slate-400 mb-1">Plat Nomor</p>
+                                        <p className="font-mono text-3xl font-bold tracking-widest text-indigo-700">
+                                            {sale.plate_number}
+                                        </p>
+                                        <p className="mt-1 text-sm text-slate-500">
+                                            {sale.vehicle_type === 'motorcycle' ? '🏍️ Motor' :
+                                             sale.vehicle_type === 'car'        ? '🚗 Mobil' :
+                                             sale.vehicle_type === 'truck'      ? '🚛 Truk/Bus' :
+                                             sale.vehicle_type ?? '-'}
+                                        </p>
+                                        <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                                            sale.exit_at ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700'
+                                        }`}>
+                                            {sale.exit_at ? '✓ Sudah Keluar' : '🟢 Masih di Area Parkir'}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Grid info waktu */}
+                                <div className="grid grid-cols-2 gap-3 text-xs">
+                                    {sale.entry_at && (
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                                            <p className="text-slate-400 mb-0.5">⏰ Masuk</p>
+                                            <p className="font-semibold text-slate-700">
+                                                {new Date(sale.entry_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {sale.exit_at ? (
+                                        <div className="rounded-xl bg-emerald-50 px-3 py-2.5">
+                                            <p className="text-emerald-500 mb-0.5">✓ Keluar</p>
+                                            <p className="font-semibold text-emerald-700">
+                                                {new Date(sale.exit_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                            </p>
+                                            {sale.entry_at && (
+                                                <p className="text-emerald-400 text-[10px] mt-0.5">
+                                                    Durasi: {Math.round((new Date(sale.exit_at) - new Date(sale.entry_at)) / 60000)} menit
+                                                </p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2.5 flex items-center justify-center">
+                                            <p className="text-slate-400 text-center text-xs">Belum keluar</p>
+                                        </div>
+                                    )}
+                                    {sale.parking_ticket_no && (
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2.5 col-span-2">
+                                            <p className="text-slate-400 mb-0.5">No. Tiket</p>
+                                            <p className="font-mono font-semibold text-slate-700">{sale.parking_ticket_no}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Tombol catat keluar */}
+                                {canExitParking && !sale.exit_at && (
+                                    <button
+                                        onClick={handleParkingExit}
+                                        disabled={processing}
+                                        className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50"
+                                    >
+                                        {processing ? 'Memproses...' : '🚗 Catat Kendaraan Keluar'}
+                                    </button>
+                                )}
+                                {sale.exit_at && (
+                                    <div className="rounded-xl bg-slate-100 px-4 py-3 text-center text-sm text-slate-500">
+                                        Kendaraan sudah tercatat keluar dari area parkir
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Info Sesi — hanya untuk pos_mode session */}
+                    {sale.pos_mode === 'session' && (
+                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3">
+                                <h3 className="text-sm font-semibold text-slate-800">🎮 Info Sesi</h3>
+                            </div>
+                            <div className="p-5 space-y-4">
+                                {/* Unit dan status */}
+                                <div className={`rounded-2xl border-2 p-4 text-center ${
+                                    sale.session_status === 'ended'  ? 'border-slate-200 bg-slate-50' :
+                                    sale.session_status === 'paused' ? 'border-amber-200 bg-amber-50' :
+                                    'border-emerald-200 bg-emerald-50'
+                                }`}>
+                                    {sale.unit_name && (
+                                        <>
+                                            <p className="text-xs font-medium text-slate-400 mb-1">Unit / Room</p>
+                                            <p className="font-mono text-2xl font-bold text-indigo-700">{sale.unit_name}</p>
+                                        </>
+                                    )}
+                                    <span className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                                        sale.session_status === 'ended'  ? 'bg-slate-200 text-slate-600' :
+                                        sale.session_status === 'paused' ? 'bg-amber-100 text-amber-700' :
+                                        'bg-emerald-100 text-emerald-700'
+                                    }`}>
+                                        {sale.session_status === 'ended'  ? '✓ Sesi Selesai' :
+                                         sale.session_status === 'paused' ? '⏸ Dijeda' :
+                                         '▶ Sesi Berjalan'}
+                                    </span>
+                                </div>
+
+                                {/* Grid info waktu */}
+                                <div className="grid grid-cols-2 gap-3 text-xs">
+                                    {sale.session_started_at && (
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                                            <p className="text-slate-400 mb-0.5">▶ Mulai</p>
+                                            <p className="font-semibold text-slate-700">
+                                                {new Date(sale.session_started_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {sale.session_ended_at ? (
+                                        <div className="rounded-xl bg-slate-100 px-3 py-2.5">
+                                            <p className="text-slate-400 mb-0.5">✓ Selesai</p>
+                                            <p className="font-semibold text-slate-600">
+                                                {new Date(sale.session_ended_at).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })}
+                                            </p>
+                                            {sale.session_started_at && (
+                                                <p className="text-slate-400 text-[10px] mt-0.5">
+                                                    {Math.round((new Date(sale.session_ended_at) - new Date(sale.session_started_at)) / 60000)} menit
+                                                </p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-xl bg-emerald-50 px-3 py-2.5 flex items-center justify-center">
+                                            <div className="text-center">
+                                                <p className="text-emerald-600 text-xs font-semibold">⏱ Berjalan</p>
+                                                {sale.session_started_at && (
+                                                    <p className="text-emerald-500 text-[10px]">
+                                                        {Math.round((Date.now() - new Date(sale.session_started_at)) / 60000)} menit
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {sale.guest_count && (
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2.5 col-span-2">
+                                            <p className="text-slate-400 mb-0.5">Pengguna</p>
+                                            <p className="font-semibold text-slate-700">👥 {sale.guest_count} orang</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Tombol akhiri sesi */}
+                                {canEndSession && sale.session_status !== 'ended' && (
+                                    <button
+                                        onClick={handleEndSession}
+                                        disabled={processing}
+                                        className="w-full rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 py-3 text-sm font-bold text-white shadow transition hover:from-slate-700 hover:to-slate-800 disabled:opacity-50"
+                                    >
+                                        {processing ? 'Memproses...' : '⏹ Akhiri Sesi'}
+                                    </button>
+                                )}
+                                {sale.session_status === 'ended' && (
+                                    <div className="rounded-xl bg-slate-100 px-4 py-3 text-center text-sm text-slate-500">
+                                        Sesi sudah selesai
+                                    </div>
                                 )}
                             </div>
                         </div>

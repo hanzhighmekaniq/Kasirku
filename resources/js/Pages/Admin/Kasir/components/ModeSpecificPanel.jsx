@@ -257,53 +257,183 @@ export default function ModeSpecificPanel({ k }) {
 
                 {k.isHospitality && (
                     <>
+                        {/* Warning customer wajib */}
+                        {!k.selectedCustomer && (
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+                                <span className="font-semibold">⚠️ Data tamu wajib diisi</span>
+                                <span className="block mt-0.5 text-amber-600">Pilih atau tambahkan tamu dari dropdown pelanggan di atas</span>
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-2">
                             <div>
-                                <label className={labelClass}>No. Kamar</label>
+                                <label className={labelClass}>No. Kamar / Unit</label>
                                 <input
                                     type="text"
                                     value={k.roomNumber}
-                                    onChange={(e) =>
-                                        k.setRoomNumber(e.target.value)
-                                    }
-                                    placeholder="Contoh: 101 / Deluxe"
+                                    onChange={(e) => k.setRoomNumber(e.target.value)}
+                                    placeholder="Contoh: 101 / Villa A"
                                     className={inputClass}
                                 />
                             </div>
                             <div>
-                                <label className={labelClass}>
-                                    Jumlah Tamu
-                                </label>
+                                <label className={labelClass}>Jumlah Tamu</label>
                                 <input
                                     type="number"
                                     min="1"
                                     value={k.guestCount}
-                                    onChange={(e) =>
-                                        k.setGuestCount(Number(e.target.value))
-                                    }
+                                    onChange={(e) => k.setGuestCount(Number(e.target.value))}
                                     className={inputClass}
                                 />
                             </div>
                         </div>
+                        {/* Durasi menginap */}
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <label className={labelClass}>Durasi</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={k.rentalDuration}
+                                    onChange={(e) => k.setRentalDuration(Number(e.target.value))}
+                                    className={inputClass}
+                                />
+                            </div>
+                            <div>
+                                <label className={labelClass}>Satuan</label>
+                                <select
+                                    value={k.rentalUnit}
+                                    onChange={(e) => k.setRentalUnit(e.target.value)}
+                                    className={inputClass}
+                                >
+                                    <option value="per_day">Per Malam</option>
+                                    <option value="per_hour">Per Jam</option>
+                                    <option value="per_week">Per Minggu</option>
+                                </select>
+                            </div>
+                        </div>
+                        {/* Estimasi check-out */}
+                        {k.rentalDuration > 0 && (
+                            <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5">
+                                <p className="text-[10px] font-semibold text-indigo-500 mb-1">🏨 Estimasi Check-out</p>
+                                <p className="text-sm font-bold text-indigo-700">
+                                    {(() => {
+                                        const now = new Date();
+                                        const ms = k.rentalUnit === 'per_hour'
+                                            ? k.rentalDuration * 3600000
+                                            : k.rentalUnit === 'per_week'
+                                            ? k.rentalDuration * 604800000
+                                            : k.rentalDuration * 86400000;
+                                        const checkOut = new Date(now.getTime() + ms);
+                                        return checkOut.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+                                    })()}
+                                </p>
+                                <p className="text-[10px] text-indigo-400 mt-0.5">
+                                    {k.rentalDuration} {k.rentalUnit === 'per_hour' ? 'jam' : k.rentalUnit === 'per_week' ? 'minggu' : 'malam'} dari sekarang
+                                </p>
+                            </div>
+                        )}
+                        <p className="text-[11px] text-slate-500">
+                            Hotel/villa: kamar, tamu, check-in/out otomatis tercatat.
+                        </p>
+                    </>
+                )}
+
+                {k.isParking && (
+                    <>
+                        {/* Plat Nomor */}
                         <div>
-                            <label className={labelClass}>Tipe Check-in</label>
-                            <select
-                                value={k.orderType}
-                                onChange={(e) =>
-                                    k.handleOrderTypeChange(e.target.value)
-                                }
-                                className={inputClass}
-                            >
-                                {k.orderOpts.map((option) => (
-                                    <option key={option.v} value={option.v}>
-                                        {option.l}
-                                    </option>
+                            <label className={labelClass}>🚗 Plat Nomor <span className="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                value={k.ticketEvent}
+                                onChange={(e) => k.setTicketEvent(e.target.value.toUpperCase())}
+                                placeholder="Contoh: B 1234 ABC"
+                                className={`${inputClass} font-mono tracking-wider uppercase`}
+                            />
+                        </div>
+                        {/* Jenis Kendaraan */}
+                        <div>
+                            <label className={labelClass}>Jenis Kendaraan</label>
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                    { v: 'motorcycle', l: '🏍️ Motor' },
+                                    { v: 'car',        l: '🚗 Mobil' },
+                                    { v: 'truck',      l: '🚛 Truk' },
+                                ].map((opt) => (
+                                    <button
+                                        key={opt.v}
+                                        type="button"
+                                        onClick={() => k.setTicketSlot(opt.v)}
+                                        className={`rounded-lg border py-2 text-xs font-medium transition ${
+                                            k.ticketSlot === opt.v || (!k.ticketSlot && opt.v === 'motorcycle')
+                                                ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                                                : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        {opt.l}
+                                    </button>
                                 ))}
-                            </select>
+                            </div>
+                        </div>
+                        {/* No. Tiket (opsional) */}
+                        <div>
+                            <label className={labelClass}>No. Tiket (opsional)</label>
+                            <input
+                                type="text"
+                                value={k.roomNumber}
+                                onChange={(e) => k.setRoomNumber(e.target.value)}
+                                placeholder="Auto-generate / scan barcode"
+                                className={inputClass}
+                            />
+                        </div>
+                        {/* Info waktu masuk */}
+                        <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
+                            <p className="text-[10px] font-medium text-slate-500">⏰ Waktu Masuk</p>
+                            <p className="text-sm font-bold text-slate-700">
+                                {new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">Dicatat otomatis saat transaksi diproses</p>
                         </div>
                         <p className="text-[11px] text-slate-500">
-                            Hospitality untuk hotel, villa, penginapan —
-                            check-in/out, deposit, dan tamu.
+                            Parkir: catat masuk, bayar saat keluar. Plat &amp; waktu masuk tersimpan otomatis.
+                        </p>
+                    </>
+                )}
+
+                {k.isSession && (
+                    <>
+                        {/* Unit / Room */}
+                        <div>
+                            <label className={labelClass}>🖥️ Unit / Room <span className="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                value={k.roomNumber}
+                                onChange={(e) => k.setRoomNumber(e.target.value)}
+                                placeholder="Contoh: PC-01, PS-03, Room-A"
+                                className={`${inputClass} font-mono`}
+                            />
+                        </div>
+                        {/* Jumlah Pengguna */}
+                        <div>
+                            <label className={labelClass}>👥 Jumlah Pengguna</label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={k.guestCount}
+                                onChange={(e) => k.setGuestCount(Number(e.target.value))}
+                                className={inputClass}
+                            />
+                        </div>
+                        {/* Info sesi */}
+                        <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold text-emerald-600 mb-1">⏱️ Sesi Dimulai</p>
+                            <p className="text-sm font-bold text-emerald-700">
+                                {new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                            </p>
+                            <p className="text-[10px] text-emerald-500 mt-0.5">Timer mulai saat transaksi diproses</p>
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                            Session: catat unit, pengguna, dan waktu mulai. Bayar di awal (prepaid) atau akhir (postpaid).
                         </p>
                     </>
                 )}

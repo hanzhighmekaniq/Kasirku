@@ -302,6 +302,14 @@ class SaleController extends Controller
                 (request()->user()->can("sale.create") || request()->user()->can("sale.void")),
             "canUpdateRentalStatus" => $sale->pos_mode === 'rental' &&
                 (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
+            "canCheckInTicket" => $sale->pos_mode === 'ticket' &&
+                (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
+            "canCheckOutHospitality" => $sale->pos_mode === 'hospitality' &&
+                (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
+            "canExitParking" => $sale->pos_mode === 'parking' &&
+                (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
+            "canEndSession" => $sale->pos_mode === 'session' &&
+                (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
         ]);
     }
 
@@ -506,6 +514,69 @@ class SaleController extends Controller
         $sale->update($update);
 
         return back()->with('success', 'Status sewa diperbarui.');
+    }
+
+    public function checkOutHospitality(Request $request, Sale $sale)
+    {
+        $storeId = session('current_store_id');
+        abort_if((int) $sale->store_id !== (int) $storeId, 404);
+        abort_unless(
+            $request->user()->can('sale.create') || $request->user()->can('sale.void'),
+            403
+        );
+        abort_unless($sale->pos_mode === 'hospitality', 422, 'Bukan transaksi hospitality.');
+
+        if ($sale->rental_status === 'returned') {
+            return back()->with('error', 'Tamu ini sudah check-out.');
+        }
+
+        $sale->update([
+            'rental_status'    => 'returned',
+            'actual_return_at' => now(),
+        ]);
+
+        return back()->with('success', 'Check-out berhasil dicatat.');
+    }
+
+    public function exitParking(Request $request, Sale $sale)
+    {
+        $storeId = session('current_store_id');
+        abort_if((int) $sale->store_id !== (int) $storeId, 404);
+        abort_unless(
+            $request->user()->can('sale.create') || $request->user()->can('sale.void'),
+            403
+        );
+        abort_unless($sale->pos_mode === 'parking', 422, 'Bukan transaksi parkir.');
+
+        if ($sale->exit_at) {
+            return back()->with('error', 'Kendaraan ini sudah tercatat keluar.');
+        }
+
+        $sale->update(['exit_at' => now()]);
+
+        return back()->with('success', 'Kendaraan berhasil dicatat keluar. ' . ($sale->plate_number ?? ''));
+    }
+
+    public function endSession(Request $request, Sale $sale)
+    {
+        $storeId = session('current_store_id');
+        abort_if((int) $sale->store_id !== (int) $storeId, 404);
+        abort_unless(
+            $request->user()->can('sale.create') || $request->user()->can('sale.void'),
+            403
+        );
+        abort_unless($sale->pos_mode === 'session', 422, 'Bukan transaksi session.');
+
+        if ($sale->session_status === 'ended') {
+            return back()->with('error', 'Sesi ini sudah berakhir.');
+        }
+
+        $sale->update([
+            'session_status'   => 'ended',
+            'session_ended_at' => now(),
+        ]);
+
+        return back()->with('success', 'Sesi ' . ($sale->unit_name ?? '') . ' berhasil diakhiri.');
     }
 
     /**

@@ -14,6 +14,10 @@ class BranchSeeder extends Seeder
         $store2 = Store::where("code", "STORE002")->firstOrFail();
         $store3 = Store::where("code", "STORE003")->firstOrFail();
         $store4 = Store::where("code", "STORE004")->firstOrFail();
+        $store5 = Store::where("code", "STORE005")->firstOrFail();
+        $store6 = Store::where("code", "STORE006")->firstOrFail();
+        $store7 = Store::where("code", "STORE007")->firstOrFail();
+        $store8 = Store::where("code", "STORE008")->firstOrFail();
 
         // Store 1 — Minimarket Sejahtera (Retail)
         Branch::firstOrCreate(
@@ -55,7 +59,7 @@ class BranchSeeder extends Seeder
             ],
         );
 
-        // Store 3 — Barbershop Rapi
+        // Store 3 — Barbershop Rapi (Service)
         Branch::firstOrCreate(
             ["store_id" => $store3->id, "code" => "BR005"],
             [
@@ -73,6 +77,50 @@ class BranchSeeder extends Seeder
                 "name" => "Sewa Alat Jaya - Pusat",
                 "phone" => "083198765432",
                 "address" => "Jl. Magelang No. 45, Sleman",
+                "is_active" => true,
+            ],
+        );
+
+        // Store 5 — Bioskop Nusantara (Ticket)
+        Branch::firstOrCreate(
+            ["store_id" => $store5->id, "code" => "BR007"],
+            [
+                "name" => "Bioskop Nusantara - Pusat",
+                "phone" => "081299887766",
+                "address" => "Jl. Pahlawan No. 5, Yogyakarta",
+                "is_active" => true,
+            ],
+        );
+
+        // Store 6 — Villa Sunrise (Hospitality)
+        Branch::firstOrCreate(
+            ["store_id" => $store6->id, "code" => "BR008"],
+            [
+                "name" => "Villa Sunrise - Pusat",
+                "phone" => "085600112233",
+                "address" => "Jl. Kaliurang Km 20, Sleman",
+                "is_active" => true,
+            ],
+        );
+
+        // Store 7 — Parkir Jayabaya (Parking)
+        Branch::firstOrCreate(
+            ["store_id" => $store7->id, "code" => "BR009"],
+            [
+                "name" => "Parkir Jayabaya - Pusat",
+                "phone" => "081355667788",
+                "address" => "Jl. Taman Siswa No. 10, Yogyakarta",
+                "is_active" => true,
+            ],
+        );
+
+        // Store 8 — GamerZone (Session)
+        Branch::firstOrCreate(
+            ["store_id" => $store8->id, "code" => "BR010"],
+            [
+                "name" => "GamerZone - Pusat",
+                "phone" => "081377889900",
+                "address" => "Jl. Gejayan No. 99, Sleman",
                 "is_active" => true,
             ],
         );

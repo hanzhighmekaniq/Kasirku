@@ -330,7 +330,7 @@ Developer masuk ke `/developer/stores/{id}` → Tab Paket → Pilih paket → Sa
 
 ---
 
-## 7. Seven Mode Kasir
+## 7. Eight Mode Kasir
 
 ### Bagaimana Mode Bekerja
 
@@ -338,24 +338,24 @@ Mode ditentukan oleh `stores.modules.pos_modes[]`. Sidebar dan fitur menyesuaika
 
 ### Tabel Fitur per Mode
 
-| Fitur | retail | fnb | service | laundry | rental | parking | session |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Produk & Kategori | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
-| Stok & Gudang | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Pembelian | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Retur | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Promo | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Modifier/Topping | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Resep Bahan Baku | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Meja Cafe | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Kitchen Display | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Waste/Pemborosan | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Antrian | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Komisi Karyawan | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Booking | ❌ | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ |
-| Membership | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| Deposit Pelanggan | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Laporan | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Fitur | retail | fnb | service | rental | ticket | hospitality | parking | session |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Produk & Kategori | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Stok & Gudang | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Pembelian | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Retur | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Promo | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Modifier/Topping | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Resep Bahan Baku | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Meja Cafe | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Kitchen Display | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Waste/Pemborosan | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Antrian | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Komisi Karyawan | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Booking | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Membership | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Deposit Pelanggan | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| Laporan | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ### Data di Tabel Sales
 
@@ -363,7 +363,7 @@ Semua transaksi disimpan di 1 tabel `sales` dengan kolom mode-specific yang null
 
 ```
 sales
-  ├── pos_mode          ← retail/fnb/service/laundry/rental/parking/session
+  ├── pos_mode          ← retail/fnb/service/rental/ticket/hospitality/parking/session
   ├── order_type        ← dine_in/takeaway/delivery (FnB)
   │
   ├── [FnB]
@@ -371,17 +371,12 @@ sales
   │   ├── kitchen_status
   │   └── delivery_address
   │
-  ├── [Service]
+  ├── [Service / Ticket]
   │   ├── employee_id
   │   ├── service_status
   │   └── service_started/finished_at
   │
-  ├── [Laundry]
-  │   ├── laundry_status
-  │   ├── weight_kg
-  │   └── estimated_done_at
-  │
-  ├── [Rental]
+  ├── [Rental / Hospitality]
   │   ├── rental_status
   │   ├── rent_start/end_at
   │   └── deposit_amount
@@ -541,23 +536,25 @@ if (needsTable && can('table.view')) {
 | Email | Password | Toko | Tipe |
 |---|---|---|---|
 | owner@gmail.com | password | Minimarket Sejahtera | Retail |
-| owner2@gmail.com | password | Warung Kopi Senja | FnB |
+| owner2@gmail.com | password | Warung Kopi Senja | F&B |
 | owner3@gmail.com | password | Barbershop Rapi | Service |
 | owner4@gmail.com | password | Sewa Alat Jaya | Rental |
-| owner5@gmail.com | password | Futsal Merdeka | Ticket |
+| owner5@gmail.com | password | Bioskop Nusantara | Ticket |
 | owner6@gmail.com | password | Villa Sunrise | Hospitality |
+| owner7@gmail.com | password | Parkir Jayabaya | Parking |
+| owner8@gmail.com | password | GamerZone | Session |
 
 ### Kasir
-| Email | Password | Toko | Cabang |
+| Email | Password | Toko | Tipe |
 |---|---|---|---|
-| rizki@gmail.com | password | Minimarket Sejahtera | Pusat |
-| sari@gmail.com | password | Minimarket Sejahtera | Babarsari |
-| kasir@gmail.com | password | Kopi Senja | Pusat |
-| dewi@gmail.com | password | Kopi Senja | UGM |
-| barber@gmail.com | password | Barbershop Rapi | Pusat |
-| sewa@gmail.com | password | Sewa Alat Jaya | Pusat |
-| futsal@gmail.com | password | Futsal Merdeka | Pusat |
-| villa@gmail.com | password | Villa Sunrise | Pusat |
+| rizki@gmail.com | password | Minimarket Sejahtera | Retail |
+| kasir@gmail.com | password | Kopi Senja | F&B |
+| barber@gmail.com | password | Barbershop Rapi | Service |
+| sewa@gmail.com | password | Sewa Alat Jaya | Rental |
+| bioskop@gmail.com | password | Bioskop Nusantara | Ticket |
+| villa@gmail.com | password | Villa Sunrise | Hospitality |
+| parkir@gmail.com | password | Parkir Jayabaya | Parking |
+| gamer@gmail.com | password | GamerZone | Session |
 
 ---
 

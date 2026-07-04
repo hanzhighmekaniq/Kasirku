@@ -304,6 +304,18 @@ Route::middleware(["auth", "store", "branch"])
                 SaleController::class,
                 "updateRentalStatus",
             ])->name("sales.updateRentalStatus");
+            Route::patch("/sales/{sale}/checkout", [
+                SaleController::class,
+                "checkOutHospitality",
+            ])->name("sales.checkOutHospitality");
+            Route::patch("/sales/{sale}/parking-exit", [
+                SaleController::class,
+                "exitParking",
+            ])->name("sales.exitParking");
+            Route::patch("/sales/{sale}/session-end", [
+                SaleController::class,
+                "endSession",
+            ])->name("sales.endSession");
         });
 
         // ─────────────────────────────────────────────────────────────────

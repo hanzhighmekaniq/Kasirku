@@ -268,12 +268,21 @@ class KasirController extends Controller
 
             case "hospitality":
                 if (!empty($validated["room_number"])) {
-                    $data["rental_unit_name"] = $validated["room_number"];
+                    $data["room_number"] = $validated["room_number"];
                 }
                 if (!empty($validated["guest_count"])) {
                     $data["guest_count"] = (int) $validated["guest_count"];
                 }
+                if (!empty($validated["rental_duration"])) {
+                    $data["rental_duration"] = (int) $validated["rental_duration"];
+                    $data["rental_unit"] = $validated["rental_unit"] ?? "per_day";
+                }
                 $data["rental_status"] = "active";
+                break;
+
+            case "parking":
+                // Parking data disimpan langsung ke kolom (plate_number, vehicle_type, entry_at)
+                // Extra_data tidak perlu parking_status
                 break;
         }
 
@@ -319,6 +328,8 @@ class KasirController extends Controller
             "ticket_slot" => "nullable|string|max:100",
             "room_number" => "nullable|string|max:50",
             "guest_count" => "nullable|integer|min:1",
+            // Session mode
+            // room_number & guest_count already declared above
             // Employee for service/ticket mode
             "employee_id" => "nullable|exists:employees,id",
         ]);
@@ -481,6 +492,62 @@ class KasirController extends Controller
                     'rental_status'  => 'active',
                     'service_status' => null, // bukan service
                 ]);
+            }
+
+            // Set check-in/check-out untuk mode hospitality
+            if ($store?->store_type === 'hospitality') {
+                $checkIn = $now;
+                // Default durasi 1 malam (per_day)
+                $nights = 1;
+                $rentalUnit = $validated['rental_unit'] ?? 'per_day';
+
+                if (!empty($validated['rental_duration'])) {
+                    $nights = (int) $validated['rental_duration'];
+                }
+
+                $checkOut = match($rentalUnit) {
+                    'per_hour' => $checkIn->copy()->addHours($nights),
+                    'per_week' => $checkIn->copy()->addWeeks($nights),
+                    default    => $checkIn->copy()->addDays($nights), // per_day / per malam
+                };
+
+                $sale->update([
+                    'rent_start_at' => $checkIn,
+                    'rent_end_at'   => $checkOut,
+                    'rental_status' => 'active',
+                ]);
+            }
+
+            // Set parking fields untuk mode parking
+            if ($store?->store_type === 'parking') {
+                $parkingUpdate = ['entry_at' => $now];
+
+                if (!empty($validated['ticket_event'])) {
+                    $parkingUpdate['plate_number'] = strtoupper($validated['ticket_event']);
+                }
+                if (!empty($validated['ticket_slot'])) {
+                    $parkingUpdate['vehicle_type'] = $validated['ticket_slot']; // motorcycle/car/truck
+                }
+                if (!empty($validated['room_number'])) {
+                    $parkingUpdate['parking_ticket_no'] = $validated['room_number'];
+                }
+
+                $sale->update($parkingUpdate);
+            }
+
+            // Set session fields untuk mode session
+            if ($store?->store_type === 'session') {
+                $sessionUpdate = [
+                    'session_status'     => 'running',
+                    'session_started_at' => $now,
+                    'guest_count'        => $validated['guest_count'] ?? 1,
+                ];
+
+                if (!empty($validated['room_number'])) {
+                    $sessionUpdate['unit_name'] = $validated['room_number'];
+                }
+
+                $sale->update($sessionUpdate);
             }
 
             // Set kitchen_status untuk mode FnB

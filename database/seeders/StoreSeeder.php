@@ -9,7 +9,7 @@ class StoreSeeder extends Seeder
 {
     public function run(): void
     {
-        // Store 1 — Minimarket Sejahtera (Retail)
+        // 1 — Minimarket Sejahtera (Retail)
         Store::firstOrCreate(
             ["code" => "STORE001"],
             [
@@ -41,13 +41,12 @@ class StoreSeeder extends Seeder
                 "email" => "info@sejahtera.com",
                 "address" => "Jl. Solo No. 15, Sleman",
                 "receipt_header" => "Minimarket Sejahtera",
-                "receipt_footer" =>
-                    "Belanja hemat, hidup sejahtera! 🛒 Sejahtera © 2026",
+                "receipt_footer" => "Belanja hemat, hidup sejahtera! 🛒",
                 "is_active" => true,
             ],
         );
 
-        // Store 2 — Warung Kopi Senja (FnB)
+        // 2 — Warung Kopi Senja (F&B)
         Store::firstOrCreate(
             ["code" => "STORE002"],
             [
@@ -84,13 +83,12 @@ class StoreSeeder extends Seeder
                 "email" => "info@kopisenja.com",
                 "address" => "Jl. Malioboro No. 88, Yogyakarta",
                 "receipt_header" => "Warung Kopi Senja",
-                "receipt_footer" =>
-                    "Terima kasih telah berkunjung! ☕ Kopi Senja © 2026",
+                "receipt_footer" => "Terima kasih telah berkunjung! ☕",
                 "is_active" => true,
             ],
         );
 
-        // Store 3 — Barbershop Rapi (Service)
+        // 3 — Barbershop Rapi (Service)
         Store::firstOrCreate(
             ["code" => "STORE003"],
             [
@@ -126,7 +124,7 @@ class StoreSeeder extends Seeder
             ],
         );
 
-        // Store 4 — Sewa Alat Jaya (Rental)
+        // 4 — Sewa Alat Jaya (Rental)
         Store::firstOrCreate(
             ["code" => "STORE004"],
             [
@@ -158,11 +156,11 @@ class StoreSeeder extends Seeder
             ],
         );
 
-        // Store 5 — Futsal Merdeka (Ticket / Booking slot)
+        // 5 — Bioskop Nusantara (Ticket)
         Store::firstOrCreate(
             ["code" => "STORE005"],
             [
-                "name" => "Futsal Merdeka",
+                "name" => "Bioskop Nusantara",
                 "store_type" => "ticket",
                 "modules" => [
                     "pos_modes" => ["ticket"],
@@ -182,15 +180,15 @@ class StoreSeeder extends Seeder
                 "tax_inclusive" => false,
                 "default_tax_rate" => 0,
                 "phone" => "081299887766",
-                "email" => "info@futsalmerdeka.com",
+                "email" => "info@bioskopnusantara.com",
                 "address" => "Jl. Pahlawan No. 5, Yogyakarta",
-                "receipt_header" => "Futsal Merdeka",
-                "receipt_footer" => "Selamat bermain! ⚽",
+                "receipt_header" => "Bioskop Nusantara",
+                "receipt_footer" => "Selamat menonton! 🎬",
                 "is_active" => true,
             ],
         );
 
-        // Store 6 — Villa Sunrise (Hospitality)
+        // 6 — Villa Sunrise (Hospitality)
         Store::firstOrCreate(
             ["code" => "STORE006"],
             [
@@ -218,7 +216,61 @@ class StoreSeeder extends Seeder
                 "email" => "info@villasunrise.com",
                 "address" => "Jl. Kaliurang Km 20, Sleman",
                 "receipt_header" => "Villa Sunrise",
-                "receipt_footer" => "Terima kasih telah menginap! 🏨",
+                "receipt_footer" => "Selamat berlibur! 🏨",
+                "is_active" => true,
+            ],
+        );
+
+        // 7 — Parkir Jayabaya (Parking)
+        Store::firstOrCreate(
+            ["code" => "STORE007"],
+            [
+                "name" => "Parkir Jayabaya",
+                "store_type" => "parking",
+                "modules" => [
+                    "pos_modes" => ["parking"],
+                    "features" => ["report", "payment_gateway"],
+                ],
+                "plan" => "basic",
+                "max_users" => 5,
+                "max_branches" => 3,
+                "currency" => "IDR",
+                "decimal_places" => 0,
+                "timezone" => "Asia/Jakarta",
+                "tax_inclusive" => false,
+                "default_tax_rate" => 0,
+                "phone" => "081355667788",
+                "email" => "info@parkirjayabaya.com",
+                "address" => "Jl. Taman Siswa No. 10, Yogyakarta",
+                "receipt_header" => "Parkir Jayabaya",
+                "receipt_footer" => "Parkir aman, nyaman! 🅿️",
+                "is_active" => true,
+            ],
+        );
+
+        // 8 — GamerZone (Session)
+        Store::firstOrCreate(
+            ["code" => "STORE008"],
+            [
+                "name" => "GamerZone",
+                "store_type" => "session",
+                "modules" => [
+                    "pos_modes" => ["session"],
+                    "features" => ["booking", "report", "payment_gateway"],
+                ],
+                "plan" => "basic",
+                "max_users" => 5,
+                "max_branches" => 3,
+                "currency" => "IDR",
+                "decimal_places" => 0,
+                "timezone" => "Asia/Jakarta",
+                "tax_inclusive" => false,
+                "default_tax_rate" => 0,
+                "phone" => "081377889900",
+                "email" => "info@gamerzone.id",
+                "address" => "Jl. Gejayan No. 99, Sleman",
+                "receipt_header" => "GamerZone",
+                "receipt_footer" => "Game on! 🎮",
                 "is_active" => true,
             ],
         );

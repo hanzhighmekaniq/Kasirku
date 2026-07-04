@@ -88,8 +88,10 @@ export default function useKasir({
     const isRental = activeMode === "rental";
     const isTicket = activeMode === "ticket";
     const isHospitality = activeMode === "hospitality";
+    const isParking = activeMode === "parking";
+    const isSession = activeMode === "session";
 
-    // backward compat (old sub-types now mapped to final 6 modes)
+    // backward compat
     const isCafe = isFnb;
     const isBooth = isFnb;
     const orderOpts = modeConfig.orderTypes;
@@ -461,7 +463,8 @@ export default function useKasir({
     /* ── click product ── */
     const handleProductClick = (product) => {
         const hasModifiers = (product.modifier_groups ?? []).length > 0;
-        const hasVariants = (product.variants ?? []).filter(v => v.is_active).length > 0;
+        const hasVariants =
+            (product.variants ?? []).filter((v) => v.is_active).length > 0;
 
         if (hasModifiers) {
             // Produk dengan modifier — buka ModifierModal (behaviour lama)
@@ -647,12 +650,31 @@ export default function useKasir({
         }
         // Customer wajib untuk service
         if (isService && !selectedCustomer) {
-            alert('Layanan service wajib memilih customer terlebih dahulu.\n\nTambahkan customer baru dari dropdown pelanggan di atas.');
+            alert(
+                "Layanan service wajib memilih customer terlebih dahulu.\n\nTambahkan customer baru dari dropdown pelanggan di atas.",
+            );
             return;
         }
         // Customer wajib untuk rental
         if (isRental && !selectedCustomer) {
-            alert('Sewa barang wajib memilih customer.\n\nPilih atau tambahkan customer dari dropdown di atas.');
+            alert(
+                "Sewa barang wajib memilih customer.\n\nPilih atau tambahkan customer dari dropdown di atas.",
+            );
+            return;
+        }
+        // Customer wajib untuk hospitality
+        if (isHospitality && !selectedCustomer) {
+            alert('Menginap wajib memilih customer/tamu.\n\nPilih atau tambahkan tamu dari dropdown di atas.');
+            return;
+        }
+        // Plat nomor wajib untuk parking
+        if (isParking && !ticketEvent.trim()) {
+            alert('Parkir wajib mengisi plat nomor kendaraan.');
+            return;
+        }
+        // Unit wajib untuk session
+        if (isSession && !roomNumber.trim()) {
+            alert('Session wajib mengisi nama unit/room (misal: PC-01, PS-03).');
             return;
         }
         setSubmitting(true);
@@ -714,10 +736,23 @@ export default function useKasir({
                 : {}),
             ...(isHospitality
                 ? {
-                      room_number: roomNumber || null,
-                      guest_count: Number(guestCount) || 1,
+                      room_number:      roomNumber || null,
+                      guest_count:      Number(guestCount) || 1,
+                      rental_duration:  rentalDuration || 1,
+                      rental_unit:      rentalUnit || 'per_day',
                   }
                 : {}),
+            ...(isParking
+                ? {
+                      ticket_event: ticketEvent || null,   // plat nomor
+                      ticket_slot:  ticketSlot || null,    // jenis kendaraan
+                      room_number:  roomNumber || null,    // no. tiket
+                  }
+                : {}),
+            ...(isSession ? {
+                room_number:  roomNumber || null,
+                guest_count:  Number(guestCount) || 1,
+            } : {}),
         };
 
         try {
@@ -834,18 +869,66 @@ export default function useKasir({
                         ? takeawayCustomerName || null
                         : null,
                 employeeName: selectedEmployee
-                    ? (employees.find(e => String(e.id) === String(selectedEmployee))?.name ?? null)
+                    ? (employees.find(
+                          (e) => String(e.id) === String(selectedEmployee),
+                      )?.name ?? null)
                     : null,
-                rentalInfo: isRental && rentalDuration > 0 ? {
-                    duration: rentalDuration,
-                    unit: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_day' ? 'hari' : 'minggu',
-                    returnDate: (() => {
+                rentalInfo:
+                    isRental && rentalDuration > 0
+                        ? {
+                              duration: rentalDuration,
+                              unit:
+                                  rentalUnit === "per_hour"
+                                      ? "jam"
+                                      : rentalUnit === "per_day"
+                                        ? "hari"
+                                        : "minggu",
+                              returnDate: (() => {
+                                  const now = new Date();
+                                  const ms =
+                                      rentalUnit === "per_hour"
+                                          ? rentalDuration * 3600000
+                                          : rentalUnit === "per_day"
+                                            ? rentalDuration * 86400000
+                                            : rentalDuration * 604800000;
+                                  return new Date(
+                                      now.getTime() + ms,
+                                  ).toLocaleString("id-ID", {
+                                      dateStyle: "medium",
+                                      timeStyle: "short",
+                                  });
+                              })(),
+                          }
+                        : null,
+                hospitalityInfo: isHospitality ? {
+                    roomNumber: roomNumber || null,
+                    guestCount: Number(guestCount) || 1,
+                    duration: rentalDuration || 1,
+                    unitLabel: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_week' ? 'minggu' : 'malam',
+                    checkoutDate: (() => {
                         const now = new Date();
-                        const ms = rentalUnit === 'per_hour' ? rentalDuration * 3600000
-                            : rentalUnit === 'per_day' ? rentalDuration * 86400000
-                            : rentalDuration * 604800000;
-                        return new Date(now.getTime() + ms).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                        const ms = rentalUnit === 'per_hour'
+                            ? (rentalDuration || 1) * 3600000
+                            : rentalUnit === 'per_week'
+                            ? (rentalDuration || 1) * 604800000
+                            : (rentalDuration || 1) * 86400000;
+                        const co = new Date(now.getTime() + ms);
+                        return co.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
                     })(),
+                } : null,
+                parkingInfo: isParking ? {
+                    plateNumber: ticketEvent || '-',
+                    vehicleLabel: ticketSlot === 'motorcycle' ? '🏍️ Motor' :
+                                  ticketSlot === 'car'        ? '🚗 Mobil' :
+                                  ticketSlot === 'truck'      ? '🚛 Truk' : '🏍️ Motor',
+                    ticketNo:    roomNumber || null,
+                    entryTime:   new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                } : null,
+                sessionInfo: isSession ? {
+                    unitName:   roomNumber || null,
+                    guestCount: guestCount || 1,
+                    startTime:  new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                    orderType:  orderType,
                 } : null,
             });
 
@@ -950,18 +1033,68 @@ export default function useKasir({
                                 ? takeawayCustomerName || null
                                 : null,
                         employeeName: selectedEmployee
-                            ? (employees.find(e => String(e.id) === String(selectedEmployee))?.name ?? null)
+                            ? (employees.find(
+                                  (e) =>
+                                      String(e.id) === String(selectedEmployee),
+                              )?.name ?? null)
                             : null,
-                        rentalInfo: isRental && rentalDuration > 0 ? {
-                            duration: rentalDuration,
-                            unit: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_day' ? 'hari' : 'minggu',
-                            returnDate: (() => {
+                        rentalInfo:
+                            isRental && rentalDuration > 0
+                                ? {
+                                      duration: rentalDuration,
+                                      unit:
+                                          rentalUnit === "per_hour"
+                                              ? "jam"
+                                              : rentalUnit === "per_day"
+                                                ? "hari"
+                                                : "minggu",
+                                      returnDate: (() => {
+                                          const now = new Date();
+                                          const ms =
+                                              rentalUnit === "per_hour"
+                                                  ? rentalDuration * 3600000
+                                                  : rentalUnit === "per_day"
+                                                    ? rentalDuration * 86400000
+                                                    : rentalDuration *
+                                                      604800000;
+                                          return new Date(
+                                              now.getTime() + ms,
+                                          ).toLocaleString("id-ID", {
+                                              dateStyle: "medium",
+                                              timeStyle: "short",
+                                          });
+                                      })(),
+                                  }
+                                : null,
+                        hospitalityInfo: isHospitality ? {
+                            roomNumber: roomNumber || null,
+                            guestCount: Number(guestCount) || 1,
+                            duration: rentalDuration || 1,
+                            unitLabel: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_week' ? 'minggu' : 'malam',
+                            checkoutDate: (() => {
                                 const now = new Date();
-                                const ms = rentalUnit === 'per_hour' ? rentalDuration * 3600000
-                                    : rentalUnit === 'per_day' ? rentalDuration * 86400000
-                                    : rentalDuration * 604800000;
-                                return new Date(now.getTime() + ms).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                                const ms = rentalUnit === 'per_hour'
+                                    ? (rentalDuration || 1) * 3600000
+                                    : rentalUnit === 'per_week'
+                                    ? (rentalDuration || 1) * 604800000
+                                    : (rentalDuration || 1) * 86400000;
+                                const co = new Date(now.getTime() + ms);
+                                return co.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
                             })(),
+                        } : null,
+                        parkingInfo: isParking ? {
+                            plateNumber: ticketEvent || '-',
+                            vehicleLabel: ticketSlot === 'motorcycle' ? '🏍️ Motor' :
+                                          ticketSlot === 'car'        ? '🚗 Mobil' :
+                                          ticketSlot === 'truck'      ? '🚛 Truk' : '🏍️ Motor',
+                            ticketNo:    roomNumber || null,
+                            entryTime:   new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                        } : null,
+                        sessionInfo: isSession ? {
+                            unitName:   roomNumber || null,
+                            guestCount: guestCount || 1,
+                            startTime:  new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                            orderType:  orderType,
                         } : null,
                         isOffline: true,
                     });
@@ -1066,18 +1199,70 @@ export default function useKasir({
                                       offlineCustomer?.name
                                     : null,
                             employeeName: selectedEmployee
-                                ? (employees.find(e => String(e.id) === String(selectedEmployee))?.name ?? null)
+                                ? (employees.find(
+                                      (e) =>
+                                          String(e.id) ===
+                                          String(selectedEmployee),
+                                  )?.name ?? null)
                                 : null,
-                            rentalInfo: isRental && rentalDuration > 0 ? {
-                                duration: rentalDuration,
-                                unit: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_day' ? 'hari' : 'minggu',
-                                returnDate: (() => {
+                            rentalInfo:
+                                isRental && rentalDuration > 0
+                                    ? {
+                                          duration: rentalDuration,
+                                          unit:
+                                              rentalUnit === "per_hour"
+                                                  ? "jam"
+                                                  : rentalUnit === "per_day"
+                                                    ? "hari"
+                                                    : "minggu",
+                                          returnDate: (() => {
+                                              const now = new Date();
+                                              const ms =
+                                                  rentalUnit === "per_hour"
+                                                      ? rentalDuration * 3600000
+                                                      : rentalUnit === "per_day"
+                                                        ? rentalDuration *
+                                                          86400000
+                                                        : rentalDuration *
+                                                          604800000;
+                                              return new Date(
+                                                  now.getTime() + ms,
+                                              ).toLocaleString("id-ID", {
+                                                  dateStyle: "medium",
+                                                  timeStyle: "short",
+                                              });
+                                          })(),
+                                      }
+                                    : null,
+                            hospitalityInfo: isHospitality ? {
+                                roomNumber: roomNumber || null,
+                                guestCount: Number(guestCount) || 1,
+                                duration: rentalDuration || 1,
+                                unitLabel: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_week' ? 'minggu' : 'malam',
+                                checkoutDate: (() => {
                                     const now = new Date();
-                                    const ms = rentalUnit === 'per_hour' ? rentalDuration * 3600000
-                                        : rentalUnit === 'per_day' ? rentalDuration * 86400000
-                                        : rentalDuration * 604800000;
-                                    return new Date(now.getTime() + ms).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                                    const ms = rentalUnit === 'per_hour'
+                                        ? (rentalDuration || 1) * 3600000
+                                        : rentalUnit === 'per_week'
+                                        ? (rentalDuration || 1) * 604800000
+                                        : (rentalDuration || 1) * 86400000;
+                                    const co = new Date(now.getTime() + ms);
+                                    return co.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
                                 })(),
+                            } : null,
+                            parkingInfo: isParking ? {
+                                plateNumber: ticketEvent || '-',
+                                vehicleLabel: ticketSlot === 'motorcycle' ? '🏍️ Motor' :
+                                              ticketSlot === 'car'        ? '🚗 Mobil' :
+                                              ticketSlot === 'truck'      ? '🚛 Truk' : '🏍️ Motor',
+                                ticketNo:    roomNumber || null,
+                                entryTime:   new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                            } : null,
+                            sessionInfo: isSession ? {
+                                unitName:   roomNumber || null,
+                                guestCount: guestCount || 1,
+                                startTime:  new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                                orderType:  orderType,
                             } : null,
                             isOffline: true,
                         });
@@ -1150,18 +1335,66 @@ export default function useKasir({
                     ? takeawayCustomerName || null
                     : null,
             employeeName: selectedEmployee
-                ? (employees.find(e => String(e.id) === String(selectedEmployee))?.name ?? null)
+                ? (employees.find(
+                      (e) => String(e.id) === String(selectedEmployee),
+                  )?.name ?? null)
                 : null,
-            rentalInfo: isRental && rentalDuration > 0 ? {
-                duration: rentalDuration,
-                unit: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_day' ? 'hari' : 'minggu',
-                returnDate: (() => {
+            rentalInfo:
+                isRental && rentalDuration > 0
+                    ? {
+                          duration: rentalDuration,
+                          unit:
+                              rentalUnit === "per_hour"
+                                  ? "jam"
+                                  : rentalUnit === "per_day"
+                                    ? "hari"
+                                    : "minggu",
+                          returnDate: (() => {
+                              const now = new Date();
+                              const ms =
+                                  rentalUnit === "per_hour"
+                                      ? rentalDuration * 3600000
+                                      : rentalUnit === "per_day"
+                                        ? rentalDuration * 86400000
+                                        : rentalDuration * 604800000;
+                              return new Date(
+                                  now.getTime() + ms,
+                              ).toLocaleString("id-ID", {
+                                  dateStyle: "medium",
+                                  timeStyle: "short",
+                              });
+                          })(),
+                      }
+                    : null,
+            hospitalityInfo: isHospitality ? {
+                roomNumber: roomNumber || null,
+                guestCount: Number(guestCount) || 1,
+                duration: rentalDuration || 1,
+                unitLabel: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_week' ? 'minggu' : 'malam',
+                checkoutDate: (() => {
                     const now = new Date();
-                    const ms = rentalUnit === 'per_hour' ? rentalDuration * 3600000
-                        : rentalUnit === 'per_day' ? rentalDuration * 86400000
-                        : rentalDuration * 604800000;
-                    return new Date(now.getTime() + ms).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                    const ms = rentalUnit === 'per_hour'
+                        ? (rentalDuration || 1) * 3600000
+                        : rentalUnit === 'per_week'
+                        ? (rentalDuration || 1) * 604800000
+                        : (rentalDuration || 1) * 86400000;
+                    const co = new Date(now.getTime() + ms);
+                    return co.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
                 })(),
+            } : null,
+            parkingInfo: isParking ? {
+                plateNumber: ticketEvent || '-',
+                vehicleLabel: ticketSlot === 'motorcycle' ? '🏍️ Motor' :
+                              ticketSlot === 'car'        ? '🚗 Mobil' :
+                              ticketSlot === 'truck'      ? '🚛 Truk' : '🏍️ Motor',
+                ticketNo:    roomNumber || null,
+                entryTime:   new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+            } : null,
+            sessionInfo: isSession ? {
+                unitName:   roomNumber || null,
+                guestCount: guestCount || 1,
+                startTime:  new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                orderType:  pgModalData?.orderType ?? orderType,
             } : null,
         });
 
@@ -1222,6 +1455,8 @@ export default function useKasir({
         isRental,
         isTicket,
         isHospitality,
+        isParking,
+        isSession,
         isCafe,
         isBooth,
         orderOpts,

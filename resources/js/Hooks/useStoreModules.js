@@ -50,18 +50,18 @@ export function useStoreModules() {
 
     const hasMode = (mode) => posModes.includes(mode);
 
-    // ── 6 mode strict ────────────────────────────────────────────────────────
+    // ── 8 mode ─────────────────────────────────────────────────────────────
     const isRetail = hasMode("retail");
     const isFnb = hasMode("fnb");
     const isService = hasMode("service");
     const isRental = hasMode("rental");
     const isTicket = hasMode("ticket");
     const isHospitality = hasMode("hospitality");
+    const isParking = hasMode("parking");
+    const isSession = hasMode("session");
 
-    // Backward-compat aliases — lama di-merge ke mode 6
-    const isLaundry = isService; // laundry → service
-    const isSession = isRental; // session (warnet/ps) → rental
-    const isParking = isTicket; // parking → ticket
+    // Backward-compat aliases
+    const isLaundry = isService;
 
     // Grouped helpers
     const needsStock = (isRetail || isFnb || isRental) && hasFeature("stock");

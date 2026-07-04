@@ -41,36 +41,39 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            // ── Core: wajib ─────────────────────────────────────────
             StoreTypeSeeder::class,
             PlanSeeder::class,
             FeatureSeeder::class,
             StoreSeeder::class,
             BranchSeeder::class,
-            RolePermissionSeeder::class, // setelah store — roles dibuat per store
+            RolePermissionSeeder::class,
             UserSeeder::class,
-            EmployeeSeeder::class,
-            CategorySeeder::class,
-            SupplierSeeder::class,
-            CustomerSeeder::class,
             PaymentMethodSeeder::class,
-            CafeTableSeeder::class,
             ExpenseCategorySeeder::class,
-            ProductModifierSeeder::class,
-            ProductSeeder::class,
-            ProductBatchSeeder::class,
-            ProductStockSeeder::class,
-            ProductRecipeSeeder::class,
-            PromotionSeeder::class,
-            CashierShiftSeeder::class,
-            SaleSeeder::class,
-            PurchaseSeeder::class,
-            ExpenseSeeder::class,
-            StockMovementSeeder::class,
-            WasteSeeder::class,
-            BranchDemoSeeder::class,
-            DemoDataSeeder::class,
-            MembershipSeeder::class,
-            ServiceSaleSeeder::class,
+
+            // ── Demo data: bertahap per toko (uncomment sesuai kebutuhan) ──
+            // EmployeeSeeder::class,    // perlu update untuk 8 store
+            // CategorySeeder::class,    // perlu update untuk 8 store
+            // SupplierSeeder::class,    // perlu update untuk 8 store
+            // CustomerSeeder::class,    // perlu update untuk 8 store
+            // CafeTableSeeder::class,   // perlu update
+            // ProductSeeder::class,     // perlu update untuk 8 store
+            // PromotionSeeder::class,   // perlu update untuk 8 store
+            // ProductBatchSeeder::class,
+            // ProductStockSeeder::class,
+            // ProductRecipeSeeder::class,
+            // ProductModifierSeeder::class,
+            // CashierShiftSeeder::class,
+            // SaleSeeder::class,
+            // PurchaseSeeder::class,
+            // ExpenseSeeder::class,
+            // StockMovementSeeder::class,
+            // WasteSeeder::class,
+            // MembershipSeeder::class,
+            // ServiceSaleSeeder::class,
+            // BranchDemoSeeder::class,
+            // DemoDataSeeder::class,
         ]);
     }
 }

@@ -79,6 +79,61 @@ export default function ReceiptModal({
                     </p>
                 </>
             )}
+            {receipt.hospitalityInfo && (
+                <>
+                    <div className="my-2 border-t border-dashed border-slate-200" />
+                    <p className="text-center font-bold text-slate-800">🏨 INFO MENGINAP</p>
+                    {receipt.hospitalityInfo.roomNumber && (
+                        <p className="text-center text-slate-600">Kamar: {receipt.hospitalityInfo.roomNumber}</p>
+                    )}
+                    <p className="text-center text-slate-500">
+                        {receipt.hospitalityInfo.duration} {receipt.hospitalityInfo.unitLabel}
+                    </p>
+                    <p className="text-center text-slate-500">
+                        Check-out: {receipt.hospitalityInfo.checkoutDate}
+                    </p>
+                    {receipt.hospitalityInfo.guestCount > 1 && (
+                        <p className="text-center text-slate-400">{receipt.hospitalityInfo.guestCount} tamu</p>
+                    )}
+                </>
+            )}
+            {receipt.parkingInfo && (
+                <>
+                    <div className="my-2 border-t border-dashed border-slate-200" />
+                    <p className="text-center font-bold text-slate-800">🅿️ TIKET PARKIR</p>
+                    <p className="text-center font-mono text-2xl font-bold tracking-widest text-indigo-700">
+                        {receipt.parkingInfo.plateNumber}
+                    </p>
+                    <p className="text-center text-slate-600">
+                        {receipt.parkingInfo.vehicleLabel}
+                    </p>
+                    <p className="text-center text-slate-500 text-xs">
+                        Masuk: {receipt.parkingInfo.entryTime}
+                    </p>
+                    {receipt.parkingInfo.ticketNo && (
+                        <p className="text-center text-slate-400 text-xs">Tiket: {receipt.parkingInfo.ticketNo}</p>
+                    )}
+                    <p className="text-center text-[10px] text-slate-400 mt-1">
+                        Simpan tiket ini untuk keluar
+                    </p>
+                </>
+            )}
+            {receipt.sessionInfo && (
+                <>
+                    <div className="my-2 border-t border-dashed border-slate-200" />
+                    <p className="text-center font-bold text-slate-800">🎮 INFO SESI</p>
+                    {receipt.sessionInfo.unitName && (
+                        <p className="text-center font-mono text-xl font-bold text-indigo-700">{receipt.sessionInfo.unitName}</p>
+                    )}
+                    <p className="text-center text-slate-500 text-xs">Mulai: {receipt.sessionInfo.startTime}</p>
+                    {receipt.sessionInfo.guestCount > 1 && (
+                        <p className="text-center text-slate-400 text-xs">{receipt.sessionInfo.guestCount} pengguna</p>
+                    )}
+                    <p className="text-center text-[10px] text-slate-400 mt-1">
+                        {receipt.sessionInfo.orderType === 'prepaid' ? 'Prepaid — bayar di awal' : 'Postpaid — bayar saat selesai'}
+                    </p>
+                </>
+            )}
             {receipt.deliveryAddress && (
                 <>
                     {receipt.deliveryCustomerName && (
