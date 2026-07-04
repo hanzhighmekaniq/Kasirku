@@ -341,6 +341,7 @@ function EmployeeList({ items, onDelete }) {
                             <th className="px-6 py-3.5">Cabang</th>
                             <th className="px-6 py-3.5">Kontak</th>
                             <th className="px-6 py-3.5">Jabatan</th>
+                            <th className="px-6 py-3.5 text-center">Komisi</th>
                             <th className="px-6 py-3.5 text-center">Role</th>
                             <th className="px-6 py-3.5 text-center">Status</th>
                             <th className="px-6 py-3.5 text-right">Aksi</th>
@@ -380,6 +381,19 @@ function EmployeeList({ items, onDelete }) {
                                 </td>
                                 <td className="px-6 py-4 text-slate-600">
                                     {emp.position || "-"}
+                                </td>
+                                <td className="px-6 py-4 text-center">
+                                    {emp.commission_type === "none" || !emp.commission_type ? (
+                                        <span className="text-xs text-slate-400">-</span>
+                                    ) : emp.commission_type === "percent" ? (
+                                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                                            {emp.commission_value}%
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                                            Rp {Number(emp.commission_value).toLocaleString("id-ID")}
+                                        </span>
+                                    )}
                                 </td>
                                 <td className="px-6 py-4 text-center">
                                     <RoleBadge role={emp.user_roles?.[0]} />
@@ -426,6 +440,13 @@ function EmployeeList({ items, onDelete }) {
                                 {emp.position && (
                                     <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
                                         {emp.position}
+                                    </span>
+                                )}
+                                {emp.commission_type && emp.commission_type !== "none" && (
+                                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                                        {emp.commission_type === "percent"
+                                            ? `Komisi ${emp.commission_value}%`
+                                            : `Komisi Rp ${Number(emp.commission_value).toLocaleString("id-ID")}`}
                                     </span>
                                 )}
                             </div>

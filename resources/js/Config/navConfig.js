@@ -30,13 +30,10 @@ export function buildNavGroups(modules) {
         needsReport,
         isFnb,
         isService,
-        isLaundry,
         isRental,
-        isParking,
-        isSession,
-        isRetail,
         isTicket,
         isHospitality,
+        isRetail,
     } = modules;
 
     const groups = [];
@@ -82,7 +79,7 @@ export function buildNavGroups(modules) {
         opsItems.push({
             key: "kitchen",
             name: "Kitchen Display",
-            href: "#",
+            href: r("admin.kitchen.index"),
             icon: "kitchen",
             current: "admin.kitchen.*",
             badge: "FnB",
@@ -187,13 +184,11 @@ export function buildNavGroups(modules) {
     }
     if (needsCommission && can("commission.view")) {
         masterItems.push({
-            key: "commissions",
-            name: "Komisi",
-            href: "#",
+            key: "employee-commissions",
+            name: "Komisi Karyawan",
+            href: r("admin.employee-commissions.index"),
             icon: "commission",
-            current: "admin.commissions.*",
-            badge: "Service",
-            badgeColor: "violet",
+            current: "admin.employee-commissions.*",
         });
     }
 

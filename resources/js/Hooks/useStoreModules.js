@@ -58,10 +58,10 @@ export function useStoreModules() {
     const isTicket = hasMode("ticket");
     const isHospitality = hasMode("hospitality");
 
-    // Backward-compat aliases — lama di-merge ke mode baru
+    // Backward-compat aliases — lama di-merge ke mode 6
     const isLaundry = isService; // laundry → service
     const isSession = isRental; // session (warnet/ps) → rental
-    const isParking = false; // parking belum diimplementasi
+    const isParking = isTicket; // parking → ticket
 
     // Grouped helpers
     const needsStock = (isRetail || isFnb || isRental) && hasFeature("stock");

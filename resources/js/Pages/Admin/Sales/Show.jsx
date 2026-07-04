@@ -3,7 +3,7 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import axios from "axios";
 import { useState } from "react";
 
-export default function Show({ sale, paymentMethods, pgConfigs }) {
+export default function Show({ sale, paymentMethods, pgConfigs, canUpdateServiceStatus, canUpdateRentalStatus }) {
     const { flash } = usePage().props;
     const [confirmingStatus, setConfirmingStatus] = useState(null);
     const [processing, setProcessing] = useState(false);
@@ -106,6 +106,27 @@ export default function Show({ sale, paymentMethods, pgConfigs }) {
                     setConfirmingStatus(null);
                 },
             },
+        );
+    };
+
+    const handleServiceStatus = (status) => {
+        setProcessing(true);
+        router.patch(
+            route("admin.sales.updateServiceStatus", sale.id),
+            { service_status: status },
+            {
+                preserveScroll: true,
+                onFinish: () => setProcessing(false),
+            },
+        );
+    };
+
+    const handleRentalStatus = (status) => {
+        setProcessing(true);
+        router.patch(
+            route("admin.sales.updateRentalStatus", sale.id),
+            { rental_status: status },
+            { preserveScroll: true, onFinish: () => setProcessing(false) }
         );
     };
 
@@ -327,6 +348,181 @@ export default function Show({ sale, paymentMethods, pgConfigs }) {
                             </div>
                         </div>
                     </div>
+
+                    {/* Service Status — hanya untuk pos_mode service/laundry */}
+                    {(sale.pos_mode === 'service' || sale.pos_mode === 'laundry') && (
+                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3">
+                                <h3 className="text-sm font-semibold text-slate-800">Status Pengerjaan</h3>
+                                <p className="text-xs text-slate-500 mt-0.5">Tap untuk update status layanan</p>
+                            </div>
+                            <div className="p-5">
+                                {/* Step indicator */}
+                                <div className="flex items-center gap-0">
+                                    {[
+                                        { key: 'waiting',     label: 'Menunggu',   icon: '⏳', color: 'amber' },
+                                        { key: 'in_progress', label: 'Dikerjakan', icon: '✂️', color: 'blue' },
+                                        { key: 'done',        label: 'Selesai',    icon: '✅', color: 'emerald' },
+                                    ].map((step, idx) => {
+                                        const steps = ['waiting', 'in_progress', 'done'];
+                                        const currentIdx = steps.indexOf(sale.service_status ?? 'waiting');
+                                        const stepIdx = steps.indexOf(step.key);
+                                        const isActive = sale.service_status === step.key;
+                                        const isDone = stepIdx < currentIdx;
+                                        const isNext = stepIdx === currentIdx + 1;
+
+                                        const colorMap = {
+                                            amber:   { active: 'bg-amber-500 text-white border-amber-500',     done: 'bg-amber-100 text-amber-600 border-amber-200',     next: 'border-slate-200 text-slate-400 hover:border-amber-300 hover:bg-amber-50' },
+                                            blue:    { active: 'bg-blue-500 text-white border-blue-500',       done: 'bg-blue-100 text-blue-600 border-blue-200',         next: 'border-slate-200 text-slate-400 hover:border-blue-300 hover:bg-blue-50' },
+                                            emerald: { active: 'bg-emerald-500 text-white border-emerald-500', done: 'bg-emerald-100 text-emerald-600 border-emerald-200', next: 'border-slate-200 text-slate-400 hover:border-emerald-300 hover:bg-emerald-50' },
+                                        };
+                                        const cls = colorMap[step.color];
+
+                                        return (
+                                            <div key={step.key} className="flex flex-1 items-center">
+                                                <button
+                                                    onClick={() => isNext && canUpdateServiceStatus && handleServiceStatus(step.key)}
+                                                    disabled={!isNext || !canUpdateServiceStatus || processing}
+                                                    className={`flex flex-1 flex-col items-center gap-1.5 rounded-2xl border-2 px-3 py-4 text-center transition ${
+                                                        isActive ? cls.active :
+                                                        isDone   ? cls.done :
+                                                        isNext && canUpdateServiceStatus ? cls.next :
+                                                        'border-slate-100 text-slate-300 cursor-default'
+                                                    }`}
+                                                >
+                                                    <span className="text-2xl">{step.icon}</span>
+                                                    <span className="text-xs font-semibold">{step.label}</span>
+                                                    {isActive && (
+                                                        <span className="rounded-full bg-white/30 px-2 py-0.5 text-[10px] font-bold">
+                                                            Saat ini
+                                                        </span>
+                                                    )}
+                                                    {isDone && (
+                                                        <span className="text-[10px]">✓ Selesai</span>
+                                                    )}
+                                                    {isNext && canUpdateServiceStatus && (
+                                                        <span className="text-[10px]">Tap untuk update →</span>
+                                                    )}
+                                                </button>
+                                                {idx < 2 && (
+                                                    <div className={`mx-1 h-0.5 w-4 shrink-0 ${stepIdx < currentIdx ? 'bg-emerald-300' : 'bg-slate-200'}`} />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {/* Waktu pengerjaan */}
+                                {sale.service_started_at && (
+                                    <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2">
+                                            <p className="text-slate-400 mb-0.5">Mulai dikerjakan</p>
+                                            <p className="font-semibold text-slate-700">
+                                                {new Date(sale.service_started_at).toLocaleString('id-ID', { timeStyle: 'short', dateStyle: 'short' })}
+                                            </p>
+                                        </div>
+                                        {sale.service_finished_at && (
+                                            <div className="rounded-xl bg-emerald-50 px-3 py-2">
+                                                <p className="text-emerald-500 mb-0.5">Selesai</p>
+                                                <p className="font-semibold text-emerald-700">
+                                                    {new Date(sale.service_finished_at).toLocaleString('id-ID', { timeStyle: 'short', dateStyle: 'short' })}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Rental Status — hanya untuk pos_mode rental */}
+                    {sale.pos_mode === 'rental' && (
+                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3">
+                                <h3 className="text-sm font-semibold text-slate-800">Status Sewa</h3>
+                            </div>
+                            <div className="p-5 space-y-4">
+                                {/* Status badge */}
+                                <div className="flex items-center gap-3">
+                                    <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold ${
+                                        sale.rental_status === 'returned'  ? 'bg-emerald-100 text-emerald-700' :
+                                        sale.rental_status === 'overdue'   ? 'bg-red-100 text-red-700' :
+                                        sale.rental_status === 'cancelled' ? 'bg-slate-100 text-slate-500' :
+                                        'bg-blue-100 text-blue-700'
+                                    }`}>
+                                        {sale.rental_status === 'active'    && '🔑 Sedang Disewa'}
+                                        {sale.rental_status === 'returned'  && '✅ Sudah Dikembalikan'}
+                                        {sale.rental_status === 'overdue'   && '⚠️ Terlambat Kembali'}
+                                        {sale.rental_status === 'cancelled' && '❌ Dibatalkan'}
+                                        {!sale.rental_status               && '🔑 Sedang Disewa'}
+                                    </span>
+                                </div>
+
+                                {/* Info sewa */}
+                                <div className="grid grid-cols-2 gap-3 text-xs">
+                                    {sale.rent_start_at && (
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                                            <p className="text-slate-400 mb-0.5">Mulai sewa</p>
+                                            <p className="font-semibold text-slate-700">
+                                                {new Date(sale.rent_start_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {sale.rent_end_at && (
+                                        <div className={`rounded-xl px-3 py-2.5 ${
+                                            sale.rental_status === 'active' && new Date(sale.rent_end_at) < new Date()
+                                                ? 'bg-red-50' : 'bg-slate-50'
+                                        }`}>
+                                            <p className="text-slate-400 mb-0.5">Estimasi kembali</p>
+                                            <p className={`font-semibold ${
+                                                sale.rental_status === 'active' && new Date(sale.rent_end_at) < new Date()
+                                                    ? 'text-red-600' : 'text-slate-700'
+                                            }`}>
+                                                {new Date(sale.rent_end_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                                {sale.rental_status === 'active' && new Date(sale.rent_end_at) < new Date() && ' ⚠️ Terlambat!'}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {sale.actual_return_at && (
+                                        <div className="rounded-xl bg-emerald-50 px-3 py-2.5">
+                                            <p className="text-emerald-500 mb-0.5">Dikembalikan</p>
+                                            <p className="font-semibold text-emerald-700">
+                                                {new Date(sale.actual_return_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Action buttons */}
+                                {canUpdateRentalStatus && (sale.rental_status === 'active' || !sale.rental_status) && (
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleRentalStatus('returned')}
+                                            disabled={processing}
+                                            className="flex-1 rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50 transition"
+                                        >
+                                            {processing ? '...' : '✅ Tandai Sudah Dikembalikan'}
+                                        </button>
+                                        <button
+                                            onClick={() => handleRentalStatus('overdue')}
+                                            disabled={processing}
+                                            className="rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50 disabled:opacity-50 transition"
+                                        >
+                                            ⚠️ Terlambat
+                                        </button>
+                                    </div>
+                                )}
+                                {canUpdateRentalStatus && sale.rental_status === 'overdue' && (
+                                    <button
+                                        onClick={() => handleRentalStatus('returned')}
+                                        disabled={processing}
+                                        className="w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50 transition"
+                                    >
+                                        {processing ? '...' : '✅ Sudah Dikembalikan (Terlambat)'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Items */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

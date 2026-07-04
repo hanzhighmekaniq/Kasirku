@@ -41,7 +41,7 @@ class RolePermissionSeeder extends Seeder
             // Laporan
             'report.sales','report.purchase','report.stock','report.expense','report.shift','report.commission',
             // Shift
-            'shift.open','shift.close','shift.view',
+            'shift.open','shift.close','shift.view','shift.manage',
             // Pengeluaran
             'expense.view','expense.create','expense.edit','expense.delete',
             // Promosi

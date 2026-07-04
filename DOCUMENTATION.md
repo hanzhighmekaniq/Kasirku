@@ -540,20 +540,24 @@ if (needsTable && can('table.view')) {
 ### Owner
 | Email | Password | Toko | Tipe |
 |---|---|---|---|
-| owner@gmail.com | password | Warung Kopi Senja | FnB |
-| owner2@gmail.com | password | Minimarket Sejahtera | Retail |
+| owner@gmail.com | password | Minimarket Sejahtera | Retail |
+| owner2@gmail.com | password | Warung Kopi Senja | FnB |
 | owner3@gmail.com | password | Barbershop Rapi | Service |
-| owner4@gmail.com | password | Laundry Bersih | Laundry |
+| owner4@gmail.com | password | Sewa Alat Jaya | Rental |
+| owner5@gmail.com | password | Futsal Merdeka | Ticket |
+| owner6@gmail.com | password | Villa Sunrise | Hospitality |
 
 ### Kasir
 | Email | Password | Toko | Cabang |
 |---|---|---|---|
+| rizki@gmail.com | password | Minimarket Sejahtera | Pusat |
+| sari@gmail.com | password | Minimarket Sejahtera | Babarsari |
 | kasir@gmail.com | password | Kopi Senja | Pusat |
 | dewi@gmail.com | password | Kopi Senja | UGM |
-| rizki@gmail.com | password | Minimarket | Pusat |
-| sari@gmail.com | password | Minimarket | Babarsari |
-| barber@gmail.com | password | Barbershop | Pusat |
-| laundry@gmail.com | password | Laundry | Pusat |
+| barber@gmail.com | password | Barbershop Rapi | Pusat |
+| sewa@gmail.com | password | Sewa Alat Jaya | Pusat |
+| futsal@gmail.com | password | Futsal Merdeka | Pusat |
+| villa@gmail.com | password | Villa Sunrise | Pusat |
 
 ---
 

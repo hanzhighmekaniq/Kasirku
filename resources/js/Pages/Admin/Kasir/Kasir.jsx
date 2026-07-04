@@ -8,11 +8,13 @@ import BarcodeScanner from "@/Components/BarcodeScanner";
 import useKasir from "./useKasir";
 import IconBtn from "./components/IconBtn";
 import ModifierModal from "./components/ModifierModal";
+import VariantModal from "./components/VariantModal";
 import PaymentModal from "./components/PaymentModal";
 import ReceiptModal from "./components/ReceiptModal";
 import HistoryPanel from "./components/HistoryPanel";
 import ProductCard from "./components/ProductCard";
 import CartRow from "./components/CartRow";
+import ModeSpecificPanel from "./components/ModeSpecificPanel";
 
 export default function Kasir(props) {
     const k = useKasir(props);
@@ -25,6 +27,7 @@ export default function Kasir(props) {
         storeName,
         receiptFooter,
         activeShift,
+        employees = [],
     } = props;
 
     return (
@@ -62,10 +65,8 @@ export default function Kasir(props) {
                             </svg>
                             Riwayat
                         </button>
-                        <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium capitalize text-slate-500 sm:inline">
-                            {storeType
-                                .replace(/_/g, " ")
-                                .replace(/\b\w/g, (c) => c.toUpperCase())}
+                        <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500 sm:inline">
+                            {k.modeConfig.icon} {k.modeConfig.label}
                         </span>
                     </div>
                 </div>
@@ -1072,171 +1073,7 @@ export default function Kasir(props) {
                         </div>
                     )}
 
-                    {/* Service: Laundry weight */}
-                    {k.isService && (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="border-b border-slate-100 bg-violet-50/60 px-4 py-2.5">
-                                <h3 className="text-xs font-semibold text-violet-800">
-                                    Detail Layanan
-                                </h3>
-                            </div>
-                            <div className="p-3">
-                                <label className="mb-1 block text-xs font-medium text-slate-600">
-                                    Berat (kg)
-                                </label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.1"
-                                    value={k.serviceWeight}
-                                    onChange={(e) =>
-                                        k.setServiceWeight(e.target.value)
-                                    }
-                                    placeholder="0"
-                                    className="block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Rental: Duration */}
-                    {k.isRental && (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="border-b border-slate-100 bg-cyan-50/60 px-4 py-2.5">
-                                <h3 className="text-xs font-semibold text-cyan-800">
-                                    Detail Sewa
-                                </h3>
-                            </div>
-                            <div className="p-3">
-                                <div className="flex gap-2">
-                                    <div className="flex-1">
-                                        <label className="mb-1 block text-xs font-medium text-slate-600">
-                                            Durasi
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={k.rentalDuration}
-                                            onChange={(e) =>
-                                                k.setRentalDuration(
-                                                    Number(e.target.value),
-                                                )
-                                            }
-                                            className="block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-                                        />
-                                    </div>
-                                    <div className="w-28">
-                                        <label className="mb-1 block text-xs font-medium text-slate-600">
-                                            Satuan
-                                        </label>
-                                        <select
-                                            value={k.rentalUnit}
-                                            onChange={(e) =>
-                                                k.setRentalUnit(e.target.value)
-                                            }
-                                            className="block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-                                        >
-                                            <option value="per_hour">
-                                                Per Jam
-                                            </option>
-                                            <option value="per_day">
-                                                Per Hari
-                                            </option>
-                                            <option value="per_week">
-                                                Per Minggu
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Ticket: Event + Slot */}
-                    {k.isTicket && (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="border-b border-slate-100 bg-rose-50/60 px-4 py-2.5">
-                                <h3 className="text-xs font-semibold text-rose-800">
-                                    Detail Tiket
-                                </h3>
-                            </div>
-                            <div className="p-3 space-y-2">
-                                <div>
-                                    <label className="mb-1 block text-xs font-medium text-slate-600">
-                                        Nama Event / Acara
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={k.ticketEvent}
-                                        onChange={(e) =>
-                                            k.setTicketEvent(e.target.value)
-                                        }
-                                        placeholder="Contoh: Avengers, Futsal Lap. A"
-                                        className="block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-xs font-medium text-slate-600">
-                                        Slot / Jadwal
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={k.ticketSlot}
-                                        onChange={(e) =>
-                                            k.setTicketSlot(e.target.value)
-                                        }
-                                        placeholder="Contoh: 14:00 - 15:00"
-                                        className="block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Hospitality: Room */}
-                    {k.isHospitality && (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="border-b border-slate-100 bg-amber-50/60 px-4 py-2.5">
-                                <h3 className="text-xs font-semibold text-amber-800">
-                                    Detail Kamar
-                                </h3>
-                            </div>
-                            <div className="p-3">
-                                <div className="flex gap-2">
-                                    <div className="flex-1">
-                                        <label className="mb-1 block text-xs font-medium text-slate-600">
-                                            No. Kamar
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={k.roomNumber}
-                                            onChange={(e) =>
-                                                k.setRoomNumber(e.target.value)
-                                            }
-                                            placeholder="Contoh: 101, Deluxe A"
-                                            className="block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                                        />
-                                    </div>
-                                    <div className="w-24">
-                                        <label className="mb-1 block text-xs font-medium text-slate-600">
-                                            Tamu
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={k.guestCount}
-                                            onChange={(e) =>
-                                                k.setGuestCount(
-                                                    Number(e.target.value),
-                                                )
-                                            }
-                                            className="block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    <ModeSpecificPanel k={k} />
 
                     {/* Cart items */}
                     <div className="flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col">
@@ -1507,6 +1344,20 @@ export default function Kasir(props) {
                         k.setModifierTarget(null);
                     }}
                     onClose={() => k.setModifierTarget(null)}
+                />
+            )}
+            {k.variantTarget && (
+                <VariantModal
+                    product={k.variantTarget}
+                    onConfirm={(variant, qty, note) => {
+                        // addToCart dengan key yang sama akan auto-increment qty,
+                        // jadi loop sebanyak qty untuk mendapatkan jumlah yang benar
+                        for (let i = 0; i < qty; i++) {
+                            k.addToCart(k.variantTarget, variant, [], note);
+                        }
+                        k.setVariantTarget(null);
+                    }}
+                    onClose={() => k.setVariantTarget(null)}
                 />
             )}
             {k.showPayment && (

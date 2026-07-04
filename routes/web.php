@@ -206,9 +206,9 @@ Route::middleware(["auth", "store", "branch"])
         ])->name("master-data");
 
         // ─────────────────────────────────────────────────────────────────
-        // POS / KASIR — permission: sale.create
+        // POS / KASIR — permission: sale.create + wajib shift aktif
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:sale.create")->group(function () {
+        Route::middleware(["permission:sale.create", "ensure.shift"])->group(function () {
             Route::get("/kasir", [KasirController::class, "index"])->name(
                 "kasir.index",
             );
@@ -233,46 +233,28 @@ Route::middleware(["auth", "store", "branch"])
         });
 
         // ─────────────────────────────────────────────────────────────────
-        // SHIFT — permission: shift.open / shift.view
+        // SHIFT — permission: shift.view / shift.open / shift.close / shift.manage
+        // shift.manage = owner/admin/supervisor bisa lihat semua, edit, hapus, buka ulang
         // ─────────────────────────────────────────────────────────────────
+        // SHIFT — static routes HARUS sebelum {cashierShift} agar tidak tertangkap sebagai wildcard
         Route::middleware("permission:shift.view")->group(function () {
-            Route::get("/cashier-shifts", [
-                CashierShiftController::class,
-                "index",
-            ])->name("cashier-shifts.index");
-            Route::get("/cashier-shifts/{cashierShift}", [
-                CashierShiftController::class,
-                "show",
-            ])->name("cashier-shifts.show");
+            Route::get("/cashier-shifts", [CashierShiftController::class, "index"])->name("cashier-shifts.index");
         });
         Route::middleware("permission:shift.open")->group(function () {
-            Route::get("/cashier-shifts/create", [
-                CashierShiftController::class,
-                "create",
-            ])->name("cashier-shifts.create");
-            Route::post("/cashier-shifts", [
-                CashierShiftController::class,
-                "store",
-            ])->name("cashier-shifts.store");
-            Route::post("/cashier-shifts/{cashierShift}/close", [
-                CashierShiftController::class,
-                "close",
-            ])->name("cashier-shifts.close");
+            Route::get("/cashier-shifts/create", [CashierShiftController::class, "create"])->name("cashier-shifts.create");
+            Route::post("/cashier-shifts", [CashierShiftController::class, "store"])->name("cashier-shifts.store");
         });
-        // Admin override (owner/admin) — edit, hapus, buka ulang shift
-        Route::middleware("role:owner,admin")->group(function () {
-            Route::patch("/cashier-shifts/{cashierShift}", [
-                CashierShiftController::class,
-                "update",
-            ])->name("cashier-shifts.update");
-            Route::delete("/cashier-shifts/{cashierShift}", [
-                CashierShiftController::class,
-                "destroy",
-            ])->name("cashier-shifts.destroy");
-            Route::post("/cashier-shifts/{cashierShift}/reopen", [
-                CashierShiftController::class,
-                "reopen",
-            ])->name("cashier-shifts.reopen");
+        // Route dengan {cashierShift} wildcard — harus SETELAH semua route static
+        Route::middleware("permission:shift.view")->group(function () {
+            Route::get("/cashier-shifts/{cashierShift}", [CashierShiftController::class, "show"])->name("cashier-shifts.show");
+        });
+        Route::middleware("permission:shift.close")->group(function () {
+            Route::post("/cashier-shifts/{cashierShift}/close", [CashierShiftController::class, "close"])->name("cashier-shifts.close");
+        });
+        Route::middleware("permission:shift.manage")->group(function () {
+            Route::patch("/cashier-shifts/{cashierShift}", [CashierShiftController::class, "update"])->name("cashier-shifts.update");
+            Route::delete("/cashier-shifts/{cashierShift}", [CashierShiftController::class, "destroy"])->name("cashier-shifts.destroy");
+            Route::post("/cashier-shifts/{cashierShift}/reopen", [CashierShiftController::class, "reopen"])->name("cashier-shifts.reopen");
         });
 
         // ─────────────────────────────────────────────────────────────────
@@ -312,6 +294,16 @@ Route::middleware(["auth", "store", "branch"])
                 SaleController::class,
                 "destroy",
             ])->name("sales.destroy");
+        });
+        Route::middleware("permission:sale.create")->group(function () {
+            Route::patch("/sales/{sale}/service-status", [
+                SaleController::class,
+                "updateServiceStatus",
+            ])->name("sales.updateServiceStatus");
+            Route::patch("/sales/{sale}/rental-status", [
+                SaleController::class,
+                "updateRentalStatus",
+            ])->name("sales.updateRentalStatus");
         });
 
         // ─────────────────────────────────────────────────────────────────
@@ -592,6 +584,22 @@ Route::middleware(["auth", "store", "branch"])
         });
 
         // ─────────────────────────────────────────────────────────────────
+        // KOMISI KARYAWAN — permission: commission.view / commission.approve
+        // ─────────────────────────────────────────────────────────────────
+        Route::middleware("permission:commission.view")->group(function () {
+            Route::get("/employee-commissions", [
+                \App\Http\Controllers\Admin\EmployeeCommissionController::class,
+                "index",
+            ])->name("employee-commissions.index");
+        });
+        Route::middleware("permission:commission.approve")->group(function () {
+            Route::patch("/employee-commissions/{commission}/status", [
+                \App\Http\Controllers\Admin\EmployeeCommissionController::class,
+                "updateStatus",
+            ])->name("employee-commissions.update-status");
+        });
+
+        // ─────────────────────────────────────────────────────────────────
         // PENGELUARAN — permission: expense.*
         // ─────────────────────────────────────────────────────────────────
         Route::middleware("permission:expense.view")->group(function () {
@@ -703,6 +711,22 @@ Route::middleware(["auth", "store", "branch"])
                 PaymentMethodController::class,
                 "savePgSettings",
             ])->name("payment-methods.pg.save");
+        });
+
+        // ─────────────────────────────────────────────────────────────────
+        // KITCHEN DISPLAY — permission: kitchen.view / kitchen.update
+        // ─────────────────────────────────────────────────────────────────
+        Route::middleware("permission:kitchen.view")->group(function () {
+            Route::get("/kitchen", [
+                \App\Http\Controllers\Admin\KitchenController::class,
+                "index",
+            ])->name("kitchen.index");
+        });
+        Route::middleware("permission:kitchen.update")->group(function () {
+            Route::patch("/kitchen/{sale}/status", [
+                \App\Http\Controllers\Admin\KitchenController::class,
+                "updateStatus",
+            ])->name("kitchen.update-status");
         });
 
         // ─────────────────────────────────────────────────────────────────

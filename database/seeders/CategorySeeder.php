@@ -17,7 +17,7 @@ class CategorySeeder extends Seeder
         $store5 = Store::where("code", "STORE005")->firstOrFail();
         $store6 = Store::where("code", "STORE006")->firstOrFail();
 
-        // ── Store 1: Kopi Senja — FnB ─────────────────────────────────
+        // ── Store 1: Minimarket Sejahtera — Retail ──────────────────
         $minuman = Category::create([
             "store_id" => $store1->id,
             "name" => "Minuman",
@@ -110,7 +110,7 @@ class CategorySeeder extends Seeder
             "sort_order" => 6,
         ]);
 
-        // ── Store 2: Minimarket ───────────────────────────────────────
+        // ── Store 2: Kopi Senja — FnB ────────────────────────────────
         $sembako = Category::create([
             "store_id" => $store2->id,
             "name" => "Sembako",
@@ -171,32 +171,32 @@ class CategorySeeder extends Seeder
             "sort_order" => 3,
         ]);
 
-        // ── Store 4: Laundry ──────────────────────────────────────────
-        $layananLaundry = Category::create([
+        // ── Store 4: Sewa Alat — Rental ────────────────────────────
+        $peralatan = Category::create([
             "store_id" => $store4->id,
-            "name" => "Layanan Laundry",
-            "slug" => "layanan-laundry",
+            "name" => "Peralatan Sewa",
+            "slug" => "peralatan-sewa",
             "sort_order" => 1,
         ]);
         Category::create([
             "store_id" => $store4->id,
-            "parent_id" => $layananLaundry->id,
-            "name" => "Kiloan",
-            "slug" => "kiloan",
+            "parent_id" => $peralatan->id,
+            "name" => "Alat Berat",
+            "slug" => "alat-berat",
             "sort_order" => 1,
         ]);
         Category::create([
             "store_id" => $store4->id,
-            "parent_id" => $layananLaundry->id,
-            "name" => "Satuan",
-            "slug" => "satuan",
+            "parent_id" => $peralatan->id,
+            "name" => "Kamera & Audio",
+            "slug" => "kamera-audio",
             "sort_order" => 2,
         ]);
         Category::create([
             "store_id" => $store4->id,
-            "parent_id" => $layananLaundry->id,
-            "name" => "Express",
-            "slug" => "express",
+            "parent_id" => $peralatan->id,
+            "name" => "Event & Pesta",
+            "slug" => "event-pesta",
             "sort_order" => 3,
         ]);
 
