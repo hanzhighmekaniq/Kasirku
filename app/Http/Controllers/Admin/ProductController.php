@@ -24,6 +24,7 @@ class ProductController extends Controller
     public function index()
     {
         $storeId = session("current_store_id");
+        $store = \App\Models\Store::find($storeId);
 
         $products = Product::forStore($storeId)
             ->with(["category", "supplier", "stocks"])
@@ -36,7 +37,8 @@ class ProductController extends Controller
             });
 
         return Inertia::render("Admin/Products/Index", [
-            "products" => $products,
+            "products"  => $products,
+            "storeType" => $store?->store_type ?? "retail",
         ]);
     }
 
@@ -101,10 +103,13 @@ class ProductController extends Controller
     public function create()
     {
         $storeId = session("current_store_id");
+        $store = \App\Models\Store::find($storeId);
+
         return Inertia::render("Admin/Products/Create", [
-            "categories" => Category::forStore($storeId)->orderBy("name")->get(),
-            "suppliers"  => Supplier::where("store_id", $storeId)->orderBy("name")->get(),
+            "categories"   => Category::forStore($storeId)->orderBy("name")->get(),
+            "suppliers"    => Supplier::where("store_id", $storeId)->orderBy("name")->get(),
             "productTypes" => self::PRODUCT_TYPES,
+            "storeType"    => $store?->store_type ?? "retail",
         ]);
     }
 
@@ -112,6 +117,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             "name" => "required|string|max:255",
+            "description" => "nullable|string|max:2000",
             "sku" => "required|string|max:100|unique:products,sku",
             "barcode" => "nullable|string|max:100|unique:products,barcode",
             "type" => "required|in:finished_goods,raw_material,combo,service,rental_item,time_based",
@@ -120,6 +126,8 @@ class ProductController extends Controller
             "unit" => "nullable|string|max:30",
             "sell_price" => "required|numeric|min:0",
             "cost_price" => "nullable|numeric|min:0",
+            "price_per_hour" => "nullable|numeric|min:0",
+            "min_duration_minutes" => "nullable|integer|min:0",
             "initial_stock" => "nullable|integer|min:0",
             "stock_minimum" => "nullable|integer|min:0",
             "track_stock" => "boolean",
@@ -128,6 +136,12 @@ class ProductController extends Controller
             "preparation_time" => "nullable|integer|min:0",
             "is_active" => "boolean",
             "image" => "nullable|image|mimes:jpg,jpeg,png,webp|max:2048",
+            // per-type fields
+            "capacity"                 => "nullable|integer|min:1",
+            "max_guests"               => "nullable|integer|min:1",
+            "valid_duration_minutes"   => "nullable|integer|min:0",
+            "session_duration_minutes" => "nullable|integer|min:0",
+            "deposit_amount"           => "nullable|numeric|min:0",
         ]);
 
         $imagePath = null;
@@ -136,23 +150,31 @@ class ProductController extends Controller
         }
 
         $product = Product::create([
-            "store_id"         => session("current_store_id"),
-            "name" => $validated["name"],
-            "sku" => $validated["sku"],
-            "barcode" => $validated["barcode"] ?? BarcodeHelper::generate(),
-            "type" => $validated["type"],
-            "category_id" => $validated["category_id"] ?? null,
-            "supplier_id" => $validated["supplier_id"] ?? null,
-            "unit" => $validated["unit"] ?? "pcs",
-            "sell_price" => $validated["sell_price"],
-            "cost_price" => $validated["cost_price"] ?? 0,
-            "stock_minimum" => $validated["stock_minimum"] ?? 0,
-            "track_stock" => $validated["track_stock"] ?? true,
-            "is_sellable" => $validated["is_sellable"] ?? true,
-            "is_composable" => $validated["is_composable"] ?? false,
-            "preparation_time" => $validated["preparation_time"] ?? null,
-            "is_active" => $validated["is_active"] ?? true,
-            "image" => $imagePath,
+            "store_id"                 => session("current_store_id"),
+            "name"                     => $validated["name"],
+            "description"              => $validated["description"] ?? null,
+            "sku"                      => $validated["sku"],
+            "barcode"                  => $validated["barcode"] ?? BarcodeHelper::generate(),
+            "type"                     => $validated["type"],
+            "category_id"              => $validated["category_id"] ?? null,
+            "supplier_id"              => $validated["supplier_id"] ?? null,
+            "unit"                     => $validated["unit"] ?? "pcs",
+            "sell_price"               => $validated["sell_price"],
+            "cost_price"               => $validated["cost_price"] ?? 0,
+            "price_per_hour"           => $validated["price_per_hour"] ?? null,
+            "min_duration_minutes"     => $validated["min_duration_minutes"] ?? null,
+            "stock_minimum"            => $validated["stock_minimum"] ?? 0,
+            "track_stock"              => $validated["track_stock"] ?? true,
+            "is_sellable"              => $validated["is_sellable"] ?? true,
+            "is_composable"            => $validated["is_composable"] ?? false,
+            "preparation_time"         => $validated["preparation_time"] ?? null,
+            "is_active"                => $validated["is_active"] ?? true,
+            "image"                    => $imagePath,
+            "capacity"                 => $validated["capacity"] ?? null,
+            "max_guests"               => $validated["max_guests"] ?? null,
+            "valid_duration_minutes"   => $validated["valid_duration_minutes"] ?? null,
+            "session_duration_minutes" => $validated["session_duration_minutes"] ?? null,
+            "deposit_amount"           => $validated["deposit_amount"] ?? null,
         ]);
 
         $initialStock = (int) ($validated["initial_stock"] ?? 0);
@@ -171,11 +193,14 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $storeId = session("current_store_id");
+        $store = \App\Models\Store::find($storeId);
+
         return Inertia::render("Admin/Products/Edit", [
             "product"      => $product,
             "categories"   => Category::forStore($storeId)->orderBy("name")->get(),
             "suppliers"    => Supplier::where("store_id", $storeId)->orderBy("name")->get(),
             "productTypes" => self::PRODUCT_TYPES,
+            "storeType"    => $store?->store_type ?? "retail",
         ]);
     }
 
@@ -183,6 +208,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             "name" => "required|string|max:255",
+            "description" => "nullable|string|max:2000",
             "sku" =>
                 "required|string|max:100|unique:products,sku," . $product->id,
             "barcode" =>
@@ -194,6 +220,8 @@ class ProductController extends Controller
             "unit" => "nullable|string|max:30",
             "sell_price" => "required|numeric|min:0",
             "cost_price" => "nullable|numeric|min:0",
+            "price_per_hour" => "nullable|numeric|min:0",
+            "min_duration_minutes" => "nullable|integer|min:0",
             "stock_minimum" => "nullable|integer|min:0",
             "track_stock" => "boolean",
             "is_sellable" => "boolean",
@@ -202,6 +230,12 @@ class ProductController extends Controller
             "is_active" => "boolean",
             "image" => "nullable|image|mimes:jpg,jpeg,png,webp|max:2048",
             "remove_image" => "boolean",
+            // per-type fields
+            "capacity"                 => "nullable|integer|min:1",
+            "max_guests"               => "nullable|integer|min:1",
+            "valid_duration_minutes"   => "nullable|integer|min:0",
+            "session_duration_minutes" => "nullable|integer|min:0",
+            "deposit_amount"           => "nullable|numeric|min:0",
         ]);
 
         // Handle gambar
@@ -224,22 +258,30 @@ class ProductController extends Controller
         }
 
         $product->update([
-            "name" => $validated["name"],
-            "sku" => $validated["sku"],
-            "barcode" => $validated["barcode"] ?? null,
-            "type" => $validated["type"],
-            "category_id" => $validated["category_id"] ?? null,
-            "supplier_id" => $validated["supplier_id"] ?? null,
-            "unit" => $validated["unit"] ?? "pcs",
-            "sell_price" => $validated["sell_price"],
-            "cost_price" => $validated["cost_price"] ?? 0,
-            "stock_minimum" => $validated["stock_minimum"] ?? 0,
-            "track_stock" => $validated["track_stock"] ?? true,
-            "is_sellable" => $validated["is_sellable"] ?? true,
-            "is_composable" => $validated["is_composable"] ?? false,
-            "preparation_time" => $validated["preparation_time"] ?? null,
-            "is_active" => $validated["is_active"] ?? true,
-            "image" => $imagePath,
+            "name"                     => $validated["name"],
+            "description"              => $validated["description"] ?? null,
+            "sku"                      => $validated["sku"],
+            "barcode"                  => $validated["barcode"] ?? null,
+            "type"                     => $validated["type"],
+            "category_id"              => $validated["category_id"] ?? null,
+            "supplier_id"              => $validated["supplier_id"] ?? null,
+            "unit"                     => $validated["unit"] ?? "pcs",
+            "sell_price"               => $validated["sell_price"],
+            "cost_price"               => $validated["cost_price"] ?? 0,
+            "price_per_hour"           => $validated["price_per_hour"] ?? null,
+            "min_duration_minutes"     => $validated["min_duration_minutes"] ?? null,
+            "stock_minimum"            => $validated["stock_minimum"] ?? 0,
+            "track_stock"              => $validated["track_stock"] ?? true,
+            "is_sellable"              => $validated["is_sellable"] ?? true,
+            "is_composable"            => $validated["is_composable"] ?? false,
+            "preparation_time"         => $validated["preparation_time"] ?? null,
+            "is_active"                => $validated["is_active"] ?? true,
+            "image"                    => $imagePath,
+            "capacity"                 => $validated["capacity"] ?? null,
+            "max_guests"               => $validated["max_guests"] ?? null,
+            "valid_duration_minutes"   => $validated["valid_duration_minutes"] ?? null,
+            "session_duration_minutes" => $validated["session_duration_minutes"] ?? null,
+            "deposit_amount"           => $validated["deposit_amount"] ?? null,
         ]);
 
         return redirect()

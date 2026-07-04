@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import BarcodeScanner from "@/Components/BarcodeScanner";
 
@@ -15,38 +15,58 @@ const UNIT_OPTIONS = [
     "karton",
 ];
 
-const TOGGLE_OPTIONS = [
-    {
-        key: "track_stock",
-        label: "Pantau Stok",
-        desc: "Lacak jumlah stok produk ini",
-    },
-    {
-        key: "is_sellable",
-        label: "Bisa Dijual",
-        desc: "Nonaktifkan untuk bahan baku",
-    },
-    {
-        key: "is_composable",
-        label: "Produk Komposisi",
-        desc: "Tersusun dari produk lain (combo)",
-    },
-    {
-        key: "is_active",
-        label: "Produk Aktif",
-        desc: "Tampil di kasir & daftar produk",
-    },
-];
+// Fitur yang tampil per store type
+const STORE_FEATURES = {
+    //                       barcode  supplier  costPrice  prepTime  isComposable  isSellable  trackStock
+    retail:      { barcode: true,  supplier: true,  costPrice: true,  prepTime: false, isComposable: false, isSellable: true,  trackStock: true  },
+    fnb:         { barcode: true,  supplier: true,  costPrice: true,  prepTime: true,  isComposable: true,  isSellable: true,  trackStock: true  },
+    service:     { barcode: false, supplier: false, costPrice: true,  prepTime: false, isComposable: false, isSellable: false, trackStock: false },
+    rental:      { barcode: false, supplier: true,  costPrice: true,  prepTime: false, isComposable: false, isSellable: false, trackStock: true  },
+    ticket:      { barcode: false, supplier: false, costPrice: false, prepTime: false, isComposable: false, isSellable: false, trackStock: false },
+    hospitality: { barcode: false, supplier: false, costPrice: false, prepTime: false, isComposable: false, isSellable: false, trackStock: false },
+    parking:     { barcode: false, supplier: false, costPrice: false, prepTime: false, isComposable: false, isSellable: false, trackStock: false },
+    session:     { barcode: false, supplier: false, costPrice: false, prepTime: false, isComposable: false, isSellable: false, trackStock: false },
+};
 
-export default function Create({ categories, suppliers }) {
+// Tipe produk yang relevan per store type
+const RELEVANT_TYPES = {
+    retail:      ['finished_goods', 'raw_material', 'combo'],
+    fnb:         ['finished_goods', 'raw_material', 'combo'],
+    service:     ['service', 'finished_goods'],
+    rental:      ['rental_item', 'finished_goods'],
+    ticket:      ['time_based', 'finished_goods'],
+    hospitality: ['time_based', 'service', 'finished_goods'],
+    parking:     ['time_based'],
+    session:     ['time_based', 'finished_goods'],
+};
+
+const DEFAULT_TYPE = {
+    retail:      'finished_goods',
+    fnb:         'finished_goods',
+    service:     'service',
+    rental:      'rental_item',
+    ticket:      'time_based',
+    hospitality: 'time_based',
+    parking:     'time_based',
+    session:     'time_based',
+};
+
+// Tipe yang tidak punya stok fisik
+const NO_STOCK_TYPES = ['service', 'time_based'];
+
+export default function Create({ categories, suppliers, productTypes = {}, storeType = 'retail' }) {
     const [imagePreview, setImagePreview] = useState(null);
     const [showScanner, setShowScanner] = useState(false);
+
+    const availableTypes = RELEVANT_TYPES[storeType] ?? ['finished_goods'];
+    const defaultType    = DEFAULT_TYPE[storeType]    ?? 'finished_goods';
+    const feat           = STORE_FEATURES[storeType]  ?? STORE_FEATURES.retail;
 
     const { data, setData, post, processing, errors } = useForm({
         name: "",
         sku: "",
         barcode: "",
-        type: "finished_goods",
+        type: defaultType,
         category_id: "",
         supplier_id: "",
         unit: "pcs",
@@ -54,13 +74,46 @@ export default function Create({ categories, suppliers }) {
         cost_price: "",
         initial_stock: "",
         stock_minimum: "",
-        track_stock: true,
+        track_stock: !NO_STOCK_TYPES.includes(defaultType),
         is_sellable: true,
         is_composable: false,
         preparation_time: "",
         is_active: true,
         image: null,
+        description: "",
+        price_per_hour: "",
+        min_duration_minutes: "",
+        capacity: "",
+        max_guests: "",
+        valid_duration_minutes: "",
+        session_duration_minutes: "",
+        deposit_amount: "",
     });
+
+    // Apakah tipe yang dipilih tidak punya stok fisik
+    const isNoStock = NO_STOCK_TYPES.includes(data.type);
+
+    // Label harga dinamis berdasarkan tipe
+    const priceLabel = data.type === 'time_based'  ? 'Tarif / Harga' :
+                       data.type === 'service'      ? 'Tarif Jasa' :
+                       data.type === 'rental_item'  ? 'Tarif Sewa' :
+                       'Harga Jual';
+
+    // Satuan dinamis berdasarkan tipe
+    const unitOptionsForType = data.type === 'time_based'   ? ['jam', 'menit', 'hari', 'malam', 'sesi'] :
+                               data.type === 'service'       ? ['kunjungan', 'sesi', 'pcs', 'item'] :
+                               data.type === 'rental_item'   ? ['unit', 'pcs', 'set', 'hari'] :
+                               UNIT_OPTIONS;
+
+    // Handler perubahan tipe: auto-update track_stock
+    const handleTypeChange = (newType) => {
+        setData("type", newType);
+        if (NO_STOCK_TYPES.includes(newType)) {
+            setData("track_stock", false);
+        } else {
+            setData("track_stock", true);
+        }
+    };
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -147,6 +200,7 @@ export default function Create({ categories, suppliers }) {
                                             className={inputCls(!!errors.sku)}
                                         />
                                     </Field>
+                                    {feat.barcode ? (
                                     <Field
                                         label="Barcode"
                                         error={errors.barcode}
@@ -188,6 +242,17 @@ export default function Create({ categories, suppliers }) {
                                             </button>
                                         </div>
                                     </Field>
+                                    ) : (
+                                    <Field label="Kode Referensi" error={errors.barcode}>
+                                        <input
+                                            type="text"
+                                            value={data.barcode}
+                                            onChange={(e) => setData("barcode", e.target.value)}
+                                            placeholder="Kode internal (opsional)"
+                                            className={inputCls(!!errors.barcode)}
+                                        />
+                                    </Field>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -199,19 +264,15 @@ export default function Create({ categories, suppliers }) {
                                         <select
                                             value={data.type}
                                             onChange={(e) =>
-                                                setData("type", e.target.value)
+                                                handleTypeChange(e.target.value)
                                             }
                                             className={inputCls(!!errors.type)}
                                         >
-                                            <option value="finished_goods">
-                                                Barang Jadi
-                                            </option>
-                                            <option value="raw_material">
-                                                Bahan Baku
-                                            </option>
-                                            <option value="combo">
-                                                Combo / Paket
-                                            </option>
+                                            {availableTypes.map((typeKey) => (
+                                                <option key={typeKey} value={typeKey}>
+                                                    {productTypes[typeKey] ?? typeKey}
+                                                </option>
+                                            ))}
                                         </select>
                                     </Field>
                                     <Field label="Satuan" error={errors.unit}>
@@ -222,7 +283,7 @@ export default function Create({ categories, suppliers }) {
                                             }
                                             className={inputCls(!!errors.unit)}
                                         >
-                                            {UNIT_OPTIONS.map((u) => (
+                                            {unitOptionsForType.map((u) => (
                                                 <option key={u} value={u}>
                                                     {u}
                                                 </option>
@@ -230,6 +291,14 @@ export default function Create({ categories, suppliers }) {
                                         </select>
                                     </Field>
                                 </div>
+                                {data.type !== 'finished_goods' && data.type !== 'raw_material' && (
+                                    <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5 text-xs text-indigo-700">
+                                        {data.type === 'service' && '✂️ Produk jasa: tidak ada stok fisik, harga adalah tarif layanan'}
+                                        {data.type === 'rental_item' && '🔑 Item rental: stok = jumlah unit yang bisa disewakan'}
+                                        {data.type === 'time_based' && '⏱️ Berbasis waktu: tarif per durasi (jam/malam/sesi)'}
+                                        {data.type === 'combo' && '📦 Combo: gabungan beberapa produk dalam 1 paket'}
+                                    </div>
+                                )}
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <Field
@@ -258,6 +327,7 @@ export default function Create({ categories, suppliers }) {
                                             ))}
                                         </select>
                                     </Field>
+                                    {feat.supplier && (
                                     <Field
                                         label="Supplier"
                                         error={errors.supplier_id}
@@ -284,8 +354,33 @@ export default function Create({ categories, suppliers }) {
                                             ))}
                                         </select>
                                     </Field>
+                                    )}
                                 </div>
                             </div>
+                        </SectionCard>
+
+                        {/* SECTION: Deskripsi */}
+                        <SectionCard
+                            title="Deskripsi"
+                            subtitle="Penjelasan produk/layanan untuk customer"
+                        >
+                            <Field label="Deskripsi" error={errors.description}>
+                                <textarea
+                                    value={data.description}
+                                    onChange={(e) => setData("description", e.target.value)}
+                                    rows={3}
+                                    placeholder={
+                                        data.type === 'service'     ? 'Contoh: Potong rambut + keramas + blow dry' :
+                                        data.type === 'rental_item' ? 'Contoh: Motor matic 125cc, bensin full, helm tersedia' :
+                                        data.type === 'time_based'  ? 'Contoh: Akses internet unlimited, PC gaming spec tinggi' :
+                                        data.type === 'hospitality' ? 'Contoh: Kamar AC, 2 kasur single, sarapan termasuk' :
+                                        'Deskripsi produk (opsional)'
+                                    }
+                                    className={`${inputCls(!!errors.description)} resize-none`}
+                                    maxLength={2000}
+                                />
+                                <p className="mt-1 text-xs text-slate-400">{(data.description || '').length}/2000 karakter</p>
+                            </Field>
                         </SectionCard>
 
                         {/* SECTION: Harga */}
@@ -293,9 +388,9 @@ export default function Create({ categories, suppliers }) {
                             title="Harga"
                             subtitle="Harga beli dan jual produk"
                         >
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className={`grid gap-4 ${feat.costPrice ? 'grid-cols-2' : 'grid-cols-1 max-w-xs'}`}>
                                 <Field
-                                    label="Harga Jual"
+                                    label={priceLabel}
                                     required
                                     error={errors.sell_price}
                                 >
@@ -318,6 +413,7 @@ export default function Create({ categories, suppliers }) {
                                         />
                                     </div>
                                 </Field>
+                                {feat.costPrice && (
                                 <Field
                                     label="Harga Beli (Modal)"
                                     error={errors.cost_price}
@@ -341,8 +437,9 @@ export default function Create({ categories, suppliers }) {
                                         />
                                     </div>
                                 </Field>
+                                )}
                             </div>
-                            {Number(data.sell_price) > 0 &&
+                            {feat.costPrice && Number(data.sell_price) > 0 &&
                                 Number(data.cost_price) > 0 && (
                                     <div className="mt-3 rounded-xl bg-slate-50 px-4 py-2.5 text-xs text-slate-500">
                                         Margin:{" "}
@@ -367,7 +464,131 @@ export default function Create({ categories, suppliers }) {
                                 )}
                         </SectionCard>
 
+                        {/* SECTION: Detail spesifik per tipe */}
+                        {(data.type === 'time_based' || data.type === 'rental_item' ||
+                          ['ticket', 'hospitality', 'session', 'parking', 'rental'].includes(storeType)) && (
+                            <SectionCard
+                                title="Detail Spesifik"
+                                subtitle="Informasi tambahan sesuai tipe produk"
+                            >
+                                <div className="space-y-4">
+
+                                    {/* price_per_hour — untuk time_based dan rental */}
+                                    {(data.type === 'time_based' || data.type === 'rental_item') && (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <Field label="Tarif Per Jam" error={errors.price_per_hour}>
+                                                <div className="relative">
+                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                                    <input
+                                                        type="number"
+                                                        value={data.price_per_hour}
+                                                        onChange={(e) => setData("price_per_hour", e.target.value)}
+                                                        min="0"
+                                                        placeholder="0"
+                                                        className={`${inputCls(!!errors.price_per_hour)} pl-9`}
+                                                    />
+                                                </div>
+                                                <p className="mt-1 text-xs text-slate-400">Tarif per jam (opsional, selain harga dasar)</p>
+                                            </Field>
+                                            <Field label="Durasi Minimum (menit)" error={errors.min_duration_minutes}>
+                                                <input
+                                                    type="number"
+                                                    value={data.min_duration_minutes}
+                                                    onChange={(e) => setData("min_duration_minutes", e.target.value)}
+                                                    min="0"
+                                                    placeholder="Contoh: 60"
+                                                    className={inputCls(!!errors.min_duration_minutes)}
+                                                />
+                                                <p className="mt-1 text-xs text-slate-400">Minimal durasi pemakaian</p>
+                                            </Field>
+                                        </div>
+                                    )}
+
+                                    {/* session_duration_minutes — untuk session/time_based di store session */}
+                                    {(storeType === 'session' || storeType === 'parking') && data.type === 'time_based' && (
+                                        <Field label="Durasi Paket (menit)" error={errors.session_duration_minutes}>
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="number"
+                                                    value={data.session_duration_minutes}
+                                                    onChange={(e) => setData("session_duration_minutes", e.target.value)}
+                                                    min="0"
+                                                    placeholder="60 = 1 jam, 0 = unlimited"
+                                                    className={`${inputCls(!!errors.session_duration_minutes)} max-w-xs`}
+                                                />
+                                            </div>
+                                            <p className="mt-1 text-xs text-slate-400">0 = unlimited. Misal: 60 (1 jam), 120 (2 jam), 180 (3 jam)</p>
+                                        </Field>
+                                    )}
+
+                                    {/* capacity — untuk ticket */}
+                                    {storeType === 'ticket' && (
+                                        <Field label="Kapasitas (orang/slot)" error={errors.capacity}>
+                                            <input
+                                                type="number"
+                                                value={data.capacity}
+                                                onChange={(e) => setData("capacity", e.target.value)}
+                                                min="1"
+                                                placeholder="Contoh: 10"
+                                                className={`${inputCls(!!errors.capacity)} max-w-xs`}
+                                            />
+                                            <p className="mt-1 text-xs text-slate-400">Berapa orang yang bisa pakai slot/tiket ini</p>
+                                        </Field>
+                                    )}
+
+                                    {/* valid_duration_minutes — untuk ticket */}
+                                    {storeType === 'ticket' && (
+                                        <Field label="Berlaku (menit)" error={errors.valid_duration_minutes}>
+                                            <input
+                                                type="number"
+                                                value={data.valid_duration_minutes}
+                                                onChange={(e) => setData("valid_duration_minutes", e.target.value)}
+                                                min="0"
+                                                placeholder="Contoh: 90 = 1,5 jam. Kosongkan jika tidak terbatas"
+                                                className={`${inputCls(!!errors.valid_duration_minutes)} max-w-xs`}
+                                            />
+                                            <p className="mt-1 text-xs text-slate-400">Tiket berlaku berapa menit setelah check-in</p>
+                                        </Field>
+                                    )}
+
+                                    {/* max_guests — untuk hospitality */}
+                                    {storeType === 'hospitality' && (
+                                        <Field label="Kapasitas Tamu" error={errors.max_guests}>
+                                            <input
+                                                type="number"
+                                                value={data.max_guests}
+                                                onChange={(e) => setData("max_guests", e.target.value)}
+                                                min="1"
+                                                placeholder="Contoh: 2"
+                                                className={`${inputCls(!!errors.max_guests)} max-w-xs`}
+                                            />
+                                            <p className="mt-1 text-xs text-slate-400">Maksimal tamu yang bisa menginap</p>
+                                        </Field>
+                                    )}
+
+                                    {/* deposit_amount — untuk rental */}
+                                    {(storeType === 'rental' || data.type === 'rental_item') && (
+                                        <Field label="Deposit" error={errors.deposit_amount}>
+                                            <div className="relative max-w-xs">
+                                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                                <input
+                                                    type="number"
+                                                    value={data.deposit_amount}
+                                                    onChange={(e) => setData("deposit_amount", e.target.value)}
+                                                    min="0"
+                                                    placeholder="0"
+                                                    className={`${inputCls(!!errors.deposit_amount)} pl-9`}
+                                                />
+                                            </div>
+                                            <p className="mt-1 text-xs text-slate-400">Deposit yang perlu dibayar penyewa (dikembalikan saat return)</p>
+                                        </Field>
+                                    )}
+                                </div>
+                            </SectionCard>
+                        )}
+
                         {/* SECTION: Stok */}
+                        {!isNoStock ? (
                         <SectionCard
                             title="Stok"
                             subtitle="Pengaturan stok awal dan minimum"
@@ -419,6 +640,18 @@ export default function Create({ categories, suppliers }) {
                                 </Field>
                             </div>
                         </SectionCard>
+                        ) : (
+                        <SectionCard title="Stok" subtitle="Tidak berlaku untuk tipe ini">
+                            <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-500 flex items-center gap-2">
+                                <span>ℹ️</span>
+                                <span>
+                                    {data.type === 'service'   ? 'Layanan jasa tidak memiliki stok fisik.' :
+                                     data.type === 'time_based' ? 'Produk berbasis waktu tidak memiliki stok.' :
+                                     'Tipe ini tidak memiliki stok.'}
+                                </span>
+                            </div>
+                        </SectionCard>
+                        )}
 
                         {/* SECTION: Pengaturan Tambahan */}
                         <SectionCard
@@ -426,6 +659,8 @@ export default function Create({ categories, suppliers }) {
                             subtitle="Opsi lanjutan untuk produk"
                         >
                             <div className="space-y-4">
+                                {/* Waktu persiapan — hanya FnB */}
+                                {feat.prepTime && (
                                 <Field
                                     label="Waktu Persiapan"
                                     hint="menit"
@@ -452,35 +687,66 @@ export default function Create({ categories, suppliers }) {
                                         </span>
                                     </div>
                                 </Field>
+                                )}
                                 <div className="grid grid-cols-2 gap-3">
-                                    {TOGGLE_OPTIONS.map(
-                                        ({ key, label, desc }) => (
-                                            <label
-                                                key={key}
-                                                className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={data[key]}
-                                                    onChange={(e) =>
-                                                        setData(
-                                                            key,
-                                                            e.target.checked,
-                                                        )
-                                                    }
-                                                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                                <div>
-                                                    <p className="text-sm font-medium text-slate-700">
-                                                        {label}
-                                                    </p>
-                                                    <p className="text-xs text-slate-400">
-                                                        {desc}
-                                                    </p>
-                                                </div>
-                                            </label>
-                                        ),
+                                    {/* Pantau Stok — hanya store yang punya stok fisik */}
+                                    {feat.trackStock && !isNoStock && (
+                                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.track_stock}
+                                                onChange={(e) => setData("track_stock", e.target.checked)}
+                                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-700">Pantau Stok</p>
+                                                <p className="text-xs text-slate-400">Lacak jumlah stok produk ini</p>
+                                            </div>
+                                        </label>
                                     )}
+                                    {/* Bisa Dijual — hanya retail/fnb yang punya raw_material */}
+                                    {feat.isSellable && (
+                                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.is_sellable}
+                                                onChange={(e) => setData("is_sellable", e.target.checked)}
+                                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-700">Bisa Dijual</p>
+                                                <p className="text-xs text-slate-400">Nonaktifkan untuk bahan baku</p>
+                                            </div>
+                                        </label>
+                                    )}
+                                    {/* Produk Komposisi — hanya FnB */}
+                                    {feat.isComposable && (
+                                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.is_composable}
+                                                onChange={(e) => setData("is_composable", e.target.checked)}
+                                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-700">Produk Komposisi</p>
+                                                <p className="text-xs text-slate-400">Tersusun dari produk lain (combo)</p>
+                                            </div>
+                                        </label>
+                                    )}
+                                    {/* Produk Aktif — selalu tampil */}
+                                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.is_active}
+                                            onChange={(e) => setData("is_active", e.target.checked)}
+                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <div>
+                                            <p className="text-sm font-medium text-slate-700">Produk Aktif</p>
+                                            <p className="text-xs text-slate-400">Tampil di kasir & daftar produk</p>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
                         </SectionCard>
@@ -561,11 +827,7 @@ export default function Create({ categories, suppliers }) {
                                 <SummaryRow
                                     label="Tipe"
                                     value={
-                                        {
-                                            finished_goods: "Barang Jadi",
-                                            raw_material: "Bahan Baku",
-                                            combo: "Combo",
-                                        }[data.type]
+                                        productTypes[data.type] ?? data.type
                                     }
                                 />
                                 <SummaryRow label="Satuan" value={data.unit} />

@@ -34,7 +34,7 @@ class UserSeeder extends Seeder
 
         // ── Owner 1: Minimarket Sejahtera (Retail) ──────────────────
         $owner1 = User::updateOrCreate(
-            ["email" => "owner@gmail.com"],
+            ["email" => "owner1@gmail.com"],
             [
                 "name" => "Budi Santoso",
                 "password" => Hash::make("password"),

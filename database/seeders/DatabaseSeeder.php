@@ -52,7 +52,10 @@ class DatabaseSeeder extends Seeder
             PaymentMethodSeeder::class,
             ExpenseCategorySeeder::class,
 
-            // ── Demo data: bertahap per toko (uncomment sesuai kebutuhan) ──
+            // ── Full relational demo data for 8 store types ───────────
+            FullDemoSeeder::class,
+
+            // ── Legacy demo data: bertahap per toko (uncomment sesuai kebutuhan) ──
             // EmployeeSeeder::class,    // perlu update untuk 8 store
             // CategorySeeder::class,    // perlu update untuk 8 store
             // SupplierSeeder::class,    // perlu update untuk 8 store

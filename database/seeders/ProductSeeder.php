@@ -2,764 +2,763 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
 use App\Models\Product;
 use App\Models\Store;
-use App\Models\Supplier;
 use Illuminate\Database\Seeder;
 
 class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        $store1 = Store::where("code", "STORE001")->firstOrFail();
-        $store2 = Store::where("code", "STORE002")->firstOrFail();
-        $store3 = Store::where("code", "STORE003")->firstOrFail();
-        $store4 = Store::where("code", "STORE004")->firstOrFail();
-        $store5 = Store::where("code", "STORE005")->firstOrFail();
-        $store6 = Store::where("code", "STORE006")->firstOrFail();
-
-        // Helpers
-        $cat = fn(string $slug, int $storeId) => Category::where("slug", $slug)
-            ->where("store_id", $storeId)
-            ->value("id");
-        $sup = fn(string $code, int $storeId) => Supplier::where("code", $code)
-            ->where("store_id", $storeId)
-            ->value("id");
+        $s1 = Store::where('code', 'STORE001')->firstOrFail(); // Minimarket Sejahtera (retail)
+        $s2 = Store::where('code', 'STORE002')->firstOrFail(); // Warung Kopi Senja (fnb)
+        $s3 = Store::where('code', 'STORE003')->firstOrFail(); // Barbershop Rapi (service)
+        $s4 = Store::where('code', 'STORE004')->firstOrFail(); // Sewa Alat Jaya (rental)
+        $s5 = Store::where('code', 'STORE005')->firstOrFail(); // Bioskop Nusantara (ticket)
+        $s6 = Store::where('code', 'STORE006')->firstOrFail(); // Villa Sunrise (hospitality)
+        $s7 = Store::where('code', 'STORE007')->firstOrFail(); // Parkir Jayabaya (parking)
+        $s8 = Store::where('code', 'STORE008')->firstOrFail(); // GamerZone (session)
 
         // ══════════════════════════════════════════════════════════════
-        // STORE 1 — Kopi Senja (FnB)
+        // STORE 1 — Minimarket Sejahtera (retail)
+        // Produk fisik, track_stock=true, tipe finished_goods
         // ══════════════════════════════════════════════════════════════
 
-        // --- Bahan baku ---
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("biji-kopi", $store1->id),
-            "supplier_id" => $sup("SUP0001", $store1->id),
-            "sku" => "S1-RM-001",
-            "name" => "Biji Kopi Arabika Gayo",
-            "type" => "raw_material",
-            "unit" => "kg",
-            "base_unit" => "gram",
-            "cost_price" => 120000,
-            "sell_price" => 0,
-            "stock_minimum" => 5,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("biji-kopi", $store1->id),
-            "supplier_id" => $sup("SUP0001", $store1->id),
-            "sku" => "S1-RM-002",
-            "name" => "Biji Kopi Robusta Lampung",
-            "type" => "raw_material",
-            "unit" => "kg",
-            "base_unit" => "gram",
-            "cost_price" => 85000,
-            "sell_price" => 0,
-            "stock_minimum" => 5,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("susu-cream", $store1->id),
-            "supplier_id" => $sup("SUP0002", $store1->id),
-            "sku" => "S1-RM-003",
-            "name" => "Susu Fresh Milk",
-            "type" => "raw_material",
-            "unit" => "liter",
-            "base_unit" => "ml",
-            "cost_price" => 18000,
-            "sell_price" => 0,
-            "stock_minimum" => 10,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("susu-cream", $store1->id),
-            "supplier_id" => $sup("SUP0002", $store1->id),
-            "sku" => "S1-RM-004",
-            "name" => "Susu Evaporated",
-            "type" => "raw_material",
-            "unit" => "liter",
-            "base_unit" => "ml",
-            "cost_price" => 22000,
-            "sell_price" => 0,
-            "stock_minimum" => 5,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("gula-sirup", $store1->id),
-            "sku" => "S1-RM-005",
-            "name" => "Gula Pasir",
-            "type" => "raw_material",
-            "unit" => "kg",
-            "base_unit" => "gram",
-            "cost_price" => 14000,
-            "sell_price" => 0,
-            "stock_minimum" => 10,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("gula-sirup", $store1->id),
-            "sku" => "S1-RM-006",
-            "name" => "Gula Aren Cair",
-            "type" => "raw_material",
-            "unit" => "liter",
-            "base_unit" => "ml",
-            "cost_price" => 25000,
-            "sell_price" => 0,
-            "stock_minimum" => 5,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("gula-sirup", $store1->id),
-            "sku" => "S1-RM-007",
-            "name" => "Sirup Vanilla",
-            "type" => "raw_material",
-            "unit" => "liter",
-            "base_unit" => "ml",
-            "cost_price" => 35000,
-            "sell_price" => 0,
-            "stock_minimum" => 3,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("tepung", $store1->id),
-            "sku" => "S1-RM-008",
-            "name" => "Tepung Terigu",
-            "type" => "raw_material",
-            "unit" => "kg",
-            "base_unit" => "gram",
-            "cost_price" => 12000,
-            "sell_price" => 0,
-            "stock_minimum" => 10,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("sayuran", $store1->id),
-            "sku" => "S1-RM-009",
-            "name" => "Telur Ayam",
-            "type" => "raw_material",
-            "unit" => "kg",
-            "base_unit" => "pcs",
-            "cost_price" => 2200,
-            "sell_price" => 0,
-            "stock_minimum" => 20,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("es-batu", $store1->id),
-            "sku" => "S1-RM-010",
-            "name" => "Es Batu Kristal",
-            "type" => "raw_material",
-            "unit" => "kg",
-            "base_unit" => "gram",
-            "cost_price" => 3000,
-            "sell_price" => 0,
-            "stock_minimum" => 50,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("sayuran", $store1->id),
-            "sku" => "S1-RM-011",
-            "name" => "Nasi Putih",
-            "type" => "raw_material",
-            "unit" => "kg",
-            "base_unit" => "gram",
-            "cost_price" => 8000,
-            "sell_price" => 0,
-            "stock_minimum" => 20,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("sayuran", $store1->id),
-            "sku" => "S1-RM-012",
-            "name" => "Mie Instan",
-            "type" => "raw_material",
-            "unit" => "pcs",
-            "base_unit" => "pcs",
-            "cost_price" => 3500,
-            "sell_price" => 0,
-            "stock_minimum" => 30,
-            "track_stock" => true,
-            "is_sellable" => false,
-        ]);
+        Product::firstOrCreate(
+            ['store_id' => $s1->id, 'sku' => 'S1-001'],
+            [
+                'category_id'  => null,
+                'supplier_id'  => null,
+                'barcode'      => '8991101000011',
+                'name'         => 'Indomie Goreng',
+                'description'  => 'Mie instan goreng rasa ayam bawang, 85gr per bungkus.',
+                'type'         => 'finished_goods',
+                'unit'         => 'pcs',
+                'cost_price'   => 2800,
+                'sell_price'   => 4000,
+                'stock_minimum'=> 20,
+                'track_stock'  => true,
+                'is_sellable'  => true,
+                'is_active'    => true,
+            ]
+        );
 
-        // --- Produk jadi FnB ---
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("kopi", $store1->id),
-            "sku" => "S1-FG-001",
-            "barcode" => "8991001000001",
-            "name" => "Kopi Hitam",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 5,
-            "unit" => "pcs",
-            "cost_price" => 3000,
-            "sell_price" => 18000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("kopi", $store1->id),
-            "sku" => "S1-FG-002",
-            "barcode" => "8991001000002",
-            "name" => "Kopi Susu",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 5,
-            "unit" => "pcs",
-            "cost_price" => 5500,
-            "sell_price" => 28000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("kopi", $store1->id),
-            "sku" => "S1-FG-003",
-            "barcode" => "8991001000003",
-            "name" => "Espresso",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 3,
-            "unit" => "pcs",
-            "cost_price" => 2500,
-            "sell_price" => 22000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("kopi", $store1->id),
-            "sku" => "S1-FG-004",
-            "barcode" => "8991001000004",
-            "name" => "Cappuccino",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 5,
-            "unit" => "pcs",
-            "cost_price" => 6000,
-            "sell_price" => 30000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("kopi", $store1->id),
-            "sku" => "S1-FG-005",
-            "barcode" => "8991001000005",
-            "name" => "Vanilla Latte",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 5,
-            "unit" => "pcs",
-            "cost_price" => 7000,
-            "sell_price" => 32000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("non-kopi", $store1->id),
-            "sku" => "S1-FG-006",
-            "barcode" => "8991001000006",
-            "name" => "Matcha Latte",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 5,
-            "unit" => "pcs",
-            "cost_price" => 6500,
-            "sell_price" => 30000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("non-kopi", $store1->id),
-            "sku" => "S1-FG-007",
-            "barcode" => "8991001000007",
-            "name" => "Teh Tarik",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 4,
-            "unit" => "pcs",
-            "cost_price" => 3000,
-            "sell_price" => 20000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("non-kopi", $store1->id),
-            "sku" => "S1-FG-008",
-            "barcode" => "8991001000008",
-            "name" => "Jus Jeruk",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 3,
-            "unit" => "pcs",
-            "cost_price" => 4000,
-            "sell_price" => 22000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("nasi-mie", $store1->id),
-            "sku" => "S1-FG-009",
-            "barcode" => "8991001000009",
-            "name" => "Nasi Goreng Spesial",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 15,
-            "unit" => "pcs",
-            "cost_price" => 8000,
-            "sell_price" => 28000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("nasi-mie", $store1->id),
-            "sku" => "S1-FG-010",
-            "barcode" => "8991001000010",
-            "name" => "Mie Goreng Kampung",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 10,
-            "unit" => "pcs",
-            "cost_price" => 5000,
-            "sell_price" => 22000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("snack", $store1->id),
-            "sku" => "S1-FG-011",
-            "barcode" => "8991001000011",
-            "name" => "Roti Bakar Cokelat",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 10,
-            "unit" => "pcs",
-            "cost_price" => 4000,
-            "sell_price" => 18000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("snack", $store1->id),
-            "sku" => "S1-FG-012",
-            "barcode" => "8991001000012",
-            "name" => "Pisang Goreng",
-            "type" => "finished_goods",
-            "is_composable" => true,
-            "preparation_time" => 8,
-            "unit" => "pcs",
-            "cost_price" => 3000,
-            "sell_price" => 15000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store1->id,
-            "category_id" => $cat("kopi", $store1->id),
-            "sku" => "S1-FG-013",
-            "barcode" => "8991001000013",
-            "name" => "Combo Kopi Susu + Roti Bakar",
-            "type" => "combo",
-            "is_composable" => true,
-            "preparation_time" => 15,
-            "unit" => "pcs",
-            "cost_price" => 9500,
-            "sell_price" => 38000,
-            "track_stock" => false,
-        ]);
+        Product::firstOrCreate(
+            ['store_id' => $s1->id, 'sku' => 'S1-002'],
+            [
+                'category_id'  => null,
+                'supplier_id'  => null,
+                'barcode'      => '8997225000020',
+                'name'         => 'Aqua 600ml',
+                'description'  => 'Air mineral dalam kemasan botol 600ml.',
+                'type'         => 'finished_goods',
+                'unit'         => 'pcs',
+                'cost_price'   => 2500,
+                'sell_price'   => 4000,
+                'stock_minimum'=> 24,
+                'track_stock'  => true,
+                'is_sellable'  => true,
+                'is_active'    => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s1->id, 'sku' => 'S1-003'],
+            [
+                'category_id'  => null,
+                'supplier_id'  => null,
+                'barcode'      => '8999999000031',
+                'name'         => 'Susu Ultra 200ml',
+                'description'  => 'Susu UHT rasa full cream, kemasan 200ml.',
+                'type'         => 'finished_goods',
+                'unit'         => 'pcs',
+                'cost_price'   => 3800,
+                'sell_price'   => 5500,
+                'stock_minimum'=> 12,
+                'track_stock'  => true,
+                'is_sellable'  => true,
+                'is_active'    => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s1->id, 'sku' => 'S1-004'],
+            [
+                'category_id'  => null,
+                'supplier_id'  => null,
+                'barcode'      => '8887290000041',
+                'name'         => 'Sabun Lifebuoy 100gr',
+                'description'  => 'Sabun mandi batang antibakteri 100gr.',
+                'type'         => 'finished_goods',
+                'unit'         => 'pcs',
+                'cost_price'   => 5500,
+                'sell_price'   => 8500,
+                'stock_minimum'=> 6,
+                'track_stock'  => true,
+                'is_sellable'  => true,
+                'is_active'    => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s1->id, 'sku' => 'S1-005'],
+            [
+                'category_id'  => null,
+                'supplier_id'  => null,
+                'barcode'      => '8991102000051',
+                'name'         => 'Beras Rojolele 5kg',
+                'description'  => 'Beras putih premium varietas Rojolele, kemasan 5kg.',
+                'type'         => 'finished_goods',
+                'unit'         => 'pcs',
+                'cost_price'   => 60000,
+                'sell_price'   => 72000,
+                'stock_minimum'=> 10,
+                'track_stock'  => true,
+                'is_sellable'  => true,
+                'is_active'    => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s1->id, 'sku' => 'S1-006'],
+            [
+                'category_id'  => null,
+                'supplier_id'  => null,
+                'barcode'      => '8991103000061',
+                'name'         => 'Minyak Goreng Tropical 1L',
+                'description'  => 'Minyak goreng sawit murni kemasan 1 liter.',
+                'type'         => 'finished_goods',
+                'unit'         => 'pcs',
+                'cost_price'   => 15000,
+                'sell_price'   => 21000,
+                'stock_minimum'=> 12,
+                'track_stock'  => true,
+                'is_sellable'  => true,
+                'is_active'    => true,
+            ]
+        );
 
         // ══════════════════════════════════════════════════════════════
-        // STORE 2 — Minimarket Sejahtera (Retail)
+        // STORE 2 — Warung Kopi Senja (fnb)
+        // Menu minuman + makanan, preparation_time, tipe finished_goods
         // ══════════════════════════════════════════════════════════════
-        Product::create([
-            "store_id" => $store2->id,
-            "category_id" => $cat("snack-kemasan", $store2->id),
-            "supplier_id" => $sup("SUP0002", $store2->id),
-            "sku" => "S2-MM-001",
-            "barcode" => "8997002000001",
-            "name" => "Indomie Goreng",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 2500,
-            "sell_price" => 3500,
-            "stock_minimum" => 20,
-            "track_stock" => true,
-        ]);
-        Product::create([
-            "store_id" => $store2->id,
-            "category_id" => $cat("minuman-kemasan", $store2->id),
-            "supplier_id" => $sup("SUP0002", $store2->id),
-            "sku" => "S2-MM-002",
-            "barcode" => "8997002000002",
-            "name" => "Teh Botol Sosro 450ml",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 3500,
-            "sell_price" => 5000,
-            "stock_minimum" => 24,
-            "track_stock" => true,
-        ]);
-        Product::create([
-            "store_id" => $store2->id,
-            "category_id" => $cat("minuman-kemasan", $store2->id),
-            "supplier_id" => $sup("SUP0002", $store2->id),
-            "sku" => "S2-MM-003",
-            "barcode" => "8997002000003",
-            "name" => "Aqua 600ml",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 3000,
-            "sell_price" => 4000,
-            "stock_minimum" => 24,
-            "track_stock" => true,
-        ]);
-        Product::create([
-            "store_id" => $store2->id,
-            "category_id" => $cat("beras", $store2->id),
-            "supplier_id" => $sup("SUP0001", $store2->id),
-            "sku" => "S2-MM-004",
-            "barcode" => "8997002000004",
-            "name" => "Beras Premium 5kg",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 55000,
-            "sell_price" => 65000,
-            "stock_minimum" => 10,
-            "track_stock" => true,
-        ]);
-        Product::create([
-            "store_id" => $store2->id,
-            "category_id" => $cat("minyak-bumbu", $store2->id),
-            "supplier_id" => $sup("SUP0001", $store2->id),
-            "sku" => "S2-MM-005",
-            "barcode" => "8997002000005",
-            "name" => "Minyak Goreng 1 Liter",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 14000,
-            "sell_price" => 18000,
-            "stock_minimum" => 15,
-            "track_stock" => true,
-        ]);
-        Product::create([
-            "store_id" => $store2->id,
-            "category_id" => $cat("minyak-bumbu", $store2->id),
-            "supplier_id" => $sup("SUP0001", $store2->id),
-            "sku" => "S2-MM-006",
-            "barcode" => "8997002000006",
-            "name" => "Gula Pasir 1kg",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 12000,
-            "sell_price" => 15000,
-            "stock_minimum" => 20,
-            "track_stock" => true,
-        ]);
-        Product::create([
-            "store_id" => $store2->id,
-            "category_id" => $cat("produk-susu", $store2->id),
-            "supplier_id" => $sup("SUP0002", $store2->id),
-            "sku" => "S2-MM-007",
-            "barcode" => "8997002000007",
-            "name" => "Susu Kental Manis 400g",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 8000,
-            "sell_price" => 11000,
-            "stock_minimum" => 12,
-            "track_stock" => true,
-        ]);
-        Product::create([
-            "store_id" => $store2->id,
-            "category_id" => $cat("minuman-kemasan", $store2->id),
-            "supplier_id" => $sup("SUP0002", $store2->id),
-            "sku" => "S2-MM-008",
-            "barcode" => "8997002000008",
-            "name" => "Kopi Torabika 3in1",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 2000,
-            "sell_price" => 3000,
-            "stock_minimum" => 30,
-            "track_stock" => true,
-        ]);
+
+        Product::firstOrCreate(
+            ['store_id' => $s2->id, 'sku' => 'S2-001'],
+            [
+                'category_id'     => null,
+                'supplier_id'     => null,
+                'name'            => 'Kopi Susu Gula Aren',
+                'description'     => 'Espresso shot dengan susu fresh dan gula aren asli.',
+                'type'            => 'finished_goods',
+                'preparation_time'=> 5,
+                'unit'            => 'pcs',
+                'cost_price'      => 8000,
+                'sell_price'      => 22000,
+                'track_stock'     => false,
+                'is_sellable'     => true,
+                'is_active'       => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s2->id, 'sku' => 'S2-002'],
+            [
+                'category_id'     => null,
+                'supplier_id'     => null,
+                'name'            => 'Americano',
+                'description'     => 'Espresso double shot dengan air panas, rasa kopi kuat.',
+                'type'            => 'finished_goods',
+                'preparation_time'=> 3,
+                'unit'            => 'pcs',
+                'cost_price'      => 5000,
+                'sell_price'      => 18000,
+                'track_stock'     => false,
+                'is_sellable'     => true,
+                'is_active'       => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s2->id, 'sku' => 'S2-003'],
+            [
+                'category_id'     => null,
+                'supplier_id'     => null,
+                'name'            => 'Matcha Latte',
+                'description'     => 'Matcha premium Jepang dengan susu segar dan sedikit pemanis.',
+                'type'            => 'finished_goods',
+                'preparation_time'=> 5,
+                'unit'            => 'pcs',
+                'cost_price'      => 9000,
+                'sell_price'      => 25000,
+                'track_stock'     => false,
+                'is_sellable'     => true,
+                'is_active'       => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s2->id, 'sku' => 'S2-004'],
+            [
+                'category_id'     => null,
+                'supplier_id'     => null,
+                'name'            => 'Croissant Butter',
+                'description'     => 'Croissant lembut berlapis mentega, dipanggang fresh setiap hari.',
+                'type'            => 'finished_goods',
+                'preparation_time'=> 2,
+                'unit'            => 'pcs',
+                'cost_price'      => 8000,
+                'sell_price'      => 20000,
+                'track_stock'     => false,
+                'is_sellable'     => true,
+                'is_active'       => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s2->id, 'sku' => 'S2-005'],
+            [
+                'category_id'     => null,
+                'supplier_id'     => null,
+                'name'            => 'Nasi Goreng Spesial',
+                'description'     => 'Nasi goreng dengan telur, ayam suwir, kerupuk, dan acar.',
+                'type'            => 'finished_goods',
+                'preparation_time'=> 10,
+                'unit'            => 'pcs',
+                'cost_price'      => 10000,
+                'sell_price'      => 28000,
+                'track_stock'     => false,
+                'is_sellable'     => true,
+                'is_active'       => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s2->id, 'sku' => 'S2-006'],
+            [
+                'category_id'     => null,
+                'supplier_id'     => null,
+                'name'            => 'Roti Bakar Coklat',
+                'description'     => 'Roti tawar panggang dengan selai coklat dan margarin.',
+                'type'            => 'finished_goods',
+                'preparation_time'=> 5,
+                'unit'            => 'pcs',
+                'cost_price'      => 5000,
+                'sell_price'      => 15000,
+                'track_stock'     => false,
+                'is_sellable'     => true,
+                'is_active'       => true,
+            ]
+        );
 
         // ══════════════════════════════════════════════════════════════
-        // STORE 3 — Barbershop Rapi (Service)
+        // STORE 3 — Barbershop Rapi (service)
+        // Layanan jasa, tipe service, track_stock=false
         // ══════════════════════════════════════════════════════════════
-        Product::create([
-            "store_id" => $store3->id,
-            "category_id" => $cat("layanan-potong", $store3->id),
-            "sku" => "S3-SV-001",
-            "name" => "Potong Rambut Biasa",
-            "type" => "service",
-            "unit" => "sesi",
-            "cost_price" => 5000,
-            "sell_price" => 20000,
-            "track_stock" => false,
-            "preparation_time" => 15,
-        ]);
-        Product::create([
-            "store_id" => $store3->id,
-            "category_id" => $cat("layanan-potong", $store3->id),
-            "sku" => "S3-SV-002",
-            "name" => "Potong + Cuci Rambut",
-            "type" => "service",
-            "unit" => "sesi",
-            "cost_price" => 8000,
-            "sell_price" => 35000,
-            "track_stock" => false,
-            "preparation_time" => 25,
-        ]);
-        Product::create([
-            "store_id" => $store3->id,
-            "category_id" => $cat("layanan-potong", $store3->id),
-            "sku" => "S3-SV-003",
-            "name" => "Undercut / Fade",
-            "type" => "service",
-            "unit" => "sesi",
-            "cost_price" => 10000,
-            "sell_price" => 45000,
-            "track_stock" => false,
-            "preparation_time" => 30,
-        ]);
-        Product::create([
-            "store_id" => $store3->id,
-            "category_id" => $cat("layanan-extra", $store3->id),
-            "sku" => "S3-SV-004",
-            "name" => "Cukur Jenggot",
-            "type" => "service",
-            "unit" => "sesi",
-            "cost_price" => 3000,
-            "sell_price" => 15000,
-            "track_stock" => false,
-            "preparation_time" => 10,
-        ]);
-        Product::create([
-            "store_id" => $store3->id,
-            "category_id" => $cat("layanan-extra", $store3->id),
-            "sku" => "S3-SV-005",
-            "name" => "Creambath",
-            "type" => "service",
-            "unit" => "sesi",
-            "cost_price" => 15000,
-            "sell_price" => 60000,
-            "track_stock" => false,
-            "preparation_time" => 45,
-        ]);
-        Product::create([
-            "store_id" => $store3->id,
-            "category_id" => $cat("produk-barber", $store3->id),
-            "sku" => "S3-PD-001",
-            "barcode" => "8997003000001",
-            "name" => "Pomade Rambut",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 25000,
-            "sell_price" => 45000,
-            "stock_minimum" => 5,
-            "track_stock" => true,
-        ]);
+
+        Product::firstOrCreate(
+            ['store_id' => $s3->id, 'sku' => 'S3-001'],
+            [
+                'category_id' => null,
+                'supplier_id' => null,
+                'name'        => 'Potong Rambut Regular',
+                'description' => 'Potong rambut + blow dry + sisir. Termasuk konsultasi gaya.',
+                'type'        => 'service',
+                'unit'        => 'kunjungan',
+                'cost_price'  => 10000,
+                'sell_price'  => 35000,
+                'track_stock' => false,
+                'is_sellable' => true,
+                'is_active'   => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s3->id, 'sku' => 'S3-002'],
+            [
+                'category_id' => null,
+                'supplier_id' => null,
+                'name'        => 'Potong + Keramas',
+                'description' => 'Potong rambut, keramas, kondisioner, dan blow dry.',
+                'type'        => 'service',
+                'unit'        => 'kunjungan',
+                'cost_price'  => 18000,
+                'sell_price'  => 55000,
+                'track_stock' => false,
+                'is_sellable' => true,
+                'is_active'   => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s3->id, 'sku' => 'S3-003'],
+            [
+                'category_id' => null,
+                'supplier_id' => null,
+                'name'        => 'Cukur Jenggot',
+                'description' => 'Pencukuran jenggot rapi dengan pisau cukur dan foam.',
+                'type'        => 'service',
+                'unit'        => 'kunjungan',
+                'cost_price'  => 8000,
+                'sell_price'  => 25000,
+                'track_stock' => false,
+                'is_sellable' => true,
+                'is_active'   => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s3->id, 'sku' => 'S3-004'],
+            [
+                'category_id' => null,
+                'supplier_id' => null,
+                'name'        => 'Cat Rambut',
+                'description' => 'Cat rambut pilihan warna, termasuk kondisioner pasca pewarnaan.',
+                'type'        => 'service',
+                'unit'        => 'kunjungan',
+                'cost_price'  => 60000,
+                'sell_price'  => 150000,
+                'track_stock' => false,
+                'is_sellable' => true,
+                'is_active'   => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s3->id, 'sku' => 'S3-005'],
+            [
+                'category_id' => null,
+                'supplier_id' => null,
+                'name'        => 'Hair Mask Treatment',
+                'description' => 'Perawatan rambut intensif dengan masker protein dan steam.',
+                'type'        => 'service',
+                'unit'        => 'kunjungan',
+                'cost_price'  => 30000,
+                'sell_price'  => 75000,
+                'track_stock' => false,
+                'is_sellable' => true,
+                'is_active'   => true,
+            ]
+        );
 
         // ══════════════════════════════════════════════════════════════
-        // STORE 4 — Sewa Alat Jaya (Rental)
+        // STORE 4 — Sewa Alat Jaya (rental)
+        // rental_item, track_stock=true (stok = unit tersedia), deposit
         // ══════════════════════════════════════════════════════════════
-        Product::create([
-            "store_id" => $store4->id,
-            "category_id" => $cat("alat-berat", $store4->id),
-            "sku" => "S4-RT-001",
-            "name" => "Sewa Molen Beton (per hari)",
-            "type" => "service",
-            "unit" => "hari",
-            "cost_price" => 40000,
-            "sell_price" => 80000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store4->id,
-            "category_id" => $cat("alat-berat", $store4->id),
-            "sku" => "S4-RT-002",
-            "name" => "Sewa Scaffolding (per set/hari)",
-            "type" => "service",
-            "unit" => "hari",
-            "cost_price" => 25000,
-            "sell_price" => 50000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store4->id,
-            "category_id" => $cat("kamera-audio", $store4->id),
-            "sku" => "S4-RT-003",
-            "name" => "Sewa Kamera DSLR (per hari)",
-            "type" => "service",
-            "unit" => "hari",
-            "cost_price" => 50000,
-            "sell_price" => 100000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store4->id,
-            "category_id" => $cat("kamera-audio", $store4->id),
-            "sku" => "S4-RT-004",
-            "name" => "Sewa Sound System (per set/hari)",
-            "type" => "service",
-            "unit" => "hari",
-            "cost_price" => 75000,
-            "sell_price" => 150000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store4->id,
-            "category_id" => $cat("event-pesta", $store4->id),
-            "sku" => "S4-RT-005",
-            "name" => "Sewa Tenda Roder (per set/hari)",
-            "type" => "service",
-            "unit" => "hari",
-            "cost_price" => 100000,
-            "sell_price" => 200000,
-            "track_stock" => false,
-        ]);
+
+        Product::firstOrCreate(
+            ['store_id' => $s4->id, 'sku' => 'S4-001'],
+            [
+                'category_id'    => null,
+                'supplier_id'    => null,
+                'name'           => 'Tenda Dome 4 Orang',
+                'description'    => 'Tenda camping waterproof kapasitas 4 orang, lengkap dengan tiang dan pasak.',
+                'type'           => 'rental_item',
+                'unit'           => 'unit',
+                'cost_price'     => 30000,
+                'sell_price'     => 75000,
+                'deposit_amount' => 200000,
+                'stock_minimum'  => 1,
+                'track_stock'    => true,
+                'is_sellable'    => true,
+                'is_active'      => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s4->id, 'sku' => 'S4-002'],
+            [
+                'category_id'    => null,
+                'supplier_id'    => null,
+                'name'           => 'Matras Camping',
+                'description'    => 'Matras tidur lipat untuk camping, ringan dan tahan lembab.',
+                'type'           => 'rental_item',
+                'unit'           => 'unit',
+                'cost_price'     => 8000,
+                'sell_price'     => 25000,
+                'deposit_amount' => 50000,
+                'stock_minimum'  => 2,
+                'track_stock'    => true,
+                'is_sellable'    => true,
+                'is_active'      => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s4->id, 'sku' => 'S4-003'],
+            [
+                'category_id'    => null,
+                'supplier_id'    => null,
+                'name'           => 'Kompor Gas Portable',
+                'description'    => 'Kompor gas portable single burner untuk camping dan outdoor.',
+                'type'           => 'rental_item',
+                'unit'           => 'unit',
+                'cost_price'     => 10000,
+                'sell_price'     => 30000,
+                'deposit_amount' => 100000,
+                'stock_minimum'  => 1,
+                'track_stock'    => true,
+                'is_sellable'    => true,
+                'is_active'      => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s4->id, 'sku' => 'S4-004'],
+            [
+                'category_id'    => null,
+                'supplier_id'    => null,
+                'name'           => 'Kamera DSLR Canon',
+                'description'    => 'Kamera DSLR Canon EOS 2000D dengan lensa kit 18-55mm, tas, dan baterai cadangan.',
+                'type'           => 'rental_item',
+                'unit'           => 'unit',
+                'cost_price'     => 50000,
+                'sell_price'     => 150000,
+                'deposit_amount' => 500000,
+                'stock_minimum'  => 1,
+                'track_stock'    => true,
+                'is_sellable'    => true,
+                'is_active'      => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s4->id, 'sku' => 'S4-005'],
+            [
+                'category_id'    => null,
+                'supplier_id'    => null,
+                'name'           => 'Sepeda Gunung',
+                'description'    => 'Sepeda gunung 21-speed, cocok untuk trek alam dan perkotaan.',
+                'type'           => 'rental_item',
+                'unit'           => 'unit',
+                'cost_price'     => 20000,
+                'sell_price'     => 50000,
+                'deposit_amount' => 300000,
+                'stock_minimum'  => 1,
+                'track_stock'    => true,
+                'is_sellable'    => true,
+                'is_active'      => true,
+            ]
+        );
 
         // ══════════════════════════════════════════════════════════════
-        // STORE 5 — Futsal Merdeka (Ticket / Booking)
+        // STORE 5 — Bioskop Nusantara (ticket)
+        // time_based, capacity, valid_duration_minutes
         // ══════════════════════════════════════════════════════════════
-        Product::create([
-            "store_id" => $store5->id,
-            "category_id" => $cat("futsal", $store5->id),
-            "sku" => "S5-TK-001",
-            "name" => "Lapangan Futsal (per jam)",
-            "type" => "service",
-            "unit" => "jam",
-            "cost_price" => 30000,
-            "sell_price" => 120000,
-            "track_stock" => false,
-            "preparation_time" => 60,
-        ]);
-        Product::create([
-            "store_id" => $store5->id,
-            "category_id" => $cat("futsal", $store5->id),
-            "sku" => "S5-TK-002",
-            "name" => "Sewa Rompi (per pcs)",
-            "type" => "service",
-            "unit" => "pcs",
-            "cost_price" => 2000,
-            "sell_price" => 10000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store5->id,
-            "category_id" => $cat("futsal", $store5->id),
-            "sku" => "S5-TK-003",
-            "name" => "Sewa Bola",
-            "type" => "service",
-            "unit" => "pcs",
-            "cost_price" => 3000,
-            "sell_price" => 15000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store5->id,
-            "category_id" => $cat("minuman-ticket", $store5->id),
-            "sku" => "S5-TK-004",
-            "name" => "Air Mineral 600ml",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 3000,
-            "sell_price" => 5000,
-            "stock_minimum" => 20,
-            "track_stock" => true,
-        ]);
-        Product::create([
-            "store_id" => $store5->id,
-            "category_id" => $cat("minuman-ticket", $store5->id),
-            "sku" => "S5-TK-005",
-            "name" => "Minuman Isotonik",
-            "type" => "finished_goods",
-            "unit" => "pcs",
-            "cost_price" => 5000,
-            "sell_price" => 8000,
-            "stock_minimum" => 10,
-            "track_stock" => true,
-        ]);
+
+        Product::firstOrCreate(
+            ['store_id' => $s5->id, 'sku' => 'S5-001'],
+            [
+                'category_id'           => null,
+                'supplier_id'           => null,
+                'name'                  => 'Tiket Reguler',
+                'description'           => 'Tiket bioskop reguler, kursi non-VIP dengan kenyamanan standar.',
+                'type'                  => 'time_based',
+                'unit'                  => 'tiket',
+                'cost_price'            => 15000,
+                'sell_price'            => 50000,
+                'capacity'              => 100,
+                'valid_duration_minutes'=> 150,
+                'track_stock'           => false,
+                'is_sellable'           => true,
+                'is_active'             => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s5->id, 'sku' => 'S5-002'],
+            [
+                'category_id'           => null,
+                'supplier_id'           => null,
+                'name'                  => 'Tiket VIP',
+                'description'           => 'Kursi VIP dengan tempat duduk premium, recliner, dan snack gratis.',
+                'type'                  => 'time_based',
+                'unit'                  => 'tiket',
+                'cost_price'            => 30000,
+                'sell_price'            => 85000,
+                'capacity'              => 30,
+                'valid_duration_minutes'=> 150,
+                'track_stock'           => false,
+                'is_sellable'           => true,
+                'is_active'             => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s5->id, 'sku' => 'S5-003'],
+            [
+                'category_id'           => null,
+                'supplier_id'           => null,
+                'name'                  => 'Tiket Couple',
+                'description'           => 'Sofa couple 2 kursi berdampingan, cocok untuk pasangan.',
+                'type'                  => 'time_based',
+                'unit'                  => 'pasang',
+                'cost_price'            => 50000,
+                'sell_price'            => 150000,
+                'capacity'              => 15,
+                'valid_duration_minutes'=> 150,
+                'track_stock'           => false,
+                'is_sellable'           => true,
+                'is_active'             => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s5->id, 'sku' => 'S5-004'],
+            [
+                'category_id'           => null,
+                'supplier_id'           => null,
+                'name'                  => 'Tiket Anak-Anak',
+                'description'           => 'Tiket khusus anak usia di bawah 12 tahun, film rating SU.',
+                'type'                  => 'time_based',
+                'unit'                  => 'tiket',
+                'cost_price'            => 10000,
+                'sell_price'            => 35000,
+                'capacity'              => 50,
+                'valid_duration_minutes'=> 90,
+                'track_stock'           => false,
+                'is_sellable'           => true,
+                'is_active'             => true,
+            ]
+        );
 
         // ══════════════════════════════════════════════════════════════
-        // STORE 6 — Villa Sunrise (Hospitality)
+        // STORE 6 — Villa Sunrise (hospitality)
+        // time_based, max_guests, sell_price = tarif per malam
         // ══════════════════════════════════════════════════════════════
-        Product::create([
-            "store_id" => $store6->id,
-            "category_id" => $cat("kamar", $store6->id),
-            "sku" => "S6-HT-001",
-            "name" => "Kamar Standard (per malam)",
-            "type" => "service",
-            "unit" => "malam",
-            "cost_price" => 100000,
-            "sell_price" => 350000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store6->id,
-            "category_id" => $cat("kamar", $store6->id),
-            "sku" => "S6-HT-002",
-            "name" => "Kamar Deluxe (per malam)",
-            "type" => "service",
-            "unit" => "malam",
-            "cost_price" => 200000,
-            "sell_price" => 550000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store6->id,
-            "category_id" => $cat("kamar", $store6->id),
-            "sku" => "S6-HT-003",
-            "name" => "Kamar Suite (per malam)",
-            "type" => "service",
-            "unit" => "malam",
-            "cost_price" => 350000,
-            "sell_price" => 850000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store6->id,
-            "category_id" => $cat("layanan-hotel", $store6->id),
-            "sku" => "S6-HT-004",
-            "name" => "Extra Bed",
-            "type" => "service",
-            "unit" => "pcs",
-            "cost_price" => 30000,
-            "sell_price" => 100000,
-            "track_stock" => false,
-        ]);
-        Product::create([
-            "store_id" => $store6->id,
-            "category_id" => $cat("layanan-hotel", $store6->id),
-            "sku" => "S6-HT-005",
-            "name" => "Breakfast Buffet",
-            "type" => "service",
-            "unit" => "pax",
-            "cost_price" => 30000,
-            "sell_price" => 75000,
-            "track_stock" => false,
-        ]);
+
+        Product::firstOrCreate(
+            ['store_id' => $s6->id, 'sku' => 'S6-001'],
+            [
+                'category_id' => null,
+                'supplier_id' => null,
+                'name'        => 'Kamar Standard',
+                'description' => 'Kamar AC, 1 kasur double, kamar mandi dalam, TV 32 inci, dan sarapan.',
+                'type'        => 'time_based',
+                'unit'        => 'malam',
+                'cost_price'  => 120000,
+                'sell_price'  => 350000,
+                'max_guests'  => 2,
+                'track_stock' => false,
+                'is_sellable' => true,
+                'is_active'   => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s6->id, 'sku' => 'S6-002'],
+            [
+                'category_id' => null,
+                'supplier_id' => null,
+                'name'        => 'Kamar Deluxe',
+                'description' => 'Kamar AC luas, 1 kasur king, balkon dengan view taman, dan minibar.',
+                'type'        => 'time_based',
+                'unit'        => 'malam',
+                'cost_price'  => 200000,
+                'sell_price'  => 500000,
+                'max_guests'  => 2,
+                'track_stock' => false,
+                'is_sellable' => true,
+                'is_active'   => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s6->id, 'sku' => 'S6-003'],
+            [
+                'category_id' => null,
+                'supplier_id' => null,
+                'name'        => 'Villa Family',
+                'description' => 'Villa 3 kamar tidur, dapur lengkap, ruang keluarga, dan kolam renang pribadi.',
+                'type'        => 'time_based',
+                'unit'        => 'malam',
+                'cost_price'  => 450000,
+                'sell_price'  => 1200000,
+                'max_guests'  => 6,
+                'track_stock' => false,
+                'is_sellable' => true,
+                'is_active'   => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s6->id, 'sku' => 'S6-004'],
+            [
+                'category_id' => null,
+                'supplier_id' => null,
+                'name'        => 'Suite Room',
+                'description' => 'Suite premium dengan bathtub, sofa lounge, minibar, dan view pegunungan.',
+                'type'        => 'time_based',
+                'unit'        => 'malam',
+                'cost_price'  => 300000,
+                'sell_price'  => 800000,
+                'max_guests'  => 2,
+                'track_stock' => false,
+                'is_sellable' => true,
+                'is_active'   => true,
+            ]
+        );
+
+        // ══════════════════════════════════════════════════════════════
+        // STORE 7 — Parkir Jayabaya (parking)
+        // time_based, session_duration_minutes=0 (per transaksi), price_per_hour
+        // ══════════════════════════════════════════════════════════════
+
+        Product::firstOrCreate(
+            ['store_id' => $s7->id, 'sku' => 'S7-001'],
+            [
+                'category_id'              => null,
+                'supplier_id'              => null,
+                'name'                     => 'Parkir Motor',
+                'description'              => 'Tarif parkir sepeda motor per transaksi masuk-keluar.',
+                'type'                     => 'time_based',
+                'unit'                     => 'kendaraan',
+                'cost_price'               => 0,
+                'sell_price'               => 3000,
+                'price_per_hour'           => 2000,
+                'session_duration_minutes' => 0,
+                'track_stock'              => false,
+                'is_sellable'              => true,
+                'is_active'                => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s7->id, 'sku' => 'S7-002'],
+            [
+                'category_id'              => null,
+                'supplier_id'              => null,
+                'name'                     => 'Parkir Mobil',
+                'description'              => 'Tarif parkir mobil per transaksi masuk-keluar.',
+                'type'                     => 'time_based',
+                'unit'                     => 'kendaraan',
+                'cost_price'               => 0,
+                'sell_price'               => 5000,
+                'price_per_hour'           => 3000,
+                'session_duration_minutes' => 0,
+                'track_stock'              => false,
+                'is_sellable'              => true,
+                'is_active'                => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s7->id, 'sku' => 'S7-003'],
+            [
+                'category_id'              => null,
+                'supplier_id'              => null,
+                'name'                     => 'Parkir Truk/Bus',
+                'description'              => 'Tarif parkir kendaraan besar (truk dan bus) per transaksi.',
+                'type'                     => 'time_based',
+                'unit'                     => 'kendaraan',
+                'cost_price'               => 0,
+                'sell_price'               => 10000,
+                'price_per_hour'           => 5000,
+                'session_duration_minutes' => 0,
+                'track_stock'              => false,
+                'is_sellable'              => true,
+                'is_active'                => true,
+            ]
+        );
+
+        // ══════════════════════════════════════════════════════════════
+        // STORE 8 — GamerZone (session)
+        // time_based, session_duration_minutes = durasi paket
+        // ══════════════════════════════════════════════════════════════
+
+        Product::firstOrCreate(
+            ['store_id' => $s8->id, 'sku' => 'S8-001'],
+            [
+                'category_id'              => null,
+                'supplier_id'              => null,
+                'name'                     => 'Paket 1 Jam',
+                'description'              => 'Akses 1 jam ke semua fasilitas warnet dan konsol PS.',
+                'type'                     => 'time_based',
+                'unit'                     => 'sesi',
+                'cost_price'               => 2000,
+                'sell_price'               => 8000,
+                'price_per_hour'           => 8000,
+                'session_duration_minutes' => 60,
+                'track_stock'              => false,
+                'is_sellable'              => true,
+                'is_active'                => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s8->id, 'sku' => 'S8-002'],
+            [
+                'category_id'              => null,
+                'supplier_id'              => null,
+                'name'                     => 'Paket 2 Jam',
+                'description'              => 'Akses 2 jam ke semua fasilitas, hemat dibanding beli per jam.',
+                'type'                     => 'time_based',
+                'unit'                     => 'sesi',
+                'cost_price'               => 4000,
+                'sell_price'               => 15000,
+                'price_per_hour'           => 7500,
+                'session_duration_minutes' => 120,
+                'track_stock'              => false,
+                'is_sellable'              => true,
+                'is_active'                => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s8->id, 'sku' => 'S8-003'],
+            [
+                'category_id'              => null,
+                'supplier_id'              => null,
+                'name'                     => 'Paket 5 Jam',
+                'description'              => 'Akses 5 jam non-stop, cocok untuk marathon gaming.',
+                'type'                     => 'time_based',
+                'unit'                     => 'sesi',
+                'cost_price'               => 10000,
+                'sell_price'               => 35000,
+                'price_per_hour'           => 7000,
+                'session_duration_minutes' => 300,
+                'track_stock'              => false,
+                'is_sellable'              => true,
+                'is_active'                => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s8->id, 'sku' => 'S8-004'],
+            [
+                'category_id'              => null,
+                'supplier_id'              => null,
+                'name'                     => 'Paket Malam',
+                'description'              => 'Paket overnight 8 jam mulai pukul 22:00, harga spesial.',
+                'type'                     => 'time_based',
+                'unit'                     => 'sesi',
+                'cost_price'               => 8000,
+                'sell_price'               => 25000,
+                'price_per_hour'           => 3125,
+                'session_duration_minutes' => 480,
+                'track_stock'              => false,
+                'is_sellable'              => true,
+                'is_active'                => true,
+            ]
+        );
+
+        Product::firstOrCreate(
+            ['store_id' => $s8->id, 'sku' => 'S8-005'],
+            [
+                'category_id'              => null,
+                'supplier_id'              => null,
+                'name'                     => 'Member Harian',
+                'description'              => 'Akses unlimited 1 hari penuh, bebas keluar masuk.',
+                'type'                     => 'time_based',
+                'unit'                     => 'hari',
+                'cost_price'               => 20000,
+                'sell_price'               => 50000,
+                'price_per_hour'           => 0,
+                'session_duration_minutes' => 0,
+                'track_stock'              => false,
+                'is_sellable'              => true,
+                'is_active'                => true,
+            ]
+        );
     }
 }

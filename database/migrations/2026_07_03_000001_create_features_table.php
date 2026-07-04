@@ -24,17 +24,10 @@ return new class extends Migration {
             $table->integer("sort_order")->default(0);
             $table->timestamps();
         });
-
-        Schema::create("plan_feature", function (Blueprint $table) {
-            $table->foreignId("plan_id")->constrained()->cascadeOnDelete();
-            $table->foreignId("feature_id")->constrained()->cascadeOnDelete();
-            $table->primary(["plan_id", "feature_id"]);
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists("plan_feature");
         Schema::dropIfExists("features");
     }
 };

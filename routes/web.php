@@ -346,16 +346,14 @@ Route::middleware(["auth", "store", "branch"])
             Route::get("/products", [ProductController::class, "index"])->name(
                 "products.index",
             );
-            Route::get("/products/{product}", [
-                ProductController::class,
-                "show",
-            ])->name("products.show");
+            // Static routes HARUS sebelum wildcard {product}
             Route::get("/products/by-barcode", [
                 ProductBarcodeController::class,
                 "findByBarcode",
             ])->name("products.by-barcode");
         });
         Route::middleware("permission:product.create")->group(function () {
+            // /products/create HARUS sebelum /products/{product} agar tidak tertangkap wildcard
             Route::get("/products/create", [
                 ProductController::class,
                 "create",
@@ -363,6 +361,13 @@ Route::middleware(["auth", "store", "branch"])
             Route::post("/products", [ProductController::class, "store"])->name(
                 "products.store",
             );
+        });
+        Route::middleware("permission:product.view")->group(function () {
+            // Wildcard {product} harus setelah semua route static
+            Route::get("/products/{product}", [
+                ProductController::class,
+                "show",
+            ])->name("products.show");
         });
         Route::middleware("permission:product.edit")->group(function () {
             Route::get("/products/{product}/edit", [

@@ -15,24 +15,29 @@ class Product extends Model
 
     protected $fillable = [
         'store_id', 'category_id', 'supplier_id',
-        'sku', 'barcode', 'name', 'type', 'image',
+        'sku', 'barcode', 'name', 'description', 'type', 'image',
         'is_composable', 'preparation_time',
         'is_sellable', 'unit', 'base_unit',
         'cost_price', 'sell_price',
         'price_per_hour', 'min_duration_minutes',
         'stock_minimum', 'track_stock', 'is_active',
+        // per-type fields
+        'capacity', 'max_guests',
+        'valid_duration_minutes', 'session_duration_minutes',
+        'deposit_amount',
     ];
 
     protected function casts(): array
     {
         return [
-            'cost_price'          => 'decimal:2',
-            'sell_price'          => 'decimal:2',
-            'price_per_hour'      => 'decimal:2',
-            'is_composable'       => 'boolean',
-            'is_sellable'         => 'boolean',
-            'track_stock'         => 'boolean',
-            'is_active'           => 'boolean',
+            'cost_price'               => 'decimal:2',
+            'sell_price'               => 'decimal:2',
+            'price_per_hour'           => 'decimal:2',
+            'deposit_amount'           => 'decimal:2',
+            'is_composable'            => 'boolean',
+            'is_sellable'              => 'boolean',
+            'track_stock'              => 'boolean',
+            'is_active'                => 'boolean',
         ];
     }
 

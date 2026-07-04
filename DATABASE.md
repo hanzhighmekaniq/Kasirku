@@ -147,7 +147,7 @@ Tabel default Laravel Breeze yang ditambahkan kolom `store_id` dan `role` untuk 
 | `cashier` | Hanya kasir (POS), melihat produk, proses penjualan |
 
 **Seed Data:**
-- `owner@gmail.com` / password → role: owner
+- `owner1@gmail.com` / password → role: owner
 - `manager@gmail.com` / password → role: manager
 - `kasir@gmail.com` / password → role: cashier
 

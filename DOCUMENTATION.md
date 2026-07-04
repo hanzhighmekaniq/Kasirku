@@ -131,7 +131,7 @@ model_has_roles (Spatie) ← User X punya role Y di store Z
 ### Struktur Relasi Multi-Store
 
 ```
-User (owner@gmail.com)
+User (owner1@gmail.com)
   ├── user_store → store_id=1 (Kopi Senja, FnB)
   │     └── model_has_roles → role=owner, store_id=1
   └── user_store → store_id=2 (Minimarket, Retail)
@@ -154,7 +154,7 @@ Login: dev@gmail.com / password
 ### 4.2 Owner Login (1 Toko)
 
 ```
-Login: owner@gmail.com / password
+Login: owner1@gmail.com / password
   → isDeveloper() = false
   → punya 1 store di user_store
   → set current_store_id = store.id di session
@@ -169,7 +169,7 @@ Login: owner@gmail.com / password
 ### 4.3 Owner Login (Multi-Toko)
 
 ```
-Login: owner@gmail.com / password
+Login: owner1@gmail.com / password
   → punya >1 store di user_store
   → redirect /app/select-store
   → Pilih toko → simpan current_store_id di session
@@ -535,7 +535,7 @@ if (needsTable && can('table.view')) {
 ### Owner
 | Email | Password | Toko | Tipe |
 |---|---|---|---|
-| owner@gmail.com | password | Minimarket Sejahtera | Retail |
+| owner1@gmail.com | password | Minimarket Sejahtera | Retail |
 | owner2@gmail.com | password | Warung Kopi Senja | F&B |
 | owner3@gmail.com | password | Barbershop Rapi | Service |
 | owner4@gmail.com | password | Sewa Alat Jaya | Rental |
@@ -592,7 +592,7 @@ php artisan serve
 ### Akses
 - **Aplikasi**: http://127.0.0.1:8000
 - **Login developer**: dev@gmail.com / password → http://127.0.0.1:8000/developer/dashboard
-- **Login owner**: owner@gmail.com / password → http://127.0.0.1:8000/app/dashboard
+- **Login owner**: owner1@gmail.com / password → http://127.0.0.1:8000/app/dashboard
 
 ### Development Mode
 

@@ -29,12 +29,12 @@ class EmployeeSeeder extends Seeder
             ["store_id" => $store1->id, "employee_code" => "EMP001"],
             [
                 "branch_id" => $br1->id,
-                "user_id" => User::where("email", "owner@gmail.com")->value(
+                "user_id" => User::where("email", "owner1@gmail.com")->value(
                     "id",
                 ),
                 "name" => "Budi Santoso",
                 "phone" => "081111111111",
-                "email" => "owner@gmail.com",
+                "email" => "owner1@gmail.com",
                 "position" => "Owner / Manager",
                 "commission_type" => "none",
                 "commission_value" => 0,
