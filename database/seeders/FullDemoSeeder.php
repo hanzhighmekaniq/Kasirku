@@ -236,21 +236,13 @@ class FullDemoSeeder extends Seeder
         $type = $config["type"];
         $ownerNo = (int) substr($storeCode, -3);
         $ownerEmail = "owner{$ownerNo}@gmail.com";
-        $cashierEmails = [
-            "STORE001" => "rizki@gmail.com",
-            "STORE002" => "kasir@gmail.com",
-            "STORE003" => "barber@gmail.com",
-            "STORE004" => "sewa@gmail.com",
-            "STORE005" => "bioskop@gmail.com",
-            "STORE006" => "villa@gmail.com",
-            "STORE007" => "parkir@gmail.com",
-            "STORE008" => "gamer@gmail.com",
-        ];
-        $cashierEmail = $cashierEmails[$storeCode] ?? "kasir@gmail.com";
         $ownerId = DB::table("users")->where("email", $ownerEmail)->value("id");
-        $cashierId =
-            DB::table("users")->where("email", $cashierEmail)->value("id") ??
-            $ownerId;
+        // Kasir: ambil dari employee pertama di branch pertama (sudah dibuat EmployeeSeeder)
+        $cashierId = DB::table("employees")
+            ->where("store_id", $store->id)
+            ->where("branch_id", $branch->id)
+            ->orderBy("id")
+            ->value("user_id") ?? $ownerId;
 
         $cashId = $this->upsert(
             "payment_methods",
@@ -328,49 +320,13 @@ class FullDemoSeeder extends Seeder
             ],
         );
 
-        $ownerEmployeeId = $this->upsert(
-            "employees",
-            [
-                "store_id" => $store->id,
-                "employee_code" => "{$storeCode}-EMP-OWNER",
-            ],
-            [
-                "branch_id" => $branch->id,
-                "user_id" => $ownerId,
-                "name" =>
-                    DB::table("users")->where("id", $ownerId)->value("name") ??
-                    "Owner Demo",
-                "phone" => "081111111111",
-                "email" => $ownerEmail,
-                "position" => "Owner / Manager",
-                "commission_type" => "none",
-                "commission_value" => 0,
-                "status" => "active",
-            ],
-        );
-        $cashierEmployeeId = $this->upsert(
-            "employees",
-            [
-                "store_id" => $store->id,
-                "employee_code" => "{$storeCode}-EMP-CASHIER",
-            ],
-            [
-                "branch_id" => $branch->id,
-                "user_id" => $cashierId,
-                "name" =>
-                    DB::table("users")
-                        ->where("id", $cashierId)
-                        ->value("name") ?? "Kasir Demo",
-                "phone" => "082222222222",
-                "email" => $cashierEmail,
-                "position" => in_array($type, ["service", "ticket"], true)
-                    ? "Operator / Staff"
-                    : "Cashier",
-                "commission_type" => $type === "service" ? "percent" : "none",
-                "commission_value" => $type === "service" ? 10 : 0,
-                "status" => "active",
-            ],
-        );
+        $ownerEmployeeId = null; // Owner bukan karyawan — tidak ada di employees
+        // Ambil employee kasir pertama di branch pertama store ini (sudah dibuat EmployeeSeeder)
+        $cashierEmployeeId = DB::table("employees")
+            ->where("store_id", $store->id)
+            ->where("branch_id", $branch->id)
+            ->orderBy("id")
+            ->value("id");
 
         $categoryIds = [];
         foreach ($config["categories"] as $idx => $categoryName) {

@@ -26,9 +26,10 @@ class DashboardController extends Controller
 
         $storeId = session("current_store_id") ?? $user->stores()->first()?->id;
 
-        // Branch filter: flat branch_ids[] array like Reports/Expenses
-        $branchIds = null;
-        if ($user->isKasir()) {
+        // User tanpa sale.void (kasir) selalu terkunci ke branch-nya sendiri
+        $canViewAll = $user->can('sale.void');
+        $branchIds  = null;
+        if (!$canViewAll) {
             $branchIds = [$user->branch_id];
         } elseif ($request->filled("branch_ids")) {
             $branchIds = (array) $request->input("branch_ids");
@@ -44,12 +45,12 @@ class DashboardController extends Controller
         $monthEnd = Carbon::now()->endOfDay();
 
         // ── Scope helper for branch + kasir filtering ─────────
-        $saleScope = function ($q) use ($storeId, $branchIds, $user) {
+        $saleScope = function ($q) use ($storeId, $branchIds, $user, $canViewAll) {
             $q->where("store_id", $storeId)->where("status", "completed");
             if ($branchIds) {
                 $q->whereIn("branch_id", $branchIds);
             }
-            if ($user->isKasir()) {
+            if (!$canViewAll) {
                 $q->where("user_id", $user->id);
             }
         };
@@ -110,9 +111,9 @@ class DashboardController extends Controller
                 "user_id",
             ]);
 
-        // ── Per-branch breakdown (always show for admin) ────────
+        // ── Per-branch breakdown (hanya user dengan akses penuh) ────────
         $branchBreakdown = [];
-        if ($user->isAdmin()) {
+        if ($canViewAll) {
             $store = Store::find($storeId);
             if ($store) {
                 $branchBreakdown = $store
@@ -150,9 +151,9 @@ class DashboardController extends Controller
             }
         }
 
-        // ── Multi-store overview (admin with > 1 store) ────────
+        // ── Multi-store overview (user dengan akses penuh & > 1 store) ────────
         $storeOverview = [];
-        if ($user->isAdmin()) {
+        if ($canViewAll) {
             $userStores = $user
                 ->stores()
                 ->get([
@@ -207,7 +208,7 @@ class DashboardController extends Controller
                 fn($q) => $q->whereIn("sales.branch_id", $branchIds),
             )
             ->when(
-                $user->isKasir(),
+                !$canViewAll,
                 fn($q) => $q->where("sales.user_id", $user->id),
             )
             ->select(
@@ -248,7 +249,7 @@ class DashboardController extends Controller
             ->whereDate("created_at", $today)
             ->count();
         $activeShift = null;
-        if ($user->isKasir()) {
+        if (!$canViewAll) {
             $activeShift = CashierShift::where("store_id", $storeId)
                 ->where("user_id", $user->id)
                 ->where("status", "open")
@@ -272,7 +273,7 @@ class DashboardController extends Controller
                 fn($q) => $q->whereIn("sales.branch_id", $branchIds),
             )
             ->when(
-                $user->isKasir(),
+                !$canViewAll,
                 fn($q) => $q->where("sales.user_id", $user->id),
             )
             ->select(
@@ -285,7 +286,7 @@ class DashboardController extends Controller
             ->get();
 
         return Inertia::render("Admin/Dashboard", [
-            "mode" => $user->isKasir() ? "kasir" : "admin",
+            "mode" => $canViewAll ? "admin" : "kasir",
             "currentStore" => $storeId
                 ? Store::find($storeId, ["id", "name", "store_type"])
                 : null,

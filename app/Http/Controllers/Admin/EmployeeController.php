@@ -43,6 +43,7 @@ class EmployeeController extends Controller
 
         return Inertia::render("Admin/Employees/Index", [
             "employees" => $employees,
+            "storeType" => \App\Models\Store::find($storeId)?->store_type ?? 'retail',
         ]);
     }
 

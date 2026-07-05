@@ -24,11 +24,10 @@ class ExpenseController extends Controller
             ->where("store_id", $storeId)
             ->latest();
 
-        // Multi-branch filter (for admin)
-        if ($user && !$user->isKasir() && $request->filled("branch_ids")) {
+        // User dengan sale.void (admin ke atas) bisa filter multi-branch
+        if ($user && $user->can('sale.void') && $request->filled("branch_ids")) {
             $query->whereIn("branch_id", (array) $request->input("branch_ids"));
         } elseif ($branchId) {
-            // Kasir — scope to their branch
             $query->where("branch_id", $branchId);
         }
 

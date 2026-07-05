@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
 
-export default function Index({ stocks, stats }) {
+export default function Index({ stocks, stats, storeType = 'retail' }) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState('');
     const [selectedProductId, setSelectedProductId] = useState('');
@@ -10,6 +10,12 @@ export default function Index({ stocks, stats }) {
     const [dropdownSearch, setDropdownSearch] = useState('');
     const dropdownRef = useRef(null);
     const searchInputRef = useRef(null);
+
+    // Label dinamis per store type
+    const isRawMaterial = storeType === 'fnb';
+    const PAGE_TITLE   = isRawMaterial ? 'Stok Bahan Baku' : 'Stok Produk';
+    const ITEM_LABEL   = isRawMaterial ? 'Bahan Baku' : storeType === 'rental' ? 'Unit' : 'Produk';
+    const STAT_PRODUCT = isRawMaterial ? 'Total Bahan Baku' : storeType === 'rental' ? 'Total Unit' : 'Total Produk';
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -81,7 +87,7 @@ export default function Index({ stocks, stats }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-slate-800">Stok Produk</h2>
+                    <h2 className="text-lg font-semibold text-slate-800">{PAGE_TITLE}</h2>
                     <div className="flex items-center gap-2">
                         <Link href={route('admin.stock.movements')} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -91,7 +97,7 @@ export default function Index({ stocks, stats }) {
                 </div>
             }
         >
-            <Head title="Stok Produk" />
+            <Head title={PAGE_TITLE} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{flash.success}</div>
@@ -125,7 +131,7 @@ export default function Index({ stocks, stats }) {
 
             {/* Summary cards */}
             <div className="mb-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                <StatCard title="Total Produk" value={stats.total_products} icon="product" color="indigo" />
+                <StatCard title={STAT_PRODUCT} value={stats.total_products} icon="product" color="indigo" />
                 <StatCard title="Total Item" value={stats.total_items?.toLocaleString('id-ID')} icon="box" color="slate" />
                 <StatCard title="Stok Menipis" value={stats.low_stock} icon="warn" color="amber" />
                 <StatCard title="Stok Habis" value={stats.out_of_stock} icon="danger" color="red" />
@@ -146,7 +152,7 @@ export default function Index({ stocks, stats }) {
                         }`}
                     >
                         <svg className="h-4 w-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
-                        <span className="truncate max-w-[200px]">{selectedProduct ? selectedProduct.name : 'Semua Produk'}</span>
+                        <span className="truncate max-w-[200px]">{selectedProduct ? selectedProduct.name : `Semua ${ITEM_LABEL}`}</span>
                         {selectedProduct ? (
                             <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedProductId(''); }} className="ml-1 rounded-full p-0.5 text-indigo-400 hover:bg-indigo-100 hover:text-indigo-600">
                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -180,7 +186,7 @@ export default function Index({ stocks, stats }) {
                                         !selectedProductId ? 'bg-indigo-50 font-semibold text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
                                     }`}
                                 >
-                                    Semua Produk
+                                    Semua {ITEM_LABEL}
                                 </button>
                                 {dropdownProducts.length === 0 ? (
                                     <p className="px-3 py-4 text-center text-xs text-slate-400">Tidak ada produk ditemukan.</p>

@@ -45,7 +45,7 @@ function ProductCombobox({ products, storeType, onPick }) {
     const containerRef              = useRef(null);
     const inputRef                  = useRef(null);
 
-    const unitLabel = storeType === 'cafe' ? 'stok' : 'pcs';
+    const unitLabel = storeType === 'fnb' ? 'stok' : 'pcs';
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -83,7 +83,7 @@ function ProductCombobox({ products, storeType, onPick }) {
     return (
         <div ref={containerRef} className="relative">
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Cari {storeType === 'cafe' ? 'Bahan Baku' : 'Produk'}
+                Cari {storeType === 'fnb' ? 'Bahan Baku' : 'Produk'}
             </label>
             <div className="relative">
                 <svg className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
@@ -96,7 +96,7 @@ function ProductCombobox({ products, storeType, onPick }) {
                     onChange={(e) => { setQuery(e.target.value); setOpen(true); setIdx(0); }}
                     onFocus={() => setOpen(true)}
                     onKeyDown={onKey}
-                    placeholder={`Ketik nama atau SKU ${storeType === 'cafe' ? 'bahan baku' : 'produk'}…`}
+                    placeholder={`Ketik nama atau SKU ${storeType === 'fnb' ? 'bahan baku' : 'produk'}…`}
                     className={`${inputCls()} pl-10 pr-9`}
                     autoComplete="off"
                 />
@@ -291,7 +291,7 @@ export default function Create({ suppliers, products, paymentMethods, storeType 
                         {/* Items */}
                         <SectionCard
                             title="Item Pembelian"
-                            subtitle={storeType === 'cafe' ? 'Pilih bahan baku yang dibeli dari supplier' : 'Pilih produk yang dibeli dari supplier'}
+                            subtitle={storeType === 'fnb' ? 'Pilih bahan baku yang dibeli dari supplier' : 'Pilih produk yang dibeli dari supplier'}
                         >
                             <div className="space-y-4">
                                 {/* Step 1: cari produk */}

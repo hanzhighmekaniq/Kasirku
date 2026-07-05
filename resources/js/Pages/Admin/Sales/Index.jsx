@@ -5,12 +5,155 @@ import * as ReactDOM from "react-dom";
 import axios from "axios";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 
+/* ── Order type options per store type ───────────────── */
+const ORDER_TYPE_OPTIONS = {
+    retail: [
+        { v: "takeaway", l: "Ambil" },
+        { v: "delivery", l: "Antar" },
+        { v: "wholesale", l: "Grosir" },
+    ],
+    fnb: [
+        { v: "dine_in", l: "Dine-in" },
+        { v: "takeaway", l: "Takeaway" },
+        { v: "delivery", l: "Delivery" },
+    ],
+    service: [
+        { v: "walk_in", l: "Walk-in" },
+        { v: "booking", l: "Booking" },
+        { v: "pickup_delivery", l: "Jemput & Antar" },
+    ],
+    rental: [
+        { v: "per_hour", l: "Per Jam" },
+        { v: "per_day", l: "Per Hari" },
+        { v: "per_week", l: "Per Minggu" },
+    ],
+    ticket: [
+        { v: "online", l: "Booking Online" },
+        { v: "walk_in", l: "Walk-in" },
+        { v: "group", l: "Group" },
+    ],
+    hospitality: [
+        { v: "check_in", l: "Check-in" },
+        { v: "reservation", l: "Reservasi" },
+        { v: "short_stay", l: "Short Stay" },
+    ],
+    parking: [
+        { v: "entry", l: "Masuk" },
+        { v: "exit", l: "Keluar" },
+        { v: "lost_ticket", l: "Tiket Hilang" },
+    ],
+    session: [
+        { v: "postpaid", l: "Postpaid" },
+        { v: "prepaid", l: "Prepaid" },
+        { v: "booking", l: "Booking" },
+    ],
+};
+
+/* ── Extra column config per store type ──────────────── */
+const EXTRA_COL = {
+    fnb: {
+        header: "Meja",
+        render: (s) =>
+            s.table?.table_number ? `Meja ${s.table.table_number}` : "-",
+    },
+    rental: {
+        header: "Tgl Kembali",
+        render: (s) =>
+            s.rent_end_at
+                ? new Date(s.rent_end_at).toLocaleDateString("id-ID")
+                : "-",
+    },
+    hospitality: {
+        header: "Check-out",
+        render: (s) =>
+            s.rent_end_at
+                ? new Date(s.rent_end_at).toLocaleDateString("id-ID")
+                : "-",
+    },
+    parking: { header: "Plat Nomor", render: (s) => s.plate_number ?? "-" },
+    session: { header: "Unit/Sesi", render: (s) => s.unit_name ?? "-" },
+};
+
+/* ── Extra status badge per store type ───────────────── */
+function ExtraStatusBadge({ sale, storeType }) {
+    if (storeType === "rental" && sale.rental_status) {
+        const map = {
+            active: "bg-blue-100 text-blue-700",
+            returned: "bg-emerald-100 text-emerald-700",
+            overdue: "bg-red-100 text-red-700",
+            cancelled: "bg-slate-100 text-slate-500",
+        };
+        const label = {
+            active: "🔑 Disewa",
+            returned: "✅ Kembali",
+            overdue: "⚠️ Telat",
+            cancelled: "❌ Batal",
+        };
+        return (
+            <span
+                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.rental_status] ?? "bg-slate-100 text-slate-600"}`}
+            >
+                {label[sale.rental_status] ?? sale.rental_status}
+            </span>
+        );
+    }
+    if (storeType === "service" && sale.service_status) {
+        const map = {
+            waiting: "bg-amber-100 text-amber-700",
+            in_progress: "bg-blue-100 text-blue-700",
+            done: "bg-emerald-100 text-emerald-700",
+        };
+        const label = {
+            waiting: "⏳ Antri",
+            in_progress: "⚙️ Proses",
+            done: "✅ Selesai",
+        };
+        return (
+            <span
+                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.service_status] ?? "bg-slate-100 text-slate-600"}`}
+            >
+                {label[sale.service_status] ?? sale.service_status}
+            </span>
+        );
+    }
+    if (storeType === "session" && sale.session_status) {
+        const map = {
+            running: "bg-blue-100 text-blue-700",
+            ended: "bg-emerald-100 text-emerald-700",
+        };
+        const label = { running: "▶ Aktif", ended: "⏹ Selesai" };
+        return (
+            <span
+                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.session_status] ?? "bg-slate-100 text-slate-600"}`}
+            >
+                {label[sale.session_status] ?? sale.session_status}
+            </span>
+        );
+    }
+    if (storeType === "hospitality" && sale.rental_status) {
+        const map = {
+            active: "bg-blue-100 text-blue-700",
+            returned: "bg-emerald-100 text-emerald-700",
+        };
+        const label = { active: "🛏 Check-in", returned: "✅ Check-out" };
+        return (
+            <span
+                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.rental_status] ?? "bg-slate-100 text-slate-600"}`}
+            >
+                {label[sale.rental_status] ?? sale.rental_status}
+            </span>
+        );
+    }
+    return null;
+}
+
 export default function Index({
     sales,
     stats,
     branches = [],
     currentBranchId = "",
     activeFilters = {},
+    storeType = "retail",
 }) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState("");
@@ -20,6 +163,24 @@ export default function Index({
     const [processing, setProcessing] = useState(false);
     const [printReceipt, setPrintReceipt] = useState(null);
     const [printLoading, setPrintLoading] = useState(false);
+
+    // Derived from storeType
+    const orderTypeOptions =
+        ORDER_TYPE_OPTIONS[storeType] ?? ORDER_TYPE_OPTIONS.retail;
+    const extraCol = EXTRA_COL[storeType] ?? null;
+
+    // Page title per store type
+    const PAGE_TITLE = {
+        retail: "Penjualan",
+        fnb: "Transaksi",
+        service: "Transaksi Jasa",
+        rental: "Transaksi Sewa",
+        ticket: "Penjualan Tiket",
+        hospitality: "Transaksi Penginapan",
+        parking: "Transaksi Parkir",
+        session: "Transaksi Sesi",
+    };
+    const pageTitle = PAGE_TITLE[storeType] ?? "Penjualan";
 
     // Server-side filter state
     const [filterBranch, setFilterBranch] = useState(
@@ -162,7 +323,7 @@ export default function Index({
             header={
                 <div className="flex items-center justify-between gap-4">
                     <h2 className="text-lg font-semibold text-slate-800">
-                        Penjualan
+                        {pageTitle}
                     </h2>
                     <Link
                         href={route("admin.sales.create")}
@@ -323,9 +484,11 @@ export default function Index({
                     className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 >
                     <option value="all">Semua Tipe</option>
-                    <option value="dine_in">Dine In</option>
-                    <option value="takeaway">Take Away</option>
-                    <option value="delivery">Delivery</option>
+                    {orderTypeOptions.map((opt) => (
+                        <option key={opt.v} value={opt.v}>
+                            {opt.l}
+                        </option>
+                    ))}
                 </select>
             </div>
 
@@ -441,6 +604,11 @@ export default function Index({
                             <th className="px-5 py-3.5 font-medium text-slate-500">
                                 Tipe
                             </th>
+                            {extraCol && (
+                                <th className="px-5 py-3.5 font-medium text-slate-500">
+                                    {extraCol.header}
+                                </th>
+                            )}
                             <th className="px-5 py-3.5 text-right font-medium text-slate-500">
                                 Total
                             </th>
@@ -450,6 +618,16 @@ export default function Index({
                             <th className="px-5 py-3.5 font-medium text-slate-500">
                                 Status
                             </th>
+                            {[
+                                "rental",
+                                "service",
+                                "session",
+                                "hospitality",
+                            ].includes(storeType) && (
+                                <th className="px-5 py-3.5 font-medium text-slate-500">
+                                    Status Ops
+                                </th>
+                            )}
                             <th className="px-5 py-3.5 font-medium text-slate-500">
                                 Bayar
                             </th>
@@ -462,7 +640,18 @@ export default function Index({
                         {filtered.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan={10}
+                                    colSpan={
+                                        10 +
+                                        (extraCol ? 1 : 0) +
+                                        ([
+                                            "rental",
+                                            "service",
+                                            "session",
+                                            "hospitality",
+                                        ].includes(storeType)
+                                            ? 1
+                                            : 0)
+                                    }
                                     className="px-5 py-16 text-center text-slate-400"
                                 >
                                     <svg
@@ -500,8 +689,16 @@ export default function Index({
                                         {s.customer?.name ?? "Umum"}
                                     </td>
                                     <td className="px-5 py-3.5">
-                                        <OrderTypeBadge type={s.order_type} />
+                                        <OrderTypeBadge
+                                            type={s.order_type}
+                                            storeType={storeType}
+                                        />
                                     </td>
+                                    {extraCol && (
+                                        <td className="px-5 py-3.5 text-slate-600 text-sm">
+                                            {extraCol.render(s)}
+                                        </td>
+                                    )}
                                     <td className="px-5 py-3.5 text-right font-medium text-slate-800">
                                         {fmtRp(s.grand_total)}
                                     </td>
@@ -511,6 +708,19 @@ export default function Index({
                                     <td className="px-5 py-3.5">
                                         <StatusBadge status={s.status} />
                                     </td>
+                                    {[
+                                        "rental",
+                                        "service",
+                                        "session",
+                                        "hospitality",
+                                    ].includes(storeType) && (
+                                        <td className="px-5 py-3.5">
+                                            <ExtraStatusBadge
+                                                sale={s}
+                                                storeType={storeType}
+                                            />
+                                        </td>
+                                    )}
                                     <td className="px-5 py-3.5">
                                         <PaymentBadge
                                             status={s.payment_status}
@@ -672,7 +882,10 @@ export default function Index({
                                 <div>
                                     <span className="text-slate-400">Tipe</span>
                                     <p className="font-medium text-slate-700">
-                                        <OrderTypeBadge type={s.order_type} />
+                                        <OrderTypeBadge
+                                            type={s.order_type}
+                                            storeType={storeType}
+                                        />
                                     </p>
                                 </div>
                                 <div>
@@ -685,6 +898,34 @@ export default function Index({
                                         />
                                     </p>
                                 </div>
+                                {extraCol && (
+                                    <div>
+                                        <span className="text-slate-400">
+                                            {extraCol.header}
+                                        </span>
+                                        <p className="font-medium text-slate-700">
+                                            {extraCol.render(s)}
+                                        </p>
+                                    </div>
+                                )}
+                                {[
+                                    "rental",
+                                    "service",
+                                    "session",
+                                    "hospitality",
+                                ].includes(storeType) && (
+                                    <div>
+                                        <span className="text-slate-400">
+                                            Status Ops
+                                        </span>
+                                        <p className="font-medium text-slate-700">
+                                            <ExtraStatusBadge
+                                                sale={s}
+                                                storeType={storeType}
+                                            />
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                             <div className="flex gap-2">
                                 <Link
@@ -843,14 +1084,45 @@ function PaymentBadge({ status }) {
     );
 }
 
-function OrderTypeBadge({ type }) {
+function OrderTypeBadge({ type, storeType }) {
     const map = {
+        // FnB
         dine_in: { label: "Dine In", cls: "bg-blue-100 text-blue-700" },
-        takeaway: { label: "Take Away", cls: "bg-orange-100 text-orange-700" },
+        takeaway: { label: "Takeaway", cls: "bg-orange-100 text-orange-700" },
         delivery: { label: "Delivery", cls: "bg-purple-100 text-purple-700" },
+        // Retail
+        wholesale: { label: "Grosir", cls: "bg-cyan-100 text-cyan-700" },
+        // Service
+        walk_in: { label: "Walk-in", cls: "bg-emerald-100 text-emerald-700" },
+        booking: { label: "Booking", cls: "bg-violet-100 text-violet-700" },
+        pickup_delivery: {
+            label: "Jemput & Antar",
+            cls: "bg-purple-100 text-purple-700",
+        },
+        // Rental
+        per_hour: { label: "Per Jam", cls: "bg-amber-100 text-amber-700" },
+        per_day: { label: "Per Hari", cls: "bg-amber-100 text-amber-700" },
+        per_week: { label: "Per Minggu", cls: "bg-amber-100 text-amber-700" },
+        // Ticket
+        online: { label: "Online", cls: "bg-rose-100 text-rose-700" },
+        group: { label: "Group", cls: "bg-pink-100 text-pink-700" },
+        // Hospitality
+        check_in: { label: "Check-in", cls: "bg-teal-100 text-teal-700" },
+        reservation: {
+            label: "Reservasi",
+            cls: "bg-indigo-100 text-indigo-700",
+        },
+        short_stay: { label: "Short Stay", cls: "bg-sky-100 text-sky-700" },
+        // Parking
+        entry: { label: "Masuk", cls: "bg-slate-100 text-slate-700" },
+        exit: { label: "Keluar", cls: "bg-slate-200 text-slate-600" },
+        lost_ticket: { label: "Tiket Hilang", cls: "bg-red-100 text-red-600" },
+        // Session
+        postpaid: { label: "Postpaid", cls: "bg-indigo-100 text-indigo-700" },
+        prepaid: { label: "Prepaid", cls: "bg-violet-100 text-violet-700" },
     };
     const config = map[type] ?? {
-        label: type,
+        label: type ?? "-",
         cls: "bg-slate-100 text-slate-600",
     };
     return (
@@ -918,11 +1190,31 @@ function PrintReceiptModal({ sale, storeName, onClose }) {
             )}
             {sale.order_type && (
                 <p className="text-center text-[10px] uppercase tracking-wider text-slate-400">
-                    {sale.order_type === "dine_in"
-                        ? "Dine-in"
-                        : sale.order_type === "takeaway"
-                          ? "Takeaway"
-                          : "Delivery"}
+                    {(() => {
+                        const labels = {
+                            dine_in: "Dine-in",
+                            takeaway: "Takeaway",
+                            delivery: "Delivery",
+                            wholesale: "Grosir",
+                            walk_in: "Walk-in",
+                            booking: "Booking",
+                            pickup_delivery: "Jemput & Antar",
+                            per_hour: "Per Jam",
+                            per_day: "Per Hari",
+                            per_week: "Per Minggu",
+                            online: "Online",
+                            group: "Group",
+                            check_in: "Check-in",
+                            reservation: "Reservasi",
+                            short_stay: "Short Stay",
+                            entry: "Masuk",
+                            exit: "Keluar",
+                            lost_ticket: "Tiket Hilang",
+                            postpaid: "Postpaid",
+                            prepaid: "Prepaid",
+                        };
+                        return labels[sale.order_type] ?? sale.order_type;
+                    })()}
                 </p>
             )}
 

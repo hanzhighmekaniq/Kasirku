@@ -104,9 +104,10 @@ Route::middleware(["auth", "developer"])
         Route::get("/branches", [DevBranchController::class, "allIndex"])->name(
             "branches.index",
         );
-        Route::resource("stores.branches", DevBranchController::class)->except([
-            "show",
-        ]);
+        Route::get("/branches/{branch}", [DevBranchController::class, "showApi"])->name(
+            "branches.show",
+        );
+        Route::resource("stores.branches", DevBranchController::class);
 
         // User management (global)
         Route::resource("users", DevUserController::class);

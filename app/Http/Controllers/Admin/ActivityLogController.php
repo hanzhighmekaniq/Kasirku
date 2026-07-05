@@ -14,8 +14,8 @@ class ActivityLogController extends Controller
     {
         $user = $request->user();
 
-        // Only admin can see activity logs
-        abort_unless($user->isAdmin(), 403);
+        // Hanya user dengan setting.view yang bisa akses log aktivitas
+        abort_unless($user->can('setting.view'), 403);
 
         $storeId = $user->currentStore()?->id;
         $branchId = $user->currentBranch()?->id;

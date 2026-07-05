@@ -96,18 +96,6 @@ class HandleInertiaRequests extends Middleware
                     false,
                 ),
                 "isDeveloper" => fn() => $user?->isDeveloper() ?? false,
-                "isOwner" => fn() => rescue(
-                    function () use ($user, $storeId) {
-                        if (!$user || !$storeId) {
-                            return false;
-                        }
-                        return $user->hasRole("owner");
-                    },
-                    false,
-                    false,
-                ),
-                "isAdmin" => fn() => $user?->isAdmin() ?? false,
-                "isKasir" => fn() => $user?->isKasir() ?? false,
             ],
 
             "currentStore" => fn() => rescue(

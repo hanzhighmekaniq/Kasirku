@@ -25,9 +25,10 @@ trait HasStoreScope
     {
         $user     = Auth::user();
         $storeId  = session('current_store_id') ?? $user->stores()->get()->first()?->id;
+        // User tanpa sale.void (kasir) selalu terkunci ke branch-nya sendiri
         $branchId = session('current_branch_id')
                     ?? session('branch_id')
-                    ?? ($user->isKasir() ? $user->branch_id : null);
+                    ?? (!$user->can('sale.void') ? $user->branch_id : null);
 
         return [(int) $storeId, $branchId ? (int) $branchId : null];
     }

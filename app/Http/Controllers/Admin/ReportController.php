@@ -32,11 +32,12 @@ class ReportController extends Controller
             ? Carbon::parse($request->end_date)->endOfDay()
             : Carbon::now()->endOfDay();
 
-        // ── Branch filter (simple: flat array of branch_ids) ─
-        // Kasir: forced to their branch
-        // Admin: filter by selected branch_ids, null = all
-        $branchIds = null;
-        if ($user->isKasir()) {
+        // ── Branch filter ─────────────────────────────────────
+        // User tanpa sale.void (kasir) → paksa ke branch sendiri
+        // User dengan sale.void (admin/owner/supervisor) → bisa pilih branch
+        $canViewAll = $user->can('sale.void');
+        $branchIds  = null;
+        if (!$canViewAll) {
             $branchIds = [$user->branch_id];
         } elseif ($request->filled("branch_ids")) {
             $branchIds = (array) $request->input("branch_ids");
@@ -625,50 +626,58 @@ class ReportController extends Controller
             ->limit(10)
             ->get();
 
-        // ── Branch data for UI filter ────────────────────────
+        $store       = Store::find($storeId);
+        $storeType   = $store?->store_type ?? 'retail';
         $allBranches = Branch::where("store_id", $storeId)
             ->where("is_active", true)
             ->orderBy("name")
             ->get(["id", "code", "name"]);
 
+        // Tentukan section yang relevan per store type
+        $hasStock    = in_array($storeType, ['retail', 'fnb', 'rental']);
+        $hasSupplier = in_array($storeType, ['retail', 'fnb', 'rental']);
+        $hasWaste    = $storeType === 'fnb';
+        $hasCashFlow = in_array($storeType, ['retail', 'fnb', 'service', 'rental']);
+
         return Inertia::render("Admin/Reports/Index", [
             "summary" => [
-                "total_sales" => $summary["totalSales"],
-                "total_purchases" => $summary["totalPurchases"],
-                "total_expenses" => $summary["totalExpenses"],
-                "cogs" => $summary["cogs"],
-                "gross_profit" => $summary["grossProfit"],
-                "net_profit" => $summary["netProfit"],
-                "sales_count" => $summary["salesCount"],
-                "purchase_count" => $summary["purchaseCount"],
-                "total_sale_returns" => $summary["totalSaleReturns"],
-                "total_purchase_returns" => $summary["totalPurchaseReturns"],
+                "total_sales"             => $summary["totalSales"],
+                "total_purchases"         => $hasSupplier ? $summary["totalPurchases"] : 0,
+                "total_expenses"          => $summary["totalExpenses"],
+                "cogs"                    => $summary["cogs"],
+                "gross_profit"            => $summary["grossProfit"],
+                "net_profit"              => $summary["netProfit"],
+                "sales_count"             => $summary["salesCount"],
+                "purchase_count"          => $hasSupplier ? $summary["purchaseCount"] : 0,
+                "total_sale_returns"      => $summary["totalSaleReturns"],
+                "total_purchase_returns"  => $hasSupplier ? $summary["totalPurchaseReturns"] : 0,
             ],
-            "dailySales" => $dailySales,
-            "topProducts" => $topProducts,
-            "salesByPayment" => $salesByPayment,
-            "salesByCategory" => $salesByCategory,
-            "expensesByCategory" => $expensesByCategory,
-            "recentSales" => $recentSales,
-            "recentPurchases" => $recentPurchases,
-            "cashFlow" => $cashFlow,
-            "inventoryItems" => $inventoryItems,
-            "totalInventoryValue" => $totalInventoryValue,
-            "lowStockProducts" => $lowStockProducts,
-            "topCustomers" => $topCustomers,
-            "expiringBatches" => $expiringBatches,
-            "wasteTotal" => $wasteTotal,
-            "wasteByCategory" => $wasteByCategory,
-            "topWasteProducts" => $topWasteProducts,
-            "supplierPerformance" => $supplierPerformance,
-            "promotionEffectiveness" => $promotionEffectiveness,
+            "dailySales"              => $dailySales,
+            "topProducts"             => $topProducts,
+            "salesByPayment"          => $salesByPayment,
+            "salesByCategory"         => $salesByCategory,
+            "expensesByCategory"      => $expensesByCategory,
+            "recentSales"             => $recentSales,
+            "recentPurchases"         => $hasSupplier ? $recentPurchases : [],
+            "cashFlow"                => $hasCashFlow ? $cashFlow : collect([]),
+            "inventoryItems"          => $hasStock ? $inventoryItems : collect([]),
+            "totalInventoryValue"     => $hasStock ? $totalInventoryValue : 0,
+            "lowStockProducts"        => $hasStock ? $lowStockProducts : collect([]),
+            "topCustomers"            => $topCustomers,
+            "expiringBatches"         => $hasStock ? $expiringBatches : collect([]),
+            "wasteTotal"              => $hasWaste ? $wasteTotal : 0,
+            "wasteByCategory"         => $hasWaste ? $wasteByCategory : collect([]),
+            "topWasteProducts"        => $hasWaste ? $topWasteProducts : collect([]),
+            "supplierPerformance"     => $hasSupplier ? $supplierPerformance : collect([]),
+            "promotionEffectiveness"  => $promotionEffectiveness,
             "filters" => [
                 "start_date" => $from->format("Y-m-d"),
-                "end_date" => $to->format("Y-m-d"),
+                "end_date"   => $to->format("Y-m-d"),
                 "branch_ids" => $branchIds ?? [],
             ],
-            "branches" => $allBranches,
-            "isKasir" => $user->isKasir(),
+            "branches"  => $allBranches,
+            "storeType" => $storeType,
+            "canViewAll" => $canViewAll,
         ]);
     }
 }

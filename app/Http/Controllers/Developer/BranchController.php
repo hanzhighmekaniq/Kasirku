@@ -68,6 +68,34 @@ class BranchController extends Controller
             ->with("success", "Cabang berhasil ditambahkan.");
     }
 
+    public function show(Store $store, Branch $branch)
+    {
+        abort_unless($branch->store_id === $store->id, 404);
+
+        $branch->load(["store", "employees.user"]);
+
+        $employees = $branch->employees->map(function ($emp) {
+            return [
+                "id" => $emp->id,
+                "name" => $emp->name,
+                "position" => $emp->position,
+                "phone" => $emp->phone,
+                "is_active" => $emp->is_active,
+                "user" => $emp->user ? [
+                    "id" => $emp->user->id,
+                    "name" => $emp->user->name,
+                    "email" => $emp->user->email,
+                ] : null,
+            ];
+        });
+
+        return Inertia::render("Developer/Branches/Show", [
+            "store" => $store,
+            "branch" => $branch,
+            "employees" => $employees,
+        ]);
+    }
+
     public function edit(Store $store, Branch $branch)
     {
         abort_unless($branch->store_id === $store->id, 404);
@@ -120,6 +148,46 @@ class BranchController extends Controller
         return redirect()
             ->route("developer.stores.branches.index", $store)
             ->with("success", "Cabang berhasil dihapus.");
+    }
+
+    /**
+     * API: Detail branch untuk modal (dipanggil via axios)
+     */
+    public function showApi(Branch $branch)
+    {
+        $branch->load(['store', 'employees.user']);
+
+        $employees = $branch->employees->map(function ($emp) {
+            return [
+                'id' => $emp->id,
+                'name' => $emp->name,
+                'position' => $emp->position,
+                'phone' => $emp->phone,
+                'is_active' => $emp->is_active,
+                'user' => $emp->user ? [
+                    'id' => $emp->user->id,
+                    'name' => $emp->user->name,
+                    'email' => $emp->user->email,
+                ] : null,
+            ];
+        });
+
+        return response()->json([
+            'branch' => [
+                'id' => $branch->id,
+                'code' => $branch->code,
+                'name' => $branch->name,
+                'address' => $branch->address,
+                'phone' => $branch->phone,
+                'is_active' => $branch->is_active,
+                'store' => $branch->store ? [
+                    'id' => $branch->store->id,
+                    'name' => $branch->store->name,
+                    'store_type' => $branch->store->store_type,
+                ] : null,
+            ],
+            'employees' => $employees,
+        ]);
     }
 
     private function rules(int $storeId, ?int $ignoreId = null): array

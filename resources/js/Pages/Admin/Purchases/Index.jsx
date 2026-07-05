@@ -3,12 +3,25 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 
-export default function Index({ purchases, stats }) {
+export default function Index({ purchases, stats, storeType = 'retail' }) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [processing, setProcessing] = useState(false);
+
+    // Label dinamis per store type
+    const PAGE_TITLE = {
+        retail:  'Pembelian',
+        fnb:     'Pembelian Bahan Baku',
+        rental:  'Pembelian Unit',
+        default: 'Pembelian',
+    };
+    const pageTitle   = PAGE_TITLE[storeType] ?? PAGE_TITLE.default;
+    const addLabel    = storeType === 'fnb' ? 'Tambah Pembelian Bahan Baku' : 'Tambah Pembelian';
+    const searchPlaceholder = storeType === 'fnb'
+        ? 'Cari no. faktur atau supplier bahan baku...'
+        : 'Cari no. faktur atau supplier...';
 
     const filtered = useMemo(() => {
         let list = [...purchases];
@@ -33,7 +46,7 @@ export default function Index({ purchases, stats }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-lg font-semibold text-slate-800">Pembelian</h2>
+                    <h2 className="text-lg font-semibold text-slate-800">{pageTitle}</h2>
                     <Link href={route('admin.purchases.create')} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                         Tambah
@@ -41,7 +54,7 @@ export default function Index({ purchases, stats }) {
                 </div>
             }
         >
-            <Head title="Pembelian" />
+            <Head title={pageTitle} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{flash.success}</div>
@@ -62,7 +75,7 @@ export default function Index({ purchases, stats }) {
             <div className="mb-4 flex flex-col gap-3 sm:flex-row">
                 <div className="relative flex-1">
                     <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                    <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari no. faktur atau supplier..." className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                    <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={searchPlaceholder} className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
                 </div>
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
                     <option value="all">Semua Status</option>

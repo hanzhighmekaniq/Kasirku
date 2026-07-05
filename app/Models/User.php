@@ -77,18 +77,6 @@ class User extends Authenticatable
         return (bool) $this->is_developer;
     }
 
-    /** Shortcut: cek apakah user punya role kasir di store aktif */
-    public function isKasir(): bool
-    {
-        return $this->hasRole('kasir');
-    }
-
-    /** Shortcut: cek apakah user punya role owner atau admin di store aktif */
-    public function isAdmin(): bool
-    {
-        return $this->hasRole(['owner', 'admin']);
-    }
-
     /** Shortcut: cek apakah user bisa akses operasional (semua kecuali developer) */
     public function canAccessOperational(): bool
     {

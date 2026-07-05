@@ -21,6 +21,7 @@ class CustomerController extends Controller
 
         return Inertia::render("Admin/Customers/Index", [
             "customers" => $customers,
+            "storeType" => \App\Models\Store::find($storeId)?->store_type ?? 'retail',
         ]);
     }
 

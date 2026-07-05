@@ -27,11 +27,32 @@ const ROLE_LABELS = {
     developer: "Developer",
 };
 
-export default function Index({ employees }) {
+export default function Index({ employees, storeType = 'retail' }) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState("");
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
+
+    // Label per store type
+    const PAGE_LABEL = {
+        retail:      'Karyawan',
+        fnb:         'Karyawan',
+        service:     'Terapis / Staf',
+        rental:      'Staf',
+        ticket:      'Staf & Operator',
+        hospitality: 'Staf Hotel',
+        parking:     'Petugas Parkir',
+        session:     'Operator',
+    };
+    const ADD_LABEL = {
+        service:     'Tambah Terapis',
+        hospitality: 'Tambah Staf',
+        parking:     'Tambah Petugas',
+        session:     'Tambah Operator',
+    };
+    const pageLabel = PAGE_LABEL[storeType] ?? 'Karyawan';
+    const addLabel  = ADD_LABEL[storeType]  ?? 'Tambah Karyawan';
+    const showCommission = ['service', 'ticket', 'fnb', 'retail'].includes(storeType);
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -71,34 +92,22 @@ export default function Index({ employees }) {
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold text-slate-800">
-                        Karyawan
+                        {pageLabel}
                     </h2>
                     <Link
                         href={route("admin.employees.create")}
                         className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
                     >
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                            />
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
-                        <span className="hidden sm:inline">
-                            Tambah Karyawan
-                        </span>
+                        <span className="hidden sm:inline">{addLabel}</span>
                         <span className="sm:hidden">Tambah</span>
                     </Link>
                 </div>
             }
         >
-            <Head title="Karyawan" />
+            <Head title={pageLabel} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -112,17 +121,9 @@ export default function Index({ employees }) {
             )}
 
             <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <StatCard label="Total Karyawan" value={employees.length} />
-                <StatCard
-                    label="Ada Akun Login"
-                    value={employees.filter((e) => e.user).length}
-                    tone="sky"
-                />
-                <StatCard
-                    label="Karyawan Aktif"
-                    value={activeCount}
-                    tone="emerald"
-                />
+                <StatCard label={`Total ${pageLabel}`} value={employees.length} />
+                <StatCard label="Ada Akun Login" value={employees.filter((e) => e.user).length} tone="sky" />
+                <StatCard label="Aktif" value={activeCount} tone="emerald" />
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -156,7 +157,7 @@ export default function Index({ employees }) {
                         <span className="font-semibold text-slate-700">
                             {filtered.length}
                         </span>{" "}
-                        karyawan
+                        {pageLabel.toLowerCase()}
                     </p>
                 </div>
 
@@ -210,7 +211,7 @@ export default function Index({ employees }) {
                         )}
                     </div>
                 ) : (
-                    <EmployeeList items={filtered} onDelete={setTarget} />
+                    <EmployeeList items={filtered} onDelete={setTarget} showCommission={showCommission} />
                 )}
             </div>
 
@@ -330,7 +331,7 @@ function RowActions({ employee, onDelete }) {
     );
 }
 
-function EmployeeList({ items, onDelete }) {
+function EmployeeList({ items, onDelete, showCommission = true }) {
     return (
         <>
             <div className="hidden overflow-x-auto lg:block">
@@ -341,7 +342,7 @@ function EmployeeList({ items, onDelete }) {
                             <th className="px-6 py-3.5">Cabang</th>
                             <th className="px-6 py-3.5">Kontak</th>
                             <th className="px-6 py-3.5">Jabatan</th>
-                            <th className="px-6 py-3.5 text-center">Komisi</th>
+                            {showCommission && <th className="px-6 py-3.5 text-center">Komisi</th>}
                             <th className="px-6 py-3.5 text-center">Role</th>
                             <th className="px-6 py-3.5 text-center">Status</th>
                             <th className="px-6 py-3.5 text-right">Aksi</th>
@@ -382,6 +383,7 @@ function EmployeeList({ items, onDelete }) {
                                 <td className="px-6 py-4 text-slate-600">
                                     {emp.position || "-"}
                                 </td>
+                                {showCommission && (
                                 <td className="px-6 py-4 text-center">
                                     {emp.commission_type === "none" || !emp.commission_type ? (
                                         <span className="text-xs text-slate-400">-</span>
@@ -395,6 +397,7 @@ function EmployeeList({ items, onDelete }) {
                                         </span>
                                     )}
                                 </td>
+                                )}
                                 <td className="px-6 py-4 text-center">
                                     <RoleBadge role={emp.user_roles?.[0]} />
                                 </td>

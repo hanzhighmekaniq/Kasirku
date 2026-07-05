@@ -36,7 +36,7 @@ class ReportAIController extends Controller
             : Carbon::now()->endOfDay();
 
         $branchIds = null;
-        if ($user->isKasir()) {
+        if (!$user->can('sale.void')) {
             $branchIds = [$user->branch_id];
         } elseif ($request->filled('branch_ids')) {
             $branchIds = (array) $request->input('branch_ids');

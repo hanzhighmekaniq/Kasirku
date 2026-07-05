@@ -44,7 +44,8 @@ class PurchaseController extends Controller
 
         return Inertia::render("Admin/Purchases/Index", [
             "purchases" => $purchases,
-            "stats" => $stats,
+            "stats"     => $stats,
+            "storeType" => \App\Models\Store::find($storeId)?->store_type ?? 'retail',
         ]);
     }
 
@@ -53,16 +54,24 @@ class PurchaseController extends Controller
         $storeId = session("current_store_id");
         $store = Store::find($storeId);
 
-        // Filter products by store type: cafe → raw_material, minimarket → finished_goods + combo
+        // Filter products by store type:
+        // fnb → raw_material (bahan baku)
+        // rental → rental_item
+        // service/ticket/hospitality/session/parking → service / time_based
+        // retail dan lainnya → finished_goods + combo
         $products = Product::forStore($storeId)
             ->where("is_active", true)
             ->when(
-                $store && $store->store_type === "cafe",
+                $store && $store->store_type === "fnb",
                 fn($q) => $q->where("type", "raw_material"),
             )
             ->when(
-                $store && $store->store_type !== "cafe",
-                fn($q) => $q->whereIn("type", ["finished_goods", "combo"]),
+                $store && $store->store_type === "rental",
+                fn($q) => $q->whereIn("type", ["rental_item", "finished_goods"]),
+            )
+            ->when(
+                $store && !in_array($store->store_type, ["fnb", "rental"]),
+                fn($q) => $q->whereIn("type", ["finished_goods", "combo", "service", "time_based"]),
             )
             ->with("stocks", fn($q) => $q->where("store_id", $storeId))
             ->orderBy("name")

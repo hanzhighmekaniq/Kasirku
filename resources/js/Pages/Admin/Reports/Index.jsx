@@ -764,9 +764,38 @@ export default function Index({
     promotionEffectiveness,
     filters,
     branches = [],
-    isKasir,
+    storeType = 'retail',
+    canViewAll = false,
 }) {
     const [activeTab, setActiveTab] = useState('sales');
+
+    // Flags dari storeType
+    const hasStock    = ['retail', 'fnb', 'rental'].includes(storeType);
+    const hasSupplier = ['retail', 'fnb', 'rental'].includes(storeType);
+    const hasWaste    = storeType === 'fnb';
+    const hasCashFlow = ['retail', 'fnb', 'service', 'rental'].includes(storeType);
+
+    // Label disesuaikan per store type
+    const PAGE_TITLE = {
+        retail:      'Laporan Keuangan',
+        fnb:         'Laporan Keuangan',
+        service:     'Laporan Jasa',
+        rental:      'Laporan Sewa',
+        ticket:      'Laporan Tiket',
+        hospitality: 'Laporan Penginapan',
+        parking:     'Laporan Parkir',
+        session:     'Laporan Sesi',
+    };
+    const PRODUCT_LABEL = {
+        retail:      'Top 10 Produk',
+        fnb:         'Top 10 Menu',
+        service:     'Top 10 Layanan',
+        rental:      'Top 10 Item Sewa',
+        ticket:      'Top 10 Tiket',
+        hospitality: 'Top 10 Kamar / Paket',
+        parking:     'Top 10 Tarif',
+        session:     'Top 10 Paket Sesi',
+    };
 
     // Local pending state — baru dikirim saat Terapkan diklik
     const [pendingBranchIds, setPendingBranchIds] = useState(
@@ -799,7 +828,7 @@ export default function Index({
 
     const statCards = [
         { label: 'Penjualan', value: fmt(summary.total_sales), sub: `${fmtNum(summary.sales_count)} transaksi` },
-        { label: 'Pembelian', value: fmt(summary.total_purchases), sub: `${fmtNum(summary.purchase_count)} pembelian` },
+        ...(hasSupplier ? [{ label: 'Pembelian', value: fmt(summary.total_purchases), sub: `${fmtNum(summary.purchase_count)} pembelian` }] : []),
         { label: 'Pengeluaran', value: fmt(summary.total_expenses), sub: 'Operasional & lainnya' },
         { label: 'Laba Bersih', value: fmt(summary.net_profit), sub: `Kotor: ${fmt(summary.gross_profit)}` },
     ];
@@ -808,7 +837,7 @@ export default function Index({
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between gap-3 w-full">
-                    <h2 className="text-lg font-bold text-slate-900">Laporan Keuangan</h2>
+                    <h2 className="text-lg font-bold text-slate-900">{PAGE_TITLE[storeType] ?? 'Laporan Keuangan'}</h2>
                     <span className="hidden rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 sm:inline">
                         {new Date(filters.start_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
                         {' — '}
@@ -823,8 +852,8 @@ export default function Index({
                 {/* Date filter */}
                 <DateFilter filters={filters} onApply={(s, e) => applyFilters(s, e)} />
 
-                {/* Branch checkboxes (admin only, >1 branch) */}
-                {!isKasir && branches.length > 1 && (
+                {/* Branch checkboxes (hanya user dengan akses penuh, >1 branch) */}
+                {canViewAll && branches.length > 1 && (
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xs font-medium text-slate-400">Cabang:</span>
                         {branches.map((b) => (
@@ -862,7 +891,8 @@ export default function Index({
                     {statCards.map((s) => <StatCard key={s.label} {...s} />)}
                 </div>
 
-                {/* Profit breakdown */}
+                {/* Profit breakdown — hanya store type yang punya COGS & purchase */}
+                {hasSupplier && (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     {[
                         { label: 'HPP (COGS)', value: fmt(summary.cogs) },
@@ -882,6 +912,7 @@ export default function Index({
                         </Card>
                     ))}
                 </div>
+                )}
 
                 {/* Trend + Payment */}
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -915,11 +946,12 @@ export default function Index({
 
                 {/* Top products */}
                 <Card>
-                    <SectionHeader title="Top 10 Produk" subtitle="Pendapatan tertinggi pada periode ini" />
+                    <SectionHeader title={PRODUCT_LABEL[storeType] ?? 'Top 10 Produk'} subtitle="Pendapatan tertinggi pada periode ini" />
                     <TopProductsTable data={topProducts} />
                 </Card>
 
-                {/* Cash Flow */}
+                {/* Cash Flow — hanya retail, fnb, service, rental */}
+                {hasCashFlow && (
                 <Card>
                     <SectionHeader title="Arus Kas Harian" subtitle="Pemasukan (penjualan) vs Pengeluaran (pembelian + biaya)" />
                     <div className="flex items-center gap-4 px-5 pt-3 pb-1 text-xs">
@@ -940,6 +972,7 @@ export default function Index({
                         </div>
                     )}
                 </Card>
+                )}
 
                 {/* Top Customers */}
                 <Card>
@@ -947,35 +980,45 @@ export default function Index({
                     <TopCustomersTable data={topCustomers} />
                 </Card>
 
-                {/* Inventory Value */}
+                {/* Inventory Value — hanya retail, fnb, rental */}
+                {hasStock && (
                 <Card>
                     <SectionHeader title="Nilai Stok" subtitle="20 produk dengan nilai stok tertinggi" />
                     <InventoryTable items={inventoryItems} totalValue={totalInventoryValue} />
                 </Card>
+                )}
 
-                {/* Expiring Batches */}
+                {/* Expiring Batches — hanya retail, fnb, rental */}
+                {hasStock && (
                 <Card>
                     <SectionHeader title="Stok Akan Kadaluarsa" subtitle="Batch yang kadaluarsa dalam 30 hari ke depan" />
                     <ExpiringBatchesTable data={expiringBatches} />
                 </Card>
+                )}
 
-                {/* Low Stock Warning */}
+                {/* Low Stock Warning — hanya retail, fnb, rental */}
+                {hasStock && (
                 <Card>
                     <SectionHeader title="Stok Menipis" subtitle="Produk yang stoknya mendekati atau di bawah batas minimum" />
                     <LowStockTable data={lowStockProducts} />
                 </Card>
+                )}
 
-                {/* Waste */}
+                {/* Waste — hanya fnb */}
+                {hasWaste && (
                 <Card>
                     <SectionHeader title="Waste / Produk Terbuang" subtitle="Kerugian akibat produk rusak, kadaluarsa, atau terbuang" />
                     <WasteSection total={wasteTotal} byCategory={wasteByCategory} topProducts={topWasteProducts} />
                 </Card>
+                )}
 
-                {/* Supplier Performance */}
+                {/* Supplier Performance — hanya retail, fnb, rental */}
+                {hasSupplier && (
                 <Card>
                     <SectionHeader title="Kinerja Supplier" subtitle="10 supplier dengan total pembelian tertinggi" />
                     <SupplierPerformanceTable data={supplierPerformance} />
                 </Card>
+                )}
 
                 {/* Promotion Effectiveness */}
                 <Card>
@@ -986,18 +1029,24 @@ export default function Index({
                 {/* Recent transactions */}
                 <Card>
                     <SectionHeader title="Transaksi Terbaru" subtitle="5 transaksi terakhir" />
-                    <Tabs
-                        tabs={[
-                            { id: 'sales', label: 'Penjualan' },
-                            { id: 'purchases', label: 'Pembelian' },
-                        ]}
-                        active={activeTab}
-                        onChange={setActiveTab}
-                    />
-                    {activeTab === 'sales' ? (
-                        <RecentSalesTable data={recentSales} />
+                    {hasSupplier ? (
+                        <>
+                            <Tabs
+                                tabs={[
+                                    { id: 'sales', label: 'Penjualan' },
+                                    { id: 'purchases', label: 'Pembelian' },
+                                ]}
+                                active={activeTab}
+                                onChange={setActiveTab}
+                            />
+                            {activeTab === 'sales' ? (
+                                <RecentSalesTable data={recentSales} />
+                            ) : (
+                                <RecentPurchasesTable data={recentPurchases} />
+                            )}
+                        </>
                     ) : (
-                        <RecentPurchasesTable data={recentPurchases} />
+                        <RecentSalesTable data={recentSales} />
                     )}
                 </Card>
             </div>

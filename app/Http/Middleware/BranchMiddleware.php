@@ -50,13 +50,13 @@ class BranchMiddleware
         $branchId = $request->session()->get('current_branch_id')
                  ?? $request->session()->get('branch_id');
 
-        // ── Kasir: branch wajib dari employee record ──────────────────
-        if ($user->isKasir() && !$branchId) {
+        // ── User tanpa sale.void (kasir): branch wajib dari employee record ──
+        if (!$user->can('sale.void') && !$branchId) {
             $empBranch = $user->employee?->branch_id;
             if (!$empBranch) {
                 return redirect()
                     ->route('admin.dashboard')
-                    ->with('error', 'Akun kasir belum ditugaskan ke cabang.');
+                    ->with('error', 'Akun kamu belum ditugaskan ke cabang.');
             }
             $branchId = $empBranch;
             $request->session()->put('current_branch_id', $branchId);

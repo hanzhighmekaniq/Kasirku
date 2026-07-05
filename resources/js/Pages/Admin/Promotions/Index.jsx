@@ -95,7 +95,8 @@ function statCount(list, fn) {
 
 export default function Index({ promotions }) {
     const { auth } = usePage().props;
-    const isKasir = (auth.roles ?? []).includes("kasir") || auth.role === "kasir";
+    // Pakai permission, bukan nama role
+    const canManage = (auth.permissions ?? []).includes('promotion.create');
     const promos = promotions || [];
 
     const [search, setSearch] = useState("");
@@ -179,7 +180,7 @@ export default function Index({ promotions }) {
                             {activeCount} promo aktif · {promos.length} total
                         </p>
                     </div>
-                    {!isKasir && (
+                    {canManage && (
                         <Link
                             href={route("admin.promotions.create")}
                             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
@@ -337,7 +338,7 @@ export default function Index({ promotions }) {
                                     ? "Coba ubah filter atau kata kunci."
                                     : "Buat promo pertama untuk menarik pelanggan."}
                             </p>
-                            {!hasFilters && !isKasir && (
+                            {!hasFilters && canManage && (
                                 <Link
                                     href={route("admin.promotions.create")}
                                     className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
@@ -380,7 +381,7 @@ export default function Index({ promotions }) {
                                             <th className="px-5 py-3 text-center">
                                                 Status
                                             </th>
-                                            {!isKasir && (
+                                            {canManage && (
                                                 <th className="px-5 py-3 text-right">
                                                     Aksi
                                                 </th>
@@ -454,7 +455,7 @@ export default function Index({ promotions }) {
                                                         promo={promo}
                                                     />
                                                 </td>
-                                                {!isKasir && (
+                                                {canManage && (
                                                     <td className="px-5 py-3.5">
                                                         <div className="flex items-center justify-end gap-1">
                                                             <Link
@@ -554,7 +555,7 @@ export default function Index({ promotions }) {
                                                 {promo.products_count} produk
                                             </p>
                                         )}
-                                        {!isKasir && (
+                                        {canManage && (
                                             <div className="mt-3 flex justify-end gap-1">
                                                 <Link
                                                     href={route(

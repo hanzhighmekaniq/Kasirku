@@ -248,40 +248,39 @@ class StoreController extends Controller
 
     public function show(Store $store)
     {
-        $store->load(["branches", "users"]);
-        $store->loadCount(["sales", "products", "employees"]);
+        $store->load(["branches"]);
+        $store->loadCount(["branches", "employees"]);
 
-        // Users dengan role mereka di store ini
-        $usersWithRole = $store->users->map(function (User $user) use ($store) {
-            app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
-            return [
-                "id" => $user->id,
-                "name" => $user->name,
-                "email" => $user->email,
-                "roles" => $user->getRoleNames(),
-            ];
-        });
-        app(PermissionRegistrar::class)->setPermissionsTeamId(null);
+        // Hanya owner di store ini (exclude developer, exclude tanpa role)
+        $owners = $store->users()
+            ->where('is_developer', false)
+            ->get()
+            ->map(function (User $user) use ($store) {
+                app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
+                $roles = $user->getRoleNames();
+                app(PermissionRegistrar::class)->setPermissionsTeamId(null);
+
+                if ($roles->isEmpty()) return null;
+
+                return [
+                    "id"    => $user->id,
+                    "name"  => $user->name,
+                    "email" => $user->email,
+                    "roles" => $roles,
+                ];
+            })
+            ->filter()
+            ->values();
+
+        // Semua user non-developer untuk dropdown assign owner
+        $allUsers = User::where('is_developer', false)
+            ->orderBy("name")
+            ->get(["id", "name", "email"]);
 
         return Inertia::render("Developer/Stores/Show", [
-            "store" => $store,
-            "usersWithRole" => $usersWithRole,
-            "allUsers" => User::orderBy("name")->get(["id", "name", "email"]),
-            "plans" => collect(\App\Models\Store::planConfig())
-                ->map(
-                    fn($p, $k) => array_merge($p, [
-                        "key" => $k,
-                        "color" => match ($k) {
-                            "free" => "bg-slate-100 text-slate-600",
-                            "basic" => "bg-blue-100 text-blue-700",
-                            "pro" => "bg-indigo-100 text-indigo-700",
-                            default => "bg-slate-100 text-slate-600",
-                        },
-                    ]),
-                )
-                ->toArray(),
-            "defaultModules" => self::DEFAULT_MODULES,
-            "allFeatures" => $this->allFeaturesList(),
+            "store"   => $store,
+            "owners"  => $owners,
+            "allUsers" => $allUsers,
         ]);
     }
 

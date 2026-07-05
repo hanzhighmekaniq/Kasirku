@@ -26,31 +26,38 @@ class SaleController extends Controller
 
     public function index(Request $request)
     {
+        $user    = Auth::user();
         $storeId = session("current_store_id");
 
-        // Branch filter: query param > session > kasir fixed
+        // Branch filter: query param > session
+        // User tanpa sale.void (kasir) selalu terkunci ke branch-nya sendiri
+        $canViewAll = $user->can('sale.void');
+
         $branchId =
             $request->input("branch_id") ?:
             session("current_branch_id") ??
-                (session("branch_id") ??
-                    (Auth::user()->isKasir() ? Auth::user()->branch_id : null));
+            session("branch_id");
+
+        // Jika tidak punya sale.void, paksa ke branch sendiri
+        if (!$canViewAll && !$branchId) {
+            $branchId = $user->branch_id ?? null;
+        }
 
         $branches = Branch::where("store_id", $storeId)
             ->where("is_active", true)
             ->get(["id", "code", "name"]);
 
         $query = Sale::where("store_id", $storeId)
-            ->with(["customer", "user", "branch"])
+            ->with(["customer", "user", "branch", "table"])
             ->latest();
 
         if ($branchId) {
             $query->where("branch_id", $branchId);
         }
 
-        // Kasir hanya melihat transaksi yang dibuat oleh akun kasir itu sendiri.
-        // Role selain kasir tetap melihat semua transaksi sesuai filter toko/cabang.
-        if (Auth::user()->isKasir()) {
-            $query->where("user_id", Auth::id());
+        // User tanpa sale.void hanya lihat transaksi miliknya sendiri
+        if (!$canViewAll) {
+            $query->where("user_id", $user->id);
         }
 
         // Filter: date range
@@ -88,12 +95,15 @@ class SaleController extends Controller
             "payment_status" => $request->input("payment_status", "all"),
         ];
 
+        $store = \App\Models\Store::find($storeId);
+
         return Inertia::render("Admin/Sales/Index", [
             "sales" => $sales,
             "stats" => $stats,
             "branches" => $branches,
             "currentBranchId" => $branchId ? (string) $branchId : "",
             "activeFilters" => $activeFilters,
+            "storeType" => $store?->store_type ?? "retail",
         ]);
     }
 
@@ -122,22 +132,42 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
+        $storeId   = session("current_store_id");
+        $store     = \App\Models\Store::find($storeId);
+        $storeType = $store?->store_type ?? 'retail';
+
+        // Order types valid per store type — ambil dari StoreType model
+        $storeTypeModel = \App\Models\StoreType::where('code', $storeType)->first();
+        $validOrderTypes = collect($storeTypeModel?->order_types ?? [])
+            ->pluck('v')
+            ->filter()
+            ->values()
+            ->toArray();
+
+        // Fallback jika StoreType belum ada di DB
+        if (empty($validOrderTypes)) {
+            $validOrderTypes = ['takeaway', 'delivery', 'dine_in', 'walk_in',
+                'booking', 'per_hour', 'per_day', 'per_week', 'online', 'group',
+                'check_in', 'reservation', 'short_stay', 'entry', 'exit',
+                'lost_ticket', 'postpaid', 'prepaid', 'wholesale', 'pickup_delivery'];
+        }
+
         $validated = $request->validate([
-            "customer_id" => "nullable|exists:customers,id",
-            "table_id" => "nullable|integer",
-            "sale_date" => "required|date",
-            "order_type" => "required|in:dine_in,takeaway,delivery",
-            "discount_amount" => "nullable|numeric|min:0",
-            "tax_amount" => "nullable|numeric|min:0",
-            "shipping_amount" => "nullable|numeric|min:0",
-            "payment_method_id" => "nullable|exists:payment_methods,id",
-            "paid_amount" => "required|numeric|min:0",
-            "notes" => "nullable|string|max:500",
-            "items" => "required|array|min:1",
-            "items.*.product_id" => "required|exists:products,id",
-            "items.*.quantity" => "required|integer|min:1",
-            "items.*.price" => "required|numeric|min:0",
-            "items.*.discount_amount" => "nullable|numeric|min:0",
+            "customer_id"      => "nullable|exists:customers,id",
+            "table_id"         => "nullable|integer",
+            "sale_date"        => "required|date",
+            "order_type"       => ["required", "string", \Illuminate\Validation\Rule::in($validOrderTypes)],
+            "discount_amount"  => "nullable|numeric|min:0",
+            "tax_amount"       => "nullable|numeric|min:0",
+            "shipping_amount"  => "nullable|numeric|min:0",
+            "payment_method_id"=> "nullable|exists:payment_methods,id",
+            "paid_amount"      => "required|numeric|min:0",
+            "notes"            => "nullable|string|max:500",
+            "items"            => "required|array|min:1",
+            "items.*.product_id"     => "required|exists:products,id",
+            "items.*.quantity"       => "required|integer|min:1",
+            "items.*.price"          => "required|numeric|min:0",
+            "items.*.discount_amount"=> "nullable|numeric|min:0",
         ]);
 
         DB::beginTransaction();
@@ -324,12 +354,12 @@ class SaleController extends Controller
         }
 
         if (
-            Auth::user()->isKasir() &&
+            !Auth::user()->can('sale.void') &&
             (int) $sale->user_id !== (int) Auth::id()
         ) {
             abort(
                 403,
-                "Akses ditolak. Struk ini bukan transaksi milik akun kasir kamu.",
+                "Akses ditolak. Struk ini bukan transaksi milik akun kamu.",
             );
         }
 

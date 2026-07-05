@@ -9,10 +9,13 @@ const TIER_STYLES = {
     gold: 'bg-yellow-100 text-yellow-700',
 };
 
-export default function Index({ customers }) {
+export default function Index({ customers, storeType = 'retail' }) {
     const [search, setSearch] = useState('');
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
+
+    // Poin & Tier hanya relevan untuk retail, fnb, service (membership/loyalty)
+    const showLoyalty = ['retail', 'fnb', 'service', 'hospitality'].includes(storeType);
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -106,7 +109,7 @@ export default function Index({ customers }) {
                         )}
                     </div>
                 ) : (
-                    <CustomerList items={filtered} onDelete={setTarget} />
+                    <CustomerList items={filtered} onDelete={setTarget} showLoyalty={showLoyalty} />
                 )}
             </div>
 
@@ -155,7 +158,7 @@ function RowActions({ customer, onDelete }) {
     );
 }
 
-function CustomerList({ items, onDelete }) {
+function CustomerList({ items, onDelete, showLoyalty = true }) {
     return (
         <>
             {/* Desktop table */}
@@ -166,8 +169,8 @@ function CustomerList({ items, onDelete }) {
                             <th className="px-6 py-3.5">Nama</th>
                             <th className="px-6 py-3.5">Telepon</th>
                             <th className="px-6 py-3.5">Email</th>
-                            <th className="px-6 py-3.5 text-center">Poin</th>
-                            <th className="px-6 py-3.5 text-center">Tier</th>
+                            {showLoyalty && <th className="px-6 py-3.5 text-center">Poin</th>}
+                            {showLoyalty && <th className="px-6 py-3.5 text-center">Tier</th>}
                             <th className="px-6 py-3.5 text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -185,16 +188,20 @@ function CustomerList({ items, onDelete }) {
                                 </td>
                                 <td className="px-6 py-4 text-slate-600">{c.phone || '—'}</td>
                                 <td className="px-6 py-4 text-slate-600">{c.email || '—'}</td>
+                                {showLoyalty && (
                                 <td className="px-6 py-4 text-center">
                                     <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
                                         {c.points || 0}
                                     </span>
                                 </td>
+                                )}
+                                {showLoyalty && (
                                 <td className="px-6 py-4 text-center">
                                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${TIER_STYLES[c.tier] || TIER_STYLES.bronze}`}>
                                         {c.tier || 'bronze'}
                                     </span>
                                 </td>
+                                )}
                                 <td className="px-6 py-4">
                                     <RowActions customer={c} onDelete={onDelete} />
                                 </td>
