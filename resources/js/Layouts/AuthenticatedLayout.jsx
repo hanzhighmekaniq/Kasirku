@@ -351,6 +351,10 @@ export default function AuthenticatedLayout({ header, children }) {
     const { auth, currentStore, userStores = [], currentBranch, branches = [], flash } = usePage().props;
     const user = auth?.user;
 
+    // Hanya owner/admin/supervisor yang boleh ganti toko/branch
+    // Karyawan biasa (kasir, gudang) false → switcher tersembunyi, branch terkunci
+    const canSwitchContext = auth?.canSwitch === true;
+
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [collapsed, setCollapsed]     = useState(() => {
         try { return JSON.parse(localStorage.getItem('sidebar-collapsed') ?? 'false'); }
@@ -414,23 +418,34 @@ export default function AuthenticatedLayout({ header, children }) {
 
                     {/* Right side */}
                     <div className="flex items-center gap-2">
-                        {/* Store switcher — hanya muncul kalau multi-store */}
-                        {currentStore && userStores?.length > 1 && (
+                        {/* Store switcher — hanya owner/manager yang punya multi-store */}
+                        {currentStore && userStores?.length > 1 && canSwitchContext && (
                             <StoreSwitcher currentStore={currentStore} userStores={userStores} />
                         )}
 
                         {/* Branch badge / switcher */}
                         {currentBranch && (
-                            branches?.length > 1
-                                ? <BranchSwitcher currentBranch={currentBranch} branches={branches} />
-                                : (
-                                    <span className="hidden items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 sm:flex">
-                                        <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 21V8.25A2.25 2.25 0 016.75 6h10.5a2.25 2.25 0 012.25 2.25V21" />
-                                        </svg>
-                                        {currentBranch.name}
-                                    </span>
-                                )
+                            // Karyawan biasa: badge static saja, tidak bisa ganti branch
+                            !canSwitchContext ? (
+                                <span className="hidden items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 sm:flex">
+                                    <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 21V8.25A2.25 2.25 0 016.75 6h10.5a2.25 2.25 0 012.25 2.25V21" />
+                                    </svg>
+                                    <span>{currentBranch.name}</span>
+                                    <svg className="h-3 w-3 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                    </svg>
+                                </span>
+                            ) : branches?.length > 1 ? (
+                                <BranchSwitcher currentBranch={currentBranch} branches={branches} />
+                            ) : (
+                                <span className="hidden items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 sm:flex">
+                                    <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 21V8.25A2.25 2.25 0 016.75 6h10.5a2.25 2.25 0 012.25 2.25V21" />
+                                    </svg>
+                                    {currentBranch.name}
+                                </span>
+                            )
                         )}
 
                         <OfflineIndicator />

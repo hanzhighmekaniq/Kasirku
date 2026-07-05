@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 \Spatie\Permission\Middleware\PermissionMiddleware::class,
             "active_shift" => \App\Http\Middleware\EnsureActiveShift::class,
             "ensure.shift" => \App\Http\Middleware\EnsureActiveShift::class,
+            "feature" => \App\Http\Middleware\CheckFeatureAccess::class,
         ]);
 
         // CSRF exception for payment gateway webhooks + offline transaction sync

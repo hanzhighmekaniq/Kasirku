@@ -91,14 +91,22 @@ class BranchSelectController extends Controller
 
     /**
      * Switch branch (from header dropdown).
+     * Hanya owner/manager yang boleh switch branch.
+     * Karyawan terkunci ke branch dari employee record.
      */
     public function switch(Request $request)
     {
+        $user = Auth::user();
+
+        // Karyawan biasa tidak boleh switch branch
+        if (!$user->canSwitchBranch()) {
+            return back()->with('error', 'Kamu tidak memiliki akses untuk mengganti cabang.');
+        }
+
         $validated = $request->validate([
             'branch_id' => 'required|exists:branches,id',
         ]);
 
-        $user    = Auth::user();
         $storeId = session('current_store_id');
         $store   = $storeId ? \App\Models\Store::find($storeId) : $user->stores()->first();
 

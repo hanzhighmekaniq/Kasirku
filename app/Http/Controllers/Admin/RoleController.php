@@ -127,4 +127,41 @@ class RoleController extends Controller
 
         return back()->with('success', "Role berhasil dihapus.");
     }
+
+    /**
+     * Duplikat role sistem sebagai role custom baru.
+     * Template: permission diambil dari role asal, is_system = false.
+     */
+    public function duplicate(Role $role)
+    {
+        $this->setTeam();
+        $storeId = $this->currentStoreId();
+
+        // Hanya boleh duplikat role yang ada di store ini atau role sistem store ini
+        if ($role->store_id !== $storeId) {
+            abort(403);
+        }
+
+        $baseName = $role->name . ' (custom)';
+        $counter  = 1;
+        $newName  = $baseName;
+
+        // Pastikan nama tidak duplicate
+        while (Role::where('name', $newName)->where('store_id', $storeId)->exists()) {
+            $newName = $baseName . ' ' . $counter++;
+        }
+
+        $newRole = Role::create([
+            'name'        => $newName,
+            'guard_name'  => 'web',
+            'store_id'    => $storeId,
+            'is_system'   => false,
+            'description' => 'Duplikat dari role "' . $role->name . '"',
+        ]);
+
+        // Salin semua permission dari role asal
+        $newRole->syncPermissions($role->permissions);
+
+        return back()->with('success', "Role \"{$newRole->name}\" berhasil diduplikat dari \"{$role->name}\".");
+    }
 }

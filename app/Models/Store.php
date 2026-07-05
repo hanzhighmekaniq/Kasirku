@@ -32,6 +32,7 @@ class Store extends Model
         "address",
         "is_active",
         "plan",
+        "plan_id",
         "plan_expires_at",
         "max_users",
         "max_branches",
@@ -53,6 +54,11 @@ class Store extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, "user_id");
+    }
+
+    public function planModel(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class, "plan_id");
     }
 
     public function users(): BelongsToMany
@@ -196,47 +202,69 @@ class Store extends Model
             return $dbPlans
                 ->map(
                     fn($p) => [
-                        "key" => $p->code,
-                        "label" => $p->label,
-                        "description" => $p->description,
-                        "max_users" => $p->max_users,
+                        "id"           => $p->id,
+                        "key"          => $p->code,
+                        "label"        => $p->label,
+                        "description"  => $p->description,
+                        "max_users"    => $p->max_users,
                         "max_branches" => $p->max_branches,
-                        "price" => (float) $p->price,
-                        "trial_days" => $p->trial_days,
-                        "features" => $p->featureCodes(),
+                        "price"        => (float) $p->price,
+                        "trial_days"   => $p->trial_days,
+                        "features"     => $p->featureCodes(),
                     ],
                 )
                 ->values()
                 ->toArray();
         }
-        // Fallback ke hardcoded
+        // Fallback ke hardcoded (tanpa id)
         return collect(self::planConfig())
-            ->map(fn($p, $k) => array_merge($p, ["key" => $k]))
+            ->map(fn($p, $k) => array_merge($p, ["id" => null, "key" => $k]))
             ->values()
             ->toArray();
     }
 
-    /** Ambil config plan aktif toko ini */
+    /** Ambil config plan aktif toko ini — dari relasi plan_id, fallback ke hardcoded */
     public function activePlanConfig(): array
     {
+        // Coba dari relasi Plan model
+        $plan = $this->planModel;
+        if ($plan) {
+            return [
+                "label"        => $plan->label,
+                "max_users"    => $plan->max_users,
+                "max_branches" => $plan->max_branches,
+                "features"     => $plan->featureCodes(),
+            ];
+        }
+        // Fallback ke hardcoded (jika plan_id belum diset)
         return self::planConfig()[$this->plan] ?? self::planConfig()["free"];
+    }
+
+    /** Efektif max users: override toko ?? ambil dari plan */
+    public function effectiveMaxUsers(): int
+    {
+        return $this->max_users ?? $this->activePlanConfig()["max_users"] ?? 1;
+    }
+
+    /** Efektif max branches: override toko ?? ambil dari plan */
+    public function effectiveMaxBranches(): int
+    {
+        return $this->max_branches ?? $this->activePlanConfig()["max_branches"] ?? 1;
     }
 
     /** Cek apakah plan mengizinkan fitur tertentu */
     public function planAllowsFeature(string $feature): bool
     {
-        $plan = $this->effectivePlan();
-        $features = $this->activePlanConfig()["features"];
+        $features = $this->activePlanConfig()["features"] ?? [];
 
-        // Pro = semua diizinkan
+        // Wildcard = semua diizinkan (plan Pro)
         if ($features === ["*"] || in_array("*", $features)) {
             return true;
         }
 
-        // Free = hanya blokir fitur premium tertentu, sisanya boleh
-        // Ini mencegah sidebar kosong saat developer set plan free tapi modules sudah dikonfigurasi
-        if ($plan === "free") {
-            $blockedInFree = ["payment_gateway"]; // hanya blokir ini di free
+        // Free: hanya blokir payment_gateway agar sidebar tidak kosong
+        if ($this->effectivePlanCode() === "free") {
+            $blockedInFree = ["payment_gateway"];
             return !in_array($feature, $blockedInFree);
         }
 
@@ -247,11 +275,9 @@ class Store extends Model
     /** Cek apakah fitur aktif di modules DAN diizinkan plan */
     public function hasFeature(string $feature): bool
     {
-        // Fitur harus aktif di modules toko ini (dikonfigurasi developer)
         if (!in_array($feature, $this->modules["features"] ?? [])) {
             return false;
         }
-        // Dan plan harus mengizinkannya
         return $this->planAllowsFeature($feature);
     }
 
@@ -266,16 +292,13 @@ class Store extends Model
     /** Apakah masih bisa tambah user baru */
     public function canAddUser(): bool
     {
-        $maxUsers = $this->max_users ?? $this->activePlanConfig()["max_users"];
-        return $this->users()->count() < $maxUsers;
+        return $this->users()->count() < $this->effectiveMaxUsers();
     }
 
     /** Apakah masih bisa tambah branch baru */
     public function canAddBranch(): bool
     {
-        $maxBranches =
-            $this->max_branches ?? $this->activePlanConfig()["max_branches"];
-        return $this->branches()->count() < $maxBranches;
+        return $this->branches()->count() < $this->effectiveMaxBranches();
     }
 
     /** Plan expired? */
@@ -285,9 +308,17 @@ class Store extends Model
             $this->plan_expires_at->isPast();
     }
 
-    /** Efektif plan aktif (fallback ke free jika expired) */
+    /** Kode plan efektif (fallback ke free jika expired) */
+    public function effectivePlanCode(): string
+    {
+        if ($this->isPlanExpired()) return "free";
+        // Dari relasi plan_id dulu, lalu kolom plan lama
+        return $this->planModel?->code ?? $this->plan ?? "free";
+    }
+
+    /** @deprecated Gunakan effectivePlanCode() */
     public function effectivePlan(): string
     {
-        return $this->isPlanExpired() ? "free" : $this->plan ?? "free";
+        return $this->effectivePlanCode();
     }
 }

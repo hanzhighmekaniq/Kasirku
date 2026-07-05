@@ -96,6 +96,13 @@ class HandleInertiaRequests extends Middleware
                     false,
                 ),
                 "isDeveloper" => fn() => $user?->isDeveloper() ?? false,
+                // Apakah user boleh ganti toko/cabang (owner, admin, supervisor)
+                // Karyawan biasa (kasir, gudang) false → switcher disembunyikan
+                "canSwitch" => fn() => rescue(
+                    fn() => $user && !$user->isDeveloper() ? $user->canSwitchBranch() : false,
+                    false,
+                    false,
+                ),
             ],
 
             "currentStore" => fn() => rescue(

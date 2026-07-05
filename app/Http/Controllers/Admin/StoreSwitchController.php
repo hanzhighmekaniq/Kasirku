@@ -97,14 +97,21 @@ class StoreSwitchController extends Controller
 
     /**
      * Switch toko dari header dropdown.
+     * Hanya owner/manager yang boleh switch toko.
      */
     public function switch(Request $request)
     {
+        $user = Auth::user();
+
+        // Karyawan biasa tidak boleh switch toko
+        if (!$user->canSwitchBranch()) {
+            return back()->with('error', 'Kamu tidak memiliki akses untuk mengganti toko.');
+        }
+
         $validated = $request->validate([
             "store_id" => "required|exists:stores,id",
         ]);
 
-        $user = Auth::user();
         $store = $user->stores()->find($validated["store_id"]);
 
         if (!$store) {

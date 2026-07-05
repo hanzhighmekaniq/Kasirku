@@ -7,17 +7,21 @@ export default function Create({
     plans = [],
 }) {
     const { data, setData, post, processing, errors } = useForm({
+        // ── Informasi Toko ──────────────────────
         code: "",
         name: "",
-        store_type: "retail",
         phone: "",
         email: "",
         address: "",
         is_active: true,
+        // ── Tipe & Plan ─────────────────────────
+        store_type: "retail",
+        plan_id: null,
+        // ── Cabang (create only) ────────────────
         branches: [{ code: "", name: "", phone: "", address: "" }],
+        // ── Owner (create only) ─────────────────
         owner_ids: [],
         new_owner: { name: "", email: "", password: "" },
-        plan: "free",
     });
 
     const submit = (e) => {
@@ -25,6 +29,7 @@ export default function Create({
         post(route("developer.stores.store"));
     };
 
+    // ── Branch handlers ──────────────────────
     const addBranch = () =>
         setData("branches", [
             ...data.branches,
@@ -40,6 +45,8 @@ export default function Create({
         branches[i] = { ...branches[i], [field]: val };
         setData("branches", branches);
     };
+
+    // ── Owner handlers ───────────────────────
     const toggleOwner = (id) => {
         const ids = data.owner_ids.includes(id)
             ? data.owner_ids.filter((x) => x !== id)
@@ -60,13 +67,13 @@ export default function Create({
                 processing={processing}
                 onSubmit={submit}
                 cancelHref={route("developer.stores.index")}
+                plans={plans}
                 availableOwners={availableOwners}
                 onAddBranch={addBranch}
                 onRemoveBranch={removeBranch}
                 onUpdateBranch={updateBranch}
                 onToggleOwner={toggleOwner}
                 onUpdateNewOwner={updateNewOwner}
-                plans={plans}
             />
         </>
     );

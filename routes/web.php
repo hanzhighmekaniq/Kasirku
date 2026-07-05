@@ -209,7 +209,7 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // POS / KASIR — permission: sale.create + wajib shift aktif
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware(["permission:sale.create", "ensure.shift"])->group(function () {
+        Route::middleware(["feature:basic_pos", "permission:sale.create", "ensure.shift"])->group(function () {
             Route::get("/kasir", [KasirController::class, "index"])->name(
                 "kasir.index",
             );
@@ -218,19 +218,21 @@ Route::middleware(["auth", "store", "branch"])
                 "store",
             ])->name("kasir.store");
 
-            // Payment gateway (untuk POS)
-            Route::post("/payment-gateway/create", [
-                PaymentGatewayController::class,
-                "createTransaction",
-            ])->name("payment-gateway.create");
-            Route::get("/payment-gateway/{pgTrxId}/status", [
-                PaymentGatewayController::class,
-                "checkStatus",
-            ])->name("payment-gateway.status");
-            Route::get("/payment-gateway/pending", [
-                PaymentGatewayController::class,
-                "pendingTransactions",
-            ])->name("payment-gateway.pending");
+            // Payment gateway (untuk POS) — perlu fitur payment_gateway
+            Route::middleware("feature:payment_gateway")->group(function () {
+                Route::post("/payment-gateway/create", [
+                    PaymentGatewayController::class,
+                    "createTransaction",
+                ])->name("payment-gateway.create");
+                Route::get("/payment-gateway/{pgTrxId}/status", [
+                    PaymentGatewayController::class,
+                    "checkStatus",
+                ])->name("payment-gateway.status");
+                Route::get("/payment-gateway/pending", [
+                    PaymentGatewayController::class,
+                    "pendingTransactions",
+                ])->name("payment-gateway.pending");
+            });
         });
 
         // ─────────────────────────────────────────────────────────────────
@@ -261,7 +263,7 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // PENJUALAN — permission: sale.view / sale.create
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:sale.view")->group(function () {
+        Route::middleware(["feature:basic_pos", "permission:sale.view"])->group(function () {
             Route::get("/sales", [SaleController::class, "index"])->name(
                 "sales.index",
             );
@@ -273,7 +275,7 @@ Route::middleware(["auth", "store", "branch"])
                 "print",
             ])->name("sales.print");
         });
-        Route::middleware("permission:sale.create")->group(function () {
+        Route::middleware(["feature:basic_pos", "permission:sale.create"])->group(function () {
             Route::get("/sales/create", [
                 SaleController::class,
                 "create",
@@ -286,7 +288,7 @@ Route::middleware(["auth", "store", "branch"])
                 "switchPayment",
             ])->name("sales.switchPayment");
         });
-        Route::middleware("permission:sale.void")->group(function () {
+        Route::middleware(["feature:basic_pos", "permission:sale.void"])->group(function () {
             Route::patch("/sales/{sale}/status", [
                 SaleController::class,
                 "updateStatus",
@@ -296,7 +298,7 @@ Route::middleware(["auth", "store", "branch"])
                 "destroy",
             ])->name("sales.destroy");
         });
-        Route::middleware("permission:sale.create")->group(function () {
+        Route::middleware(["feature:basic_pos", "permission:sale.create"])->group(function () {
             Route::patch("/sales/{sale}/service-status", [
                 SaleController::class,
                 "updateServiceStatus",
@@ -322,7 +324,7 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // RETUR PENJUALAN — permission: sale.return
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:sale.return")->group(function () {
+        Route::middleware(["feature:sale_return", "permission:sale.return"])->group(function () {
             Route::resource("sale-returns", SaleReturnController::class)->only([
                 "index",
                 "create",
@@ -370,7 +372,7 @@ Route::middleware(["auth", "store", "branch"])
                 "show",
             ])->name("products.show");
         });
-        Route::middleware("permission:product.edit")->group(function () {
+        Route::middleware(["permission:product.edit"])->group(function () {
             Route::get("/products/{product}/edit", [
                 ProductController::class,
                 "edit",
@@ -385,8 +387,10 @@ Route::middleware(["auth", "store", "branch"])
                 "products.variants",
                 ProductVariantController::class,
             )->only(["index", "store", "update", "destroy"]);
+        });
 
-            // Recipe
+        // Recipe — feature:recipe + permission:product.edit
+        Route::middleware(["feature:recipe", "permission:product.edit"])->group(function () {
             Route::get("/products/{product}/recipes", [
                 ProductRecipeController::class,
                 "index",
@@ -399,8 +403,10 @@ Route::middleware(["auth", "store", "branch"])
                 ProductRecipeController::class,
                 "destroy",
             ])->name("products.recipes.destroy");
+        });
 
-            // Modifier groups
+        // Modifier — feature:modifier + permission:product.edit
+        Route::middleware(["feature:modifier", "permission:product.edit"])->group(function () {
             Route::resource(
                 "modifier-groups",
                 ProductModifierGroupController::class,
@@ -446,7 +452,7 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // STOK — permission: stock.*
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:stock.view")->group(function () {
+        Route::middleware(["feature:stock", "permission:stock.view"])->group(function () {
             Route::get("/stock", [StockController::class, "index"])->name(
                 "stock.index",
             );
@@ -459,7 +465,7 @@ Route::middleware(["auth", "store", "branch"])
                 ProductBatchController::class,
             )->except(["show"]);
         });
-        Route::middleware("permission:stock.adjustment")->group(function () {
+        Route::middleware(["feature:stock", "permission:stock.adjustment"])->group(function () {
             Route::resource(
                 "stock-adjustments",
                 StockAdjustmentController::class,
@@ -469,7 +475,7 @@ Route::middleware(["auth", "store", "branch"])
                 "updateStatus",
             ])->name("stock-adjustments.updateStatus");
         });
-        Route::middleware("permission:stock.opname")->group(function () {
+        Route::middleware(["feature:stock_opname", "permission:stock.opname"])->group(function () {
             Route::resource(
                 "stock-opnames",
                 StockOpnameController::class,
@@ -479,7 +485,7 @@ Route::middleware(["auth", "store", "branch"])
                 "updateStatus",
             ])->name("stock-opnames.updateStatus");
         });
-        Route::middleware("permission:stock.transfer")->group(function () {
+        Route::middleware(["feature:stock", "permission:stock.transfer"])->group(function () {
             Route::resource(
                 "stock-transfers",
                 StockTransferController::class,
@@ -489,7 +495,7 @@ Route::middleware(["auth", "store", "branch"])
                 "updateStatus",
             ])->name("stock-transfers.updateStatus");
         });
-        Route::middleware("permission:stock.waste")->group(function () {
+        Route::middleware(["feature:waste", "permission:stock.waste"])->group(function () {
             Route::resource("wastes", WasteController::class)->only([
                 "index",
                 "create",
@@ -506,13 +512,13 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // PEMBELIAN — permission: purchase.*
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:purchase.view")->group(function () {
+        Route::middleware(["feature:purchase", "permission:purchase.view"])->group(function () {
             Route::resource("purchases", PurchaseController::class)->only([
                 "index",
                 "show",
             ]);
         });
-        Route::middleware("permission:purchase.create")->group(function () {
+        Route::middleware(["feature:purchase", "permission:purchase.create"])->group(function () {
             Route::resource("purchases", PurchaseController::class)->only([
                 "create",
                 "store",
@@ -522,13 +528,13 @@ Route::middleware(["auth", "store", "branch"])
                 "updateStatus",
             ])->name("purchases.updateStatus");
         });
-        Route::middleware("permission:purchase.delete")->group(function () {
+        Route::middleware(["feature:purchase", "permission:purchase.delete"])->group(function () {
             Route::delete("/purchases/{purchase}", [
                 PurchaseController::class,
                 "destroy",
             ])->name("purchases.destroy");
         });
-        Route::middleware("permission:purchase.return")->group(function () {
+        Route::middleware(["feature:purchase", "permission:purchase.return"])->group(function () {
             Route::resource(
                 "purchase-returns",
                 PurchaseReturnController::class,
@@ -553,7 +559,7 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // BOOKING — permission: booking.view
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:booking.view")->group(function () {
+        Route::middleware(["feature:booking", "permission:booking.view"])->group(function () {
             Route::get("/bookings", [BookingController::class, "index"])->name(
                 "bookings.index",
             );
@@ -573,7 +579,7 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // MEMBERSHIP — permission: membership.*
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:membership.view")->group(function () {
+        Route::middleware(["feature:membership", "permission:membership.view"])->group(function () {
             Route::get("/memberships", [
                 MembershipController::class,
                 "index",
@@ -604,13 +610,13 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // KOMISI KARYAWAN — permission: commission.view / commission.approve
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:commission.view")->group(function () {
+        Route::middleware(["feature:commission", "permission:commission.view"])->group(function () {
             Route::get("/employee-commissions", [
                 \App\Http\Controllers\Admin\EmployeeCommissionController::class,
                 "index",
             ])->name("employee-commissions.index");
         });
-        Route::middleware("permission:commission.approve")->group(function () {
+        Route::middleware(["feature:commission", "permission:commission.approve"])->group(function () {
             Route::patch("/employee-commissions/{commission}/status", [
                 \App\Http\Controllers\Admin\EmployeeCommissionController::class,
                 "updateStatus",
@@ -641,25 +647,25 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // PROMOSI — permission: promotion.*
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:promotion.view")->group(function () {
+        Route::middleware(["feature:promo", "permission:promotion.view"])->group(function () {
             Route::resource("promotions", PromotionController::class)->only([
                 "index",
                 "show",
             ]);
         });
-        Route::middleware("permission:promotion.create")->group(function () {
+        Route::middleware(["feature:promo", "permission:promotion.create"])->group(function () {
             Route::resource("promotions", PromotionController::class)->only([
                 "create",
                 "store",
             ]);
         });
-        Route::middleware("permission:promotion.edit")->group(function () {
+        Route::middleware(["feature:promo", "permission:promotion.edit"])->group(function () {
             Route::resource("promotions", PromotionController::class)->only([
                 "edit",
                 "update",
             ]);
         });
-        Route::middleware("permission:promotion.delete")->group(function () {
+        Route::middleware(["feature:promo", "permission:promotion.delete"])->group(function () {
             Route::delete("/promotions/{promotion}", [
                 PromotionController::class,
                 "destroy",
@@ -669,7 +675,7 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // MEJA CAFE — permission: table.view / table.manage
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:table.view")->group(function () {
+        Route::middleware(["feature:table", "permission:table.view"])->group(function () {
             Route::resource("cafe-tables", CafeTableController::class)->except([
                 "show",
             ]);
@@ -682,7 +688,7 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // LAPORAN — permission: report.*
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:report.sales")->group(function () {
+        Route::middleware(["feature:report", "permission:report.sales"])->group(function () {
             Route::get("/reports", [ReportController::class, "index"])->name(
                 "reports.index",
             );
@@ -734,13 +740,13 @@ Route::middleware(["auth", "store", "branch"])
         // ─────────────────────────────────────────────────────────────────
         // KITCHEN DISPLAY — permission: kitchen.view / kitchen.update
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware("permission:kitchen.view")->group(function () {
+        Route::middleware(["feature:kitchen", "permission:kitchen.view"])->group(function () {
             Route::get("/kitchen", [
                 \App\Http\Controllers\Admin\KitchenController::class,
                 "index",
             ])->name("kitchen.index");
         });
-        Route::middleware("permission:kitchen.update")->group(function () {
+        Route::middleware(["feature:kitchen", "permission:kitchen.update"])->group(function () {
             Route::patch("/kitchen/{sale}/status", [
                 \App\Http\Controllers\Admin\KitchenController::class,
                 "updateStatus",
@@ -766,6 +772,10 @@ Route::middleware(["auth", "store", "branch"])
                 RoleController::class,
                 "destroy",
             ])->name("roles.destroy");
+            Route::post("/roles/{role}/duplicate", [
+                RoleController::class,
+                "duplicate",
+            ])->name("roles.duplicate");
 
             // User Management (invite, assign role, revoke)
             Route::get("/store-users", [

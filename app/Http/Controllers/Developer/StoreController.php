@@ -183,10 +183,18 @@ class StoreController extends Controller
             "new_owner.name" => "nullable|string|max:255",
             "new_owner.email" => "nullable|email|unique:users,email",
             "new_owner.password" => "nullable|string|min:6",
-            "plan" => ["nullable", "string", Rule::in(self::PLAN_KEYS)],
+            "plan_id" => ["nullable", "integer", "exists:plans,id"],
         ]);
 
         DB::transaction(function () use ($validated) {
+            // Resolve plan
+            $planId = $validated["plan_id"] ?? null;
+            $planCode = "free";
+            if ($planId) {
+                $planModel = \App\Models\Plan::find($planId);
+                $planCode = $planModel?->code ?? "free";
+            }
+
             // 1. Buat store dengan modules default sesuai store_type
             $modules = self::defaultModulesForType($validated["store_type"]);
             $store = Store::create([
@@ -198,7 +206,11 @@ class StoreController extends Controller
                 "email" => $validated["email"] ?? null,
                 "address" => $validated["address"] ?? null,
                 "is_active" => $validated["is_active"] ?? true,
-                "plan" => $validated["plan"] ?? "free",
+                "plan" => $planCode,
+                "plan_id" => $planId,
+                // max_users & max_branches null → ikut plan
+                "max_users" => null,
+                "max_branches" => null,
             ]);
 
             // 2. Buat branches
@@ -215,7 +227,7 @@ class StoreController extends Controller
             // 3. Buat semua role sistem untuk store ini
             StoreRoleService::createRolesForStore($store->id);
 
-            // 3. Assign existing users sebagai owner
+            // 4. Assign existing users sebagai owner
             if (!empty($validated["owner_ids"])) {
                 foreach ($validated["owner_ids"] as $userId) {
                     $user = User::findOrFail($userId);
@@ -224,7 +236,7 @@ class StoreController extends Controller
                 }
             }
 
-            // 4. Buat owner baru jika diisi
+            // 5. Buat owner baru jika diisi
             $no = $validated["new_owner"] ?? [];
             if (
                 !empty($no["name"]) &&
@@ -248,7 +260,7 @@ class StoreController extends Controller
 
     public function show(Store $store)
     {
-        $store->load(["branches"]);
+        $store->load(["branches", "planModel"]);
         $store->loadCount(["branches", "employees"]);
 
         // Hanya owner di store ini (exclude developer, exclude tanpa role)
@@ -387,11 +399,13 @@ class StoreController extends Controller
 
     public function edit(Store $store)
     {
+        $store->load(["planModel"]);
         $store->loadCount(["users", "branches", "sales"]);
 
         return Inertia::render("Developer/Stores/Edit", [
             "store" => $store,
             "storeTypes" => self::getStoreTypes(),
+            "plans" => Store::allPlans(),
         ]);
     }
 
@@ -415,16 +429,14 @@ class StoreController extends Controller
             "address" => "nullable|string",
             "is_active" => "boolean",
             "modules" => "nullable|array",
-            "plan" => [
-                "nullable",
-                Rule::in(array_keys(\App\Models\Store::planConfig())),
-            ],
+            "plan_id" => ["nullable", "integer", "exists:plans,id"],
             "plan_expires_at" => "nullable|date",
+            // Override manual per-toko (opsional, null = ikut plan)
             "max_users" => "nullable|integer|min:1",
             "max_branches" => "nullable|integer|min:1",
         ]);
 
-        // Kalau store_type berubah, update modules ke default tipe baru (kecuali modules sudah dikirim)
+        // Kalau store_type berubah, update modules ke default tipe baru
         if (
             $validated["store_type"] !== $store->store_type &&
             empty($validated["modules"])
@@ -433,15 +445,10 @@ class StoreController extends Controller
                 self::DEFAULT_MODULES[$validated["store_type"]] ?? null;
         }
 
-        // Kalau plan berubah, update max_users & max_branches sesuai plan (kecuali di-override manual)
-        if (!empty($validated["plan"])) {
-            $planConfig = self::PLANS()[$validated["plan"]];
-            if (empty($validated["max_users"])) {
-                $validated["max_users"] = $planConfig["max_users"];
-            }
-            if (empty($validated["max_branches"])) {
-                $validated["max_branches"] = $planConfig["max_branches"];
-            }
+        // Sync kolom plan (string) dari plan_id untuk backward compat
+        if (isset($validated["plan_id"])) {
+            $planModel = \App\Models\Plan::find($validated["plan_id"]);
+            $validated["plan"] = $planModel?->code ?? "free";
         }
 
         $store->update($validated);
@@ -542,16 +549,20 @@ class StoreController extends Controller
     public function updateTypeFeatures(Request $request)
     {
         $validated = $request->validate([
-            "features" => "required|array",
-            "features.*.store_type" =>
-                "required|string|in:" . implode(",", self::getStoreTypes()),
-            "features.*.feature_code" => "required|string",
+            "features"                  => "present|array",
+            "features.*.store_type"     => "required|string|in:" . implode(",", self::getStoreTypes()),
+            "features.*.feature_code"   => "required|string|exists:features,code",
         ]);
 
-        // Reset all applicable_types
+        // Reset semua applicable_types
         \App\Models\Feature::query()->update(["applicable_types" => null]);
 
-        // Build new mapping
+        // Kalau kosong (semua di-uncheck), selesai
+        if (empty($validated["features"])) {
+            return back()->with("success", "Fitur per tipe toko berhasil disimpan.");
+        }
+
+        // Build mapping: feature_code => [store_types]
         $typeFeatures = [];
         foreach ($validated["features"] as $item) {
             $typeFeatures[$item["feature_code"]][] = $item["store_type"];
@@ -559,13 +570,10 @@ class StoreController extends Controller
 
         foreach ($typeFeatures as $featureCode => $types) {
             \App\Models\Feature::where("code", $featureCode)->update([
-                "applicable_types" => $types,
+                "applicable_types" => array_unique($types),
             ]);
         }
 
-        return back()->with(
-            "success",
-            "Fitur per tipe toko berhasil disimpan.",
-        );
+        return back()->with("success", "Fitur per tipe toko berhasil disimpan.");
     }
 }

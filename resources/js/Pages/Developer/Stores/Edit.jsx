@@ -3,13 +3,20 @@ import StoreForm from "./StoreForm";
 
 export default function Edit({ store, storeTypes, plans = [] }) {
     const { data, setData, put, processing, errors } = useForm({
+        // ── Informasi Toko ──────────────────────
         code: store.code ?? "",
         name: store.name ?? "",
-        store_type: store.store_type ?? "retail",
         phone: store.phone ?? "",
         email: store.email ?? "",
         address: store.address ?? "",
         is_active: store.is_active ?? true,
+        // ── Tipe & Plan ─────────────────────────
+        store_type: store.store_type ?? "retail",
+        plan_id: store.plan_id ?? null,
+        // ── Plan Override (edit only) ───────────
+        plan_expires_at: store.plan_expires_at ?? "",
+        max_users: store.max_users ?? "",
+        max_branches: store.max_branches ?? "",
     });
 
     const submit = (e) => {
@@ -29,7 +36,6 @@ export default function Edit({ store, storeTypes, plans = [] }) {
                 onSubmit={submit}
                 cancelHref={route("developer.stores.show", store.id)}
                 isEdit
-                store={store}
                 plans={plans}
             />
         </>

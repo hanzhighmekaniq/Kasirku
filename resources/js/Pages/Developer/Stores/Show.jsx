@@ -209,7 +209,9 @@ export default function Show({ store, owners, allUsers }) {
     const [showAddOwner,  setShowAddOwner]  = useState(false);
 
     const tm       = STORE_TYPE[store.store_type] ?? { label: store.store_type, icon: '🏬', color: 'slate' };
-    const planMeta = PLAN_STYLE[store.plan] ?? { label: store.plan ?? 'Free', cls: 'bg-slate-100 text-slate-600 ring-slate-200' };
+    const planLabel = store.plan_model?.label ?? store.plan ?? 'Free';
+    const planCode  = store.plan_model?.code  ?? store.plan ?? 'free';
+    const planMeta  = PLAN_STYLE[planCode] ?? { label: planLabel, cls: 'bg-slate-100 text-slate-600 ring-slate-200' };
 
     const handleRevokeOwner = (userId) => {
         if (!confirm('Cabut akses owner ini dari toko?')) return;

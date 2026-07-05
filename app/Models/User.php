@@ -83,6 +83,17 @@ class User extends Authenticatable
         return !$this->isDeveloper();
     }
 
+    /**
+     * Cek apakah user boleh ganti toko/branch.
+     * Owner, admin, supervisor bisa — kasir & gudang tidak.
+     * Cek via permission setting.view yang hanya dimiliki role dengan akses luas.
+     */
+    public function canSwitchBranch(): bool
+    {
+        // setting.view dimiliki owner, admin, supervisor — tidak dimiliki kasir/gudang/kitchen
+        return $this->can('setting.view');
+    }
+
     public function hasRoleInStore(string $role, int $storeId): bool
     {
         return $this->hasRole($role, null, $storeId);
