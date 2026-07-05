@@ -260,23 +260,43 @@ class StoreController extends Controller
 
     public function show(Store $store)
     {
-        $store->load(["branches", "planModel"]);
+        $store->load(["branches", "planModel.planFeatures"]);
         $store->loadCount(["branches", "employees"]);
 
+        // Fitur dari plan yang tersedia untuk toko ini
+        $planFeatures =
+            $store->planModel
+                ?->planFeatures()
+                ->orderBy("sort_order")
+                ->get()
+                ->map(
+                    fn($f) => [
+                        "code" => $f->code,
+                        "label" => $f->label,
+                        "category" => $f->category,
+                        "applicable_types" => $f->applicable_types,
+                    ],
+                ) ?? collect();
+
         // Hanya owner di store ini (exclude developer, exclude tanpa role)
-        $owners = $store->users()
-            ->where('is_developer', false)
+        $owners = $store
+            ->users()
+            ->where("is_developer", false)
             ->get()
             ->map(function (User $user) use ($store) {
-                app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
+                app(PermissionRegistrar::class)->setPermissionsTeamId(
+                    $store->id,
+                );
                 $roles = $user->getRoleNames();
                 app(PermissionRegistrar::class)->setPermissionsTeamId(null);
 
-                if ($roles->isEmpty()) return null;
+                if ($roles->isEmpty()) {
+                    return null;
+                }
 
                 return [
-                    "id"    => $user->id,
-                    "name"  => $user->name,
+                    "id" => $user->id,
+                    "name" => $user->name,
                     "email" => $user->email,
                     "roles" => $roles,
                 ];
@@ -285,14 +305,15 @@ class StoreController extends Controller
             ->values();
 
         // Semua user non-developer untuk dropdown assign owner
-        $allUsers = User::where('is_developer', false)
+        $allUsers = User::where("is_developer", false)
             ->orderBy("name")
             ->get(["id", "name", "email"]);
 
         return Inertia::render("Developer/Stores/Show", [
-            "store"   => $store,
-            "owners"  => $owners,
+            "store" => $store,
+            "owners" => $owners,
             "allUsers" => $allUsers,
+            "planFeatures" => $planFeatures,
         ]);
     }
 
@@ -549,9 +570,10 @@ class StoreController extends Controller
     public function updateTypeFeatures(Request $request)
     {
         $validated = $request->validate([
-            "features"                  => "present|array",
-            "features.*.store_type"     => "required|string|in:" . implode(",", self::getStoreTypes()),
-            "features.*.feature_code"   => "required|string|exists:features,code",
+            "features" => "present|array",
+            "features.*.store_type" =>
+                "required|string|in:" . implode(",", self::getStoreTypes()),
+            "features.*.feature_code" => "required|string|exists:features,code",
         ]);
 
         // Reset semua applicable_types
@@ -559,7 +581,10 @@ class StoreController extends Controller
 
         // Kalau kosong (semua di-uncheck), selesai
         if (empty($validated["features"])) {
-            return back()->with("success", "Fitur per tipe toko berhasil disimpan.");
+            return back()->with(
+                "success",
+                "Fitur per tipe toko berhasil disimpan.",
+            );
         }
 
         // Build mapping: feature_code => [store_types]
@@ -574,6 +599,9 @@ class StoreController extends Controller
             ]);
         }
 
-        return back()->with("success", "Fitur per tipe toko berhasil disimpan.");
+        return back()->with(
+            "success",
+            "Fitur per tipe toko berhasil disimpan.",
+        );
     }
 }

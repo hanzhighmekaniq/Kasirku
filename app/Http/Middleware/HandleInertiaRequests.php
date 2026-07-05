@@ -193,25 +193,45 @@ class HandleInertiaRequests extends Middleware
 
     private function getStorePlan(int $storeId): ?array
     {
-        $store = Store::find($storeId);
+        $store = Store::with('planModel.planFeatures')->find($storeId);
         if (!$store) {
             return null;
         }
-        $planKey = $store->effectivePlan();
-        $planConfig =
-            \App\Models\Store::planConfig()[$planKey] ??
-            \App\Models\Store::planConfig()["free"];
+
+        $planCode   = $store->effectivePlanCode();
+        $planModel  = $store->planModel;
+
+        // Fitur dari plan_id (DB) — fallback ke hardcoded
+        if ($planModel) {
+            $featureCodes = $planModel->featureCodes();
+            // Pro: kalau tidak ada feature terdaftar di pivot, anggap semua (*)
+            if (empty($featureCodes)) {
+                $featureCodes = ['*'];
+            }
+            $label       = $planModel->label;
+            $maxUsers    = $store->effectiveMaxUsers();
+            $maxBranches = $store->effectiveMaxBranches();
+        } else {
+            // Fallback hardcoded
+            $planConfig  = \App\Models\Store::planConfig()[$planCode]
+                            ?? \App\Models\Store::planConfig()['free'];
+            $featureCodes = $planConfig['features'];
+            $label        = $planConfig['label'];
+            $maxUsers     = $store->effectiveMaxUsers();
+            $maxBranches  = $store->effectiveMaxBranches();
+        }
+
         return [
-            "plan" => $planKey,
-            "label" => $planConfig["label"],
-            "features" => $planConfig["features"],
-            "max_users" => $store->max_users ?? $planConfig["max_users"],
-            "max_branches" =>
-                $store->max_branches ?? $planConfig["max_branches"],
-            "expires_at" => $store->plan_expires_at,
-            "is_expired" => $store->isPlanExpired(),
-            "can_add_user" => $store->canAddUser(),
-            "can_add_branch" => $store->canAddBranch(),
+            'plan'         => $planCode,
+            'plan_id'      => $store->plan_id,
+            'label'        => $label,
+            'features'     => $featureCodes,
+            'max_users'    => $maxUsers,
+            'max_branches' => $maxBranches,
+            'expires_at'   => $store->plan_expires_at,
+            'is_expired'   => $store->isPlanExpired(),
+            'can_add_user' => $store->canAddUser(),
+            'can_add_branch' => $store->canAddBranch(),
         ];
     }
 }

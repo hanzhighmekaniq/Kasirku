@@ -47,14 +47,6 @@ class CheckFeatureAccess
             }
         }
 
-        // ── Cek 3: Fitur aktif di modules toko ───────────────────────────
-        // Ini opsional — modules dikonfigurasi developer per toko
-        // Hanya enforce kalau modules sudah dikonfigurasi (tidak kosong)
-        $modules = $store->modules ?? [];
-        if (! empty($modules['features']) && ! in_array($feature, $modules['features'])) {
-            return $this->deny($request, $feature, 'modules');
-        }
-
         return $next($request);
     }
 

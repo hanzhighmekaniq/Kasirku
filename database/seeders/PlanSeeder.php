@@ -6,91 +6,127 @@ use App\Models\Feature;
 use App\Models\Plan;
 use Illuminate\Database\Seeder;
 
+/**
+ * PlanSeeder — buat 3 plan (free, basic, pro) dan attach fitur.
+ *
+ * PENTING: Harus dijalankan SETELAH FeatureSeeder agar feature codes sudah ada.
+ * Feature codes di sini harus sinkron dengan FeatureSeeder.php.
+ */
 class PlanSeeder extends Seeder
 {
     public function run(): void
     {
-        $free = Plan::firstOrCreate(
-            ["code" => "free"],
+        // ── Buat plan ─────────────────────────────────────────────────
+        Plan::updateOrCreate(
+            ['code' => 'free'],
             [
-                "label" => "Free",
-                "description" => "Paket gratis untuk pemula. Fitur dasar POS.",
-                "max_users" => 1,
-                "max_branches" => 1,
-                "price" => 0,
-                "trial_days" => 0,
-                "sort_order" => 1,
+                'label'       => 'Free',
+                'description' => 'Paket gratis untuk pemula. Fitur dasar POS.',
+                'max_users'   => 1,
+                'max_branches'=> 1,
+                'price'       => 0,
+                'trial_days'  => 0,
+                'sort_order'  => 1,
+                'is_active'   => true,
             ],
         );
 
-        $basic = Plan::firstOrCreate(
-            ["code" => "basic"],
+        Plan::updateOrCreate(
+            ['code' => 'basic'],
             [
-                "label" => "Basic",
-                "description" => "Paket standar untuk bisnis berkembang.",
-                "max_users" => 5,
-                "max_branches" => 3,
-                "price" => 199000,
-                "trial_days" => 14,
-                "sort_order" => 2,
+                'label'       => 'Basic',
+                'description' => 'Paket standar untuk bisnis berkembang.',
+                'max_users'   => 5,
+                'max_branches'=> 3,
+                'price'       => 199000,
+                'trial_days'  => 14,
+                'sort_order'  => 2,
+                'is_active'   => true,
             ],
         );
 
-        $pro = Plan::firstOrCreate(
-            ["code" => "pro"],
+        Plan::updateOrCreate(
+            ['code' => 'pro'],
             [
-                "label" => "Pro",
-                "description" =>
-                    "Paket premium tanpa batasan. Semua fitur unlocked.",
-                "max_users" => 999,
-                "max_branches" => 999,
-                "price" => 499000,
-                "trial_days" => 7,
-                "sort_order" => 3,
+                'label'       => 'Pro',
+                'description' => 'Paket premium tanpa batasan. Semua fitur unlocked.',
+                'max_users'   => 999,
+                'max_branches'=> 999,
+                'price'       => 499000,
+                'trial_days'  => 7,
+                'sort_order'  => 3,
+                'is_active'   => true,
             ],
         );
 
-        // Sync features via pivot
-        $free
-            ->planFeatures()
-            ->sync(
-                Feature::whereIn("code", [
-                    "basic_pos",
-                    "stock",
-                    "purchase",
-                    "promo",
-                ])->pluck("id"),
+        // ── Attach fitur ke plan ──────────────────────────────────────
+        // NOTE: Feature codes ini harus sinkron dengan FeatureSeeder.php
+
+        $free  = Plan::where('code', 'free')->first();
+        $basic = Plan::where('code', 'basic')->first();
+        $pro   = Plan::where('code', 'pro')->first();
+
+        // Free: hanya fitur dasar
+        if ($free) {
+            $free->planFeatures()->sync(
+                Feature::whereIn('code', [
+                    'dashboard',
+                    'basic_pos',
+                    'shift',
+                    'product',
+                    'category',
+                    'customer',
+                    'employee',
+                    'expense',
+                ])->pluck('id'),
             );
+        }
 
-        $basic
-            ->planFeatures()
-            ->sync(
-                Feature::whereIn("code", [
-                    "basic_pos",
-                    "stock",
-                    "purchase",
-                    "batch",
-                    "expiry",
-                    "promo",
-                    "sale_return",
-                    "recipe",
-                    "modifier",
-                    "table",
-                    "kitchen",
-                    "waste",
-                    "queue",
-                    "booking",
-                    "commission",
-                    "membership",
-                    "deposit",
-                    "report",
-                    "payment_gateway",
-                    "stock_opname",
-                ])->pluck("id"),
+        // Basic: semua fitur kecuali deposit (legacy)
+        if ($basic) {
+            $basic->planFeatures()->sync(
+                Feature::whereIn('code', [
+                    'dashboard',
+                    'basic_pos',
+                    'shift',
+                    'sale_return',
+                    'promo',
+                    'expense',
+                    'table',
+                    'kitchen',
+                    'queue',
+                    'booking',
+                    'product',
+                    'category',
+                    'modifier',
+                    'customer',
+                    'membership',
+                    'supplier',
+                    'employee',
+                    'commission',
+                    'purchase',
+                    'purchase_return',
+                    'stock',
+                    'batch_expired',
+                    'stock_adjustment',
+                    'stock_opname',
+                    'stock_transfer',
+                    'waste',
+                    'recipe',
+                    'report',
+                    'payment_gateway',
+                    'payment_method',
+                    'settings',
+                    'user_management',
+                    'role_management',
+                    'activity_log',
+                ])->pluck('id'),
             );
+        }
 
-        $pro->planFeatures()->sync(
-            Feature::pluck("id"), // all features
-        );
+        // Pro: semua fitur (termasuk deposit legacy)
+        if ($pro) {
+            $pro->planFeatures()->sync(Feature::pluck('id'));
+        }
     }
 }

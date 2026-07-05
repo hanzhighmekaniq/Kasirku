@@ -41,23 +41,83 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        $user->load('stores');
+        $user->load(['stores.planModel.planFeatures']);
 
-        // Kumpulkan role per store
-        $storeRoles = $user->stores->map(function (Store $store) use ($user) {
+        // Semua fitur di sistem
+        $allFeatures = \App\Models\Feature::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'code', 'label', 'category', 'applicable_types']);
+
+        // Data per toko: role, permissions, fitur tersedia (plan + type)
+        $storeAccess = $user->stores->map(function (\App\Models\Store $store) use ($user, $allFeatures) {
+            // Role user di store ini
             app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
+            $roles = $user->getRoleNames()->values();
+
+            // Permissions user di store ini
+            $roleIds = DB::table('model_has_roles')
+                ->where('model_id', $user->id)
+                ->where('model_type', get_class($user))
+                ->where('store_id', $store->id)
+                ->pluck('role_id');
+
+            $permissions = DB::table('permissions')
+                ->join('role_has_permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
+                ->whereIn('role_has_permissions.role_id', $roleIds)
+                ->distinct()
+                ->pluck('permissions.name')
+                ->values()
+                ->toArray();
+
+            app(PermissionRegistrar::class)->setPermissionsTeamId(null);
+
+            // Fitur dari plan toko
+            $planFeatureCodes = $store->planModel
+                ? $store->planModel->planFeatures->pluck('code')->toArray()
+                : [];
+            $planAllAll = empty($planFeatureCodes); // plan tanpa fitur = pro = semua
+
+            // Fitur dari applicable_types (tipe toko)
+            $typeFeatureCodes = $allFeatures
+                ->filter(fn($f) => !empty($f->applicable_types) && in_array($store->store_type, $f->applicable_types))
+                ->pluck('code')
+                ->toArray();
+
+            // Status per fitur: plan_ok, type_ok → can_access
+            $featureStatus = $allFeatures->map(function ($f) use ($planFeatureCodes, $planAllAll, $typeFeatureCodes) {
+                $planOk = $planAllAll || in_array($f->code, $planFeatureCodes);
+                $typeOk = !empty($f->applicable_types)
+                    ? in_array($f->code, $typeFeatureCodes)
+                    : true;
+                return [
+                    'code'       => $f->code,
+                    'label'      => $f->label,
+                    'category'   => $f->category,
+                    'plan_ok'    => $planOk,
+                    'type_ok'    => $typeOk,
+                    'can_access' => $planOk && $typeOk,
+                ];
+            })->values();
+
             return [
-                'store_id'   => $store->id,
-                'store_name' => $store->name,
-                'store_type' => $store->store_type,
-                'roles'      => $user->getRoleNames()->values(),
+                'store_id'      => $store->id,
+                'store_name'    => $store->name,
+                'store_code'    => $store->code,
+                'store_type'    => $store->store_type,
+                'plan_label'    => $store->planModel?->label ?? $store->plan ?? 'Free',
+                'plan_code'     => $store->planModel?->code ?? $store->plan ?? 'free',
+                'roles'         => $roles,
+                'permissions'   => $permissions,
+                'feature_status'=> $featureStatus,
             ];
         });
+
         app(PermissionRegistrar::class)->setPermissionsTeamId(null);
 
         return Inertia::render('Developer/Users/Show', [
-            'user'       => $user,
-            'storeRoles' => $storeRoles,
+            'user'        => $user,
+            'storeAccess' => $storeAccess,
+            'allFeatures' => $allFeatures,
         ]);
     }
 

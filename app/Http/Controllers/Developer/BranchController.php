@@ -12,46 +12,54 @@ use Inertia\Inertia;
 class BranchController extends Controller
 {
     /**
-     * List ALL branches across all stores (developer overview).
+     * List branches — optional store filter via query param ?store_id=X
+     * atau via route model binding /stores/{store}/branches
      */
-    public function allIndex()
+    public function index(Request $request, ?Store $store = null)
     {
+        $storeId = $store?->id ?? $request->query("store_id");
+
         $branches = Branch::with("store")
             ->withCount(["employees", "sales", "purchases"])
+            ->when($storeId, fn($q) => $q->where("store_id", $storeId))
             ->orderBy("store_id")
             ->orderByDesc("is_active")
             ->orderBy("name")
             ->get();
 
-        return Inertia::render("Developer/Branches/AllIndex", [
-            "branches" => $branches,
-            "stores" => Store::orderBy("name")->get(["id", "name", "code"]),
-        ]);
-    }
-
-    public function index(Request $request, Store $store)
-    {
-        $branches = Branch::where("store_id", $store->id)
-            ->withCount(["employees", "sales", "purchases"])
-            ->orderByDesc("is_active")
-            ->orderBy("name")
-            ->get();
-
         return Inertia::render("Developer/Branches/Index", [
-            "store" => $store,
             "branches" => $branches,
+            "stores" => Store::orderBy("name")->get([
+                "id",
+                "name",
+                "code",
+                "store_type",
+            ]),
+            "selectedStoreId" => $storeId ? (int) $storeId : null,
         ]);
     }
 
-    public function create(Store $store)
+    /** @deprecated — gunakan index() dengan ?store_id=X */
+    public function allIndex()
     {
+        return redirect()->route("developer.branches.index");
+    }
+
+    public function create(Request $request, ?Store $store = null)
+    {
+        $storeId = $store?->id ?? $request->query("store_id");
+
         return Inertia::render("Developer/Branches/Create", [
             "store" => $store,
+            "stores" => Store::orderBy("name")->get(["id", "name", "code"]),
+            "selectedStoreId" => $storeId ? (int) $storeId : null,
         ]);
     }
 
-    public function store(Request $request, Store $store)
+    public function store(Request $request, ?Store $store = null)
     {
+        // Jika store tidak dari route binding, ambil dari input
+        $store = $store ?? Store::findOrFail($request->input("store_id"));
         $validated = $request->validate($this->rules($store->id));
 
         Branch::create([
@@ -81,11 +89,13 @@ class BranchController extends Controller
                 "position" => $emp->position,
                 "phone" => $emp->phone,
                 "is_active" => $emp->is_active,
-                "user" => $emp->user ? [
-                    "id" => $emp->user->id,
-                    "name" => $emp->user->name,
-                    "email" => $emp->user->email,
-                ] : null,
+                "user" => $emp->user
+                    ? [
+                        "id" => $emp->user->id,
+                        "name" => $emp->user->name,
+                        "email" => $emp->user->email,
+                    ]
+                    : null,
             ];
         });
 
@@ -155,38 +165,42 @@ class BranchController extends Controller
      */
     public function showApi(Branch $branch)
     {
-        $branch->load(['store', 'employees.user']);
+        $branch->load(["store", "employees.user"]);
 
         $employees = $branch->employees->map(function ($emp) {
             return [
-                'id' => $emp->id,
-                'name' => $emp->name,
-                'position' => $emp->position,
-                'phone' => $emp->phone,
-                'is_active' => $emp->is_active,
-                'user' => $emp->user ? [
-                    'id' => $emp->user->id,
-                    'name' => $emp->user->name,
-                    'email' => $emp->user->email,
-                ] : null,
+                "id" => $emp->id,
+                "name" => $emp->name,
+                "position" => $emp->position,
+                "phone" => $emp->phone,
+                "is_active" => $emp->is_active,
+                "user" => $emp->user
+                    ? [
+                        "id" => $emp->user->id,
+                        "name" => $emp->user->name,
+                        "email" => $emp->user->email,
+                    ]
+                    : null,
             ];
         });
 
         return response()->json([
-            'branch' => [
-                'id' => $branch->id,
-                'code' => $branch->code,
-                'name' => $branch->name,
-                'address' => $branch->address,
-                'phone' => $branch->phone,
-                'is_active' => $branch->is_active,
-                'store' => $branch->store ? [
-                    'id' => $branch->store->id,
-                    'name' => $branch->store->name,
-                    'store_type' => $branch->store->store_type,
-                ] : null,
+            "branch" => [
+                "id" => $branch->id,
+                "code" => $branch->code,
+                "name" => $branch->name,
+                "address" => $branch->address,
+                "phone" => $branch->phone,
+                "is_active" => $branch->is_active,
+                "store" => $branch->store
+                    ? [
+                        "id" => $branch->store->id,
+                        "name" => $branch->store->name,
+                        "store_type" => $branch->store->store_type,
+                    ]
+                    : null,
             ],
-            'employees' => $employees,
+            "employees" => $employees,
         ]);
     }
 

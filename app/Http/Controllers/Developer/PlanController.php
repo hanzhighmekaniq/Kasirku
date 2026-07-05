@@ -25,7 +25,7 @@ class PlanController extends Controller
             "plan" => null,
             "allFeatures" => Feature::where("is_active", true)
                 ->orderBy("sort_order")
-                ->pluck("label", "id"),
+                ->get(["id", "code", "label", "category", "sort_order"]),
         ]);
     }
 
@@ -62,7 +62,7 @@ class PlanController extends Controller
             "plan" => $plan,
             "allFeatures" => Feature::where("is_active", true)
                 ->orderBy("sort_order")
-                ->pluck("label", "id"),
+                ->get(["id", "code", "label", "category", "sort_order"]),
         ]);
     }
 
@@ -111,5 +111,21 @@ class PlanController extends Controller
         return redirect()
             ->route("developer.plans.index")
             ->with("success", "Paket berhasil dihapus.");
+    }
+
+    /** Reorder plans via drag & drop — terima array of { id, sort_order } */
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            "orders"              => "required|array",
+            "orders.*.id"         => "required|integer|exists:plans,id",
+            "orders.*.sort_order" => "required|integer|min:0",
+        ]);
+
+        foreach ($validated["orders"] as $item) {
+            Plan::where("id", $item["id"])->update(["sort_order" => $item["sort_order"]]);
+        }
+
+        return response()->json(["ok" => true]);
     }
 }
