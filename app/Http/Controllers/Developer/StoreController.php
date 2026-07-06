@@ -33,23 +33,12 @@ class StoreController extends Controller
 
     /**
      * Modules default per tipe toko dari relasi store_type_feature.
+     * @deprecated - Fitur sekarang diambil langsung dari relasi, tidak perlu modules JSON
      */
     public static function defaultModulesForType(string $type): array
     {
-        $storeType = \App\Models\StoreType::where("code", $type)->first();
-        $features = $storeType
-            ? $storeType
-                ->features()
-                ->where("features.is_active", true)
-                ->orderBy("features.sort_order")
-                ->pluck("features.code")
-                ->toArray()
-            : [];
-
-        return [
-            "pos_modes" => [$type],
-            "features" => $features,
-        ];
+        // Kept for backward compatibility, but not used anymore
+        return ["pos_modes" => [$type], "features" => []];
     }
 
     /** Hardcoded fallback — 6 mode strict */
@@ -137,11 +126,14 @@ class StoreController extends Controller
             ->orderByDesc("created_at")
             ->get()
             ->map(function ($store) {
+                // Use getRelation to bypass the accessor and get the actual StoreType model
+                $storeTypeRelation = $store->getRelation('storeType');
+                
                 return [
                     "id" => $store->id,
                     "code" => $store->code,
                     "name" => $store->name,
-                    "store_type" => $store->store_type,
+                    "store_type" => $storeTypeRelation?->code,
                     "plan" => $store->planModel?->code,
                     "is_active" => $store->is_active,
                     "created_at" => $store->created_at,
@@ -178,15 +170,27 @@ class StoreController extends Controller
                 ],
             );
 
+        // Ambil store types dengan features-nya
+        $storeTypes = \App\Models\StoreType::with('features')
+            ->where('is_active', true)
+            ->orderBy("sort_order")
+            ->get()
+            ->map(function($st) {
+                return [
+                    "id" => $st->id,
+                    "code" => $st->code,
+                    "label" => $st->label,
+                    "icon" => $st->icon,
+                    "features" => $st->features()
+                        ->where('features.is_active', true)
+                        ->orderBy('features.sort_order')
+                        ->get(['features.id', 'features.code', 'features.label', 'features.category']),
+                ];
+            });
+
         return Inertia::render("Developer/Stores/Create", [
             "availableOwners" => $availableOwners,
-            "storeTypes" => \App\Models\StoreType::orderBy("sort_order")->get([
-                "id",
-                "code",
-                "label",
-                "icon",
-            ]),
-            "defaultModules" => self::DEFAULT_MODULES,
+            "storeTypes" => $storeTypes,
             "plans" => Store::allPlans(),
         ]);
     }
@@ -219,22 +223,12 @@ class StoreController extends Controller
         DB::transaction(function () use ($validated) {
             // Resolve plan
             $planId = $validated["plan_id"] ?? null;
-            $planCode = "free";
-            if ($planId) {
-                $planModel = \App\Models\Plan::find($planId);
-                $planCode = $planModel?->code ?? "free";
-            }
 
-            // 1. Buat store dengan modules default sesuai store_type
-            $storeType = \App\Models\StoreType::findOrFail(
-                $validated["store_type_id"],
-            );
-            $modules = self::defaultModulesForType($storeType->code);
+            // 1. Buat store (modules tidak perlu lagi, fitur diambil dari relasi)
             $store = Store::create([
                 "code" => strtoupper($validated["code"]),
                 "name" => $validated["name"],
-                "store_type_id" => $storeType->id,
-                "modules" => $modules,
+                "store_type_id" => $validated["store_type_id"],
                 "phone" => $validated["phone"] ?? null,
                 "email" => $validated["email"] ?? null,
                 "address" => $validated["address"] ?? null,
@@ -295,16 +289,30 @@ class StoreController extends Controller
         $store->load(["branches", "storeType.features", "planModel.features"]);
         $store->loadCount(["branches", "employees"]);
 
+        // Get the actual StoreType model bypassing the accessor
+        $storeTypeRelation = $store->getRelation('storeType');
+        $planModelRelation = $store->getRelation('planModel');
+
+        // Fitur dari store type
+        $storeTypeFeatures = $storeTypeRelation
+            ? $storeTypeRelation->features()
+                ->where('features.is_active', true)
+                ->orderBy('features.sort_order')
+                ->get(['features.id', 'features.code', 'features.label', 'features.category'])
+            : collect();
+
         // Fitur dari plan yang tersedia untuk toko ini
-        $planFeatures =
-            $store->planModel?->features()->orderBy("sort_order")->get()->map(
-                fn($f) => [
-                    "code" => $f->code,
-                    "label" => $f->label,
-                    "category" => $f->category,
-                    "store_types" => $f->storeTypes->pluck("code"),
-                ],
-            ) ?? collect();
+        $planFeatures = $planModelRelation
+            ? $planModelRelation->features()
+                ->where('features.is_active', true)
+                ->orderBy('features.sort_order')
+                ->get(['features.id', 'features.code', 'features.label', 'features.category'])
+            : collect();
+
+        // Fitur yang benar-benar aktif (intersection dari store_type dan plan)
+        $activeFeatures = $storeTypeFeatures->filter(function($storeTypeFeature) use ($planFeatures) {
+            return $planFeatures->contains('code', $storeTypeFeature->code);
+        })->values();
 
         // Hanya owner di store ini (exclude developer, exclude tanpa role)
         $owners = $store
@@ -342,9 +350,9 @@ class StoreController extends Controller
             "id" => $store->id,
             "code" => $store->code,
             "name" => $store->name,
-            "store_type" => $store->store_type,
+            "store_type" => $storeTypeRelation?->code,
             "store_type_id" => $store->store_type_id,
-            "plan" => $store->planModel?->code,
+            "plan" => $planModelRelation?->code,
             "plan_id" => $store->plan_id,
             "plan_expires_at" => $store->plan_expires_at,
             "max_users" => $store->max_users,
@@ -352,22 +360,23 @@ class StoreController extends Controller
             "phone" => $store->phone,
             "email" => $store->email,
             "address" => $store->address,
-            "modules" => $store->modules,
             "is_active" => $store->is_active,
             "created_at" => $store->created_at,
             "updated_at" => $store->updated_at,
             "branches_count" => $store->branches_count,
             "employees_count" => $store->employees_count,
             "branches" => $store->branches,
-            "storeType" => $store->storeType,
-            "planModel" => $store->planModel,
+            "storeType" => $storeTypeRelation,
+            "planModel" => $planModelRelation,
         ];
 
         return Inertia::render("Developer/Stores/Show", [
             "store" => $storeData,
             "owners" => $owners,
             "allUsers" => $allUsers,
+            "storeTypeFeatures" => $storeTypeFeatures,
             "planFeatures" => $planFeatures,
+            "activeFeatures" => $activeFeatures,
         ]);
     }
 
@@ -474,17 +483,29 @@ class StoreController extends Controller
 
     public function edit(Store $store)
     {
-        $store->load(["planModel", "storeType"]);
+        $store->load(["planModel", "storeType", "storeType.features", "planModel.features"]);
         $store->loadCount(["users", "branches", "sales"]);
+
+        // Get the actual relations bypassing the accessor
+        $storeTypeRelation = $store->getRelation('storeType');
+        $planModelRelation = $store->getRelation('planModel');
+
+        // Get available features for this store type
+        $availableFeatures = $storeTypeRelation 
+            ? $storeTypeRelation->features()
+                ->where('features.is_active', true)
+                ->orderBy('features.sort_order')
+                ->get(['features.id', 'features.code', 'features.label', 'features.category'])
+            : collect();
 
         // Transform store data untuk frontend
         $storeData = [
             "id" => $store->id,
             "code" => $store->code,
             "name" => $store->name,
-            "store_type" => $store->store_type,
+            "store_type" => $storeTypeRelation?->code,
             "store_type_id" => $store->store_type_id,
-            "plan" => $store->planModel?->code,
+            "plan" => $planModelRelation?->code,
             "plan_id" => $store->plan_id,
             "plan_expires_at" => $store->plan_expires_at,
             "max_users" => $store->max_users,
@@ -492,15 +513,14 @@ class StoreController extends Controller
             "phone" => $store->phone,
             "email" => $store->email,
             "address" => $store->address,
-            "modules" => $store->modules,
             "is_active" => $store->is_active,
             "created_at" => $store->created_at,
             "updated_at" => $store->updated_at,
             "users_count" => $store->users_count,
             "branches_count" => $store->branches_count,
             "sales_count" => $store->sales_count,
-            "storeType" => $store->storeType,
-            "planModel" => $store->planModel,
+            "storeType" => $storeTypeRelation,
+            "planModel" => $planModelRelation,
         ];
 
         return Inertia::render("Developer/Stores/Edit", [
@@ -512,6 +532,7 @@ class StoreController extends Controller
                 "icon",
             ]),
             "plans" => Store::allPlans(),
+            "availableFeatures" => $availableFeatures,
         ]);
     }
 
@@ -534,25 +555,12 @@ class StoreController extends Controller
             ],
             "address" => "nullable|string",
             "is_active" => "boolean",
-            "modules" => "nullable|array",
             "plan_id" => ["nullable", "integer", "exists:plans,id"],
             "plan_expires_at" => "nullable|date",
             // Override manual per-toko (opsional, null = ikut plan)
             "max_users" => "nullable|integer|min:1",
             "max_branches" => "nullable|integer|min:1",
         ]);
-
-        // Kalau store_type_id berubah, update modules ke default tipe baru
-        $storeType = \App\Models\StoreType::find($validated["store_type_id"]);
-        if (
-            $storeType &&
-            $storeType->code !== $store->store_type &&
-            empty($validated["modules"])
-        ) {
-            $validated["modules"] = self::defaultModulesForType(
-                $storeType->code,
-            );
-        }
 
         $store->update($validated);
 

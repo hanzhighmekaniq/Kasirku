@@ -34,10 +34,10 @@ class BranchController extends Controller
                     "id"   => $b->store->id,
                     "code" => $b->store->code,
                     "name" => $b->store->name,
-                    "store_type" => $b->store->storeType ? [
-                        "id"    => $b->store->storeType->id,
-                        "code"  => $b->store->storeType->code,
-                        "label" => $b->store->storeType->label,
+                    "store_type" => $b->store->getRelation('storeType') ? [
+                        "id"    => $b->store->getRelation('storeType')->id,
+                        "code"  => $b->store->getRelation('storeType')->code,
+                        "label" => $b->store->getRelation('storeType')->label,
                     ] : null,
                 ] : null,
             ]);
@@ -46,10 +46,10 @@ class BranchController extends Controller
             "id"   => $s->id,
             "code" => $s->code,
             "name" => $s->name,
-            "store_type" => $s->storeType ? [
-                "id"    => $s->storeType->id,
-                "code"  => $s->storeType->code,
-                "label" => $s->storeType->label,
+            "store_type" => $s->getRelation('storeType') ? [
+                "id"    => $s->getRelation('storeType')->id,
+                "code"  => $s->getRelation('storeType')->code,
+                "label" => $s->getRelation('storeType')->label,
             ] : null,
         ]);
 

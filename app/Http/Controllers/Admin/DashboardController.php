@@ -183,7 +183,7 @@ class DashboardController extends Controller
                             "id" => $store->id,
                             "name" => $store->name,
                             "code" => $store->code,
-                            "store_type" => $store->storeType?->code,
+                            "store_type" => $store->getRelation('storeType')?->code,
                             "today_sales" => (float) (clone $q)
                                 ->whereDate("sale_date", $today)
                                 ->sum("grand_total"),

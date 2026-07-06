@@ -446,8 +446,7 @@ export default function Index({ stores, storeTypes }) {
                                                     </Link>
                                                     <Link
                                                         href={route(
-                                                            "developer.stores.branches.index",
-                                                            s.id,
+                                                            "developer.branches.index",
                                                         )}
                                                         title="Cabang"
                                                         className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"

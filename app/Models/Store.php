@@ -19,7 +19,6 @@ class Store extends Model
         "code",
         "name",
         "store_type_id",
-        "modules",
         "logo",
         "currency",
         "decimal_places",
@@ -41,7 +40,6 @@ class Store extends Model
     protected function casts(): array
     {
         return [
-            "modules" => "array",
             "is_active" => "boolean",
             "tax_inclusive" => "boolean",
             "default_tax_rate" => "decimal:2",
@@ -247,22 +245,31 @@ class Store extends Model
             ->toArray();
     }
 
-    /** Ambil config plan aktif toko ini — dari relasi plan_id, fallback ke hardcoded */
+    /** Ambil config plan aktif toko ini — dari relasi plan_id */
     public function activePlanConfig(): array
     {
         // Coba dari relasi Plan model
-        $plan = $this->planModel;
-        if ($plan) {
+        $plan = $this->getRelation('planModel');
+        if (!$plan) {
+            // Fallback ke free plan
+            $plan = \App\Models\Plan::where('code', 'free')->first();
+        }
+        
+        if (!$plan) {
             return [
-                "label" => $plan->label,
-                "max_users" => $plan->max_users,
-                "max_branches" => $plan->max_branches,
-                "features" => $plan->featureCodes(),
+                "label" => "Free",
+                "max_users" => 1,
+                "max_branches" => 1,
+                "features" => [],
             ];
         }
-        // Fallback ke hardcoded (jika plan_id belum diset)
-        return self::planConfig()[$this->planModel?->code ?? "free"] ??
-            self::planConfig()["free"];
+        
+        return [
+            "label" => $plan->label,
+            "max_users" => $plan->max_users,
+            "max_branches" => $plan->max_branches,
+            "features" => $plan->featureCodes(),
+        ];
     }
 
     /** Efektif max users: override toko ?? ambil dari plan */
@@ -282,34 +289,50 @@ class Store extends Model
     /** Cek apakah plan mengizinkan fitur tertentu */
     public function planAllowsFeature(string $feature): bool
     {
-        $features = $this->activePlanConfig()["features"] ?? [];
-
-        // Wildcard = semua diizinkan (plan Pro / developer override)
-        if (in_array("*", $features)) {
-            return true;
+        $plan = $this->getRelation('planModel');
+        if (!$plan) {
+            // Fallback ke free plan
+            $plan = \App\Models\Plan::where('code', 'free')->first();
         }
-
-        // Cek apakah fitur ada di daftar features plan ini
-        return in_array($feature, $features);
-    }
-
-    /** Cek apakah fitur aktif di modules DAN diizinkan plan */
-    public function hasFeature(string $feature): bool
-    {
-        if (!in_array($feature, $this->modules["features"] ?? [])) {
+        
+        if (!$plan) {
             return false;
         }
+        
+        // Cek di relasi plan_feature
+        return $plan->features()
+            ->where('features.code', $feature)
+            ->where('features.is_active', true)
+            ->exists();
+    }
+
+    /** Cek apakah fitur aktif - ambil dari relasi store_type dan plan */
+    public function hasFeature(string $feature): bool
+    {
+        // Cek apakah fitur diizinkan oleh store type
+        $storeType = $this->getRelation('storeType');
+        if (!$storeType) {
+            return false;
+        }
+        
+        $storeTypeHasFeature = $storeType->features()
+            ->where('features.code', $feature)
+            ->where('features.is_active', true)
+            ->exists();
+            
+        if (!$storeTypeHasFeature) {
+            return false;
+        }
+        
+        // Cek apakah fitur diizinkan oleh plan
         return $this->planAllowsFeature($feature);
     }
 
     public function hasPosMode(string $mode): bool
     {
-        return in_array(
-            $mode,
-            $this->modules["pos_modes"] ?? [
-                $this->storeType?->code ?? "retail",
-            ],
-        );
+        // POS mode ditentukan oleh store_type
+        $storeTypeCode = $this->getRelation('storeType')?->code ?? 'retail';
+        return $storeTypeCode === $mode;
     }
 
     /** Apakah masih bisa tambah user baru */
