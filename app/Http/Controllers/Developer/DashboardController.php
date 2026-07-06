@@ -22,39 +22,72 @@ class DashboardController extends Controller
             ->whereDate("sale_date", today())
             ->sum("grand_total");
 
-        $recentStores = Store::withCount(["users", "sales"])
-            ->orderByDesc("created_at")
+        $recentStores = Store::with('storeType')
+            ->withCount(["users", "sales"])
+            ->select(
+                "stores.id",
+                "stores.code",
+                "stores.name",
+                "stores.store_type_id",
+                "stores.is_active",
+                "stores.created_at",
+            )
+            ->orderByDesc("stores.created_at")
             ->limit(5)
-            ->get([
-                "id",
-                "code",
-                "name",
-                "store_type",
-                "is_active",
-                "created_at",
-            ]);
+            ->get()
+            ->map(function ($store) {
+                return [
+                    'id' => $store->id,
+                    'code' => $store->code,
+                    'name' => $store->name,
+                    'store_type' => $store->store_type,
+                    'is_active' => $store->is_active,
+                    'created_at' => $store->created_at,
+                    'users_count' => $store->users_count,
+                    'sales_count' => $store->sales_count,
+                ];
+            });
 
-        $storeRevenues = Store::select(
-            "stores.id",
-            "stores.name",
-            "stores.store_type",
-            DB::raw("SUM(sales.grand_total) as revenue"),
-            DB::raw("COUNT(sales.id) as sale_count"),
-        )
+        $storeRevenues = Store::with('storeType')
+            ->select(
+                "stores.id",
+                "stores.name",
+                "stores.store_type_id",
+                DB::raw("SUM(sales.grand_total) as revenue"),
+                DB::raw("COUNT(sales.id) as sale_count"),
+            )
             ->leftJoin("sales", function ($j) {
                 $j->on("sales.store_id", "=", "stores.id")->where(
                     "sales.status",
                     "completed",
                 );
             })
-            ->groupBy("stores.id", "stores.name", "stores.store_type")
+            ->groupBy("stores.id", "stores.name", "stores.store_type_id")
             ->orderByDesc("revenue")
             ->limit(8)
-            ->get();
+            ->get()
+            ->map(function ($store) {
+                return [
+                    'id' => $store->id,
+                    'name' => $store->name,
+                    'store_type' => $store->store_type,
+                    'revenue' => $store->revenue,
+                    'sale_count' => $store->sale_count,
+                ];
+            });
 
         // Ringkasan role per store
-        $storeTypes = Store::select("store_type", DB::raw("count(*) as total"))
-            ->groupBy("store_type")
+        $storeTypes = Store::join(
+            "store_types",
+            "stores.store_type_id",
+            "=",
+            "store_types.id",
+        )
+            ->select(
+                "store_types.code as store_type",
+                DB::raw("count(*) as total"),
+            )
+            ->groupBy("store_types.code")
             ->pluck("total", "store_type");
 
         return Inertia::render("Developer/Dashboard", [

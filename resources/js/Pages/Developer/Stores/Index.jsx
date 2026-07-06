@@ -101,17 +101,17 @@ export default function Index({ stores, storeTypes }) {
         { key: "inactive", label: `Nonaktif (${stats.inactive})` },
     ];
 
-    // Build type options from storeTypes prop or fallback to defaults
-    const typeOptions = storeTypes ?? [
-        { key: "retail", label: "Retail" },
-        { key: "fnb", label: "FnB / Cafe" },
-        { key: "service", label: "Service" },
-        { key: "rental", label: "Rental" },
-        { key: "ticket", label: "Tiket" },
-        { key: "hospitality", label: "Hospitality" },
-        { key: "parking", label: "Parkir" },
-        { key: "session", label: "Session" },
+    // Build type options from storeTypes prop
+    const typeOptions = [
+        { key: "all", label: "Semua Tipe" },
+        ...(storeTypes ?? []).map((t) => ({
+            key: t.code,
+            label: t.icon + " " + t.label,
+        })),
     ];
+    useEffect(() => {
+        setPage(1);
+    }, [search, filterType, filterStatus]);
 
     return (
         <DeveloperLayout

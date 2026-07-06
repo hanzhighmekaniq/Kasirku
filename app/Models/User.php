@@ -14,24 +14,16 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'is_developer',
-        'password',
-    ];
+    protected $fillable = ["name", "email", "is_developer", "password"];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ["password", "remember_token"];
 
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'is_developer'      => 'boolean',
+            "email_verified_at" => "datetime",
+            "password" => "hashed",
+            "is_developer" => "boolean",
         ];
     }
 
@@ -39,9 +31,18 @@ class User extends Authenticatable
 
     public function stores(): BelongsToMany
     {
-        return $this->belongsToMany(Store::class, 'user_store')
+        return $this->belongsToMany(Store::class, "user_store")
+            ->with("storeType")
             ->withTimestamps()
-            ->select('stores.id', 'stores.name', 'stores.code', 'stores.store_type', 'stores.modules', 'stores.logo', 'stores.is_active');
+            ->select(
+                "stores.id",
+                "stores.name",
+                "stores.code",
+                "stores.store_type_id",
+                "stores.modules",
+                "stores.logo",
+                "stores.is_active",
+            );
     }
 
     public function employee(): HasOne
@@ -91,7 +92,7 @@ class User extends Authenticatable
     public function canSwitchBranch(): bool
     {
         // setting.view dimiliki owner, admin, supervisor — tidak dimiliki kasir/gudang/kitchen
-        return $this->can('setting.view');
+        return $this->can("setting.view");
     }
 
     public function hasRoleInStore(string $role, int $storeId): bool
@@ -101,14 +102,18 @@ class User extends Authenticatable
 
     public function assignRoleInStore(string $role, int $storeId): void
     {
-        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($storeId);
+        app(
+            \Spatie\Permission\PermissionRegistrar::class,
+        )->setPermissionsTeamId($storeId);
         $this->assignRole($role);
-        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId(null);
+        app(
+            \Spatie\Permission\PermissionRegistrar::class,
+        )->setPermissionsTeamId(null);
     }
 
     public function currentStore(): ?Store
     {
-        $storeId = session('current_store_id');
+        $storeId = session("current_store_id");
         if ($storeId) {
             return $this->stores()->find($storeId);
         }
@@ -117,7 +122,7 @@ class User extends Authenticatable
 
     public function currentBranch(): ?Branch
     {
-        $branchId = session('current_branch_id');
+        $branchId = session("current_branch_id");
         if ($branchId) {
             return Branch::find($branchId);
         }

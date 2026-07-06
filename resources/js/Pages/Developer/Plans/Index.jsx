@@ -176,7 +176,7 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
                         Fitur
                     </p>
                     <p className="font-bold text-slate-800">
-                        {plan.plan_features?.length ?? 0}
+                        {plan.features?.length ?? 0}
                     </p>
                 </div>
                 {plan.trial_days > 0 && (

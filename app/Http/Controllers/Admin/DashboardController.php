@@ -27,8 +27,8 @@ class DashboardController extends Controller
         $storeId = session("current_store_id") ?? $user->stores()->first()?->id;
 
         // User tanpa sale.void (kasir) selalu terkunci ke branch-nya sendiri
-        $canViewAll = $user->can('sale.void');
-        $branchIds  = null;
+        $canViewAll = $user->can("sale.void");
+        $branchIds = null;
         if (!$canViewAll) {
             $branchIds = [$user->branch_id];
         } elseif ($request->filled("branch_ids")) {
@@ -45,7 +45,12 @@ class DashboardController extends Controller
         $monthEnd = Carbon::now()->endOfDay();
 
         // ── Scope helper for branch + kasir filtering ─────────
-        $saleScope = function ($q) use ($storeId, $branchIds, $user, $canViewAll) {
+        $saleScope = function ($q) use (
+            $storeId,
+            $branchIds,
+            $user,
+            $canViewAll,
+        ) {
             $q->where("store_id", $storeId)->where("status", "completed");
             if ($branchIds) {
                 $q->whereIn("branch_id", $branchIds);
@@ -156,10 +161,11 @@ class DashboardController extends Controller
         if ($canViewAll) {
             $userStores = $user
                 ->stores()
+                ->with("storeType")
                 ->get([
                     "stores.id",
                     "stores.name",
-                    "stores.store_type",
+                    "stores.store_type_id",
                     "stores.code",
                 ]);
             if ($userStores->count() > 1) {
@@ -177,7 +183,7 @@ class DashboardController extends Controller
                             "id" => $store->id,
                             "name" => $store->name,
                             "code" => $store->code,
-                            "store_type" => $store->store_type,
+                            "store_type" => $store->storeType?->code,
                             "today_sales" => (float) (clone $q)
                                 ->whereDate("sale_date", $today)
                                 ->sum("grand_total"),
@@ -288,7 +294,11 @@ class DashboardController extends Controller
         return Inertia::render("Admin/Dashboard", [
             "mode" => $canViewAll ? "admin" : "kasir",
             "currentStore" => $storeId
-                ? Store::find($storeId, ["id", "name", "store_type"])
+                ? Store::with("storeType")->find($storeId, [
+                    "id",
+                    "name",
+                    "store_type_id",
+                ])
                 : null,
             "branches" => $branches,
             "filters" => [

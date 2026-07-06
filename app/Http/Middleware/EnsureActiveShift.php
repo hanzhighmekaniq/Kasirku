@@ -25,45 +25,53 @@ class EnsureActiveShift
         if (!$user) {
             return $next($request);
         }
-
         // Developer dan user tanpa permission shift.open tidak kena enforce
-        if ($user->isDeveloper() || !$user->can('shift.open')) {
+        /** @var \App\Models\User $user */
+
+        if ($user->isDeveloper() || !$user->can("shift.open")) {
             return $next($request);
         }
 
         // Owner/admin/supervisor (punya shift.manage) tidak kena enforce
-        if ($user->can('shift.manage')) {
+        if ($user->can("shift.manage")) {
             return $next($request);
         }
 
-        $storeId = session('current_store_id');
+        $storeId = session("current_store_id");
         if (!$storeId) {
             return $next($request);
         }
 
         // Cek apakah store ini mengaktifkan fitur shift
-        $store = Store::find($storeId);
-        if (!$store || !$store->hasFeature('cashier_shift')) {
+        $store = Store::with(["storeType"])->find($storeId);
+        if (!$store || !$store->hasFeature("cashier_shift")) {
             return $next($request);
         }
 
         // Cek shift aktif
-        $activeShift = CashierShift::where('store_id', $storeId)
-            ->where('user_id', $user->id)
-            ->where('status', 'open')
+        $activeShift = CashierShift::where("store_id", $storeId)
+            ->where("user_id", $user->id)
+            ->where("status", "open")
             ->exists();
 
         if (!$activeShift) {
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Buka shift kasir terlebih dahulu sebelum melakukan transaksi.',
-                ], 422);
+            if ($request->expectsJson() || $request->is("api/*")) {
+                return response()->json(
+                    [
+                        "success" => false,
+                        "message" =>
+                            "Buka shift kasir terlebih dahulu sebelum melakukan transaksi.",
+                    ],
+                    422,
+                );
             }
 
             return redirect()
-                ->route('admin.cashier-shifts.create')
-                ->with('error', 'Buka shift kasir terlebih dahulu sebelum melakukan transaksi.');
+                ->route("admin.cashier-shifts.create")
+                ->with(
+                    "error",
+                    "Buka shift kasir terlebih dahulu sebelum melakukan transaksi.",
+                );
         }
 
         return $next($request);

@@ -99,7 +99,9 @@ class HandleInertiaRequests extends Middleware
                 // Apakah user boleh ganti toko/cabang (owner, admin, supervisor)
                 // Karyawan biasa (kasir, gudang) false → switcher disembunyikan
                 "canSwitch" => fn() => rescue(
-                    fn() => $user && !$user->isDeveloper() ? $user->canSwitchBranch() : false,
+                    fn() => $user && !$user->isDeveloper()
+                        ? $user->canSwitchBranch()
+                        : false,
                     false,
                     false,
                 ),
@@ -107,11 +109,11 @@ class HandleInertiaRequests extends Middleware
 
             "currentStore" => fn() => rescue(
                 fn() => $storeId
-                    ? Store::find($storeId, [
+                    ? Store::with("storeType")->find($storeId, [
                         "id",
                         "name",
                         "code",
-                        "store_type",
+                        "store_type_id",
                         "modules",
                         "logo",
                     ])
@@ -119,26 +121,27 @@ class HandleInertiaRequests extends Middleware
                 null,
                 false,
             ),
-            "storeTypeFeatures" => function () use ($storeId) {
-                if (!$storeId) {
-                    return [];
-                }
-                $store = \App\Models\Store::find($storeId);
-                if (!$store) {
-                    return [];
-                }
-                return \App\Models\Feature::where("is_active", true)
-                    ->whereNotNull("applicable_types")
-                    ->get()
-                    ->filter(
-                        fn($f) => in_array(
-                            $store->store_type,
-                            $f->applicable_types ?? [],
-                        ),
-                    )
-                    ->pluck("code")
-                    ->toArray();
-            },
+            "storeTypeFeatures" => fn() => rescue(
+                function () use ($storeId) {
+                    if (!$storeId) {
+                        return [];
+                    }
+                    $store = \App\Models\Store::with(
+                        "storeType.features",
+                    )->find($storeId);
+                    if (!$store || !$store->getRelationValue("storeType")) {
+                        return [];
+                    }
+
+                    return $store
+                        ->getRelationValue("storeType")
+                        ->features->where("is_active", true)
+                        ->pluck("code")
+                        ->toArray();
+                },
+                [],
+                false,
+            ),
 
             "allStoreTypes" => function () {
                 return \App\Models\StoreType::active();
@@ -154,11 +157,12 @@ class HandleInertiaRequests extends Middleware
             "userStores" => fn() => rescue(
                 fn() => $user
                     ?->stores()
+                    ->with("storeType")
                     ->select(
                         "stores.id",
                         "stores.name",
                         "stores.code",
-                        "stores.store_type",
+                        "stores.store_type_id",
                         "stores.logo",
                     )
                     ->get() ?? collect(),
@@ -187,51 +191,50 @@ class HandleInertiaRequests extends Middleware
                 "error" => fn() => $request->session()->get("error"),
                 "warning" => fn() => $request->session()->get("warning"),
                 "info" => fn() => $request->session()->get("info"),
+                // Diisi middleware CheckFeatureAccess ketika store type tidak support fitur
+                "typeBlock" => fn() => $request->session()->get("typeBlock"),
             ],
         ];
     }
 
     private function getStorePlan(int $storeId): ?array
     {
-        $store = Store::with('planModel.planFeatures')->find($storeId);
+        $store = Store::with("planModel.planFeatures")->find($storeId);
         if (!$store) {
             return null;
         }
 
-        $planCode   = $store->effectivePlanCode();
-        $planModel  = $store->planModel;
+        $planCode = $store->effectivePlanCode();
+        $planModel = $store->planModel;
 
         // Fitur dari plan_id (DB) — fallback ke hardcoded
-        if ($planModel) {
+        if ($planModel && !empty($planModel->featureCodes())) {
             $featureCodes = $planModel->featureCodes();
-            // Pro: kalau tidak ada feature terdaftar di pivot, anggap semua (*)
-            if (empty($featureCodes)) {
-                $featureCodes = ['*'];
-            }
-            $label       = $planModel->label;
-            $maxUsers    = $store->effectiveMaxUsers();
+            $label = $planModel->label;
+            $maxUsers = $store->effectiveMaxUsers();
             $maxBranches = $store->effectiveMaxBranches();
         } else {
-            // Fallback hardcoded
-            $planConfig  = \App\Models\Store::planConfig()[$planCode]
-                            ?? \App\Models\Store::planConfig()['free'];
-            $featureCodes = $planConfig['features'];
-            $label        = $planConfig['label'];
-            $maxUsers     = $store->effectiveMaxUsers();
-            $maxBranches  = $store->effectiveMaxBranches();
+            // Fallback hardcoded (kalau pivot kosong atau plan_id null)
+            $planConfig =
+                \App\Models\Store::planConfig()[$planCode] ??
+                \App\Models\Store::planConfig()["free"];
+            $featureCodes = $planConfig["features"];
+            $label = $planConfig["label"];
+            $maxUsers = $store->effectiveMaxUsers();
+            $maxBranches = $store->effectiveMaxBranches();
         }
 
         return [
-            'plan'         => $planCode,
-            'plan_id'      => $store->plan_id,
-            'label'        => $label,
-            'features'     => $featureCodes,
-            'max_users'    => $maxUsers,
-            'max_branches' => $maxBranches,
-            'expires_at'   => $store->plan_expires_at,
-            'is_expired'   => $store->isPlanExpired(),
-            'can_add_user' => $store->canAddUser(),
-            'can_add_branch' => $store->canAddBranch(),
+            "plan" => $planCode,
+            "plan_id" => $store->plan_id,
+            "label" => $label,
+            "features" => $featureCodes,
+            "max_users" => $maxUsers,
+            "max_branches" => $maxBranches,
+            "expires_at" => $store->plan_expires_at,
+            "is_expired" => $store->isPlanExpired(),
+            "can_add_user" => $store->canAddUser(),
+            "can_add_branch" => $store->canAddBranch(),
         ];
     }
 }

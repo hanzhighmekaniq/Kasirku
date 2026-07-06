@@ -44,8 +44,9 @@ class PurchaseController extends Controller
 
         return Inertia::render("Admin/Purchases/Index", [
             "purchases" => $purchases,
-            "stats"     => $stats,
-            "storeType" => \App\Models\Store::find($storeId)?->store_type ?? 'retail',
+            "stats" => $stats,
+            "storeType" =>
+                \App\Models\Store::find($storeId)?->store_type ?? "retail",
         ]);
     }
 
@@ -67,11 +68,22 @@ class PurchaseController extends Controller
             )
             ->when(
                 $store && $store->store_type === "rental",
-                fn($q) => $q->whereIn("type", ["rental_item", "finished_goods"]),
+                fn($q) => $q->whereIn("type", [
+                    "rental_item",
+                    "finished_goods",
+                ]),
             )
             ->when(
-                $store && !in_array($store->store_type, ["fnb", "rental"]),
-                fn($q) => $q->whereIn("type", ["finished_goods", "combo", "service", "time_based"]),
+                $store &&
+                    $store &&
+                    $store &&
+                    !in_array($store->store_type, ["fnb", "rental"]),
+                fn($q) => $q->whereIn("type", [
+                    "finished_goods",
+                    "combo",
+                    "service",
+                    "time_based",
+                ]),
             )
             ->with("stocks", fn($q) => $q->where("store_id", $storeId))
             ->orderBy("name")

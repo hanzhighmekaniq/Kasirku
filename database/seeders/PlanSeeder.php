@@ -67,8 +67,9 @@ class PlanSeeder extends Seeder
         $pro   = Plan::where('code', 'pro')->first();
 
         // Free: hanya fitur dasar
+        // Free: hanya fitur dasar
         if ($free) {
-            $free->planFeatures()->sync(
+            $free->features()->sync(
                 Feature::whereIn('code', [
                     'dashboard',
                     'basic_pos',
@@ -84,7 +85,7 @@ class PlanSeeder extends Seeder
 
         // Basic: semua fitur kecuali deposit (legacy)
         if ($basic) {
-            $basic->planFeatures()->sync(
+            $basic->features()->sync(
                 Feature::whereIn('code', [
                     'dashboard',
                     'basic_pos',
@@ -126,7 +127,7 @@ class PlanSeeder extends Seeder
 
         // Pro: semua fitur (termasuk deposit legacy)
         if ($pro) {
-            $pro->planFeatures()->sync(Feature::pluck('id'));
+            $pro->features()->sync(Feature::pluck('id'));
         }
     }
 }

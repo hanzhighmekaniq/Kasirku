@@ -13,7 +13,35 @@ class PlanController extends Controller
 {
     public function index()
     {
-        $plans = Plan::with("planFeatures")->orderBy("sort_order")->get();
+        $plans = Plan::with("features")
+            ->orderBy("sort_order")
+            ->get()
+            ->map(function ($plan) {
+                return [
+                    'id' => $plan->id,
+                    'code' => $plan->code,
+                    'label' => $plan->label,
+                    'description' => $plan->description,
+                    'max_users' => $plan->max_users,
+                    'max_branches' => $plan->max_branches,
+                    'price' => (float) $plan->price,
+                    'trial_days' => $plan->trial_days,
+                    'is_active' => $plan->is_active,
+                    'sort_order' => $plan->sort_order,
+                    'created_at' => $plan->created_at,
+                    'stores_count' => $plan->stores()->count(),
+                    'features' => $plan->features->map(function ($feature) {
+                        return [
+                            'id' => $feature->id,
+                            'code' => $feature->code,
+                            'label' => $feature->label,
+                            'category' => $feature->category,
+                            'sort_order' => $feature->sort_order,
+                        ];
+                    }),
+                ];
+            });
+
         return Inertia::render("Developer/Plans/Index", [
             "plans" => $plans,
         ]);
@@ -21,11 +49,22 @@ class PlanController extends Controller
 
     public function create()
     {
+        $allFeatures = Feature::where("is_active", true)
+            ->orderBy("sort_order")
+            ->get()
+            ->map(function ($feature) {
+                return [
+                    'id' => $feature->id,
+                    'code' => $feature->code,
+                    'label' => $feature->label,
+                    'category' => $feature->category,
+                    'sort_order' => $feature->sort_order,
+                ];
+            });
+
         return Inertia::render("Developer/Plans/Form", [
             "plan" => null,
-            "allFeatures" => Feature::where("is_active", true)
-                ->orderBy("sort_order")
-                ->get(["id", "code", "label", "category", "sort_order"]),
+            "allFeatures" => $allFeatures,
         ]);
     }
 
@@ -47,7 +86,7 @@ class PlanController extends Controller
         $plan = Plan::create($validated);
 
         if (isset($validated["feature_ids"])) {
-            $plan->planFeatures()->sync($validated["feature_ids"]);
+            $plan->features()->sync($validated["feature_ids"]);
         }
 
         return redirect()
@@ -57,12 +96,46 @@ class PlanController extends Controller
 
     public function edit(Plan $plan)
     {
-        $plan->load("planFeatures");
+        $plan->load("features");
+
+        $planData = [
+            'id' => $plan->id,
+            'code' => $plan->code,
+            'label' => $plan->label,
+            'description' => $plan->description,
+            'max_users' => $plan->max_users,
+            'max_branches' => $plan->max_branches,
+            'price' => (float) $plan->price,
+            'trial_days' => $plan->trial_days,
+            'is_active' => $plan->is_active,
+            'sort_order' => $plan->sort_order,
+            'features' => $plan->features->map(function ($feature) {
+                return [
+                    'id' => $feature->id,
+                    'code' => $feature->code,
+                    'label' => $feature->label,
+                    'category' => $feature->category,
+                    'sort_order' => $feature->sort_order,
+                ];
+            }),
+        ];
+
+        $allFeatures = Feature::where("is_active", true)
+            ->orderBy("sort_order")
+            ->get()
+            ->map(function ($feature) {
+                return [
+                    'id' => $feature->id,
+                    'code' => $feature->code,
+                    'label' => $feature->label,
+                    'category' => $feature->category,
+                    'sort_order' => $feature->sort_order,
+                ];
+            });
+
         return Inertia::render("Developer/Plans/Form", [
-            "plan" => $plan,
-            "allFeatures" => Feature::where("is_active", true)
-                ->orderBy("sort_order")
-                ->get(["id", "code", "label", "category", "sort_order"]),
+            "plan" => $planData,
+            "allFeatures" => $allFeatures,
         ]);
     }
 
@@ -89,7 +162,7 @@ class PlanController extends Controller
         $plan->update($validated);
 
         if (isset($validated["feature_ids"])) {
-            $plan->planFeatures()->sync($validated["feature_ids"]);
+            $plan->features()->sync($validated["feature_ids"]);
         }
 
         return redirect()

@@ -15,7 +15,7 @@ export default function Create({
         address: "",
         is_active: true,
         // ── Tipe & Plan ─────────────────────────
-        store_type: "retail",
+        store_type_id: null,
         plan_id: null,
         // ── Cabang (create only) ────────────────
         branches: [{ code: "", name: "", phone: "", address: "" }],
@@ -68,6 +68,7 @@ export default function Create({
                 onSubmit={submit}
                 cancelHref={route("developer.stores.index")}
                 plans={plans}
+                storeTypes={storeTypes}
                 availableOwners={availableOwners}
                 onAddBranch={addBranch}
                 onRemoveBranch={removeBranch}

@@ -17,7 +17,11 @@ return new class extends Migration {
             $table->string("code", 50)->unique();
             $table->string("name");
             // store_type sebagai hint utama, modules JSON sebagai penentu fitur aktif
-            $table->string("store_type", 30)->default("retail");
+            $table
+                ->foreignId("store_type_id")
+                ->nullable()
+                ->constrained("store_types")
+                ->restrictOnDelete();
             // modules: { "pos_modes": ["retail","fnb","service"], "features": ["kitchen","queue","booking","delivery","rental","parking","membership","commission"] }
             $table->json("modules")->nullable();
             $table->string("logo")->nullable();
@@ -32,10 +36,20 @@ return new class extends Migration {
             $table->string("email")->nullable()->unique();
             $table->text("address")->nullable();
             $table->boolean("is_active")->default(true);
-            $table->string("plan", 20)->default("free");
+            $table
+                ->foreignId("plan_id")
+                ->nullable()
+                ->constrained("plans")
+                ->nullOnDelete();
             $table->date("plan_expires_at")->nullable();
-            $table->unsignedSmallInteger("max_users")->default(1);
-            $table->unsignedSmallInteger("max_branches")->default(1);
+            $table
+                ->unsignedSmallInteger("max_users")
+                ->nullable()
+                ->default(null);
+            $table
+                ->unsignedSmallInteger("max_branches")
+                ->nullable()
+                ->default(null);
             $table->timestamps();
         });
     }

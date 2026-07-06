@@ -26,13 +26,13 @@ class DatabaseSeeder extends Seeder
         $this->call([
             // ── Core: wajib ─────────────────────────────────────────
             StoreTypeSeeder::class,
+            FeatureSeeder::class, // HARUS sebelum PlanSeeder
             PlanSeeder::class,
-            FeatureSeeder::class,
             StoreSeeder::class,
             BranchSeeder::class,
             RolePermissionSeeder::class,
             UserSeeder::class,
-            EmployeeSeeder::class,     // karyawan per branch (bukan owner)
+            EmployeeSeeder::class, // karyawan per branch (bukan owner)
             PaymentMethodSeeder::class,
             ExpenseCategorySeeder::class,
 

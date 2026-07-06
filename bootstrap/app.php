@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Auth;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -43,7 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e,
             $request,
         ) {
-            if (auth()->check()) {
+            if (Auth::check()) {
                 return redirect()->route("admin.dashboard");
             }
             return redirect()->route("login");
@@ -54,7 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e,
             $request,
         ) {
-            if (auth()->check()) {
+            if (Auth::check()) {
                 return redirect()->route("admin.dashboard");
             }
             return redirect()->route("login");
@@ -73,7 +74,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // Cek apakah ini request Inertia
             if ($request->header("X-Inertia")) {
                 // Inertia request: return 500 dengan flash error
-                if (auth()->check()) {
+                if (Auth::check()) {
                     return redirect()
                         ->route("admin.dashboard")
                         ->with(

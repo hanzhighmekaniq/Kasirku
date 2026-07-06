@@ -34,13 +34,34 @@ export async function syncAll() {
     syncing = true;
 
     try {
+        // Skip sync for developer pages — they don't have store/branch session
+        if (window.location.pathname.startsWith("/developer")) {
+            syncing = false;
+            return {
+                success: false,
+                reason: "developer_page",
+                syncedAt: lastSyncAt,
+            };
+        }
+
         const response = await fetch("/app/master-data", {
             headers: {
                 Accept: "application/json",
-                "X-Requested-With": "XMLHttpRequest",
-                "X-Inertia": "false",
+                // Jangan kirim X-Inertia — kalau dikirim (meski "false"),
+                // Inertia middleware akan intercept & cek version → 409 mismatch.
+                // Request ini adalah plain AJAX, bukan Inertia navigation.
             },
         });
+
+        // 409 = Inertia version mismatch (aset berubah) — bukan error data, skip saja
+        if (response.status === 409) {
+            syncing = false;
+            return {
+                success: false,
+                reason: "version_mismatch",
+                syncedAt: lastSyncAt,
+            };
+        }
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);

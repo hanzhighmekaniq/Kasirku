@@ -4,7 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\Feature;
 use App\Models\Plan;
+use App\Models\StoreType;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Semua 34 feature code yang mengontrol sidebar & route access.
@@ -317,8 +319,39 @@ class FeatureSeeder extends Seeder
         foreach ($features as $f) {
             Feature::updateOrCreate(
                 ["code" => $f["code"]],
-                array_merge($f, ["is_active" => true]),
+                [
+                    "label" => $f["label"],
+                    "description" => $f["description"] ?? null,
+                    "category" => $f["category"] ?? null,
+                    "sort_order" => $f["sort_order"] ?? 0,
+                    "is_active" => true,
+                ],
             );
+        }
+
+        // ── Sync to store_type_feature table ────────────────────────────
+        $storeTypeIds = StoreType::pluck("id", "code");
+
+        DB::table("store_type_feature")->delete();
+        foreach ($features as $f) {
+            $feature = Feature::where("code", $f["code"])->first();
+            if ($feature && !empty($f["applicable_types"])) {
+                foreach ($f["applicable_types"] as $type) {
+                    $storeTypeId = $storeTypeIds->get($type);
+
+                    if (!$storeTypeId) {
+                        continue;
+                    }
+
+                    DB::table("store_type_feature")->updateOrInsert(
+                        [
+                            "store_type_id" => $storeTypeId,
+                            "feature_id" => $feature->id,
+                        ],
+                        ["created_at" => now(), "updated_at" => now()],
+                    );
+                }
+            }
         }
 
         // ── Attach features to plans ──────────────────────────────────────
@@ -379,17 +412,17 @@ class FeatureSeeder extends Seeder
 
         if ($free) {
             $free
-                ->planFeatures()
+                ->features()
                 ->sync(Feature::whereIn("code", $freeCodes)->pluck("id"));
         }
         if ($basic) {
             $basic
-                ->planFeatures()
+                ->features()
                 ->sync(Feature::whereIn("code", $basicCodes)->pluck("id"));
         }
         if ($pro) {
             // Pro = semua fitur
-            $pro->planFeatures()->sync(Feature::pluck("id"));
+            $pro->features()->sync(Feature::pluck("id"));
         }
     }
 }

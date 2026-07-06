@@ -12,30 +12,30 @@ import { usePage } from "@inertiajs/react";
  */
 export function useStoreModules() {
     const { currentStore, auth, storePlan, storeTypeFeatures } =
-        usePage().props;
+        usePage().props ?? {};
 
-    const modules        = currentStore?.modules ?? {};
-    const posModes       = modules.pos_modes ?? [currentStore?.store_type ?? "retail"];
+    const modules = currentStore?.modules ?? {};
+    const posModes = modules.pos_modes ?? [
+        currentStore?.store_type ?? "retail",
+    ];
     const moduleFeatures = modules.features ?? [];
-    const permissions    = auth?.permissions ?? [];
+    const permissions = auth?.permissions ?? [];
 
-    // Layer 1 — applicable_types per tipe toko
+    // Layer 1 — store_type_feature dari relasi (pivot)
     const typeFeatures = storeTypeFeatures ?? [];
+    const typeFeaturesLoaded = typeFeatures.length > 0;
 
-    // Layer 3 — plan features
-    const planFeatures = storePlan?.features ?? ["*"];
-    const planAllAll   = planFeatures.includes("*");
+    // Layer 2 — plan features
+    const planFeatures = storePlan?.features ?? [];
+    const planAllAll = planFeatures.length === 1 && planFeatures[0] === "*";
 
     const planAllows = (feature) => {
         if (planAllAll) return true;
-        if ((storePlan?.plan ?? "free") === "free") {
-            return !["payment_gateway"].includes(feature);
-        }
         return planFeatures.includes(feature);
     };
 
     const typeSupports = (feature) => {
-        if (typeFeatures.length === 0) return true;
+        if (!typeFeaturesLoaded) return false;
         return typeFeatures.includes(feature);
     };
 
@@ -44,76 +44,125 @@ export function useStoreModules() {
         return moduleFeatures.includes(feature);
     };
 
-    /** 2-layer check: type + plan */
+    /**
+     * hasFeature = tipe toko support DAN plan mengizinkan.
+     * Muncul normal, bisa diklik.
+     */
     const hasFeature = (feature) =>
         typeSupports(feature) && planAllows(feature);
 
-    const can    = (permission) => permissions.includes(permission);
-    const canAny = (...perms)   => perms.some((p) => permissions.includes(p));
-    const hasMode = (mode)       => posModes.includes(mode);
+    /**
+     * isFeatureLocked = tipe toko support TAPI plan TIDAK mengizinkan.
+     * Muncul di sidebar tapi dikunci — user lihat fiturnya ada di tipe toko,
+     * tapi perlu upgrade plan untuk mengakses.
+     *
+     * Kalau tipe toko TIDAK support → HIDDEN total (bahkan URL pun diblok).
+     */
+    const isFeatureLocked = (feature) =>
+        typeSupports(feature) && !planAllows(feature);
+
+    const can = (permission) => permissions.includes(permission);
+    const canAny = (...perms) => perms.some((p) => permissions.includes(p));
+    const hasMode = (mode) => posModes.includes(mode);
 
     // Mode flags
-    const isRetail      = hasMode("retail");
-    const isFnb         = hasMode("fnb");
-    const isService     = hasMode("service");
-    const isRental      = hasMode("rental");
-    const isTicket      = hasMode("ticket");
+    const isRetail = hasMode("retail");
+    const isFnb = hasMode("fnb");
+    const isService = hasMode("service");
+    const isRental = hasMode("rental");
+    const isTicket = hasMode("ticket");
     const isHospitality = hasMode("hospitality");
-    const isParking     = hasMode("parking");
-    const isSession     = hasMode("session");
-    const isLaundry     = isService;
+    const isParking = hasMode("parking");
+    const isSession = hasMode("session");
+    const isLaundry = isService;
 
     // ── Computed feature flags ─────────────────────────────────────────────
     // POS & Transaksi
-    const hasDashboard   = hasFeature("dashboard");
-    const hasPos         = hasFeature("basic_pos");
-    const hasShift       = hasFeature("shift");
-    const hasSaleReturn  = hasFeature("sale_return");
-    const hasPromo       = hasFeature("promo");
-    const hasExpense     = hasFeature("expense");
+    const hasDashboard = hasFeature("dashboard");
+    const hasPos = hasFeature("basic_pos");
+    const hasShift = hasFeature("shift");
+    const hasSaleReturn = hasFeature("sale_return");
+    const hasPromo = hasFeature("promo");
+    const hasExpense = hasFeature("expense");
 
-    // Operasional mode-specific
-    const needsTable     = (isFnb || isHospitality) && hasFeature("table");
-    const needsKitchen   = isFnb && hasFeature("kitchen");
-    const needsQueue     = isService && hasFeature("queue");
-    const needsBooking   = hasFeature("booking");
+    // Locked variants (plan/type fails but feature exists)
+    const lockedDashboard = isFeatureLocked("dashboard");
+    const lockedPos = isFeatureLocked("basic_pos");
+    const lockedShift = isFeatureLocked("shift");
+    const lockedSaleReturn = isFeatureLocked("sale_return");
+    const lockedPromo = isFeatureLocked("promo");
+    const lockedExpense = isFeatureLocked("expense");
+    const lockedTable = isFeatureLocked("table");
+    const lockedKitchen = isFeatureLocked("kitchen");
+    const lockedQueue = isFeatureLocked("queue");
+    const lockedBooking = isFeatureLocked("booking");
+    const lockedProduct = isFeatureLocked("product");
+    const lockedCategory = isFeatureLocked("category");
+    const lockedModifier = isFeatureLocked("modifier");
+    const lockedCustomer = isFeatureLocked("customer");
+    const lockedMembership = isFeatureLocked("membership");
+    const lockedSupplier = isFeatureLocked("supplier");
+    const lockedEmployee = isFeatureLocked("employee");
+    const lockedCommission = isFeatureLocked("commission");
+    const lockedPurchase = isFeatureLocked("purchase");
+    const lockedPurchaseReturn = isFeatureLocked("purchase_return");
+    const lockedStock = isFeatureLocked("stock");
+    const lockedBatchExpired = isFeatureLocked("batch_expired");
+    const lockedAdjustment = isFeatureLocked("stock_adjustment");
+    const lockedOpname = isFeatureLocked("stock_opname");
+    const lockedTransfer = isFeatureLocked("stock_transfer");
+    const lockedWaste = isFeatureLocked("waste");
+    const lockedRecipe = isFeatureLocked("recipe");
+    const lockedReport = isFeatureLocked("report");
+    const lockedPaymentGw = isFeatureLocked("payment_gateway");
+    const lockedPaymentMethod = isFeatureLocked("payment_method");
+    const lockedSettings = isFeatureLocked("settings");
+    const lockedUserManagement = isFeatureLocked("user_management");
+    const lockedRoleManagement = isFeatureLocked("role_management");
+    const lockedActivityLog = isFeatureLocked("activity_log");
 
-    // Master data
-    const hasProduct     = hasFeature("product");
-    const hasCategory    = hasFeature("category");
-    const needsModifier  = isFnb && hasFeature("modifier");
-    const hasCustomer    = hasFeature("customer");
+    // Operasional mode-specific — mode flag hanya untuk badge/cosmetics
+    const needsTable = hasFeature("table");
+    const needsKitchen = hasFeature("kitchen");
+    const needsQueue = hasFeature("queue");
+    const needsBooking = hasFeature("booking");
+
+    // Master data — storeTypeFeatures sudah jadi single source of truth
+    const hasProduct = hasFeature("product");
+    const hasCategory = hasFeature("category");
+    const needsModifier = hasFeature("modifier");
+    const hasCustomer = hasFeature("customer");
     const needsMembership = hasFeature("membership");
-    const needsSupplier  = (isRetail || isFnb || isRental) && hasFeature("supplier");
-    const hasEmployee    = hasFeature("employee");
+    const needsSupplier = hasFeature("supplier");
+    const hasEmployee = hasFeature("employee");
     const needsCommission = hasFeature("commission");
 
     // Transaksi
-    const hasPurchase       = (isRetail || isFnb || isRental) && hasFeature("purchase");
-    const hasPurchaseReturn = (isRetail || isFnb || isRental) && hasFeature("purchase_return");
+    const hasPurchase = hasFeature("purchase");
+    const hasPurchaseReturn = hasFeature("purchase_return");
 
     // Inventaris
-    const needsStock        = (isRetail || isFnb || isRental) && hasFeature("stock");
-    const needsBatchExpired = (isRetail || isFnb) && hasFeature("batch_expired");
-    const needsAdjustment   = (isRetail || isFnb || isRental) && hasFeature("stock_adjustment");
-    const needsOpname       = (isRetail || isFnb) && hasFeature("stock_opname");
-    const needsTransfer     = (isRetail || isFnb || isRental) && hasFeature("stock_transfer");
-    const needsWaste        = isFnb && hasFeature("waste");
-    const needsRecipe       = isFnb && hasFeature("recipe");
+    const needsStock = hasFeature("stock");
+    const needsBatchExpired = hasFeature("batch_expired");
+    const needsAdjustment = hasFeature("stock_adjustment");
+    const needsOpname = hasFeature("stock_opname");
+    const needsTransfer = hasFeature("stock_transfer");
+    const needsWaste = hasFeature("waste");
+    const needsRecipe = hasFeature("recipe");
 
     // Keuangan
-    const needsReport    = hasFeature("report");
+    const needsReport = hasFeature("report");
     const needsPaymentGw = hasFeature("payment_gateway");
     const hasPaymentMethod = hasFeature("payment_method");
 
     // Sistem
-    const hasSettings       = hasFeature("settings");
+    const hasSettings = hasFeature("settings");
     const hasUserManagement = hasFeature("user_management");
     const hasRoleManagement = hasFeature("role_management");
-    const hasActivityLog    = hasFeature("activity_log");
+    const hasActivityLog = hasFeature("activity_log");
 
     // Backward-compat aliases (masih dipakai kode lama)
-    const needsStock_compat   = needsStock;
+    const needsStock_compat = needsStock;
     const needsSupplier_compat = needsSupplier;
 
     return {
@@ -124,17 +173,18 @@ export function useStoreModules() {
         planFeatures,
         permissions,
         // Plan info
-        plan:         storePlan?.plan       ?? "free",
-        planLabel:    storePlan?.label      ?? "Free",
-        planExpired:  storePlan?.is_expired ?? false,
-        canAddUser:   storePlan?.can_add_user    ?? false,
-        canAddBranch: storePlan?.can_add_branch  ?? false,
+        plan: storePlan?.plan ?? "free",
+        planLabel: storePlan?.label ?? "Free",
+        planExpired: storePlan?.is_expired ?? false,
+        canAddUser: storePlan?.can_add_user ?? false,
+        canAddBranch: storePlan?.can_add_branch ?? false,
         // Checkers
         hasMode,
         hasFeature,
         planAllows,
         typeSupports,
         moduleActive,
+        isFeatureLocked,
         can,
         canAny,
         // Mode flags
@@ -182,6 +232,41 @@ export function useStoreModules() {
         hasUserManagement,
         hasRoleManagement,
         hasActivityLog,
+        // Locked flags
+        lockedDashboard,
+        lockedPos,
+        lockedShift,
+        lockedSaleReturn,
+        lockedPromo,
+        lockedExpense,
+        lockedTable,
+        lockedKitchen,
+        lockedQueue,
+        lockedBooking,
+        lockedProduct,
+        lockedCategory,
+        lockedModifier,
+        lockedCustomer,
+        lockedMembership,
+        lockedSupplier,
+        lockedEmployee,
+        lockedCommission,
+        lockedPurchase,
+        lockedPurchaseReturn,
+        lockedStock,
+        lockedBatchExpired,
+        lockedAdjustment,
+        lockedOpname,
+        lockedTransfer,
+        lockedWaste,
+        lockedRecipe,
+        lockedReport,
+        lockedPaymentGw,
+        lockedPaymentMethod,
+        lockedSettings,
+        lockedUserManagement,
+        lockedRoleManagement,
+        lockedActivityLog,
         // Backward-compat
         needsStock: needsStock_compat,
         needsSupplier: needsSupplier_compat,

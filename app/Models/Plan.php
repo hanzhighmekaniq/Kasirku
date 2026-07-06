@@ -35,27 +35,54 @@ class Plan extends Model
         ];
     }
 
+    // --- Relationships ---
+
+    /**
+     * Stores yang menggunakan plan ini
+     */
     public function stores(): HasMany
     {
-        return $this->hasMany(Store::class, "plan", "code");
+        return $this->hasMany(Store::class, "plan_id");
     }
 
+    /**
+     * Features yang dimiliki plan ini (many-to-many via plan_feature)
+     */
+    public function features(): BelongsToMany
+    {
+        return $this->belongsToMany(Feature::class, "plan_feature")
+            ->withTimestamps();
+    }
+
+    /**
+     * Alias untuk konsistensi dengan naming convention lama
+     * @deprecated Use features() instead
+     */
     public function planFeatures(): BelongsToMany
     {
-        return $this->belongsToMany(Feature::class, "plan_feature");
+        return $this->features();
     }
 
+    /**
+     * Ambil semua feature codes dari plan ini
+     */
     public function featureCodes(): array
     {
-        return $this->planFeatures()->pluck("code")->toArray();
+        return $this->features()
+            ->where('is_active', true)
+            ->pluck('code')
+            ->toArray();
     }
 
-    /** Get all features as label-friendly array */
+    /**
+     * Get all features as label-friendly array
+     */
     public function featureList(): array
     {
-        return $this->planFeatures()
-            ->orderBy("sort_order")
-            ->pluck("label", "code")
+        return $this->features()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->pluck('label', 'code')
             ->toArray();
     }
 }

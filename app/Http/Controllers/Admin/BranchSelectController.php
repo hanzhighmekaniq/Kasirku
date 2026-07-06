@@ -16,38 +16,41 @@ class BranchSelectController extends Controller
     {
         $user = Auth::user();
 
-        $storeId = session('current_store_id');
-        $store   = $storeId ? \App\Models\Store::find($storeId) : $user->stores()->first();
+        $storeId = session("current_store_id");
+        $store = $storeId
+            ? \App\Models\Store::find($storeId)
+            : $user->stores()->first();
 
         if (!$store) {
-            return redirect()->route('admin.store.select');
+            return redirect()->route("admin.store.select");
         }
 
-        $branches = $store->branches()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'code', 'name', 'phone', 'address']);
+        $branches = $store
+            ->branches()
+            ->where("is_active", true)
+            ->orderBy("name")
+            ->get(["id", "code", "name", "phone", "address"]);
 
         // If only 1 branch, auto-select and redirect
         if ($branches->count() === 1) {
             $branch = $branches->first();
             session([
-                'branch_id'         => $branch->id,
-                'current_branch_id' => $branch->id,
+                "branch_id" => $branch->id,
+                "current_branch_id" => $branch->id,
             ]);
-            $intended = session('url.intended', route('admin.dashboard'));
-            session()->forget('url.intended');
+            $intended = session("url.intended", route("admin.dashboard"));
+            session()->forget("url.intended");
             return redirect($intended);
         }
 
         if ($branches->isEmpty()) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route("admin.dashboard");
         }
 
-        return Inertia::render('Admin/SelectBranch', [
-            'branches'  => $branches,
-            'storeName' => $store->name,
-            'intended'  => session('url.intended', route('admin.dashboard')),
+        return Inertia::render("Admin/SelectBranch", [
+            "branches" => $branches,
+            "storeName" => $store->name,
+            "intended" => session("url.intended", route("admin.dashboard")),
         ]);
     }
 
@@ -57,34 +60,39 @@ class BranchSelectController extends Controller
     public function select(Request $request)
     {
         $validated = $request->validate([
-            'branch_id' => 'required|exists:branches,id',
+            "branch_id" => "required|exists:branches,id",
         ]);
 
-        $user    = Auth::user();
-        $storeId = session('current_store_id');
-        $store   = $storeId ? \App\Models\Store::find($storeId) : $user->stores()->first();
+        $user = Auth::user();
+        $storeId = session("current_store_id");
+        $store = $storeId
+            ? \App\Models\Store::find($storeId)
+            : $user->stores()->first();
 
         if (!$store) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route("admin.dashboard");
         }
 
         // Verify branch belongs to current store and is active
-        $branch = $store->branches()
-            ->where('id', $validated['branch_id'])
-            ->where('is_active', true)
+        $branch = $store
+            ->branches()
+            ->where("id", $validated["branch_id"])
+            ->where("is_active", true)
             ->first();
 
         if (!$branch) {
-            return back()->withErrors(['branch_id' => 'Cabang tidak valid atau tidak aktif.']);
+            return back()->withErrors([
+                "branch_id" => "Cabang tidak valid atau tidak aktif.",
+            ]);
         }
 
         session([
-            'branch_id'         => $branch->id,
-            'current_branch_id' => $branch->id,
+            "branch_id" => $branch->id,
+            "current_branch_id" => $branch->id,
         ]);
 
-        $intended = session('url.intended', route('admin.dashboard'));
-        session()->forget('url.intended');
+        $intended = session("url.intended", route("admin.dashboard"));
+        session()->forget("url.intended");
 
         return redirect($intended);
     }
@@ -97,37 +105,43 @@ class BranchSelectController extends Controller
     public function switch(Request $request)
     {
         $user = Auth::user();
-
+        /** @var \App\Models\User $user */
         // Karyawan biasa tidak boleh switch branch
         if (!$user->canSwitchBranch()) {
-            return back()->with('error', 'Kamu tidak memiliki akses untuk mengganti cabang.');
+            return back()->with(
+                "error",
+                "Kamu tidak memiliki akses untuk mengganti cabang.",
+            );
         }
 
         $validated = $request->validate([
-            'branch_id' => 'required|exists:branches,id',
+            "branch_id" => "required|exists:branches,id",
         ]);
 
-        $storeId = session('current_store_id');
-        $store   = $storeId ? \App\Models\Store::find($storeId) : $user->stores()->first();
+        $storeId = session("current_store_id");
+        $store = $storeId
+            ? \App\Models\Store::find($storeId)
+            : $user->stores()->first();
 
         if (!$store) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route("admin.dashboard");
         }
 
-        $branch = $store->branches()
-            ->where('id', $validated['branch_id'])
-            ->where('is_active', true)
+        $branch = $store
+            ->branches()
+            ->where("id", $validated["branch_id"])
+            ->where("is_active", true)
             ->first();
 
         if (!$branch) {
-            return back()->with('error', 'Cabang tidak valid.');
+            return back()->with("error", "Cabang tidak valid.");
         }
 
         session([
-            'branch_id'         => $branch->id,
-            'current_branch_id' => $branch->id,
+            "branch_id" => $branch->id,
+            "current_branch_id" => $branch->id,
         ]);
 
-        return back()->with('success', "Beralih ke cabang: {$branch->name}");
+        return back()->with("success", "Beralih ke cabang: {$branch->name}");
     }
 }

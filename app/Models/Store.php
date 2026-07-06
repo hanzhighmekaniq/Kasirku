@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Plan;
+use App\Models\StoreType;
 
 class Store extends Model
 {
@@ -17,7 +18,7 @@ class Store extends Model
         "user_id",
         "code",
         "name",
-        "store_type",
+        "store_type_id",
         "modules",
         "logo",
         "currency",
@@ -31,7 +32,6 @@ class Store extends Model
         "email",
         "address",
         "is_active",
-        "plan",
         "plan_id",
         "plan_expires_at",
         "max_users",
@@ -56,9 +56,33 @@ class Store extends Model
         return $this->belongsTo(User::class, "user_id");
     }
 
+    public function storeType(): BelongsTo
+    {
+        return $this->belongsTo(StoreType::class, "store_type_id");
+    }
+
     public function planModel(): BelongsTo
     {
         return $this->belongsTo(Plan::class, "plan_id");
+    }
+
+    /**
+     * Accessor untuk backward compat — return store_type code.
+     * Frontend tetap membaca currentStore.store_type.
+     */
+    public function getStoreTypeAttribute(): ?string
+    {
+        $type = $this->getRelationValue("storeType");
+        return $type?->code;
+    }
+
+    /**
+     * Accessor untuk plan code.
+     */
+    public function getPlanAttribute(): ?string
+    {
+        $plan = $this->getRelationValue("planModel");
+        return $plan?->code;
     }
 
     public function users(): BelongsToMany
@@ -194,7 +218,7 @@ class Store extends Model
     /** Ambil semua plan dari database (dengan fallback ke hardcoded) */
     public static function allPlans(): array
     {
-        $dbPlans = Plan::with("planFeatures")
+        $dbPlans = Plan::with("features")
             ->where("is_active", true)
             ->orderBy("sort_order")
             ->get();
@@ -202,15 +226,15 @@ class Store extends Model
             return $dbPlans
                 ->map(
                     fn($p) => [
-                        "id"           => $p->id,
-                        "key"          => $p->code,
-                        "label"        => $p->label,
-                        "description"  => $p->description,
-                        "max_users"    => $p->max_users,
+                        "id" => $p->id,
+                        "key" => $p->code,
+                        "label" => $p->label,
+                        "description" => $p->description,
+                        "max_users" => $p->max_users,
                         "max_branches" => $p->max_branches,
-                        "price"        => (float) $p->price,
-                        "trial_days"   => $p->trial_days,
-                        "features"     => $p->featureCodes(),
+                        "price" => (float) $p->price,
+                        "trial_days" => $p->trial_days,
+                        "features" => $p->featureCodes(),
                     ],
                 )
                 ->values()
@@ -230,26 +254,29 @@ class Store extends Model
         $plan = $this->planModel;
         if ($plan) {
             return [
-                "label"        => $plan->label,
-                "max_users"    => $plan->max_users,
+                "label" => $plan->label,
+                "max_users" => $plan->max_users,
                 "max_branches" => $plan->max_branches,
-                "features"     => $plan->featureCodes(),
+                "features" => $plan->featureCodes(),
             ];
         }
         // Fallback ke hardcoded (jika plan_id belum diset)
-        return self::planConfig()[$this->plan] ?? self::planConfig()["free"];
+        return self::planConfig()[$this->planModel?->code ?? "free"] ??
+            self::planConfig()["free"];
     }
 
     /** Efektif max users: override toko ?? ambil dari plan */
     public function effectiveMaxUsers(): int
     {
-        return $this->max_users ?? $this->activePlanConfig()["max_users"] ?? 1;
+        return $this->max_users ??
+            ($this->activePlanConfig()["max_users"] ?? 1);
     }
 
     /** Efektif max branches: override toko ?? ambil dari plan */
     public function effectiveMaxBranches(): int
     {
-        return $this->max_branches ?? $this->activePlanConfig()["max_branches"] ?? 1;
+        return $this->max_branches ??
+            ($this->activePlanConfig()["max_branches"] ?? 1);
     }
 
     /** Cek apakah plan mengizinkan fitur tertentu */
@@ -257,19 +284,13 @@ class Store extends Model
     {
         $features = $this->activePlanConfig()["features"] ?? [];
 
-        // Wildcard = semua diizinkan (plan Pro)
-        if ($features === ["*"] || in_array("*", $features)) {
+        // Wildcard = semua diizinkan (plan Pro / developer override)
+        if (in_array("*", $features)) {
             return true;
         }
 
-        // Free: hanya blokir payment_gateway agar sidebar tidak kosong
-        if ($this->effectivePlanCode() === "free") {
-            $blockedInFree = ["payment_gateway"];
-            return !in_array($feature, $blockedInFree);
-        }
-
-        // Basic ke atas = izinkan semua fitur yang ada di modules
-        return true;
+        // Cek apakah fitur ada di daftar features plan ini
+        return in_array($feature, $features);
     }
 
     /** Cek apakah fitur aktif di modules DAN diizinkan plan */
@@ -285,7 +306,9 @@ class Store extends Model
     {
         return in_array(
             $mode,
-            $this->modules["pos_modes"] ?? [$this->store_type],
+            $this->modules["pos_modes"] ?? [
+                $this->storeType?->code ?? "retail",
+            ],
         );
     }
 
@@ -311,9 +334,10 @@ class Store extends Model
     /** Kode plan efektif (fallback ke free jika expired) */
     public function effectivePlanCode(): string
     {
-        if ($this->isPlanExpired()) return "free";
-        // Dari relasi plan_id dulu, lalu kolom plan lama
-        return $this->planModel?->code ?? $this->plan ?? "free";
+        if ($this->isPlanExpired()) {
+            return "free";
+        }
+        return $this->planModel?->code ?? "free";
     }
 
     /** @deprecated Gunakan effectivePlanCode() */

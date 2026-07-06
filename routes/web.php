@@ -42,10 +42,10 @@ use App\Http\Controllers\Admin\StoreSwitchController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\WasteController;
-use App\Http\Controllers\Developer\BranchController as DevBranchController;
 use App\Http\Controllers\Developer\DashboardController as DevDashboardController;
 use App\Http\Controllers\Developer\StoreController as DevStoreController;
 use App\Http\Controllers\Developer\UserController as DevUserController;
+use App\Models\Branch;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -100,48 +100,13 @@ Route::middleware(["auth", "developer"])
             "revokeOwner",
         ])->name("stores.revoke-owner");
 
-        // Branch management
-        Route::get("/branches", [DevBranchController::class, "index"])->name(
-            "branches.index",
-        );
-        Route::get("/branches/create", [
-            DevBranchController::class,
-            "create",
-        ])->name("branches.create");
-        Route::get("/branches/{branch}", [
-            DevBranchController::class,
-            "showApi",
-        ])->name("branches.show");
-        Route::get("/stores/{store}/branches", [
-            DevBranchController::class,
-            "index",
-        ])->name("stores.branches.index");
-        Route::get("/stores/{store}/branches/create", [
-            DevBranchController::class,
-            "create",
-        ])->name("stores.branches.create");
-        Route::post("/stores/{store}/branches", [
-            DevBranchController::class,
-            "store",
-        ])->name("stores.branches.store");
-        Route::get("/stores/{store}/branches/{branch}", [
-            DevBranchController::class,
-            "show",
-        ])->name("stores.branches.show");
-        Route::get("/stores/{store}/branches/{branch}/edit", [
-            DevBranchController::class,
-            "edit",
-        ])->name("stores.branches.edit");
-        Route::patch("/stores/{store}/branches/{branch}", [
-            DevBranchController::class,
-            "update",
-        ])->name("stores.branches.update");
-        Route::delete("/stores/{store}/branches/{branch}", [
-            DevBranchController::class,
-            "destroy",
-        ])->name("stores.branches.destroy");
+        // ── Branch management ─────────────────────────────────────────
+        Route::resource(
+            "branches",
+            \App\Http\Controllers\Developer\BranchController::class,
+        )->names("branches");
 
-        // User management (global)
+        // ── User management ────────────────────────────────────────────
         Route::resource("users", DevUserController::class);
         Route::get("stores/{store}/branches-json", [
             DevUserController::class,

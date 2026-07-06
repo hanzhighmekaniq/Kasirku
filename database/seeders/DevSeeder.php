@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Feature;
 use App\Models\Plan;
+use App\Models\Store;
 use App\Models\StoreType;
 use App\Models\User;
+use App\Services\StoreRoleService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
@@ -103,8 +105,11 @@ class DevSeeder extends Seeder
         $this->seedStoreTypes();
         $this->seedPlans();
         $this->call([\Database\Seeders\FeatureSeeder::class]);
+        $this->call([\Database\Seeders\FeatureDetailSeeder::class]);
+        $this->call([\Database\Seeders\PlanSeeder::class]);
         $this->seedPermissions();
         $this->seedDeveloper();
+        $this->seedDemoStores();
 
         $this->info("━━━━━━━━━━━━━━━━━━━━━━━━");
         $this->info("✅ SELESAI");
@@ -113,7 +118,9 @@ class DevSeeder extends Seeder
         $this->info("");
         $this->info("📊 Dibuat:");
         $this->info(
-            "   8 tipe toko  |  3 plan  |  35 fitur  |  " . count(self::PERMISSIONS) . " permission  |  1 developer",
+            "   8 tipe toko  |  3 plan  |  35 fitur  |  " .
+                count(self::PERMISSIONS) .
+                " permission  |  1 developer",
         );
         $this->info("");
         $this->info("💡 Untuk data demo (toko, owner, cabang, dll):");
@@ -565,5 +572,85 @@ class DevSeeder extends Seeder
             ],
         );
         $this->info("👤 dev@gmail.com / " . self::PASSWORD);
+    }
+
+    // ── Demo Stores ──────────────────────────────────────────────────────
+
+    private function seedDemoStores(): void
+    {
+        $dev = User::where("email", "dev@gmail.com")->first();
+        if (!$dev) {
+            return;
+        }
+
+        $retail = StoreType::where("code", "retail")->first();
+        $fnb = StoreType::where("code", "fnb")->first();
+        $free = Plan::where("code", "free")->first();
+        $basic = Plan::where("code", "basic")->first();
+
+        $stores = [];
+
+        // Toko 1: Retail + Free (hanya 8 fitur plan)
+        if ($retail && $free) {
+            $s1 = Store::create([
+                "code" => "DEMO01",
+                "name" => "Toko Retail Demo",
+                "store_type_id" => $retail->id,
+                "plan_id" => $free->id,
+                "modules" => [
+                    "pos_modes" => ["retail"],
+                    "features" => $free->featureCodes(),
+                ],
+                "is_active" => true,
+            ]);
+            $s1->branches()->create([
+                "code" => "BR001",
+                "name" => "Cabang Pusat",
+                "is_active" => true,
+            ]);
+            StoreRoleService::createRolesForStore($s1->id);
+            $s1->users()->syncWithoutDetaching([$dev->id]);
+            $this->assignRole($dev, $s1->id, "owner");
+            $stores[] = "Retail+Free";
+        }
+
+        // Toko 2: F&B + Basic (34 fitur plan)
+        if ($fnb && $basic) {
+            $s2 = Store::create([
+                "code" => "DEMO02",
+                "name" => "Kafe FnB Demo",
+                "store_type_id" => $fnb->id,
+                "plan_id" => $basic->id,
+                "modules" => [
+                    "pos_modes" => ["fnb"],
+                    "features" => $basic->featureCodes(),
+                ],
+                "is_active" => true,
+            ]);
+            $s2->branches()->create([
+                "code" => "BR002",
+                "name" => "Cabang Pusat",
+                "is_active" => true,
+            ]);
+            StoreRoleService::createRolesForStore($s2->id);
+            $s2->users()->syncWithoutDetaching([$dev->id]);
+            $this->assignRole($dev, $s2->id, "owner");
+            $stores[] = "FnB+Basic";
+        }
+
+        $this->info(
+            "🏪 " . count($stores) . " toko demo: " . implode(", ", $stores),
+        );
+    }
+
+    private function assignRole(User $user, int $storeId, string $role): void
+    {
+        app(
+            \Spatie\Permission\PermissionRegistrar::class,
+        )->setPermissionsTeamId($storeId);
+        $user->assignRole($role);
+        app(
+            \Spatie\Permission\PermissionRegistrar::class,
+        )->setPermissionsTeamId(null);
     }
 }

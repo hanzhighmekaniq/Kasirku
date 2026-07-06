@@ -41,7 +41,7 @@ export default function Form({ plan, allFeatures = [] }) {
         max_branches: plan?.max_branches ?? 1,
         price:       plan?.price       ?? 0,
         trial_days:  plan?.trial_days  ?? 0,
-        feature_ids: plan?.plan_features?.map(f => f.id) ?? [],
+        feature_ids: plan?.features?.map(f => f.id) ?? [],
         is_active:   plan?.is_active   ?? true,
         sort_order:  plan?.sort_order  ?? 0,
     });

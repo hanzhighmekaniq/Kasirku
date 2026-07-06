@@ -7,17 +7,20 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create("plan_feature", function (Blueprint $table) {
+        Schema::create("feature_details", function (Blueprint $table) {
             $table->id();
-            $table->foreignId("plan_id")->constrained()->cascadeOnDelete();
             $table->foreignId("feature_id")->constrained()->cascadeOnDelete();
-            $table->unique(["plan_id", "feature_id"]);
+            $table->string("code", 50)->unique();
+            $table->string("label");
+            $table->text("description")->nullable();
+            $table->integer("sort_order")->default(0);
+            $table->boolean("is_active")->default(true);
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists("plan_feature");
+        Schema::dropIfExists("feature_details");
     }
 };

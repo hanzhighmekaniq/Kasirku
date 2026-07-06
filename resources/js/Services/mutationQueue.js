@@ -56,7 +56,8 @@ export async function enqueue({
             "Content-Type": "application/json",
             Accept: "application/json",
             "X-Requested-With": "XMLHttpRequest",
-            "X-Inertia": "false",
+            // Jangan kirim X-Inertia — header ini (meski "false") akan
+            // di-intercept Inertia middleware → cek version → 409 mismatch.
             ...headers,
         },
         body,

@@ -16,10 +16,6 @@ return new class extends Migration {
                 ->string("category", 50)
                 ->nullable()
                 ->comment("pos, inventory, crm, finance, system");
-            $table
-                ->json("applicable_types")
-                ->nullable()
-                ->comment("Tipe toko yang bisa pakai fitur ini");
             $table->boolean("is_active")->default(true);
             $table->integer("sort_order")->default(0);
             $table->timestamps();

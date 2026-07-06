@@ -20,13 +20,13 @@ export default function StoreForm({
     isEdit = false,
     availableOwners = [],
     plans = [],
+    storeTypes = [],
     onAddBranch,
     onRemoveBranch,
     onUpdateBranch,
     onToggleOwner,
     onUpdateNewOwner,
 }) {
-    const { allStoreTypes = [] } = usePage().props;
     const [ownerSearch, setOwnerSearch] = useState("");
 
     const filteredOwners = ownerSearch.trim()
@@ -157,31 +157,31 @@ export default function StoreForm({
                             Tipe Toko *
                         </h2>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                            {allStoreTypes.map((t) => (
+                            {storeTypes.map((t) => (
                                 <button
                                     type="button"
-                                    key={t.code}
+                                    key={t.id}
                                     onClick={() =>
-                                        setData("store_type", t.code)
+                                        setData("store_type_id", t.id)
                                     }
                                     className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 text-center transition ${
-                                        data.store_type === t.code
+                                        data.store_type_id === t.id
                                             ? "border-indigo-500 bg-indigo-50"
                                             : "border-slate-200 bg-white hover:border-slate-300"
                                     }`}
                                 >
                                     <span className="text-2xl">{t.icon}</span>
                                     <span
-                                        className={`text-xs font-semibold ${data.store_type === t.code ? "text-indigo-700" : "text-slate-700"}`}
+                                        className={`text-xs font-semibold ${data.store_type_id === t.id ? "text-indigo-700" : "text-slate-700"}`}
                                     >
                                         {t.label}
                                     </span>
                                 </button>
                             ))}
                         </div>
-                        {errors.store_type && (
+                        {errors.store_type_id && (
                             <p className="mt-2 text-xs text-red-600">
-                                {errors.store_type}
+                                {errors.store_type_id}
                             </p>
                         )}
                     </section>
@@ -198,29 +198,54 @@ export default function StoreForm({
                             ).map((plan) => {
                                 const isSelected = data.plan_id === plan.id;
                                 const colorMap = {
-                                    free:  { border: "border-slate-200 hover:border-slate-300",  selectedBorder: "border-slate-700 bg-slate-50",  badge: "bg-slate-500" },
-                                    basic: { border: "border-blue-200 hover:border-blue-300",    selectedBorder: "border-blue-600 bg-blue-50",    badge: "bg-blue-500" },
-                                    pro:   { border: "border-indigo-200 hover:border-indigo-300",selectedBorder: "border-indigo-600 bg-indigo-50",badge: "bg-indigo-500" },
+                                    free: {
+                                        border: "border-slate-200 hover:border-slate-300",
+                                        selectedBorder:
+                                            "border-slate-700 bg-slate-50",
+                                        badge: "bg-slate-500",
+                                    },
+                                    basic: {
+                                        border: "border-blue-200 hover:border-blue-300",
+                                        selectedBorder:
+                                            "border-blue-600 bg-blue-50",
+                                        badge: "bg-blue-500",
+                                    },
+                                    pro: {
+                                        border: "border-indigo-200 hover:border-indigo-300",
+                                        selectedBorder:
+                                            "border-indigo-600 bg-indigo-50",
+                                        badge: "bg-indigo-500",
+                                    },
                                 };
                                 const c = colorMap[plan.key] ?? colorMap.free;
                                 return (
                                     <button
                                         type="button"
                                         key={plan.id}
-                                        onClick={() => setData("plan_id", plan.id)}
+                                        onClick={() =>
+                                            setData("plan_id", plan.id)
+                                        }
                                         className={`flex flex-col rounded-xl border-2 p-4 text-left transition ${isSelected ? c.selectedBorder : c.border}`}
                                     >
-                                        <span className={`inline-flex w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold text-white ${c.badge}`}>
+                                        <span
+                                            className={`inline-flex w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold text-white ${c.badge}`}
+                                        >
                                             {plan.label}
                                         </span>
                                         {plan.price > 0 && (
                                             <span className="mt-1.5 text-sm font-bold text-slate-800">
-                                                Rp {plan.price.toLocaleString("id-ID")}
-                                                <span className="text-xs font-normal text-slate-400">/bln</span>
+                                                Rp{" "}
+                                                {plan.price.toLocaleString(
+                                                    "id-ID",
+                                                )}
+                                                <span className="text-xs font-normal text-slate-400">
+                                                    /bln
+                                                </span>
                                             </span>
                                         )}
                                         <span className="mt-2 text-xs text-slate-600">
-                                            Maks {plan.max_users} user · {plan.max_branches} cabang
+                                            Maks {plan.max_users} user ·{" "}
+                                            {plan.max_branches} cabang
                                         </span>
                                         {plan.trial_days > 0 && (
                                             <span className="mt-1 text-[11px] text-emerald-600">
@@ -229,7 +254,8 @@ export default function StoreForm({
                                         )}
                                         <span className="mt-1 text-[11px] text-slate-400 leading-relaxed">
                                             {plan.features?.length > 0
-                                                ? plan.features.length + " fitur"
+                                                ? plan.features.length +
+                                                  " fitur"
                                                 : "Semua fitur"}
                                         </span>
                                     </button>
@@ -237,7 +263,9 @@ export default function StoreForm({
                             })}
                         </div>
                         {errors.plan_id && (
-                            <p className="mt-2 text-xs text-red-600">{errors.plan_id}</p>
+                            <p className="mt-2 text-xs text-red-600">
+                                {errors.plan_id}
+                            </p>
                         )}
 
                         {/* Override per-toko — hanya di edit mode */}
@@ -250,10 +278,17 @@ export default function StoreForm({
                                     <input
                                         type="date"
                                         value={data.plan_expires_at ?? ""}
-                                        onChange={(e) => setData("plan_expires_at", e.target.value || null)}
+                                        onChange={(e) =>
+                                            setData(
+                                                "plan_expires_at",
+                                                e.target.value || null,
+                                            )
+                                        }
                                         className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                                     />
-                                    <p className="mt-1 text-[10px] text-slate-400">Kosong = tidak ada batas</p>
+                                    <p className="mt-1 text-[10px] text-slate-400">
+                                        Kosong = tidak ada batas
+                                    </p>
                                 </div>
                                 <div>
                                     <label className="mb-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -263,11 +298,20 @@ export default function StoreForm({
                                         type="number"
                                         min={1}
                                         value={data.max_users ?? ""}
-                                        onChange={(e) => setData("max_users", e.target.value ? parseInt(e.target.value) : null)}
+                                        onChange={(e) =>
+                                            setData(
+                                                "max_users",
+                                                e.target.value
+                                                    ? parseInt(e.target.value)
+                                                    : null,
+                                            )
+                                        }
                                         placeholder="Ikut plan"
                                         className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                                     />
-                                    <p className="mt-1 text-[10px] text-slate-400">Kosong = ikut plan</p>
+                                    <p className="mt-1 text-[10px] text-slate-400">
+                                        Kosong = ikut plan
+                                    </p>
                                 </div>
                                 <div>
                                     <label className="mb-1 block text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -277,11 +321,20 @@ export default function StoreForm({
                                         type="number"
                                         min={1}
                                         value={data.max_branches ?? ""}
-                                        onChange={(e) => setData("max_branches", e.target.value ? parseInt(e.target.value) : null)}
+                                        onChange={(e) =>
+                                            setData(
+                                                "max_branches",
+                                                e.target.value
+                                                    ? parseInt(e.target.value)
+                                                    : null,
+                                            )
+                                        }
                                         placeholder="Ikut plan"
                                         className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                                     />
-                                    <p className="mt-1 text-[10px] text-slate-400">Kosong = ikut plan</p>
+                                    <p className="mt-1 text-[10px] text-slate-400">
+                                        Kosong = ikut plan
+                                    </p>
                                 </div>
                             </div>
                         )}

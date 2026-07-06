@@ -4,68 +4,156 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckFeatureAccess
 {
     /**
      * Cek 2 hal:
-     * 1. Plan toko mengizinkan fitur ini (via plan_features)
-     * 2. Store type mendukung fitur ini (via applicable_types)
+     * 1. Store type mendukung fitur ini (via store_type_feature)
+     * 2. Plan toko mengizinkan fitur ini (via plan_features)
+     *
+     * Urutan cek: type dulu, baru plan.
+     * Kalau type tidak support → popup "tipe toko salah" (upgrade plan tidak akan membantu)
+     * Kalau plan tidak allow → halaman "Upgrade Plan"
      *
      * Usage: ->middleware('feature:kitchen')
      */
-    public function handle(Request $request, Closure $next, string $feature): Response
-    {
+    public function handle(
+        Request $request,
+        Closure $next,
+        string $feature,
+    ): Response {
         /** @var \App\Models\Store|null $store */
-        $store = session('current_store_id')
-            ? \App\Models\Store::with(['planModel.planFeatures'])->find(session('current_store_id'))
+        $store = session("current_store_id")
+            ? \App\Models\Store::with([
+                "planModel.planFeatures",
+                "storeType.features",
+            ])->find(session("current_store_id"))
             : null;
 
         // Kalau belum ada store di session, lanjut saja (biarkan StoreMiddleware yang handle)
-        if (! $store) {
+        if (!$store) {
             return $next($request);
         }
 
-        // ── Cek 1: Plan mengizinkan fitur ini? ───────────────────────────
-        if (! $store->planAllowsFeature($feature)) {
-            return $this->deny($request, $feature, 'plan');
+        // Ambil info fitur dari DB untuk label yang ramah pengguna
+        $featureModel = \App\Models\Feature::with("storeTypes")
+            ->where("code", $feature)
+            ->first();
+        $featureLabel = $featureModel?->label ?? $feature;
+
+        // ── Cek 1: Store type mendukung fitur ini? ────────────────────────
+        $typeFeatureCodes = $store->getRelationValue("storeType")
+            ? $store
+                ->getRelationValue("storeType")
+                ->features->pluck("code")
+                ->toArray()
+            : [];
+
+        if (!in_array($feature, $typeFeatureCodes)) {
+            return $this->denyType(
+                $request,
+                $feature,
+                $featureLabel,
+                $store,
+                $featureModel,
+            );
         }
 
-        // ── Cek 2: Store type mendukung fitur ini? ────────────────────────
-        // Cek dari tabel features.applicable_types
-        $featureModel = \App\Models\Feature::where('code', $feature)
-            ->where('is_active', true)
-            ->first();
-
-        if ($featureModel) {
-            $applicableTypes = $featureModel->applicable_types ?? [];
-
-            // Kalau applicable_types kosong / null → fitur berlaku untuk semua tipe
-            if (! empty($applicableTypes) && ! in_array($store->store_type, $applicableTypes)) {
-                return $this->deny($request, $feature, 'type');
-            }
+        // ── Cek 2: Plan mengizinkan fitur ini? ───────────────────────────
+        if (!$store->planAllowsFeature($feature)) {
+            return $this->denyPlan($request, $feature, $featureLabel, $store);
         }
 
         return $next($request);
     }
 
-    private function deny(Request $request, string $feature, string $reason): Response
-    {
-        $messages = [
-            'plan'    => 'Fitur ini tidak tersedia untuk paket langganan toko Anda. Upgrade plan untuk mengakses fitur ini.',
-            'type'    => 'Fitur ini tidak tersedia untuk tipe toko Anda.',
-            'modules' => 'Fitur ini belum diaktifkan untuk toko Anda. Hubungi administrator.',
-        ];
+    /**
+     * Fitur tidak tersedia untuk tipe toko ini.
+     * → Inertia: redirect back + flash "typeBlock" agar frontend tampilkan popup
+     * → Non-Inertia: redirect dashboard dengan pesan error
+     */
+    private function denyType(
+        Request $request,
+        string $feature,
+        string $featureLabel,
+        \App\Models\Store $store,
+        ?\App\Models\Feature $featureModel,
+    ): Response {
+        $currentType = $store->getRelationValue("storeType");
 
-        $message = $messages[$reason] ?? 'Fitur tidak tersedia untuk paket/tipe toko Anda.';
+        // Tipe toko yang BISA menggunakan fitur ini
+        $supportedTypes = $featureModel
+            ? $featureModel->storeTypes
+                ->where("is_active", true)
+                ->map(fn($t) => ["code" => $t->code, "label" => $t->label])
+                ->values()
+                ->toArray()
+            : [];
 
-        if ($request->wantsJson() || $request->header('X-Inertia')) {
-            abort(403, $message);
+        if ($request->header("X-Inertia")) {
+            return redirect()
+                ->back(302, [], route("admin.dashboard"))
+                ->with("typeBlock", [
+                    "feature" => $feature,
+                    "featureLabel" => $featureLabel,
+                    "currentType" => $currentType
+                        ? [
+                            "code" => $currentType->code,
+                            "label" => $currentType->label,
+                        ]
+                        : null,
+                    "supportedTypes" => $supportedTypes,
+                ]);
+        }
+
+        $typeLabel = $currentType?->label ?? "tipe toko Anda";
+        return redirect()
+            ->route("admin.dashboard")
+            ->with(
+                "error",
+                "Fitur \"{$featureLabel}\" tidak tersedia untuk {$typeLabel}.",
+            );
+    }
+
+    /**
+     * Fitur tersedia untuk tipe toko, tapi plan tidak mengizinkan.
+     * → Inertia: render halaman "Upgrade Plan" secara inline
+     * → Non-Inertia: redirect dashboard dengan pesan error
+     */
+    private function denyPlan(
+        Request $request,
+        string $feature,
+        string $featureLabel,
+        \App\Models\Store $store,
+    ): Response {
+        if ($request->header("X-Inertia")) {
+            $planCode = $store->effectivePlanCode();
+            $planModel = $store->planModel;
+
+            return Inertia::render("Blocked/FeatureLocked", [
+                "feature" => $feature,
+                "featureLabel" => $featureLabel,
+                "storePlan" => [
+                    "plan" => $planCode,
+                    "label" => $planModel?->label ?? ucfirst($planCode),
+                ],
+                "storeType" => $store->getRelationValue("storeType")
+                    ? [
+                        "code" => $store->getRelationValue("storeType")->code,
+                        "label" => $store->getRelationValue("storeType")->label,
+                    ]
+                    : null,
+            ]);
         }
 
         return redirect()
-            ->route('admin.dashboard')
-            ->with('error', $message);
+            ->route("admin.dashboard")
+            ->with(
+                "error",
+                "Fitur \"{$featureLabel}\" tidak tersedia untuk paket Anda. Upgrade plan untuk mengaksesnya.",
+            );
     }
 }
