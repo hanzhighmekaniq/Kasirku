@@ -31,94 +31,6 @@ class StoreController extends Controller
 
     const PLAN_KEYS = ["free", "basic", "pro"];
 
-    /**
-     * Modules default per tipe toko dari relasi store_type_feature.
-     * @deprecated - Fitur sekarang diambil langsung dari relasi, tidak perlu modules JSON
-     */
-    public static function defaultModulesForType(string $type): array
-    {
-        // Kept for backward compatibility, but not used anymore
-        return ["pos_modes" => [$type], "features" => []];
-    }
-
-    /** Hardcoded fallback — 6 mode strict */
-    const DEFAULT_MODULES_FALLBACK = [
-        "retail" => [
-            "pos_modes" => ["retail"],
-            "features" => [
-                "stock",
-                "purchase",
-                "batch",
-                "expiry",
-                "promo",
-                "sale_return",
-                "report",
-                "payment_gateway",
-                "stock_opname",
-            ],
-        ],
-        "fnb" => [
-            "pos_modes" => ["fnb"],
-            "features" => [
-                "stock",
-                "purchase",
-                "recipe",
-                "modifier",
-                "table",
-                "kitchen",
-                "waste",
-                "promo",
-                "delivery",
-                "booking",
-                "sale_return",
-                "report",
-                "payment_gateway",
-                "stock_opname",
-            ],
-        ],
-        "service" => [
-            "pos_modes" => ["service"],
-            "features" => [
-                "queue",
-                "booking",
-                "commission",
-                "membership",
-                "deposit",
-                "promo",
-                "report",
-                "payment_gateway",
-            ],
-        ],
-        "rental" => [
-            "pos_modes" => ["rental"],
-            "features" => [
-                "stock",
-                "purchase",
-                "booking",
-                "deposit",
-                "report",
-                "payment_gateway",
-            ],
-        ],
-        "ticket" => [
-            "pos_modes" => ["ticket"],
-            "features" => ["booking", "promo", "report", "payment_gateway"],
-        ],
-        "hospitality" => [
-            "pos_modes" => ["hospitality"],
-            "features" => [
-                "booking",
-                "membership",
-                "deposit",
-                "report",
-                "payment_gateway",
-            ],
-        ],
-    ];
-
-    /** @deprecated Use defaultModulesForType() instead */
-    const DEFAULT_MODULES = self::DEFAULT_MODULES_FALLBACK;
-
     public function index()
     {
         $stores = Store::with(["storeType", "planModel"])
@@ -126,9 +38,8 @@ class StoreController extends Controller
             ->orderByDesc("created_at")
             ->get()
             ->map(function ($store) {
-                // Use getRelation to bypass the accessor and get the actual StoreType model
-                $storeTypeRelation = $store->getRelation('storeType');
-                
+                $storeTypeRelation = $store->getRelation("storeType");
+
                 return [
                     "id" => $store->id,
                     "code" => $store->code,
@@ -142,6 +53,51 @@ class StoreController extends Controller
                     "sales_count" => $store->sales_count,
                 ];
             });
+
+        // Ambil owner per toko (user dengan role "owner")
+        $storeIds = $stores->pluck("id");
+        $ownerMap = collect();
+        if ($storeIds->isNotEmpty()) {
+            $ownerMap = \Illuminate\Support\Facades\DB::table("users")
+                ->join("user_store", "users.id", "=", "user_store.user_id")
+                ->join("model_has_roles", function ($join) {
+                    $join
+                        ->on("users.id", "=", "model_has_roles.model_id")
+                        ->where(
+                            "model_has_roles.model_type",
+                            \App\Models\User::class,
+                        );
+                })
+                ->join("roles", "model_has_roles.role_id", "=", "roles.id")
+                ->where("roles.name", "owner")
+                ->whereIn("user_store.store_id", $storeIds)
+                ->select(
+                    "users.id",
+                    "users.name",
+                    "users.email",
+                    "user_store.store_id",
+                )
+                ->get()
+                ->groupBy("store_id");
+        }
+
+        // Merge owner ke data store
+        $stores = $stores->map(function ($store) use ($ownerMap) {
+            $ownersForStore = $ownerMap->get($store["id"]) ?? collect();
+            return [
+                ...$store,
+                "owners" => $ownersForStore
+                    ->map(
+                        fn($o) => [
+                            "id" => $o->id,
+                            "name" => $o->name,
+                            "email" => $o->email,
+                        ],
+                    )
+                    ->values(),
+                "has_owner" => $ownersForStore->isNotEmpty(),
+            ];
+        });
 
         $allStoreTypes = \App\Models\StoreType::orderBy("sort_order")->get([
             "id",
@@ -171,20 +127,26 @@ class StoreController extends Controller
             );
 
         // Ambil store types dengan features-nya
-        $storeTypes = \App\Models\StoreType::with('features')
-            ->where('is_active', true)
+        $storeTypes = \App\Models\StoreType::with("features")
+            ->where("is_active", true)
             ->orderBy("sort_order")
             ->get()
-            ->map(function($st) {
+            ->map(function ($st) {
                 return [
                     "id" => $st->id,
                     "code" => $st->code,
                     "label" => $st->label,
                     "icon" => $st->icon,
-                    "features" => $st->features()
-                        ->where('features.is_active', true)
-                        ->orderBy('features.sort_order')
-                        ->get(['features.id', 'features.code', 'features.label', 'features.category']),
+                    "features" => $st
+                        ->features()
+                        ->where("features.is_active", true)
+                        ->orderBy("features.sort_order")
+                        ->get([
+                            "features.id",
+                            "features.code",
+                            "features.label",
+                            "features.category",
+                        ]),
                 ];
             });
 
@@ -290,29 +252,44 @@ class StoreController extends Controller
         $store->loadCount(["branches", "employees"]);
 
         // Get the actual StoreType model bypassing the accessor
-        $storeTypeRelation = $store->getRelation('storeType');
-        $planModelRelation = $store->getRelation('planModel');
+        $storeTypeRelation = $store->getRelation("storeType");
+        $planModelRelation = $store->getRelation("planModel");
 
         // Fitur dari store type
         $storeTypeFeatures = $storeTypeRelation
-            ? $storeTypeRelation->features()
-                ->where('features.is_active', true)
-                ->orderBy('features.sort_order')
-                ->get(['features.id', 'features.code', 'features.label', 'features.category'])
+            ? $storeTypeRelation
+                ->features()
+                ->where("features.is_active", true)
+                ->orderBy("features.sort_order")
+                ->get([
+                    "features.id",
+                    "features.code",
+                    "features.label",
+                    "features.category",
+                ])
             : collect();
 
         // Fitur dari plan yang tersedia untuk toko ini
         $planFeatures = $planModelRelation
-            ? $planModelRelation->features()
-                ->where('features.is_active', true)
-                ->orderBy('features.sort_order')
-                ->get(['features.id', 'features.code', 'features.label', 'features.category'])
+            ? $planModelRelation
+                ->features()
+                ->with("storeTypes:store_types.id,store_types.code")
+                ->where("features.is_active", true)
+                ->orderBy("features.sort_order")
+                ->get([
+                    "features.id",
+                    "features.code",
+                    "features.label",
+                    "features.category",
+                ])
             : collect();
 
         // Fitur yang benar-benar aktif (intersection dari store_type dan plan)
-        $activeFeatures = $storeTypeFeatures->filter(function($storeTypeFeature) use ($planFeatures) {
-            return $planFeatures->contains('code', $storeTypeFeature->code);
-        })->values();
+        $activeFeatures = $storeTypeFeatures
+            ->filter(function ($storeTypeFeature) use ($planFeatures) {
+                return $planFeatures->contains("code", $storeTypeFeature->code);
+            })
+            ->values();
 
         // Hanya owner di store ini (exclude developer, exclude tanpa role)
         $owners = $store
@@ -380,122 +357,32 @@ class StoreController extends Controller
         ]);
     }
 
-    /** Semua fitur yang bisa diaktifkan/nonaktifkan per store — 6 mode strict */
-    private function allFeaturesList(): array
-    {
-        return [
-            [
-                "key" => "stock",
-                "label" => "Manajemen Stok",
-                "modes" => ["retail", "fnb", "rental"],
-            ],
-            [
-                "key" => "purchase",
-                "label" => "Pembelian",
-                "modes" => ["retail", "fnb", "rental"],
-            ],
-            [
-                "key" => "batch",
-                "label" => "Batch & Expired",
-                "modes" => ["retail", "fnb"],
-            ],
-            [
-                "key" => "expiry",
-                "label" => "Pantau Kedaluwarsa",
-                "modes" => ["retail", "fnb"],
-            ],
-            [
-                "key" => "recipe",
-                "label" => "Resep Bahan Baku",
-                "modes" => ["fnb"],
-            ],
-            [
-                "key" => "modifier",
-                "label" => "Modifier / Topping",
-                "modes" => ["fnb"],
-            ],
-            [
-                "key" => "table",
-                "label" => "Manajemen Meja",
-                "modes" => ["fnb", "hospitality"],
-            ],
-            [
-                "key" => "kitchen",
-                "label" => "Kitchen Display",
-                "modes" => ["fnb"],
-            ],
-            [
-                "key" => "waste",
-                "label" => "Waste / Pemborosan",
-                "modes" => ["fnb"],
-            ],
-            [
-                "key" => "promo",
-                "label" => "Promo & Diskon",
-                "modes" => ["retail", "fnb", "service", "ticket"],
-            ],
-            ["key" => "delivery", "label" => "Delivery", "modes" => ["fnb"]],
-            ["key" => "queue", "label" => "Antrian", "modes" => ["service"]],
-            [
-                "key" => "booking",
-                "label" => "Booking / Reservasi",
-                "modes" => [
-                    "fnb",
-                    "service",
-                    "rental",
-                    "ticket",
-                    "hospitality",
-                ],
-            ],
-            [
-                "key" => "commission",
-                "label" => "Komisi Karyawan",
-                "modes" => ["service"],
-            ],
-            [
-                "key" => "membership",
-                "label" => "Membership",
-                "modes" => ["service", "hospitality"],
-            ],
-            [
-                "key" => "deposit",
-                "label" => "Deposit Pelanggan",
-                "modes" => ["service", "rental", "hospitality"],
-            ],
-            [
-                "key" => "sale_return",
-                "label" => "Retur Penjualan",
-                "modes" => ["retail", "fnb"],
-            ],
-            [
-                "key" => "stock_opname",
-                "label" => "Opname Stok",
-                "modes" => ["retail", "fnb"],
-            ],
-            ["key" => "report", "label" => "Laporan", "modes" => ["*"]],
-            [
-                "key" => "payment_gateway",
-                "label" => "Payment Gateway",
-                "modes" => ["*"],
-            ],
-        ];
-    }
-
     public function edit(Store $store)
     {
-        $store->load(["planModel", "storeType", "storeType.features", "planModel.features"]);
+        $store->load([
+            "planModel",
+            "storeType",
+            "storeType.features",
+            "planModel.features",
+        ]);
         $store->loadCount(["users", "branches", "sales"]);
 
         // Get the actual relations bypassing the accessor
-        $storeTypeRelation = $store->getRelation('storeType');
-        $planModelRelation = $store->getRelation('planModel');
+        $storeTypeRelation = $store->getRelation("storeType");
+        $planModelRelation = $store->getRelation("planModel");
 
         // Get available features for this store type
-        $availableFeatures = $storeTypeRelation 
-            ? $storeTypeRelation->features()
-                ->where('features.is_active', true)
-                ->orderBy('features.sort_order')
-                ->get(['features.id', 'features.code', 'features.label', 'features.category'])
+        $availableFeatures = $storeTypeRelation
+            ? $storeTypeRelation
+                ->features()
+                ->where("features.is_active", true)
+                ->orderBy("features.sort_order")
+                ->get([
+                    "features.id",
+                    "features.code",
+                    "features.label",
+                    "features.category",
+                ])
             : collect();
 
         // Transform store data untuk frontend

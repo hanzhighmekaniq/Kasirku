@@ -304,6 +304,125 @@ class DevSeeder extends Seeder
         $this->info("💳 3 plan");
     }
 
+    private function seedPermissions(): void
+    {
+        foreach (self::PERMISSIONS as $p) {
+            Permission::firstOrCreate(["name" => $p, "guard_name" => "web"]);
+        }
+        $this->info("🔑 " . count(self::PERMISSIONS) . " permission");
+    }
+
+    // ── Developer ────────────────────────────────────────────────────────
+
+    private function seedDeveloper(): void
+    {
+        User::updateOrCreate(
+            ["email" => "dev@gmail.com"],
+            [
+                "name" => "Dev Admin",
+                "password" => Hash::make(self::PASSWORD),
+                "is_developer" => true,
+            ],
+        );
+        $this->info("👤 dev@gmail.com / " . self::PASSWORD);
+    }
+
+    // ── Demo Stores ──────────────────────────────────────────────────────
+
+    private function seedDemoStores(): void
+    {
+        $retail = StoreType::where("code", "retail")->first();
+        $fnb = StoreType::where("code", "fnb")->first();
+        $free = Plan::where("code", "free")->first();
+        $basic = Plan::where("code", "basic")->first();
+
+        $stores = [];
+        $owners = [];
+
+        // Toko 1: Retail + Free
+        if ($retail && $free) {
+            $s1 = Store::create([
+                "code" => "DEMO01",
+                "name" => "Toko Retail Demo",
+                "store_type_id" => $retail->id,
+                "plan_id" => $free->id,
+                "is_active" => true,
+            ]);
+            $s1->branches()->create([
+                "code" => "BR001",
+                "name" => "Cabang Pusat",
+                "is_active" => true,
+            ]);
+            StoreRoleService::createRolesForStore($s1->id);
+
+            // Buat owner terpisah (bukan dev)
+            $owner1 = User::updateOrCreate(
+                ["email" => "owner.retail@demo.com"],
+                [
+                    "name" => "Owner Retail",
+                    "password" => Hash::make(self::PASSWORD),
+                    "is_developer" => false,
+                ],
+            );
+            $s1->users()->syncWithoutDetaching([$owner1->id]);
+            $this->assignRole($owner1, $s1->id, "owner");
+
+            $stores[] = "Retail+Free";
+            $owners[] = "owner.retail@demo.com";
+        }
+
+        // Toko 2: F&B + Basic
+        if ($fnb && $basic) {
+            $s2 = Store::create([
+                "code" => "DEMO02",
+                "name" => "Kafe FnB Demo",
+                "store_type_id" => $fnb->id,
+                "plan_id" => $basic->id,
+                "is_active" => true,
+            ]);
+            $s2->branches()->create([
+                "code" => "BR002",
+                "name" => "Cabang Pusat",
+                "is_active" => true,
+            ]);
+            StoreRoleService::createRolesForStore($s2->id);
+
+            // Buat owner terpisah (bukan dev)
+            $owner2 = User::updateOrCreate(
+                ["email" => "owner.fnb@demo.com"],
+                [
+                    "name" => "Owner FnB",
+                    "password" => Hash::make(self::PASSWORD),
+                    "is_developer" => false,
+                ],
+            );
+            $s2->users()->syncWithoutDetaching([$owner2->id]);
+            $this->assignRole($owner2, $s2->id, "owner");
+
+            $stores[] = "FnB+Basic";
+            $owners[] = "owner.fnb@demo.com";
+        }
+
+        $this->info(
+            "🏪 " . count($stores) . " toko demo: " . implode(", ", $stores),
+        );
+        if (!empty($owners)) {
+            $this->info(
+                "👤 Owner: " . implode(", ", $owners) . " / " . self::PASSWORD,
+            );
+        }
+    }
+
+    private function assignRole(User $user, int $storeId, string $role): void
+    {
+        app(
+            \Spatie\Permission\PermissionRegistrar::class,
+        )->setPermissionsTeamId($storeId);
+        $user->assignRole($role);
+        app(
+            \Spatie\Permission\PermissionRegistrar::class,
+        )->setPermissionsTeamId(null);
+    }
     // ── Features ────────────────────────────────────────────────────────
 
     // private function seedFeatures(): void
@@ -550,107 +669,4 @@ class DevSeeder extends Seeder
     //     $this->info("🔧 21 fitur + attached ke plans");
     // }
     // ── Permissions ─────────────────────────────────────────────────────
-
-    private function seedPermissions(): void
-    {
-        foreach (self::PERMISSIONS as $p) {
-            Permission::firstOrCreate(["name" => $p, "guard_name" => "web"]);
-        }
-        $this->info("🔑 " . count(self::PERMISSIONS) . " permission");
-    }
-
-    // ── Developer ────────────────────────────────────────────────────────
-
-    private function seedDeveloper(): void
-    {
-        User::updateOrCreate(
-            ["email" => "dev@gmail.com"],
-            [
-                "name" => "Dev Admin",
-                "password" => Hash::make(self::PASSWORD),
-                "is_developer" => true,
-            ],
-        );
-        $this->info("👤 dev@gmail.com / " . self::PASSWORD);
-    }
-
-    // ── Demo Stores ──────────────────────────────────────────────────────
-
-    private function seedDemoStores(): void
-    {
-        $dev = User::where("email", "dev@gmail.com")->first();
-        if (!$dev) {
-            return;
-        }
-
-        $retail = StoreType::where("code", "retail")->first();
-        $fnb = StoreType::where("code", "fnb")->first();
-        $free = Plan::where("code", "free")->first();
-        $basic = Plan::where("code", "basic")->first();
-
-        $stores = [];
-
-        // Toko 1: Retail + Free (hanya 8 fitur plan)
-        if ($retail && $free) {
-            $s1 = Store::create([
-                "code" => "DEMO01",
-                "name" => "Toko Retail Demo",
-                "store_type_id" => $retail->id,
-                "plan_id" => $free->id,
-                "modules" => [
-                    "pos_modes" => ["retail"],
-                    "features" => $free->featureCodes(),
-                ],
-                "is_active" => true,
-            ]);
-            $s1->branches()->create([
-                "code" => "BR001",
-                "name" => "Cabang Pusat",
-                "is_active" => true,
-            ]);
-            StoreRoleService::createRolesForStore($s1->id);
-            $s1->users()->syncWithoutDetaching([$dev->id]);
-            $this->assignRole($dev, $s1->id, "owner");
-            $stores[] = "Retail+Free";
-        }
-
-        // Toko 2: F&B + Basic (34 fitur plan)
-        if ($fnb && $basic) {
-            $s2 = Store::create([
-                "code" => "DEMO02",
-                "name" => "Kafe FnB Demo",
-                "store_type_id" => $fnb->id,
-                "plan_id" => $basic->id,
-                "modules" => [
-                    "pos_modes" => ["fnb"],
-                    "features" => $basic->featureCodes(),
-                ],
-                "is_active" => true,
-            ]);
-            $s2->branches()->create([
-                "code" => "BR002",
-                "name" => "Cabang Pusat",
-                "is_active" => true,
-            ]);
-            StoreRoleService::createRolesForStore($s2->id);
-            $s2->users()->syncWithoutDetaching([$dev->id]);
-            $this->assignRole($dev, $s2->id, "owner");
-            $stores[] = "FnB+Basic";
-        }
-
-        $this->info(
-            "🏪 " . count($stores) . " toko demo: " . implode(", ", $stores),
-        );
-    }
-
-    private function assignRole(User $user, int $storeId, string $role): void
-    {
-        app(
-            \Spatie\Permission\PermissionRegistrar::class,
-        )->setPermissionsTeamId($storeId);
-        $user->assignRole($role);
-        app(
-            \Spatie\Permission\PermissionRegistrar::class,
-        )->setPermissionsTeamId(null);
-    }
 }

@@ -39,7 +39,6 @@ class User extends Authenticatable
                 "stores.name",
                 "stores.code",
                 "stores.store_type_id",
-                "stores.modules",
                 "stores.logo",
                 "stores.is_active",
             );

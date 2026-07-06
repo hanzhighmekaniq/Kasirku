@@ -114,7 +114,6 @@ class HandleInertiaRequests extends Middleware
                         "name",
                         "code",
                         "store_type_id",
-                        "modules",
                         "logo",
                     ])
                     : null,

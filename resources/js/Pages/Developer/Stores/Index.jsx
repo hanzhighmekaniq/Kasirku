@@ -1,14 +1,10 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const STORE_TYPE = {
     retail: { label: "Retail", icon: "🏪", cls: "bg-blue-50 text-blue-700" },
-    fnb: {
-        label: "FnB / Cafe",
-        icon: "☕",
-        cls: "bg-orange-50 text-orange-700",
-    },
+    fnb: { label: "FnB", icon: "☕", cls: "bg-amber-50 text-amber-700" },
     service: {
         label: "Service",
         icon: "✂️",
@@ -17,32 +13,24 @@ const STORE_TYPE = {
     rental: {
         label: "Rental",
         icon: "🔑",
-        cls: "bg-yellow-50 text-yellow-700",
+        cls: "bg-orange-50 text-orange-700",
     },
-    ticket: { label: "Tiket", icon: "🎟️", cls: "bg-rose-50 text-rose-700" },
+    ticket: { label: "Tiket", icon: "🎫", cls: "bg-pink-50 text-pink-700" },
     hospitality: {
         label: "Hospitality",
         icon: "🏨",
-        cls: "bg-amber-50 text-amber-700",
+        cls: "bg-teal-50 text-teal-700",
     },
-    laundry: {
-        label: "Service",
-        icon: "👕",
-        cls: "bg-violet-50 text-violet-700",
-    },
-    parking: { label: "Parkir", icon: "🅿️", cls: "bg-slate-50 text-slate-700" },
-    session: {
-        label: "Rental",
-        icon: "🖥️",
-        cls: "bg-yellow-50 text-yellow-700",
-    },
+    laundry: { label: "Laundry", icon: "👕", cls: "bg-cyan-50 text-cyan-700" },
+    parking: { label: "Parkir", icon: "🅿️", cls: "bg-gray-50 text-gray-700" },
+    session: { label: "Sesi", icon: "🖥️", cls: "bg-indigo-50 text-indigo-700" },
 };
 
 const PLAN_BADGE = {
-    free: { label: "Free", cls: "bg-slate-100 text-slate-500" },
-    basic: { label: "Basic", cls: "bg-blue-50 text-blue-600" },
-    pro: { label: "Pro", cls: "bg-indigo-50 text-indigo-700" },
-    enterprise: { label: "Enterprise", cls: "bg-violet-50 text-violet-700" },
+    free: { label: "Free", cls: "bg-slate-100 text-slate-600" },
+    basic: { label: "Basic", cls: "bg-emerald-50 text-emerald-700" },
+    pro: { label: "Pro", cls: "bg-amber-50 text-amber-700" },
+    enterprise: { label: "Enterprise", cls: "bg-purple-50 text-purple-700" },
 };
 
 export default function Index({ stores, storeTypes }) {
@@ -50,21 +38,29 @@ export default function Index({ stores, storeTypes }) {
     const [deleting, setDeleting] = useState(null);
     const [search, setSearch] = useState("");
     const [filterType, setFilterType] = useState("all");
-    const [filterStatus, setFilterStatus] = useState("all");
+    const [filter, setFilter] = useState("all");
     const [page, setPage] = useState(1);
     const perPage = 10;
 
+    /* ── Filter logic ──────────────────────────────────── */
     const filtered = stores.filter((s) => {
+        const q = search.toLowerCase();
         const matchSearch =
             !search ||
-            s.name.toLowerCase().includes(search.toLowerCase()) ||
-            s.code.toLowerCase().includes(search.toLowerCase());
+            s.name.toLowerCase().includes(q) ||
+            s.code.toLowerCase().includes(q) ||
+            (s.owner_names ?? "").toLowerCase().includes(q) ||
+            (s.owners ?? []).some((o) =>
+                (o.name ?? "").toLowerCase().includes(q),
+            );
         const matchType = filterType === "all" || s.store_type === filterType;
-        const matchStatus =
-            filterStatus === "all" ||
-            (filterStatus === "active" && s.is_active) ||
-            (filterStatus === "inactive" && !s.is_active);
-        return matchSearch && matchType && matchStatus;
+        const matchFilter =
+            filter === "all" ||
+            (filter === "active" && s.is_active) ||
+            (filter === "inactive" && !s.is_active) ||
+            (filter === "has_owner" && s.has_owner) ||
+            (filter === "no_owner" && !s.has_owner);
+        return matchSearch && matchType && matchFilter;
     });
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
@@ -75,11 +71,13 @@ export default function Index({ stores, storeTypes }) {
         all: stores.length,
         active: stores.filter((s) => s.is_active).length,
         inactive: stores.filter((s) => !s.is_active).length,
+        has_owner: stores.filter((s) => s.has_owner).length,
+        no_owner: stores.filter((s) => !s.has_owner).length,
     };
 
     useEffect(() => {
         setPage(1);
-    }, [search, filterType, filterStatus]);
+    }, [search, filterType, filter]);
 
     const handleDelete = (store) => {
         if (
@@ -95,23 +93,21 @@ export default function Index({ stores, storeTypes }) {
         });
     };
 
-    const STATUS_CHIPS = [
+    const FILTER_CHIPS = [
         { key: "all", label: `Semua (${stats.all})` },
         { key: "active", label: `Aktif (${stats.active})` },
         { key: "inactive", label: `Nonaktif (${stats.inactive})` },
+        { key: "has_owner", label: `Punya Owner (${stats.has_owner})` },
+        { key: "no_owner", label: `Belum Ada (${stats.no_owner})` },
     ];
 
-    // Build type options from storeTypes prop
     const typeOptions = [
         { key: "all", label: "Semua Tipe" },
         ...(storeTypes ?? []).map((t) => ({
             key: t.code,
-            label: t.icon + " " + t.label,
+            label: (t.icon ?? "🏬") + " " + (t.label ?? t.code),
         })),
     ];
-    useEffect(() => {
-        setPage(1);
-    }, [search, filterType, filterStatus]);
 
     return (
         <DeveloperLayout
@@ -168,8 +164,8 @@ export default function Index({ stores, storeTypes }) {
                 </div>
             )}
 
-            {/* Search & Type filter */}
-            <div className="mb-3 flex flex-col gap-3 sm:flex-row">
+            {/* ── Filter Bar ─────────────────────────── */}
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
                 {/* Search */}
                 <div className="relative flex-1">
                     <svg
@@ -188,7 +184,7 @@ export default function Index({ stores, storeTypes }) {
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Cari nama atau kode toko..."
+                        placeholder="Cari toko, kode, atau owner..."
                         className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                     />
                     {search && (
@@ -220,10 +216,9 @@ export default function Index({ stores, storeTypes }) {
                         onChange={(e) => setFilterType(e.target.value)}
                         className="appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-3.5 pr-9 text-sm text-slate-700 shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer"
                     >
-                        <option value="all">Semua Tipe</option>
                         {typeOptions.map((t) => (
-                            <option key={t.key ?? t} value={t.key ?? t}>
-                                {t.label ?? t}
+                            <option key={t.key} value={t.key}>
+                                {t.label}
                             </option>
                         ))}
                     </select>
@@ -243,14 +238,14 @@ export default function Index({ stores, storeTypes }) {
                 </div>
             </div>
 
-            {/* Status filter chips */}
+            {/* ── Status Chips ───────────────────────── */}
             <div className="mb-5 flex flex-wrap gap-2">
-                {STATUS_CHIPS.map((chip) => (
+                {FILTER_CHIPS.map((chip) => (
                     <button
                         key={chip.key}
-                        onClick={() => setFilterStatus(chip.key)}
+                        onClick={() => setFilter(chip.key)}
                         className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                            filterStatus === chip.key
+                            filter === chip.key
                                 ? "bg-slate-900 text-white shadow-sm"
                                 : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                         }`}
@@ -260,265 +255,305 @@ export default function Index({ stores, storeTypes }) {
                 ))}
             </div>
 
+            {/* ── Table ──────────────────────────────── */}
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                {stores.length === 0 ? (
+                {filtered.length === 0 ? (
                     <div className="flex flex-col items-center py-16 text-center">
                         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100 text-4xl">
                             🏬
                         </div>
                         <p className="mt-5 text-base font-semibold text-slate-800">
-                            Belum ada toko
+                            {stores.length === 0
+                                ? "Belum ada toko"
+                                : "Tidak ada toko ditemukan"}
                         </p>
                         <p className="mt-1 text-sm text-slate-500">
-                            Mulai dengan menambahkan toko pertama.
+                            {stores.length === 0
+                                ? "Mulai dengan menambahkan toko pertama."
+                                : "Coba ubah filter atau kata kunci pencarian."}
                         </p>
-                        <Link
-                            href={route("developer.stores.create")}
-                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:from-emerald-600 hover:to-teal-700"
-                        >
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
+                        {stores.length === 0 ? (
+                            <Link
+                                href={route("developer.stores.create")}
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-indigo-700"
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M12 4.5v15m7.5-7.5h-15"
-                                />
-                            </svg>
-                            Tambah Toko
-                        </Link>
-                    </div>
-                ) : filtered.length === 0 ? (
-                    <div className="flex flex-col items-center py-16 text-center">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-100">
-                            <svg
-                                className="h-10 w-10 text-slate-300"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1}
-                                stroke="currentColor"
+                                <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 4.5v15m7.5-7.5h-15"
+                                    />
+                                </svg>
+                                Tambah Toko
+                            </Link>
+                        ) : (
+                            <button
+                                onClick={() => {
+                                    setSearch("");
+                                    setFilterType("all");
+                                    setFilter("all");
+                                }}
+                                className="mt-4 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                />
-                            </svg>
-                        </div>
-                        <p className="mt-5 font-semibold text-slate-700">
-                            Tidak ada toko ditemukan
-                        </p>
-                        <p className="mt-1 text-sm text-slate-400">
-                            Coba ubah filter atau kata kunci pencarian.
-                        </p>
-                        <button
-                            onClick={() => {
-                                setSearch("");
-                                setFilterType("all");
-                                setFilterStatus("all");
-                            }}
-                            className="mt-4 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-                        >
-                            Reset Filter
-                        </button>
+                                Reset Filter
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <>
-                        <table className="w-full table-fixed text-sm">
-                            <thead>
-                                <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                    <th className="w-[30%] px-5 py-3.5">
-                                        Toko
-                                    </th>
-                                    <th className="w-[16%] px-5 py-3.5">
-                                        Tipe
-                                    </th>
-                                    <th className="w-[12%] px-5 py-3.5">
-                                        Plan
-                                    </th>
-                                    <th className="w-[9%] px-5 py-3.5 text-center">
-                                        User
-                                    </th>
-                                    <th className="w-[9%] px-5 py-3.5 text-center">
-                                        Cabang
-                                    </th>
-                                    <th className="w-[10%] px-5 py-3.5 text-center">
-                                        Status
-                                    </th>
-                                    <th className="w-[14%] px-5 py-3.5 text-right">
-                                        Aksi
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {paginated.map((s) => {
-                                    const tm = STORE_TYPE[s.store_type] ?? {
-                                        label: s.store_type,
-                                        icon: "🏬",
-                                        cls: "bg-slate-100 text-slate-600",
-                                    };
-                                    const planKey = (
-                                        s.plan ?? "free"
-                                    ).toLowerCase();
-                                    const pb =
-                                        PLAN_BADGE[planKey] ?? PLAN_BADGE.free;
-                                    return (
-                                        <tr
-                                            key={s.id}
-                                            className="group transition hover:bg-slate-50/70"
-                                        >
-                                            <td className="px-5 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl">
-                                                        {tm.icon}
-                                                    </span>
-                                                    <div>
-                                                        <p className="font-semibold text-slate-800">
-                                                            {s.name}
-                                                        </p>
-                                                        <p className="text-xs font-mono text-slate-400">
-                                                            {s.code}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-5 py-4">
-                                                <span
-                                                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${tm.cls}`}
-                                                >
-                                                    {tm.label}
-                                                </span>
-                                            </td>
-                                            <td className="px-5 py-4">
-                                                <span
-                                                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${pb.cls}`}
-                                                >
-                                                    {pb.label}
-                                                </span>
-                                            </td>
-                                            <td className="px-5 py-4 text-center text-slate-600">
-                                                {s.users_count ?? 0}
-                                            </td>
-                                            <td className="px-5 py-4 text-center text-slate-600">
-                                                {s.branches_count ?? 0}
-                                            </td>
-                                            <td className="px-5 py-4 text-center">
-                                                <span
-                                                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${s.is_active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
-                                                >
-                                                    {s.is_active
-                                                        ? "Aktif"
-                                                        : "Nonaktif"}
-                                                </span>
-                                            </td>
-                                            <td className="px-5 py-4">
-                                                <div className="flex items-center justify-end gap-1">
-                                                    <Link
-                                                        href={route(
-                                                            "developer.stores.show",
-                                                            s.id,
-                                                        )}
-                                                        title="Detail"
-                                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
-                                                    >
-                                                        <svg
-                                                            className="h-4 w-4"
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                            strokeWidth={1.7}
-                                                            stroke="currentColor"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-                                                            />
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                                            />
-                                                        </svg>
-                                                    </Link>
-                                                    <Link
-                                                        href={route(
-                                                            "developer.branches.index",
-                                                        )}
-                                                        title="Cabang"
-                                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
-                                                    >
-                                                        <svg
-                                                            className="h-4 w-4"
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                            strokeWidth={1.7}
-                                                            stroke="currentColor"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016A3.001 3.001 0 0021 9.349m-18 0V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v4.099"
-                                                            />
-                                                        </svg>
-                                                    </Link>
-                                                    <Link
-                                                        href={route(
-                                                            "developer.stores.edit",
-                                                            s.id,
-                                                        )}
-                                                        title="Edit"
-                                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"
-                                                    >
-                                                        <svg
-                                                            className="h-4 w-4"
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                            strokeWidth={1.7}
-                                                            stroke="currentColor"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-                                                            />
-                                                        </svg>
-                                                    </Link>
-                                                    <button
-                                                        onClick={() =>
-                                                            handleDelete(s)
-                                                        }
-                                                        disabled={
-                                                            deleting === s.id
-                                                        }
-                                                        title="Hapus"
-                                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                                                    >
-                                                        <svg
-                                                            className="h-4 w-4"
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                            strokeWidth={1.7}
-                                                            stroke="currentColor"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                                            />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                        <div className="overflow-x-auto">
+                            <table className="w-full table-fixed text-sm">
+                                <thead>
+                                    <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                        <th className="w-[24%] px-5 py-3.5">
+                                            Toko
+                                        </th>
+                                        <th className="w-[11%] px-5 py-3.5">
+                                            Tipe
+                                        </th>
+                                        <th className="w-[16%] px-5 py-3.5">
+                                            Owner
+                                        </th>
+                                        <th className="w-[9%] px-5 py-3.5">
+                                            Plan
+                                        </th>
+                                        <th className="w-[8%] px-5 py-3.5 text-center">
+                                            User
+                                        </th>
+                                        <th className="w-[8%] px-5 py-3.5 text-center">
+                                            Cabang
+                                        </th>
+                                        <th className="w-[9%] px-5 py-3.5 text-center">
+                                            Status
+                                        </th>
+                                        <th className="w-[15%] px-5 py-3.5 text-right">
+                                            Aksi
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {paginated.map((s) => {
+                                        const tm = STORE_TYPE[s.store_type] ?? {
+                                            label: s.store_type ?? "-",
+                                            icon: "🏬",
+                                            cls: "bg-slate-50 text-slate-500",
+                                        };
+                                        const pb =
+                                            PLAN_BADGE[s.plan] ??
+                                            PLAN_BADGE.free;
+                                        const owners = s.owners ?? [];
+                                        const showOwners = owners.slice(0, 1);
+                                        const extraCount = owners.length - 1;
 
+                                        return (
+                                            <tr
+                                                key={s.id}
+                                                className="group transition hover:bg-slate-50/70"
+                                            >
+                                                {/* Toko */}
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-lg">
+                                                            {tm.icon}
+                                                        </span>
+                                                        <div className="min-w-0">
+                                                            <Link
+                                                                href={route(
+                                                                    "developer.stores.show",
+                                                                    s.id,
+                                                                )}
+                                                                className="text-sm font-semibold text-slate-800 transition hover:text-indigo-600 truncate block"
+                                                            >
+                                                                {s.name}
+                                                            </Link>
+                                                            <p className="font-mono text-[11px] text-slate-400">
+                                                                {s.code}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                {/* Tipe */}
+                                                <td className="px-5 py-4">
+                                                    <span
+                                                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${tm.cls}`}
+                                                    >
+                                                        {tm.label}
+                                                    </span>
+                                                </td>
+
+                                                {/* Owner */}
+                                                <td className="px-5 py-4">
+                                                    {owners.length > 0 ? (
+                                                        <div className="space-y-0.5">
+                                                            {showOwners.map(
+                                                                (o) => (
+                                                                    <div
+                                                                        key={
+                                                                            o.id
+                                                                        }
+                                                                        className="min-w-0"
+                                                                    >
+                                                                        <p className="text-xs font-medium text-slate-700 truncate">
+                                                                            {
+                                                                                o.name
+                                                                            }
+                                                                        </p>
+                                                                    </div>
+                                                                ),
+                                                            )}
+                                                            {extraCount > 0 && (
+                                                                <span className="inline-block rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
+                                                                    +
+                                                                    {extraCount}{" "}
+                                                                    lainnya
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs italic text-slate-400">
+                                                            —
+                                                        </span>
+                                                    )}
+                                                </td>
+
+                                                {/* Plan */}
+                                                <td className="px-5 py-4">
+                                                    <span
+                                                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${pb.cls}`}
+                                                    >
+                                                        {pb.label}
+                                                    </span>
+                                                </td>
+
+                                                {/* User */}
+                                                <td className="px-5 py-4 text-center">
+                                                    <span className="text-sm font-medium text-slate-600">
+                                                        {s.users_count}
+                                                    </span>
+                                                </td>
+
+                                                {/* Cabang */}
+                                                <td className="px-5 py-4 text-center">
+                                                    <span className="text-sm font-medium text-slate-600">
+                                                        {s.branches_count}
+                                                    </span>
+                                                </td>
+
+                                                {/* Status */}
+                                                <td className="px-5 py-4 text-center">
+                                                    <span
+                                                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                                                            s.is_active
+                                                                ? "bg-emerald-50 text-emerald-700"
+                                                                : "bg-slate-100 text-slate-500"
+                                                        }`}
+                                                    >
+                                                        {s.is_active
+                                                            ? "Aktif"
+                                                            : "Nonaktif"}
+                                                    </span>
+                                                </td>
+
+                                                {/* Aksi */}
+                                                <td className="px-5 py-4">
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Link
+                                                            href={route(
+                                                                "developer.stores.show",
+                                                                s.id,
+                                                            )}
+                                                            title="Detail"
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+                                                        >
+                                                            <svg
+                                                                className="h-4 w-4"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                strokeWidth={
+                                                                    1.7
+                                                                }
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                                                                />
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                                                />
+                                                            </svg>
+                                                        </Link>
+                                                        <Link
+                                                            href={route(
+                                                                "developer.stores.edit",
+                                                                s.id,
+                                                            )}
+                                                            title="Edit"
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"
+                                                        >
+                                                            <svg
+                                                                className="h-4 w-4"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                strokeWidth={
+                                                                    1.7
+                                                                }
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
+                                                                />
+                                                            </svg>
+                                                        </Link>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDelete(s)
+                                                            }
+                                                            disabled={
+                                                                deleting ===
+                                                                s.id
+                                                            }
+                                                            title="Hapus"
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                                                        >
+                                                            <svg
+                                                                className="h-4 w-4"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                strokeWidth={
+                                                                    1.7
+                                                                }
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                                                                />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* ── Pagination ───────────────── */}
                         <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
                             <p className="text-xs text-slate-500">
                                 Menampilkan{" "}

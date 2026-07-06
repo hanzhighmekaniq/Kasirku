@@ -13,26 +13,13 @@ class StoreSeeder extends Seeder
     {
         $typeId = fn($code) => StoreType::where("code", $code)->value("id");
         $planId = fn($code) => Plan::where("code", $code)->value("id");
+
         // 1 — Minimarket Sejahtera (Retail)
         Store::firstOrCreate(
             ["code" => "STORE001"],
             [
                 "name" => "Minimarket Sejahtera",
                 "store_type_id" => $typeId("retail"),
-                "modules" => [
-                    "pos_modes" => ["retail"],
-                    "features" => [
-                        "stock",
-                        "purchase",
-                        "batch",
-                        "expiry",
-                        "promo",
-                        "sale_return",
-                        "report",
-                        "payment_gateway",
-                        "stock_opname",
-                    ],
-                ],
                 "plan_id" => $planId("basic"),
                 "max_users" => 5,
                 "max_branches" => 3,
@@ -56,25 +43,6 @@ class StoreSeeder extends Seeder
             [
                 "name" => "Warung Kopi Senja",
                 "store_type_id" => $typeId("fnb"),
-                "modules" => [
-                    "pos_modes" => ["fnb"],
-                    "features" => [
-                        "stock",
-                        "purchase",
-                        "recipe",
-                        "modifier",
-                        "table",
-                        "kitchen",
-                        "waste",
-                        "promo",
-                        "delivery",
-                        "booking",
-                        "sale_return",
-                        "report",
-                        "payment_gateway",
-                        "stock_opname",
-                    ],
-                ],
                 "plan_id" => $planId("basic"),
                 "max_users" => 5,
                 "max_branches" => 3,
@@ -98,19 +66,6 @@ class StoreSeeder extends Seeder
             [
                 "name" => "Barbershop Rapi",
                 "store_type_id" => $typeId("service"),
-                "modules" => [
-                    "pos_modes" => ["service"],
-                    "features" => [
-                        "queue",
-                        "booking",
-                        "commission",
-                        "membership",
-                        "deposit",
-                        "promo",
-                        "report",
-                        "payment_gateway",
-                    ],
-                ],
                 "plan_id" => $planId("basic"),
                 "max_users" => 5,
                 "max_branches" => 3,
@@ -134,15 +89,6 @@ class StoreSeeder extends Seeder
             [
                 "name" => "Sewa Alat Jaya",
                 "store_type_id" => $typeId("rental"),
-                "modules" => [
-                    "pos_modes" => ["rental"],
-                    "features" => [
-                        "deposit",
-                        "booking",
-                        "report",
-                        "payment_gateway",
-                    ],
-                ],
                 "plan_id" => $planId("basic"),
                 "max_users" => 5,
                 "max_branches" => 3,
@@ -166,15 +112,6 @@ class StoreSeeder extends Seeder
             [
                 "name" => "Bioskop Nusantara",
                 "store_type_id" => $typeId("ticket"),
-                "modules" => [
-                    "pos_modes" => ["ticket"],
-                    "features" => [
-                        "booking",
-                        "promo",
-                        "report",
-                        "payment_gateway",
-                    ],
-                ],
                 "plan_id" => $planId("basic"),
                 "max_users" => 5,
                 "max_branches" => 3,
@@ -198,16 +135,6 @@ class StoreSeeder extends Seeder
             [
                 "name" => "Villa Sunrise",
                 "store_type_id" => $typeId("hospitality"),
-                "modules" => [
-                    "pos_modes" => ["hospitality"],
-                    "features" => [
-                        "booking",
-                        "membership",
-                        "deposit",
-                        "report",
-                        "payment_gateway",
-                    ],
-                ],
                 "plan_id" => $planId("basic"),
                 "max_users" => 5,
                 "max_branches" => 3,
@@ -231,10 +158,6 @@ class StoreSeeder extends Seeder
             [
                 "name" => "Parkir Jayabaya",
                 "store_type_id" => $typeId("parking"),
-                "modules" => [
-                    "pos_modes" => ["parking"],
-                    "features" => ["report", "payment_gateway"],
-                ],
                 "plan_id" => $planId("basic"),
                 "max_users" => 5,
                 "max_branches" => 3,
@@ -258,10 +181,6 @@ class StoreSeeder extends Seeder
             [
                 "name" => "GamerZone",
                 "store_type_id" => $typeId("session"),
-                "modules" => [
-                    "pos_modes" => ["session"],
-                    "features" => ["booking", "report", "payment_gateway"],
-                ],
                 "plan_id" => $planId("basic"),
                 "max_users" => 5,
                 "max_branches" => 3,

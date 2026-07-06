@@ -111,11 +111,9 @@ class UserController extends Controller
             $planAllAll = empty($planFeatureCodes); // plan tanpa fitur = pro = semua
 
             // Fitur dari relasi store_type_feature (tipe toko)
-            $typeFeatureCodes = $store->storeType
-                ? $store
-                    ->getRelationValue("storeType")
-                    ->features->pluck("code")
-                    ->toArray()
+            $storeType = $store->getRelationValue("storeType");
+            $typeFeatureCodes = $storeType
+                ? $storeType->features->pluck("code")->toArray()
                 : [];
 
             // Status per fitur: plan_ok, type_ok → can_access

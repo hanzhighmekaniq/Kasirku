@@ -373,7 +373,7 @@ function AddOwnerModal({ allUsers, storeId, onClose }) {
 
 // ── Section: Detail Plan ──────────────────────────────────────────────────────
 function PlanDetailSection({ store, planMeta, planFeatures }) {
-    const plan = store.plan_model;
+    const plan = store.planModel;
     const effectiveMaxUsers = store.max_users ?? plan?.max_users ?? "—";
     const effectiveMaxBranches =
         store.max_branches ?? plan?.max_branches ?? "—";
@@ -586,8 +586,8 @@ export default function Show({ store, owners, allUsers, planFeatures = [] }) {
         icon: "🏬",
         color: "slate",
     };
-    const planLabel = store.plan_model?.label ?? store.plan ?? "Free";
-    const planCode = store.plan_model?.code ?? store.plan ?? "free";
+    const planLabel = store.planModel?.label ?? store.plan ?? "Free";
+    const planCode = store.planModel?.code ?? store.plan ?? "free";
     const planMeta = PLAN_STYLE[planCode] ?? {
         label: planLabel,
         cls: "bg-slate-100 text-slate-600 ring-slate-200",
@@ -605,7 +605,7 @@ export default function Show({ store, owners, allUsers, planFeatures = [] }) {
         {
             label: "Cabang",
             value: store.branches_count ?? store.branches?.length ?? 0,
-            sub: `Maks ${store.max_branches ?? store.plan_model?.max_branches ?? "∞"}`,
+            sub: `Maks ${store.max_branches ?? store.planModel?.max_branches ?? "∞"}`,
             color: "indigo",
             icon: (
                 <svg
@@ -647,7 +647,7 @@ export default function Show({ store, owners, allUsers, planFeatures = [] }) {
         {
             label: "Karyawan",
             value: store.employees_count ?? 0,
-            sub: `Maks ${store.max_users ?? store.plan_model?.max_users ?? "∞"} user`,
+            sub: `Maks ${store.max_users ?? store.planModel?.max_users ?? "∞"} user`,
             color: "emerald",
             icon: (
                 <svg
@@ -920,10 +920,7 @@ export default function Show({ store, owners, allUsers, planFeatures = [] }) {
                         </span>
                     </div>
                     <Link
-                        href={route(
-                            "developer.stores.branches.create",
-                            store.id,
-                        )}
+                        href={route("developer.branches.create")}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition-colors"
                     >
                         <svg
@@ -995,8 +992,8 @@ export default function Show({ store, owners, allUsers, planFeatures = [] }) {
                                     </button>
                                     <Link
                                         href={route(
-                                            "developer.stores.branches.edit",
-                                            [store.id, b.id],
+                                            "developer.branches.edit",
+                                            b.id,
                                         )}
                                         className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
                                         title="Edit"
