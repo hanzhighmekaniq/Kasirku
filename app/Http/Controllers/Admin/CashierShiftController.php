@@ -125,17 +125,13 @@ class CashierShiftController extends Controller
 
         $branchId = $this->resolveBranchId($storeId);
 
-        $shift = CashierShift::create([
-            "store_id" => $storeId,
-            "branch_id" => $branchId,
-            "user_id" => $user->id,
-            "shift_no" => $this->generateShiftNo($storeId),
-            "opened_at" => now(),
-            "opening_cash" => $data["opening_cash"],
-            "expected_cash" => $data["opening_cash"],
-            "status" => "open",
-            "opening_note" => $data["opening_note"] ?? null,
-        ]);
+        $shift = $this->createShiftWithRetry(
+            $storeId,
+            $branchId,
+            $user->id,
+            $data,
+            3,
+        );
 
         $this->log(
             $storeId,
@@ -492,14 +488,46 @@ class CashierShiftController extends Controller
 
     private function generateShiftNo(int $storeId): string
     {
-        $today = now()->format("Ymd");
-        $count = CashierShift::where("store_id", $storeId)
-            ->whereDate("created_at", today())
-            ->count();
-        return "SHF-" .
-            $today .
-            "-" .
-            str_pad((string) ($count + 1), 3, "0", STR_PAD_LEFT);
+        $prefix = "SHF-" . now()->format("Ymd") . "-";
+        $last = CashierShift::where("store_id", $storeId)
+            ->where("shift_no", "like", $prefix . "%")
+            ->orderByDesc("id")
+            ->first();
+        $seq = $last ? (int) substr($last->shift_no, -3) + 1 : 1;
+        return $prefix . str_pad((string) $seq, 3, "0", STR_PAD_LEFT);
+    }
+
+    /** Retry create shift — antisipasi race condition duplicate shift_no */
+    private function createShiftWithRetry(
+        int $storeId,
+        int $branchId,
+        int $userId,
+        array $data,
+        int $maxRetries = 3,
+    ): CashierShift {
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            try {
+                return CashierShift::create([
+                    "store_id" => $storeId,
+                    "branch_id" => $branchId,
+                    "user_id" => $userId,
+                    "shift_no" => $this->generateShiftNo($storeId),
+                    "opened_at" => now(),
+                    "opening_cash" => $data["opening_cash"],
+                    "expected_cash" => $data["opening_cash"],
+                    "status" => "open",
+                    "opening_note" => $data["opening_note"] ?? null,
+                ]);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                if ($attempt === $maxRetries - 1) {
+                    throw $e;
+                }
+                usleep(100000); // 100ms delay before retry
+            }
+        }
+        throw new \RuntimeException(
+            "Gagal membuat shift setelah {$maxRetries}x percobaan.",
+        );
     }
 
     private function buildSummary(CashierShift $shift): array
