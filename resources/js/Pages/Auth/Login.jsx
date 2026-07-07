@@ -1,19 +1,20 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import { Head, Link, useForm } from '@inertiajs/react';
+import ApplicationLogo from "@/Components/ApplicationLogo";
+import Checkbox from "@/Components/Checkbox";
+import InputError from "@/Components/InputError";
+import { Head, Link, useForm, usePage } from "@inertiajs/react";
 
 export default function Login({ status, canResetPassword }) {
+    const { flash } = usePage().props;
     const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
-        password: '',
+        email: "",
+        password: "",
         remember: false,
     });
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('login'), {
-            onFinish: () => reset('password'),
+        post(route("login"), {
+            onFinish: () => reset("password"),
         });
     };
 
@@ -34,8 +35,12 @@ export default function Login({ status, canResetPassword }) {
                                 <ApplicationLogo className="h-7 w-7 fill-current text-white" />
                             </div>
                             <div className="leading-tight">
-                                <span className="block text-lg font-bold tracking-tight text-white">SIM-KASIR</span>
-                                <span className="block text-xs font-medium text-slate-400">Point of Sale System</span>
+                                <span className="block text-lg font-bold tracking-tight text-white">
+                                    SIM-KASIR
+                                </span>
+                                <span className="block text-xs font-medium text-slate-400">
+                                    Point of Sale System
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -45,19 +50,26 @@ export default function Login({ status, canResetPassword }) {
                             Kelola bisnismu dalam satu sistem.
                         </h1>
                         <p className="mt-4 max-w-md text-base text-slate-300">
-                            Solusi kasir serba bisa untuk minimart, cafe, dan coffee shop. Cepat, modern, dan dapat diandalkan.
+                            Solusi kasir serba bisa untuk minimart, cafe, dan
+                            coffee shop. Cepat, modern, dan dapat diandalkan.
                         </p>
                         <div className="mt-8 flex flex-wrap gap-3">
-                            {['Minimart', 'Cafe', 'Coffee Shop', 'Retail'].map((tag) => (
-                                <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-slate-200 backdrop-blur">
-                                    {tag}
-                                </span>
-                            ))}
+                            {["Minimart", "Cafe", "Coffee Shop", "Retail"].map(
+                                (tag) => (
+                                    <span
+                                        key={tag}
+                                        className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-slate-200 backdrop-blur"
+                                    >
+                                        {tag}
+                                    </span>
+                                ),
+                            )}
                         </div>
                     </div>
 
                     <div className="relative z-10 p-10 text-sm text-slate-400 xl:px-14">
-                        &copy; {new Date().getFullYear()} SIM-KASIR. All rights reserved.
+                        &copy; {new Date().getFullYear()} SIM-KASIR. All rights
+                        reserved.
                     </div>
                 </div>
 
@@ -70,14 +82,22 @@ export default function Login({ status, canResetPassword }) {
                                 <ApplicationLogo className="h-7 w-7 fill-current text-white" />
                             </div>
                             <div className="leading-tight">
-                                <span className="block text-lg font-bold tracking-tight text-slate-900">SIM-KASIR</span>
-                                <span className="block text-xs font-medium text-slate-500">Point of Sale System</span>
+                                <span className="block text-lg font-bold tracking-tight text-slate-900">
+                                    SIM-KASIR
+                                </span>
+                                <span className="block text-xs font-medium text-slate-500">
+                                    Point of Sale System
+                                </span>
                             </div>
                         </div>
 
                         <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-xl shadow-slate-200/60 sm:p-9">
-                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">Selamat datang kembali</h2>
-                            <p className="mt-1 text-sm text-slate-500">Masuk untuk melanjutkan ke dashboard kamu.</p>
+                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+                                Selamat datang kembali
+                            </h2>
+                            <p className="mt-1 text-sm text-slate-500">
+                                Masuk untuk melanjutkan ke dashboard kamu.
+                            </p>
 
                             {status && (
                                 <div className="mt-5 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
@@ -85,9 +105,33 @@ export default function Login({ status, canResetPassword }) {
                                 </div>
                             )}
 
+                            {flash?.error && (
+                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                                    <svg
+                                        className="mr-1.5 inline-block h-4 w-4 align-text-bottom"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={2}
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                                        />
+                                    </svg>
+                                    {flash.error}
+                                </div>
+                            )}
+
                             <form onSubmit={submit} className="mt-6 space-y-5">
                                 <div>
-                                    <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email</label>
+                                    <label
+                                        htmlFor="email"
+                                        className="block text-sm font-medium text-slate-700"
+                                    >
+                                        Email
+                                    </label>
                                     <input
                                         id="email"
                                         type="email"
@@ -95,26 +139,41 @@ export default function Login({ status, canResetPassword }) {
                                         value={data.email}
                                         autoComplete="username"
                                         autoFocus
-                                        onChange={(e) => setData('email', e.target.value)}
+                                        onChange={(e) =>
+                                            setData("email", e.target.value)
+                                        }
                                         className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-indigo-500 focus:ring-indigo-500"
                                         placeholder="nama@email.com"
                                     />
-                                    <InputError message={errors.email} className="mt-2" />
+                                    <InputError
+                                        message={errors.email}
+                                        className="mt-2"
+                                    />
                                 </div>
 
                                 <div>
-                                    <label htmlFor="password" className="block text-sm font-medium text-slate-700">Password</label>
+                                    <label
+                                        htmlFor="password"
+                                        className="block text-sm font-medium text-slate-700"
+                                    >
+                                        Password
+                                    </label>
                                     <input
                                         id="password"
                                         type="password"
                                         name="password"
                                         value={data.password}
                                         autoComplete="current-password"
-                                        onChange={(e) => setData('password', e.target.value)}
+                                        onChange={(e) =>
+                                            setData("password", e.target.value)
+                                        }
                                         className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-indigo-500 focus:ring-indigo-500"
                                         placeholder="••••••••"
                                     />
-                                    <InputError message={errors.password} className="mt-2" />
+                                    <InputError
+                                        message={errors.password}
+                                        className="mt-2"
+                                    />
                                 </div>
 
                                 <div className="flex items-center justify-between">
@@ -122,13 +181,20 @@ export default function Login({ status, canResetPassword }) {
                                         <Checkbox
                                             name="remember"
                                             checked={data.remember}
-                                            onChange={(e) => setData('remember', e.target.checked)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "remember",
+                                                    e.target.checked,
+                                                )
+                                            }
                                         />
-                                        <span className="ms-2 text-sm text-slate-600">Ingat saya</span>
+                                        <span className="ms-2 text-sm text-slate-600">
+                                            Ingat saya
+                                        </span>
                                     </label>
                                     {canResetPassword && (
                                         <Link
-                                            href={route('password.request')}
+                                            href={route("password.request")}
                                             className="text-sm font-medium text-indigo-600 transition hover:text-indigo-500"
                                         >
                                             Lupa password?
@@ -141,13 +207,14 @@ export default function Login({ status, canResetPassword }) {
                                     disabled={processing}
                                     className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60"
                                 >
-                                    {processing ? 'Memproses...' : 'Masuk'}
+                                    {processing ? "Memproses..." : "Masuk"}
                                 </button>
                             </form>
                         </div>
 
                         <p className="mt-6 text-center text-xs text-slate-400 lg:hidden">
-                            &copy; {new Date().getFullYear()} SIM-KASIR. All rights reserved.
+                            &copy; {new Date().getFullYear()} SIM-KASIR. All
+                            rights reserved.
                         </p>
                     </div>
                 </div>

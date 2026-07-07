@@ -175,9 +175,11 @@ class HandleInertiaRequests extends Middleware
                 false,
             ),
 
-            "allStoreTypes" => function () {
-                return \App\Models\StoreType::active();
-            },
+            "allStoreTypes" => fn() => rescue(
+                fn() => \App\Models\StoreType::active(),
+                collect(),
+                false,
+            ),
 
             "storePlan" => fn() => rescue(
                 function () use ($storeId) {

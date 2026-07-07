@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { useState } from "react";
 import { Head, Link } from "@inertiajs/react";
 import axios from "axios";
 import * as ReactDOM from "react-dom";
@@ -18,6 +19,7 @@ import ModeSpecificPanel from "./components/ModeSpecificPanel";
 
 export default function Kasir(props) {
     const k = useKasir(props);
+    const [showExtraFees, setShowExtraFees] = useState(false);
     const {
         tables,
         categories,
@@ -74,64 +76,40 @@ export default function Kasir(props) {
         >
             <Head title="Kasir" />
 
-            <div className="flex h-[calc(100vh-7.5rem)] gap-4 overflow-hidden">
+            <div className="flex h-[calc(100vh-65px)] gap-42 overflow-hidden sm:h-[calc(100vh-73px)]">
                 {/* ── LEFT: Product panel ── */}
-                <div className="flex p-4 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="flex p-3 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                     {!activeShift ? (
-                        <div className="m-4 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-white px-5 shadow-sm">
-                            <div className="flex  items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500">
-                                        <svg
-                                            className="h-5 w-5 text-white"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth={1.8}
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-amber-800">
-                                            Belum Ada Shift Aktif
-                                        </p>
-                                        <p className="text-xs text-amber-600">
-                                            Anda harus membuka shift sebelum
-                                            melakukan transaksi.
-                                        </p>
-                                    </div>
-                                </div>
-                                <Link
-                                    href={route("admin.cashier-shifts.create")}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/30 transition hover:from-amber-600 hover:to-orange-600"
+                        <div className="mb-2 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+                            <span className="inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-500" />
+                            <span className="flex-1 text-xs font-medium text-amber-800">
+                                Buka shift dulu untuk mulai transaksi
+                            </span>
+                            <Link
+                                href={route("admin.cashier-shifts.create")}
+                                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-600"
+                            >
+                                <svg
+                                    className="h-3.5 w-3.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
                                 >
-                                    <svg
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                    </svg>
-                                    Buka Shift
-                                </Link>
-                            </div>
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+                                Buka Shift
+                            </Link>
                         </div>
                     ) : (
-                        <div className="mb-4 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white px-5 py-3 shadow-sm">
+                        <div className=" rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white px-2 py-2 shadow-sm">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500">
+                                    <div className="flex h-4 w-4 items-center justify-center rounded-lg bg-emerald-500">
                                         <svg
                                             className="h-4 w-4 text-white"
                                             fill="none"
@@ -147,7 +125,7 @@ export default function Kasir(props) {
                                         </svg>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-emerald-800">
+                                        <p className="text-xs font-medium text-emerald-800">
                                             Shift Aktif:{" "}
                                             <span className="font-semibold">
                                                 {activeShift.shift_no}
@@ -286,7 +264,7 @@ export default function Kasir(props) {
 
                 {/* ── RIGHT: Cart + summary ── */}
                 <div
-                    className={`flex w-80 shrink-0 gap-1 flex-col xl:w-96 md:relative md:flex max-md:fixed max-md:inset-y-0 max-md:right-0 max-md:z-50 max-md:w-80 max-md:bg-white max-md:shadow-2xl max-md:transition-transform max-md:duration-300 sm:max-md:w-96 ${k.cartPanelOpen ? "max-md:translate-x-0" : "max-md:translate-x-full max-md:hidden"}`}
+                    className={`flex w-72 shrink-0 flex-col gap-1 xl:w-80 md:relative md:flex max-md:fixed max-md:inset-y-0 max-md:right-0 max-md:z-50 max-md:w-72 max-md:bg-white max-md:shadow-2xl max-md:transition-transform max-md:duration-300 sm:max-md:w-80 ${k.cartPanelOpen ? "max-md:translate-x-0" : "max-md:translate-x-full max-md:hidden"}`}
                 >
                     {/* Order options */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -302,7 +280,7 @@ export default function Kasir(props) {
                             ))}
                         </div>
 
-                        <div className="flex flex-wrap gap-2 p-3">
+                        <div className="flex flex-wrap gap-1.5 p-2">
                             {/* Table selector — searchable dropdown */}
                             {(k.isCafe || k.isBooth || k.isHospitality) &&
                                 k.orderType === "dine_in" &&
@@ -955,27 +933,21 @@ export default function Kasir(props) {
                         </div>
                     </div>
 
-                    {/* Takeaway — Nama Pelanggan */}
+                    {/* Takeaway — Nama Pemesan (compact inline) */}
                     {k.orderType === "takeaway" && (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="border-b border-slate-100 bg-emerald-50/60 px-4 py-2.5">
-                                <h3 className="text-xs font-semibold text-emerald-800">
-                                    Nama Pelanggan (Takeaway)
-                                </h3>
-                            </div>
-                            <div className="p-3">
-                                <input
-                                    type="text"
-                                    value={k.takeawayCustomerName}
-                                    onChange={(e) =>
-                                        k.setTakeawayCustomerName(
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder="Ketik nama atau pilih pelanggan di atas..."
-                                    className="block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
-                                />
-                            </div>
+                        <div className="flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2 shadow-sm">
+                            <span className="shrink-0 text-xs font-semibold text-emerald-700">
+                                📦 Nama
+                            </span>
+                            <input
+                                type="text"
+                                value={k.takeawayCustomerName}
+                                onChange={(e) =>
+                                    k.setTakeawayCustomerName(e.target.value)
+                                }
+                                placeholder="Nama pemesan..."
+                                className="flex-1 rounded-lg border-emerald-200 bg-white py-1 text-xs focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                            />
                         </div>
                     )}
                     {/* Delivery fields */}
@@ -1006,7 +978,7 @@ export default function Kasir(props) {
                                 </svg>
                             </button>
                             {k.deliveryInfoOpen && (
-                                <div className="space-y-3 p-3">
+                                <div className="space-y-2 p-2">
                                     {/* Nama Penerima */}
                                     <div>
                                         <label className="mb-1 block text-xs font-medium text-slate-600">
@@ -1076,7 +1048,7 @@ export default function Kasir(props) {
                     <ModeSpecificPanel k={k} />
 
                     {/* Cart items */}
-                    <div className="flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col">
+                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                             <h3 className="text-sm font-semibold text-slate-800">
                                 Keranjang{" "}
@@ -1093,7 +1065,7 @@ export default function Kasir(props) {
                                 </button>
                             )}
                         </div>
-                        <div className="flex-1 overflow-y-auto space-y-2 p-3">
+                        <div className="flex-1 overflow-y-auto space-y-1.5 p-2">
                             {k.cart.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-10 text-center">
                                     <svg
@@ -1130,30 +1102,32 @@ export default function Kasir(props) {
 
                         {/* Note */}
                         {k.cart.length > 0 && (
-                            <div className="border-t border-slate-100 px-3 py-2">
+                            <div className="border-t border-slate-100 px-2 py-1.5">
                                 <input
                                     type="text"
                                     value={k.note}
                                     onChange={(e) => k.setNote(e.target.value)}
-                                    placeholder="Catatan transaksi..."
+                                    placeholder="📝 Catatan transaksi..."
                                     className="block w-full rounded-xl border-slate-200 bg-slate-50 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                 />
                             </div>
                         )}
 
                         {/* Totals */}
-                        <div className="border-t border-slate-200 p-3 space-y-2">
-                            <div className="flex items-center justify-between text-sm text-slate-500">
+                        <div className="border-t border-slate-200 p-2 space-y-1.5">
+                            {/* Subtotal */}
+                            <div className="flex items-center justify-between text-xs text-slate-500">
                                 <span>Subtotal</span>
                                 <span className="font-medium text-slate-800">
                                     {k.fmt(k.subtotal)}
                                 </span>
                             </div>
+                            {/* Promo diskon per-item */}
                             {k.totalPromoDisc > 0 && (
-                                <div className="flex items-center justify-between text-sm text-emerald-600">
+                                <div className="flex items-center justify-between text-xs text-emerald-600">
                                     <span className="inline-flex items-center gap-1">
                                         <svg
-                                            className="h-3.5 w-3.5"
+                                            className="h-3 w-3"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             strokeWidth={2}
@@ -1177,11 +1151,12 @@ export default function Kasir(props) {
                                     </span>
                                 </div>
                             )}
+                            {/* Promo diskon keranjang */}
                             {k.cartPromoDiscount > 0 && (
-                                <div className="flex items-center justify-between text-sm text-emerald-600">
+                                <div className="flex items-center justify-between text-xs text-emerald-600">
                                     <span className="inline-flex items-center gap-1">
                                         <svg
-                                            className="h-3.5 w-3.5"
+                                            className="h-3 w-3"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             strokeWidth={2}
@@ -1205,50 +1180,13 @@ export default function Kasir(props) {
                                     </span>
                                 </div>
                             )}
-                            <div className="flex items-center gap-2">
-                                <span className="w-20 text-xs text-slate-500">
-                                    Diskon
-                                </span>
-                                <div className="relative flex-1">
-                                    <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-xs text-slate-400">
-                                        Rp
-                                    </span>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={k.discount}
-                                        onChange={(e) =>
-                                            k.setDiscount(e.target.value)
-                                        }
-                                        className="block w-full rounded-lg border-slate-200 py-1 pl-7 text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="w-20 text-xs text-slate-500">
-                                    Pajak
-                                </span>
-                                <div className="relative flex-1">
-                                    <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-xs text-slate-400">
-                                        Rp
-                                    </span>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={k.tax}
-                                        onChange={(e) =>
-                                            k.setTax(e.target.value)
-                                        }
-                                        className="block w-full rounded-lg border-slate-200 py-1 pl-7 text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
-                                    />
-                                </div>
-                            </div>
+                            {/* Ongkir */}
                             {k.orderType === "delivery" &&
                                 Number(k.deliveryFee) > 0 && (
-                                    <div className="flex items-center justify-between text-sm text-slate-500">
+                                    <div className="flex items-center justify-between text-xs text-slate-500">
                                         <span className="inline-flex items-center gap-1">
                                             <svg
-                                                className="h-3.5 w-3.5"
+                                                className="h-3 w-3"
                                                 fill="none"
                                                 viewBox="0 0 24 24"
                                                 strokeWidth={2}
@@ -1267,6 +1205,99 @@ export default function Kasir(props) {
                                         </span>
                                     </div>
                                 )}
+
+                            {/* Diskon & Pajak — collapsible */}
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setShowExtraFees(!showExtraFees)
+                                    }
+                                    className="flex w-full items-center justify-between rounded-lg px-1.5 py-1 text-xs text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
+                                >
+                                    <span className="flex items-center gap-1">
+                                        <svg
+                                            className="h-3 w-3"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={2}
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                            />
+                                        </svg>
+                                        Diskon &amp; Pajak
+                                        {(Number(k.discount) > 0 ||
+                                            Number(k.tax) > 0) && (
+                                            <span className="ml-1 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[9px] font-semibold text-indigo-600">
+                                                aktif
+                                            </span>
+                                        )}
+                                    </span>
+                                    <svg
+                                        className={`h-3 w-3 transition-transform ${showExtraFees ? "rotate-180" : ""}`}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={2.5}
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                                        />
+                                    </svg>
+                                </button>
+                                {showExtraFees && (
+                                    <div className="mt-1 space-y-1.5 px-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-14 shrink-0 text-xs text-slate-500">
+                                                Diskon
+                                            </span>
+                                            <div className="relative flex-1">
+                                                <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-xs text-slate-400">
+                                                    Rp
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={k.discount}
+                                                    onChange={(e) =>
+                                                        k.setDiscount(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="block w-full rounded-lg border-slate-200 py-1 pl-7 text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-14 shrink-0 text-xs text-slate-500">
+                                                Pajak
+                                            </span>
+                                            <div className="relative flex-1">
+                                                <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-xs text-slate-400">
+                                                    Rp
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={k.tax}
+                                                    onChange={(e) =>
+                                                        k.setTax(e.target.value)
+                                                    }
+                                                    className="block w-full rounded-lg border-slate-200 py-1 pl-7 text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Grand Total */}
                             <div className="flex items-center justify-between rounded-xl bg-indigo-50 px-3 py-2">
                                 <span className="text-sm font-semibold text-indigo-800">
                                     Total
@@ -1275,11 +1306,13 @@ export default function Kasir(props) {
                                     {k.fmt(k.grandTotal)}
                                 </span>
                             </div>
+                            {/* Bayar button */}
                             <button
                                 type="button"
                                 disabled={
                                     k.cart.length === 0 ||
                                     k.submitting ||
+                                    !activeShift ||
                                     (k.orderType === "dine_in" &&
                                         (k.isCafe || k.isBooth) &&
                                         !k.selectedTable)
@@ -1289,11 +1322,13 @@ export default function Kasir(props) {
                             >
                                 {k.submitting
                                     ? "Memproses..."
-                                    : k.orderType === "dine_in" &&
-                                        (k.isCafe || k.isBooth) &&
-                                        !k.selectedTable
-                                      ? "Pilih meja dulu"
-                                      : `Bayar ${k.cart.length > 0 ? k.fmt(k.grandTotal) : ""}`}
+                                    : !activeShift
+                                      ? "⚠ Buka Shift"
+                                      : k.orderType === "dine_in" &&
+                                          (k.isCafe || k.isBooth) &&
+                                          !k.selectedTable
+                                        ? "Pilih meja dulu"
+                                        : `Bayar ${k.cart.length > 0 ? k.fmt(k.grandTotal) : ""}`}
                             </button>
                         </div>
                     </div>

@@ -1,3 +1,5 @@
+import { useState, useRef, useEffect } from "react";
+
 export default function ModeSpecificPanel({ k }) {
     const sectionClass =
         "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm";
@@ -5,34 +7,71 @@ export default function ModeSpecificPanel({ k }) {
     const inputClass =
         "block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
 
-    const renderFeatureChips = () => (
-        <div className="mt-2 flex flex-wrap gap-1.5">
-            {k.modeConfig.features.slice(0, 6).map((feature) => (
-                <span
-                    key={feature}
-                    className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-medium text-slate-600 ring-1 ring-slate-200"
-                >
-                    {feature.replace(/_/g, " ")}
-                </span>
-            ))}
-        </div>
-    );
+    const [showDesc, setShowDesc] = useState(false);
+    const tooltipRef = useRef(null);
+
+    // Tutup tooltip kalau klik di luar
+    useEffect(() => {
+        if (!showDesc) return;
+        function handle(e) {
+            if (tooltipRef.current && !tooltipRef.current.contains(e.target)) {
+                setShowDesc(false);
+            }
+        }
+        document.addEventListener("mousedown", handle);
+        return () => document.removeEventListener("mousedown", handle);
+    }, [showDesc]);
 
     return (
         <div className={sectionClass}>
-            <div className="border-b border-slate-100 bg-indigo-50/60 px-4 py-2.5">
-                <div className="flex items-start gap-2">
-                    <span className="text-lg leading-none">
-                        {k.modeConfig.icon}
-                    </span>
-                    <div className="min-w-0">
-                        <h3 className="text-xs font-semibold text-indigo-800">
+            <div className="border-b border-slate-100 bg-indigo-50/60 px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-base leading-none shrink-0">
+                            {k.modeConfig.icon}
+                        </span>
+                        <h3 className="text-xs font-semibold text-indigo-800 truncate">
                             {k.modeConfig.label} POS
                         </h3>
-                        <p className="mt-0.5 text-[11px] leading-relaxed text-indigo-700/80">
-                            {k.modeConfig.description}
-                        </p>
-                        {renderFeatureChips()}
+                    </div>
+                    {/* (!) info button */}
+                    <div className="relative shrink-0" ref={tooltipRef}>
+                        <button
+                            type="button"
+                            onClick={() => setShowDesc(!showDesc)}
+                            className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-600 transition hover:bg-indigo-200"
+                            title="Info mode POS"
+                        >
+                            !
+                        </button>
+                        {showDesc && (
+                            <div className="absolute right-0 top-6 z-50 w-60 rounded-xl border border-indigo-100 bg-white p-3 shadow-xl">
+                                <p className="text-[11px] leading-relaxed text-slate-600">
+                                    {k.modeConfig.description}
+                                </p>
+                                {k.modeConfig.features?.length > 0 && (
+                                    <div className="mt-2 flex flex-wrap gap-1">
+                                        {k.modeConfig.features
+                                            .slice(0, 6)
+                                            .map((feature) => (
+                                                <span
+                                                    key={feature}
+                                                    className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-600 ring-1 ring-indigo-100"
+                                                >
+                                                    {feature.replace(/_/g, " ")}
+                                                </span>
+                                            ))}
+                                    </div>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDesc(false)}
+                                    className="mt-2 text-[10px] text-slate-400 hover:text-slate-600 transition"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -113,8 +152,13 @@ export default function ModeSpecificPanel({ k }) {
                     <>
                         {k.isService && !k.selectedCustomer && (
                             <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
-                                <span className="font-semibold">⚠️ Customer wajib diisi</span>
-                                <span className="block mt-0.5 text-amber-600">Pilih pelanggan dari dropdown di atas sebelum bayar</span>
+                                <span className="font-semibold">
+                                    ⚠️ Customer wajib diisi
+                                </span>
+                                <span className="block mt-0.5 text-amber-600">
+                                    Pilih pelanggan dari dropdown di atas
+                                    sebelum bayar
+                                </span>
                             </div>
                         )}
                         <div>
@@ -181,8 +225,13 @@ export default function ModeSpecificPanel({ k }) {
                     <>
                         {!k.selectedCustomer && (
                             <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
-                                <span className="font-semibold">⚠️ Customer wajib diisi</span>
-                                <span className="block mt-0.5 text-amber-600">Pilih penyewa dari dropdown pelanggan di atas</span>
+                                <span className="font-semibold">
+                                    ⚠️ Customer wajib diisi
+                                </span>
+                                <span className="block mt-0.5 text-amber-600">
+                                    Pilih penyewa dari dropdown pelanggan di
+                                    atas
+                                </span>
                             </div>
                         )}
                         <div className="grid grid-cols-2 gap-2">
@@ -232,18 +281,43 @@ export default function ModeSpecificPanel({ k }) {
                         {/* Estimasi tanggal kembali — kalkulasi otomatis */}
                         {k.rentalDuration > 0 && (
                             <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5">
-                                <p className="text-[10px] font-semibold text-indigo-500 mb-1">Estimasi Kembali</p>
+                                <p className="text-[10px] font-semibold text-indigo-500 mb-1">
+                                    Estimasi Kembali
+                                </p>
                                 <p className="text-sm font-bold text-indigo-700">
                                     {(() => {
                                         const now = new Date();
-                                        const ms = k.rentalUnit === 'per_hour'
-                                            ? k.rentalDuration * 3600000
-                                            : k.rentalUnit === 'per_day'
-                                            ? k.rentalDuration * 86400000
-                                            : k.rentalDuration * 604800000;
-                                        const endDate = new Date(now.getTime() + ms);
-                                        return endDate.toLocaleDateString('id-ID', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }) +
-                                            (k.rentalUnit === 'per_hour' ? ' ' + endDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '');
+                                        const ms =
+                                            k.rentalUnit === "per_hour"
+                                                ? k.rentalDuration * 3600000
+                                                : k.rentalUnit === "per_day"
+                                                  ? k.rentalDuration * 86400000
+                                                  : k.rentalDuration *
+                                                    604800000;
+                                        const endDate = new Date(
+                                            now.getTime() + ms,
+                                        );
+                                        return (
+                                            endDate.toLocaleDateString(
+                                                "id-ID",
+                                                {
+                                                    weekday: "short",
+                                                    day: "2-digit",
+                                                    month: "short",
+                                                    year: "numeric",
+                                                },
+                                            ) +
+                                            (k.rentalUnit === "per_hour"
+                                                ? " " +
+                                                  endDate.toLocaleTimeString(
+                                                      "id-ID",
+                                                      {
+                                                          hour: "2-digit",
+                                                          minute: "2-digit",
+                                                      },
+                                                  )
+                                                : "")
+                                        );
                                     })()}
                                 </p>
                             </div>
@@ -260,28 +334,41 @@ export default function ModeSpecificPanel({ k }) {
                         {/* Warning customer wajib */}
                         {!k.selectedCustomer && (
                             <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
-                                <span className="font-semibold">⚠️ Data tamu wajib diisi</span>
-                                <span className="block mt-0.5 text-amber-600">Pilih atau tambahkan tamu dari dropdown pelanggan di atas</span>
+                                <span className="font-semibold">
+                                    ⚠️ Data tamu wajib diisi
+                                </span>
+                                <span className="block mt-0.5 text-amber-600">
+                                    Pilih atau tambahkan tamu dari dropdown
+                                    pelanggan di atas
+                                </span>
                             </div>
                         )}
                         <div className="grid grid-cols-2 gap-2">
                             <div>
-                                <label className={labelClass}>No. Kamar / Unit</label>
+                                <label className={labelClass}>
+                                    No. Kamar / Unit
+                                </label>
                                 <input
                                     type="text"
                                     value={k.roomNumber}
-                                    onChange={(e) => k.setRoomNumber(e.target.value)}
+                                    onChange={(e) =>
+                                        k.setRoomNumber(e.target.value)
+                                    }
                                     placeholder="Contoh: 101 / Villa A"
                                     className={inputClass}
                                 />
                             </div>
                             <div>
-                                <label className={labelClass}>Jumlah Tamu</label>
+                                <label className={labelClass}>
+                                    Jumlah Tamu
+                                </label>
                                 <input
                                     type="number"
                                     min="1"
                                     value={k.guestCount}
-                                    onChange={(e) => k.setGuestCount(Number(e.target.value))}
+                                    onChange={(e) =>
+                                        k.setGuestCount(Number(e.target.value))
+                                    }
                                     className={inputClass}
                                 />
                             </div>
@@ -294,7 +381,11 @@ export default function ModeSpecificPanel({ k }) {
                                     type="number"
                                     min="1"
                                     value={k.rentalDuration}
-                                    onChange={(e) => k.setRentalDuration(Number(e.target.value))}
+                                    onChange={(e) =>
+                                        k.setRentalDuration(
+                                            Number(e.target.value),
+                                        )
+                                    }
                                     className={inputClass}
                                 />
                             </div>
@@ -302,7 +393,9 @@ export default function ModeSpecificPanel({ k }) {
                                 <label className={labelClass}>Satuan</label>
                                 <select
                                     value={k.rentalUnit}
-                                    onChange={(e) => k.setRentalUnit(e.target.value)}
+                                    onChange={(e) =>
+                                        k.setRentalUnit(e.target.value)
+                                    }
                                     className={inputClass}
                                 >
                                     <option value="per_day">Per Malam</option>
@@ -314,26 +407,46 @@ export default function ModeSpecificPanel({ k }) {
                         {/* Estimasi check-out */}
                         {k.rentalDuration > 0 && (
                             <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5">
-                                <p className="text-[10px] font-semibold text-indigo-500 mb-1">🏨 Estimasi Check-out</p>
+                                <p className="text-[10px] font-semibold text-indigo-500 mb-1">
+                                    🏨 Estimasi Check-out
+                                </p>
                                 <p className="text-sm font-bold text-indigo-700">
                                     {(() => {
                                         const now = new Date();
-                                        const ms = k.rentalUnit === 'per_hour'
-                                            ? k.rentalDuration * 3600000
-                                            : k.rentalUnit === 'per_week'
-                                            ? k.rentalDuration * 604800000
-                                            : k.rentalDuration * 86400000;
-                                        const checkOut = new Date(now.getTime() + ms);
-                                        return checkOut.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+                                        const ms =
+                                            k.rentalUnit === "per_hour"
+                                                ? k.rentalDuration * 3600000
+                                                : k.rentalUnit === "per_week"
+                                                  ? k.rentalDuration * 604800000
+                                                  : k.rentalDuration * 86400000;
+                                        const checkOut = new Date(
+                                            now.getTime() + ms,
+                                        );
+                                        return checkOut.toLocaleDateString(
+                                            "id-ID",
+                                            {
+                                                weekday: "long",
+                                                day: "2-digit",
+                                                month: "long",
+                                                year: "numeric",
+                                            },
+                                        );
                                     })()}
                                 </p>
                                 <p className="text-[10px] text-indigo-400 mt-0.5">
-                                    {k.rentalDuration} {k.rentalUnit === 'per_hour' ? 'jam' : k.rentalUnit === 'per_week' ? 'minggu' : 'malam'} dari sekarang
+                                    {k.rentalDuration}{" "}
+                                    {k.rentalUnit === "per_hour"
+                                        ? "jam"
+                                        : k.rentalUnit === "per_week"
+                                          ? "minggu"
+                                          : "malam"}{" "}
+                                    dari sekarang
                                 </p>
                             </div>
                         )}
                         <p className="text-[11px] text-slate-500">
-                            Hotel/villa: kamar, tamu, check-in/out otomatis tercatat.
+                            Hotel/villa: kamar, tamu, check-in/out otomatis
+                            tercatat.
                         </p>
                     </>
                 )}
@@ -342,32 +455,43 @@ export default function ModeSpecificPanel({ k }) {
                     <>
                         {/* Plat Nomor */}
                         <div>
-                            <label className={labelClass}>🚗 Plat Nomor <span className="text-red-500">*</span></label>
+                            <label className={labelClass}>
+                                🚗 Plat Nomor{" "}
+                                <span className="text-red-500">*</span>
+                            </label>
                             <input
                                 type="text"
                                 value={k.ticketEvent}
-                                onChange={(e) => k.setTicketEvent(e.target.value.toUpperCase())}
+                                onChange={(e) =>
+                                    k.setTicketEvent(
+                                        e.target.value.toUpperCase(),
+                                    )
+                                }
                                 placeholder="Contoh: B 1234 ABC"
                                 className={`${inputClass} font-mono tracking-wider uppercase`}
                             />
                         </div>
                         {/* Jenis Kendaraan */}
                         <div>
-                            <label className={labelClass}>Jenis Kendaraan</label>
+                            <label className={labelClass}>
+                                Jenis Kendaraan
+                            </label>
                             <div className="grid grid-cols-3 gap-1.5">
                                 {[
-                                    { v: 'motorcycle', l: '🏍️ Motor' },
-                                    { v: 'car',        l: '🚗 Mobil' },
-                                    { v: 'truck',      l: '🚛 Truk' },
+                                    { v: "motorcycle", l: "🏍️ Motor" },
+                                    { v: "car", l: "🚗 Mobil" },
+                                    { v: "truck", l: "🚛 Truk" },
                                 ].map((opt) => (
                                     <button
                                         key={opt.v}
                                         type="button"
                                         onClick={() => k.setTicketSlot(opt.v)}
                                         className={`rounded-lg border py-2 text-xs font-medium transition ${
-                                            k.ticketSlot === opt.v || (!k.ticketSlot && opt.v === 'motorcycle')
-                                                ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
-                                                : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                                            k.ticketSlot === opt.v ||
+                                            (!k.ticketSlot &&
+                                                opt.v === "motorcycle")
+                                                ? "border-indigo-400 bg-indigo-50 text-indigo-700"
+                                                : "border-slate-200 text-slate-500 hover:border-slate-300"
                                         }`}
                                     >
                                         {opt.l}
@@ -377,25 +501,37 @@ export default function ModeSpecificPanel({ k }) {
                         </div>
                         {/* No. Tiket (opsional) */}
                         <div>
-                            <label className={labelClass}>No. Tiket (opsional)</label>
+                            <label className={labelClass}>
+                                No. Tiket (opsional)
+                            </label>
                             <input
                                 type="text"
                                 value={k.roomNumber}
-                                onChange={(e) => k.setRoomNumber(e.target.value)}
+                                onChange={(e) =>
+                                    k.setRoomNumber(e.target.value)
+                                }
                                 placeholder="Auto-generate / scan barcode"
                                 className={inputClass}
                             />
                         </div>
                         {/* Info waktu masuk */}
                         <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
-                            <p className="text-[10px] font-medium text-slate-500">⏰ Waktu Masuk</p>
-                            <p className="text-sm font-bold text-slate-700">
-                                {new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                            <p className="text-[10px] font-medium text-slate-500">
+                                ⏰ Waktu Masuk
                             </p>
-                            <p className="text-[10px] text-slate-400 mt-0.5">Dicatat otomatis saat transaksi diproses</p>
+                            <p className="text-sm font-bold text-slate-700">
+                                {new Date().toLocaleString("id-ID", {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                })}
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                                Dicatat otomatis saat transaksi diproses
+                            </p>
                         </div>
                         <p className="text-[11px] text-slate-500">
-                            Parkir: catat masuk, bayar saat keluar. Plat &amp; waktu masuk tersimpan otomatis.
+                            Parkir: catat masuk, bayar saat keluar. Plat &amp;
+                            waktu masuk tersimpan otomatis.
                         </p>
                     </>
                 )}
@@ -404,36 +540,53 @@ export default function ModeSpecificPanel({ k }) {
                     <>
                         {/* Unit / Room */}
                         <div>
-                            <label className={labelClass}>🖥️ Unit / Room <span className="text-red-500">*</span></label>
+                            <label className={labelClass}>
+                                🖥️ Unit / Room{" "}
+                                <span className="text-red-500">*</span>
+                            </label>
                             <input
                                 type="text"
                                 value={k.roomNumber}
-                                onChange={(e) => k.setRoomNumber(e.target.value)}
+                                onChange={(e) =>
+                                    k.setRoomNumber(e.target.value)
+                                }
                                 placeholder="Contoh: PC-01, PS-03, Room-A"
                                 className={`${inputClass} font-mono`}
                             />
                         </div>
                         {/* Jumlah Pengguna */}
                         <div>
-                            <label className={labelClass}>👥 Jumlah Pengguna</label>
+                            <label className={labelClass}>
+                                👥 Jumlah Pengguna
+                            </label>
                             <input
                                 type="number"
                                 min="1"
                                 value={k.guestCount}
-                                onChange={(e) => k.setGuestCount(Number(e.target.value))}
+                                onChange={(e) =>
+                                    k.setGuestCount(Number(e.target.value))
+                                }
                                 className={inputClass}
                             />
                         </div>
                         {/* Info sesi */}
                         <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2.5">
-                            <p className="text-[10px] font-semibold text-emerald-600 mb-1">⏱️ Sesi Dimulai</p>
-                            <p className="text-sm font-bold text-emerald-700">
-                                {new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                            <p className="text-[10px] font-semibold text-emerald-600 mb-1">
+                                ⏱️ Sesi Dimulai
                             </p>
-                            <p className="text-[10px] text-emerald-500 mt-0.5">Timer mulai saat transaksi diproses</p>
+                            <p className="text-sm font-bold text-emerald-700">
+                                {new Date().toLocaleString("id-ID", {
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                })}
+                            </p>
+                            <p className="text-[10px] text-emerald-500 mt-0.5">
+                                Timer mulai saat transaksi diproses
+                            </p>
                         </div>
                         <p className="text-[11px] text-slate-500">
-                            Session: catat unit, pengguna, dan waktu mulai. Bayar di awal (prepaid) atau akhir (postpaid).
+                            Session: catat unit, pengguna, dan waktu mulai.
+                            Bayar di awal (prepaid) atau akhir (postpaid).
                         </p>
                     </>
                 )}

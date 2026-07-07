@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->boolean("is_developer")->default(false);
             $table->string("email")->unique();
             $table->timestamp("email_verified_at")->nullable();
+            $table->string("session_token", 64)->nullable();
             $table->string("password");
             $table->rememberToken();
             $table->timestamps();

@@ -11,13 +11,15 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\PermissionRegistrar;
+use Illuminate\Support\Str;
 
 class AuthenticatedSessionController extends Controller
 {
     public function create(): Response|RedirectResponse
     {
-        if (auth()->check()) {
-            $user = auth()->user();
+        if (Auth::check()) {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
             if ($user->isDeveloper()) {
                 return redirect()->route("developer.dashboard");
             }
@@ -37,7 +39,13 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        $user = $request->user();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // Generate session token — single-session enforcement
+        $sessionToken = Str::random(64);
+        $user->update(["session_token" => $sessionToken]);
+        $request->session()->put("session_token", $sessionToken);
 
         // ── Developer → dashboard khusus, tidak perlu store context ──
         if ($user->isDeveloper()) {

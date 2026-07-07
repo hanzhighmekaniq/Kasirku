@@ -10,9 +10,9 @@
  *   return <List items={data} />;
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { getAll } from '@/Services/db';
-import { getLastSync } from '@/Services/sync';
+import { useState, useEffect, useRef } from "react";
+import { getAll } from "@/Services/db";
+import { getLastSync } from "@/Services/sync";
 
 /**
  * @param {string} storeName — IndexedDB store name (products, categories, customers, payment_methods)
@@ -43,14 +43,21 @@ export default function useOfflineData(storeName, options = {}) {
             const now = Date.now();
 
             // Try server first (unless offline or skipServer)
-            if (!skipServer && navigator.onLine && (now - lastFetchRef.current > staleMs)) {
+            if (
+                !skipServer &&
+                navigator.onLine &&
+                now - lastFetchRef.current > staleMs
+            ) {
                 try {
-                    const apiStore = storeName === 'payment_methods' ? 'payment_methods' : storeName;
-                    const response = await fetch(`/admin/master-data`, {
+                    const apiStore =
+                        storeName === "payment_methods"
+                            ? "payment_methods"
+                            : storeName;
+                    const response = await fetch(`/app/master-data`, {
                         headers: {
-                            Accept: 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-Inertia': 'false',
+                            Accept: "application/json",
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-Inertia": "false",
                         },
                     });
 
@@ -62,14 +69,19 @@ export default function useOfflineData(storeName, options = {}) {
                             const items = body[apiStore] || [];
                             setData(items);
                             setIsOffline(false);
-                            setLastSync(body.synced_at || new Date().toISOString());
+                            setLastSync(
+                                body.synced_at || new Date().toISOString(),
+                            );
                             setLoading(false);
                             return; // success — exit early
                         }
                     }
                 } catch (e) {
                     // Network error — fall through to IndexedDB fallback
-                    console.warn(`[useOfflineData] Server fetch failed for ${storeName}, falling back to cache:`, e.message);
+                    console.warn(
+                        `[useOfflineData] Server fetch failed for ${storeName}, falling back to cache:`,
+                        e.message,
+                    );
                 }
             }
 
@@ -83,7 +95,9 @@ export default function useOfflineData(storeName, options = {}) {
                 }
             } catch (dbError) {
                 if (mountedRef.current) {
-                    setError(`Gagal memuat data ${storeName} — ${dbError.message}`);
+                    setError(
+                        `Gagal memuat data ${storeName} — ${dbError.message}`,
+                    );
                     setLoading(false);
                 }
             }
@@ -108,12 +122,12 @@ export default function useOfflineData(storeName, options = {}) {
             setIsOffline(true);
         }
 
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
+        window.addEventListener("online", handleOnline);
+        window.addEventListener("offline", handleOffline);
 
         return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
+            window.removeEventListener("online", handleOnline);
+            window.removeEventListener("offline", handleOffline);
         };
     }, []);
 

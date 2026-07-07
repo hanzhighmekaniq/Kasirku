@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Alias for middleware
         $middleware->alias([
+            "single-session" => \App\Http\Middleware\EnsureSingleSession::class,
             "store" => \App\Http\Middleware\StoreMiddleware::class,
             "branch" => \App\Http\Middleware\BranchMiddleware::class,
             "role" => \App\Http\Middleware\RoleMiddleware::class,

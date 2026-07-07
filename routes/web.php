@@ -80,7 +80,7 @@ Route::post("/webhooks/{provider}", [WebhookController::class, "handle"])
 // DEVELOPER routes — /developer/*
 // Dunia terpisah, tidak pakai store/branch middleware
 // ─────────────────────────────────────────────────────────────────────────────
-Route::middleware(["auth", "developer"])
+Route::middleware(["auth", "developer", "single-session"])
     ->prefix("developer")
     ->name("developer.")
     ->group(function () {
@@ -151,7 +151,7 @@ Route::middleware(["auth", "developer"])
 // Middleware: auth + store (set Spatie team) + branch
 // Permission check dilakukan per route group / controller.
 // ─────────────────────────────────────────────────────────────────────────────
-Route::middleware(["auth", "store", "branch"])
+Route::middleware(["auth", "single-session", "store", "branch"])
     ->prefix("app")
     ->name("admin.")
     ->group(function () {
