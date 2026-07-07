@@ -489,8 +489,7 @@ class CashierShiftController extends Controller
     private function generateShiftNo(int $storeId): string
     {
         $prefix = "SHF-" . now()->format("Ymd") . "-";
-        $last = CashierShift::where("store_id", $storeId)
-            ->where("shift_no", "like", $prefix . "%")
+        $last = CashierShift::where("shift_no", "like", $prefix . "%")
             ->orderByDesc("id")
             ->first();
         $seq = $last ? (int) substr($last->shift_no, -3) + 1 : 1;
@@ -518,8 +517,11 @@ class CashierShiftController extends Controller
                     "status" => "open",
                     "opening_note" => $data["opening_note"] ?? null,
                 ]);
-            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-                if ($attempt === $maxRetries - 1) {
+            } catch (\Exception $e) {
+                if (
+                    $attempt === $maxRetries - 1 ||
+                    !str_contains($e->getMessage(), "Duplicate entry")
+                ) {
                     throw $e;
                 }
                 usleep(100000); // 100ms delay before retry
