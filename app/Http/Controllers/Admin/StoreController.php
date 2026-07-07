@@ -14,10 +14,10 @@ class StoreController extends Controller
      */
     public function index()
     {
-        $stores = Store::withCount('branches')->withCount('users')->get();
+        $stores = Store::withCount("branches")->withCount("users")->get();
 
-        return Inertia::render('Admin/Stores/Index', [
-            'stores' => $stores,
+        return Inertia::render("Admin/Stores/Index", [
+            "stores" => $stores,
         ]);
     }
 
@@ -26,7 +26,7 @@ class StoreController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Stores/Create');
+        return Inertia::render("Admin/Stores/Create");
     }
 
     /**
@@ -35,18 +35,17 @@ class StoreController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'store_type'  => 'required|string|in:cafe,minimarket,restoran,toko',
-            'modules'     => 'required|array',
-            'modules.*'   => 'string',
-            'address'     => 'nullable|string|max:500',
-            'phone'       => 'nullable|string|max:20',
+            "name" => "required|string|max:255",
+            "store_type_id" => "required|exists:store_types,id",
+            "address" => "nullable|string|max:500",
+            "phone" => "nullable|string|max:20",
         ]);
 
         Store::create($validated);
 
-        return redirect()->route('admin.stores.index')
-            ->with('success', 'Toko berhasil dibuat.');
+        return redirect()
+            ->route("admin.stores.index")
+            ->with("success", "Toko berhasil dibuat.");
     }
 
     /**
@@ -54,8 +53,8 @@ class StoreController extends Controller
      */
     public function edit(Store $store)
     {
-        return Inertia::render('Admin/Stores/Edit', [
-            'store' => $store,
+        return Inertia::render("Admin/Stores/Edit", [
+            "store" => $store,
         ]);
     }
 
@@ -65,18 +64,17 @@ class StoreController extends Controller
     public function update(Request $request, Store $store)
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'store_type'  => 'required|string|in:cafe,minimarket,restoran,toko',
-            'modules'     => 'required|array',
-            'modules.*'   => 'string',
-            'address'     => 'nullable|string|max:500',
-            'phone'       => 'nullable|string|max:20',
+            "name" => "required|string|max:255",
+            "store_type_id" => "required|exists:store_types,id",
+            "address" => "nullable|string|max:500",
+            "phone" => "nullable|string|max:20",
         ]);
 
         $store->update($validated);
 
-        return redirect()->route('admin.stores.index')
-            ->with('success', 'Toko berhasil diupdate.');
+        return redirect()
+            ->route("admin.stores.index")
+            ->with("success", "Toko berhasil diupdate.");
     }
 
     /**
@@ -86,7 +84,8 @@ class StoreController extends Controller
     {
         $store->delete();
 
-        return redirect()->route('admin.stores.index')
-            ->with('success', 'Toko berhasil dihapus.');
+        return redirect()
+            ->route("admin.stores.index")
+            ->with("success", "Toko berhasil dihapus.");
     }
 }

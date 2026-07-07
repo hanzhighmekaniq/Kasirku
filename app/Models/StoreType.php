@@ -38,7 +38,7 @@ class StoreType extends Model
      */
     public function stores(): HasMany
     {
-        return $this->hasMany(Store::class, 'store_type_id');
+        return $this->hasMany(Store::class, "store_type_id");
     }
 
     /**
@@ -48,7 +48,7 @@ class StoreType extends Model
     {
         return $this->belongsToMany(
             Feature::class,
-            "store_type_feature"
+            "store_type_feature",
         )->withTimestamps();
     }
 
@@ -58,8 +58,8 @@ class StoreType extends Model
     public function featureCodes(): array
     {
         return $this->features()
-            ->where('is_active', true)
-            ->pluck('code')
+            ->where("is_active", true)
+            ->pluck("code")
             ->toArray();
     }
 
@@ -69,10 +69,39 @@ class StoreType extends Model
     public function featureList(): array
     {
         return $this->features()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->pluck('label', 'code')
+            ->where("is_active", true)
+            ->orderBy("sort_order")
+            ->pluck("label", "code")
             ->toArray();
+    }
+
+    /**
+     * Ambil semua feature detail codes dari seluruh fitur store type ini.
+     * Relasi: StoreType → store_type_feature → Feature → feature_details
+     */
+    public function featureDetailCodes(): array
+    {
+        return \App\Models\FeatureDetail::whereIn(
+            "feature_id",
+            $this->features()->pluck("features.id"),
+        )
+            ->where("is_active", true)
+            ->pluck("code")
+            ->toArray();
+    }
+
+    /**
+     * Cek apakah store type ini punya feature detail tertentu
+     */
+    public function hasFeatureDetail(string $detailCode): bool
+    {
+        return \App\Models\FeatureDetail::whereIn(
+            "feature_id",
+            $this->features()->pluck("features.id"),
+        )
+            ->where("code", $detailCode)
+            ->where("is_active", true)
+            ->exists();
     }
 
     // --- Static Helpers ---

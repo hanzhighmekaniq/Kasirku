@@ -28,7 +28,7 @@ class CheckFeatureAccess
         /** @var \App\Models\Store|null $store */
         $store = session("current_store_id")
             ? \App\Models\Store::with([
-                "planModel.planFeatures",
+                "planModel.features",
                 "storeType.features",
             ])->find(session("current_store_id"))
             : null;
@@ -81,7 +81,7 @@ class CheckFeatureAccess
         string $featureLabel,
         \App\Models\Store $store,
         ?\App\Models\Feature $featureModel,
-    ): Response {
+    ) {
         $currentType = $store->getRelationValue("storeType");
 
         // Tipe toko yang BISA menggunakan fitur ini
@@ -128,7 +128,7 @@ class CheckFeatureAccess
         string $feature,
         string $featureLabel,
         \App\Models\Store $store,
-    ): Response {
+    ) {
         if ($request->header("X-Inertia")) {
             $planCode = $store->effectivePlanCode();
             $planModel = $store->planModel;

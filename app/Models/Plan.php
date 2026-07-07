@@ -50,8 +50,10 @@ class Plan extends Model
      */
     public function features(): BelongsToMany
     {
-        return $this->belongsToMany(Feature::class, "plan_feature")
-            ->withTimestamps();
+        return $this->belongsToMany(
+            Feature::class,
+            "plan_feature",
+        )->withTimestamps();
     }
 
     /**
@@ -69,8 +71,8 @@ class Plan extends Model
     public function featureCodes(): array
     {
         return $this->features()
-            ->where('is_active', true)
-            ->pluck('code')
+            ->where("is_active", true)
+            ->pluck("code")
             ->toArray();
     }
 
@@ -80,9 +82,38 @@ class Plan extends Model
     public function featureList(): array
     {
         return $this->features()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->pluck('label', 'code')
+            ->where("is_active", true)
+            ->orderBy("sort_order")
+            ->pluck("label", "code")
             ->toArray();
+    }
+
+    /**
+     * Ambil semua feature detail codes dari seluruh fitur plan ini.
+     * Relasi: Plan → plan_feature → Feature → feature_details
+     */
+    public function featureDetailCodes(): array
+    {
+        return \App\Models\FeatureDetail::whereIn(
+            "feature_id",
+            $this->features()->pluck("features.id"),
+        )
+            ->where("is_active", true)
+            ->pluck("code")
+            ->toArray();
+    }
+
+    /**
+     * Cek apakah plan ini punya feature detail tertentu
+     */
+    public function hasFeatureDetail(string $detailCode): bool
+    {
+        return \App\Models\FeatureDetail::whereIn(
+            "feature_id",
+            $this->features()->pluck("features.id"),
+        )
+            ->where("code", $detailCode)
+            ->where("is_active", true)
+            ->exists();
     }
 }

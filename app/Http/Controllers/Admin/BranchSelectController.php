@@ -15,7 +15,7 @@ class BranchSelectController extends Controller
     public function selectForm()
     {
         $user = Auth::user();
-
+        /** @var \App\Models\User $user */
         $storeId = session("current_store_id");
         $store = $storeId
             ? \App\Models\Store::find($storeId)
@@ -62,7 +62,7 @@ class BranchSelectController extends Controller
         $validated = $request->validate([
             "branch_id" => "required|exists:branches,id",
         ]);
-
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $storeId = session("current_store_id");
         $store = $storeId

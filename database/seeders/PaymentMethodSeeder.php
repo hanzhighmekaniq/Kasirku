@@ -15,33 +15,44 @@ class PaymentMethodSeeder extends Seeder
      */
     public function run(): void
     {
-        $stores = Store::all();
+        $stores = Store::with("storeType")->get();
 
         foreach ($stores as $store) {
-            $this->seedForStore($store->id, $store->store_type);
+            $this->seedForStore(
+                $store->id,
+                $store->getRelation("storeType")?->code ?? "retail",
+            );
         }
     }
 
     private function seedForStore(int $storeId, string $storeType): void
     {
         // Skip jika sudah ada (idempotent)
-        if (PaymentMethod::where('store_id', $storeId)->exists()) {
-            $this->command?->line("  [skip] store_id={$storeId} sudah punya payment methods");
+        if (PaymentMethod::where("store_id", $storeId)->exists()) {
+            $this->command?->line(
+                "  [skip] store_id={$storeId} sudah punya payment methods",
+            );
             return;
         }
 
         $methods = $this->methodsForType($storeType);
 
         foreach ($methods as $i => $m) {
-            PaymentMethod::create(array_merge($m, [
-                'code'       => $m['code'] . '_' . $storeId,  // unique per store
-                'store_id'   => $storeId,
-                'sort_order' => $i + 1,
-                'is_active'  => true,
-            ]));
+            PaymentMethod::create(
+                array_merge($m, [
+                    "code" => $m["code"] . "_" . $storeId, // unique per store
+                    "store_id" => $storeId,
+                    "sort_order" => $i + 1,
+                    "is_active" => true,
+                ]),
+            );
         }
 
-        $this->command?->line("  ✔ store_id={$storeId} ({$storeType}): " . count($methods) . " methods");
+        $this->command?->line(
+            "  ✔ store_id={$storeId} ({$storeType}): " .
+                count($methods) .
+                " methods",
+        );
     }
 
     /**
@@ -52,35 +63,115 @@ class PaymentMethodSeeder extends Seeder
     {
         // Base methods — semua store
         $base = [
-            ['code' => 'CASH',     'name' => 'Tunai',            'type' => 'cash',     'provider' => null],
-            ['code' => 'QRIS',     'name' => 'QRIS',             'type' => 'digital',  'provider' => 'QRIS'],
-            ['code' => 'TRANSFER', 'name' => 'Transfer Bank',    'type' => 'transfer', 'provider' => null],
+            [
+                "code" => "CASH",
+                "name" => "Tunai",
+                "type" => "cash",
+                "provider" => null,
+            ],
+            [
+                "code" => "QRIS",
+                "name" => "QRIS",
+                "type" => "digital",
+                "provider" => "QRIS",
+            ],
+            [
+                "code" => "TRANSFER",
+                "name" => "Transfer Bank",
+                "type" => "transfer",
+                "provider" => null,
+            ],
         ];
 
         // Tambahan per tipe
         $extra = match ($storeType) {
-            'retail' => [
-                ['code' => 'DEBIT',    'name' => 'Kartu Debit',  'type' => 'card',    'provider' => null],
-                ['code' => 'CREDIT',   'name' => 'Kartu Kredit', 'type' => 'card',    'provider' => null],
-                ['code' => 'GOPAY',    'name' => 'GoPay',        'type' => 'ewallet', 'provider' => 'Gojek'],
-                ['code' => 'OVO',      'name' => 'OVO',          'type' => 'ewallet', 'provider' => 'OVO'],
+            "retail" => [
+                [
+                    "code" => "DEBIT",
+                    "name" => "Kartu Debit",
+                    "type" => "card",
+                    "provider" => null,
+                ],
+                [
+                    "code" => "CREDIT",
+                    "name" => "Kartu Kredit",
+                    "type" => "card",
+                    "provider" => null,
+                ],
+                [
+                    "code" => "GOPAY",
+                    "name" => "GoPay",
+                    "type" => "ewallet",
+                    "provider" => "Gojek",
+                ],
+                [
+                    "code" => "OVO",
+                    "name" => "OVO",
+                    "type" => "ewallet",
+                    "provider" => "OVO",
+                ],
             ],
-            'fnb' => [
-                ['code' => 'DEBIT',    'name' => 'Kartu Debit',  'type' => 'card',    'provider' => null],
-                ['code' => 'GOPAY',    'name' => 'GoPay',        'type' => 'ewallet', 'provider' => 'Gojek'],
-                ['code' => 'OVO',      'name' => 'OVO',          'type' => 'ewallet', 'provider' => 'OVO'],
-                ['code' => 'DANA',     'name' => 'DANA',         'type' => 'ewallet', 'provider' => 'DANA'],
+            "fnb" => [
+                [
+                    "code" => "DEBIT",
+                    "name" => "Kartu Debit",
+                    "type" => "card",
+                    "provider" => null,
+                ],
+                [
+                    "code" => "GOPAY",
+                    "name" => "GoPay",
+                    "type" => "ewallet",
+                    "provider" => "Gojek",
+                ],
+                [
+                    "code" => "OVO",
+                    "name" => "OVO",
+                    "type" => "ewallet",
+                    "provider" => "OVO",
+                ],
+                [
+                    "code" => "DANA",
+                    "name" => "DANA",
+                    "type" => "ewallet",
+                    "provider" => "DANA",
+                ],
             ],
-            'service' => [
-                ['code' => 'DEBIT',    'name' => 'Kartu Debit',  'type' => 'card',    'provider' => null],
-                ['code' => 'GOPAY',    'name' => 'GoPay',        'type' => 'ewallet', 'provider' => 'Gojek'],
+            "service" => [
+                [
+                    "code" => "DEBIT",
+                    "name" => "Kartu Debit",
+                    "type" => "card",
+                    "provider" => null,
+                ],
+                [
+                    "code" => "GOPAY",
+                    "name" => "GoPay",
+                    "type" => "ewallet",
+                    "provider" => "Gojek",
+                ],
             ],
-            'laundry' => [
-                ['code' => 'DEBIT',    'name' => 'Kartu Debit',  'type' => 'card',    'provider' => null],
+            "laundry" => [
+                [
+                    "code" => "DEBIT",
+                    "name" => "Kartu Debit",
+                    "type" => "card",
+                    "provider" => null,
+                ],
             ],
-            'rental', 'ticket', 'hospitality', 'session', 'parking' => [
-                ['code' => 'DEBIT',    'name' => 'Kartu Debit',  'type' => 'card',    'provider' => null],
-                ['code' => 'GOPAY',    'name' => 'GoPay',        'type' => 'ewallet', 'provider' => 'Gojek'],
+            "rental", "ticket", "hospitality", "session", "parking" => [
+                [
+                    "code" => "DEBIT",
+                    "name" => "Kartu Debit",
+                    "type" => "card",
+                    "provider" => null,
+                ],
+                [
+                    "code" => "GOPAY",
+                    "name" => "GoPay",
+                    "type" => "ewallet",
+                    "provider" => "Gojek",
+                ],
             ],
             default => [],
         };

@@ -19,13 +19,17 @@ class ExpenseController extends Controller
     {
         [$storeId, $branchId] = $this->storeScope();
         $user = Auth::user();
+        /** @var \App\Models\User|null $user */
 
         $query = Expense::with(["expenseCategory", "user", "branch"])
             ->where("store_id", $storeId)
             ->latest();
-
         // User dengan sale.void (admin ke atas) bisa filter multi-branch
-        if ($user && $user->can('sale.void') && $request->filled("branch_ids")) {
+        if (
+            $user &&
+            $user->can("sale.void") &&
+            $request->filled("branch_ids")
+        ) {
             $query->whereIn("branch_id", (array) $request->input("branch_ids"));
         } elseif ($branchId) {
             $query->where("branch_id", $branchId);

@@ -33,7 +33,10 @@ class KasirController extends Controller
         /** @var User $user */
         $user = Auth::user();
         [$storeId, $branchId] = $this->storeScope();
-        $store = $user->stores()->find($storeId) ?? $user->stores()->first();
+        $store =
+            $user->stores()->with("storeType")->find($storeId) ??
+            $user->stores()->with("storeType")->first();
+        $storeTypeCode = $store?->getRelation("storeType")?->code ?? "retail";
 
         $products = Product::forStore($storeId)
             ->where("is_active", true)
@@ -131,7 +134,7 @@ class KasirController extends Controller
             ]);
 
         $tables = [];
-        if (in_array($store?->store_type, ["fnb", "hospitality"])) {
+        if (in_array($storeTypeCode, ["fnb", "hospitality"])) {
             $tables = CafeTable::where("store_id", $storeId)
                 ->where("branch_id", $branchId)
                 ->where("is_active", true)
@@ -141,7 +144,7 @@ class KasirController extends Controller
 
         // Hanya untuk mode service/ticket — kirim daftar karyawan aktif
         $employees = [];
-        if (in_array($store?->store_type, ["service", "ticket"])) {
+        if (in_array($storeTypeCode, ["service", "ticket"])) {
             $employees = \App\Models\Employee::where("store_id", $storeId)
                 ->where("status", "active")
                 ->orderBy("name")
@@ -181,7 +184,7 @@ class KasirController extends Controller
 
         $orderTypes = \App\Models\StoreType::where(
             "code",
-            $store?->store_type,
+            $storeTypeCode,
         )->value("order_types");
 
         return Inertia::render("Admin/Kasir/Kasir", [
@@ -193,8 +196,8 @@ class KasirController extends Controller
             "tables" => $tables,
             "todaySales" => $todaySales,
             "orderTypes" => $orderTypes,
-            "storeType" => $store?->store_type ?? "retail",
-            "posMode" => $store?->store_type ?? "retail",
+            "storeType" => $storeTypeCode,
+            "posMode" => $storeTypeCode,
             "storeName" => $store?->name ?? "",
             "receiptFooter" => $store?->receipt_footer ?? "",
             "pgMethods" => $this->getActivePgMethods($storeId),
@@ -274,8 +277,10 @@ class KasirController extends Controller
                     $data["guest_count"] = (int) $validated["guest_count"];
                 }
                 if (!empty($validated["rental_duration"])) {
-                    $data["rental_duration"] = (int) $validated["rental_duration"];
-                    $data["rental_unit"] = $validated["rental_unit"] ?? "per_day";
+                    $data["rental_duration"] =
+                        (int) $validated["rental_duration"];
+                    $data["rental_unit"] =
+                        $validated["rental_unit"] ?? "per_day";
                 }
                 $data["rental_status"] = "active";
                 break;
@@ -362,7 +367,9 @@ class KasirController extends Controller
             $user = $request->user();
             $storeId = session("current_store_id");
             $branchId = session("branch_id");
-            $store = Store::find($storeId);
+            $store = Store::with("storeType")->find($storeId);
+            $storeTypeCode =
+                $store?->getRelation("storeType")?->code ?? "retail";
             $now = now();
 
             $prefix = "SL-" . $now->format("Ymd") . "-";
@@ -448,7 +455,7 @@ class KasirController extends Controller
                 ),
                 "sale_no" => $saleNo,
                 "sale_date" => $now,
-                "pos_mode" => $store?->store_type ?? "retail",
+                "pos_mode" => $storeTypeCode,
                 "order_type" => $validated["order_type"],
                 "subtotal" => $subtotal,
                 "discount_amount" => $discount + $cartPromoDiscount,
@@ -466,7 +473,7 @@ class KasirController extends Controller
                 // ── extra_data: mode-specific fields ───────────────────────
                 "extra_data" => $this->buildExtraData(
                     $validated,
-                    $store?->store_type,
+                    $storeTypeCode,
                 ),
             ]);
 
@@ -476,83 +483,94 @@ class KasirController extends Controller
             }
 
             // Set tanggal sewa untuk mode rental
-            if (in_array($store?->store_type, ['rental']) && !empty($validated['rental_duration'])) {
-                $unit = $validated['rental_unit'] ?? 'per_day';
-                $duration = (int) $validated['rental_duration'];
+            if (
+                in_array($storeTypeCode, ["rental"]) &&
+                !empty($validated["rental_duration"])
+            ) {
+                $unit = $validated["rental_unit"] ?? "per_day";
+                $duration = (int) $validated["rental_duration"];
 
-                $endAt = match($unit) {
-                    'per_hour' => $now->copy()->addHours($duration),
-                    'per_week' => $now->copy()->addWeeks($duration),
-                    default    => $now->copy()->addDays($duration), // per_day
+                $endAt = match ($unit) {
+                    "per_hour" => $now->copy()->addHours($duration),
+                    "per_week" => $now->copy()->addWeeks($duration),
+                    default => $now->copy()->addDays($duration), // per_day
                 };
 
                 $sale->update([
-                    'rent_start_at'  => $now,
-                    'rent_end_at'    => $endAt,
-                    'rental_status'  => 'active',
-                    'service_status' => null, // bukan service
+                    "rent_start_at" => $now,
+                    "rent_end_at" => $endAt,
+                    "rental_status" => "active",
+                    "service_status" => null, // bukan service
                 ]);
             }
 
             // Set check-in/check-out untuk mode hospitality
-            if ($store?->store_type === 'hospitality') {
+            if ($storeTypeCode === "hospitality") {
                 $checkIn = $now;
                 // Default durasi 1 malam (per_day)
                 $nights = 1;
-                $rentalUnit = $validated['rental_unit'] ?? 'per_day';
+                $rentalUnit = $validated["rental_unit"] ?? "per_day";
 
-                if (!empty($validated['rental_duration'])) {
-                    $nights = (int) $validated['rental_duration'];
+                if (!empty($validated["rental_duration"])) {
+                    $nights = (int) $validated["rental_duration"];
                 }
 
-                $checkOut = match($rentalUnit) {
-                    'per_hour' => $checkIn->copy()->addHours($nights),
-                    'per_week' => $checkIn->copy()->addWeeks($nights),
-                    default    => $checkIn->copy()->addDays($nights), // per_day / per malam
+                $checkOut = match ($rentalUnit) {
+                    "per_hour" => $checkIn->copy()->addHours($nights),
+                    "per_week" => $checkIn->copy()->addWeeks($nights),
+                    default => $checkIn
+                        ->copy()
+                        ->addDays($nights), // per_day / per malam
                 };
 
                 $sale->update([
-                    'rent_start_at' => $checkIn,
-                    'rent_end_at'   => $checkOut,
-                    'rental_status' => 'active',
+                    "rent_start_at" => $checkIn,
+                    "rent_end_at" => $checkOut,
+                    "rental_status" => "active",
                 ]);
             }
 
             // Set parking fields untuk mode parking
-            if ($store?->store_type === 'parking') {
-                $parkingUpdate = ['entry_at' => $now];
+            if ($storeTypeCode === "parking") {
+                $parkingUpdate = ["entry_at" => $now];
 
-                if (!empty($validated['ticket_event'])) {
-                    $parkingUpdate['plate_number'] = strtoupper($validated['ticket_event']);
+                if (!empty($validated["ticket_event"])) {
+                    $parkingUpdate["plate_number"] = strtoupper(
+                        $validated["ticket_event"],
+                    );
                 }
-                if (!empty($validated['ticket_slot'])) {
-                    $parkingUpdate['vehicle_type'] = $validated['ticket_slot']; // motorcycle/car/truck
+                if (!empty($validated["ticket_slot"])) {
+                    $parkingUpdate["vehicle_type"] = $validated["ticket_slot"]; // motorcycle/car/truck
                 }
-                if (!empty($validated['room_number'])) {
-                    $parkingUpdate['parking_ticket_no'] = $validated['room_number'];
+                if (!empty($validated["room_number"])) {
+                    $parkingUpdate["parking_ticket_no"] =
+                        $validated["room_number"];
                 }
 
                 $sale->update($parkingUpdate);
             }
 
             // Set session fields untuk mode session
-            if ($store?->store_type === 'session') {
+            if ($storeTypeCode === "session") {
                 $sessionUpdate = [
-                    'session_status'     => 'running',
-                    'session_started_at' => $now,
-                    'guest_count'        => $validated['guest_count'] ?? 1,
+                    "session_status" => "running",
+                    "session_started_at" => $now,
+                    "guest_count" => $validated["guest_count"] ?? 1,
                 ];
 
-                if (!empty($validated['room_number'])) {
-                    $sessionUpdate['unit_name'] = $validated['room_number'];
+                if (!empty($validated["room_number"])) {
+                    $sessionUpdate["unit_name"] = $validated["room_number"];
                 }
 
                 $sale->update($sessionUpdate);
             }
 
             // Set kitchen_status untuk mode FnB
-            if (in_array($store?->store_type, ['fnb']) && $saleStatus !== 'pending') {
-                $sale->update(['kitchen_status' => 'pending']);
+            if (
+                in_array($storeTypeCode, ["fnb"]) &&
+                $saleStatus !== "pending"
+            ) {
+                $sale->update(["kitchen_status" => "pending"]);
             }
 
             // Mark table as occupied
@@ -723,7 +741,7 @@ class KasirController extends Controller
             // Hitung komisi untuk mode service/ticket (setelah commit berhasil)
             if (
                 !empty($validated["employee_id"]) &&
-                in_array($store?->store_type, ["service", "ticket"])
+                in_array($storeTypeCode, ["service", "ticket"])
             ) {
                 $employee = \App\Models\Employee::find(
                     $validated["employee_id"],

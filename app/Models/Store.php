@@ -164,7 +164,22 @@ class Store extends Model
     // --- Plan config terpusat ---
 
     /**
-     * Definisi paket. Single source of truth — dipakai backend dan frontend.
+     * Default config untuk plan "free" — fallback tunggal ketika DB kosong.
+     * Dipakai oleh activePlanConfig(), planAllowsFeature(), dsb.
+     */
+    public static function defaultPlanConfig(): array
+    {
+        return [
+            "label" => "Free",
+            "max_users" => 1,
+            "max_branches" => 1,
+            "features" => [],
+        ];
+    }
+
+    /**
+     * Definisi paket (fallback hardcoded). Single source of truth untuk fallback.
+     * Preferensi utama tetap tabel `plans` via relasi planModel().
      * Sync dengan StoreController::PLANS.
      */
     public static function planConfig(): array
@@ -174,41 +189,19 @@ class Store extends Model
                 "label" => "Free",
                 "max_users" => 1,
                 "max_branches" => 1,
-                // Fitur dasar saja — tidak ada laporan, tidak ada payment gateway, tidak ada multi-fitur advance
-                "features" => ["basic_pos", "stock", "purchase", "promo"],
+                "features" => [],
             ],
             "basic" => [
                 "label" => "Basic",
                 "max_users" => 5,
                 "max_branches" => 3,
-                "features" => [
-                    "basic_pos",
-                    "stock",
-                    "purchase",
-                    "batch",
-                    "expiry",
-                    "promo",
-                    "sale_return",
-                    "recipe",
-                    "modifier",
-                    "table",
-                    "kitchen",
-                    "waste",
-                    "queue",
-                    "booking",
-                    "commission",
-                    "membership",
-                    "deposit",
-                    "report",
-                    "payment_gateway",
-                    "stock_opname",
-                ],
+                "features" => [],
             ],
             "pro" => [
                 "label" => "Pro",
                 "max_users" => 999,
                 "max_branches" => 999,
-                "features" => ["*"], // semua fitur
+                "features" => [],
             ],
         ];
     }
@@ -249,21 +242,17 @@ class Store extends Model
     public function activePlanConfig(): array
     {
         // Coba dari relasi Plan model
-        $plan = $this->getRelation('planModel');
+        $plan = $this->getRelation("planModel");
         if (!$plan) {
-            // Fallback ke free plan
-            $plan = \App\Models\Plan::where('code', 'free')->first();
+            // Fallback ke plan "free" di DB
+            $plan = \App\Models\Plan::where("code", "free")->first();
         }
-        
+
         if (!$plan) {
-            return [
-                "label" => "Free",
-                "max_users" => 1,
-                "max_branches" => 1,
-                "features" => [],
-            ];
+            // DB kosong sama sekali — pakai default hardcoded
+            return self::defaultPlanConfig();
         }
-        
+
         return [
             "label" => $plan->label,
             "max_users" => $plan->max_users,
@@ -289,20 +278,23 @@ class Store extends Model
     /** Cek apakah plan mengizinkan fitur tertentu */
     public function planAllowsFeature(string $feature): bool
     {
-        $plan = $this->getRelation('planModel');
+        $plan = $this->getRelation("planModel");
         if (!$plan) {
-            // Fallback ke free plan
-            $plan = \App\Models\Plan::where('code', 'free')->first();
+            // Fallback ke plan "free" di DB
+            $plan = \App\Models\Plan::where("code", "free")->first();
         }
-        
+
         if (!$plan) {
+            // DB kosong — default free plan tidak punya fitur apapun
+            // (defaultPlanConfig().features = [])
             return false;
         }
-        
+
         // Cek di relasi plan_feature
-        return $plan->features()
-            ->where('features.code', $feature)
-            ->where('features.is_active', true)
+        return $plan
+            ->features()
+            ->where("features.code", $feature)
+            ->where("features.is_active", true)
             ->exists();
     }
 
@@ -310,28 +302,92 @@ class Store extends Model
     public function hasFeature(string $feature): bool
     {
         // Cek apakah fitur diizinkan oleh store type
-        $storeType = $this->getRelation('storeType');
+        $storeType = $this->getRelation("storeType");
         if (!$storeType) {
             return false;
         }
-        
-        $storeTypeHasFeature = $storeType->features()
-            ->where('features.code', $feature)
-            ->where('features.is_active', true)
+
+        $storeTypeHasFeature = $storeType
+            ->features()
+            ->where("features.code", $feature)
+            ->where("features.is_active", true)
             ->exists();
-            
+
         if (!$storeTypeHasFeature) {
             return false;
         }
-        
+
         // Cek apakah fitur diizinkan oleh plan
         return $this->planAllowsFeature($feature);
+    }
+
+    /**
+     * Cek apakah feature detail aktif — granular check via store_type & plan.
+     *
+     * Relasi: store_type → store_type_feature → feature → feature_detail
+     *         DAN plan → plan_feature → feature → feature_detail
+     *
+     * Contoh: hasFeatureDetail('pos.hold_order')
+     */
+    public function hasFeatureDetail(string $detailCode): bool
+    {
+        // 1. Cari feature parent dari detail ini
+        $detail = \App\Models\FeatureDetail::where("code", $detailCode)
+            ->where("is_active", true)
+            ->first();
+        if (!$detail) {
+            return false;
+        }
+
+        // 2. Pastikan feature parent-nya aktif
+        $feature = $detail->feature;
+        if (!$feature || !$feature->is_active) {
+            return false;
+        }
+
+        // 3. Cek apakah store_type mengizinkan feature parent
+        $storeType = $this->getRelation("storeType");
+        if (!$storeType) {
+            return false;
+        }
+
+        $storeTypeHasFeature = $storeType
+            ->features()
+            ->where("features.code", $feature->code)
+            ->where("features.is_active", true)
+            ->exists();
+
+        if (!$storeTypeHasFeature) {
+            return false;
+        }
+
+        // 4. Cek apakah plan mengizinkan feature parent
+        $plan = $this->getRelation("planModel");
+        if (!$plan) {
+            $plan = \App\Models\Plan::where("code", "free")->first();
+        }
+        if (!$plan) {
+            return false;
+        }
+
+        $planHasFeature = $plan
+            ->features()
+            ->where("features.code", $feature->code)
+            ->where("features.is_active", true)
+            ->exists();
+
+        if (!$planHasFeature) {
+            return false;
+        }
+
+        // 5. Semua gate lolos — detail diizinkan
+        return true;
     }
 
     public function hasPosMode(string $mode): bool
     {
         // POS mode ditentukan oleh store_type
-        $storeTypeCode = $this->getRelation('storeType')?->code ?? 'retail';
+        $storeTypeCode = $this->getRelation("storeType")?->code ?? "retail";
         return $storeTypeCode === $mode;
     }
 

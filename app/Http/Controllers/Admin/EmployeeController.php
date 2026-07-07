@@ -28,37 +28,52 @@ class EmployeeController extends Controller
             ->map(function ($emp) use ($storeId) {
                 // Ambil role user di store ini
                 $roles = $emp->user_id
-                    ? \DB::table('model_has_roles')
-                        ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                        ->where('model_has_roles.model_id', $emp->user_id)
-                        ->where('model_has_roles.model_type', \App\Models\User::class)
-                        ->where('model_has_roles.store_id', $storeId)
-                        ->pluck('roles.name')
+                    ? DB::table("model_has_roles")
+                        ->join(
+                            "roles",
+                            "roles.id",
+                            "=",
+                            "model_has_roles.role_id",
+                        )
+                        ->where("model_has_roles.model_id", $emp->user_id)
+                        ->where(
+                            "model_has_roles.model_type",
+                            \App\Models\User::class,
+                        )
+                        ->where("model_has_roles.store_id", $storeId)
+                        ->pluck("roles.name")
                     : collect();
 
                 return array_merge($emp->toArray(), [
-                    'user_roles' => $roles,
+                    "user_roles" => $roles,
                 ]);
             });
 
         return Inertia::render("Admin/Employees/Index", [
             "employees" => $employees,
-            "storeType" => \App\Models\Store::find($storeId)?->store_type ?? 'retail',
+            "storeType" =>
+                \App\Models\Store::with("storeType")
+                    ->find($storeId)
+                    ?->getRelation("storeType")?->code ?? "retail",
         ]);
     }
 
     public function create(Request $request)
     {
-        $storeId = session('current_store_id');
-        $roles = \Spatie\Permission\Models\Role::where(function ($q) use ($storeId) {
-            $q->whereNull('store_id')->orWhere('store_id', $storeId);
-        })->where('name', '!=', 'owner')->where('name', '!=', 'developer')
-          ->get(['id','name','description']);
+        $storeId = session("current_store_id");
+        $roles = \Spatie\Permission\Models\Role::where(function ($q) use (
+            $storeId,
+        ) {
+            $q->whereNull("store_id")->orWhere("store_id", $storeId);
+        })
+            ->where("name", "!=", "owner")
+            ->where("name", "!=", "developer")
+            ->get(["id", "name", "description"]);
 
         return Inertia::render("Admin/Employees/Create", [
-            "branches"      => $this->branchOptions($request),
+            "branches" => $this->branchOptions($request),
             "suggestedCode" => $this->nextEmployeeCode($storeId),
-            "roles"         => $roles,
+            "roles" => $roles,
         ]);
     }
 
@@ -75,8 +90,8 @@ class EmployeeController extends Controller
 
             if ($wantsAccount) {
                 $user = User::create([
-                    "name"     => $validated["name"],
-                    "email"    => $validated["email"],
+                    "name" => $validated["name"],
+                    "email" => $validated["email"],
                     "password" => Hash::make($validated["password"]),
                 ]);
 
@@ -85,45 +100,57 @@ class EmployeeController extends Controller
 
                 // Assign role via Spatie
                 if (!empty($validated["role"])) {
-                    app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($storeId);
+                    app(
+                        \Spatie\Permission\PermissionRegistrar::class,
+                    )->setPermissionsTeamId($storeId);
                     $user->assignRole($validated["role"]);
-                    app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId(null);
+                    app(
+                        \Spatie\Permission\PermissionRegistrar::class,
+                    )->setPermissionsTeamId(null);
                 }
             }
 
             Employee::create([
-                "store_id"        => $storeId,
-                "branch_id"       => $validated["branch_id"] ?? null,
-                "user_id"         => $user?->id,
-                "employee_code"   => strtoupper($validated["employee_code"]),
-                "name"            => $validated["name"],
-                "phone"           => $validated["phone"] ?? null,
-                "email"           => $validated["email"] ?? null,
-                "position"        => $validated["position"] ?? null,
+                "store_id" => $storeId,
+                "branch_id" => $validated["branch_id"] ?? null,
+                "user_id" => $user?->id,
+                "employee_code" => strtoupper($validated["employee_code"]),
+                "name" => $validated["name"],
+                "phone" => $validated["phone"] ?? null,
+                "email" => $validated["email"] ?? null,
+                "position" => $validated["position"] ?? null,
                 "commission_type" => $validated["commission_type"] ?? "none",
-                "commission_value"=> $validated["commission_value"] ?? 0,
-                "status"          => $validated["status"],
+                "commission_value" => $validated["commission_value"] ?? 0,
+                "status" => $validated["status"],
             ]);
         });
 
-        return redirect()->route("admin.employees.index")
+        return redirect()
+            ->route("admin.employees.index")
             ->with("success", "Karyawan berhasil ditambahkan.");
     }
 
     public function edit(Request $request, Employee $employee)
     {
         $this->ensureSameStore($request, $employee);
-        $storeId = session('current_store_id');
+        $storeId = session("current_store_id");
 
-        $roles = \Spatie\Permission\Models\Role::where(function ($q) use ($storeId) {
-            $q->whereNull('store_id')->orWhere('store_id', $storeId);
-        })->where('name', '!=', 'owner')->where('name', '!=', 'developer')
-          ->get(['id','name','description']);
+        $roles = \Spatie\Permission\Models\Role::where(function ($q) use (
+            $storeId,
+        ) {
+            $q->whereNull("store_id")->orWhere("store_id", $storeId);
+        })
+            ->where("name", "!=", "owner")
+            ->where("name", "!=", "developer")
+            ->get(["id", "name", "description"]);
 
         return Inertia::render("Admin/Employees/Edit", [
-            "employee" => $employee->load(["branch:id,name,code","user:id,name,email"]),
+            "employee" => $employee->load([
+                "branch:id,name,code",
+                "user:id,name,email",
+            ]),
             "branches" => $this->branchOptions($request),
-            "roles"    => $roles,
+            "roles" => $roles,
         ]);
     }
 
@@ -135,12 +162,17 @@ class EmployeeController extends Controller
         $validated = $request->validate($this->rules($storeId, $employee));
         $wantsAccount = $request->boolean("create_account");
 
-        DB::transaction(function () use ($validated, $employee, $wantsAccount, $storeId) {
+        DB::transaction(function () use (
+            $validated,
+            $employee,
+            $wantsAccount,
+            $storeId,
+        ) {
             $user = $employee->user;
 
             if ($wantsAccount) {
                 $payload = [
-                    "name"  => $validated["name"],
+                    "name" => $validated["name"],
                     "email" => $validated["email"],
                 ];
                 if (!empty($validated["password"])) {
@@ -157,21 +189,25 @@ class EmployeeController extends Controller
 
                 // Update role Spatie
                 if (!empty($validated["role"])) {
-                    app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($storeId);
-                    DB::table('model_has_roles')
-                        ->where('model_id', $user->id)
-                        ->where('model_type', User::class)
-                        ->where('store_id', $storeId)
+                    app(
+                        \Spatie\Permission\PermissionRegistrar::class,
+                    )->setPermissionsTeamId($storeId);
+                    DB::table("model_has_roles")
+                        ->where("model_id", $user->id)
+                        ->where("model_type", User::class)
+                        ->where("store_id", $storeId)
                         ->delete();
                     $user->assignRole($validated["role"]);
-                    app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId(null);
+                    app(
+                        \Spatie\Permission\PermissionRegistrar::class,
+                    )->setPermissionsTeamId(null);
                 }
             } elseif ($user) {
                 // Cabut akun
-                DB::table('model_has_roles')
-                    ->where('model_id', $user->id)
-                    ->where('model_type', User::class)
-                    ->where('store_id', $storeId)
+                DB::table("model_has_roles")
+                    ->where("model_id", $user->id)
+                    ->where("model_type", User::class)
+                    ->where("store_id", $storeId)
                     ->delete();
                 $user->stores()->detach($storeId);
                 $employee->update(["user_id" => null]);
@@ -179,20 +215,21 @@ class EmployeeController extends Controller
             }
 
             $employee->update([
-                "branch_id"        => $validated["branch_id"] ?? null,
-                "user_id"          => $user?->id,
-                "employee_code"    => strtoupper($validated["employee_code"]),
-                "name"             => $validated["name"],
-                "phone"            => $validated["phone"] ?? null,
-                "email"            => $validated["email"] ?? null,
-                "position"         => $validated["position"] ?? null,
-                "commission_type"  => $validated["commission_type"] ?? "none",
+                "branch_id" => $validated["branch_id"] ?? null,
+                "user_id" => $user?->id,
+                "employee_code" => strtoupper($validated["employee_code"]),
+                "name" => $validated["name"],
+                "phone" => $validated["phone"] ?? null,
+                "email" => $validated["email"] ?? null,
+                "position" => $validated["position"] ?? null,
+                "commission_type" => $validated["commission_type"] ?? "none",
                 "commission_value" => $validated["commission_value"] ?? 0,
-                "status"           => $validated["status"],
+                "status" => $validated["status"],
             ]);
         });
 
-        return redirect()->route("admin.employees.index")
+        return redirect()
+            ->route("admin.employees.index")
             ->with("success", "Karyawan berhasil diperbarui.");
     }
 
@@ -223,34 +260,59 @@ class EmployeeController extends Controller
 
     private function rules(int $storeId, ?Employee $employee = null): array
     {
-        $userId     = $employee?->user_id;
+        $userId = $employee?->user_id;
         $employeeId = $employee?->id;
 
         return [
-            "employee_code"    => ["required","string","max:50",'regex:/^[A-Za-z0-9_-]+$/',
-                Rule::unique("employees","employee_code")->where(fn($q) => $q->where("store_id",$storeId))->ignore($employeeId),
+            "employee_code" => [
+                "required",
+                "string",
+                "max:50",
+                'regex:/^[A-Za-z0-9_-]+$/',
+                Rule::unique("employees", "employee_code")
+                    ->where(fn($q) => $q->where("store_id", $storeId))
+                    ->ignore($employeeId),
             ],
-            "branch_id"        => ["nullable", Rule::exists("branches","id")->where(fn($q) => $q->where("store_id",$storeId))],
-            "name"             => ["required","string","max:255"],
-            "phone"            => ["nullable","string","max:30"],
-            "email"            => [
-                "nullable","email","max:255",
-                Rule::unique("employees","email")->ignore($employeeId),
-                Rule::unique("users","email")->ignore($userId),
+            "branch_id" => [
+                "nullable",
+                Rule::exists("branches", "id")->where(
+                    fn($q) => $q->where("store_id", $storeId),
+                ),
+            ],
+            "name" => ["required", "string", "max:255"],
+            "phone" => ["nullable", "string", "max:30"],
+            "email" => [
+                "nullable",
+                "email",
+                "max:255",
+                Rule::unique("employees", "email")->ignore($employeeId),
+                Rule::unique("users", "email")->ignore($userId),
                 Rule::requiredIf(fn() => request()->boolean("create_account")),
             ],
-            "position"         => ["nullable","string","max:100"],
-            "commission_type"  => ["nullable", Rule::in(["none","percent","flat"])],
-            "commission_value" => ["nullable","numeric","min:0"],
-            "status"           => ["required", Rule::in(["active","inactive","terminated"])],
-            "create_account"   => ["boolean"],
-            "role"             => [
-                Rule::requiredIf(fn() => request()->boolean("create_account")),
-                "nullable","string",
+            "position" => ["nullable", "string", "max:100"],
+            "commission_type" => [
+                "nullable",
+                Rule::in(["none", "percent", "flat"]),
             ],
-            "password"         => [
-                Rule::requiredIf(fn() => request()->boolean("create_account") && !$userId),
-                "nullable","string","min:6","confirmed",
+            "commission_value" => ["nullable", "numeric", "min:0"],
+            "status" => [
+                "required",
+                Rule::in(["active", "inactive", "terminated"]),
+            ],
+            "create_account" => ["boolean"],
+            "role" => [
+                Rule::requiredIf(fn() => request()->boolean("create_account")),
+                "nullable",
+                "string",
+            ],
+            "password" => [
+                Rule::requiredIf(
+                    fn() => request()->boolean("create_account") && !$userId,
+                ),
+                "nullable",
+                "string",
+                "min:6",
+                "confirmed",
             ],
         ];
     }

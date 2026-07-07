@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-
+use App\Models\User;
 use App\Http\Controllers\Concerns\HasStoreScope;
 
 class SaleController extends Controller
@@ -26,17 +26,17 @@ class SaleController extends Controller
 
     public function index(Request $request)
     {
-        $user    = Auth::user();
+        /** @var User|null $user */
+        $user = Auth::user();
         $storeId = session("current_store_id");
 
         // Branch filter: query param > session
         // User tanpa sale.void (kasir) selalu terkunci ke branch-nya sendiri
-        $canViewAll = $user->can('sale.void');
+        $canViewAll = $user->can("sale.void");
 
         $branchId =
             $request->input("branch_id") ?:
-            session("current_branch_id") ??
-            session("branch_id");
+            session("current_branch_id") ?? session("branch_id");
 
         // Jika tidak punya sale.void, paksa ke branch sendiri
         if (!$canViewAll && !$branchId) {
@@ -95,7 +95,7 @@ class SaleController extends Controller
             "payment_status" => $request->input("payment_status", "all"),
         ];
 
-        $store = \App\Models\Store::find($storeId);
+        $store = \App\Models\Store::with("storeType")->find($storeId);
 
         return Inertia::render("Admin/Sales/Index", [
             "sales" => $sales,
@@ -103,7 +103,7 @@ class SaleController extends Controller
             "branches" => $branches,
             "currentBranchId" => $branchId ? (string) $branchId : "",
             "activeFilters" => $activeFilters,
-            "storeType" => $store?->store_type ?? "retail",
+            "storeType" => $store?->getRelation("storeType")?->code ?? "retail",
         ]);
     }
 
@@ -132,42 +132,67 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
-        $storeId   = session("current_store_id");
-        $store     = \App\Models\Store::find($storeId);
-        $storeType = $store?->store_type ?? 'retail';
+        $storeId = session("current_store_id");
+        $store = \App\Models\Store::with("storeType")->find($storeId);
+        $storeType = $store?->getRelation("storeType")?->code ?? "retail";
 
         // Order types valid per store type — ambil dari StoreType model
-        $storeTypeModel = \App\Models\StoreType::where('code', $storeType)->first();
+        $storeTypeModel = \App\Models\StoreType::where(
+            "code",
+            $storeType,
+        )->first();
         $validOrderTypes = collect($storeTypeModel?->order_types ?? [])
-            ->pluck('v')
+            ->pluck("v")
             ->filter()
             ->values()
             ->toArray();
 
         // Fallback jika StoreType belum ada di DB
         if (empty($validOrderTypes)) {
-            $validOrderTypes = ['takeaway', 'delivery', 'dine_in', 'walk_in',
-                'booking', 'per_hour', 'per_day', 'per_week', 'online', 'group',
-                'check_in', 'reservation', 'short_stay', 'entry', 'exit',
-                'lost_ticket', 'postpaid', 'prepaid', 'wholesale', 'pickup_delivery'];
+            $validOrderTypes = [
+                "takeaway",
+                "delivery",
+                "dine_in",
+                "walk_in",
+                "booking",
+                "per_hour",
+                "per_day",
+                "per_week",
+                "online",
+                "group",
+                "check_in",
+                "reservation",
+                "short_stay",
+                "entry",
+                "exit",
+                "lost_ticket",
+                "postpaid",
+                "prepaid",
+                "wholesale",
+                "pickup_delivery",
+            ];
         }
 
         $validated = $request->validate([
-            "customer_id"      => "nullable|exists:customers,id",
-            "table_id"         => "nullable|integer",
-            "sale_date"        => "required|date",
-            "order_type"       => ["required", "string", \Illuminate\Validation\Rule::in($validOrderTypes)],
-            "discount_amount"  => "nullable|numeric|min:0",
-            "tax_amount"       => "nullable|numeric|min:0",
-            "shipping_amount"  => "nullable|numeric|min:0",
-            "payment_method_id"=> "nullable|exists:payment_methods,id",
-            "paid_amount"      => "required|numeric|min:0",
-            "notes"            => "nullable|string|max:500",
-            "items"            => "required|array|min:1",
-            "items.*.product_id"     => "required|exists:products,id",
-            "items.*.quantity"       => "required|integer|min:1",
-            "items.*.price"          => "required|numeric|min:0",
-            "items.*.discount_amount"=> "nullable|numeric|min:0",
+            "customer_id" => "nullable|exists:customers,id",
+            "table_id" => "nullable|integer",
+            "sale_date" => "required|date",
+            "order_type" => [
+                "required",
+                "string",
+                \Illuminate\Validation\Rule::in($validOrderTypes),
+            ],
+            "discount_amount" => "nullable|numeric|min:0",
+            "tax_amount" => "nullable|numeric|min:0",
+            "shipping_amount" => "nullable|numeric|min:0",
+            "payment_method_id" => "nullable|exists:payment_methods,id",
+            "paid_amount" => "required|numeric|min:0",
+            "notes" => "nullable|string|max:500",
+            "items" => "required|array|min:1",
+            "items.*.product_id" => "required|exists:products,id",
+            "items.*.quantity" => "required|integer|min:1",
+            "items.*.price" => "required|numeric|min:0",
+            "items.*.discount_amount" => "nullable|numeric|min:0",
         ]);
 
         DB::beginTransaction();
@@ -328,24 +353,44 @@ class SaleController extends Controller
             "sale" => $sale,
             "paymentMethods" => $paymentMethods,
             "pgConfigs" => $pgConfigs,
-            "canUpdateServiceStatus" => in_array($sale->pos_mode, ["service", "laundry"]) &&
-                (request()->user()->can("sale.create") || request()->user()->can("sale.void")),
-            "canUpdateRentalStatus" => $sale->pos_mode === 'rental' &&
-                (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
-            "canCheckInTicket" => $sale->pos_mode === 'ticket' &&
-                (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
-            "canCheckOutHospitality" => $sale->pos_mode === 'hospitality' &&
-                (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
-            "canExitParking" => $sale->pos_mode === 'parking' &&
-                (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
-            "canEndSession" => $sale->pos_mode === 'session' &&
-                (request()->user()->can('sale.create') || request()->user()->can('sale.void')),
+            "canUpdateServiceStatus" =>
+                in_array($sale->pos_mode, ["service", "laundry"]) &&
+                (request()->user()->can("sale.create") ||
+                    request()->user()->can("sale.void")),
+            "canUpdateRentalStatus" =>
+                $sale->pos_mode === "rental" &&
+                (request()->user()->can("sale.create") ||
+                    request()->user()->can("sale.void")),
+            "canCheckInTicket" =>
+                $sale->pos_mode === "ticket" &&
+                (request()->user()->can("sale.create") ||
+                    request()->user()->can("sale.void")),
+            "canCheckOutHospitality" =>
+                $sale->pos_mode === "hospitality" &&
+                (request()->user()->can("sale.create") ||
+                    request()->user()->can("sale.void")),
+            "canExitParking" =>
+                $sale->pos_mode === "parking" &&
+                (request()->user()->can("sale.create") ||
+                    request()->user()->can("sale.void")),
+            "canEndSession" =>
+                $sale->pos_mode === "session" &&
+                (request()->user()->can("sale.create") ||
+                    request()->user()->can("sale.void")),
         ]);
     }
 
     public function print(Sale $sale)
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(401, "Unauthenticated.");
+        }
+
         $storeId = session("current_store_id");
+
         if ($storeId && (int) $sale->store_id !== (int) $storeId) {
             abort(
                 403,
@@ -354,8 +399,8 @@ class SaleController extends Controller
         }
 
         if (
-            !Auth::user()->can('sale.void') &&
-            (int) $sale->user_id !== (int) Auth::id()
+            !$user->can("sale.void") &&
+            (int) $sale->user_id !== (int) $user->id
         ) {
             abort(
                 403,
@@ -496,117 +541,152 @@ class SaleController extends Controller
 
     public function updateServiceStatus(Request $request, Sale $sale)
     {
-        $storeId = session('current_store_id');
+        $storeId = session("current_store_id");
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
         abort_unless(
-            $request->user()->can('sale.create') || $request->user()->can('sale.void'),
-            403
+            $request->user()->can("sale.create") ||
+                $request->user()->can("sale.void"),
+            403,
         );
 
         $validated = $request->validate([
-            'service_status' => ['required', 'in:waiting,in_progress,done'],
+            "service_status" => ["required", "in:waiting,in_progress,done"],
         ]);
 
-        $update = ['service_status' => $validated['service_status']];
+        $update = ["service_status" => $validated["service_status"]];
 
         // Catat waktu mulai dan selesai otomatis
-        if ($validated['service_status'] === 'in_progress' && !$sale->service_started_at) {
-            $update['service_started_at'] = now();
+        if (
+            $validated["service_status"] === "in_progress" &&
+            !$sale->service_started_at
+        ) {
+            $update["service_started_at"] = now();
         }
-        if ($validated['service_status'] === 'done' && !$sale->service_finished_at) {
-            $update['service_finished_at'] = now();
+        if (
+            $validated["service_status"] === "done" &&
+            !$sale->service_finished_at
+        ) {
+            $update["service_finished_at"] = now();
         }
 
         $sale->update($update);
 
-        return back()->with('success', 'Status pengerjaan diperbarui.');
+        return back()->with("success", "Status pengerjaan diperbarui.");
     }
 
     public function updateRentalStatus(Request $request, Sale $sale)
     {
-        $storeId = session('current_store_id');
+        $storeId = session("current_store_id");
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
         abort_unless(
-            $request->user()->can('sale.create') || $request->user()->can('sale.void'),
-            403
+            $request->user()->can("sale.create") ||
+                $request->user()->can("sale.void"),
+            403,
         );
 
         $validated = $request->validate([
-            'rental_status' => ['required', 'in:active,returned,overdue,cancelled'],
+            "rental_status" => [
+                "required",
+                "in:active,returned,overdue,cancelled",
+            ],
         ]);
 
-        $update = ['rental_status' => $validated['rental_status']];
+        $update = ["rental_status" => $validated["rental_status"]];
 
-        if ($validated['rental_status'] === 'returned') {
-            $update['actual_return_at'] = now();
+        if ($validated["rental_status"] === "returned") {
+            $update["actual_return_at"] = now();
         }
 
         $sale->update($update);
 
-        return back()->with('success', 'Status sewa diperbarui.');
+        return back()->with("success", "Status sewa diperbarui.");
     }
 
     public function checkOutHospitality(Request $request, Sale $sale)
     {
-        $storeId = session('current_store_id');
+        $storeId = session("current_store_id");
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
         abort_unless(
-            $request->user()->can('sale.create') || $request->user()->can('sale.void'),
-            403
+            $request->user()->can("sale.create") ||
+                $request->user()->can("sale.void"),
+            403,
         );
-        abort_unless($sale->pos_mode === 'hospitality', 422, 'Bukan transaksi hospitality.');
+        abort_unless(
+            $sale->pos_mode === "hospitality",
+            422,
+            "Bukan transaksi hospitality.",
+        );
 
-        if ($sale->rental_status === 'returned') {
-            return back()->with('error', 'Tamu ini sudah check-out.');
+        if ($sale->rental_status === "returned") {
+            return back()->with("error", "Tamu ini sudah check-out.");
         }
 
         $sale->update([
-            'rental_status'    => 'returned',
-            'actual_return_at' => now(),
+            "rental_status" => "returned",
+            "actual_return_at" => now(),
         ]);
 
-        return back()->with('success', 'Check-out berhasil dicatat.');
+        return back()->with("success", "Check-out berhasil dicatat.");
     }
 
     public function exitParking(Request $request, Sale $sale)
     {
-        $storeId = session('current_store_id');
+        $storeId = session("current_store_id");
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
         abort_unless(
-            $request->user()->can('sale.create') || $request->user()->can('sale.void'),
-            403
+            $request->user()->can("sale.create") ||
+                $request->user()->can("sale.void"),
+            403,
         );
-        abort_unless($sale->pos_mode === 'parking', 422, 'Bukan transaksi parkir.');
+        abort_unless(
+            $sale->pos_mode === "parking",
+            422,
+            "Bukan transaksi parkir.",
+        );
 
         if ($sale->exit_at) {
-            return back()->with('error', 'Kendaraan ini sudah tercatat keluar.');
+            return back()->with(
+                "error",
+                "Kendaraan ini sudah tercatat keluar.",
+            );
         }
 
-        $sale->update(['exit_at' => now()]);
+        $sale->update(["exit_at" => now()]);
 
-        return back()->with('success', 'Kendaraan berhasil dicatat keluar. ' . ($sale->plate_number ?? ''));
+        return back()->with(
+            "success",
+            "Kendaraan berhasil dicatat keluar. " . ($sale->plate_number ?? ""),
+        );
     }
 
     public function endSession(Request $request, Sale $sale)
     {
-        $storeId = session('current_store_id');
+        $storeId = session("current_store_id");
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
         abort_unless(
-            $request->user()->can('sale.create') || $request->user()->can('sale.void'),
-            403
+            $request->user()->can("sale.create") ||
+                $request->user()->can("sale.void"),
+            403,
         );
-        abort_unless($sale->pos_mode === 'session', 422, 'Bukan transaksi session.');
+        abort_unless(
+            $sale->pos_mode === "session",
+            422,
+            "Bukan transaksi session.",
+        );
 
-        if ($sale->session_status === 'ended') {
-            return back()->with('error', 'Sesi ini sudah berakhir.');
+        if ($sale->session_status === "ended") {
+            return back()->with("error", "Sesi ini sudah berakhir.");
         }
 
         $sale->update([
-            'session_status'   => 'ended',
-            'session_ended_at' => now(),
+            "session_status" => "ended",
+            "session_ended_at" => now(),
         ]);
 
-        return back()->with('success', 'Sesi ' . ($sale->unit_name ?? '') . ' berhasil diakhiri.');
+        return back()->with(
+            "success",
+            "Sesi " . ($sale->unit_name ?? "") . " berhasil diakhiri.",
+        );
     }
 
     /**

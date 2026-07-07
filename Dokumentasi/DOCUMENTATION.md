@@ -654,14 +654,35 @@ User::create([
 ]);
 ```
 
-### Modules vs Plan
+### Arsitektur Relasi Database (Update Juli 2026)
 
-- **`modules.features`** = fitur yang *diaktifkan developer* untuk toko ini (via developer panel)
-- **`stores.plan`** = batas yang *boleh diaktifkan* berdasarkan paket langganan
+**Column `modules` (JSON) sudah dihapus.** Fitur sekarang 100% dari relasi database:
 
-Kedua-duanya harus lolos agar fitur muncul di sidebar:
 ```
-hasFeature('kitchen') = moduleActive('kitchen') AND planAllows('kitchen')
+features (master)
+    ├─ feature_details (detail config)
+    ├─ store_types ─── store_type_feature (pivot)
+    └─ plans ────────── plan_feature (pivot)
+            │
+            └─ stores (tenant) ─── store_type_id → store_types.code
+```
+
+**Cara akses store type code:**
+```php
+// ✅ BENAR — via relasi
+$store = Store::with('storeType')->find($id);
+$code = $store->getRelation('storeType')?->code;  // "retail", "fnb", dll
+
+// ❌ SALAH — accessor langsung (bisa N+1)
+$code = $store->store_type;
+```
+
+**Cek fitur:**
+```php
+// Fitur = Intersection dari:
+// 1. Store Type features (via store_type_feature)
+// 2. Plan features (via plan_feature)
+$store->hasFeature('kitchen'); // true jika store type FnB + plan mengizinkan
 ```
 
 ---

@@ -21,10 +21,8 @@ class AuthenticatedSessionController extends Controller
             if ($user->isDeveloper()) {
                 return redirect()->route("developer.dashboard");
             }
-            $firstStore = $user->stores()->first();
-            if ($firstStore && !session("current_store_id")) {
-                session(["current_store_id" => $firstStore->id]);
-            }
+            // Jangan auto-pick store — biarkan StoreMiddleware yang handle
+            // redirect ke store-select jika multi-store, atau auto-set jika single
             return redirect()->route("admin.dashboard");
         }
 
@@ -65,10 +63,19 @@ class AuthenticatedSessionController extends Controller
         // Set Spatie team context ke store pertama
         app(PermissionRegistrar::class)->setPermissionsTeamId($firstStore->id);
 
-        // ── Kasir: set branch dari employee record langsung ──
+        // ── Kasir: set store & branch dari employee record langsung ──
         if ($user->hasRole("kasir")) {
             $branchId = $user->employee?->branch_id;
             if ($branchId) {
+                $branch = \App\Models\Branch::find($branchId);
+                if ($branch) {
+                    $request
+                        ->session()
+                        ->put("current_store_id", $branch->store_id);
+                    app(PermissionRegistrar::class)->setPermissionsTeamId(
+                        $branch->store_id,
+                    );
+                }
                 $request->session()->put("branch_id", $branchId);
                 $request->session()->put("current_branch_id", $branchId);
             }

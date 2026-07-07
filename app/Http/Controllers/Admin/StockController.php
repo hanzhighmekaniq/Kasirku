@@ -60,9 +60,12 @@ class StockController extends Controller
         ];
 
         return Inertia::render("Admin/Stock/Index", [
-            "stocks"    => $stocks,
-            "stats"     => $stats,
-            "storeType" => \App\Models\Store::find($storeId)?->store_type ?? 'retail',
+            "stocks" => $stocks,
+            "stats" => $stats,
+            "storeType" =>
+                \App\Models\Store::with("storeType")
+                    ->find($storeId)
+                    ?->getRelation("storeType")?->code ?? "retail",
         ]);
     }
 

@@ -21,7 +21,10 @@ class CustomerController extends Controller
 
         return Inertia::render("Admin/Customers/Index", [
             "customers" => $customers,
-            "storeType" => \App\Models\Store::find($storeId)?->store_type ?? 'retail',
+            "storeType" =>
+                \App\Models\Store::with("storeType")
+                    ->find($storeId)
+                    ?->getRelation("storeType")?->code ?? "retail",
         ]);
     }
 
@@ -36,25 +39,33 @@ class CustomerController extends Controller
         abort_unless($storeId, 403);
 
         $validated = $request->validate([
-            "name"    => "required|string|max:255",
-            "phone"   => "nullable|string|max:30",
-            "email"   => ["nullable","email",Rule::unique("customers","email")->where("store_id",$storeId)],
+            "name" => "required|string|max:255",
+            "phone" => "nullable|string|max:30",
+            "email" => [
+                "nullable",
+                "email",
+                Rule::unique("customers", "email")->where("store_id", $storeId),
+            ],
             "address" => "nullable|string",
             "birth_date" => "nullable|date",
-            "gender"     => "nullable|in:male,female",
-            "notes"      => "nullable|string|max:500",
+            "gender" => "nullable|in:male,female",
+            "notes" => "nullable|string|max:500",
         ]);
 
         $validated["store_id"] = $storeId;
-        $validated["code"]     = $this->nextCode($storeId);
+        $validated["code"] = $this->nextCode($storeId);
 
         $customer = Customer::create($validated);
 
         if ($request->expectsJson()) {
-            return response()->json(["success" => true, "customer" => $customer->fresh()]);
+            return response()->json([
+                "success" => true,
+                "customer" => $customer->fresh(),
+            ]);
         }
 
-        return redirect()->route("admin.customers.index")
+        return redirect()
+            ->route("admin.customers.index")
             ->with("success", "Pelanggan berhasil ditambahkan.");
     }
 
@@ -64,18 +75,25 @@ class CustomerController extends Controller
         $storeId = session("current_store_id");
 
         $validated = $request->validate([
-            "name"    => "required|string|max:255",
-            "phone"   => "nullable|string|max:30",
-            "email"   => ["nullable","email",Rule::unique("customers","email")->ignore($customer->id)->where("store_id",$storeId)],
+            "name" => "required|string|max:255",
+            "phone" => "nullable|string|max:30",
+            "email" => [
+                "nullable",
+                "email",
+                Rule::unique("customers", "email")
+                    ->ignore($customer->id)
+                    ->where("store_id", $storeId),
+            ],
             "address" => "nullable|string",
             "birth_date" => "nullable|date",
-            "gender"     => "nullable|in:male,female",
-            "notes"      => "nullable|string|max:500",
+            "gender" => "nullable|in:male,female",
+            "notes" => "nullable|string|max:500",
         ]);
 
         $customer->update($validated);
 
-        return redirect()->route("admin.customers.index")
+        return redirect()
+            ->route("admin.customers.index")
             ->with("success", "Pelanggan berhasil diupdate.");
     }
 

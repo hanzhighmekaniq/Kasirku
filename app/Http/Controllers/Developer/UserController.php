@@ -35,7 +35,7 @@ class UserController extends Controller
                             "id" => $store->id,
                             "name" => $store->name,
                             "code" => $store->code,
-                            "store_type" => $store->store_type,
+                            "store_type" => $store->getRelation('storeType')?->code,
                             "store_type_id" => $store->store_type_id,
                         ];
                     }),
@@ -53,7 +53,7 @@ class UserController extends Controller
                     "id" => $store->id,
                     "name" => $store->name,
                     "code" => $store->code,
-                    "store_type" => $store->store_type,
+                    "store_type" => $store->getRelation('storeType')?->code,
                     "store_type_id" => $store->store_type_id,
                 ];
             });
@@ -141,7 +141,7 @@ class UserController extends Controller
                 "store_id" => $store->id,
                 "store_name" => $store->name,
                 "store_code" => $store->code,
-                "store_type" => $store->store_type,
+                "store_type" => $store->getRelation('storeType')?->code,
                 "plan_label" =>
                     $store->planModel?->label ?? ($store->plan ?? "Free"),
                 "plan_code" =>
@@ -167,7 +167,7 @@ class UserController extends Controller
                     "id" => $store->id,
                     "name" => $store->name,
                     "code" => $store->code,
-                    "store_type" => $store->store_type,
+                    "store_type" => $store->getRelation('storeType')?->code,
                 ];
             }),
         ];
@@ -189,7 +189,7 @@ class UserController extends Controller
                     "id" => $store->id,
                     "name" => $store->name,
                     "code" => $store->code,
-                    "store_type" => $store->store_type,
+                    "store_type" => $store->getRelation('storeType')?->code,
                     "store_type_id" => $store->store_type_id,
                 ];
             });
@@ -270,7 +270,7 @@ class UserController extends Controller
                     "id" => $store->id,
                     "name" => $store->name,
                     "code" => $store->code,
-                    "store_type" => $store->store_type,
+                    "store_type" => $store->getRelation('storeType')?->code,
                 ];
             }),
         ];
@@ -283,7 +283,7 @@ class UserController extends Controller
                     "id" => $store->id,
                     "name" => $store->name,
                     "code" => $store->code,
-                    "store_type" => $store->store_type,
+                    "store_type" => $store->getRelation('storeType')?->code,
                     "store_type_id" => $store->store_type_id,
                 ];
             });

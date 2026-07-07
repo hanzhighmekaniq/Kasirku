@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Spatie\Permission\PermissionRegistrar;
@@ -14,9 +15,11 @@ class SettingController extends Controller
 {
     public function index()
     {
+        /** @var \App\Models\User|null $user */
         $user = Auth::user();
         $storeId = session("current_store_id");
-        $store = \App\Models\Store::find($storeId) ?? $user->stores()->first();
+        $store =
+            \App\Models\Store::find($storeId) ?? $user?->stores()?->first();
 
         // Ambil semua user di store ini beserta role mereka
         $storeUsers = collect();
@@ -58,9 +61,10 @@ class SettingController extends Controller
     public function update(Request $request)
     {
         $storeId = session("current_store_id");
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
         $store =
-            \App\Models\Store::find($storeId) ??
-            Auth::user()->stores()->first();
+            \App\Models\Store::find($storeId) ?? $user?->stores()?->first();
 
         if (!$store) {
             return back()->with("error", "Toko tidak ditemukan.");
@@ -96,15 +100,14 @@ class SettingController extends Controller
 
         // Handle logo
         $logoPath = $store->logo;
-        if ($request->boolean("remove_logo") && $store->logo) {
-            \Storage::disk("public")->delete($store->logo);
-            $logoPath = null;
-        }
         if ($request->hasFile("logo")) {
             if ($store->logo) {
-                \Storage::disk("public")->delete($store->logo);
+                Storage::disk("public")->delete($store->logo);
             }
             $logoPath = $request->file("logo")->store("stores", "public");
+        } elseif ($request->boolean("remove_logo") && $store->logo) {
+            Storage::disk("public")->delete($store->logo);
+            $logoPath = null;
         }
 
         $store->update([

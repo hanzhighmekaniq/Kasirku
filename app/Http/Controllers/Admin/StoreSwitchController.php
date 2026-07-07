@@ -15,10 +15,14 @@ class StoreSwitchController extends Controller
      */
     public function selectForm()
     {
+        /** @var User|null $user */
         $user = Auth::user();
         $stores = $user
             ->stores()
-            ->with(["branches" => fn($q) => $q->where("is_active", true)])
+            ->with([
+                "branches" => fn($q) => $q->where("is_active", true),
+                "storeType",
+            ])
             ->get();
 
         // Kalau hanya 1 toko, auto-set dan redirect
@@ -40,7 +44,7 @@ class StoreSwitchController extends Controller
                     "id" => $s->id,
                     "code" => $s->code,
                     "name" => $s->name,
-                    "store_type" => $s->store_type,
+                    "store_type" => $s->getRelation("storeType")?->code,
                     "branches_count" => $s->branches->count(),
                 ],
             ),
@@ -57,7 +61,7 @@ class StoreSwitchController extends Controller
         ]);
 
         $user = Auth::user();
-
+        /** @var User|null $user */
         // Pastikan user punya akses ke store ini
         $store = $user->stores()->find($validated["store_id"]);
 
@@ -102,10 +106,13 @@ class StoreSwitchController extends Controller
     public function switch(Request $request)
     {
         $user = Auth::user();
-
+        /** @var User|null $user */
         // Karyawan biasa tidak boleh switch toko
         if (!$user->canSwitchBranch()) {
-            return back()->with('error', 'Kamu tidak memiliki akses untuk mengganti toko.');
+            return back()->with(
+                "error",
+                "Kamu tidak memiliki akses untuk mengganti toko.",
+            );
         }
 
         $validated = $request->validate([

@@ -22,7 +22,7 @@ class DashboardController extends Controller
             ->whereDate("sale_date", today())
             ->sum("grand_total");
 
-        $recentStores = Store::with('storeType')
+        $recentStores = Store::with("storeType")
             ->withCount(["users", "sales"])
             ->select(
                 "stores.id",
@@ -37,18 +37,18 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($store) {
                 return [
-                    'id' => $store->id,
-                    'code' => $store->code,
-                    'name' => $store->name,
-                    'store_type' => $store->store_type,
-                    'is_active' => $store->is_active,
-                    'created_at' => $store->created_at,
-                    'users_count' => $store->users_count,
-                    'sales_count' => $store->sales_count,
+                    "id" => $store->id,
+                    "code" => $store->code,
+                    "name" => $store->name,
+                    "store_type" => $store->getRelation("storeType")?->code,
+                    "is_active" => $store->is_active,
+                    "created_at" => $store->created_at,
+                    "users_count" => $store->users_count,
+                    "sales_count" => $store->sales_count,
                 ];
             });
 
-        $storeRevenues = Store::with('storeType')
+        $storeRevenues = Store::with("storeType")
             ->select(
                 "stores.id",
                 "stores.name",
@@ -68,11 +68,11 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($store) {
                 return [
-                    'id' => $store->id,
-                    'name' => $store->name,
-                    'store_type' => $store->store_type,
-                    'revenue' => $store->revenue,
-                    'sale_count' => $store->sale_count,
+                    "id" => $store->id,
+                    "name" => $store->name,
+                    "store_type" => $store->getRelation("storeType")?->code,
+                    "revenue" => $store->revenue,
+                    "sale_count" => $store->sale_count,
                 ];
             });
 

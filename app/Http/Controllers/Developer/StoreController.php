@@ -23,14 +23,6 @@ class StoreController extends Controller
         return \App\Models\StoreType::codes();
     }
 
-    /** Definisi paket langganan — sync dengan Store::planConfig() */
-    public static function PLANS(): array
-    {
-        return \App\Models\Store::planConfig();
-    }
-
-    const PLAN_KEYS = ["free", "basic", "pro"];
-
     public function index()
     {
         $stores = Store::with(["storeType", "planModel"])

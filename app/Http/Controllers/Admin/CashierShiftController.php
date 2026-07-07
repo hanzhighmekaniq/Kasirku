@@ -182,12 +182,14 @@ class CashierShiftController extends Controller
         $cashierShift->load([
             "user:id,name",
             "branch:id,name",
-            "store:id,store_type,modules",
+            "store:id,store_type_id",
+            "store.storeType",
             "payments.paymentMethod:id,name,type",
         ]);
 
         $summary = $this->buildSummary($cashierShift);
-        $storeType = $cashierShift->store?->store_type ?? "retail";
+        $storeType =
+            $cashierShift->store?->getRelation("storeType")?->code ?? "retail";
 
         // Data tambahan per store type
         $typeSummary = $this->buildTypeSummary($cashierShift, $storeType);

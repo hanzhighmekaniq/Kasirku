@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Auth;
 class MutationController extends Controller
 {
     /**
@@ -76,7 +76,7 @@ class MutationController extends Controller
         $saleRequest->headers->set("X-Requested-With", "XMLHttpRequest");
 
         // Restore authenticated user from the current session
-        $saleRequest->setUserResolver(fn() => auth()->user());
+        $saleRequest->setUserResolver(fn() => Auth::user());
 
         $controller = app(KasirController::class);
         $controller->store($saleRequest);
@@ -84,7 +84,7 @@ class MutationController extends Controller
         // KasirController sends a JSON response with sale data.
         // We access the sale via the global request's session (it was created inside DB::transaction).
         // Instead of parsing the response, re-query the last sale created by this user.
-        $sale = \App\Models\Sale::where("user_id", auth()->id())
+        $sale = \App\Models\Sale::where("user_id", Auth::id())
             ->orderByDesc("id")
             ->first();
 

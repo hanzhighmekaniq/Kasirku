@@ -46,14 +46,17 @@ class PurchaseController extends Controller
             "purchases" => $purchases,
             "stats" => $stats,
             "storeType" =>
-                \App\Models\Store::find($storeId)?->store_type ?? "retail",
+                \App\Models\Store::with("storeType")
+                    ->find($storeId)
+                    ?->getRelation("storeType")?->code ?? "retail",
         ]);
     }
 
     public function create()
     {
         $storeId = session("current_store_id");
-        $store = Store::find($storeId);
+        $store = Store::with("storeType")->find($storeId);
+        $storeTypeCode = $store?->getRelation("storeType")?->code ?? "retail";
 
         // Filter products by store type:
         // fnb → raw_material (bahan baku)
@@ -63,11 +66,11 @@ class PurchaseController extends Controller
         $products = Product::forStore($storeId)
             ->where("is_active", true)
             ->when(
-                $store && $store->store_type === "fnb",
+                $store && $storeTypeCode === "fnb",
                 fn($q) => $q->where("type", "raw_material"),
             )
             ->when(
-                $store && $store->store_type === "rental",
+                $store && $storeTypeCode === "rental",
                 fn($q) => $q->whereIn("type", [
                     "rental_item",
                     "finished_goods",
@@ -77,7 +80,7 @@ class PurchaseController extends Controller
                 $store &&
                     $store &&
                     $store &&
-                    !in_array($store->store_type, ["fnb", "rental"]),
+                    !in_array($storeTypeCode, ["fnb", "rental"]),
                 fn($q) => $q->whereIn("type", [
                     "finished_goods",
                     "combo",
@@ -108,7 +111,7 @@ class PurchaseController extends Controller
             "paymentMethods" => PaymentMethod::forStore($storeId)
                 ->where("is_active", true)
                 ->get(),
-            "storeType" => $store->store_type ?? "retail",
+            "storeType" => $storeTypeCode ?? "retail",
         ]);
     }
 

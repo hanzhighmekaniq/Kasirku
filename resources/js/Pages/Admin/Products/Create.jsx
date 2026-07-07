@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, useForm } from "@inertiajs/react";
+import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import BarcodeScanner from "@/Components/BarcodeScanner";
 
@@ -15,52 +15,59 @@ const UNIT_OPTIONS = [
     "karton",
 ];
 
-// Fitur yang tampil per store type
-const STORE_FEATURES = {
-    //                       barcode  supplier  costPrice  prepTime  isComposable  isSellable  trackStock
-    retail:      { barcode: true,  supplier: true,  costPrice: true,  prepTime: false, isComposable: false, isSellable: true,  trackStock: true  },
-    fnb:         { barcode: true,  supplier: true,  costPrice: true,  prepTime: true,  isComposable: true,  isSellable: true,  trackStock: true  },
-    service:     { barcode: false, supplier: false, costPrice: true,  prepTime: false, isComposable: false, isSellable: false, trackStock: false },
-    rental:      { barcode: false, supplier: true,  costPrice: true,  prepTime: false, isComposable: false, isSellable: false, trackStock: true  },
-    ticket:      { barcode: false, supplier: false, costPrice: false, prepTime: false, isComposable: false, isSellable: false, trackStock: false },
-    hospitality: { barcode: false, supplier: false, costPrice: false, prepTime: false, isComposable: false, isSellable: false, trackStock: false },
-    parking:     { barcode: false, supplier: false, costPrice: false, prepTime: false, isComposable: false, isSellable: false, trackStock: false },
-    session:     { barcode: false, supplier: false, costPrice: false, prepTime: false, isComposable: false, isSellable: false, trackStock: false },
-};
+// UI field visibility — derived from storeTypeFeatures (database)
+// Mapping: supplier→supplier, purchase→costPrice, kitchen→prepTime,
+//          recipe→isComposable, stock→trackStock, product→barcode/isSellable
 
 // Tipe produk yang relevan per store type
 const RELEVANT_TYPES = {
-    retail:      ['finished_goods', 'raw_material', 'combo'],
-    fnb:         ['finished_goods', 'raw_material', 'combo'],
-    service:     ['service', 'finished_goods'],
-    rental:      ['rental_item', 'finished_goods'],
-    ticket:      ['time_based', 'finished_goods'],
-    hospitality: ['time_based', 'service', 'finished_goods'],
-    parking:     ['time_based'],
-    session:     ['time_based', 'finished_goods'],
+    retail: ["finished_goods", "raw_material", "combo"],
+    fnb: ["finished_goods", "raw_material", "combo"],
+    service: ["service", "finished_goods"],
+    rental: ["rental_item", "finished_goods"],
+    ticket: ["time_based", "finished_goods"],
+    hospitality: ["time_based", "service", "finished_goods"],
+    parking: ["time_based"],
+    session: ["time_based", "finished_goods"],
 };
 
 const DEFAULT_TYPE = {
-    retail:      'finished_goods',
-    fnb:         'finished_goods',
-    service:     'service',
-    rental:      'rental_item',
-    ticket:      'time_based',
-    hospitality: 'time_based',
-    parking:     'time_based',
-    session:     'time_based',
+    retail: "finished_goods",
+    fnb: "finished_goods",
+    service: "service",
+    rental: "rental_item",
+    ticket: "time_based",
+    hospitality: "time_based",
+    parking: "time_based",
+    session: "time_based",
 };
 
 // Tipe yang tidak punya stok fisik
-const NO_STOCK_TYPES = ['service', 'time_based'];
+const NO_STOCK_TYPES = ["service", "time_based"];
 
-export default function Create({ categories, suppliers, productTypes = {}, storeType = 'retail' }) {
+export default function Create({
+    categories,
+    suppliers,
+    productTypes = {},
+    storeType = "retail",
+}) {
     const [imagePreview, setImagePreview] = useState(null);
     const [showScanner, setShowScanner] = useState(false);
 
-    const availableTypes = RELEVANT_TYPES[storeType] ?? ['finished_goods'];
-    const defaultType    = DEFAULT_TYPE[storeType]    ?? 'finished_goods';
-    const feat           = STORE_FEATURES[storeType]  ?? STORE_FEATURES.retail;
+    const { storeTypeFeatures = [] } = usePage().props;
+    const has = (f) => storeTypeFeatures.includes(f);
+
+    const availableTypes = RELEVANT_TYPES[storeType] ?? ["finished_goods"];
+    const defaultType = DEFAULT_TYPE[storeType] ?? "finished_goods";
+    const feat = {
+        barcode: true, // selalu tampilkan barcode
+        supplier: has("supplier"), // retail, fnb, rental
+        costPrice: has("purchase"), // retail, fnb, rental
+        prepTime: has("kitchen"), // fnb
+        isComposable: has("recipe"), // fnb
+        isSellable: true, // selalu tampilkan is_sellable
+        trackStock: has("stock"), // retail, fnb, rental
+    };
 
     const { data, setData, post, processing, errors } = useForm({
         name: "",
@@ -94,16 +101,24 @@ export default function Create({ categories, suppliers, productTypes = {}, store
     const isNoStock = NO_STOCK_TYPES.includes(data.type);
 
     // Label harga dinamis berdasarkan tipe
-    const priceLabel = data.type === 'time_based'  ? 'Tarif / Harga' :
-                       data.type === 'service'      ? 'Tarif Jasa' :
-                       data.type === 'rental_item'  ? 'Tarif Sewa' :
-                       'Harga Jual';
+    const priceLabel =
+        data.type === "time_based"
+            ? "Tarif / Harga"
+            : data.type === "service"
+              ? "Tarif Jasa"
+              : data.type === "rental_item"
+                ? "Tarif Sewa"
+                : "Harga Jual";
 
     // Satuan dinamis berdasarkan tipe
-    const unitOptionsForType = data.type === 'time_based'   ? ['jam', 'menit', 'hari', 'malam', 'sesi'] :
-                               data.type === 'service'       ? ['kunjungan', 'sesi', 'pcs', 'item'] :
-                               data.type === 'rental_item'   ? ['unit', 'pcs', 'set', 'hari'] :
-                               UNIT_OPTIONS;
+    const unitOptionsForType =
+        data.type === "time_based"
+            ? ["jam", "menit", "hari", "malam", "sesi"]
+            : data.type === "service"
+              ? ["kunjungan", "sesi", "pcs", "item"]
+              : data.type === "rental_item"
+                ? ["unit", "pcs", "set", "hari"]
+                : UNIT_OPTIONS;
 
     // Handler perubahan tipe: auto-update track_stock
     const handleTypeChange = (newType) => {
@@ -201,11 +216,52 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                                         />
                                     </Field>
                                     {feat.barcode ? (
-                                    <Field
-                                        label="Barcode"
-                                        error={errors.barcode}
-                                    >
-                                        <div className="flex gap-2">
+                                        <Field
+                                            label="Barcode"
+                                            error={errors.barcode}
+                                        >
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={data.barcode}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "barcode",
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="EAN-13 (opsional)"
+                                                    className={`${inputCls(!!errors.barcode)} flex-1`}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setShowScanner(true)
+                                                    }
+                                                    className="shrink-0 inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                                                    title="Scan Barcode dari Label"
+                                                >
+                                                    <svg
+                                                        className="w-5 h-5"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </Field>
+                                    ) : (
+                                        <Field
+                                            label="Kode Referensi"
+                                            error={errors.barcode}
+                                        >
                                             <input
                                                 type="text"
                                                 value={data.barcode}
@@ -215,43 +271,12 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                                                         e.target.value,
                                                     )
                                                 }
-                                                placeholder="EAN-13 (opsional)"
-                                                className={`${inputCls(!!errors.barcode)} flex-1`}
+                                                placeholder="Kode internal (opsional)"
+                                                className={inputCls(
+                                                    !!errors.barcode,
+                                                )}
                                             />
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setShowScanner(true)
-                                                }
-                                                className="shrink-0 inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-                                                title="Scan Barcode dari Label"
-                                            >
-                                                <svg
-                                                    className="w-5 h-5"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        strokeWidth={2}
-                                                        d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </Field>
-                                    ) : (
-                                    <Field label="Kode Referensi" error={errors.barcode}>
-                                        <input
-                                            type="text"
-                                            value={data.barcode}
-                                            onChange={(e) => setData("barcode", e.target.value)}
-                                            placeholder="Kode internal (opsional)"
-                                            className={inputCls(!!errors.barcode)}
-                                        />
-                                    </Field>
+                                        </Field>
                                     )}
                                 </div>
 
@@ -269,8 +294,12 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                                             className={inputCls(!!errors.type)}
                                         >
                                             {availableTypes.map((typeKey) => (
-                                                <option key={typeKey} value={typeKey}>
-                                                    {productTypes[typeKey] ?? typeKey}
+                                                <option
+                                                    key={typeKey}
+                                                    value={typeKey}
+                                                >
+                                                    {productTypes[typeKey] ??
+                                                        typeKey}
                                                 </option>
                                             ))}
                                         </select>
@@ -291,14 +320,19 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                                         </select>
                                     </Field>
                                 </div>
-                                {data.type !== 'finished_goods' && data.type !== 'raw_material' && (
-                                    <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5 text-xs text-indigo-700">
-                                        {data.type === 'service' && '✂️ Produk jasa: tidak ada stok fisik, harga adalah tarif layanan'}
-                                        {data.type === 'rental_item' && '🔑 Item rental: stok = jumlah unit yang bisa disewakan'}
-                                        {data.type === 'time_based' && '⏱️ Berbasis waktu: tarif per durasi (jam/malam/sesi)'}
-                                        {data.type === 'combo' && '📦 Combo: gabungan beberapa produk dalam 1 paket'}
-                                    </div>
-                                )}
+                                {data.type !== "finished_goods" &&
+                                    data.type !== "raw_material" && (
+                                        <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5 text-xs text-indigo-700">
+                                            {data.type === "service" &&
+                                                "✂️ Produk jasa: tidak ada stok fisik, harga adalah tarif layanan"}
+                                            {data.type === "rental_item" &&
+                                                "🔑 Item rental: stok = jumlah unit yang bisa disewakan"}
+                                            {data.type === "time_based" &&
+                                                "⏱️ Berbasis waktu: tarif per durasi (jam/malam/sesi)"}
+                                            {data.type === "combo" &&
+                                                "📦 Combo: gabungan beberapa produk dalam 1 paket"}
+                                        </div>
+                                    )}
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <Field
@@ -328,32 +362,35 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                                         </select>
                                     </Field>
                                     {feat.supplier && (
-                                    <Field
-                                        label="Supplier"
-                                        error={errors.supplier_id}
-                                    >
-                                        <select
-                                            value={data.supplier_id}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "supplier_id",
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className={inputCls(
-                                                !!errors.supplier_id,
-                                            )}
+                                        <Field
+                                            label="Supplier"
+                                            error={errors.supplier_id}
                                         >
-                                            <option value="">
-                                                Pilih Supplier
-                                            </option>
-                                            {suppliers.map((s) => (
-                                                <option key={s.id} value={s.id}>
-                                                    {s.name}
+                                            <select
+                                                value={data.supplier_id}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "supplier_id",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className={inputCls(
+                                                    !!errors.supplier_id,
+                                                )}
+                                            >
+                                                <option value="">
+                                                    Pilih Supplier
                                                 </option>
-                                            ))}
-                                        </select>
-                                    </Field>
+                                                {suppliers.map((s) => (
+                                                    <option
+                                                        key={s.id}
+                                                        value={s.id}
+                                                    >
+                                                        {s.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </Field>
                                     )}
                                 </div>
                             </div>
@@ -367,19 +404,28 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                             <Field label="Deskripsi" error={errors.description}>
                                 <textarea
                                     value={data.description}
-                                    onChange={(e) => setData("description", e.target.value)}
+                                    onChange={(e) =>
+                                        setData("description", e.target.value)
+                                    }
                                     rows={3}
                                     placeholder={
-                                        data.type === 'service'     ? 'Contoh: Potong rambut + keramas + blow dry' :
-                                        data.type === 'rental_item' ? 'Contoh: Motor matic 125cc, bensin full, helm tersedia' :
-                                        data.type === 'time_based'  ? 'Contoh: Akses internet unlimited, PC gaming spec tinggi' :
-                                        data.type === 'hospitality' ? 'Contoh: Kamar AC, 2 kasur single, sarapan termasuk' :
-                                        'Deskripsi produk (opsional)'
+                                        data.type === "service"
+                                            ? "Contoh: Potong rambut + keramas + blow dry"
+                                            : data.type === "rental_item"
+                                              ? "Contoh: Motor matic 125cc, bensin full, helm tersedia"
+                                              : data.type === "time_based"
+                                                ? "Contoh: Akses internet unlimited, PC gaming spec tinggi"
+                                                : data.type === "hospitality"
+                                                  ? "Contoh: Kamar AC, 2 kasur single, sarapan termasuk"
+                                                  : "Deskripsi produk (opsional)"
                                     }
                                     className={`${inputCls(!!errors.description)} resize-none`}
                                     maxLength={2000}
                                 />
-                                <p className="mt-1 text-xs text-slate-400">{(data.description || '').length}/2000 karakter</p>
+                                <p className="mt-1 text-xs text-slate-400">
+                                    {(data.description || "").length}/2000
+                                    karakter
+                                </p>
                             </Field>
                         </SectionCard>
 
@@ -388,7 +434,9 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                             title="Harga"
                             subtitle="Harga beli dan jual produk"
                         >
-                            <div className={`grid gap-4 ${feat.costPrice ? 'grid-cols-2' : 'grid-cols-1 max-w-xs'}`}>
+                            <div
+                                className={`grid gap-4 ${feat.costPrice ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}
+                            >
                                 <Field
                                     label={priceLabel}
                                     required
@@ -414,32 +462,33 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                                     </div>
                                 </Field>
                                 {feat.costPrice && (
-                                <Field
-                                    label="Harga Beli (Modal)"
-                                    error={errors.cost_price}
-                                >
-                                    <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
-                                            Rp
-                                        </span>
-                                        <input
-                                            type="number"
-                                            value={data.cost_price}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "cost_price",
-                                                    e.target.value,
-                                                )
-                                            }
-                                            min="0"
-                                            placeholder="0"
-                                            className={`${inputCls(!!errors.cost_price)} pl-9`}
-                                        />
-                                    </div>
-                                </Field>
+                                    <Field
+                                        label="Harga Beli (Modal)"
+                                        error={errors.cost_price}
+                                    >
+                                        <div className="relative">
+                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                                Rp
+                                            </span>
+                                            <input
+                                                type="number"
+                                                value={data.cost_price}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "cost_price",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                min="0"
+                                                placeholder="0"
+                                                className={`${inputCls(!!errors.cost_price)} pl-9`}
+                                            />
+                                        </div>
+                                    </Field>
                                 )}
                             </div>
-                            {feat.costPrice && Number(data.sell_price) > 0 &&
+                            {feat.costPrice &&
+                                Number(data.sell_price) > 0 &&
                                 Number(data.cost_price) > 0 && (
                                     <div className="mt-3 rounded-xl bg-slate-50 px-4 py-2.5 text-xs text-slate-500">
                                         Margin:{" "}
@@ -465,122 +514,229 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                         </SectionCard>
 
                         {/* SECTION: Detail spesifik per tipe */}
-                        {(data.type === 'time_based' || data.type === 'rental_item' ||
-                          ['ticket', 'hospitality', 'session', 'parking', 'rental'].includes(storeType)) && (
+                        {(data.type === "time_based" ||
+                            data.type === "rental_item" ||
+                            [
+                                "ticket",
+                                "hospitality",
+                                "session",
+                                "parking",
+                                "rental",
+                            ].includes(storeType)) && (
                             <SectionCard
                                 title="Detail Spesifik"
                                 subtitle="Informasi tambahan sesuai tipe produk"
                             >
                                 <div className="space-y-4">
-
                                     {/* price_per_hour — untuk time_based dan rental */}
-                                    {(data.type === 'time_based' || data.type === 'rental_item') && (
+                                    {(data.type === "time_based" ||
+                                        data.type === "rental_item") && (
                                         <div className="grid grid-cols-2 gap-4">
-                                            <Field label="Tarif Per Jam" error={errors.price_per_hour}>
+                                            <Field
+                                                label="Tarif Per Jam"
+                                                error={errors.price_per_hour}
+                                            >
                                                 <div className="relative">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                                        Rp
+                                                    </span>
                                                     <input
                                                         type="number"
-                                                        value={data.price_per_hour}
-                                                        onChange={(e) => setData("price_per_hour", e.target.value)}
+                                                        value={
+                                                            data.price_per_hour
+                                                        }
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                "price_per_hour",
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         min="0"
                                                         placeholder="0"
                                                         className={`${inputCls(!!errors.price_per_hour)} pl-9`}
                                                     />
                                                 </div>
-                                                <p className="mt-1 text-xs text-slate-400">Tarif per jam (opsional, selain harga dasar)</p>
+                                                <p className="mt-1 text-xs text-slate-400">
+                                                    Tarif per jam (opsional,
+                                                    selain harga dasar)
+                                                </p>
                                             </Field>
-                                            <Field label="Durasi Minimum (menit)" error={errors.min_duration_minutes}>
+                                            <Field
+                                                label="Durasi Minimum (menit)"
+                                                error={
+                                                    errors.min_duration_minutes
+                                                }
+                                            >
                                                 <input
                                                     type="number"
-                                                    value={data.min_duration_minutes}
-                                                    onChange={(e) => setData("min_duration_minutes", e.target.value)}
+                                                    value={
+                                                        data.min_duration_minutes
+                                                    }
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "min_duration_minutes",
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     min="0"
                                                     placeholder="Contoh: 60"
-                                                    className={inputCls(!!errors.min_duration_minutes)}
+                                                    className={inputCls(
+                                                        !!errors.min_duration_minutes,
+                                                    )}
                                                 />
-                                                <p className="mt-1 text-xs text-slate-400">Minimal durasi pemakaian</p>
+                                                <p className="mt-1 text-xs text-slate-400">
+                                                    Minimal durasi pemakaian
+                                                </p>
                                             </Field>
                                         </div>
                                     )}
 
                                     {/* session_duration_minutes — untuk session/time_based di store session */}
-                                    {(storeType === 'session' || storeType === 'parking') && data.type === 'time_based' && (
-                                        <Field label="Durasi Paket (menit)" error={errors.session_duration_minutes}>
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="number"
-                                                    value={data.session_duration_minutes}
-                                                    onChange={(e) => setData("session_duration_minutes", e.target.value)}
-                                                    min="0"
-                                                    placeholder="60 = 1 jam, 0 = unlimited"
-                                                    className={`${inputCls(!!errors.session_duration_minutes)} max-w-xs`}
-                                                />
-                                            </div>
-                                            <p className="mt-1 text-xs text-slate-400">0 = unlimited. Misal: 60 (1 jam), 120 (2 jam), 180 (3 jam)</p>
-                                        </Field>
-                                    )}
+                                    {(storeType === "session" ||
+                                        storeType === "parking") &&
+                                        data.type === "time_based" && (
+                                            <Field
+                                                label="Durasi Paket (menit)"
+                                                error={
+                                                    errors.session_duration_minutes
+                                                }
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="number"
+                                                        value={
+                                                            data.session_duration_minutes
+                                                        }
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                "session_duration_minutes",
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        min="0"
+                                                        placeholder="60 = 1 jam, 0 = unlimited"
+                                                        className={`${inputCls(!!errors.session_duration_minutes)} max-w-xs`}
+                                                    />
+                                                </div>
+                                                <p className="mt-1 text-xs text-slate-400">
+                                                    0 = unlimited. Misal: 60 (1
+                                                    jam), 120 (2 jam), 180 (3
+                                                    jam)
+                                                </p>
+                                            </Field>
+                                        )}
 
                                     {/* capacity — untuk ticket */}
-                                    {storeType === 'ticket' && (
-                                        <Field label="Kapasitas (orang/slot)" error={errors.capacity}>
+                                    {storeType === "ticket" && (
+                                        <Field
+                                            label="Kapasitas (orang/slot)"
+                                            error={errors.capacity}
+                                        >
                                             <input
                                                 type="number"
                                                 value={data.capacity}
-                                                onChange={(e) => setData("capacity", e.target.value)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "capacity",
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 min="1"
                                                 placeholder="Contoh: 10"
                                                 className={`${inputCls(!!errors.capacity)} max-w-xs`}
                                             />
-                                            <p className="mt-1 text-xs text-slate-400">Berapa orang yang bisa pakai slot/tiket ini</p>
+                                            <p className="mt-1 text-xs text-slate-400">
+                                                Berapa orang yang bisa pakai
+                                                slot/tiket ini
+                                            </p>
                                         </Field>
                                     )}
 
                                     {/* valid_duration_minutes — untuk ticket */}
-                                    {storeType === 'ticket' && (
-                                        <Field label="Berlaku (menit)" error={errors.valid_duration_minutes}>
+                                    {storeType === "ticket" && (
+                                        <Field
+                                            label="Berlaku (menit)"
+                                            error={
+                                                errors.valid_duration_minutes
+                                            }
+                                        >
                                             <input
                                                 type="number"
-                                                value={data.valid_duration_minutes}
-                                                onChange={(e) => setData("valid_duration_minutes", e.target.value)}
+                                                value={
+                                                    data.valid_duration_minutes
+                                                }
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "valid_duration_minutes",
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 min="0"
                                                 placeholder="Contoh: 90 = 1,5 jam. Kosongkan jika tidak terbatas"
                                                 className={`${inputCls(!!errors.valid_duration_minutes)} max-w-xs`}
                                             />
-                                            <p className="mt-1 text-xs text-slate-400">Tiket berlaku berapa menit setelah check-in</p>
+                                            <p className="mt-1 text-xs text-slate-400">
+                                                Tiket berlaku berapa menit
+                                                setelah check-in
+                                            </p>
                                         </Field>
                                     )}
 
                                     {/* max_guests — untuk hospitality */}
-                                    {storeType === 'hospitality' && (
-                                        <Field label="Kapasitas Tamu" error={errors.max_guests}>
+                                    {storeType === "hospitality" && (
+                                        <Field
+                                            label="Kapasitas Tamu"
+                                            error={errors.max_guests}
+                                        >
                                             <input
                                                 type="number"
                                                 value={data.max_guests}
-                                                onChange={(e) => setData("max_guests", e.target.value)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "max_guests",
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 min="1"
                                                 placeholder="Contoh: 2"
                                                 className={`${inputCls(!!errors.max_guests)} max-w-xs`}
                                             />
-                                            <p className="mt-1 text-xs text-slate-400">Maksimal tamu yang bisa menginap</p>
+                                            <p className="mt-1 text-xs text-slate-400">
+                                                Maksimal tamu yang bisa menginap
+                                            </p>
                                         </Field>
                                     )}
 
                                     {/* deposit_amount — untuk rental */}
-                                    {(storeType === 'rental' || data.type === 'rental_item') && (
-                                        <Field label="Deposit" error={errors.deposit_amount}>
+                                    {(storeType === "rental" ||
+                                        data.type === "rental_item") && (
+                                        <Field
+                                            label="Deposit"
+                                            error={errors.deposit_amount}
+                                        >
                                             <div className="relative max-w-xs">
-                                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                                    Rp
+                                                </span>
                                                 <input
                                                     type="number"
                                                     value={data.deposit_amount}
-                                                    onChange={(e) => setData("deposit_amount", e.target.value)}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "deposit_amount",
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     min="0"
                                                     placeholder="0"
                                                     className={`${inputCls(!!errors.deposit_amount)} pl-9`}
                                                 />
                                             </div>
-                                            <p className="mt-1 text-xs text-slate-400">Deposit yang perlu dibayar penyewa (dikembalikan saat return)</p>
+                                            <p className="mt-1 text-xs text-slate-400">
+                                                Deposit yang perlu dibayar
+                                                penyewa (dikembalikan saat
+                                                return)
+                                            </p>
                                         </Field>
                                     )}
                                 </div>
@@ -589,68 +745,75 @@ export default function Create({ categories, suppliers, productTypes = {}, store
 
                         {/* SECTION: Stok */}
                         {!isNoStock ? (
-                        <SectionCard
-                            title="Stok"
-                            subtitle="Pengaturan stok awal dan minimum"
-                        >
-                            <div className="grid grid-cols-2 gap-4">
-                                <Field
-                                    label="Stok Awal"
-                                    error={errors.initial_stock}
-                                >
-                                    <input
-                                        type="number"
-                                        value={data.initial_stock}
-                                        onChange={(e) =>
-                                            setData(
-                                                "initial_stock",
-                                                e.target.value,
-                                            )
-                                        }
-                                        min="0"
-                                        placeholder="0"
-                                        disabled={!data.track_stock}
-                                        className={`${inputCls(!!errors.initial_stock)} disabled:bg-slate-100 disabled:text-slate-400`}
-                                    />
-                                    <p className="mt-1 text-xs text-slate-400">
-                                        Jumlah stok saat produk pertama dibuat.
-                                    </p>
-                                </Field>
-                                <Field
-                                    label="Stok Minimum"
-                                    error={errors.stock_minimum}
-                                >
-                                    <input
-                                        type="number"
-                                        value={data.stock_minimum}
-                                        onChange={(e) =>
-                                            setData(
-                                                "stock_minimum",
-                                                e.target.value,
-                                            )
-                                        }
-                                        min="0"
-                                        placeholder="0"
-                                        disabled={!data.track_stock}
-                                        className={`${inputCls(!!errors.stock_minimum)} disabled:bg-slate-100 disabled:text-slate-400`}
-                                    />
-                                    <p className="mt-1 text-xs text-slate-400">
-                                        Peringatan jika stok di bawah angka ini.
-                                    </p>
-                                </Field>
-                            </div>
-                        </SectionCard>
+                            <SectionCard
+                                title="Stok"
+                                subtitle="Pengaturan stok awal dan minimum"
+                            >
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Field
+                                        label="Stok Awal"
+                                        error={errors.initial_stock}
+                                    >
+                                        <input
+                                            type="number"
+                                            value={data.initial_stock}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "initial_stock",
+                                                    e.target.value,
+                                                )
+                                            }
+                                            min="0"
+                                            placeholder="0"
+                                            disabled={!data.track_stock}
+                                            className={`${inputCls(!!errors.initial_stock)} disabled:bg-slate-100 disabled:text-slate-400`}
+                                        />
+                                        <p className="mt-1 text-xs text-slate-400">
+                                            Jumlah stok saat produk pertama
+                                            dibuat.
+                                        </p>
+                                    </Field>
+                                    <Field
+                                        label="Stok Minimum"
+                                        error={errors.stock_minimum}
+                                    >
+                                        <input
+                                            type="number"
+                                            value={data.stock_minimum}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "stock_minimum",
+                                                    e.target.value,
+                                                )
+                                            }
+                                            min="0"
+                                            placeholder="0"
+                                            disabled={!data.track_stock}
+                                            className={`${inputCls(!!errors.stock_minimum)} disabled:bg-slate-100 disabled:text-slate-400`}
+                                        />
+                                        <p className="mt-1 text-xs text-slate-400">
+                                            Peringatan jika stok di bawah angka
+                                            ini.
+                                        </p>
+                                    </Field>
+                                </div>
+                            </SectionCard>
                         ) : (
-                        <SectionCard title="Stok" subtitle="Tidak berlaku untuk tipe ini">
-                            <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-500 flex items-center gap-2">
-                                <span>ℹ️</span>
-                                <span>
-                                    {data.type === 'service'   ? 'Layanan jasa tidak memiliki stok fisik.' :
-                                     data.type === 'time_based' ? 'Produk berbasis waktu tidak memiliki stok.' :
-                                     'Tipe ini tidak memiliki stok.'}
-                                </span>
-                            </div>
-                        </SectionCard>
+                            <SectionCard
+                                title="Stok"
+                                subtitle="Tidak berlaku untuk tipe ini"
+                            >
+                                <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-500 flex items-center gap-2">
+                                    <span>ℹ️</span>
+                                    <span>
+                                        {data.type === "service"
+                                            ? "Layanan jasa tidak memiliki stok fisik."
+                                            : data.type === "time_based"
+                                              ? "Produk berbasis waktu tidak memiliki stok."
+                                              : "Tipe ini tidak memiliki stok."}
+                                    </span>
+                                </div>
+                            </SectionCard>
                         )}
 
                         {/* SECTION: Pengaturan Tambahan */}
@@ -661,32 +824,32 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                             <div className="space-y-4">
                                 {/* Waktu persiapan — hanya FnB */}
                                 {feat.prepTime && (
-                                <Field
-                                    label="Waktu Persiapan"
-                                    hint="menit"
-                                    error={errors.preparation_time}
-                                >
-                                    <div className="relative max-w-xs">
-                                        <input
-                                            type="number"
-                                            value={data.preparation_time}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "preparation_time",
-                                                    e.target.value,
-                                                )
-                                            }
-                                            min="0"
-                                            placeholder="Kosongkan jika tidak perlu"
-                                            className={inputCls(
-                                                !!errors.preparation_time,
-                                            )}
-                                        />
-                                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-slate-400">
-                                            menit
-                                        </span>
-                                    </div>
-                                </Field>
+                                    <Field
+                                        label="Waktu Persiapan"
+                                        hint="menit"
+                                        error={errors.preparation_time}
+                                    >
+                                        <div className="relative max-w-xs">
+                                            <input
+                                                type="number"
+                                                value={data.preparation_time}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "preparation_time",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                min="0"
+                                                placeholder="Kosongkan jika tidak perlu"
+                                                className={inputCls(
+                                                    !!errors.preparation_time,
+                                                )}
+                                            />
+                                            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-slate-400">
+                                                menit
+                                            </span>
+                                        </div>
+                                    </Field>
                                 )}
                                 <div className="grid grid-cols-2 gap-3">
                                     {/* Pantau Stok — hanya store yang punya stok fisik */}
@@ -695,12 +858,21 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                                             <input
                                                 type="checkbox"
                                                 checked={data.track_stock}
-                                                onChange={(e) => setData("track_stock", e.target.checked)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "track_stock",
+                                                        e.target.checked,
+                                                    )
+                                                }
                                                 className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                                             />
                                             <div>
-                                                <p className="text-sm font-medium text-slate-700">Pantau Stok</p>
-                                                <p className="text-xs text-slate-400">Lacak jumlah stok produk ini</p>
+                                                <p className="text-sm font-medium text-slate-700">
+                                                    Pantau Stok
+                                                </p>
+                                                <p className="text-xs text-slate-400">
+                                                    Lacak jumlah stok produk ini
+                                                </p>
                                             </div>
                                         </label>
                                     )}
@@ -710,12 +882,21 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                                             <input
                                                 type="checkbox"
                                                 checked={data.is_sellable}
-                                                onChange={(e) => setData("is_sellable", e.target.checked)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "is_sellable",
+                                                        e.target.checked,
+                                                    )
+                                                }
                                                 className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                                             />
                                             <div>
-                                                <p className="text-sm font-medium text-slate-700">Bisa Dijual</p>
-                                                <p className="text-xs text-slate-400">Nonaktifkan untuk bahan baku</p>
+                                                <p className="text-sm font-medium text-slate-700">
+                                                    Bisa Dijual
+                                                </p>
+                                                <p className="text-xs text-slate-400">
+                                                    Nonaktifkan untuk bahan baku
+                                                </p>
                                             </div>
                                         </label>
                                     )}
@@ -725,12 +906,22 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                                             <input
                                                 type="checkbox"
                                                 checked={data.is_composable}
-                                                onChange={(e) => setData("is_composable", e.target.checked)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        "is_composable",
+                                                        e.target.checked,
+                                                    )
+                                                }
                                                 className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                                             />
                                             <div>
-                                                <p className="text-sm font-medium text-slate-700">Produk Komposisi</p>
-                                                <p className="text-xs text-slate-400">Tersusun dari produk lain (combo)</p>
+                                                <p className="text-sm font-medium text-slate-700">
+                                                    Produk Komposisi
+                                                </p>
+                                                <p className="text-xs text-slate-400">
+                                                    Tersusun dari produk lain
+                                                    (combo)
+                                                </p>
                                             </div>
                                         </label>
                                     )}
@@ -739,12 +930,21 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                                         <input
                                             type="checkbox"
                                             checked={data.is_active}
-                                            onChange={(e) => setData("is_active", e.target.checked)}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "is_active",
+                                                    e.target.checked,
+                                                )
+                                            }
                                             className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                                         />
                                         <div>
-                                            <p className="text-sm font-medium text-slate-700">Produk Aktif</p>
-                                            <p className="text-xs text-slate-400">Tampil di kasir & daftar produk</p>
+                                            <p className="text-sm font-medium text-slate-700">
+                                                Produk Aktif
+                                            </p>
+                                            <p className="text-xs text-slate-400">
+                                                Tampil di kasir & daftar produk
+                                            </p>
                                         </div>
                                     </label>
                                 </div>
@@ -826,9 +1026,7 @@ export default function Create({ categories, suppliers, productTypes = {}, store
                             <dl className="space-y-2 text-sm">
                                 <SummaryRow
                                     label="Tipe"
-                                    value={
-                                        productTypes[data.type] ?? data.type
-                                    }
+                                    value={productTypes[data.type] ?? data.type}
                                 />
                                 <SummaryRow label="Satuan" value={data.unit} />
                                 <SummaryRow

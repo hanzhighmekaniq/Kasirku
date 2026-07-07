@@ -141,6 +141,39 @@ class HandleInertiaRequests extends Middleware
                 [],
                 false,
             ),
+            "storeTypeFeatureDetails" => fn() => rescue(
+                function () use ($storeId) {
+                    if (!$storeId) {
+                        return [];
+                    }
+                    $store = \App\Models\Store::with(
+                        "storeType.features",
+                    )->find($storeId);
+                    $storeType = $store?->getRelationValue("storeType");
+                    if (!$storeType) {
+                        return [];
+                    }
+
+                    $featureIds = $storeType->features
+                        ->where("is_active", true)
+                        ->pluck("id")
+                        ->toArray();
+
+                    if (empty($featureIds)) {
+                        return [];
+                    }
+
+                    return \App\Models\FeatureDetail::whereIn(
+                        "feature_id",
+                        $featureIds,
+                    )
+                        ->where("is_active", true)
+                        ->pluck("code")
+                        ->toArray();
+                },
+                [],
+                false,
+            ),
 
             "allStoreTypes" => function () {
                 return \App\Models\StoreType::active();
@@ -198,29 +231,41 @@ class HandleInertiaRequests extends Middleware
 
     private function getStorePlan(int $storeId): ?array
     {
-        $store = Store::with("planModel.planFeatures")->find($storeId);
+        $store = Store::with("planModel.features")->find($storeId);
         if (!$store) {
             return null;
         }
 
         $planCode = $store->effectivePlanCode();
         $planModel = $store->planModel;
+        $maxUsers = $store->effectiveMaxUsers();
+        $maxBranches = $store->effectiveMaxBranches();
 
         // Fitur dari plan_id (DB) — fallback ke hardcoded
-        if ($planModel && !empty($planModel->featureCodes())) {
-            $featureCodes = $planModel->featureCodes();
+        $featureCodes = $planModel ? $planModel->featureCodes() : [];
+
+        if (!empty($featureCodes)) {
             $label = $planModel->label;
-            $maxUsers = $store->effectiveMaxUsers();
-            $maxBranches = $store->effectiveMaxBranches();
+            // Ambil detail codes dari features yang sudah eager-loaded
+            $featureIds = $planModel->features
+                ->where("is_active", true)
+                ->pluck("id")
+                ->toArray();
+            $featureDetails = !empty($featureIds)
+                ? \App\Models\FeatureDetail::whereIn("feature_id", $featureIds)
+                    ->where("is_active", true)
+                    ->pluck("code")
+                    ->toArray()
+                : [];
         } else {
-            // Fallback hardcoded (kalau pivot kosong atau plan_id null)
+            // Fallback hardcoded (kalau pivot kosong atau plan_id null).
+            // planConfig() kini selalu punya key "features".
             $planConfig =
                 \App\Models\Store::planConfig()[$planCode] ??
                 \App\Models\Store::planConfig()["free"];
-            $featureCodes = $planConfig["features"];
+            $featureCodes = $planConfig["features"] ?? [];
             $label = $planConfig["label"];
-            $maxUsers = $store->effectiveMaxUsers();
-            $maxBranches = $store->effectiveMaxBranches();
+            $featureDetails = [];
         }
 
         return [
@@ -228,6 +273,7 @@ class HandleInertiaRequests extends Middleware
             "plan_id" => $store->plan_id,
             "label" => $label,
             "features" => $featureCodes,
+            "feature_details" => $featureDetails,
             "max_users" => $maxUsers,
             "max_branches" => $maxBranches,
             "expires_at" => $store->plan_expires_at,
