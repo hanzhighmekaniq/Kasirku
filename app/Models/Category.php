@@ -16,7 +16,6 @@ class Category extends Model
         "store_id",
         "parent_id",
         "name",
-        "type",
         "slug",
         "description",
     ];
@@ -53,5 +52,27 @@ class Category extends Model
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    /**
+     * Get full breadcrumb path: "Pakaian > Kaos > Lengan Panjang"
+     */
+    public function getPathAttribute(): string
+    {
+        $parts = [$this->name];
+        $current = $this->parent;
+        while ($current) {
+            array_unshift($parts, $current->name);
+            $current = $current->parent;
+        }
+        return implode(" > ", $parts);
+    }
+
+    /**
+     * All ancestors up to root
+     */
+    public function ancestors(): BelongsTo
+    {
+        return $this->parent()->with("ancestors");
     }
 }

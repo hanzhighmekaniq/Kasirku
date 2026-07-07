@@ -42,77 +42,102 @@ class PurchaseController extends Controller
             "unpaid" => $purchases->where("payment_status", "unpaid")->count(),
         ];
 
+        $store = Store::with("storeType")->find($storeId);
+        $storeTypeCode = $store?->getRelation("storeType")?->code ?? "retail";
+
         return Inertia::render("Admin/Purchases/Index", [
             "purchases" => $purchases,
             "stats" => $stats,
-            "storeType" =>
-                \App\Models\Store::with("storeType")
-                    ->find($storeId)
-                    ?->getRelation("storeType")?->code ?? "retail",
+            "storeType" => $storeTypeCode,
         ]);
     }
 
     public function create()
     {
-        $storeId = session("current_store_id");
-        $store = Store::with("storeType")->find($storeId);
-        $storeTypeCode = $store?->getRelation("storeType")?->code ?? "retail";
+        try {
+            // Gunakan storeScope untuk mendapatkan store ID dengan fallback
+            [$storeId, $branchId] = $this->storeScope();
+            
+            if (!$storeId) {
+                \Log::warning('Purchase Create: No store ID found');
+                return redirect()->route('admin.dashboard')
+                    ->with('error', 'Silakan pilih toko terlebih dahulu.');
+            }
+            
+            // Load store dengan eager loading storeType
+            $store = Store::with("storeType")->find($storeId);
+            
+            // Pastikan store ada
+            if (!$store) {
+                \Log::error("Purchase Create: Store not found - ID: {$storeId}");
+                return redirect()->route('admin.dashboard')
+                    ->with('error', 'Toko tidak ditemukan.');
+            }
+            
+            // Ambil store type code
+            // CATATAN: Gunakan accessor yang return string, atau akses relasi dengan getRelation
+            $storeType = $store->getRelation("storeType");
+            if (!$storeType) {
+                \Log::error("Purchase Create: Store type not found for store ID: {$storeId}");
+                return redirect()->route('admin.dashboard')
+                    ->with('error', 'Tipe toko tidak ditemukan.');
+            }
+            
+            $storeTypeCode = $storeType->code ?? "retail";
+            \Log::info("Purchase Create: Store {$storeId}, Type: {$storeTypeCode}");
 
-        // Filter products by store type:
-        // fnb → raw_material (bahan baku)
-        // rental → rental_item
-        // service/ticket/hospitality/session/parking → service / time_based
-        // retail dan lainnya → finished_goods + combo
-        $products = Product::forStore($storeId)
-            ->where("is_active", true)
-            ->when(
-                $store && $storeTypeCode === "fnb",
-                fn($q) => $q->where("type", "raw_material"),
-            )
-            ->when(
-                $store && $storeTypeCode === "rental",
-                fn($q) => $q->whereIn("type", [
-                    "rental_item",
-                    "finished_goods",
-                ]),
-            )
-            ->when(
-                $store &&
-                    $store &&
-                    $store &&
-                    !in_array($storeTypeCode, ["fnb", "rental"]),
-                fn($q) => $q->whereIn("type", [
-                    "finished_goods",
-                    "combo",
-                    "service",
-                    "time_based",
-                ]),
-            )
-            ->with("stocks", fn($q) => $q->where("store_id", $storeId))
-            ->orderBy("name")
-            ->get()
-            ->map(
-                fn($p) => [
+            // Filter products by store type
+            $productsQuery = Product::forStore($storeId)
+                ->where("is_active", true);
+                
+            if ($storeTypeCode === "fnb") {
+                $productsQuery->where("type", "raw_material");
+            } elseif ($storeTypeCode === "rental") {
+                $productsQuery->whereIn("type", ["rental_item", "finished_goods"]);
+            } else {
+                $productsQuery->whereIn("type", ["finished_goods", "combo", "service", "time_based"]);
+            }
+            
+            $products = $productsQuery
+                ->with("stocks", fn($q) => $q->where("store_id", $storeId))
+                ->orderBy("name")
+                ->get()
+                ->map(fn($p) => [
                     "id" => $p->id,
                     "name" => $p->name,
                     "sku" => $p->sku,
-                    "cost_price" => $p->cost_price,
+                    "cost_price" => (float) ($p->cost_price ?? 0),
                     "type" => $p->type,
-                    "stock" =>
-                        $p->stocks->sum("quantity") -
-                        $p->stocks->sum("reserved_quantity"),
-                    "base_unit" => $p->base_unit,
-                ],
-            );
+                    "stock" => $p->stocks->sum("quantity") - $p->stocks->sum("reserved_quantity"),
+                    "base_unit" => $p->base_unit ?? "pcs",
+                ]);
 
-        return Inertia::render("Admin/Purchases/Create", [
-            "suppliers" => Supplier::where("store_id", $storeId)->get(),
-            "products" => $products,
-            "paymentMethods" => PaymentMethod::forStore($storeId)
+            $suppliers = Supplier::where("store_id", $storeId)
+                ->orderBy("name")
+                ->get(['id', 'name', 'phone', 'email']);
+
+            $paymentMethods = PaymentMethod::forStore($storeId)
                 ->where("is_active", true)
-                ->get(),
-            "storeType" => $storeTypeCode ?? "retail",
-        ]);
+                ->orderBy("name")
+                ->get(['id', 'name', 'type']);
+
+            \Log::info("Purchase Create: Rendering with " . count($products) . " products, " . 
+                       count($suppliers) . " suppliers, " . count($paymentMethods) . " payment methods");
+
+            return Inertia::render("Admin/Purchases/Create", [
+                "suppliers" => $suppliers,
+                "products" => $products,
+                "paymentMethods" => $paymentMethods,
+                "storeType" => $storeTypeCode,
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Purchase Create Error: ' . $e->getMessage());
+            \Log::error('Stack Trace: ' . $e->getTraceAsString());
+            
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'Terjadi kesalahan saat memuat halaman pembelian: ' . $e->getMessage());
+        }
     }
 
     public function store(Request $request)

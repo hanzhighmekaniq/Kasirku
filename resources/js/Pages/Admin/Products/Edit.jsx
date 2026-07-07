@@ -61,7 +61,7 @@ export default function Edit({
     };
 
     const { data, setData, post, processing, errors } = useForm({
-        _method: "PUT",
+        _method: "PATCH",
         name: product.name ?? "",
         sku: product.sku ?? "",
         barcode: product.barcode ?? "",

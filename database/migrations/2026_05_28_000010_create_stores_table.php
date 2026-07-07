@@ -23,7 +23,6 @@ return new class extends Migration {
                 ->constrained("store_types")
                 ->restrictOnDelete();
             // modules: { "pos_modes": ["retail","fnb","service"], "features": ["kitchen","queue","booking","delivery","rental","parking","membership","commission"] }
-            $table->json("modules")->nullable();
             $table->string("logo")->nullable();
             $table->string("currency", 10)->default("IDR");
             $table->unsignedTinyInteger("decimal_places")->default(0);
