@@ -44,6 +44,9 @@ export default function Show({
     storeType,
     canClose,
     canManage,
+    prevShift,
+    nextShift,
+    pendingCount = 0,
 }) {
     const isOpen = shift.status === "open";
 
@@ -186,6 +189,60 @@ export default function Show({
                             </p>
                         </div>
                     </div>
+
+                    {/* Prev/Next navigation */}
+                    <div className="flex items-center gap-1 sm:ml-auto">
+                        {prevShift && (
+                            <Link
+                                href={route(
+                                    "admin.cashier-shifts.show",
+                                    prevShift.id,
+                                )}
+                                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                                title={prevShift.shift_no}
+                            >
+                                <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M15.75 19.5L8.25 12l7.5-7.5"
+                                    />
+                                </svg>
+                                Sebelumnya
+                            </Link>
+                        )}
+                        {nextShift && (
+                            <Link
+                                href={route(
+                                    "admin.cashier-shifts.show",
+                                    nextShift.id,
+                                )}
+                                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                                title={nextShift.shift_no}
+                            >
+                                Berikutnya
+                                <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                                    />
+                                </svg>
+                            </Link>
+                        )}
+                    </div>
                 </div>
             }
         >
@@ -299,6 +356,26 @@ export default function Show({
                                             className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50"
                                         >
                                             Hapus
+                                        </button>
+                                        <button
+                                            onClick={() => window.print()}
+                                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                                            title="Cetak rekap shift"
+                                        >
+                                            <svg
+                                                className="h-4 w-4 inline mr-1"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                strokeWidth={1.5}
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.23c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z"
+                                                />
+                                            </svg>
+                                            Cetak
                                         </button>
                                     </div>
                                 )}
@@ -664,6 +741,15 @@ export default function Show({
                                     {fmt(summary?.expected_cash)}
                                 </p>
                             </div>
+                            {pendingCount > 0 && (
+                                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                                    <p className="text-sm font-medium text-amber-800">
+                                        ⚠️ Ada {pendingCount} transaksi tertunda
+                                        (hold/draft) dalam shift ini. Tutup
+                                        shift tetap akan melanjutkan.
+                                    </p>
+                                </div>
+                            )}
                             <div>
                                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
                                     Kas Aktual (Fisik){" "}
@@ -701,6 +787,20 @@ export default function Show({
                                         )}
                                     </p>
                                 )}
+                                {closeData.actual_cash !== "" &&
+                                    Math.abs(
+                                        parseFloat(closeData.actual_cash || 0) -
+                                            (summary?.expected_cash ?? 0),
+                                    ) > 50000 && (
+                                        <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                                            <p className="text-xs font-medium text-amber-700">
+                                                ⚠️ Selisih kas lebih dari Rp
+                                                50.000. Pastikan perhitungan kas
+                                                aktual sudah benar sebelum
+                                                menutup shift.
+                                            </p>
+                                        </div>
+                                    )}
                             </div>
                             {(summary?.payment_breakdown ?? []).length > 0 && (
                                 <div>
@@ -914,7 +1014,8 @@ export default function Show({
                         <div className="mt-5 flex justify-end gap-2">
                             <button
                                 onClick={() => setShowDelete(false)}
-                                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                disabled={deleting}
+                                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                             >
                                 Batal
                             </button>

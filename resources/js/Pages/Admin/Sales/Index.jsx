@@ -366,81 +366,17 @@ export default function Index({
                     label="Total Transaksi"
                     value={stats.total}
                     color="slate"
-                    icon={
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                            />
-                        </svg>
-                    }
                 />
                 <SummaryCard
                     label="Selesai"
                     value={stats.completed}
                     color="emerald"
-                    icon={
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
-                    }
                 />
-                <SummaryCard
-                    label="Draft"
-                    value={stats.draft}
-                    color="amber"
-                    icon={
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"
-                            />
-                        </svg>
-                    }
-                />
+                <SummaryCard label="Draft" value={stats.draft} color="amber" />
                 <SummaryCard
                     label="Pendapatan"
                     value={fmtRp(stats.totalRevenue)}
                     color="indigo"
-                    icon={
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
-                    }
                 />
             </div>
 
@@ -1020,30 +956,19 @@ export default function Index({
     );
 }
 
-function SummaryCard({ label, value, icon, color = "slate" }) {
-    const colors = {
-        slate: "bg-slate-50 text-slate-600",
-        emerald: "bg-emerald-50 text-emerald-600",
-        amber: "bg-amber-50 text-amber-600",
-        indigo: "bg-indigo-50 text-indigo-600",
+function SummaryCard({ label, value, color = "slate" }) {
+    const borders = {
+        slate: "border-l-slate-400",
+        emerald: "border-l-emerald-400",
+        amber: "border-l-amber-400",
+        indigo: "border-l-indigo-400",
     };
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-xs font-medium text-slate-400">
-                        {label}
-                    </p>
-                    <p className="mt-1 text-2xl font-bold text-slate-800">
-                        {value}
-                    </p>
-                </div>
-                <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}
-                >
-                    {icon}
-                </div>
-            </div>
+        <div
+            className={`rounded-2xl border border-slate-200 border-l-4 bg-white p-4 shadow-sm ${borders[color] ?? ""}`}
+        >
+            <p className="text-xs font-medium text-slate-400">{label}</p>
+            <p className="mt-1 text-xl font-bold text-slate-800">{value}</p>
         </div>
     );
 }

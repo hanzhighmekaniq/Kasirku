@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { router } from "@inertiajs/react";
 import { X } from "lucide-react";
+import SearchableSelect from "@/Components/ui/SearchableSelect";
 
 export default function QuickStockModal({ product, type, onClose, onSuccess }) {
     const [qty, setQty] = useState("");
@@ -14,19 +15,19 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
     const isIn = type === "in";
 
     const reasonsIn = [
-        ["received", "Terima Barang"],
-        ["initial_stock", "Stok Awal"],
-        ["production", "Produksi Sendiri"],
-        ["correction", "Koreksi Stok"],
-        ["other", "Lainnya"],
+        { id: "received", name: "Terima Barang" },
+        { id: "initial_stock", name: "Stok Awal" },
+        { id: "production", name: "Produksi Sendiri" },
+        { id: "correction", name: "Koreksi Stok" },
+        { id: "other", name: "Lainnya" },
     ];
 
     const reasonsOut = [
-        ["correction", "Koreksi Stok"],
-        ["damaged", "Barang Rusak"],
-        ["expired", "Barang Expired"],
-        ["lost", "Barang Hilang"],
-        ["other", "Lainnya"],
+        { id: "correction", name: "Koreksi Stok" },
+        { id: "damaged", name: "Barang Rusak" },
+        { id: "expired", name: "Barang Expired" },
+        { id: "lost", name: "Barang Hilang" },
+        { id: "other", name: "Lainnya" },
     ];
 
     const reasonOptions = isIn ? reasonsIn : reasonsOut;
@@ -65,9 +66,9 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
             <div className="relative w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-                <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-slate-800">
-                        {isIn ? "➕ Tambah Stok" : "➖ Kurangi Stok"}
+                <div className="mb-5 flex items-center justify-between">
+                    <h3 className="text-base font-semibold text-slate-800">
+                        {isIn ? "Tambah Stok" : "Kurangi Stok"}
                     </h3>
                     <button
                         onClick={onClose}
@@ -79,9 +80,12 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                 </div>
 
                 <div className="space-y-4">
+                    {/* Produk */}
                     <div>
-                        <p className="text-sm text-slate-500">Produk</p>
-                        <p className="font-medium text-slate-800">
+                        <p className="text-xs font-medium text-slate-400">
+                            Produk
+                        </p>
+                        <p className="mt-0.5 text-sm font-medium text-slate-800">
                             {product.name}
                         </p>
                         <p className="text-xs text-slate-400">
@@ -89,10 +93,13 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                         </p>
                     </div>
 
+                    {/* Stok Saat Ini */}
                     <div>
-                        <p className="text-sm text-slate-500">Stok Saat Ini</p>
+                        <p className="text-xs font-medium text-slate-400">
+                            Stok Saat Ini
+                        </p>
                         <p
-                            className={`text-xl font-bold ${
+                            className={`mt-0.5 text-xl font-bold ${
                                 product.track_stock &&
                                 product.stock <= (product.stock_minimum || 0)
                                     ? "text-red-600"
@@ -105,8 +112,9 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                         </p>
                     </div>
 
+                    {/* Qty */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
                             Qty ({product.unit})
                         </label>
                         <input
@@ -116,7 +124,7 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                             placeholder="0"
                             min="0.0001"
                             step="any"
-                            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="w-full rounded-xl border border-slate-300 py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                             autoFocus
                         />
                         {!isIn && qty && Number(qty) > (product.stock ?? 0) && (
@@ -127,25 +135,23 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                         )}
                     </div>
 
+                    {/* Alasan — pakai SearchableSelect */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
                             Alasan
                         </label>
-                        <select
+                        <SearchableSelect
+                            options={reasonOptions}
                             value={reason}
-                            onChange={(e) => setReason(e.target.value)}
-                            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                        >
-                            {reasonOptions.map(([val, lbl]) => (
-                                <option key={val} value={val}>
-                                    {lbl}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(id) => setReason(id)}
+                            placeholder="Pilih alasan..."
+                            searchPlaceholder="Ketik alasan…"
+                        />
                     </div>
 
+                    {/* Catatan */}
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
                             Catatan{" "}
                             <span className="font-normal text-slate-400">
                                 (opsional)
@@ -156,7 +162,7 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="misal: dari supplier baru"
-                            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="w-full rounded-xl border border-slate-300 py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
                     </div>
 
@@ -171,7 +177,7 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                     <button
                         onClick={onClose}
                         disabled={processing}
-                        className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                        className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
                     >
                         Batal
                     </button>
@@ -183,7 +189,7 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                             Number(qty) <= 0 ||
                             (!isIn && Number(qty) > (product.stock ?? 0))
                         }
-                        className={`rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md transition disabled:opacity-60 ${
+                        className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-md transition disabled:opacity-60 ${
                             isIn
                                 ? "bg-gradient-to-r from-emerald-500 to-green-600 shadow-emerald-500/30 hover:from-emerald-600 hover:to-green-700"
                                 : "bg-gradient-to-r from-red-500 to-rose-600 shadow-red-500/30 hover:from-red-600 hover:to-rose-700"

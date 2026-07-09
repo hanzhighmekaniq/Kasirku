@@ -114,6 +114,22 @@ function StockBadge({ product }) {
     );
 }
 
+function SummaryCard({ label, value, color = "slate" }) {
+    const borders = {
+        slate: "border-l-slate-400",
+        emerald: "border-l-emerald-400",
+        rose: "border-l-rose-400",
+    };
+    return (
+        <div
+            className={`rounded-2xl border border-slate-200 border-l-4 bg-white p-4 shadow-sm ${borders[color] ?? ""}`}
+        >
+            <p className="text-xs font-medium text-slate-400">{label}</p>
+            <p className="mt-1 text-xl font-bold text-slate-800">{value}</p>
+        </div>
+    );
+}
+
 export default function Index({
     products,
     allCategories = [],
@@ -243,86 +259,28 @@ export default function Index({
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {[
-                    {
-                        label: `Total ${pageTitle}`,
-                        value: stats.total,
-                        icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10",
-                        color: "text-slate-700",
-                    },
-                    {
-                        label: "Aktif",
-                        value: stats.active,
-                        icon: "M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-                        color: "text-emerald-600",
-                    },
-                    {
-                        label: "Nonaktif",
-                        value: stats.inactive,
-                        icon: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636",
-                        color: "text-slate-400",
-                    },
-                ].map((s) => (
-                    <div
-                        key={s.label}
-                        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                                <svg
-                                    className={`h-5 w-5 ${s.color}`}
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d={s.icon}
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-500">
-                                    {s.label}
-                                </p>
-                                <p className={`text-xl font-bold ${s.color}`}>
-                                    {s.value}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+                <SummaryCard
+                    label={`Total ${pageTitle}`}
+                    value={stats.total}
+                    color="slate"
+                />
+                <SummaryCard
+                    label="Aktif"
+                    value={stats.active}
+                    color="emerald"
+                />
                 {showStock && (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                                <svg
-                                    className="h-5 w-5 text-red-600"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-500">
-                                    Stok Menipis
-                                </p>
-                                <p className="text-xl font-bold text-red-600">
-                                    {stats.lowStock}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    <SummaryCard
+                        label="Stok Menipis"
+                        value={stats.lowStock}
+                        color="rose"
+                    />
                 )}
+                <SummaryCard
+                    label="Nonaktif"
+                    value={stats.inactive}
+                    color="slate"
+                />
             </div>
 
             {/* Table card */}
@@ -351,7 +309,7 @@ export default function Index({
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nama, SKU, atau barcode..."
-                                className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                             />
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -374,7 +332,6 @@ export default function Index({
                                     onChange={(v) => setFilterCategory(v)}
                                     onClear={() => setFilterCategory("")}
                                     placeholder="Semua Kategori"
-                                    size="sm"
                                 />
                             </div>
                             <Select
@@ -396,7 +353,7 @@ export default function Index({
                                         setFilterCategory("");
                                         setFilterStatus("");
                                     }}
-                                    className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                                    className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
                                 >
                                     <svg
                                         className="h-3.5 w-3.5"

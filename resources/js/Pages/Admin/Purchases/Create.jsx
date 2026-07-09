@@ -1,48 +1,27 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Field from "@/Components/ui/Field";
+import SectionCard from "@/Components/ui/SectionCard";
+import SearchableSelect from "@/Components/ui/SearchableSelect";
 
 /* ── helpers ──────────────────────────────────────── */
 const fmtRp = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
 
-function inputCls(hasError = false) {
-    return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
+const inputCls = (hasError = false) =>
+    `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         hasError
             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
             : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-200"
     }`;
-}
-
-function SectionCard({ title, subtitle, children }) {
-    return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
-                <h3 className="text-base font-semibold text-slate-900">
-                    {title}
-                </h3>
-                {subtitle && (
-                    <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>
-                )}
-            </div>
-            <div className="p-6">{children}</div>
-        </div>
-    );
-}
-
-function Field({ label, required, error, children }) {
-    return (
-        <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                {label} {required && <span className="text-red-500">*</span>}
-            </label>
-            {children}
-            {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-        </div>
-    );
-}
 
 /* ── Product combobox ──────────────────────────────── */
-function ProductCombobox({ products, storeType, onPick }) {
+export function ProductCombobox({
+    products,
+    storeType,
+    onPick,
+    excludeIds = [],
+}) {
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
     const [idx, setIdx] = useState(0);
@@ -53,15 +32,17 @@ function ProductCombobox({ products, storeType, onPick }) {
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
-        if (!q) return products.slice(0, 30);
-        return products
+        const excludeSet = new Set(excludeIds.map(String));
+        const available = products.filter((p) => !excludeSet.has(String(p.id)));
+        if (!q) return available.slice(0, 30);
+        return available
             .filter(
                 (p) =>
                     p.name.toLowerCase().includes(q) ||
                     (p.sku && p.sku.toLowerCase().includes(q)),
             )
             .slice(0, 30);
-    }, [query, products]);
+    }, [query, products, excludeIds]);
 
     // Close on outside click
     useEffect(() => {
@@ -402,9 +383,9 @@ export default function Create({
             )}
 
             <form onSubmit={submit}>
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
                     {/* ── Kolom utama ── */}
-                    <div className="space-y-5 lg:col-span-2">
+                    <div className="space-y-2 lg:col-span-2">
                         {/* Info dasar */}
                         <SectionCard title="Informasi Pembelian">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -413,25 +394,17 @@ export default function Create({
                                     required
                                     error={errors.supplier_id}
                                 >
-                                    <select
+                                    <SearchableSelect
+                                        options={suppliers}
                                         value={data.supplier_id}
-                                        onChange={(e) =>
-                                            setData(
-                                                "supplier_id",
-                                                e.target.value,
-                                            )
+                                        onChange={(id) =>
+                                            setData("supplier_id", id)
                                         }
-                                        className={inputCls(
-                                            !!errors.supplier_id,
-                                        )}
-                                    >
-                                        <option value="">Pilih Supplier</option>
-                                        {suppliers.map((s) => (
-                                            <option key={s.id} value={s.id}>
-                                                {s.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        placeholder="Pilih Supplier"
+                                        searchPlaceholder="Ketik nama supplier…"
+                                        error={!!errors.supplier_id}
+                                        required
+                                    />
                                 </Field>
                                 <Field
                                     label="Tanggal Pembelian"
@@ -470,6 +443,9 @@ export default function Create({
                                     products={products}
                                     storeType={storeType}
                                     onPick={handlePick}
+                                    excludeIds={data.items.map(
+                                        (i) => i.product_id,
+                                    )}
                                 />
 
                                 {/* Step 2: isi qty + harga setelah pilih produk */}
@@ -770,30 +746,16 @@ export default function Create({
                                         label="Metode Pembayaran"
                                         error={errors.payment_method_id}
                                     >
-                                        <select
+                                        <SearchableSelect
+                                            options={paymentMethods}
                                             value={data.payment_method_id}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "payment_method_id",
-                                                    e.target.value,
-                                                )
+                                            onChange={(id) =>
+                                                setData("payment_method_id", id)
                                             }
-                                            className={inputCls(
-                                                !!errors.payment_method_id,
-                                            )}
-                                        >
-                                            <option value="">
-                                                Pilih Metode
-                                            </option>
-                                            {paymentMethods.map((pm) => (
-                                                <option
-                                                    key={pm.id}
-                                                    value={pm.id}
-                                                >
-                                                    {pm.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            placeholder="Pilih Metode"
+                                            searchPlaceholder="Ketik nama metode…"
+                                            error={!!errors.payment_method_id}
+                                        />
                                     </Field>
                                     <Field
                                         label="Jumlah Dibayar"

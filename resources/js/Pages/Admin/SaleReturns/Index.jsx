@@ -58,9 +58,8 @@ export default function Index({ saleReturns }) {
                     (r.customer?.name ?? "").toLowerCase().includes(q),
             );
         }
-        if (statusFilter !== "all") {
+        if (statusFilter !== "all")
             list = list.filter((r) => r.status === statusFilter);
-        }
         return list;
     }, [saleReturns, search, statusFilter]);
 
@@ -78,28 +77,25 @@ export default function Index({ saleReturns }) {
 
     const handleDelete = () => {
         setDeleting(true);
-        router.delete(
-            route("admin.sale-returns.destroy", deleteTarget.id),
-            {
-                preserveScroll: true,
-                onFinish: () => {
-                    setDeleting(false);
-                    setDeleteTarget(null);
-                },
+        router.delete(route("admin.sale-returns.destroy", deleteTarget.id), {
+            preserveScroll: true,
+            onFinish: () => {
+                setDeleting(false);
+                setDeleteTarget(null);
             },
-        );
+        });
     };
 
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-lg font-semibold text-slate-800">
+                    <h2 className="text-base font-semibold text-slate-800">
                         Retur Penjualan
                     </h2>
                     <Link
                         href={route("admin.sale-returns.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700"
                     >
                         <svg
                             className="h-4 w-4"
@@ -121,121 +117,33 @@ export default function Index({ saleReturns }) {
         >
             <Head title="Retur Penjualan" />
 
-            <div className="space-y-5">
-                {/* Stats Cards */}
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex items-center gap-4 px-5 py-4">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600">
-                                <svg
-                                    className="h-5 w-5 text-white"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-400">
-                                    Total Retur
-                                </p>
-                                <p className="text-lg font-bold text-slate-800">
-                                    {stats.total}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex items-center gap-4 px-5 py-4">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500">
-                                <svg
-                                    className="h-5 w-5 text-white"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-400">
-                                    Selesai
-                                </p>
-                                <p className="text-lg font-bold text-slate-800">
-                                    {stats.completed}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex items-center gap-4 px-5 py-4">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-400 to-slate-500">
-                                <svg
-                                    className="h-5 w-5 text-white"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-400">
-                                    Dibatalkan
-                                </p>
-                                <p className="text-lg font-bold text-slate-800">
-                                    {stats.cancelled}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex items-center gap-4 px-5 py-4">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500">
-                                <svg
-                                    className="h-5 w-5 text-white"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-400">
-                                    Total Nilai
-                                </p>
-                                <p className="text-lg font-bold text-slate-800">
-                                    {fmtRp(stats.totalAmount)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+            <div className="space-y-4">
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <SummaryCard
+                        label="Total Retur"
+                        value={stats.total}
+                        color="indigo"
+                    />
+                    <SummaryCard
+                        label="Selesai"
+                        value={stats.completed}
+                        color="emerald"
+                    />
+                    <SummaryCard
+                        label="Dibatalkan"
+                        value={stats.cancelled}
+                        color="slate"
+                    />
+                    <SummaryCard
+                        label="Total Nilai"
+                        value={fmtRp(stats.totalAmount)}
+                        color="amber"
+                    />
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <div className="relative w-full max-w-xs">
                         <svg
                             className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
@@ -258,7 +166,7 @@ export default function Index({ saleReturns }) {
                             className="block w-full rounded-xl border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1 sm:ml-auto">
                         {["all", "completed", "cancelled"].map((s) => (
                             <button
                                 key={s}
@@ -279,127 +187,146 @@ export default function Index({ saleReturns }) {
                     </div>
                 </div>
 
-                {/* Desktop Table */}
+                {/* Table */}
                 <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
-                    <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/60">
-                                <th className="px-5 py-3.5 font-medium text-slate-500">
-                                    No. Retur
-                                </th>
-                                <th className="px-5 py-3.5 font-medium text-slate-500">
-                                    Penjualan Asal
-                                </th>
-                                <th className="px-5 py-3.5 font-medium text-slate-500">
-                                    Pelanggan
-                                </th>
-                                <th className="px-5 py-3.5 font-medium text-slate-500">
-                                    Items
-                                </th>
-                                <th className="px-5 py-3.5 text-right font-medium text-slate-500">
-                                    Total
-                                </th>
-                                <th className="px-5 py-3.5 font-medium text-slate-500">
-                                    Tanggal
-                                </th>
-                                <th className="px-5 py-3.5 font-medium text-slate-500">
-                                    Status
-                                </th>
-                                <th className="px-5 py-3.5 text-right font-medium text-slate-500">
-                                    Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filtered.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan={8}
-                                        className="px-5 py-16 text-center text-slate-400"
-                                    >
-                                        <svg
-                                            className="mx-auto mb-3 h-10 w-10 text-slate-300"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth={1.5}
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
-                                            />
-                                        </svg>
-                                        <p className="text-sm">
-                                            Belum ada retur penjualan
-                                        </p>
-                                    </td>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead>
+                                <tr className="border-b border-slate-100 bg-slate-50">
+                                    <th className="px-5 py-3 text-xs font-semibold text-slate-500">
+                                        No. Retur
+                                    </th>
+                                    <th className="px-5 py-3 text-xs font-semibold text-slate-500">
+                                        Penjualan Asal
+                                    </th>
+                                    <th className="px-5 py-3 text-xs font-semibold text-slate-500">
+                                        Pelanggan
+                                    </th>
+                                    <th className="px-5 py-3 text-xs font-semibold text-slate-500">
+                                        Items
+                                    </th>
+                                    <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500">
+                                        Total
+                                    </th>
+                                    <th className="px-5 py-3 text-xs font-semibold text-slate-500">
+                                        Tanggal
+                                    </th>
+                                    <th className="px-5 py-3 text-xs font-semibold text-slate-500">
+                                        Status
+                                    </th>
+                                    <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500">
+                                        Aksi
+                                    </th>
                                 </tr>
-                            ) : (
-                                filtered.map((retur) => (
-                                    <tr
-                                        key={retur.id}
-                                        className="transition hover:bg-slate-50/50"
-                                    >
-                                        <td className="px-5 py-3.5 font-medium text-slate-800">
-                                            {retur.return_no}
-                                        </td>
-                                        <td className="px-5 py-3.5 text-slate-600">
-                                            {retur.sale?.sale_no ?? "-"}
-                                        </td>
-                                        <td className="px-5 py-3.5 text-slate-500">
-                                            {retur.customer?.name ?? "-"}
-                                        </td>
-                                        <td className="px-5 py-3.5 text-slate-600">
-                                            {retur.item_count ?? "-"}
-                                        </td>
-                                        <td className="px-5 py-3.5 text-right font-medium text-slate-700">
-                                            {fmtRp(retur.total_amount)}
-                                        </td>
-                                        <td className="px-5 py-3.5 text-xs text-slate-500">
-                                            {fmtDate(retur.return_date)}
-                                        </td>
-                                        <td className="px-5 py-3.5">
-                                            <StatusBadge status={retur.status} />
-                                        </td>
-                                        <td className="px-5 py-3.5 text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                <Link
-                                                    href={route(
-                                                        "admin.sale-returns.show",
-                                                        retur.id,
-                                                    )}
-                                                    className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50 hover:text-indigo-800"
-                                                >
-                                                    Detail
-                                                </Link>
-                                                {retur.status !==
-                                                    "completed" && (
-                                                    <button
-                                                        onClick={() =>
-                                                            setDeleteTarget(
-                                                                retur,
-                                                            )
-                                                        }
-                                                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-50 hover:text-red-700"
-                                                    >
-                                                        Hapus
-                                                    </button>
-                                                )}
-                                            </div>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {filtered.length === 0 ? (
+                                    <tr>
+                                        <td
+                                            colSpan={8}
+                                            className="px-5 py-16 text-center"
+                                        >
+                                            <svg
+                                                className="mx-auto mb-3 h-12 w-12 text-slate-300"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                strokeWidth={1}
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                                                />
+                                            </svg>
+                                            <p className="text-sm font-medium text-slate-400">
+                                                Belum ada retur penjualan
+                                            </p>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : (
+                                    filtered.map((retur) => (
+                                        <tr
+                                            key={retur.id}
+                                            className="transition hover:bg-slate-50"
+                                        >
+                                            <td className="px-5 py-3.5 font-mono text-xs font-medium text-slate-800">
+                                                {retur.return_no}
+                                            </td>
+                                            <td className="px-5 py-3.5 text-slate-600">
+                                                {retur.sale?.sale_no ?? "-"}
+                                            </td>
+                                            <td className="px-5 py-3.5 text-slate-500">
+                                                {retur.customer?.name ?? "-"}
+                                            </td>
+                                            <td className="px-5 py-3.5 text-slate-600">
+                                                {retur.item_count ?? "-"}
+                                            </td>
+                                            <td className="px-5 py-3.5 text-right font-medium text-slate-700">
+                                                {fmtRp(retur.total_amount)}
+                                            </td>
+                                            <td className="px-5 py-3.5 text-xs text-slate-500">
+                                                {fmtDate(retur.return_date)}
+                                            </td>
+                                            <td className="px-5 py-3.5">
+                                                <StatusBadge
+                                                    status={retur.status}
+                                                />
+                                            </td>
+                                            <td className="px-5 py-3.5 text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Link
+                                                        href={route(
+                                                            "admin.sale-returns.show",
+                                                            retur.id,
+                                                        )}
+                                                        className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+                                                    >
+                                                        Detail
+                                                    </Link>
+                                                    {retur.status !==
+                                                        "completed" && (
+                                                        <button
+                                                            onClick={() =>
+                                                                setDeleteTarget(
+                                                                    retur,
+                                                                )
+                                                            }
+                                                            className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50"
+                                                        >
+                                                            Hapus
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                {/* Mobile Cards */}
+                {/* Mobile */}
                 <div className="space-y-3 lg:hidden">
                     {filtered.length === 0 ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-400 shadow-sm">
-                            <p className="text-sm">Belum ada retur penjualan</p>
+                        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-12 text-center shadow-sm">
+                            <svg
+                                className="mx-auto mb-3 h-12 w-12 text-slate-300"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1}
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                                />
+                            </svg>
+                            <p className="text-sm font-medium text-slate-400">
+                                Belum ada retur penjualan
+                            </p>
                         </div>
                     ) : (
                         filtered.map((retur) => (
@@ -407,14 +334,13 @@ export default function Index({ saleReturns }) {
                                 key={retur.id}
                                 className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
                             >
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <p className="font-medium text-slate-800">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-semibold text-slate-800">
                                             {retur.return_no}
                                         </p>
                                         <p className="text-xs text-slate-500">
-                                            {retur.sale?.sale_no ?? "-"}
-                                            {" · "}
+                                            {retur.sale?.sale_no ?? "-"} ·{" "}
                                             {retur.customer?.name ?? "-"}
                                         </p>
                                     </div>
@@ -437,7 +363,7 @@ export default function Index({ saleReturns }) {
                                             "admin.sale-returns.show",
                                             retur.id,
                                         )}
-                                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50 hover:text-indigo-800"
+                                        className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
                                     >
                                         Detail
                                     </Link>
@@ -446,7 +372,7 @@ export default function Index({ saleReturns }) {
                                             onClick={() =>
                                                 setDeleteTarget(retur)
                                             }
-                                            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-50 hover:text-red-700"
+                                            className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50"
                                         >
                                             Hapus
                                         </button>
@@ -457,13 +383,11 @@ export default function Index({ saleReturns }) {
                     )}
                 </div>
 
-                {/* Delete Confirmation Modal */}
+                {/* Delete Modal */}
                 {deleteTarget && (
                     <div
                         className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
-                        onMouseDown={() =>
-                            !deleting && setDeleteTarget(null)
-                        }
+                        onMouseDown={() => !deleting && setDeleteTarget(null)}
                     >
                         <div
                             className="mx-4 w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
@@ -513,5 +437,22 @@ export default function Index({ saleReturns }) {
                 )}
             </div>
         </AuthenticatedLayout>
+    );
+}
+
+function SummaryCard({ label, value, color = "slate" }) {
+    const borders = {
+        indigo: "border-l-indigo-400",
+        emerald: "border-l-emerald-400",
+        slate: "border-l-slate-400",
+        amber: "border-l-amber-400",
+    };
+    return (
+        <div
+            className={`rounded-2xl border border-slate-200 border-l-4 bg-white p-4 shadow-sm ${borders[color] ?? ""}`}
+        >
+            <p className="text-xs font-medium text-slate-400">{label}</p>
+            <p className="mt-1 text-xl font-bold text-slate-800">{value}</p>
+        </div>
     );
 }

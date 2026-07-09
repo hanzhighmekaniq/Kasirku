@@ -4,6 +4,7 @@ import { useState } from "react";
 import BarcodeScanner from "@/Components/BarcodeScanner";
 import TreePicker from "@/Components/TreePicker";
 import Select from "@/Components/ui/Select";
+import CurrencyInput from "@/Components/ui/CurrencyInput";
 import {
     BarChart3,
     ChevronLeft,
@@ -423,24 +424,14 @@ export default function Edit({
                                     required
                                     error={errors.sell_price}
                                 >
-                                    <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
-                                            Rp
-                                        </span>
-                                        <input
-                                            type="number"
-                                            value={data.sell_price}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "sell_price",
-                                                    e.target.value,
-                                                )
-                                            }
-                                            min="0"
-                                            placeholder="0"
-                                            className={`${inputCls(!!errors.sell_price)} pl-9`}
-                                        />
-                                    </div>
+                                    <CurrencyInput
+                                        value={data.sell_price}
+                                        onChange={(v) =>
+                                            setData("sell_price", v)
+                                        }
+                                        placeholder="0"
+                                        error={!!errors.sell_price}
+                                    />
                                 </Field>
                                 {feat.costPrice && (
                                     <Field
@@ -452,24 +443,14 @@ export default function Edit({
                                         }
                                         error={errors.cost_price}
                                     >
-                                        <div className="relative">
-                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
-                                                Rp
-                                            </span>
-                                            <input
-                                                type="number"
-                                                value={data.cost_price}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "cost_price",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                min="0"
-                                                placeholder="0"
-                                                className={`${inputCls(!!errors.cost_price)} pl-9`}
-                                            />
-                                        </div>
+                                        <CurrencyInput
+                                            value={data.cost_price}
+                                            onChange={(v) =>
+                                                setData("cost_price", v)
+                                            }
+                                            placeholder="0"
+                                            error={!!errors.cost_price}
+                                        />
                                     </Field>
                                 )}
                             </div>
@@ -578,31 +559,21 @@ export default function Edit({
                                             <Field
                                                 label={`Harga per ${pu.name || "Satuan"}`}
                                             >
-                                                <div className="relative">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
-                                                        Rp
-                                                    </span>
-                                                    <input
-                                                        type="number"
-                                                        value={pu.sell_price}
-                                                        onChange={(e) => {
-                                                            const updated = [
-                                                                ...data.packaging_units,
-                                                            ];
-                                                            updated[
-                                                                i
-                                                            ].sell_price =
-                                                                e.target.value;
-                                                            setData(
-                                                                "packaging_units",
-                                                                updated,
-                                                            );
-                                                        }}
-                                                        min="0"
-                                                        placeholder="0"
-                                                        className={`${inputCls(false)} pl-9`}
-                                                    />
-                                                </div>
+                                                <CurrencyInput
+                                                    value={pu.sell_price}
+                                                    onChange={(v) => {
+                                                        const updated = [
+                                                            ...data.packaging_units,
+                                                        ];
+                                                        updated[i].sell_price =
+                                                            v;
+                                                        setData(
+                                                            "packaging_units",
+                                                            updated,
+                                                        );
+                                                    }}
+                                                    placeholder="0"
+                                                />
                                                 {pu.conversion_qty > 0 &&
                                                     pu.sell_price > 0 && (
                                                         <p className="mt-1 text-[11px] text-slate-400">
@@ -696,26 +667,19 @@ export default function Edit({
                                                 label="Tarif Per Jam"
                                                 error={errors.price_per_hour}
                                             >
-                                                <div className="relative">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
-                                                        Rp
-                                                    </span>
-                                                    <input
-                                                        type="number"
-                                                        value={
-                                                            data.price_per_hour
-                                                        }
-                                                        onChange={(e) =>
-                                                            setData(
-                                                                "price_per_hour",
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        min="0"
-                                                        placeholder="0"
-                                                        className={`${inputCls(!!errors.price_per_hour)} pl-9`}
-                                                    />
-                                                </div>
+                                                <CurrencyInput
+                                                    value={data.price_per_hour}
+                                                    onChange={(v) =>
+                                                        setData(
+                                                            "price_per_hour",
+                                                            v,
+                                                        )
+                                                    }
+                                                    placeholder="0"
+                                                    error={
+                                                        !!errors.price_per_hour
+                                                    }
+                                                />
                                                 <p className="mt-1 text-xs text-slate-400">
                                                     Tarif per jam (opsional,
                                                     selain harga dasar)
@@ -874,24 +838,14 @@ export default function Edit({
                                             label="Deposit"
                                             error={errors.deposit_amount}
                                         >
-                                            <div className="relative max-w-xs">
-                                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
-                                                    Rp
-                                                </span>
-                                                <input
-                                                    type="number"
-                                                    value={data.deposit_amount}
-                                                    onChange={(e) =>
-                                                        setData(
-                                                            "deposit_amount",
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    min="0"
-                                                    placeholder="0"
-                                                    className={`${inputCls(!!errors.deposit_amount)} pl-9`}
-                                                />
-                                            </div>
+                                            <CurrencyInput
+                                                value={data.deposit_amount}
+                                                onChange={(v) =>
+                                                    setData("deposit_amount", v)
+                                                }
+                                                placeholder="0"
+                                                error={!!errors.deposit_amount}
+                                            />
                                             <p className="mt-1 text-xs text-slate-400">
                                                 Deposit yang perlu dibayar
                                                 penyewa (dikembalikan saat

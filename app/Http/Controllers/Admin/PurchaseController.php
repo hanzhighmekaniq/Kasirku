@@ -272,6 +272,9 @@ class PurchaseController extends Controller
         return Inertia::render("Admin/Purchases/Edit", [
             "purchase" => $purchase,
             "suppliers" => Supplier::where("store_id", $storeId)->get(),
+            "products" => Product::where("store_id", $storeId)
+                ->where("is_active", true)
+                ->get(),
             "paymentMethods" => PaymentMethod::forStore($storeId)
                 ->where("is_active", true)
                 ->get(),
@@ -300,11 +303,28 @@ class PurchaseController extends Controller
             "shipping_amount" => "nullable|numeric|min:0",
             "payment_method_id" => "nullable|exists:payment_methods,id",
             "paid_amount" => "nullable|numeric|min:0",
+            "items" => "required|array|min:1",
+            "items.*.product_id" => "required|exists:products,id",
+            "items.*.quantity" => "required|numeric|min:0.01",
+            "items.*.cost_price" => "required|numeric|min:0",
         ]);
 
         DB::beginTransaction();
         try {
-            // Recalculate from existing items
+            // Replace items — safe karena draft (belum ada stok movement)
+            $purchase->items()->delete();
+            foreach ($validated["items"] as $item) {
+                \App\Models\PurchaseItem::create([
+                    "purchase_id" => $purchase->id,
+                    "product_id" => $item["product_id"],
+                    "quantity" => $item["quantity"],
+                    "cost_price" => $item["cost_price"],
+                    "subtotal" => $item["quantity"] * $item["cost_price"],
+                ]);
+            }
+            $purchase->load("items");
+
+            // Recalculate from new items
             $subtotal = 0;
             foreach ($purchase->items as $item) {
                 $subtotal += $item->quantity * $item->cost_price;

@@ -1,6 +1,9 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { useMemo, useState } from "react";
+import Field from "@/Components/ui/Field";
+import SectionCard from "@/Components/ui/SectionCard";
+import SearchableSelect from "@/Components/ui/SearchableSelect";
 
 const fmtRp = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 const inputCls =
@@ -57,7 +60,9 @@ export default function Create({ sales }) {
         () =>
             selectedItems.reduce(
                 (sum, i) =>
-                    sum + parseFloat(i.return_qty || 0) * parseFloat(i.unit_price || 0),
+                    sum +
+                    parseFloat(i.return_qty || 0) *
+                        parseFloat(i.unit_price || 0),
                 0,
             ),
         [selectedItems],
@@ -130,43 +135,30 @@ export default function Create({ sales }) {
 
             <form onSubmit={submit} className="space-y-5">
                 {/* Info Card */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                        <h3 className="text-base font-semibold text-slate-900">
-                            Informasi Retur
-                        </h3>
-                    </div>
-                    <div className="space-y-4 p-6">
+                <SectionCard title="Informasi Retur">
+                    <div className="space-y-4">
                         {/* Sale selector */}
-                        <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                                Penjualan Asal{" "}
-                                <span className="text-red-500">*</span>
-                            </label>
-                            <select
+                        <Field
+                            label="Penjualan Asal"
+                            required
+                            error={errors.sale_id}
+                        >
+                            <SearchableSelect
+                                options={sales.map((s) => ({
+                                    id: s.id,
+                                    name: `${s.sale_no} — ${fmtRp(s.grand_total)}${s.customer ? ` · ${s.customer.name}` : ""}`,
+                                }))}
                                 value={data.sale_id}
-                                onChange={(e) => {
-                                    setData("sale_id", e.target.value);
-                                    fetchSaleItems(e.target.value);
+                                onChange={(id) => {
+                                    setData("sale_id", id);
+                                    fetchSaleItems(id);
                                 }}
-                                className={inputCls}
-                            >
-                                <option value="">Pilih penjualan...</option>
-                                {sales.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.sale_no} — {fmtRp(s.grand_total)}
-                                        {s.customer
-                                            ? ` · ${s.customer.name}`
-                                            : ""}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.sale_id && (
-                                <p className="mt-1 text-xs text-red-500">
-                                    {errors.sale_id}
-                                </p>
-                            )}
-                        </div>
+                                placeholder="Pilih penjualan..."
+                                searchPlaceholder="Ketik no. penjualan…"
+                                error={!!errors.sale_id}
+                                required
+                            />
+                        </Field>
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
@@ -209,23 +201,19 @@ export default function Create({ sales }) {
                             )}
                         </div>
                     </div>
-                </div>
+                </SectionCard>
 
                 {/* Items Card */}
                 {data.sale_id && (
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-900">
-                                Item Penjualan
-                            </h3>
-                            {selectedSale && (
-                                <p className="mt-0.5 text-sm text-slate-500">
-                                    {selectedSale.sale_no} · Pelanggan:{" "}
-                                    {selectedSale.customer?.name ?? "-"}
-                                </p>
-                            )}
-                        </div>
-                        <div className="p-0">
+                    <SectionCard
+                        title="Item Penjualan"
+                        subtitle={
+                            selectedSale
+                                ? `${selectedSale.sale_no} · Pelanggan: ${selectedSale.customer?.name ?? "-"}`
+                                : null
+                        }
+                    >
+                        <div className="-m-6">
                             {loadingItems ? (
                                 <p className="px-6 py-8 text-center text-sm text-slate-400">
                                     Memuat...
@@ -256,8 +244,8 @@ export default function Create({ sales }) {
                                                     </p>
                                                     <p className="text-xs text-slate-400">
                                                         SKU: {item.product_sku}{" "}
-                                                        · Qty: {item.quantity}{" "}
-                                                        · Harga:{" "}
+                                                        · Qty: {item.quantity} ·
+                                                        Harga:{" "}
                                                         {fmtRp(item.unit_price)}
                                                     </p>
                                                     {item.returned_qty > 0 && (
@@ -329,7 +317,7 @@ export default function Create({ sales }) {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </SectionCard>
                 )}
 
                 {errors.items && (

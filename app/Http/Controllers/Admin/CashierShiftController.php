@@ -51,6 +51,28 @@ class CashierShiftController extends Controller
             });
         }
 
+        // Date range filter
+        if ($request->filled("date_from")) {
+            $query->whereDate("opened_at", ">=", $request->date_from);
+        }
+        if ($request->filled("date_to")) {
+            $query->whereDate("opened_at", "<=", $request->date_to);
+        }
+
+        // Sorting
+        $sort = $request->get("sort", "opened_at");
+        $direction = $request->get("direction", "desc");
+        $allowed = [
+            "shift_no",
+            "opened_at",
+            "closed_at",
+            "total_sales",
+            "user_id",
+        ];
+        if (in_array($sort, $allowed)) {
+            $query->orderBy($sort, $direction === "asc" ? "asc" : "desc");
+        }
+
         $activeShift = CashierShift::where("store_id", $storeId)
             ->where("user_id", $user->id)
             ->where("status", "open")
@@ -59,7 +81,14 @@ class CashierShiftController extends Controller
         return Inertia::render("Admin/CashierShifts/Index", [
             "shifts" => $query->paginate(20)->withQueryString(),
             "activeShift" => $activeShift,
-            "filters" => $request->only(["status", "search"]),
+            "filters" => $request->only([
+                "status",
+                "search",
+                "date_from",
+                "date_to",
+                "sort",
+                "direction",
+            ]),
             "canOpen" => $user->can("shift.open") && !$activeShift,
             "canManage" => $user->can("shift.manage"),
         ]);
@@ -196,6 +225,28 @@ class CashierShiftController extends Controller
             ($user->can("shift.manage") ||
                 $cashierShift->user_id === $user->id);
 
+        // Prev / next navigation
+        $prevShift = CashierShift::where("store_id", $storeId)
+            ->where("opened_at", "<", $cashierShift->opened_at)
+            ->orderBy("opened_at", "desc")
+            ->first(["id", "shift_no"]);
+
+        $nextShift = CashierShift::where("store_id", $storeId)
+            ->where("opened_at", ">", $cashierShift->opened_at)
+            ->orderBy("opened_at", "asc")
+            ->first(["id", "shift_no"]);
+
+        // Check pending transactions for close warning
+        $pendingCount = 0;
+        if ($cashierShift->isOpen()) {
+            $pendingCount = \App\Models\Sale::where(
+                "cashier_shift_id",
+                $cashierShift->id,
+            )
+                ->whereIn("status", ["hold", "draft"])
+                ->count();
+        }
+
         return Inertia::render("Admin/CashierShifts/Show", [
             "shift" => $cashierShift,
             "summary" => $summary,
@@ -203,6 +254,9 @@ class CashierShiftController extends Controller
             "storeType" => $storeType,
             "canClose" => $canClose,
             "canManage" => $user->can("shift.manage"),
+            "prevShift" => $prevShift,
+            "nextShift" => $nextShift,
+            "pendingCount" => $pendingCount,
         ]);
     }
 
@@ -247,7 +301,33 @@ class CashierShiftController extends Controller
             ],
         ]);
 
+        // Cek transaksi tertunda
+        $pendingCount = \App\Models\Sale::where(
+            "cashier_shift_id",
+            $cashierShift->id,
+        )
+            ->whereIn("status", ["hold", "draft"])
+            ->count();
+
         $summary = $this->buildSummary($cashierShift);
+
+        // Cek selisih besar (threshold Rp 50.000)
+        $discrepancy = abs(
+            (float) $data["actual_cash"] - (float) $summary["expected_cash"],
+        );
+        $discrepancyThreshold = 50000;
+
+        if (
+            $discrepancy > $discrepancyThreshold &&
+            !$request->has("force_close")
+        ) {
+            return back()->with(
+                "warning",
+                "Selisih kas terlalu besar (Rp " .
+                    number_format($discrepancy, 0, ",", ".") .
+                    "). Konfirmasi ulang atau gunakan force_close.",
+            );
+        }
 
         DB::transaction(function () use ($cashierShift, $data, $summary) {
             $cashierShift->update([
@@ -292,7 +372,11 @@ class CashierShiftController extends Controller
             $cashierShift->id,
             "Menutup shift {$cashierShift->shift_no}. Total Rp " .
                 number_format($summary["total_sales"], 0, ",", "."),
-            ["action" => "close", "actual_cash" => $data["actual_cash"]],
+            [
+                "action" => "close",
+                "actual_cash" => $data["actual_cash"],
+                "pending_count" => $pendingCount,
+            ],
         );
 
         return redirect()
@@ -372,25 +456,29 @@ class CashierShiftController extends Controller
 
         $shiftNo = $cashierShift->shift_no;
 
-        // Lepas relasi sales — data penjualan tidak ikut terhapus
-        Sale::where("cashier_shift_id", $cashierShift->id)->update([
-            "cashier_shift_id" => null,
-        ]);
+        // Soft delete — catat penghapus
+        $cashierShift->deleted_by = $request->user()->id;
+        $cashierShift->save();
+        $cashierShift->delete(); // soft delete via SoftDeletes trait
 
-        $cashierShift->delete();
+        // Soft-delete related payments
+        \App\Models\CashierShiftPayment::where(
+            "cashier_shift_id",
+            $cashierShift->id,
+        )->delete();
 
         $this->log(
             $storeId,
             $cashierShift->branch_id,
             $request->user()->id,
             null,
-            "Menghapus shift {$shiftNo}",
+            "Mengarsipkan shift {$shiftNo}",
             ["action" => "delete", "shift_no" => $shiftNo],
         );
 
         return redirect()
             ->route("admin.cashier-shifts.index")
-            ->with("success", "Shift {$shiftNo} berhasil dihapus.");
+            ->with("success", "Shift {$shiftNo} berhasil diarsipkan.");
     }
 
     /* ─────────────────────────────────────────────────────────

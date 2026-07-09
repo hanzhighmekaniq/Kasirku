@@ -20,13 +20,29 @@ export default function Create({ branchName, suggestedShiftNo }) {
                         href={route("admin.cashier-shifts.index")}
                         className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
                     >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+                            />
                         </svg>
                     </Link>
                     <div>
-                        <h2 className="text-base font-semibold text-slate-800">Buka Shift Kasir</h2>
-                        {branchName && <p className="text-xs text-slate-400">{branchName}</p>}
+                        <h2 className="text-base font-semibold text-slate-800">
+                            Buka Shift Kasir
+                        </h2>
+                        {branchName && (
+                            <p className="text-xs text-slate-400">
+                                {branchName}
+                            </p>
+                        )}
                     </div>
                 </div>
             }
@@ -34,10 +50,15 @@ export default function Create({ branchName, suggestedShiftNo }) {
             <Head title="Buka Shift" />
 
             <div className="mx-auto max-w-lg">
-                <form onSubmit={submit} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <form
+                    onSubmit={submit}
+                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                >
                     {/* Header kartu */}
                     <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
-                        <p className="text-sm font-semibold text-slate-800">Informasi Shift</p>
+                        <p className="text-sm font-semibold text-slate-800">
+                            Informasi Shift
+                        </p>
                         {suggestedShiftNo && (
                             <p className="mt-0.5 text-xs text-slate-500">
                                 Nomor shift:{" "}
@@ -52,7 +73,10 @@ export default function Create({ branchName, suggestedShiftNo }) {
                     <div className="space-y-5 p-6">
                         {/* Kas Awal */}
                         <div>
-                            <label htmlFor="opening_cash" className="mb-1.5 block text-sm font-medium text-slate-700">
+                            <label
+                                htmlFor="opening_cash"
+                                className="mb-1.5 block text-sm font-medium text-slate-700"
+                            >
                                 Kas Awal <span className="text-red-500">*</span>
                             </label>
                             <div className="relative">
@@ -66,22 +90,30 @@ export default function Create({ branchName, suggestedShiftNo }) {
                                     step="1"
                                     required
                                     value={data.opening_cash}
-                                    onChange={(e) => setData("opening_cash", e.target.value)}
+                                    onChange={(e) =>
+                                        setData("opening_cash", e.target.value)
+                                    }
                                     className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                     placeholder="0"
                                 />
                             </div>
                             {errors.opening_cash && (
-                                <p className="mt-1 text-xs text-red-500">{errors.opening_cash}</p>
+                                <p className="mt-1 text-xs text-red-500">
+                                    {errors.opening_cash}
+                                </p>
                             )}
                             <p className="mt-1 text-xs text-slate-400">
-                                Jumlah uang tunai di laci kasir saat memulai shift.
+                                Jumlah uang tunai di laci kasir saat memulai
+                                shift.
                             </p>
                         </div>
 
                         {/* Catatan Pembukaan */}
                         <div>
-                            <label htmlFor="opening_note" className="mb-1.5 block text-sm font-medium text-slate-700">
+                            <label
+                                htmlFor="opening_note"
+                                className="mb-1.5 block text-sm font-medium text-slate-700"
+                            >
                                 Catatan Pembukaan
                             </label>
                             <textarea
@@ -89,12 +121,16 @@ export default function Create({ branchName, suggestedShiftNo }) {
                                 rows={3}
                                 maxLength={1000}
                                 value={data.opening_note}
-                                onChange={(e) => setData("opening_note", e.target.value)}
+                                onChange={(e) =>
+                                    setData("opening_note", e.target.value)
+                                }
                                 className="block w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                 placeholder="Opsional..."
                             />
                             {errors.opening_note && (
-                                <p className="mt-1 text-xs text-red-500">{errors.opening_note}</p>
+                                <p className="mt-1 text-xs text-red-500">
+                                    {errors.opening_note}
+                                </p>
                             )}
                         </div>
                     </div>

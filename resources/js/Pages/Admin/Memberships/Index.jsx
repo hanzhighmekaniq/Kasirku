@@ -1,6 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, router, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import CurrencyInput from "@/Components/ui/CurrencyInput";
+import SearchableSelect from "@/Components/ui/SearchableSelect";
 import ConfirmDeleteModal from "@/Pages/Admin/Products/ConfirmDeleteModal";
 
 const DURATION_LABELS = {
@@ -250,7 +252,7 @@ function MembershipModal({ open, editing, onClose }) {
         duration_value: 1,
         price: "",
         discount_percent: "",
-        point_multiplier: "",
+        point_multiplier: 1,
         benefits: "",
         is_active: true,
     });
@@ -269,7 +271,7 @@ function MembershipModal({ open, editing, onClose }) {
                 duration_value: editing.duration_value || 1,
                 price: editing.price ?? "",
                 discount_percent: editing.discount_percent ?? "",
-                point_multiplier: editing.point_multiplier ?? "",
+                point_multiplier: editing.point_multiplier || 1,
                 benefits: Array.isArray(editing.benefits)
                     ? editing.benefits.join("\n")
                     : editing.benefits || "",
@@ -301,13 +303,15 @@ function MembershipModal({ open, editing, onClose }) {
             discount_percent:
                 data.discount_percent === "" ? null : data.discount_percent,
             point_multiplier:
-                data.point_multiplier === "" ? null : data.point_multiplier,
+                data.point_multiplier === ""
+                    ? 1
+                    : Number(data.point_multiplier),
             benefits: data.benefits
                 ? data.benefits
                       .split("\n")
                       .map((b) => b.trim())
                       .filter(Boolean)
-                : null,
+                : [],
         };
 
         if (editing) {
@@ -446,22 +450,27 @@ function MembershipModal({ open, editing, onClose }) {
                     {/* Duration */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700">
+                            <label
+                                className="block text-sm font-medium text-slate-700"
+                                title="Satuan waktu keanggotaan (hari/bulan/tahun/kunjungan)"
+                            >
                                 Tipe Durasi{" "}
                                 <span className="text-red-500">*</span>
+                                <span className="ml-1 cursor-help text-slate-400">
+                                    ⓘ
+                                </span>
                             </label>
-                            <select
+                            <SearchableSelect
+                                options={[
+                                    { id: "day", name: "Hari" },
+                                    { id: "month", name: "Bulan" },
+                                    { id: "year", name: "Tahun" },
+                                    { id: "visit", name: "Kunjungan" },
+                                ]}
                                 value={data.duration_type}
-                                onChange={(e) =>
-                                    setData("duration_type", e.target.value)
-                                }
-                                className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                            >
-                                <option value="day">Hari</option>
-                                <option value="month">Bulan</option>
-                                <option value="year">Tahun</option>
-                                <option value="visit">Kunjungan</option>
-                            </select>
+                                onChange={(v) => setData("duration_type", v)}
+                                placeholder="Pilih..."
+                            />
                             {errors.duration_type && (
                                 <p className="mt-1 text-xs text-red-500">
                                     {errors.duration_type}
@@ -492,17 +501,20 @@ function MembershipModal({ open, editing, onClose }) {
 
                     {/* Price */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">
+                        <label
+                            className="block text-sm font-medium text-slate-700"
+                            title="Harga untuk bergabung ke membership ini. Isi 0 jika gratis."
+                        >
                             Harga <span className="text-red-500">*</span>
+                            <span className="ml-1 cursor-help text-slate-400">
+                                ⓘ
+                            </span>
                         </label>
-                        <input
-                            type="number"
-                            min={0}
-                            step={1}
+                        <CurrencyInput
                             value={data.price}
-                            onChange={(e) => setData("price", e.target.value)}
-                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            onChange={(v) => setData("price", v)}
                             placeholder="0"
+                            error={!!errors.price}
                         />
                         {errors.price && (
                             <p className="mt-1 text-xs text-red-500">
@@ -514,8 +526,14 @@ function MembershipModal({ open, editing, onClose }) {
                     {/* Discount & Point Multiplier */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700">
+                            <label
+                                className="block text-sm font-medium text-slate-700"
+                                title="Persentase diskon otomatis saat transaksi. Kosongkan jika tidak ada."
+                            >
                                 Diskon (%)
+                                <span className="ml-1 cursor-help text-slate-400">
+                                    ⓘ
+                                </span>
                             </label>
                             <input
                                 type="number"
@@ -536,8 +554,14 @@ function MembershipModal({ open, editing, onClose }) {
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700">
+                            <label
+                                className="block text-sm font-medium text-slate-700"
+                                title="Berapa kali lipat poin didapat. 1 = normal, 2 = 2x lipat."
+                            >
                                 Multiplier Poin
+                                <span className="ml-1 cursor-help text-slate-400">
+                                    ⓘ
+                                </span>
                             </label>
                             <input
                                 type="number"
@@ -560,7 +584,10 @@ function MembershipModal({ open, editing, onClose }) {
 
                     {/* Benefits */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">
+                        <label
+                            className="block text-sm font-medium text-slate-700"
+                            title="Benefit yang didapat member. Tulis satu per baris. Contoh: Gratis ongkir, Diskon 10%"
+                        >
                             Benefit{" "}
                             <span className="font-normal text-slate-400">
                                 (tulis satu per baris)

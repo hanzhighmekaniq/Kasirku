@@ -875,7 +875,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
                 </header>
 
-                {/* Flash */}
+                {/* Flash — pesan sukses/error statis */}
                 {flash?.success && (
                     <div className="mx-5 mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">
                         {flash.success}
