@@ -13,6 +13,7 @@ use App\Models\StockMovement;
 use App\Models\PaymentMethod;
 use App\Models\Store;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -54,94 +55,27 @@ class PurchaseController extends Controller
 
     public function create()
     {
-        try {
-            // Gunakan storeScope untuk mendapatkan store ID dengan fallback
-            [$storeId, $branchId] = $this->storeScope();
-            
-            if (!$storeId) {
-                \Log::warning('Purchase Create: No store ID found');
-                return redirect()->route('admin.dashboard')
-                    ->with('error', 'Silakan pilih toko terlebih dahulu.');
-            }
-            
-            // Load store dengan eager loading storeType
-            $store = Store::with("storeType")->find($storeId);
-            
-            // Pastikan store ada
-            if (!$store) {
-                \Log::error("Purchase Create: Store not found - ID: {$storeId}");
-                return redirect()->route('admin.dashboard')
-                    ->with('error', 'Toko tidak ditemukan.');
-            }
-            
-            // Ambil store type code
-            // CATATAN: Gunakan accessor yang return string, atau akses relasi dengan getRelation
-            $storeType = $store->getRelation("storeType");
-            if (!$storeType) {
-                \Log::error("Purchase Create: Store type not found for store ID: {$storeId}");
-                return redirect()->route('admin.dashboard')
-                    ->with('error', 'Tipe toko tidak ditemukan.');
-            }
-            
-            $storeTypeCode = $storeType->code ?? "retail";
-            \Log::info("Purchase Create: Store {$storeId}, Type: {$storeTypeCode}");
+        [$storeId] = $this->storeScope();
 
-            // Filter products by store type
-            $productsQuery = Product::forStore($storeId)
-                ->where("is_active", true);
-                
-            if ($storeTypeCode === "fnb") {
-                $productsQuery->where("type", "raw_material");
-            } elseif ($storeTypeCode === "rental") {
-                $productsQuery->whereIn("type", ["rental_item", "finished_goods"]);
-            } else {
-                $productsQuery->whereIn("type", ["finished_goods", "combo", "service", "time_based"]);
-            }
-            
-            $products = $productsQuery
-                ->with("stocks", fn($q) => $q->where("store_id", $storeId))
-                ->orderBy("name")
-                ->get()
-                ->map(fn($p) => [
-                    "id" => $p->id,
-                    "name" => $p->name,
-                    "sku" => $p->sku,
-                    "cost_price" => (float) ($p->cost_price ?? 0),
-                    "type" => $p->type,
-                    "stock" => $p->stocks->sum("quantity") - $p->stocks->sum("reserved_quantity"),
-                    "base_unit" => $p->base_unit ?? "pcs",
-                ]);
+        $store = Store::with("storeType")->find($storeId);
+        $storeTypeCode = $store?->getRelation("storeType")?->code ?? "retail";
 
-            $suppliers = Supplier::where("store_id", $storeId)
-                ->orderBy("name")
-                ->get(['id', 'name', 'phone', 'email']);
-
-            $paymentMethods = PaymentMethod::forStore($storeId)
+        return Inertia::render("Admin/Purchases/Create", [
+            "suppliers" => Supplier::where("store_id", $storeId)->get(),
+            "products" => Product::where("store_id", $storeId)
                 ->where("is_active", true)
-                ->orderBy("name")
-                ->get(['id', 'name', 'type']);
-
-            \Log::info("Purchase Create: Rendering with " . count($products) . " products, " . 
-                       count($suppliers) . " suppliers, " . count($paymentMethods) . " payment methods");
-
-            return Inertia::render("Admin/Purchases/Create", [
-                "suppliers" => $suppliers,
-                "products" => $products,
-                "paymentMethods" => $paymentMethods,
-                "storeType" => $storeTypeCode,
-            ]);
-            
-        } catch (\Exception $e) {
-            \Log::error('Purchase Create Error: ' . $e->getMessage());
-            \Log::error('Stack Trace: ' . $e->getTraceAsString());
-            
-            return redirect()->route('admin.dashboard')
-                ->with('error', 'Terjadi kesalahan saat memuat halaman pembelian: ' . $e->getMessage());
-        }
+                ->get(),
+            "paymentMethods" => PaymentMethod::forStore($storeId)
+                ->where("is_active", true)
+                ->get(),
+            "storeType" => $storeTypeCode,
+        ]);
     }
 
     public function store(Request $request)
     {
+        [$storeId, $branchId] = $this->storeScope();
+
         $validated = $request->validate([
             "supplier_id" => "required|exists:suppliers,id",
             "purchase_date" => "required|date",
@@ -150,30 +84,24 @@ class PurchaseController extends Controller
             "shipping_amount" => "nullable|numeric|min:0",
             "payment_method_id" => "nullable|exists:payment_methods,id",
             "paid_amount" => "nullable|numeric|min:0",
+            "notes" => "nullable|string|max:500",
             "items" => "required|array|min:1",
             "items.*.product_id" => "required|exists:products,id",
-            "items.*.quantity" => "required|integer|min:1",
+            "items.*.quantity" => "required|numeric|min:0.01",
             "items.*.cost_price" => "required|numeric|min:0",
         ]);
 
         DB::beginTransaction();
-
         try {
-            // Generate purchase number
-            $date = \Carbon\Carbon::parse($validated["purchase_date"]);
-            $prefix = "PB-" . $date->format("Ymd") . "-";
-            $lastPurchase = Purchase::where(
-                "purchase_no",
-                "like",
-                $prefix . "%",
-            )
-                ->orderByDesc("purchase_no")
+            // Generate purchase_no: PO-YYYYMMDD-NNN
+            $date = now()->format("Ymd");
+            $last = Purchase::where("purchase_no", "like", "PO-{$date}-%")
+                ->orderByRaw(
+                    "CAST(SUBSTRING(purchase_no, 13) AS UNSIGNED) DESC",
+                )
                 ->first();
-            $seq = 1;
-            if ($lastPurchase) {
-                $seq = (int) substr($lastPurchase->purchase_no, -3) + 1;
-            }
-            $purchaseNo = $prefix . str_pad($seq, 3, "0", STR_PAD_LEFT);
+            $next = $last ? ((int) substr($last->purchase_no, 12)) + 1 : 1;
+            $purchaseNo = "PO-{$date}-" . str_pad($next, 3, "0", STR_PAD_LEFT);
 
             // Calculate subtotal from items
             $subtotal = 0;
@@ -187,7 +115,6 @@ class PurchaseController extends Controller
             $grandTotal = $subtotal - $discount + $tax + $shipping;
             $paidAmount = $validated["paid_amount"] ?? 0;
 
-            // Determine statuses
             $status = "draft";
             $paymentStatus = "unpaid";
             if ($paidAmount >= $grandTotal && $grandTotal > 0) {
@@ -198,12 +125,10 @@ class PurchaseController extends Controller
             }
 
             $purchase = Purchase::create([
-                "store_id" =>
-                    session("current_store_id") ?? $request->user()?->store_id,
-                "branch_id" =>
-                    session("current_branch_id") ?? session("branch_id"),
+                "store_id" => $storeId,
+                "branch_id" => $branchId,
                 "supplier_id" => $validated["supplier_id"],
-                "user_id" => $request->user()?->id,
+                "user_id" => Auth::id(),
                 "purchase_no" => $purchaseNo,
                 "purchase_date" => $validated["purchase_date"],
                 "subtotal" => $subtotal,
@@ -214,6 +139,7 @@ class PurchaseController extends Controller
                 "paid_amount" => $paidAmount,
                 "status" => $status,
                 "payment_status" => $paymentStatus,
+                "notes" => $validated["notes"] ?? null,
             ]);
 
             // Create purchase items
@@ -225,51 +151,10 @@ class PurchaseController extends Controller
                     "cost_price" => $item["cost_price"],
                     "subtotal" => $item["quantity"] * $item["cost_price"],
                 ]);
-
-                // Update product cost_price if higher
-                $product = Product::find($item["product_id"]);
-                if (
-                    $product &&
-                    ($product->cost_price == 0 ||
-                        $item["cost_price"] > $product->cost_price)
-                ) {
-                    $product->update(["cost_price" => $item["cost_price"]]);
-                }
-
-                // Update stock if completed (store-level)
-                if ($status === "completed" && $product?->track_stock) {
-                    $storeId =
-                        session("current_store_id") ??
-                        $request->user()?->store_id;
-                    $branchId =
-                        session("current_branch_id") ?? session("branch_id");
-                    $stock = ProductStock::firstOrCreate(
-                        [
-                            "product_id" => $item["product_id"],
-                            "store_id" => $storeId,
-                        ],
-                        ["quantity" => 0, "reserved_quantity" => 0],
-                    );
-                    $stock->increment("quantity", $item["quantity"]);
-
-                    StockMovement::create([
-                        "product_id" => $item["product_id"],
-                        "store_id" => $storeId,
-                        "branch_id" => $branchId,
-                        "reference_type" => Purchase::class,
-                        "reference_id" => $purchase->id,
-                        "movement_type" => "purchase_in",
-                        "quantity" => $item["quantity"],
-                        "unit_cost" => $item["cost_price"],
-                        "reference_no" => $purchaseNo,
-                        "notes" => "Pembelian #{$purchaseNo}",
-                        "moved_at" => now(),
-                    ]);
-                }
             }
 
-            // Create initial payment if any
-            if ($paidAmount > 0 && $validated["payment_method_id"] ?? false) {
+            // Jika ada pembayaran, catat sebagai payment
+            if ($paidAmount > 0 && ($validated["payment_method_id"] ?? false)) {
                 PurchasePayment::create([
                     "purchase_id" => $purchase->id,
                     "payment_method_id" => $validated["payment_method_id"],
@@ -278,19 +163,47 @@ class PurchaseController extends Controller
                 ]);
             }
 
+            // Jika langsung completed (lunas), tambah stok sekaligus
+            if ($status === "completed") {
+                foreach ($purchase->items as $item) {
+                    $product = Product::find($item->product_id);
+                    if ($product?->track_stock) {
+                        $stock = ProductStock::firstOrCreate(
+                            [
+                                "product_id" => $item->product_id,
+                                "store_id" => $storeId,
+                            ],
+                            ["quantity" => 0, "reserved_quantity" => 0],
+                        );
+                        $stock->increment("quantity", $item->quantity);
+
+                        StockMovement::create([
+                            "product_id" => $item->product_id,
+                            "store_id" => $storeId,
+                            "branch_id" => $branchId,
+                            "reference_type" => Purchase::class,
+                            "reference_id" => $purchase->id,
+                            "movement_type" => "purchase_in",
+                            "quantity" => $item->quantity,
+                            "unit_cost" => $item->cost_price,
+                            "reference_no" => $purchase->purchase_no,
+                            "notes" => "Pembelian #{$purchase->purchase_no}",
+                            "moved_at" => now(),
+                        ]);
+                    }
+                }
+            }
+
             DB::commit();
 
             return redirect()
                 ->route("admin.purchases.show", $purchase->id)
-                ->with("success", "Pembelian berhasil disimpan.");
+                ->with("success", "Pembelian berhasil dibuat.");
         } catch (\Exception $e) {
             DB::rollBack();
             return back()
                 ->withInput()
-                ->with(
-                    "error",
-                    "Gagal menyimpan pembelian: " . $e->getMessage(),
-                );
+                ->with("error", "Gagal membuat pembelian: " . $e->getMessage());
         }
     }
 
@@ -306,6 +219,174 @@ class PurchaseController extends Controller
         return Inertia::render("Admin/Purchases/Show", [
             "purchase" => $purchase,
         ]);
+    }
+
+    public function edit(Purchase $purchase)
+    {
+        $storeId = $this->storeScope()[0];
+
+        // Only draft purchases can be edited
+        if ($purchase->status !== "draft") {
+            return redirect()
+                ->route("admin.purchases.show", $purchase->id)
+                ->with(
+                    "error",
+                    "Hanya pembelian dengan status draft yang dapat diedit.",
+                );
+        }
+
+        $purchase->load([
+            "supplier",
+            "items.product",
+            "payments.paymentMethod",
+        ]);
+
+        $store = Store::with("storeType")->find($storeId);
+        $storeTypeCode = $store?->getRelation("storeType")?->code ?? "retail";
+
+        return Inertia::render("Admin/Purchases/Edit", [
+            "purchase" => $purchase,
+            "suppliers" => Supplier::where("store_id", $storeId)->get(),
+            "paymentMethods" => PaymentMethod::forStore($storeId)
+                ->where("is_active", true)
+                ->get(),
+            "storeType" => $storeTypeCode ?? "retail",
+        ]);
+    }
+
+    public function update(Request $request, Purchase $purchase)
+    {
+        if ($purchase->status !== "draft") {
+            return redirect()
+                ->route("admin.purchases.show", $purchase->id)
+                ->with(
+                    "error",
+                    "Hanya pembelian dengan status draft yang dapat diedit.",
+                );
+        }
+
+        $storeId = $this->storeScope()[0];
+
+        $validated = $request->validate([
+            "supplier_id" => "required|exists:suppliers,id",
+            "purchase_date" => "required|date",
+            "discount_amount" => "nullable|numeric|min:0",
+            "tax_amount" => "nullable|numeric|min:0",
+            "shipping_amount" => "nullable|numeric|min:0",
+            "payment_method_id" => "nullable|exists:payment_methods,id",
+            "paid_amount" => "nullable|numeric|min:0",
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Recalculate from existing items
+            $subtotal = 0;
+            foreach ($purchase->items as $item) {
+                $subtotal += $item->quantity * $item->cost_price;
+            }
+
+            $discount = $validated["discount_amount"] ?? 0;
+            $tax = $validated["tax_amount"] ?? 0;
+            $shipping = $validated["shipping_amount"] ?? 0;
+            $grandTotal = $subtotal - $discount + $tax + $shipping;
+            $paidAmount = $validated["paid_amount"] ?? 0;
+
+            $status = "draft";
+            $paymentStatus = "unpaid";
+            if ($paidAmount >= $grandTotal && $grandTotal > 0) {
+                $paymentStatus = "paid";
+                $status = "completed";
+            } elseif ($paidAmount > 0) {
+                $paymentStatus = "partial";
+            }
+
+            $wasDraft = $purchase->status === "draft";
+
+            $purchase->update([
+                "supplier_id" => $validated["supplier_id"],
+                "purchase_date" => $validated["purchase_date"],
+                "discount_amount" => $discount,
+                "tax_amount" => $tax,
+                "shipping_amount" => $shipping,
+                "subtotal" => $subtotal,
+                "grand_total" => $grandTotal,
+                "status" => $status,
+                "payment_status" => $paymentStatus,
+                "paid_amount" => $paidAmount,
+            ]);
+
+            // If moving from draft to completed, update stock
+            if ($wasDraft && $status === "completed") {
+                foreach ($purchase->items as $item) {
+                    $product = Product::find($item->product_id);
+                    if ($product?->track_stock) {
+                        $stock = ProductStock::firstOrCreate(
+                            [
+                                "product_id" => $item->product_id,
+                                "store_id" => $storeId,
+                            ],
+                            ["quantity" => 0, "reserved_quantity" => 0],
+                        );
+                        $stock->increment("quantity", $item->quantity);
+
+                        $exists = StockMovement::where([
+                            "reference_type" => Purchase::class,
+                            "reference_id" => $purchase->id,
+                            "product_id" => $item->product_id,
+                            "movement_type" => "purchase_in",
+                        ])->exists();
+                        if (!$exists) {
+                            StockMovement::create([
+                                "product_id" => $item->product_id,
+                                "store_id" => $storeId,
+                                "branch_id" => $purchase->branch_id,
+                                "reference_type" => Purchase::class,
+                                "reference_id" => $purchase->id,
+                                "movement_type" => "purchase_in",
+                                "quantity" => $item->quantity,
+                                "unit_cost" => $item->cost_price,
+                                "reference_no" => $purchase->purchase_no,
+                                "notes" => "Pembelian #{$purchase->purchase_no}",
+                                "moved_at" => now(),
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Update/create payment
+            if ($paidAmount > 0 && ($validated["payment_method_id"] ?? false)) {
+                $existingPayment = $purchase->payments()->first();
+                if ($existingPayment) {
+                    $existingPayment->update([
+                        "payment_method_id" => $validated["payment_method_id"],
+                        "paid_at" => $validated["purchase_date"],
+                        "amount" => $paidAmount,
+                    ]);
+                } else {
+                    PurchasePayment::create([
+                        "purchase_id" => $purchase->id,
+                        "payment_method_id" => $validated["payment_method_id"],
+                        "paid_at" => $validated["purchase_date"],
+                        "amount" => $paidAmount,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route("admin.purchases.show", $purchase->id)
+                ->with("success", "Pembelian berhasil diperbarui.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->withInput()
+                ->with(
+                    "error",
+                    "Gagal memperbarui pembelian: " . $e->getMessage(),
+                );
+        }
     }
 
     public function destroy(Purchase $purchase)

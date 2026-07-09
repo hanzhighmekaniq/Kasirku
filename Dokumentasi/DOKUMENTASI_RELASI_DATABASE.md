@@ -1,8 +1,10 @@
 # 📚 DOKUMENTASI LENGKAP RELASI DATABASE SISTEM POS
 
 ## 🎯 Overview
-Sistem ini menggunakan **100% relasi database** untuk menentukan fitur, akses, dan konfigurasi toko. 
+Sistem ini menggunakan **100% relasi database** untuk menentukan fitur, akses, dan konfigurasi toko.
 Tidak ada lagi ketergantungan pada JSON atau hardcoded values.
+
+> **Sumber kebenaran utama:** struktur relasi wajib mengikuti file `database/migrations`. Jika ada method relasi di model yang berbeda dari foreign key migration, maka model harus disamakan ke migration, bukan sebaliknya.
 
 **Prinsip Utama:**
 - ✅ Semua data fitur ada di tabel `features` dan `feature_details`
@@ -1066,6 +1068,525 @@ $feature->plans;                            // Collection<Plan>
 Feature::active();                          // Query builder
 Feature::byCategory('pos');                 // Query builder
 ```
+
+---
+
+## 🧭 PETA RELASI LENGKAP BERDASARKAN MIGRATION
+
+Bagian ini merangkum alur relasi dari seluruh migration. Gunakan bagian ini ketika mengecek apakah model Eloquent sudah benar.
+
+**Aturan membaca tabel:**
+
+| Istilah | Arti |
+|---------|------|
+| `required` | Kolom FK tidak nullable, data induk wajib ada |
+| `nullable` | Kolom FK boleh kosong |
+| `cascade` | Jika induk dihapus, data anak ikut terhapus |
+| `null` | Jika induk dihapus, FK di anak menjadi `NULL` |
+| `default` | Tidak ada aksi delete khusus di migration |
+| `manual index` | Kolom dibuat sebagai `unsignedBigInteger()->index()`, bukan FK database |
+
+### 1. Relasi Tenant, Owner, Plan, dan Fitur
+
+```mermaid
+flowchart TD
+    users[users]
+    stores[stores]
+    store_types[store_types]
+    plans[plans]
+    features[features]
+    feature_details[feature_details]
+    user_store[user_store]
+    store_type_feature[store_type_feature]
+    plan_feature[plan_feature]
+
+    users -->|1:N owner nullable| stores
+    users -->|M:N| user_store
+    stores -->|M:N| user_store
+
+    store_types -->|1:N nullable| stores
+    plans -->|1:N nullable| stores
+
+    features -->|1:N cascade| feature_details
+    store_types -->|M:N cascade| store_type_feature
+    features -->|M:N cascade| store_type_feature
+    plans -->|M:N cascade| plan_feature
+    features -->|M:N cascade| plan_feature
+```
+
+| Tabel anak | Kolom FK | Ke tabel | Nullable | On delete | Catatan model yang benar |
+|------------|----------|----------|----------|-----------|---------------------------|
+| `stores` | `user_id` | `users.id` | nullable | default | `Store::owner()` pakai `belongsTo(User::class, 'user_id')` |
+| `stores` | `store_type_id` | `store_types.id` | nullable | default | `Store::storeType()` pakai `belongsTo(StoreType::class, 'store_type_id')` |
+| `stores` | `plan_id` | `plans.id` | nullable | default | `Store::planModel()` pakai `belongsTo(Plan::class, 'plan_id')`; nama `plan` dipakai accessor code |
+| `user_store` | `user_id` | `users.id` | required | cascade | Pivot M:N `User` ↔ `Store` |
+| `user_store` | `store_id` | `stores.id` | required | cascade | Unique `user_id + store_id` |
+| `feature_details` | `feature_id` | `features.id` | required | cascade | `Feature::details()` / `FeatureDetail::feature()` |
+| `store_type_feature` | `store_type_id` | `store_types.id` | required | cascade | Pivot M:N `StoreType` ↔ `Feature` |
+| `store_type_feature` | `feature_id` | `features.id` | required | cascade | Unique `store_type_id + feature_id` |
+| `plan_feature` | `plan_id` | `plans.id` | required | cascade | Pivot M:N `Plan` ↔ `Feature` |
+| `plan_feature` | `feature_id` | `features.id` | required | cascade | Unique `plan_id + feature_id` |
+
+**Alur akses fitur yang benar:**
+
+1. `stores.store_type_id` menentukan tipe toko (`store_types`).
+2. `store_type_feature` menentukan fitur yang relevan untuk tipe toko tersebut.
+3. `stores.plan_id` menentukan paket langganan (`plans`).
+4. `plan_feature` menentukan fitur yang diizinkan oleh paket.
+5. Fitur yang benar-benar bisa dipakai toko adalah irisan dari fitur `store_type` dan fitur `plan`.
+6. Detail subfitur/konfigurasi tambahan dibaca dari `feature_details` melalui `features.id`.
+
+### 2. Relasi Struktur Operasional Store
+
+```mermaid
+flowchart TD
+    stores[stores]
+    branches[branches]
+    employees[employees]
+    users[users]
+    categories[categories]
+    customers[customers]
+    suppliers[suppliers]
+    payment_methods[payment_methods]
+    expense_categories[expense_categories]
+
+    stores -->|1:N cascade| branches
+    stores -->|1:N cascade| employees
+    branches -->|1:N nullOnDelete| employees
+    users -->|1:1 nullable unique nullOnDelete| employees
+
+    stores -->|1:N nullable nullOnDelete| categories
+    categories -->|self parent nullable nullOnDelete| categories
+    stores -->|1:N nullable nullOnDelete| customers
+    stores -->|1:N nullable nullOnDelete| suppliers
+    stores -->|1:N nullable nullOnDelete| payment_methods
+    stores -->|1:N nullable nullOnDelete| expense_categories
+```
+
+| Tabel anak | Kolom FK | Ke tabel | Nullable | On delete | Catatan |
+|------------|----------|----------|----------|-----------|---------|
+| `branches` | `store_id` | `stores.id` | required | cascade | Cabang selalu milik store |
+| `employees` | `store_id` | `stores.id` | required | cascade | Karyawan wajib punya store |
+| `employees` | `branch_id` | `branches.id` | nullable | null | Karyawan boleh lintas cabang/tanpa cabang tetap |
+| `employees` | `user_id` | `users.id` | nullable unique | null | Satu akun login maksimal untuk satu employee |
+| `categories` | `store_id` | `stores.id` | nullable | null | Kategori bisa global jika `store_id` null |
+| `categories` | `parent_id` | `categories.id` | nullable | null | Hierarki kategori parent-child |
+| `customers` | `store_id` | `stores.id` | nullable | null | Customer bisa global jika `store_id` null |
+| `suppliers` | `store_id` | `stores.id` | nullable | null | Supplier bisa global jika `store_id` null |
+| `payment_methods` | `store_id` | `stores.id` | nullable | null | Metode pembayaran bisa global jika `store_id` null |
+| `expense_categories` | `store_id` | `stores.id` | nullable | null | Unique `store_id + code` |
+
+### 3. Relasi Produk, Stok, Modifier, dan Resep
+
+```mermaid
+flowchart TD
+    stores[stores]
+    branches[branches]
+    categories[categories]
+    suppliers[suppliers]
+    products[products]
+    product_variants[product_variants]
+    product_batches[product_batches]
+    product_stocks[product_stocks]
+    stock_movements[stock_movements]
+    modifier_groups[product_modifier_groups]
+    modifiers[product_modifiers]
+    modifier_pivot[product_modifier_products]
+    recipes[product_recipes]
+
+    stores --> products
+    categories --> products
+    suppliers --> products
+    products --> product_variants
+    products --> product_batches
+    stores --> product_batches
+    branches --> product_batches
+    products --> product_stocks
+    stores --> product_stocks
+    branches --> product_stocks
+    products --> stock_movements
+    product_batches --> stock_movements
+    stores --> stock_movements
+    branches --> stock_movements
+    stores --> modifier_groups
+    modifier_groups --> modifiers
+    products --> modifier_pivot
+    modifier_groups --> modifier_pivot
+    products -->|produk jadi| recipes
+    products -->|raw material| recipes
+```
+
+| Tabel anak | Kolom FK | Ke tabel | Nullable | On delete | Catatan |
+|------------|----------|----------|----------|-----------|---------|
+| `products` | `store_id` | `stores.id` | nullable | null | Produk bisa global jika `store_id` null |
+| `products` | `category_id` | `categories.id` | nullable | null | Produk boleh tanpa kategori |
+| `products` | `supplier_id` | `suppliers.id` | nullable | null | Produk boleh tanpa supplier |
+| `product_variants` | `product_id` | `products.id` | required | cascade | Varian ikut terhapus jika produk dihapus |
+| `product_batches` | `product_id` | `products.id` | required | cascade | Batch stok per produk |
+| `product_batches` | `store_id` | `stores.id` | nullable | null | Batch bisa terkait store |
+| `product_batches` | `branch_id` | `branches.id` | nullable | null | Batch bisa terkait branch |
+| `product_stocks` | `product_id` | `products.id` | required | cascade | Stok per produk/store/branch |
+| `product_stocks` | `store_id` | `stores.id` | nullable | null | Unique `product_id + store_id + branch_id` |
+| `product_stocks` | `branch_id` | `branches.id` | nullable | null | Index `store_id + branch_id` |
+| `stock_movements` | `product_id` | `products.id` | required | cascade | Histori mutasi stok |
+| `stock_movements` | `product_batch_id` | `product_batches.id` | nullable | null | Mutasi bisa tanpa batch |
+| `stock_movements` | `store_id` | `stores.id` | nullable | null | Scope tenant |
+| `stock_movements` | `branch_id` | `branches.id` | nullable | null | Scope cabang |
+| `stock_movements` | `reference_type/reference_id` | polymorphic | nullable | default | Referensi transaksi: sale, purchase, adjustment, transfer, waste, opname, return |
+| `product_modifier_groups` | `store_id` | `stores.id` | nullable | null | Group modifier milik store/global |
+| `product_modifiers` | `modifier_group_id` | `product_modifier_groups.id` | required | cascade | Item modifier ikut group |
+| `product_modifier_products` | `product_id` | `products.id` | required | cascade | Pivot M:N produk ↔ modifier group |
+| `product_modifier_products` | `modifier_group_id` | `product_modifier_groups.id` | required | cascade | Unique `product_id + modifier_group_id` |
+| `product_recipes` | `product_id` | `products.id` | required | cascade | Produk jadi/combo |
+| `product_recipes` | `raw_material_id` | `products.id` | required | cascade | Bahan baku, FK ke tabel yang sama (`products`) |
+
+**Catatan penting model:**
+
+- `Product::recipes()` harus memakai FK `product_id`.
+- `Product::usedInRecipes()` harus memakai FK `raw_material_id`.
+- `Product::modifierGroups()` harus memakai pivot `product_modifier_products` dengan key `product_id` dan `modifier_group_id`.
+- Jika model `SaleItem` punya relasi varian, `variant_id` di migration hanya `unsignedBigInteger` tanpa FK database. Relasi boleh dibuat manual ke `ProductVariant::class`, tetapi jangan menganggap ada constraint database.
+
+### 4. Relasi Stock Control
+
+```mermaid
+flowchart TD
+    stores[stores]
+    branches[branches]
+    users[users]
+    products[products]
+    product_batches[product_batches]
+    adjustments[stock_adjustments]
+    adjustment_items[stock_adjustment_items]
+    opnames[stock_opnames]
+    opname_items[stock_opname_items]
+    wastes[wastes]
+    waste_items[waste_items]
+    transfers[stock_transfers]
+    transfer_items[stock_transfer_items]
+
+    stores --> adjustments
+    branches --> adjustments
+    users --> adjustments
+    adjustments --> adjustment_items
+    products --> adjustment_items
+    product_batches --> adjustment_items
+
+    stores --> opnames
+    branches --> opnames
+    users --> opnames
+    opnames --> opname_items
+    products --> opname_items
+    product_batches --> opname_items
+
+    stores --> wastes
+    branches --> wastes
+    users --> wastes
+    wastes --> waste_items
+    products --> waste_items
+    product_batches --> waste_items
+
+    stores --> transfers
+    branches -->|from_branch_id| transfers
+    branches -->|to_branch_id| transfers
+    users --> transfers
+    transfers --> transfer_items
+    products --> transfer_items
+```
+
+| Tabel anak | Kolom FK | Ke tabel | Nullable | On delete | Catatan |
+|------------|----------|----------|----------|-----------|---------|
+| `stock_adjustments` | `store_id` | `stores.id` | nullable | null | Header penyesuaian stok |
+| `stock_adjustments` | `branch_id` | `branches.id` | nullable | null | Cabang adjustment |
+| `stock_adjustments` | `user_id` | `users.id` | nullable | null | User pembuat |
+| `stock_adjustment_items` | `stock_adjustment_id` | `stock_adjustments.id` | required | cascade | Item ikut header |
+| `stock_adjustment_items` | `product_id` | `products.id` | required | cascade | Produk yang disesuaikan |
+| `stock_adjustment_items` | `product_batch_id` | `product_batches.id` | nullable | null | Batch opsional |
+| `stock_opnames` | `store_id` | `stores.id` | nullable | null | Header stok opname |
+| `stock_opnames` | `branch_id` | `branches.id` | nullable | null | Cabang opname |
+| `stock_opnames` | `user_id` | `users.id` | nullable | null | User pembuat |
+| `stock_opname_items` | `stock_opname_id` | `stock_opnames.id` | required | cascade | Item ikut header |
+| `stock_opname_items` | `product_id` | `products.id` | required | cascade | Produk yang dihitung |
+| `stock_opname_items` | `product_batch_id` | `product_batches.id` | nullable | null | Batch opsional |
+| `wastes` | `store_id` | `stores.id` | nullable | null | Header waste |
+| `wastes` | `branch_id` | `branches.id` | nullable | null | Cabang waste |
+| `wastes` | `user_id` | `users.id` | nullable | null | User pembuat |
+| `waste_items` | `waste_id` | `wastes.id` | required | cascade | Item ikut header |
+| `waste_items` | `product_id` | `products.id` | required | cascade | Produk yang terbuang |
+| `waste_items` | `product_batch_id` | `product_batches.id` | nullable | null | Batch opsional |
+| `stock_transfers` | `store_id` | `stores.id` | nullable | null | Header transfer stok |
+| `stock_transfers` | `from_branch_id` | `branches.id` | nullable | null | Cabang asal |
+| `stock_transfers` | `to_branch_id` | `branches.id` | nullable | null | Cabang tujuan |
+| `stock_transfers` | `user_id` | `users.id` | nullable | null | User pembuat |
+| `stock_transfer_items` | `stock_transfer_id` | `stock_transfers.id` | required | cascade | Item ikut header |
+| `stock_transfer_items` | `product_id` | `products.id` | required | cascade | Produk yang ditransfer |
+
+### 5. Relasi Penjualan, Pembayaran, Retur, dan Payment Gateway
+
+```mermaid
+flowchart TD
+    stores[stores]
+    branches[branches]
+    customers[customers]
+    users[users]
+    shifts[cashier_shifts]
+    cafe_tables[cafe_tables]
+    employees[employees]
+    sales[sales]
+    sale_items[sale_items]
+    sale_payments[sale_payments]
+    payment_methods[payment_methods]
+    sale_returns[sale_returns]
+    sale_return_items[sale_return_items]
+    pg_transactions[payment_gateway_transactions]
+    products[products]
+    product_batches[product_batches]
+    promotions[promotions]
+
+    stores --> sales
+    branches --> sales
+    customers --> sales
+    users --> sales
+    shifts -. manual index .-> sales
+    cafe_tables --> sales
+    employees --> sales
+
+    sales --> sale_items
+    products --> sale_items
+    product_batches --> sale_items
+    promotions --> sale_items
+    employees --> sale_items
+
+    sales --> sale_payments
+    payment_methods --> sale_payments
+    sales --> sale_returns
+    customers --> sale_returns
+    users --> sale_returns
+    sale_returns --> sale_return_items
+    sale_items --> sale_return_items
+    products --> sale_return_items
+    sales --> pg_transactions
+```
+
+| Tabel anak | Kolom FK | Ke tabel | Nullable | On delete | Catatan |
+|------------|----------|----------|----------|-----------|---------|
+| `cashier_shifts` | `store_id` | `stores.id` | required | cascade | Shift kasir selalu milik store |
+| `cashier_shifts` | `branch_id` | `branches.id` | nullable | null | Shift bisa tanpa branch |
+| `cashier_shifts` | `user_id` | `users.id` | required | cascade | User kasir wajib ada |
+| `cashier_shift_payments` | `cashier_shift_id` | `cashier_shifts.id` | required | manual index | Bukan FK database; model boleh `belongsTo(CashierShift::class, 'cashier_shift_id')` |
+| `cashier_shift_payments` | `payment_method_id` | `payment_methods.id` | nullable | null | Rekap per metode pembayaran |
+| `cafe_tables` | `store_id` | `stores.id` | required | cascade | Meja wajib milik store |
+| `cafe_tables` | `branch_id` | `branches.id` | required | cascade | Meja wajib milik branch |
+| `sales` | `store_id` | `stores.id` | nullable | null | Header transaksi |
+| `sales` | `branch_id` | `branches.id` | nullable | null | Cabang transaksi |
+| `sales` | `customer_id` | `customers.id` | nullable | null | Boleh walk-in |
+| `sales` | `user_id` | `users.id` | nullable | null | Kasir/user transaksi |
+| `sales` | `cashier_shift_id` | `cashier_shifts.id` | nullable | manual index | Tidak ada FK database di migration |
+| `sales` | `table_id` | `cafe_tables.id` | nullable | null | Khusus FnB dine-in |
+| `sales` | `employee_id` | `employees.id` | nullable | null | Karyawan utama untuk service/barber/salon |
+| `sale_items` | `sale_id` | `sales.id` | required | cascade | Item ikut header sale |
+| `sale_items` | `product_id` | `products.id` | required | cascade | Produk wajib ada |
+| `sale_items` | `variant_id` | `product_variants.id` | nullable | manual index | Migration tidak membuat FK; hanya kolom integer |
+| `sale_items` | `product_batch_id` | `product_batches.id` | nullable | null | Batch opsional |
+| `sale_items` | `promotion_id` | `promotions.id` | nullable | null | Promo opsional |
+| `sale_items` | `employee_id` | `employees.id` | nullable | null | Karyawan per item untuk komisi |
+| `sale_payments` | `sale_id` | `sales.id` | required | cascade | Payment ikut sale |
+| `sale_payments` | `payment_method_id` | `payment_methods.id` | nullable | null | Payment method boleh terhapus tanpa menghapus payment |
+| `sale_returns` | `sale_id` | `sales.id` | required | cascade | Retur terkait sale |
+| `sale_returns` | `customer_id` | `customers.id` | nullable | null | Customer opsional |
+| `sale_returns` | `user_id` | `users.id` | nullable | null | User pemroses retur |
+| `sale_return_items` | `sale_return_id` | `sale_returns.id` | required | cascade | Item ikut header retur |
+| `sale_return_items` | `sale_item_id` | `sale_items.id` | required | cascade | Item sale yang diretur |
+| `sale_return_items` | `product_id` | `products.id` | required | cascade | Produk retur |
+| `store_payment_gateways` | `store_id` | `stores.id` | required | cascade | Konfigurasi gateway per store |
+| `payment_gateway_transactions` | `sale_id` | `sales.id` | required | cascade | Transaksi gateway ikut sale |
+
+### 6. Relasi Pembelian dan Retur Pembelian
+
+```mermaid
+flowchart TD
+    stores[stores]
+    branches[branches]
+    suppliers[suppliers]
+    users[users]
+    purchases[purchases]
+    purchase_items[purchase_items]
+    purchase_payments[purchase_payments]
+    payment_methods[payment_methods]
+    purchase_returns[purchase_returns]
+    purchase_return_items[purchase_return_items]
+    products[products]
+    product_batches[product_batches]
+
+    stores --> purchases
+    branches --> purchases
+    suppliers --> purchases
+    users --> purchases
+    purchases --> purchase_items
+    products --> purchase_items
+    product_batches --> purchase_items
+    purchases --> purchase_payments
+    payment_methods --> purchase_payments
+    purchases --> purchase_returns
+    suppliers --> purchase_returns
+    users --> purchase_returns
+    purchase_returns --> purchase_return_items
+    purchase_items --> purchase_return_items
+    products --> purchase_return_items
+```
+
+| Tabel anak | Kolom FK | Ke tabel | Nullable | On delete | Catatan |
+|------------|----------|----------|----------|-----------|---------|
+| `purchases` | `store_id` | `stores.id` | nullable | null | Header pembelian |
+| `purchases` | `branch_id` | `branches.id` | nullable | null | Cabang pembelian |
+| `purchases` | `supplier_id` | `suppliers.id` | required | cascade | Supplier wajib ada |
+| `purchases` | `user_id` | `users.id` | nullable | null | User pembuat |
+| `purchase_items` | `purchase_id` | `purchases.id` | required | cascade | Item ikut header purchase |
+| `purchase_items` | `product_id` | `products.id` | required | cascade | Produk wajib ada |
+| `purchase_items` | `product_batch_id` | `product_batches.id` | nullable | null | Batch opsional |
+| `purchase_payments` | `purchase_id` | `purchases.id` | required | cascade | Payment ikut purchase |
+| `purchase_payments` | `payment_method_id` | `payment_methods.id` | nullable | null | Payment method opsional |
+| `purchase_returns` | `purchase_id` | `purchases.id` | required | cascade | Retur pembelian terkait purchase |
+| `purchase_returns` | `supplier_id` | `suppliers.id` | required | cascade | Supplier wajib ada |
+| `purchase_returns` | `user_id` | `users.id` | nullable | null | User pemroses retur |
+| `purchase_return_items` | `purchase_return_id` | `purchase_returns.id` | required | cascade | Item ikut header retur |
+| `purchase_return_items` | `purchase_item_id` | `purchase_items.id` | nullable | null | Bisa retur tanpa link item spesifik |
+| `purchase_return_items` | `product_id` | `products.id` | required | cascade | Produk retur |
+
+### 7. Relasi Promo, Expense, Booking, Queue, Membership, dan Komisi
+
+```mermaid
+flowchart TD
+    stores[stores]
+    branches[branches]
+    users[users]
+    customers[customers]
+    employees[employees]
+    sales[sales]
+    sale_items[sale_items]
+    products[products]
+    promotions[promotions]
+    promotion_products[promotion_products]
+    expenses[expenses]
+    expense_categories[expense_categories]
+    bookings[bookings]
+    queue_tickets[queue_tickets]
+    memberships[memberships]
+    customer_memberships[customer_memberships]
+    customer_deposit_logs[customer_deposit_logs]
+    employee_commissions[employee_commissions]
+    activity_logs[activity_logs]
+
+    stores --> promotions
+    products -->|free_product_id| promotions
+    promotions --> promotion_products
+    products --> promotion_products
+
+    expense_categories --> expenses
+    stores --> expenses
+    branches --> expenses
+    users --> expenses
+
+    stores --> bookings
+    branches --> bookings
+    customers --> bookings
+    employees --> bookings
+    sales --> bookings
+
+    stores --> queue_tickets
+    branches --> queue_tickets
+    customers --> queue_tickets
+    employees --> queue_tickets
+    sales --> queue_tickets
+
+    stores --> memberships
+    customers --> customer_memberships
+    memberships --> customer_memberships
+    sales --> customer_memberships
+
+    customers --> customer_deposit_logs
+    stores --> customer_deposit_logs
+    sales --> customer_deposit_logs
+
+    employees --> employee_commissions
+    stores --> employee_commissions
+    sales --> employee_commissions
+    sale_items --> employee_commissions
+
+    stores --> activity_logs
+    branches --> activity_logs
+    users --> activity_logs
+```
+
+| Tabel anak | Kolom FK | Ke tabel | Nullable | On delete | Catatan |
+|------------|----------|----------|----------|-----------|---------|
+| `promotions` | `store_id` | `stores.id` | nullable | null | Promo milik store/global |
+| `promotions` | `free_product_id` | `products.id` | nullable | null | Produk gratis opsional |
+| `promotion_products` | `promotion_id` | `promotions.id` | required | cascade | Pivot promo ↔ produk |
+| `promotion_products` | `product_id` | `products.id` | required | cascade | Unique `promotion_id + product_id` |
+| `expenses` | `expense_category_id` | `expense_categories.id` | nullable | null | Kategori expense opsional |
+| `expenses` | `store_id` | `stores.id` | nullable | null | Expense bisa scoped store |
+| `expenses` | `branch_id` | `branches.id` | nullable | null | Expense bisa scoped branch |
+| `expenses` | `user_id` | `users.id` | nullable | null | User pembuat |
+| `expenses` | `cashier_shift_id` | `cashier_shifts.id` | nullable | manual index | Bukan FK database di migration |
+| `bookings` | `store_id` | `stores.id` | required | cascade | Booking wajib milik store |
+| `bookings` | `branch_id` | `branches.id` | nullable | null | Cabang booking opsional |
+| `bookings` | `customer_id` | `customers.id` | nullable | null | Customer opsional |
+| `bookings` | `employee_id` | `employees.id` | nullable | null | Staff/stylist/terapis opsional |
+| `bookings` | `sale_id` | `sales.id` | nullable | null | Terisi saat booking dikonversi jadi transaksi |
+| `queue_tickets` | `store_id` | `stores.id` | required | cascade | Antrian wajib milik store |
+| `queue_tickets` | `branch_id` | `branches.id` | nullable | null | Cabang opsional |
+| `queue_tickets` | `customer_id` | `customers.id` | nullable | null | Customer opsional |
+| `queue_tickets` | `employee_id` | `employees.id` | nullable | null | Staff tujuan opsional |
+| `queue_tickets` | `sale_id` | `sales.id` | nullable | null | Terisi saat antrian jadi transaksi |
+| `memberships` | `store_id` | `stores.id` | required | cascade | Paket membership milik store |
+| `customer_memberships` | `customer_id` | `customers.id` | required | cascade | Membership aktif customer |
+| `customer_memberships` | `membership_id` | `memberships.id` | required | cascade | Paket membership yang dibeli |
+| `customer_memberships` | `sale_id` | `sales.id` | nullable | null | Transaksi pembelian membership |
+| `customer_deposit_logs` | `customer_id` | `customers.id` | required | cascade | Mutasi deposit customer |
+| `customer_deposit_logs` | `store_id` | `stores.id` | nullable | null | Scope store |
+| `customer_deposit_logs` | `sale_id` | `sales.id` | nullable | null | Transaksi topup/debit/refund |
+| `employee_commissions` | `employee_id` | `employees.id` | required | cascade | Komisi milik employee |
+| `employee_commissions` | `store_id` | `stores.id` | required | cascade | Scope store wajib |
+| `employee_commissions` | `sale_id` | `sales.id` | nullable | null | Komisi dari header sale |
+| `employee_commissions` | `sale_item_id` | `sale_items.id` | nullable | null | Komisi dari item sale |
+| `activity_logs` | `store_id` | `stores.id` | nullable | null | Scope store |
+| `activity_logs` | `branch_id` | `branches.id` | nullable | null | Scope branch |
+| `activity_logs` | `user_id` | `users.id` | nullable | null | Aktor log |
+| `activity_logs` | `subject_type/subject_id` | polymorphic | nullable | default | Subject bisa model apa pun |
+
+### 8. Relasi Package Permission Spatie
+
+Migration `2026_05_28_000053_create_permission_tables.php` mengikuti struktur bawaan `spatie/laravel-permission`:
+
+| Tabel | Fungsi relasi |
+|-------|---------------|
+| `permissions` | Master permission |
+| `roles` | Master role |
+| `model_has_permissions` | Polymorphic M:N model/user ↔ permission |
+| `model_has_roles` | Polymorphic M:N model/user ↔ role |
+| `role_has_permissions` | M:N role ↔ permission |
+
+Relasi ini tidak perlu dibuat manual di model bisnis POS; biasanya dikelola oleh trait Spatie seperti `HasRoles` di model `User`.
+
+### 9. Catatan Sinkronisasi Model vs Migration
+
+Gunakan checklist ini saat memperbaiki model:
+
+1. **Nama FK di model harus sama dengan migration.**
+   - Contoh benar: `StockTransfer::fromBranch()` memakai `from_branch_id`.
+   - Contoh benar: `StockTransfer::toBranch()` memakai `to_branch_id`.
+2. **Relasi nullable tetap boleh memakai `belongsTo()`, tetapi code harus siap menerima `null`.**
+   - Contoh: `$sale->customer` bisa `null` untuk walk-in customer.
+3. **Kolom manual index bukan constraint database.**
+   - `sales.cashier_shift_id`, `cashier_shift_payments.cashier_shift_id`, `expenses.cashier_shift_id`, dan `sale_items.variant_id` tidak dibuat dengan `foreignId()->constrained()` di migration.
+   - Model boleh memiliki relasi manual, tetapi jangan bergantung pada cascade/null otomatis database.
+4. **Accessor jangan menimpa kebutuhan relasi.**
+   - Di `Store`, accessor `getPlanAttribute()` mengembalikan code plan, sedangkan relasi DB ada di `planModel()` karena kolomnya `plan_id`.
+   - Di `Store`, accessor `getStoreTypeAttribute()` mengembalikan code store type, sedangkan relasi DB ada di `storeType()` karena kolomnya `store_type_id`.
+5. **Jika dokumentasi model lama berbeda dari migration, ikuti migration.**
+   - Migration menentukan kolom, FK, unique index, nullable, dan aksi delete.
+   - Model hanya lapisan akses agar query lebih mudah.
 
 ---
 

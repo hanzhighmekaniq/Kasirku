@@ -27,8 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             "branch" => \App\Http\Middleware\BranchMiddleware::class,
             "role" => \App\Http\Middleware\RoleMiddleware::class,
             "developer" => \App\Http\Middleware\DeveloperMiddleware::class,
-            "permission" =>
-                \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            "permission" => \App\Http\Middleware\PermissionMiddleware::class,
             "active_shift" => \App\Http\Middleware\EnsureActiveShift::class,
             "ensure.shift" => \App\Http\Middleware\EnsureActiveShift::class,
             "feature" => \App\Http\Middleware\CheckFeatureAccess::class,
@@ -42,29 +41,70 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // 403 — Auto-redirect ke halaman yang bisa diakses
+        // ── Spatie UnauthorizedException: tampilkan halaman error yang jelas ──
+        $exceptions->renderable(function (
+            \Spatie\Permission\Exceptions\UnauthorizedException $e,
+            $request,
+        ) {
+            if ($request->header("X-Inertia")) {
+                return \Inertia\Inertia::render("Blocked/PermissionDenied", [
+                    "permission" => $e->getMessage(),
+                    "error" => "Anda tidak memiliki izin: " . $e->getMessage(),
+                ])
+                    ->toResponse($request)
+                    ->setStatusCode(403);
+            }
+            abort(403, $e->getMessage());
+        });
+
+        // ── 403: tampilkan error, jangan redirect silent ──
         $exceptions->renderable(function (
             \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e,
             $request,
         ) {
+            if ($request->header("X-Inertia")) {
+                return \Inertia\Inertia::render("Blocked/PermissionDenied", [
+                    "permission" => $request->route()?->getName() ?? "unknown",
+                    "error" =>
+                        $e->getMessage() ?:
+                        "Anda tidak memiliki akses ke halaman ini.",
+                ])
+                    ->toResponse($request)
+                    ->setStatusCode(403);
+            }
             if (Auth::check()) {
-                return redirect()->route("admin.dashboard");
+                return redirect()
+                    ->route("admin.dashboard")
+                    ->with(
+                        "error",
+                        "Akses ditolak: " .
+                            ($e->getMessage() ?: "Anda tidak memiliki izin."),
+                    );
             }
             return redirect()->route("login");
         });
 
-        // 404 — Auto-redirect ke halaman yang bisa diakses
+        // ── 404: tampilkan pesan, jangan redirect silent ──
         $exceptions->renderable(function (
             \Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e,
             $request,
         ) {
+            if ($request->header("X-Inertia")) {
+                return \Inertia\Inertia::render("Blocked/NotFound", [
+                    "error" => "Halaman tidak ditemukan.",
+                ])
+                    ->toResponse($request)
+                    ->setStatusCode(404);
+            }
             if (Auth::check()) {
-                return redirect()->route("admin.dashboard");
+                return redirect()
+                    ->route("admin.dashboard")
+                    ->with("error", "Halaman tidak ditemukan.");
             }
             return redirect()->route("login");
         });
 
-        // 500+ umum — JANGAN putih, redirect ke dashboard dengan error message
+        // ── 500+ umum — redirect ke dashboard dengan error message ──
         $exceptions->renderable(function (\Throwable $e, $request) {
             // HTTP exception sudah di-handle di atas
             if (
@@ -76,7 +116,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // Cek apakah ini request Inertia
             if ($request->header("X-Inertia")) {
-                // Inertia request: return 500 dengan flash error
                 if (Auth::check()) {
                     return redirect()
                         ->route("admin.dashboard")

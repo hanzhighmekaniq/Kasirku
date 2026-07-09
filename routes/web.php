@@ -133,6 +133,20 @@ Route::middleware(["auth", "developer", "single-session"])
             "updateTypeFeatures",
         ])->name("type-features.update");
 
+        // Role & Permission Management
+        Route::get("/roles", [
+            \App\Http\Controllers\Developer\RoleController::class,
+            "index",
+        ])->name("roles.index");
+        Route::post("/roles/update", [
+            \App\Http\Controllers\Developer\RoleController::class,
+            "update",
+        ])->name("roles.update");
+        Route::post("/roles/reset", [
+            \App\Http\Controllers\Developer\RoleController::class,
+            "reset",
+        ])->name("roles.reset");
+
         // Profile
         Route::get("/profile", [ProfileController::class, "edit"])->name(
             "profile.edit",
@@ -599,16 +613,10 @@ Route::middleware(["auth", "single-session", "store", "branch"])
 
         // ─────────────────────────────────────────────────────────────────
         // PEMBELIAN — permission: purchase.*
+        // PENTING: route "create" (path statis) HARUS didaftar SEBELUM
+        // route "show" (/purchases/{purchase}), supaya "/purchases/create"
+        // tidak ke-intercept oleh wildcard {purchase} dan dianggap ID.
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware([
-            "feature:purchase",
-            "permission:purchase.view",
-        ])->group(function () {
-            Route::resource("purchases", PurchaseController::class)->only([
-                "index",
-                "show",
-            ]);
-        });
         Route::middleware([
             "feature:purchase",
             "permission:purchase.create",
@@ -621,6 +629,28 @@ Route::middleware(["auth", "single-session", "store", "branch"])
                 PurchaseController::class,
                 "updateStatus",
             ])->name("purchases.updateStatus");
+        });
+        Route::middleware([
+            "feature:purchase",
+            "permission:purchase.view",
+        ])->group(function () {
+            Route::resource("purchases", PurchaseController::class)->only([
+                "index",
+                "show",
+            ]);
+        });
+        Route::middleware([
+            "feature:purchase",
+            "permission:purchase.edit",
+        ])->group(function () {
+            Route::get("/purchases/{purchase}/edit", [
+                PurchaseController::class,
+                "edit",
+            ])->name("purchases.edit");
+            Route::patch("/purchases/{purchase}", [
+                PurchaseController::class,
+                "update",
+            ])->name("purchases.update");
         });
         Route::middleware([
             "feature:purchase",
