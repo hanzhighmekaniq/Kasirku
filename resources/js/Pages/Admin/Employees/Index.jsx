@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
-import ConfirmDeleteModal from "../Customers/ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/Pages/Admin/Products/ConfirmDeleteModal";
 
 const STATUS_STYLES = {
     active: "bg-emerald-100 text-emerald-700",
@@ -27,50 +27,61 @@ const ROLE_LABELS = {
     developer: "Developer",
 };
 
-export default function Index({ employees, storeType = 'retail' }) {
-    const { flash } = usePage().props;
+export default function Index({ employees, storeType = "retail" }) {
+    const { flash, storeTypeFeatures = [] } = usePage().props;
+    const has = (f) => storeTypeFeatures.includes(f);
     const [search, setSearch] = useState("");
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("");
 
     // Label per store type
     const PAGE_LABEL = {
-        retail:      'Karyawan',
-        fnb:         'Karyawan',
-        service:     'Terapis / Staf',
-        rental:      'Staf',
-        ticket:      'Staf & Operator',
-        hospitality: 'Staf Hotel',
-        parking:     'Petugas Parkir',
-        session:     'Operator',
+        retail: "Karyawan",
+        fnb: "Karyawan",
+        service: "Terapis / Staf",
+        rental: "Staf",
+        ticket: "Staf & Operator",
+        hospitality: "Staf Hotel",
+        parking: "Petugas Parkir",
+        session: "Operator",
     };
     const ADD_LABEL = {
-        service:     'Tambah Terapis',
-        hospitality: 'Tambah Staf',
-        parking:     'Tambah Petugas',
-        session:     'Tambah Operator',
+        service: "Tambah Terapis",
+        hospitality: "Tambah Staf",
+        parking: "Tambah Petugas",
+        session: "Tambah Operator",
     };
-    const pageLabel = PAGE_LABEL[storeType] ?? 'Karyawan';
-    const addLabel  = ADD_LABEL[storeType]  ?? 'Tambah Karyawan';
-    const showCommission = ['service', 'ticket', 'fnb', 'retail'].includes(storeType);
+    const pageLabel = PAGE_LABEL[storeType] ?? "Karyawan";
+    const addLabel = ADD_LABEL[storeType] ?? "Tambah Karyawan";
+    const showCommission = has("commission");
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
-        if (!q) return employees;
+        let result = employees;
 
-        return employees.filter(
-            (emp) =>
-                emp.name.toLowerCase().includes(q) ||
-                (emp.email || "").toLowerCase().includes(q) ||
-                (emp.employee_code || "").toLowerCase().includes(q) ||
-                (emp.phone || "").toLowerCase().includes(q) ||
-                (emp.position || "").toLowerCase().includes(q) ||
-                (emp.branch?.name || "").toLowerCase().includes(q) ||
-                (emp.user?.role || "").toLowerCase().includes(q),
-        );
-    }, [employees, search]);
+        if (q) {
+            result = result.filter(
+                (emp) =>
+                    emp.name.toLowerCase().includes(q) ||
+                    (emp.email || "").toLowerCase().includes(q) ||
+                    (emp.employee_code || "").toLowerCase().includes(q) ||
+                    (emp.phone || "").toLowerCase().includes(q) ||
+                    (emp.position || "").toLowerCase().includes(q) ||
+                    (emp.branch?.name || "").toLowerCase().includes(q) ||
+                    (emp.user_roles || []).some((r) =>
+                        r.toLowerCase().includes(q),
+                    ),
+            );
+        }
 
-    const employeeDataCount = employees.length;
+        if (statusFilter) {
+            result = result.filter((emp) => emp.status === statusFilter);
+        }
+
+        return result;
+    }, [employees, search, statusFilter]);
+
     const activeCount = employees.filter(
         (emp) => emp.status === "active",
     ).length;
@@ -98,8 +109,18 @@ export default function Index({ employees, storeType = 'retail' }) {
                         href={route("admin.employees.create")}
                         className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 4.5v15m7.5-7.5h-15"
+                            />
                         </svg>
                         <span className="hidden sm:inline">{addLabel}</span>
                         <span className="sm:hidden">Tambah</span>
@@ -121,8 +142,15 @@ export default function Index({ employees, storeType = 'retail' }) {
             )}
 
             <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <StatCard label={`Total ${pageLabel}`} value={employees.length} />
-                <StatCard label="Ada Akun Login" value={employees.filter((e) => e.user).length} tone="sky" />
+                <StatCard
+                    label={`Total ${pageLabel}`}
+                    value={employees.length}
+                />
+                <StatCard
+                    label="Ada Akun Login"
+                    value={employees.filter((e) => e.user).length}
+                    tone="sky"
+                />
                 <StatCard label="Aktif" value={activeCount} tone="emerald" />
             </div>
 
@@ -151,6 +179,18 @@ export default function Index({ employees, storeType = 'retail' }) {
                             placeholder="Cari nama, kode, cabang..."
                             className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        >
+                            <option value="">Semua Status</option>
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Nonaktif</option>
+                            <option value="terminated">Berhenti</option>
+                        </select>
                     </div>
                     <p className="text-sm text-slate-500">
                         Total{" "}
@@ -211,7 +251,11 @@ export default function Index({ employees, storeType = 'retail' }) {
                         )}
                     </div>
                 ) : (
-                    <EmployeeList items={filtered} onDelete={setTarget} showCommission={showCommission} />
+                    <EmployeeList
+                        items={filtered}
+                        onDelete={setTarget}
+                        showCommission={showCommission}
+                    />
                 )}
             </div>
 
@@ -342,7 +386,11 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                             <th className="px-6 py-3.5">Cabang</th>
                             <th className="px-6 py-3.5">Kontak</th>
                             <th className="px-6 py-3.5">Jabatan</th>
-                            {showCommission && <th className="px-6 py-3.5 text-center">Komisi</th>}
+                            {showCommission && (
+                                <th className="px-6 py-3.5 text-center">
+                                    Komisi
+                                </th>
+                            )}
                             <th className="px-6 py-3.5 text-center">Role</th>
                             <th className="px-6 py-3.5 text-center">Status</th>
                             <th className="px-6 py-3.5 text-right">Aksi</th>
@@ -384,19 +432,26 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                                     {emp.position || "-"}
                                 </td>
                                 {showCommission && (
-                                <td className="px-6 py-4 text-center">
-                                    {emp.commission_type === "none" || !emp.commission_type ? (
-                                        <span className="text-xs text-slate-400">-</span>
-                                    ) : emp.commission_type === "percent" ? (
-                                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                                            {emp.commission_value}%
-                                        </span>
-                                    ) : (
-                                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
-                                            Rp {Number(emp.commission_value).toLocaleString("id-ID")}
-                                        </span>
-                                    )}
-                                </td>
+                                    <td className="px-6 py-4 text-center">
+                                        {emp.commission_type === "none" ||
+                                        !emp.commission_type ? (
+                                            <span className="text-xs text-slate-400">
+                                                -
+                                            </span>
+                                        ) : emp.commission_type ===
+                                          "percent" ? (
+                                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                                                {emp.commission_value}%
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                                                Rp{" "}
+                                                {Number(
+                                                    emp.commission_value,
+                                                ).toLocaleString("id-ID")}
+                                            </span>
+                                        )}
+                                    </td>
                                 )}
                                 <td className="px-6 py-4 text-center">
                                     <RoleBadge role={emp.user_roles?.[0]} />
@@ -435,6 +490,11 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                                     ? emp.branch.name
                                     : "Belum ada cabang"}
                             </p>
+                            {emp.phone && (
+                                <p className="mt-1 text-sm text-slate-500">
+                                    {emp.phone}
+                                </p>
+                            )}
                             <p className="mt-1 text-sm text-slate-500">
                                 {emp.email || "-"}
                             </p>
@@ -445,13 +505,14 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                                         {emp.position}
                                     </span>
                                 )}
-                                {emp.commission_type && emp.commission_type !== "none" && (
-                                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                                        {emp.commission_type === "percent"
-                                            ? `Komisi ${emp.commission_value}%`
-                                            : `Komisi Rp ${Number(emp.commission_value).toLocaleString("id-ID")}`}
-                                    </span>
-                                )}
+                                {emp.commission_type &&
+                                    emp.commission_type !== "none" && (
+                                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                                            {emp.commission_type === "percent"
+                                                ? `Komisi ${emp.commission_value}%`
+                                                : `Komisi Rp ${Number(emp.commission_value).toLocaleString("id-ID")}`}
+                                        </span>
+                                    )}
                             </div>
                         </div>
                         <RowActions employee={emp} onDelete={onDelete} />

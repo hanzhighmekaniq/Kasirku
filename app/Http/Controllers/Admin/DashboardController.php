@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CashierShift;
+use App\Models\Expense;
 use App\Models\Product;
-use App\Models\Sale;
 use App\Models\ProductStock;
+use App\Models\Purchase;
+use App\Models\Sale;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -183,7 +185,8 @@ class DashboardController extends Controller
                             "id" => $store->id,
                             "name" => $store->name,
                             "code" => $store->code,
-                            "store_type" => $store->getRelation('storeType')?->code,
+                            "store_type" => $store->getRelation("storeType")
+                                ?->code,
                             "today_sales" => (float) (clone $q)
                                 ->whereDate("sale_date", $today)
                                 ->sum("grand_total"),
@@ -247,6 +250,46 @@ class DashboardController extends Controller
             ]);
         }
 
+        // ── Additional stats: profit, inventory, expenses ──
+        $todayPurchases = Purchase::where("store_id", $storeId)
+            ->where("status", "completed")
+            ->whereDate("purchase_date", $today)
+            ->sum("grand_total");
+
+        $todayExpenses = Expense::where("store_id", $storeId)
+            ->whereDate("expense_date", $today)
+            ->sum("amount");
+
+        $monthPurchases = Purchase::where("store_id", $storeId)
+            ->where("status", "completed")
+            ->whereBetween("purchase_date", [$monthStart, $monthEnd])
+            ->sum("grand_total");
+
+        $monthExpenses = Expense::where("store_id", $storeId)
+            ->whereBetween("expense_date", [$monthStart, $monthEnd])
+            ->sum("amount");
+
+        $todayProfit = $todaySales - $todayPurchases - $todayExpenses;
+        $monthProfit = $monthSales - $monthPurchases - $monthExpenses;
+
+        // Inventory value (stok × moving average cost)
+        $inventoryValue =
+            ProductStock::where("product_stocks.store_id", $storeId)
+                ->join(
+                    "products",
+                    "product_stocks.product_id",
+                    "=",
+                    "products.id",
+                )
+                ->where("products.is_active", true)
+                ->where("products.track_stock", true)
+                ->select(
+                    DB::raw(
+                        "SUM((product_stocks.quantity - product_stocks.reserved_quantity) * products.cost_price) as total",
+                    ),
+                )
+                ->value("total") ?? 0;
+
         // ── Shift stats ────────────────────────────────────────
         $openShifts = CashierShift::where("store_id", $storeId)
             ->where("status", "open")
@@ -309,6 +352,13 @@ class DashboardController extends Controller
                 "today_count" => $todayCount,
                 "month_sales" => (float) $monthSales,
                 "month_count" => $monthCount,
+                "today_purchases" => (float) $todayPurchases,
+                "today_expenses" => (float) $todayExpenses,
+                "month_purchases" => (float) $monthPurchases,
+                "month_expenses" => (float) $monthExpenses,
+                "today_profit" => (float) $todayProfit,
+                "month_profit" => (float) $monthProfit,
+                "inventory_value" => (float) $inventoryValue,
                 "low_stock" => $lowStockProducts,
                 "total_products" => $totalProducts,
                 "open_shifts" => $openShifts,

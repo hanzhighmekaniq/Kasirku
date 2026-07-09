@@ -2,6 +2,9 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import QuickStockModal from "@/Components/QuickStockModal";
+import TreePicker from "@/Components/TreePicker";
+import Select from "@/Components/ui/Select";
 
 const TYPE_LABEL = {
     finished_goods: {
@@ -111,8 +114,12 @@ function StockBadge({ product }) {
     );
 }
 
-export default function Index({ products, storeType = "retail" }) {
-    const { flash, storeTypeFeatures = [] } = usePage().props;
+export default function Index({
+    products,
+    allCategories = [],
+    storeType = "retail",
+}) {
+    const { storeTypeFeatures = [] } = usePage().props;
     const has = (f) => storeTypeFeatures.includes(f);
     const [search, setSearch] = useState("");
     const [filterType, setFilterType] = useState("");
@@ -120,6 +127,7 @@ export default function Index({ products, storeType = "retail" }) {
     const [filterStatus, setFilterStatus] = useState("");
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [stockModal, setStockModal] = useState(null); // { product, type: "in"|"out" }
 
     const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
     const filterTypeOptions = FILTER_TYPES[storeType] ?? FILTER_TYPES.retail;
@@ -138,15 +146,6 @@ export default function Index({ products, storeType = "retail" }) {
     const showDeposit = storeType === "rental";
     const showMaxGuests = storeType === "hospitality";
     const showPrepTime = has("kitchen");
-
-    const categories = useMemo(() => {
-        const map = new Map();
-        products.forEach((p) => {
-            if (p.category?.id && !map.has(p.category.id))
-                map.set(p.category.id, p.category.name);
-        });
-        return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-    }, [products]);
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -241,18 +240,6 @@ export default function Index({ products, storeType = "retail" }) {
             }
         >
             <Head title={`Manajemen ${pageTitle}`} />
-
-            {/* Flash */}
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {flash.error}
-                </div>
-            )}
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -368,43 +355,39 @@ export default function Index({ products, storeType = "retail" }) {
                             />
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <select
+                            <Select
+                                options={filterTypeOptions.map(
+                                    ([val, lbl]) => ({
+                                        value: val,
+                                        label: lbl,
+                                    }),
+                                )}
                                 value={filterType}
-                                onChange={(e) => setFilterType(e.target.value)}
-                                className="rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                            >
-                                <option value="">Semua Tipe</option>
-                                {filterTypeOptions.map(([val, lbl]) => (
-                                    <option key={val} value={val}>
-                                        {lbl}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                value={filterCategory}
-                                onChange={(e) =>
-                                    setFilterCategory(e.target.value)
-                                }
-                                className="rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                            >
-                                <option value="">Semua Kategori</option>
-                                {categories.map((c) => (
-                                    <option key={c.id} value={c.id}>
-                                        {c.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
+                                onChange={setFilterType}
+                                placeholder="Semua Tipe"
+                                className="min-w-[160px]"
+                            />
+                            <div className="min-w-[200px]">
+                                <TreePicker
+                                    categories={allCategories}
+                                    value={filterCategory}
+                                    onChange={(v) => setFilterCategory(v)}
+                                    onClear={() => setFilterCategory("")}
+                                    placeholder="Semua Kategori"
+                                    size="sm"
+                                />
+                            </div>
+                            <Select
+                                options={[
+                                    { value: "", label: "Semua Status" },
+                                    { value: "1", label: "Aktif" },
+                                    { value: "0", label: "Nonaktif" },
+                                ]}
                                 value={filterStatus}
-                                onChange={(e) =>
-                                    setFilterStatus(e.target.value)
-                                }
-                                className="rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                            >
-                                <option value="">Semua Status</option>
-                                <option value="1">Aktif</option>
-                                <option value="0">Nonaktif</option>
-                            </select>
+                                onChange={setFilterStatus}
+                                placeholder="Semua Status"
+                                className="min-w-[150px]"
+                            />
                             {hasFilters && (
                                 <button
                                     onClick={() => {
@@ -614,10 +597,19 @@ export default function Index({ products, storeType = "retail" }) {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <span className="text-xs text-slate-400">
-                                                            Satuan:{" "}
-                                                            {product.unit}
-                                                        </span>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-xs text-slate-400">
+                                                                Satuan:{" "}
+                                                                {product.unit}
+                                                            </span>
+                                                            {product.track_stock &&
+                                                                !product.supplier && (
+                                                                    <span className="inline-flex items-center rounded-full bg-amber-50 px-1.5 py-px text-[10px] font-medium text-amber-700 border border-amber-200">
+                                                                        Tanpa
+                                                                        Supplier
+                                                                    </span>
+                                                                )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -730,9 +722,87 @@ export default function Index({ products, storeType = "retail" }) {
                                             {/* Stok — hanya yang relevan */}
                                             {showStock && (
                                                 <td className="px-5 py-4 text-center">
-                                                    <StockBadge
-                                                        product={product}
-                                                    />
+                                                    <div className="inline-flex items-center gap-1">
+                                                        <StockBadge
+                                                            product={product}
+                                                        />
+                                                        {product.track_stock && (
+                                                            <div className="ml-0.5 inline-flex gap-0.5">
+                                                                <button
+                                                                    onClick={(
+                                                                        e,
+                                                                    ) => {
+                                                                        e.stopPropagation();
+                                                                        if (
+                                                                            product.supplier
+                                                                        ) {
+                                                                            router.visit(
+                                                                                route(
+                                                                                    "admin.purchases.create",
+                                                                                ) +
+                                                                                    "?product_id=" +
+                                                                                    product.id +
+                                                                                    "&supplier_id=" +
+                                                                                    product.supplier_id,
+                                                                            );
+                                                                        } else {
+                                                                            setStockModal(
+                                                                                {
+                                                                                    product,
+                                                                                    type: "in",
+                                                                                },
+                                                                            );
+                                                                        }
+                                                                    }}
+                                                                    className="inline-flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-emerald-600 transition hover:bg-emerald-200"
+                                                                    title={
+                                                                        product.supplier
+                                                                            ? "Beli dari Supplier"
+                                                                            : "Tambah Stok"
+                                                                    }
+                                                                >
+                                                                    <svg
+                                                                        className="h-3 w-3"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        strokeWidth={
+                                                                            2.5
+                                                                        }
+                                                                        stroke="currentColor"
+                                                                    >
+                                                                        <path d="M12 4.5v15m7.5-7.5h-15" />
+                                                                    </svg>
+                                                                </button>
+                                                                <button
+                                                                    onClick={(
+                                                                        e,
+                                                                    ) => {
+                                                                        e.stopPropagation();
+                                                                        setStockModal(
+                                                                            {
+                                                                                product,
+                                                                                type: "out",
+                                                                            },
+                                                                        );
+                                                                    }}
+                                                                    className="inline-flex h-5 w-5 items-center justify-center rounded bg-red-100 text-red-600 transition hover:bg-red-200"
+                                                                    title="Kurangi Stok"
+                                                                >
+                                                                    <svg
+                                                                        className="h-3 w-3"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        strokeWidth={
+                                                                            2.5
+                                                                        }
+                                                                        stroke="currentColor"
+                                                                    >
+                                                                        <path d="M5 12h14" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             )}
                                             <td className="px-5 py-4 text-center">
@@ -946,9 +1016,81 @@ export default function Index({ products, storeType = "retail" }) {
                                                     </span>
                                                 )}
                                                 {showStock && (
-                                                    <StockBadge
-                                                        product={product}
-                                                    />
+                                                    <div className="inline-flex items-center gap-1">
+                                                        <StockBadge
+                                                            product={product}
+                                                        />
+                                                        {product.track_stock && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (
+                                                                            product.supplier
+                                                                        ) {
+                                                                            router.visit(
+                                                                                route(
+                                                                                    "admin.purchases.create",
+                                                                                ) +
+                                                                                    "?product_id=" +
+                                                                                    product.id +
+                                                                                    "&supplier_id=" +
+                                                                                    product.supplier_id,
+                                                                            );
+                                                                        } else {
+                                                                            setStockModal(
+                                                                                {
+                                                                                    product,
+                                                                                    type: "in",
+                                                                                },
+                                                                            );
+                                                                        }
+                                                                    }}
+                                                                    className="inline-flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
+                                                                    title={
+                                                                        product.supplier
+                                                                            ? "Beli dari Supplier"
+                                                                            : "Tambah Stok"
+                                                                    }
+                                                                >
+                                                                    <svg
+                                                                        className="h-3 w-3"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        strokeWidth={
+                                                                            2.5
+                                                                        }
+                                                                        stroke="currentColor"
+                                                                    >
+                                                                        <path d="M12 4.5v15m7.5-7.5h-15" />
+                                                                    </svg>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        setStockModal(
+                                                                            {
+                                                                                product,
+                                                                                type: "out",
+                                                                            },
+                                                                        )
+                                                                    }
+                                                                    className="inline-flex h-5 w-5 items-center justify-center rounded bg-red-100 text-red-600 hover:bg-red-200"
+                                                                    title="Kurangi Stok"
+                                                                >
+                                                                    <svg
+                                                                        className="h-3 w-3"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        strokeWidth={
+                                                                            2.5
+                                                                        }
+                                                                        stroke="currentColor"
+                                                                    >
+                                                                        <path d="M5 12h14" />
+                                                                    </svg>
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 )}
                                                 <span
                                                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${product.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
@@ -1068,12 +1210,30 @@ export default function Index({ products, storeType = "retail" }) {
 
             {/* Confirm Delete Modal */}
             <ConfirmDeleteModal
-                show={!!target}
-                product={target}
-                deleting={deleting}
+                open={!!target}
+                title="Hapus produk?"
+                description={
+                    target
+                        ? `Produk "${target.name}" akan dihapus. Tindakan ini tidak dapat dibatalkan.`
+                        : "Tindakan ini tidak dapat dibatalkan."
+                }
+                confirmLabel="Hapus"
+                processing={deleting}
                 onConfirm={confirmDelete}
-                onCancel={() => setTarget(null)}
+                onClose={() => {
+                    if (!deleting) setTarget(null);
+                }}
             />
+
+            {/* Quick Stock Modal */}
+            {stockModal && (
+                <QuickStockModal
+                    product={stockModal.product}
+                    type={stockModal.type}
+                    onClose={() => setStockModal(null)}
+                    onSuccess={() => setStockModal(null)}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

@@ -2,6 +2,23 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import BarcodeScanner from "@/Components/BarcodeScanner";
+import TreePicker from "@/Components/TreePicker";
+import Select from "@/Components/ui/Select";
+import {
+    BarChart3,
+    ChevronLeft,
+    ClipboardList,
+    DollarSign,
+    FileText,
+    Image,
+    Info,
+    Package,
+    Plus,
+    ScanLine,
+    Settings,
+    Wrench,
+    X,
+} from "lucide-react";
 
 const UNIT_OPTIONS = [
     "pcs",
@@ -87,6 +104,13 @@ export default function Edit({
         valid_duration_minutes: product.valid_duration_minutes ?? "",
         session_duration_minutes: product.session_duration_minutes ?? "",
         deposit_amount: product.deposit_amount ?? "",
+        packaging_units: (product.packaging_units || []).map((pu) => ({
+            id: pu.id,
+            name: pu.name,
+            conversion_qty: pu.conversion_qty,
+            sell_price: pu.sell_price,
+            barcode: pu.barcode ?? "",
+        })),
     });
 
     // Apakah tipe yang dipilih tidak punya stok fisik
@@ -152,19 +176,7 @@ export default function Edit({
                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
                         aria-label="Kembali"
                     >
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.8}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M15.75 19.5L8.25 12l7.5-7.5"
-                            />
-                        </svg>
+                        <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
                     <div className="min-w-0">
                         <h2 className="text-lg font-semibold text-slate-800 truncate">
@@ -190,6 +202,7 @@ export default function Edit({
                         <SectionCard
                             title="Informasi Dasar"
                             subtitle="Identitas dan klasifikasi produk"
+                            icon={ClipboardList}
                         >
                             <div className="space-y-4">
                                 <Field
@@ -208,7 +221,7 @@ export default function Edit({
                                     />
                                 </Field>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className={`grid gap-4 grid-cols-2`}>
                                     <Field
                                         label="SKU"
                                         required
@@ -227,6 +240,7 @@ export default function Edit({
                                     {feat.barcode ? (
                                         <Field
                                             label="Barcode"
+                                            hint="opsional"
                                             error={errors.barcode}
                                         >
                                             <div className="flex gap-2">
@@ -250,25 +264,14 @@ export default function Edit({
                                                     className="shrink-0 inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
                                                     title="Scan Barcode dari Label"
                                                 >
-                                                    <svg
-                                                        className="w-5 h-5"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                        />
-                                                    </svg>
+                                                    <ScanLine className="w-5 h-5" />
                                                 </button>
                                             </div>
                                         </Field>
                                     ) : (
                                         <Field
                                             label="Kode Referensi"
+                                            hint="opsional"
                                             error={errors.barcode}
                                         >
                                             <input
@@ -290,44 +293,28 @@ export default function Edit({
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    <Field
+                                    <Select
                                         label="Tipe Produk"
-                                        required
+                                        options={availableTypes.map((t) => ({
+                                            value: t,
+                                            label: productTypes[t] ?? t,
+                                        }))}
+                                        value={data.type}
+                                        onChange={handleTypeChange}
                                         error={errors.type}
-                                    >
-                                        <select
-                                            value={data.type}
-                                            onChange={(e) =>
-                                                handleTypeChange(e.target.value)
-                                            }
-                                            className={inputCls(!!errors.type)}
-                                        >
-                                            {availableTypes.map((typeKey) => (
-                                                <option
-                                                    key={typeKey}
-                                                    value={typeKey}
-                                                >
-                                                    {productTypes[typeKey] ??
-                                                        typeKey}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </Field>
-                                    <Field label="Satuan" error={errors.unit}>
-                                        <select
-                                            value={data.unit}
-                                            onChange={(e) =>
-                                                setData("unit", e.target.value)
-                                            }
-                                            className={inputCls(!!errors.unit)}
-                                        >
-                                            {unitOptionsForType.map((u) => (
-                                                <option key={u} value={u}>
-                                                    {u}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </Field>
+                                    />
+                                    <Select
+                                        label="Satuan"
+                                        options={unitOptionsForType.map(
+                                            (u) => ({
+                                                value: u,
+                                                label: u,
+                                            }),
+                                        )}
+                                        value={data.unit}
+                                        onChange={(v) => setData("unit", v)}
+                                        error={errors.unit}
+                                    />
                                 </div>
                                 {data.type !== "finished_goods" &&
                                     data.type !== "raw_material" && (
@@ -346,60 +333,37 @@ export default function Edit({
                                 <div className="grid grid-cols-2 gap-4">
                                     <Field
                                         label="Kategori"
+                                        hint="opsional"
                                         error={errors.category_id}
                                     >
-                                        <select
+                                        <TreePicker
+                                            categories={categories}
                                             value={data.category_id}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "category_id",
-                                                    e.target.value,
-                                                )
+                                            onChange={(v) =>
+                                                setData("category_id", v)
                                             }
-                                            className={inputCls(
-                                                !!errors.category_id,
-                                            )}
-                                        >
-                                            <option value="">
-                                                Pilih Kategori
-                                            </option>
-                                            {categories.map((c) => (
-                                                <option key={c.id} value={c.id}>
-                                                    {c.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            onClear={() =>
+                                                setData("category_id", "")
+                                            }
+                                            placeholder="Kategori produk..."
+                                        />
                                     </Field>
                                     {feat.supplier && (
-                                        <Field
+                                        <Select
                                             label="Supplier"
+                                            hint="opsional"
+                                            options={suppliers.map((s) => ({
+                                                value: s.id,
+                                                label: s.name,
+                                            }))}
+                                            value={data.supplier_id}
+                                            onChange={(v) =>
+                                                setData("supplier_id", v)
+                                            }
+                                            placeholder="Pilih Supplier"
                                             error={errors.supplier_id}
-                                        >
-                                            <select
-                                                value={data.supplier_id}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "supplier_id",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className={inputCls(
-                                                    !!errors.supplier_id,
-                                                )}
-                                            >
-                                                <option value="">
-                                                    Pilih Supplier
-                                                </option>
-                                                {suppliers.map((s) => (
-                                                    <option
-                                                        key={s.id}
-                                                        value={s.id}
-                                                    >
-                                                        {s.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </Field>
+                                            searchable
+                                        />
                                     )}
                                 </div>
                             </div>
@@ -409,8 +373,14 @@ export default function Edit({
                         <SectionCard
                             title="Deskripsi"
                             subtitle="Penjelasan produk/layanan untuk customer"
+                            icon={FileText}
+                            accent="violet"
                         >
-                            <Field label="Deskripsi" error={errors.description}>
+                            <Field
+                                label="Deskripsi"
+                                hint="opsional"
+                                error={errors.description}
+                            >
                                 <textarea
                                     value={data.description}
                                     onChange={(e) =>
@@ -442,6 +412,8 @@ export default function Edit({
                         <SectionCard
                             title="Harga"
                             subtitle="Harga beli dan jual produk"
+                            icon={DollarSign}
+                            accent="emerald"
                         >
                             <div
                                 className={`grid gap-4 ${feat.costPrice ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}
@@ -473,6 +445,11 @@ export default function Edit({
                                 {feat.costPrice && (
                                     <Field
                                         label="Harga Beli (Modal)"
+                                        hint={
+                                            product.supplier
+                                                ? "Diperbarui otomatis setiap pembelian dari supplier."
+                                                : "Isi manual. Belum ada supplier untuk pembelian otomatis."
+                                        }
                                         error={errors.cost_price}
                                     >
                                         <div className="relative">
@@ -522,6 +499,178 @@ export default function Edit({
                                 )}
                         </SectionCard>
 
+                        {/* SECTION: Multi-Satuan */}
+                        <SectionCard
+                            title="Multi-Satuan"
+                            subtitle="Kemasan grosir seperti dus, box, karton"
+                            icon={Package}
+                            accent="amber"
+                        >
+                            <div className="space-y-3">
+                                {data.packaging_units.map((pu, i) => (
+                                    <div
+                                        key={i}
+                                        className="relative rounded-xl border border-slate-200 bg-slate-50/50 p-4"
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setData(
+                                                    "packaging_units",
+                                                    data.packaging_units.filter(
+                                                        (_, j) => j !== i,
+                                                    ),
+                                                )
+                                            }
+                                            className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                                            title="Hapus satuan"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Field label="Nama Satuan" required>
+                                                <input
+                                                    type="text"
+                                                    value={pu.name}
+                                                    onChange={(e) => {
+                                                        const updated = [
+                                                            ...data.packaging_units,
+                                                        ];
+                                                        updated[i].name =
+                                                            e.target.value;
+                                                        setData(
+                                                            "packaging_units",
+                                                            updated,
+                                                        );
+                                                    }}
+                                                    placeholder="cth. Dus, Box"
+                                                    className={inputCls(false)}
+                                                />
+                                            </Field>
+                                            <Field
+                                                label={`1 ${pu.name || "..."} = ? ${data.unit}`}
+                                                required
+                                            >
+                                                <input
+                                                    type="number"
+                                                    value={pu.conversion_qty}
+                                                    onChange={(e) => {
+                                                        const updated = [
+                                                            ...data.packaging_units,
+                                                        ];
+                                                        updated[
+                                                            i
+                                                        ].conversion_qty =
+                                                            e.target.value;
+                                                        setData(
+                                                            "packaging_units",
+                                                            updated,
+                                                        );
+                                                    }}
+                                                    min="1"
+                                                    placeholder={`Isi per ${pu.name || "satuan"}`}
+                                                    className={inputCls(false)}
+                                                />
+                                            </Field>
+                                        </div>
+                                        <div className="mt-3 grid grid-cols-2 gap-3">
+                                            <Field
+                                                label={`Harga per ${pu.name || "Satuan"}`}
+                                            >
+                                                <div className="relative">
+                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                                        Rp
+                                                    </span>
+                                                    <input
+                                                        type="number"
+                                                        value={pu.sell_price}
+                                                        onChange={(e) => {
+                                                            const updated = [
+                                                                ...data.packaging_units,
+                                                            ];
+                                                            updated[
+                                                                i
+                                                            ].sell_price =
+                                                                e.target.value;
+                                                            setData(
+                                                                "packaging_units",
+                                                                updated,
+                                                            );
+                                                        }}
+                                                        min="0"
+                                                        placeholder="0"
+                                                        className={`${inputCls(false)} pl-9`}
+                                                    />
+                                                </div>
+                                                {pu.conversion_qty > 0 &&
+                                                    pu.sell_price > 0 && (
+                                                        <p className="mt-1 text-[11px] text-slate-400">
+                                                            ≈ Rp{" "}
+                                                            {(
+                                                                pu.sell_price /
+                                                                pu.conversion_qty
+                                                            ).toLocaleString(
+                                                                "id-ID",
+                                                            )}{" "}
+                                                            / {data.unit}
+                                                        </p>
+                                                    )}
+                                            </Field>
+                                            <Field label="Barcode (opsional)">
+                                                <input
+                                                    type="text"
+                                                    value={pu.barcode}
+                                                    onChange={(e) => {
+                                                        const updated = [
+                                                            ...data.packaging_units,
+                                                        ];
+                                                        updated[i].barcode =
+                                                            e.target.value;
+                                                        setData(
+                                                            "packaging_units",
+                                                            updated,
+                                                        );
+                                                    }}
+                                                    placeholder="Barcode kemasan"
+                                                    className={inputCls(false)}
+                                                />
+                                            </Field>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setData("packaging_units", [
+                                            ...data.packaging_units,
+                                            {
+                                                name: "",
+                                                conversion_qty: "",
+                                                sell_price: "",
+                                                barcode: "",
+                                            },
+                                        ])
+                                    }
+                                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 py-2.5 text-sm font-medium text-slate-500 transition hover:border-indigo-400 hover:text-indigo-600"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Tambah Satuan
+                                </button>
+
+                                {data.packaging_units.length === 0 && (
+                                    <p className="text-center text-xs text-slate-400">
+                                        Tambahkan kemasan grosir seperti dus,
+                                        box, atau karton.
+                                        <br />
+                                        Contoh: 1 Dus = 12 Pcs dengan harga &
+                                        barcode sendiri.
+                                    </p>
+                                )}
+                            </div>
+                        </SectionCard>
+
                         {/* SECTION: Detail spesifik per tipe */}
                         {(data.type === "time_based" ||
                             data.type === "rental_item" ||
@@ -535,6 +684,8 @@ export default function Edit({
                             <SectionCard
                                 title="Detail Spesifik"
                                 subtitle="Informasi tambahan sesuai tipe produk"
+                                icon={Wrench}
+                                accent="amber"
                             >
                                 <div className="space-y-4">
                                     {/* price_per_hour — untuk time_based dan rental */}
@@ -757,6 +908,7 @@ export default function Edit({
                             <SectionCard
                                 title="Stok"
                                 subtitle="Pengaturan stok minimum"
+                                icon={Package}
                             >
                                 <div className="space-y-3">
                                     <Field
@@ -785,19 +937,10 @@ export default function Edit({
                                         </p>
                                     </Field>
                                     <div className="flex items-start gap-2 rounded-xl bg-indigo-50 px-4 py-3 text-xs text-indigo-700">
-                                        <svg
+                                        <Info
                                             className="mt-0.5 h-4 w-4 flex-shrink-0"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
                                             strokeWidth={1.8}
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-                                            />
-                                        </svg>
+                                        />
                                         Untuk menambah atau mengurangi stok,
                                         gunakan fitur{" "}
                                         <strong className="ml-0.5">
@@ -815,6 +958,7 @@ export default function Edit({
                             <SectionCard
                                 title="Stok"
                                 subtitle="Tidak berlaku untuk tipe ini"
+                                icon={Package}
                             >
                                 <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-500 flex items-center gap-2">
                                     <span>ℹ️</span>
@@ -833,6 +977,8 @@ export default function Edit({
                         <SectionCard
                             title="Pengaturan Tambahan"
                             subtitle="Opsi lanjutan untuk produk"
+                            icon={Settings}
+                            accent="violet"
                         >
                             <div className="space-y-4">
                                 {/* Waktu persiapan — hanya FnB */}
@@ -888,29 +1034,31 @@ export default function Edit({
                                             </div>
                                         </label>
                                     )}
-                                    {feat.isSellable && (
-                                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
-                                            <input
-                                                type="checkbox"
-                                                checked={!!data.is_sellable}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "is_sellable",
-                                                        e.target.checked,
-                                                    )
-                                                }
-                                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                            />
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-700">
-                                                    Bisa Dijual
-                                                </p>
-                                                <p className="text-xs text-slate-400">
-                                                    Nonaktifkan untuk bahan baku
-                                                </p>
-                                            </div>
-                                        </label>
-                                    )}
+                                    {feat.isSellable &&
+                                        data.type !== "finished_goods" && (
+                                            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={!!data.is_sellable}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "is_sellable",
+                                                            e.target.checked,
+                                                        )
+                                                    }
+                                                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                />
+                                                <div>
+                                                    <p className="text-sm font-medium text-slate-700">
+                                                        Bisa Dijual
+                                                    </p>
+                                                    <p className="text-xs text-slate-400">
+                                                        Nonaktifkan untuk bahan
+                                                        baku
+                                                    </p>
+                                                </div>
+                                            </label>
+                                        )}
                                     {feat.isComposable && (
                                         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
                                             <input
@@ -961,15 +1109,17 @@ export default function Edit({
                         </SectionCard>
                     </div>
 
-                    {/* ── Sidebar ── */}
-                    <div className="space-y-5">
+                    {/* ── Sidebar (sticky) ── */}
+                    <div className="space-y-5 self-start lg:sticky lg:top-16">
                         {/* Gambar */}
                         <SectionCard
                             title="Gambar Produk"
                             subtitle="JPG, PNG, WEBP. Maks 2MB."
+                            icon={Image}
+                            accent="violet"
                         >
                             <div className="space-y-3">
-                                <div className="aspect-square w-full overflow-hidden rounded-xl border-2 border-dashed border-slate-200 bg-slate-50">
+                                <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border-2 border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-indigo-50/30 transition hover:border-indigo-400 hover:from-indigo-50/20 hover:to-violet-50/20">
                                     {imagePreview ? (
                                         <img
                                             src={imagePreview}
@@ -978,27 +1128,23 @@ export default function Edit({
                                         />
                                     ) : (
                                         <div className="flex h-full flex-col items-center justify-center p-4">
-                                            <svg
-                                                className="mb-2 h-10 w-10 text-slate-300"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                strokeWidth={1.5}
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+                                                <Image
+                                                    className="h-6 w-6 text-indigo-400"
+                                                    strokeWidth={1.5}
                                                 />
-                                            </svg>
-                                            <p className="text-xs text-slate-400">
-                                                Belum ada gambar
+                                            </div>
+                                            <p className="mt-3 text-xs font-medium text-slate-500">
+                                                Klik untuk upload
+                                            </p>
+                                            <p className="mt-0.5 text-[10px] text-slate-400">
+                                                JPG, PNG, WEBP
                                             </p>
                                         </div>
                                     )}
                                 </div>
                                 <label className="block cursor-pointer">
-                                    <span className="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-center text-sm text-slate-600 transition hover:bg-slate-50">
+                                    <span className="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-medium text-slate-600 shadow-sm transition hover:border-indigo-300 hover:text-indigo-600">
                                         {imagePreview
                                             ? "Ganti Gambar"
                                             : "Pilih Gambar"}
@@ -1014,7 +1160,7 @@ export default function Edit({
                                     <button
                                         type="button"
                                         onClick={handleRemoveImage}
-                                        className="w-full text-center text-xs text-red-500 hover:text-red-700"
+                                        className="w-full text-center text-xs font-medium text-red-500 transition hover:text-red-700"
                                     >
                                         Hapus Gambar
                                     </button>
@@ -1028,13 +1174,23 @@ export default function Edit({
                         </SectionCard>
 
                         {/* Ringkasan */}
-                        <SectionCard title="Ringkasan">
+                        <SectionCard
+                            title="Ringkasan"
+                            icon={BarChart3}
+                            accent="emerald"
+                        >
                             <dl className="space-y-2 text-sm">
                                 <SummaryRow
                                     label="Tipe"
                                     value={productTypes[data.type] ?? data.type}
                                 />
                                 <SummaryRow label="Satuan" value={data.unit} />
+                                {data.packaging_units.length > 0 && (
+                                    <SummaryRow
+                                        label="Multi-Satuan"
+                                        value={`${data.packaging_units.length} kemasan`}
+                                    />
+                                )}
                                 <SummaryRow
                                     label="Dipantau"
                                     value={data.track_stock ? "Ya" : "Tidak"}
@@ -1056,11 +1212,11 @@ export default function Edit({
                         </SectionCard>
 
                         {/* Actions */}
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2.5">
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-indigo-600 hover:to-violet-700 hover:shadow-indigo-500/40 disabled:opacity-60"
                             >
                                 {processing
                                     ? "Menyimpan..."
@@ -1068,7 +1224,7 @@ export default function Edit({
                             </button>
                             <Link
                                 href={route("admin.products.index")}
-                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-800"
                             >
                                 Batal
                             </Link>
@@ -1091,18 +1247,44 @@ export default function Edit({
 }
 
 /* ── Reusable components ── */
-function SectionCard({ title, subtitle, children }) {
+function SectionCard({
+    title,
+    subtitle,
+    icon: Icon,
+    accent = "indigo",
+    children,
+}) {
+    const accents = {
+        indigo: "border-l-indigo-500 bg-indigo-50/30",
+        violet: "border-l-violet-500 bg-violet-50/30",
+        emerald: "border-l-emerald-500 bg-emerald-50/30",
+        amber: "border-l-amber-500 bg-amber-50/30",
+    };
     return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
-                <h3 className="text-base font-semibold text-slate-900">
-                    {title}
-                </h3>
-                {subtitle && (
-                    <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>
-                )}
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
+            <div
+                className={`border-b border-slate-100 bg-gradient-to-r ${accents[accent] ?? accents.indigo} px-5 py-4`}
+            >
+                <div className="flex items-center gap-2.5">
+                    {Icon && (
+                        <Icon
+                            className="h-5 w-5 text-slate-500"
+                            strokeWidth={1.7}
+                        />
+                    )}
+                    <div>
+                        <h3 className="text-sm font-semibold text-slate-800">
+                            {title}
+                        </h3>
+                        {subtitle && (
+                            <p className="mt-0.5 text-xs text-slate-500">
+                                {subtitle}
+                            </p>
+                        )}
+                    </div>
+                </div>
             </div>
-            <div className="p-6">{children}</div>
+            <div className="p-5">{children}</div>
         </div>
     );
 }
@@ -1110,10 +1292,10 @@ function SectionCard({ title, subtitle, children }) {
 function Field({ label, required, error, hint, children }) {
     return (
         <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-                {label} {required && <span className="text-red-500">*</span>}
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {label} {required && <span className="text-red-400">*</span>}
                 {hint && (
-                    <span className="ml-1 text-xs font-normal text-slate-400">
+                    <span className="ml-1 text-[10px] font-normal normal-case tracking-normal text-slate-400">
                         ({hint})
                     </span>
                 )}
@@ -1126,10 +1308,10 @@ function Field({ label, required, error, hint, children }) {
 
 function SummaryRow({ label, value, active }) {
     return (
-        <div className="flex justify-between">
-            <dt className="text-slate-500">{label}</dt>
+        <div className="flex items-center justify-between py-1.5">
+            <dt className="text-xs text-slate-500">{label}</dt>
             <dd
-                className={`font-medium ${active === undefined ? "text-slate-700" : active ? "text-emerald-600" : "text-slate-400"}`}
+                className={`text-xs font-semibold ${active === undefined ? "text-slate-700" : active ? "text-emerald-600" : "text-slate-400"}`}
             >
                 {value}
             </dd>
@@ -1138,5 +1320,5 @@ function SummaryRow({ label, value, active }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${hasError ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""}`;
+    return `block w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3.5 text-sm shadow-sm transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 ${hasError ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""}`;
 }

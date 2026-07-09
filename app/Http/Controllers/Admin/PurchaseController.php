@@ -53,12 +53,27 @@ class PurchaseController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         [$storeId] = $this->storeScope();
 
         $store = Store::with("storeType")->find($storeId);
         $storeTypeCode = $store?->getRelation("storeType")?->code ?? "retail";
+
+        // Pre-fill from product list redirect
+        $prefill = null;
+        if ($request->has("product_id") && $request->has("supplier_id")) {
+            $prefillProduct = Product::find($request->query("product_id"));
+            if ($prefillProduct) {
+                $prefill = [
+                    "supplier_id" => (int) $request->query("supplier_id"),
+                    "product_id" => $prefillProduct->id,
+                    "product_name" => $prefillProduct->name,
+                    "product_sku" => $prefillProduct->sku,
+                    "cost_price" => $prefillProduct->cost_price ?? 0,
+                ];
+            }
+        }
 
         return Inertia::render("Admin/Purchases/Create", [
             "suppliers" => Supplier::where("store_id", $storeId)->get(),
@@ -69,6 +84,7 @@ class PurchaseController extends Controller
                 ->where("is_active", true)
                 ->get(),
             "storeType" => $storeTypeCode,
+            "prefill" => $prefill,
         ]);
     }
 
@@ -172,10 +188,19 @@ class PurchaseController extends Controller
                             [
                                 "product_id" => $item->product_id,
                                 "store_id" => $storeId,
+                                "branch_id" => $branchId,
                             ],
                             ["quantity" => 0, "reserved_quantity" => 0],
                         );
                         $stock->increment("quantity", $item->quantity);
+
+                        // Update moving average cost
+                        $this->updateMovingAverageCost(
+                            $product,
+                            $item->cost_price,
+                            $item->quantity,
+                            $stock->quantity - $item->quantity,
+                        );
 
                         StockMovement::create([
                             "product_id" => $item->product_id,
@@ -324,10 +349,19 @@ class PurchaseController extends Controller
                             [
                                 "product_id" => $item->product_id,
                                 "store_id" => $storeId,
+                                "branch_id" => $purchase->branch_id,
                             ],
                             ["quantity" => 0, "reserved_quantity" => 0],
                         );
                         $stock->increment("quantity", $item->quantity);
+
+                        // Update moving average cost
+                        $this->updateMovingAverageCost(
+                            $product,
+                            $item->cost_price,
+                            $item->quantity,
+                            $stock->quantity - $item->quantity,
+                        );
 
                         $exists = StockMovement::where([
                             "reference_type" => Purchase::class,
@@ -399,9 +433,19 @@ class PurchaseController extends Controller
                     $stock = ProductStock::where([
                         "product_id" => $item->product_id,
                         "store_id" => $purchase->store_id,
+                        "branch_id" => $purchase->branch_id,
                     ])->first();
                     if ($stock) {
+                        $oldQty = $stock->quantity;
                         $stock->decrement("quantity", $item->quantity);
+
+                        // Revert moving average cost
+                        $this->revertMovingAverageCost(
+                            $product,
+                            $item->cost_price,
+                            $item->quantity,
+                            $oldQty,
+                        );
 
                         StockMovement::create([
                             "product_id" => $item->product_id,
@@ -449,10 +493,19 @@ class PurchaseController extends Controller
                             [
                                 "product_id" => $item->product_id,
                                 "store_id" => $purchase->store_id,
+                                "branch_id" => $purchase->branch_id,
                             ],
                             ["quantity" => 0, "reserved_quantity" => 0],
                         );
                         $stock->increment("quantity", $item->quantity);
+
+                        // Update moving average cost
+                        $this->updateMovingAverageCost(
+                            $product,
+                            $item->cost_price,
+                            $item->quantity,
+                            $stock->quantity - $item->quantity,
+                        );
 
                         StockMovement::create([
                             "product_id" => $item->product_id,
@@ -480,9 +533,19 @@ class PurchaseController extends Controller
                         $stock = ProductStock::where([
                             "product_id" => $item->product_id,
                             "store_id" => $purchase->store_id,
+                            "branch_id" => $purchase->branch_id,
                         ])->first();
                         if ($stock) {
+                            $oldQty = $stock->quantity;
                             $stock->decrement("quantity", $item->quantity);
+
+                            // Revert moving average cost when cancelling
+                            $this->revertMovingAverageCost(
+                                $product,
+                                $item->cost_price,
+                                $item->quantity,
+                                $oldQty,
+                            );
 
                             StockMovement::create([
                                 "product_id" => $item->product_id,
@@ -525,6 +588,54 @@ class PurchaseController extends Controller
                 "error",
                 "Gagal memperbarui status: " . $e->getMessage(),
             );
+        }
+    }
+
+    /**
+     * Update product cost_price using moving average method.
+     * Called after purchase stock increment.
+     */
+    private function updateMovingAverageCost(
+        Product $product,
+        float $newPrice,
+        float $newQty,
+        float $oldQtyBefore,
+    ): void {
+        $oldCost = $product->cost_price ?? 0;
+        $totalQty = $oldQtyBefore + $newQty;
+
+        if ($totalQty > 0) {
+            $avgCost =
+                ($oldQtyBefore * $oldCost + $newQty * $newPrice) / $totalQty;
+        } else {
+            $avgCost = $newPrice;
+        }
+
+        $product->update(["cost_price" => round($avgCost, 2)]);
+    }
+
+    /**
+     * Revert product cost_price when purchase is cancelled/deleted.
+     * Removes the purchase contribution from the moving average.
+     */
+    private function revertMovingAverageCost(
+        Product $product,
+        float $removedPrice,
+        float $removedQty,
+        float $oldQtyBefore,
+    ): void {
+        $oldCost = $product->cost_price ?? 0;
+        $remainingQty = $oldQtyBefore - $removedQty;
+
+        if ($remainingQty <= 0) {
+            $product->update(["cost_price" => 0]);
+        } else {
+            $revertCost =
+                ($oldQtyBefore * $oldCost - $removedQty * $removedPrice) /
+                $remainingQty;
+            $product->update([
+                "cost_price" => round(max(0, $revertCost), 2),
+            ]);
         }
     }
 }

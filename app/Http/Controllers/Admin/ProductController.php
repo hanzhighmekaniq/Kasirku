@@ -11,6 +11,7 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -37,8 +38,35 @@ class ProductController extends Controller
                 return $product;
             });
 
+        // Build category hierarchy for filter
+        $allCategories = Category::forStore($storeId)
+            ->orderBy("name")
+            ->get(["id", "name", "description", "parent_id"]);
+        $catMap = $allCategories->keyBy("id");
+        $allCategories = $allCategories
+            ->map(function ($cat) use ($catMap) {
+                $depth = 0;
+                $currentId = $cat->parent_id;
+                while ($currentId && isset($catMap[$currentId])) {
+                    $depth++;
+                    $currentId = $catMap[$currentId]->parent_id;
+                }
+                $cat->depth = $depth;
+                $parts = [$cat->name];
+                $currentId = $cat->parent_id;
+                while ($currentId && isset($catMap[$currentId])) {
+                    array_unshift($parts, $catMap[$currentId]->name);
+                    $currentId = $catMap[$currentId]->parent_id;
+                }
+                $cat->display_path = implode(" > ", $parts);
+                return $cat;
+            })
+            ->sortBy("display_path")
+            ->values();
+
         return Inertia::render("Admin/Products/Index", [
             "products" => $products,
+            "allCategories" => $allCategories,
             "storeType" => $store?->getRelation("storeType")?->code ?? "retail",
         ]);
     }
@@ -79,6 +107,15 @@ class ProductController extends Controller
                 ->count(),
         ];
 
+        // Recent stock movements (last 10)
+        $stockMovements = \App\Models\StockMovement::where(
+            "product_id",
+            $product->id,
+        )
+            ->orderByDesc("moved_at")
+            ->limit(10)
+            ->get();
+
         // Margin
         $margin =
             $product->sell_price > 0
@@ -98,6 +135,7 @@ class ProductController extends Controller
             "batchStats" => $batchStats,
             "margin" => $margin,
             "profitRp" => $profitRp,
+            "stockMovements" => $stockMovements,
         ]);
     }
 
@@ -106,15 +144,40 @@ class ProductController extends Controller
         $storeId = session("current_store_id");
         $store = \App\Models\Store::with("storeType")->find($storeId);
 
+        // Build category hierarchy
+        $allCategories = Category::forStore($storeId)
+            ->orderBy("name")
+            ->get(["id", "name", "description", "parent_id"]);
+        $catMap = $allCategories->keyBy("id");
+        $categories = $allCategories
+            ->map(function ($cat) use ($catMap) {
+                $depth = 0;
+                $currentId = $cat->parent_id;
+                while ($currentId && isset($catMap[$currentId])) {
+                    $depth++;
+                    $currentId = $catMap[$currentId]->parent_id;
+                }
+                $cat->depth = $depth;
+                $parts = [$cat->name];
+                $currentId = $cat->parent_id;
+                while ($currentId && isset($catMap[$currentId])) {
+                    array_unshift($parts, $catMap[$currentId]->name);
+                    $currentId = $catMap[$currentId]->parent_id;
+                }
+                $cat->display_path = implode(" > ", $parts);
+                return $cat;
+            })
+            ->sortBy("display_path")
+            ->values();
+
         return Inertia::render("Admin/Products/Create", [
-            "categories" => Category::forStore($storeId)
-                ->orderBy("name")
-                ->get(),
+            "categories" => $categories,
             "suppliers" => Supplier::where("store_id", $storeId)
                 ->orderBy("name")
                 ->get(),
             "productTypes" => self::PRODUCT_TYPES,
             "storeType" => $store?->getRelation("storeType")?->code ?? "retail",
+            "generatedSku" => Product::generateSku($storeId),
         ]);
     }
 
@@ -134,7 +197,6 @@ class ProductController extends Controller
             "cost_price" => "nullable|numeric|min:0",
             "price_per_hour" => "nullable|numeric|min:0",
             "min_duration_minutes" => "nullable|integer|min:0",
-            "initial_stock" => "nullable|integer|min:0",
             "stock_minimum" => "nullable|integer|min:0",
             "track_stock" => "boolean",
             "is_sellable" => "boolean",
@@ -148,6 +210,12 @@ class ProductController extends Controller
             "valid_duration_minutes" => "nullable|integer|min:0",
             "session_duration_minutes" => "nullable|integer|min:0",
             "deposit_amount" => "nullable|numeric|min:0",
+            // packaging units
+            "packaging_units" => "nullable|array",
+            "packaging_units.*.name" => "required|string|max:50",
+            "packaging_units.*.conversion_qty" => "required|integer|min:1",
+            "packaging_units.*.sell_price" => "nullable|numeric|min:0",
+            "packaging_units.*.barcode" => "nullable|string|max:100",
         ]);
 
         $imagePath = null;
@@ -155,48 +223,50 @@ class ProductController extends Controller
             $imagePath = $request->file("image")->store("products", "public");
         }
 
-        $product = Product::create([
-            "store_id" => session("current_store_id"),
-            "name" => $validated["name"],
-            "description" => $validated["description"] ?? null,
-            "sku" => $validated["sku"],
-            "barcode" => $validated["barcode"] ?? BarcodeHelper::generate(),
-            "type" => $validated["type"],
-            "category_id" => $validated["category_id"] ?? null,
-            "supplier_id" => $validated["supplier_id"] ?? null,
-            "unit" => $validated["unit"] ?? "pcs",
-            "sell_price" => $validated["sell_price"],
-            "cost_price" => $validated["cost_price"] ?? 0,
-            "price_per_hour" => $validated["price_per_hour"] ?? null,
-            "min_duration_minutes" =>
-                $validated["min_duration_minutes"] ?? null,
-            "stock_minimum" => $validated["stock_minimum"] ?? 0,
-            "track_stock" => $validated["track_stock"] ?? true,
-            "is_sellable" => $validated["is_sellable"] ?? true,
-            "is_composable" => $validated["is_composable"] ?? false,
-            "preparation_time" => $validated["preparation_time"] ?? null,
-            "is_active" => $validated["is_active"] ?? true,
-            "image" => $imagePath,
-            "capacity" => $validated["capacity"] ?? null,
-            "max_guests" => $validated["max_guests"] ?? null,
-            "valid_duration_minutes" =>
-                $validated["valid_duration_minutes"] ?? null,
-            "session_duration_minutes" =>
-                $validated["session_duration_minutes"] ?? null,
-            "deposit_amount" => $validated["deposit_amount"] ?? null,
-        ]);
+        DB::transaction(function () use ($validated, $imagePath, $request) {
+            $product = Product::create([
+                "store_id" => session("current_store_id"),
+                "name" => $validated["name"],
+                "description" => $validated["description"] ?? null,
+                "sku" => $validated["sku"],
+                "barcode" => $validated["barcode"] ?? null,
+                "type" => $validated["type"],
+                "category_id" => $validated["category_id"] ?? null,
+                "supplier_id" => $validated["supplier_id"] ?? null,
+                "unit" => $validated["unit"] ?? "pcs",
+                "sell_price" => $validated["sell_price"],
+                "cost_price" => $validated["cost_price"] ?? 0,
+                "price_per_hour" => $validated["price_per_hour"] ?? null,
+                "min_duration_minutes" =>
+                    $validated["min_duration_minutes"] ?? null,
+                "stock_minimum" => $validated["stock_minimum"] ?? 0,
+                "track_stock" => $validated["track_stock"] ?? true,
+                "is_sellable" => $validated["is_sellable"] ?? true,
+                "is_composable" => $validated["is_composable"] ?? false,
+                "preparation_time" => $validated["preparation_time"] ?? null,
+                "is_active" => $validated["is_active"] ?? true,
+                "image" => $imagePath,
+                "capacity" => $validated["capacity"] ?? null,
+                "max_guests" => $validated["max_guests"] ?? null,
+                "valid_duration_minutes" =>
+                    $validated["valid_duration_minutes"] ?? null,
+                "session_duration_minutes" =>
+                    $validated["session_duration_minutes"] ?? null,
+                "deposit_amount" => $validated["deposit_amount"] ?? null,
+            ]);
 
-        $initialStock = (int) ($validated["initial_stock"] ?? 0);
-        if ($initialStock > 0 && $product->track_stock) {
-            ProductStock::updateOrCreate(
-                [
-                    "product_id" => $product->id,
-                    "store_id" => session("current_store_id"),
-                    "branch_id" => null,
-                ],
-                ["quantity" => $initialStock, "reserved_quantity" => 0],
-            );
-        }
+            // Save packaging units
+            if (!empty($validated["packaging_units"])) {
+                foreach ($validated["packaging_units"] as $pu) {
+                    $product->packagingUnits()->create([
+                        "name" => $pu["name"],
+                        "conversion_qty" => $pu["conversion_qty"],
+                        "sell_price" => $pu["sell_price"] ?? 0,
+                        "barcode" => $pu["barcode"] ?? null,
+                    ]);
+                }
+            }
+        });
 
         return redirect()
             ->route("admin.products.index")
@@ -208,11 +278,37 @@ class ProductController extends Controller
         $storeId = session("current_store_id");
         $store = \App\Models\Store::with("storeType")->find($storeId);
 
+        // Build category hierarchy
+        $allCategories = Category::forStore($storeId)
+            ->orderBy("name")
+            ->get(["id", "name", "description", "parent_id"]);
+        $catMap = $allCategories->keyBy("id");
+        $categories = $allCategories
+            ->map(function ($cat) use ($catMap) {
+                $depth = 0;
+                $currentId = $cat->parent_id;
+                while ($currentId && isset($catMap[$currentId])) {
+                    $depth++;
+                    $currentId = $catMap[$currentId]->parent_id;
+                }
+                $cat->depth = $depth;
+                $parts = [$cat->name];
+                $currentId = $cat->parent_id;
+                while ($currentId && isset($catMap[$currentId])) {
+                    array_unshift($parts, $catMap[$currentId]->name);
+                    $currentId = $catMap[$currentId]->parent_id;
+                }
+                $cat->display_path = implode(" > ", $parts);
+                return $cat;
+            })
+            ->sortBy("display_path")
+            ->values();
+
+        $product->load("packagingUnits");
+
         return Inertia::render("Admin/Products/Edit", [
             "product" => $product,
-            "categories" => Category::forStore($storeId)
-                ->orderBy("name")
-                ->get(),
+            "categories" => $categories,
             "suppliers" => Supplier::where("store_id", $storeId)
                 ->orderBy("name")
                 ->get(),
@@ -254,6 +350,12 @@ class ProductController extends Controller
             "valid_duration_minutes" => "nullable|integer|min:0",
             "session_duration_minutes" => "nullable|integer|min:0",
             "deposit_amount" => "nullable|numeric|min:0",
+            // packaging units
+            "packaging_units" => "nullable|array",
+            "packaging_units.*.name" => "required|string|max:50",
+            "packaging_units.*.conversion_qty" => "required|integer|min:1",
+            "packaging_units.*.sell_price" => "nullable|numeric|min:0",
+            "packaging_units.*.barcode" => "nullable|string|max:100",
         ]);
 
         // Handle gambar
@@ -275,35 +377,55 @@ class ProductController extends Controller
             $imagePath = $request->file("image")->store("products", "public");
         }
 
-        $product->update([
-            "name" => $validated["name"],
-            "description" => $validated["description"] ?? null,
-            "sku" => $validated["sku"],
-            "barcode" => $validated["barcode"] ?? null,
-            "type" => $validated["type"],
-            "category_id" => $validated["category_id"] ?? null,
-            "supplier_id" => $validated["supplier_id"] ?? null,
-            "unit" => $validated["unit"] ?? "pcs",
-            "sell_price" => $validated["sell_price"],
-            "cost_price" => $validated["cost_price"] ?? 0,
-            "price_per_hour" => $validated["price_per_hour"] ?? null,
-            "min_duration_minutes" =>
-                $validated["min_duration_minutes"] ?? null,
-            "stock_minimum" => $validated["stock_minimum"] ?? 0,
-            "track_stock" => $validated["track_stock"] ?? true,
-            "is_sellable" => $validated["is_sellable"] ?? true,
-            "is_composable" => $validated["is_composable"] ?? false,
-            "preparation_time" => $validated["preparation_time"] ?? null,
-            "is_active" => $validated["is_active"] ?? true,
-            "image" => $imagePath,
-            "capacity" => $validated["capacity"] ?? null,
-            "max_guests" => $validated["max_guests"] ?? null,
-            "valid_duration_minutes" =>
-                $validated["valid_duration_minutes"] ?? null,
-            "session_duration_minutes" =>
-                $validated["session_duration_minutes"] ?? null,
-            "deposit_amount" => $validated["deposit_amount"] ?? null,
-        ]);
+        DB::transaction(function () use (
+            $validated,
+            $imagePath,
+            $product,
+            $request,
+        ) {
+            $product->update([
+                "name" => $validated["name"],
+                "description" => $validated["description"] ?? null,
+                "sku" => $validated["sku"],
+                "barcode" => $validated["barcode"] ?? null,
+                "type" => $validated["type"],
+                "category_id" => $validated["category_id"] ?? null,
+                "supplier_id" => $validated["supplier_id"] ?? null,
+                "unit" => $validated["unit"] ?? "pcs",
+                "sell_price" => $validated["sell_price"],
+                "cost_price" => $validated["cost_price"] ?? 0,
+                "price_per_hour" => $validated["price_per_hour"] ?? null,
+                "min_duration_minutes" =>
+                    $validated["min_duration_minutes"] ?? null,
+                "stock_minimum" => $validated["stock_minimum"] ?? 0,
+                "track_stock" => $validated["track_stock"] ?? true,
+                "is_sellable" => $validated["is_sellable"] ?? true,
+                "is_composable" => $validated["is_composable"] ?? false,
+                "preparation_time" => $validated["preparation_time"] ?? null,
+                "is_active" => $validated["is_active"] ?? true,
+                "image" => $imagePath,
+                "capacity" => $validated["capacity"] ?? null,
+                "max_guests" => $validated["max_guests"] ?? null,
+                "valid_duration_minutes" =>
+                    $validated["valid_duration_minutes"] ?? null,
+                "session_duration_minutes" =>
+                    $validated["session_duration_minutes"] ?? null,
+                "deposit_amount" => $validated["deposit_amount"] ?? null,
+            ]);
+
+            // Sync packaging units: delete all, recreate
+            $product->packagingUnits()->delete();
+            if (!empty($validated["packaging_units"])) {
+                foreach ($validated["packaging_units"] as $pu) {
+                    $product->packagingUnits()->create([
+                        "name" => $pu["name"],
+                        "conversion_qty" => $pu["conversion_qty"],
+                        "sell_price" => $pu["sell_price"] ?? 0,
+                        "barcode" => $pu["barcode"] ?? null,
+                    ]);
+                }
+            }
+        });
 
         return redirect()
             ->route("admin.products.index")

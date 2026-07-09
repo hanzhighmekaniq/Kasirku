@@ -568,6 +568,10 @@ Route::middleware(["auth", "single-session", "store", "branch"])
                 StockAdjustmentController::class,
                 "updateStatus",
             ])->name("stock-adjustments.updateStatus");
+            Route::post("/stock-adjustments/quick", [
+                StockAdjustmentController::class,
+                "quickStore",
+            ])->name("stock-adjustments.quick");
         });
         Route::middleware([
             "feature:stock_opname",

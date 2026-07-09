@@ -629,41 +629,41 @@ export default function Dashboard({
 }) {
     const { currentBranch, allStoreTypes = [] } = usePage().props;
     const isKasir = mode === "kasir";
-    const storeType = currentStore?.store_type ?? 'retail';
+    const storeType = currentStore?.store_type ?? "retail";
 
     // Flag per store type
-    const hasStock = ['retail', 'fnb', 'rental'].includes(storeType);
+    const hasStock = ["retail", "fnb", "rental"].includes(storeType);
 
     // Label dinamis
     const GREETING = {
-        retail:      '🏪 Selamat Datang!',
-        fnb:         '☕ Selamat Datang!',
-        service:     '✂️ Selamat Datang!',
-        rental:      '🔑 Selamat Datang!',
-        ticket:      '🎟️ Selamat Datang!',
-        hospitality: '🏨 Selamat Datang!',
-        parking:     '🅿️ Selamat Datang!',
-        session:     '🎮 Selamat Datang!',
+        retail: "🏪 Selamat Datang!",
+        fnb: "☕ Selamat Datang!",
+        service: "✂️ Selamat Datang!",
+        rental: "🔑 Selamat Datang!",
+        ticket: "🎟️ Selamat Datang!",
+        hospitality: "🏨 Selamat Datang!",
+        parking: "🅿️ Selamat Datang!",
+        session: "🎮 Selamat Datang!",
     };
     const PRODUCT_LABEL = {
-        retail:      'Produk Terlaris',
-        fnb:         'Menu Terlaris',
-        service:     'Layanan Terlaris',
-        rental:      'Item Sewa Terlaris',
-        ticket:      'Tiket Terlaris',
-        hospitality: 'Paket Terlaris',
-        parking:     'Tarif Terlaris',
-        session:     'Paket Sesi Terlaris',
+        retail: "Produk Terlaris",
+        fnb: "Menu Terlaris",
+        service: "Layanan Terlaris",
+        rental: "Item Sewa Terlaris",
+        ticket: "Tiket Terlaris",
+        hospitality: "Paket Terlaris",
+        parking: "Tarif Terlaris",
+        session: "Paket Sesi Terlaris",
     };
     const TRANSACTION_LABEL = {
-        retail:      'Penjualan Hari Ini',
-        fnb:         'Transaksi Hari Ini',
-        service:     'Layanan Hari Ini',
-        rental:      'Sewa Hari Ini',
-        ticket:      'Tiket Hari Ini',
-        hospitality: 'Check-in Hari Ini',
-        parking:     'Kendaraan Hari Ini',
-        session:     'Sesi Hari Ini',
+        retail: "Penjualan Hari Ini",
+        fnb: "Transaksi Hari Ini",
+        service: "Layanan Hari Ini",
+        rental: "Sewa Hari Ini",
+        ticket: "Tiket Hari Ini",
+        hospitality: "Check-in Hari Ini",
+        parking: "Kendaraan Hari Ini",
+        session: "Sesi Hari Ini",
     };
 
     const storeLabel = currentStore
@@ -703,7 +703,9 @@ export default function Dashboard({
             header={
                 <div className="flex items-center justify-between gap-3 w-full">
                     <h2 className="text-lg font-bold text-slate-900">
-                        {isKasir ? (GREETING[storeType] ?? 'Selamat Datang!') : "Dashboard"}
+                        {isKasir
+                            ? (GREETING[storeType] ?? "Selamat Datang!")
+                            : "Dashboard"}
                     </h2>
                     <div className="flex items-center gap-2">
                         {currentStore && (
@@ -877,7 +879,9 @@ export default function Dashboard({
                 {/* ── Stat cards ── */}
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <StatCard
-                        label={TRANSACTION_LABEL[storeType] ?? 'Transaksi Hari Ini'}
+                        label={
+                            TRANSACTION_LABEL[storeType] ?? "Transaksi Hari Ini"
+                        }
                         value={fmt(stats.today_sales)}
                         sub={`${fmtNum(stats.today_count)} transaksi`}
                         icon="💰"
@@ -894,9 +898,17 @@ export default function Dashboard({
                         <StatCard
                             label="Stok Menipis"
                             value={`${fmtNum(stats.low_stock)} item`}
-                            sub={stats.low_stock > 0 ? "Perlu segera restok" : "Stok aman"}
+                            sub={
+                                stats.low_stock > 0
+                                    ? "Perlu segera restok"
+                                    : "Stok aman"
+                            }
                             icon={stats.low_stock > 0 ? "⚠️" : "✅"}
-                            accent={stats.low_stock > 0 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-500"}
+                            accent={
+                                stats.low_stock > 0
+                                    ? "bg-amber-50 text-amber-600"
+                                    : "bg-emerald-50 text-emerald-500"
+                            }
                         />
                     ) : (
                         <StatCard
@@ -908,10 +920,46 @@ export default function Dashboard({
                         />
                     )}
                     <StatCard
-                        label={hasStock ? 'Total Produk' : 'Total Item/Layanan'}
+                        label={hasStock ? "Total Produk" : "Total Item/Layanan"}
                         value={fmtNum(stats.total_products)}
                         sub="Aktif"
                         icon="📦"
+                        accent="bg-violet-50 text-violet-600"
+                    />
+                </div>
+
+                {/* ── Second row ── */}
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <StatCard
+                        label="Laba Hari Ini"
+                        value={fmt(stats.today_profit)}
+                        sub="Penjualan - Pembelian - Pengeluaran"
+                        icon="💵"
+                        accent={
+                            stats.today_profit >= 0
+                                ? "bg-emerald-50 text-emerald-600"
+                                : "bg-red-50 text-red-600"
+                        }
+                    />
+                    <StatCard
+                        label="Pembelian Hari Ini"
+                        value={fmt(stats.today_purchases)}
+                        sub="Dari supplier"
+                        icon="🛒"
+                        accent="bg-indigo-50 text-indigo-600"
+                    />
+                    <StatCard
+                        label="Pengeluaran Hari Ini"
+                        value={fmt(stats.today_expenses)}
+                        sub="Biaya operasional"
+                        icon="💸"
+                        accent="bg-amber-50 text-amber-600"
+                    />
+                    <StatCard
+                        label="Nilai Stok"
+                        value={fmt(stats.inventory_value)}
+                        sub="Stok × Harga Pokok"
+                        icon="🏪"
                         accent="bg-violet-50 text-violet-600"
                     />
                 </div>
@@ -994,7 +1042,9 @@ export default function Dashboard({
                     {/* Top products today */}
                     <Card>
                         <SectionHeader
-                            title={PRODUCT_LABEL[storeType] ?? 'Produk Terlaris'}
+                            title={
+                                PRODUCT_LABEL[storeType] ?? "Produk Terlaris"
+                            }
                             subtitle="Hari ini"
                             action={
                                 <ReportBtn
@@ -1038,10 +1088,36 @@ export default function Dashboard({
                             className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50/50"
                         >
                             <span className="text-3xl">
-                                {storeType === 'fnb' ? '🍽️' : storeType === 'service' ? '✂️' : storeType === 'rental' ? '🔑' : storeType === 'ticket' ? '🎟️' : storeType === 'hospitality' ? '🛏️' : storeType === 'parking' ? '🅿️' : storeType === 'session' ? '🎮' : '🛒'}
+                                {storeType === "fnb"
+                                    ? "🍽️"
+                                    : storeType === "service"
+                                      ? "✂️"
+                                      : storeType === "rental"
+                                        ? "🔑"
+                                        : storeType === "ticket"
+                                          ? "🎟️"
+                                          : storeType === "hospitality"
+                                            ? "🛏️"
+                                            : storeType === "parking"
+                                              ? "🅿️"
+                                              : storeType === "session"
+                                                ? "🎮"
+                                                : "🛒"}
                             </span>
                             <span className="text-sm font-semibold text-slate-700">
-                                {storeType === 'fnb' ? 'Buka Kasir' : storeType === 'service' ? 'Mulai Layanan' : storeType === 'rental' ? 'Buka Sewa' : storeType === 'ticket' ? 'Jual Tiket' : storeType === 'parking' ? 'Parkir Masuk' : storeType === 'session' ? 'Mulai Sesi' : 'Buka Kasir'}
+                                {storeType === "fnb"
+                                    ? "Buka Kasir"
+                                    : storeType === "service"
+                                      ? "Mulai Layanan"
+                                      : storeType === "rental"
+                                        ? "Buka Sewa"
+                                        : storeType === "ticket"
+                                          ? "Jual Tiket"
+                                          : storeType === "parking"
+                                            ? "Parkir Masuk"
+                                            : storeType === "session"
+                                              ? "Mulai Sesi"
+                                              : "Buka Kasir"}
                             </span>
                         </Link>
                         <Link
@@ -1050,7 +1126,11 @@ export default function Dashboard({
                         >
                             <span className="text-3xl">📋</span>
                             <span className="text-sm font-semibold text-slate-700">
-                                {storeType === 'rental' ? 'Riwayat Sewa' : storeType === 'service' ? 'Riwayat Layanan' : 'Riwayat Transaksi'}
+                                {storeType === "rental"
+                                    ? "Riwayat Sewa"
+                                    : storeType === "service"
+                                      ? "Riwayat Layanan"
+                                      : "Riwayat Transaksi"}
                             </span>
                         </Link>
                         <Link
@@ -1059,7 +1139,9 @@ export default function Dashboard({
                         >
                             <span className="text-3xl">👥</span>
                             <span className="text-sm font-semibold text-slate-700">
-                                {storeType === 'service' ? 'Data Pelanggan' : 'Pelanggan'}
+                                {storeType === "service"
+                                    ? "Data Pelanggan"
+                                    : "Pelanggan"}
                             </span>
                         </Link>
                     </div>

@@ -25,6 +25,7 @@
         "@dnd-kit/sortable": "^10.0.0",
         "@dnd-kit/utilities": "^3.2.2",
         "@zxing/library": "^0.21.3",
+        "lucide-react": "^1.24.0",
         "recharts": "^3.8.1",
         "sharp": "^0.35.2"
     }

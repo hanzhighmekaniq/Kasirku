@@ -138,6 +138,125 @@ class StockAdjustmentController extends Controller
             ->with("success", "Penyesuaian stok berhasil dihapus.");
     }
 
+    /**
+     * Quick stock adjustment (IN/OUT) dari product list.
+     * Auto-approved — langsung update stok tanpa workflow draft.
+     */
+    public function quickStore(Request $request)
+    {
+        $validated = $request->validate([
+            "product_id" => "required|exists:products,id",
+            "type" => "required|in:in,out",
+            "quantity" => "required|numeric|min:0.0001",
+            "reason" => "nullable|string|max:150",
+            "notes" => "nullable|string|max:2000",
+        ]);
+
+        $storeId = session("current_store_id");
+        $branchId = session("current_branch_id");
+        $product = Product::findOrFail($validated["product_id"]);
+
+        $productStock = ProductStock::where("product_id", $product->id)
+            ->where("store_id", $storeId)
+            ->when($branchId, fn($q) => $q->where("branch_id", $branchId))
+            ->first();
+        $currentStock = $productStock->quantity ?? 0;
+
+        // Validasi: stok tidak mencukupi untuk OUT
+        if (
+            $validated["type"] === "out" &&
+            $currentStock < $validated["quantity"]
+        ) {
+            return back()->withErrors([
+                "quantity" => "Stok tidak mencukupi. Stok saat ini: {$currentStock}.",
+            ]);
+        }
+
+        $unitCost = $product->cost_price ?? 0;
+
+        if ($validated["type"] === "in") {
+            $systemQty = (float) $currentStock;
+            $actualQty = $systemQty + (float) $validated["quantity"];
+            $diff = (float) $validated["quantity"];
+        } else {
+            $systemQty = (float) $currentStock;
+            $actualQty = $systemQty - (float) $validated["quantity"];
+            $diff = -(float) $validated["quantity"];
+        }
+
+        DB::beginTransaction();
+        try {
+            $adjustment = StockAdjustment::create([
+                "store_id" => $storeId,
+                "branch_id" => $branchId,
+                "user_id" => $request->user()->id,
+                "adjustment_no" => $this->generateNumber(now()->toDateString()),
+                "adjustment_date" => now(),
+                "reason" => $validated["reason"] ?? "Penyesuaian cepat",
+                "notes" => $validated["notes"] ?? null,
+                "status" => "approved",
+            ]);
+
+            StockAdjustmentItem::create([
+                "stock_adjustment_id" => $adjustment->id,
+                "product_id" => $product->id,
+                "system_qty" => $systemQty,
+                "actual_qty" => $actualQty,
+                "difference_qty" => $diff,
+                "unit_cost" => $unitCost,
+                "total_cost" => abs($diff) * $unitCost,
+                "notes" => $validated["notes"] ?? null,
+            ]);
+
+            $stock = ProductStock::firstOrCreate(
+                [
+                    "product_id" => $product->id,
+                    "store_id" => $storeId,
+                ],
+                [
+                    "branch_id" => $branchId,
+                    "quantity" => 0,
+                    "reserved_quantity" => 0,
+                ],
+            );
+
+            if ($diff > 0) {
+                $stock->increment("quantity", $diff);
+                $type = "adjustment_in";
+            } else {
+                $stock->decrement("quantity", abs($diff));
+                $type = "adjustment_out";
+            }
+
+            StockMovement::create([
+                "product_id" => $product->id,
+                "store_id" => $storeId,
+                "branch_id" => $branchId,
+                "reference_type" => StockAdjustment::class,
+                "reference_id" => $adjustment->id,
+                "movement_type" => $type,
+                "quantity" => abs($diff),
+                "unit_cost" => $unitCost,
+                "reference_no" => $adjustment->adjustment_no,
+                "notes" =>
+                    $validated["notes"] ??
+                    "Penyesuaian #{$adjustment->adjustment_no}",
+                "moved_at" => now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->back()
+                ->with("success", "Stok berhasil disesuaikan.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors([
+                "items" => "Gagal menyimpan: " . $e->getMessage(),
+            ]);
+        }
+    }
+
     public function updateStatus(
         Request $request,
         StockAdjustment $stockAdjustment,
