@@ -1,8 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import QuickStockModal from "@/Components/QuickStockModal";
+import QuickStockModal from "@/Pages/Admin/Products/QuickStockModal";
 import TreePicker from "@/Components/TreePicker";
 import Select from "@/Components/ui/Select";
 
@@ -102,7 +102,11 @@ function TypeBadge({ type }) {
 
 function StockBadge({ product }) {
     if (!product.track_stock) {
-        return <span className="text-xs text-slate-400">—</span>;
+        return (
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
+                Tanpa Stok
+            </span>
+        );
     }
     const low = product.stock <= product.stock_minimum;
     return (
@@ -134,16 +138,18 @@ export default function Index({
     products,
     allCategories = [],
     storeType = "retail",
+    stats = {},
+    filters = {},
 }) {
     const { storeTypeFeatures = [] } = usePage().props;
     const has = (f) => storeTypeFeatures.includes(f);
-    const [search, setSearch] = useState("");
-    const [filterType, setFilterType] = useState("");
-    const [filterCategory, setFilterCategory] = useState("");
-    const [filterStatus, setFilterStatus] = useState("");
+    const [search, setSearch] = useState(filters?.search ?? "");
+    const [filterType, setFilterType] = useState(filters?.type ?? "");
+    const [filterCategory, setFilterCategory] = useState(filters?.category ?? "");
+    const [filterStatus, setFilterStatus] = useState(filters?.status ?? "");
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
-    const [stockModal, setStockModal] = useState(null); // { product, type: "in"|"out" }
+    const [stockModal, setStockModal] = useState(null);
 
     const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
     const filterTypeOptions = FILTER_TYPES[storeType] ?? FILTER_TYPES.retail;
@@ -163,40 +169,22 @@ export default function Index({
     const showMaxGuests = storeType === "hospitality";
     const showPrepTime = has("kitchen");
 
-    const filtered = useMemo(() => {
-        const q = search.trim().toLowerCase();
-        return products.filter((p) => {
-            const matchSearch =
-                !q ||
-                p.name.toLowerCase().includes(q) ||
-                p.sku.toLowerCase().includes(q) ||
-                (p.barcode ?? "").toLowerCase().includes(q);
-            const matchType = !filterType || p.type === filterType;
-            const matchCategory =
-                !filterCategory || String(p.category_id) === filterCategory;
-            const matchStatus =
-                filterStatus === ""
-                    ? true
-                    : filterStatus === "1"
-                      ? p.is_active
-                      : !p.is_active;
-            return matchSearch && matchType && matchCategory && matchStatus;
-        });
-    }, [products, search, filterType, filterCategory, filterStatus]);
+    // Server-side filter
+    const applyFilter = (key, value) => {
+        router.get(
+            route("admin.products.index"),
+            {
+                search: key === "search" ? value || undefined : (search || undefined),
+                type: key === "type" ? value || undefined : (filterType || undefined),
+                category: key === "category" ? value || undefined : (filterCategory || undefined),
+                status: key === "status" ? value || undefined : (filterStatus || undefined),
+            },
+            { preserveState: true, replace: true },
+        );
+    };
 
-    const stats = useMemo(
-        () => ({
-            total: products.length,
-            active: products.filter((p) => p.is_active).length,
-            lowStock: showStock
-                ? products.filter(
-                      (p) => p.track_stock && p.stock <= p.stock_minimum,
-                  ).length
-                : null,
-            inactive: products.filter((p) => !p.is_active).length,
-        }),
-        [products, showStock],
-    );
+    const list = products?.data ?? [];
+    const hasFilters = search || filterType || filterCategory || filterStatus;
 
     const confirmDelete = () => {
         if (!target) return;
@@ -209,8 +197,6 @@ export default function Index({
             },
         });
     };
-
-    const hasFilters = search || filterType || filterCategory || filterStatus;
 
     const sellPriceLabel =
         storeType === "session" || storeType === "parking"
@@ -321,7 +307,7 @@ export default function Index({
                                     }),
                                 )}
                                 value={filterType}
-                                onChange={setFilterType}
+                                onChange={(v) => { setFilterType(v); applyFilter("type", v); }}
                                 placeholder="Semua Tipe"
                                 className="min-w-[160px]"
                             />
@@ -329,7 +315,7 @@ export default function Index({
                                 <TreePicker
                                     categories={allCategories}
                                     value={filterCategory}
-                                    onChange={(v) => setFilterCategory(v)}
+                                    onChange={(v) => { setFilterCategory(v); applyFilter("category", v); }}
                                     onClear={() => setFilterCategory("")}
                                     placeholder="Semua Kategori"
                                 />
@@ -341,9 +327,9 @@ export default function Index({
                                     { value: "0", label: "Nonaktif" },
                                 ]}
                                 value={filterStatus}
-                                onChange={setFilterStatus}
+                                onChange={(v) => { setFilterStatus(v); applyFilter("status", v); }}
                                 placeholder="Semua Status"
-                                className="min-w-[150px]"
+                                className="min-w-[150px] "
                             />
                             {hasFilters && (
                                 <button
@@ -352,6 +338,7 @@ export default function Index({
                                         setFilterType("");
                                         setFilterCategory("");
                                         setFilterStatus("");
+                                        router.get(route("admin.products.index"), {}, { preserveState: true, replace: true });
                                     }}
                                     className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
                                 >
@@ -373,19 +360,19 @@ export default function Index({
                             )}
                         </div>
                     </div>
-                    <div className="mt-2 flex items-center justify-between">
+                    <div className="pt-4 flex items-center justify-between">
                         <p className="text-xs text-slate-500">
                             Menampilkan{" "}
                             <span className="font-semibold text-slate-700">
-                                {filtered.length}
+                                {list.length}
                             </span>{" "}
-                            dari {products.length} {pageTitle.toLowerCase()}
+                            dari {products.total} {pageTitle.toLowerCase()}
                         </p>
                     </div>
                 </div>
 
                 {/* Empty state */}
-                {filtered.length === 0 ? (
+                {list.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
                             <svg
@@ -441,69 +428,69 @@ export default function Index({
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                        <th className="px-5 py-3.5">Produk</th>
-                                        <th className="px-5 py-3.5">Tipe</th>
-                                        <th className="px-5 py-3.5 hidden lg:table-cell">
+                                        <th className="px-4 py-3.5">Produk</th>
+                                        <th className="px-4 py-3.5">Tipe</th>
+                                        <th className="px-4 py-3.5 hidden lg:table-cell">
                                             Kategori
                                         </th>
                                         {showMargin && (
-                                            <th className="px-5 py-3.5 text-right hidden xl:table-cell">
+                                            <th className="px-4 py-3.5 text-right hidden xl:table-cell">
                                                 Harga Beli
                                             </th>
                                         )}
-                                        <th className="px-5 py-3.5 text-right">
+                                        <th className="px-4 py-3.5 text-right">
                                             {sellPriceLabel}
                                         </th>
                                         {showRateHour && (
-                                            <th className="px-5 py-3.5 text-right hidden xl:table-cell">
+                                            <th className="px-4 py-3.5 text-right hidden xl:table-cell">
                                                 Per Jam
                                             </th>
                                         )}
                                         {showCapacity && (
-                                            <th className="px-5 py-3.5 text-center hidden lg:table-cell">
+                                            <th className="px-4 py-3.5 text-center hidden lg:table-cell">
                                                 Kapasitas
                                             </th>
                                         )}
                                         {showMaxGuests && (
-                                            <th className="px-5 py-3.5 text-center hidden lg:table-cell">
+                                            <th className="px-4 py-3.5 text-center hidden lg:table-cell">
                                                 Max Tamu
                                             </th>
                                         )}
                                         {showDuration && (
-                                            <th className="px-5 py-3.5 text-center hidden lg:table-cell">
+                                            <th className="px-4 py-3.5 text-center hidden lg:table-cell">
                                                 Durasi
                                             </th>
                                         )}
                                         {showDeposit && (
-                                            <th className="px-5 py-3.5 text-right hidden lg:table-cell">
+                                            <th className="px-4 py-3.5 text-right hidden lg:table-cell">
                                                 Deposit
                                             </th>
                                         )}
                                         {showPrepTime && (
-                                            <th className="px-5 py-3.5 text-center hidden lg:table-cell">
+                                            <th className="px-4 py-3.5 text-center hidden lg:table-cell">
                                                 Prep
                                             </th>
                                         )}
                                         {showStock && (
-                                            <th className="px-5 py-3.5 text-center">
+                                            <th className="px-4 py-3.5 text-center">
                                                 Stok
                                             </th>
                                         )}
-                                        <th className="px-5 py-3.5 text-center">
+                                        <th className="px-4 py-3.5 text-center">
                                             Status
                                         </th>
-                                        <th className="px-5 py-3.5 text-right">
+                                        <th className="px-4 py-3.5 text-right">
                                             Aksi
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {filtered.map((product) => (
+                                    {list.map((product) => (
                                         <tr
                                             key={product.id}
                                             className="transition hover:bg-slate-50/70"
                                         >
-                                            <td className="px-5 py-4">
+                                            <td className="px-4 py-4">
                                                 <div className="flex items-center gap-3">
                                                     {product.image ? (
                                                         <img
@@ -559,23 +546,16 @@ export default function Index({
                                                                 Satuan:{" "}
                                                                 {product.unit}
                                                             </span>
-                                                            {product.track_stock &&
-                                                                !product.supplier && (
-                                                                    <span className="inline-flex items-center rounded-full bg-amber-50 px-1.5 py-px text-[10px] font-medium text-amber-700 border border-amber-200">
-                                                                        Tanpa
-                                                                        Supplier
-                                                                    </span>
-                                                                )}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-5 py-4">
+                                            <td className="px-4 py-4">
                                                 <TypeBadge
                                                     type={product.type}
                                                 />
                                             </td>
-                                            <td className="px-5 py-4 text-slate-600 hidden lg:table-cell">
+                                            <td className="px-4 py-4 text-slate-600 hidden lg:table-cell">
                                                 {product.category?.name ?? (
                                                     <span className="text-slate-300 italic text-xs">
                                                         &mdash;
@@ -585,7 +565,7 @@ export default function Index({
 
                                             {/* Harga Beli — hanya retail/fnb */}
                                             {showMargin && (
-                                                <td className="px-5 py-4 text-right text-slate-500 hidden xl:table-cell">
+                                                <td className="px-4 py-4 text-right text-slate-500 hidden xl:table-cell">
                                                     Rp{" "}
                                                     {Number(
                                                         product.cost_price || 0,
@@ -593,7 +573,7 @@ export default function Index({
                                                 </td>
                                             )}
                                             {/* Harga Jual / Tarif */}
-                                            <td className="px-5 py-4 text-right font-medium text-slate-800">
+                                            <td className="px-4 py-4 text-right font-medium text-slate-800">
                                                 Rp{" "}
                                                 {Number(
                                                     product.sell_price || 0,
@@ -601,7 +581,7 @@ export default function Index({
                                             </td>
                                             {/* Tarif per jam */}
                                             {showRateHour && (
-                                                <td className="px-5 py-4 text-right text-slate-600 hidden xl:table-cell">
+                                                <td className="px-4 py-4 text-right text-slate-600 hidden xl:table-cell">
                                                     {product.price_per_hour >
                                                     0 ? (
                                                         `Rp ${Number(product.price_per_hour).toLocaleString("id-ID")}`
@@ -614,7 +594,7 @@ export default function Index({
                                             )}
                                             {/* Kapasitas — ticket */}
                                             {showCapacity && (
-                                                <td className="px-5 py-4 text-center text-slate-600 hidden lg:table-cell">
+                                                <td className="px-4 py-4 text-center text-slate-600 hidden lg:table-cell">
                                                     {product.capacity ?? (
                                                         <span className="text-slate-300">
                                                             —
@@ -624,7 +604,7 @@ export default function Index({
                                             )}
                                             {/* Max Guests — hospitality */}
                                             {showMaxGuests && (
-                                                <td className="px-5 py-4 text-center text-slate-600 hidden lg:table-cell">
+                                                <td className="px-4 py-4 text-center text-slate-600 hidden lg:table-cell">
                                                     {product.max_guests ? (
                                                         `${product.max_guests} tamu`
                                                     ) : (
@@ -636,7 +616,7 @@ export default function Index({
                                             )}
                                             {/* Durasi Paket — session/parking */}
                                             {showDuration && (
-                                                <td className="px-5 py-4 text-center text-slate-600 hidden lg:table-cell">
+                                                <td className="px-4 py-4 text-center text-slate-600 hidden lg:table-cell">
                                                     {product.session_duration_minutes ===
                                                     0 ? (
                                                         <span className="text-xs text-emerald-600 font-medium">
@@ -653,7 +633,7 @@ export default function Index({
                                             )}
                                             {/* Deposit — rental */}
                                             {showDeposit && (
-                                                <td className="px-5 py-4 text-right text-slate-600 hidden lg:table-cell">
+                                                <td className="px-4 py-4 text-right text-slate-600 hidden lg:table-cell">
                                                     {product.deposit_amount >
                                                     0 ? (
                                                         `Rp ${Number(product.deposit_amount).toLocaleString("id-ID")}`
@@ -666,7 +646,7 @@ export default function Index({
                                             )}
                                             {/* Prep Time — fnb */}
                                             {showPrepTime && (
-                                                <td className="px-5 py-4 text-center text-slate-500 hidden lg:table-cell">
+                                                <td className="px-4 py-4 text-center text-slate-500 hidden lg:table-cell">
                                                     {product.preparation_time ? (
                                                         `${product.preparation_time}m`
                                                     ) : (
@@ -678,58 +658,14 @@ export default function Index({
                                             )}
                                             {/* Stok — hanya yang relevan */}
                                             {showStock && (
-                                                <td className="px-5 py-4 text-center">
-                                                    <div className="inline-flex items-center gap-1">
+                                                <td className="px-4 py-3 text-center">
+                                                    <div className="flex flex-col items-center gap-1.5">
                                                         <StockBadge
                                                             product={product}
                                                         />
                                                         {product.track_stock && (
-                                                            <div className="ml-0.5 inline-flex gap-0.5">
-                                                                <button
-                                                                    onClick={(
-                                                                        e,
-                                                                    ) => {
-                                                                        e.stopPropagation();
-                                                                        if (
-                                                                            product.supplier
-                                                                        ) {
-                                                                            router.visit(
-                                                                                route(
-                                                                                    "admin.purchases.create",
-                                                                                ) +
-                                                                                    "?product_id=" +
-                                                                                    product.id +
-                                                                                    "&supplier_id=" +
-                                                                                    product.supplier_id,
-                                                                            );
-                                                                        } else {
-                                                                            setStockModal(
-                                                                                {
-                                                                                    product,
-                                                                                    type: "in",
-                                                                                },
-                                                                            );
-                                                                        }
-                                                                    }}
-                                                                    className="inline-flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-emerald-600 transition hover:bg-emerald-200"
-                                                                    title={
-                                                                        product.supplier
-                                                                            ? "Beli dari Supplier"
-                                                                            : "Tambah Stok"
-                                                                    }
-                                                                >
-                                                                    <svg
-                                                                        className="h-3 w-3"
-                                                                        fill="none"
-                                                                        viewBox="0 0 24 24"
-                                                                        strokeWidth={
-                                                                            2.5
-                                                                        }
-                                                                        stroke="currentColor"
-                                                                    >
-                                                                        <path d="M12 4.5v15m7.5-7.5h-15" />
-                                                                    </svg>
-                                                                </button>
+                                                            <div className="flex items-center gap-2.5">
+                                                                {/* Button: Stok Manual */}
                                                                 <button
                                                                     onClick={(
                                                                         e,
@@ -738,31 +674,67 @@ export default function Index({
                                                                         setStockModal(
                                                                             {
                                                                                 product,
-                                                                                type: "out",
                                                                             },
                                                                         );
                                                                     }}
-                                                                    className="inline-flex h-5 w-5 items-center justify-center rounded bg-red-100 text-red-600 transition hover:bg-red-200"
-                                                                    title="Kurangi Stok"
+                                                                    className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
+                                                                    title="Stok Manual — untuk produksi sendiri, stok awal, koreksi, atau barang rusak/hilang. BUKAN untuk pembelian dari supplier."
                                                                 >
                                                                     <svg
-                                                                        className="h-3 w-3"
+                                                                        className="h-3.5 w-3.5"
                                                                         fill="none"
                                                                         viewBox="0 0 24 24"
-                                                                        strokeWidth={
-                                                                            2.5
-                                                                        }
+                                                                        strokeWidth={2}
                                                                         stroke="currentColor"
                                                                     >
-                                                                        <path d="M5 12h14" />
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
+                                                                        />
                                                                     </svg>
+                                                                    Stok Manual
                                                                 </button>
+                                                                {/* Separator */}
+                                                                <div className="h-5 w-px bg-slate-200" />
+                                                                {/* Button: Beli dari Supplier */}
+                                                                <Link
+                                                                    href={route(
+                                                                            "admin.purchases.create",
+                                                                        ) +
+                                                                        "?product_id=" +
+                                                                        product.id +
+                                                                        (product.supplier_id
+                                                                            ? "&supplier_id=" +
+                                                                                product.supplier_id
+                                                                            : "")}
+                                                                    onClick={(e) =>
+                                                                        e.stopPropagation()
+                                                                    }
+                                                                    className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-100"
+                                                                    title="Beli stok dari supplier (Purchase Order)"
+                                                                >
+                                                                    <svg
+                                                                        className="h-3.5 w-3.5"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        strokeWidth={2}
+                                                                        stroke="currentColor"
+                                                                    >
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 003 3h4.5a3 3 0 003-3H18a1.5 1.5 0 001.5-1.5V6.75A1.5 1.5 0 0018 5.25H6.54m1.34 9l-1.06-4m0 0L5.25 3m1.63 7.25h11.24"
+                                                                        />
+                                                                    </svg>
+                                                                    Beli Stok
+                                                                </Link>
                                                             </div>
                                                         )}
                                                     </div>
                                                 </td>
                                             )}
-                                            <td className="px-5 py-4 text-center">
+                                            <td className="px-4 py-4 text-center">
                                                 <span
                                                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${product.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
                                                 >
@@ -772,7 +744,7 @@ export default function Index({
                                                 </span>
                                             </td>
 
-                                            <td className="px-5 py-4">
+                                            <td className="px-4 py-4">
                                                 <div className="flex items-center justify-end gap-1">
                                                     {/* Tombol Varian — hanya retail/fnb */}
                                                     {["retail", "fnb"].includes(
@@ -885,7 +857,7 @@ export default function Index({
 
                         {/* Mobile cards */}
                         <div className="divide-y divide-slate-100 md:hidden">
-                            {filtered.map((product) => (
+                            {list.map((product) => (
                                 <div key={product.id} className="p-4">
                                     <div className="flex items-start gap-3">
                                         {product.image ? (
@@ -1164,6 +1136,41 @@ export default function Index({
                     </>
                 )}
             </div>
+
+            {/* Pagination */}
+            {(products?.last_page ?? 1) > 1 && (
+                <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs">
+                    <span className="text-slate-500">
+                        {products.from}–{products.to} dari {products.total}
+                    </span>
+                    <div className="flex gap-1">
+                        {(products.links ?? []).map((link, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                disabled={!link.url}
+                                onClick={() => {
+                                    if (link.url) {
+                                        router.visit(link.url, {
+                                            preserveState: true,
+                                        });
+                                    }
+                                }}
+                                className={`rounded-lg px-3 py-1.5 font-medium transition ${
+                                    link.active
+                                        ? "bg-indigo-100 text-indigo-700"
+                                        : link.url
+                                          ? "text-slate-500 hover:bg-slate-100"
+                                          : "cursor-default text-slate-300"
+                                }`}
+                                dangerouslySetInnerHTML={{
+                                    __html: link.label,
+                                }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Confirm Delete Modal */}
             <ConfirmDeleteModal

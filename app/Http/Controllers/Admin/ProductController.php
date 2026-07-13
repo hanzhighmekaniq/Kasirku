@@ -23,20 +23,59 @@ class ProductController extends Controller
         "rental_item" => "Item Rental",
         "time_based" => "Berbasis Waktu",
     ];
-    public function index()
+    public function index(Request $request)
     {
         $storeId = session("current_store_id");
         $store = \App\Models\Store::with("storeType")->find($storeId);
 
-        $products = Product::forStore($storeId)
-            ->with(["category", "supplier", "stocks"])
-            ->get()
-            ->map(function ($product) {
-                $product->stock =
-                    $product->stocks->sum("quantity") -
-                    $product->stocks->sum("reserved_quantity");
-                return $product;
+        $query = Product::forStore($storeId)
+            ->with(["category", "supplier", "stocks"]);
+
+        // Server-side search
+        if ($request->filled("search")) {
+            $q = $request->search;
+            $query->where(function ($sq) use ($q) {
+                $sq->where("name", "like", "%{$q}%")
+                    ->orWhere("sku", "like", "%{$q}%")
+                    ->orWhere("barcode", "like", "%{$q}%");
             });
+        }
+
+        // Filter by type
+        if ($request->filled("type")) {
+            $query->where("type", $request->type);
+        }
+
+        // Filter by category
+        if ($request->filled("category")) {
+            $query->where("category_id", $request->category);
+        }
+
+        // Filter by status
+        if ($request->filled("status")) {
+            $query->where("is_active", $request->status === "1");
+        }
+
+        $paginated = $query->paginate(20)->withQueryString();
+
+        // Map stock ke collection yang sudah dipaginate
+        $paginated->getCollection()->transform(function ($product) {
+            $product->stock =
+                $product->stocks->sum("quantity") -
+                $product->stocks->sum("reserved_quantity");
+            return $product;
+        });
+
+        // Stats (full count, bukan dari paginated)
+        $stats = [
+            "total" => Product::forStore($storeId)->count(),
+            "active" => Product::forStore($storeId)->where("is_active", true)->count(),
+            "inactive" => Product::forStore($storeId)->where("is_active", false)->count(),
+        ];
+        $stats["lowStock"] = Product::forStore($storeId)
+            ->where("track_stock", true)
+            ->whereRaw("products.id IN (SELECT product_id FROM product_stocks WHERE quantity - reserved_quantity <= products.stock_minimum)")
+            ->count();
 
         // Build category hierarchy for filter
         $allCategories = Category::forStore($storeId)
@@ -65,9 +104,11 @@ class ProductController extends Controller
             ->values();
 
         return Inertia::render("Admin/Products/Index", [
-            "products" => $products,
+            "products" => $paginated,
             "allCategories" => $allCategories,
             "storeType" => $store?->getRelation("storeType")?->code ?? "retail",
+            "stats" => $stats,
+            "filters" => $request->only(["search", "type", "category", "status"]),
         ]);
     }
 

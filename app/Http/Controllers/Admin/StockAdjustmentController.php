@@ -150,6 +150,7 @@ class StockAdjustmentController extends Controller
             "quantity" => "required|numeric|min:0.0001",
             "reason" => "nullable|string|max:150",
             "notes" => "nullable|string|max:2000",
+            "cost_price" => "nullable|numeric|min:0",
         ]);
 
         $storeId = session("current_store_id");
@@ -172,9 +173,13 @@ class StockAdjustmentController extends Controller
             ]);
         }
 
-        $unitCost = $product->cost_price ?? 0;
+        $unitCost = $validated["cost_price"] ?? $product->cost_price ?? 0;
 
         if ($validated["type"] === "in") {
+            // Update cost_price produk jika disediakan
+            if (isset($validated["cost_price"]) && $validated["cost_price"] > 0) {
+                $product->update(["cost_price" => $validated["cost_price"]]);
+            }
             $systemQty = (float) $currentStock;
             $actualQty = $systemQty + (float) $validated["quantity"];
             $diff = (float) $validated["quantity"];

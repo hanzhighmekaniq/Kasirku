@@ -65,7 +65,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
 
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 {/* Toolbar */}
-                <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className=" border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
@@ -78,7 +78,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari kategori..."
-                            className="block w-full rounded-xl border-slate-300 py-2 pl-9 pr-10 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-10 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
                         <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                             <svg
@@ -114,19 +114,19 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                             </svg>
                         </button>
                     </form>
-                    <div className="flex items-center gap-3 text-sm text-slate-500">
-                        <span>
-                            Total{" "}
+                    <div className="pt-4 flex items-center ">
+                        <p className="text-xs text-slate-500">
+                            Menampilkan{" "}
                             <span className="font-semibold text-slate-700">
-                                {stats.total ?? categories.total}
+                                {categories.data.length}
                             </span>{" "}
-                            kategori
-                        </span>
+                            dari {categories.total} kategori
+                        </p>
                     </div>
                 </div>
 
                 {categories.data.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
                             <svg
                                 className="h-8 w-8 text-slate-400"
@@ -182,7 +182,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                 )}
 
                 {categories.last_page > 1 && (
-                    <div className="flex flex-col gap-3 border-t border-slate-100 px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-xs text-slate-500">
                             {categories.total} kategori • Halaman{" "}
                             {categories.current_page} dari{" "}
@@ -396,7 +396,7 @@ function CategoryTree({ categories, onDelete }) {
             {/* Expand/collapse all buttons */}
             {categories.length > 0 &&
                 categories.some((c) => c.has_children) && (
-                    <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-2">
+                    <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-2">
                         <button
                             onClick={expandAll}
                             className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
@@ -425,12 +425,12 @@ function CategoryTree({ categories, onDelete }) {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            <th className="px-6 py-3.5">Nama</th>
-                            <th className="px-6 py-3.5">Path</th>
-                            <th className="px-6 py-3.5 text-center w-24">
+                            <th className="px-4 py-3.5">Nama</th>
+                            <th className="px-4 py-3.5">Path</th>
+                            <th className="px-4 py-3.5 text-center w-24">
                                 Produk
                             </th>
-                            <th className="px-6 py-3.5 text-right w-24">
+                            <th className="px-4 py-3.5 text-right w-24">
                                 Aksi
                             </th>
                         </tr>
@@ -440,7 +440,7 @@ function CategoryTree({ categories, onDelete }) {
                             <tr>
                                 <td
                                     colSpan={4}
-                                    className="px-6 py-16 text-center text-slate-400"
+                                    className="px-4 py-16 text-center text-slate-400"
                                 >
                                     Belum ada kategori
                                 </td>
@@ -464,7 +464,7 @@ function CategoryTree({ categories, onDelete }) {
             {/* Mobile cards */}
             <div className="divide-y divide-slate-100 md:hidden">
                 {visible.length === 0 ? (
-                    <div className="px-6 py-16 text-center text-slate-400">
+                    <div className="px-4 py-16 text-center text-slate-400">
                         Belum ada kategori
                     </div>
                 ) : (
@@ -570,7 +570,7 @@ function CategoryRow({ cat, depth = 0, isExpanded, onToggle, onDelete }) {
         <tr
             className={`transition hover:bg-slate-50/70 ${depth === 0 ? "bg-slate-50/80" : ""}`}
         >
-            <td className="px-6 py-3">
+            <td className="px-4 py-3">
                 <div className="flex items-center gap-1">
                     {/* Tree connector lines */}
                     {depth > 0 && (
@@ -608,14 +608,14 @@ function CategoryRow({ cat, depth = 0, isExpanded, onToggle, onDelete }) {
                     )}
                 </div>
             </td>
-            <td className="px-6 py-3">
+            <td className="px-4 py-3">
                 <span
                     className={`text-xs ${depth === 0 ? "text-slate-500" : "text-slate-400"}`}
                 >
                     {cat.path || cat.name}
                 </span>
             </td>
-            <td className="px-6 py-3 text-center">
+            <td className="px-4 py-3 text-center">
                 <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         depth === 0
@@ -626,7 +626,7 @@ function CategoryRow({ cat, depth = 0, isExpanded, onToggle, onDelete }) {
                     {cat.total_products}
                 </span>
             </td>
-            <td className="px-6 py-3">
+            <td className="px-4 py-3">
                 <RowActions cat={cat} onDelete={onDelete} />
             </td>
         </tr>

@@ -114,7 +114,7 @@ export default function SearchableSelect({
                     disabled
                         ? "cursor-not-allowed bg-slate-50 text-slate-400"
                         : ""
-                } ${!value ? "text-slate-400" : "text-slate-700"}`}
+                } text-slate-700`}
             >
                 <span className="truncate">
                     {selected?.name ?? placeholder}

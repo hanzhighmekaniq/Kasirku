@@ -353,7 +353,7 @@ export default function TreePicker({
                                       </span>
                                       <div className="min-w-0 flex-1 py-2">
                                           <p
-                                              className={`truncate text-sm font-medium ${isSelected ? depthColor(depth) : "text-slate-800"}`}
+                                              className={`truncate text-sm font-medium ${isSelected ? "text-slate-700" : "text-slate-700"}`}
                                           >
                                               {cat.name}
                                           </p>
@@ -365,7 +365,7 @@ export default function TreePicker({
                                       </div>
                                       {isSelected && (
                                           <svg
-                                              className={`ml-2 h-4 w-4 shrink-0 ${depthColor(depth)}`}
+                                              className="ml-2 h-4 w-4 shrink-0 text-indigo-500"
                                               fill="none"
                                               viewBox="0 0 24 24"
                                               strokeWidth={2.5}
@@ -402,10 +402,10 @@ export default function TreePicker({
                 type="button"
                 onClick={open ? closePicker : openPicker}
                 className={`flex w-full items-center gap-2.5 rounded-xl border bg-slate-50 text-left shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-200 ${sizeClasses[size]} ${
-                    open
-                        ? "border-indigo-400 ring-2 ring-indigo-100"
-                        : "border-slate-200 hover:border-indigo-300"
-                } ${triggerClassName}`}
+                                    open
+                                        ? "border-slate-300 ring-2 ring-indigo-100"
+                                        : "border-slate-300 hover:border-slate-400"
+                                } ${triggerClassName}`}
             >
                 {selectedCat ? (
                     <>
@@ -415,10 +415,10 @@ export default function TreePicker({
                             {depthIcon(selectedCat.depth ?? 0)}
                         </span>
                         <span
-                            className={`min-w-0 flex-1 truncate text-sm font-medium ${depthColor(selectedCat.depth ?? 0)}`}
-                        >
-                            {selectedCat.name}
-                        </span>
+                            className={`min-w-0 flex-1 truncate text-sm font-medium text-slate-700`}
+                                                    >
+                                                        {selectedCat.name}
+                                                    </span>
                         <button
                             type="button"
                             onClick={(e) => {
@@ -448,7 +448,7 @@ export default function TreePicker({
                                 />
                             </svg>
                         </span>
-                        <span className="text-slate-400">{placeholder}</span>
+                        <span className="text-slate-700">{placeholder}</span>
                         <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 text-slate-400" />
                     </>
                 )}

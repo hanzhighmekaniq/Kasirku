@@ -170,7 +170,7 @@ export default function Select({
     const btnCls = `relative w-full cursor-pointer rounded-xl border bg-slate-50 py-2.5 pl-3.5 pr-10 text-left text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
         error
             ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-            : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+            : "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
     } ${disabled ? "cursor-not-allowed bg-slate-100 text-slate-400" : "hover:border-indigo-300"}`;
 
     const optCls = (active, sel) =>
@@ -312,11 +312,11 @@ export default function Select({
                         className={`${btnCls} ${searchOpen ? "border-indigo-400 ring-2 ring-indigo-100" : ""}`}
                     >
                         {selected ? (
-                            <span className="block truncate text-slate-800">
+                            <span className="block truncate text-slate-700">
                                 {getLabel(selected)}
                             </span>
                         ) : (
-                            <span className="block truncate text-slate-400">
+                            <span className="block truncate text-slate-700">
                                 {placeholder}
                             </span>
                         )}
@@ -332,11 +332,11 @@ export default function Select({
                     <div className="relative">
                         <ListboxButton className={btnCls}>
                             {selected ? (
-                                <span className="block truncate text-slate-800">
+                                <span className="block truncate text-slate-700">
                                     {getLabel(selected)}
                                 </span>
                             ) : (
-                                <span className="block truncate text-slate-400">
+                                <span className="block truncate text-slate-700">
                                     {placeholder}
                                 </span>
                             )}

@@ -121,7 +121,7 @@ export default function Index({ memberships }) {
 
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 {/* Toolbar */}
-                <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className=" border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="relative w-full sm:max-w-xs">
                         <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                             <svg
@@ -143,20 +143,24 @@ export default function Index({ memberships }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari nama, kode..."
-                            className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
                     </div>
-                    <p className="text-sm text-slate-500">
-                        Total{" "}
+                    <p className="pt-4 text-xs text-slate-500">
+                        Menampilkan{" "}
                         <span className="font-semibold text-slate-700">
                             {filtered.length}
+                        </span>{" "}
+                        dari{" "}
+                        <span className="font-semibold text-slate-700">
+                            {memberships.length}
                         </span>{" "}
                         membership
                     </p>
                 </div>
 
                 {filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
                             <svg
                                 className="h-8 w-8 text-slate-400"
@@ -301,7 +305,7 @@ function MembershipModal({ open, editing, onClose }) {
             ...data,
             price: data.price === "" ? 0 : data.price,
             discount_percent:
-                data.discount_percent === "" ? null : data.discount_percent,
+                data.discount_percent === "" ? 0 : data.discount_percent,
             point_multiplier:
                 data.point_multiplier === ""
                     ? 1
@@ -358,7 +362,7 @@ function MembershipModal({ open, editing, onClose }) {
                         : "translate-y-3 scale-95 opacity-0"
                 }`}
             >
-                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
                     <h3 className="text-base font-semibold text-slate-800">
                         {editing ? "Edit Membership" : "Tambah Membership"}
                     </h3>
@@ -761,14 +765,14 @@ function MembershipList({ items, onEdit, onDelete }) {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            <th className="px-6 py-3.5">Kode</th>
-                            <th className="px-6 py-3.5">Nama</th>
-                            <th className="px-6 py-3.5">Durasi</th>
-                            <th className="px-6 py-3.5 text-right">Harga</th>
-                            <th className="px-6 py-3.5 text-center">Diskon</th>
-                            <th className="px-6 py-3.5 text-center">Member</th>
-                            <th className="px-6 py-3.5 text-center">Status</th>
-                            <th className="px-6 py-3.5 text-right">Aksi</th>
+                            <th className="px-4 py-3.5">Kode</th>
+                            <th className="px-4 py-3.5">Nama</th>
+                            <th className="px-4 py-3.5">Durasi</th>
+                            <th className="px-4 py-3.5 text-right">Harga</th>
+                            <th className="px-4 py-3.5 text-center">Diskon</th>
+                            <th className="px-4 py-3.5 text-center">Member</th>
+                            <th className="px-4 py-3.5 text-center">Status</th>
+                            <th className="px-4 py-3.5 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -777,12 +781,12 @@ function MembershipList({ items, onEdit, onDelete }) {
                                 key={m.id}
                                 className="transition hover:bg-slate-50/70"
                             >
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-4">
                                     <span className="inline-flex items-center rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-mono font-semibold text-slate-700">
                                         {m.code}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-4">
                                     <div className="min-w-0">
                                         <p className="font-medium text-slate-800">
                                             {m.name}
@@ -794,16 +798,16 @@ function MembershipList({ items, onEdit, onDelete }) {
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-slate-600">
+                                <td className="px-4 py-4 text-slate-600">
                                     {formatDuration(
                                         m.duration_type,
                                         m.duration_value,
                                     )}
                                 </td>
-                                <td className="px-6 py-4 text-right font-medium text-slate-800">
+                                <td className="px-4 py-4 text-right font-medium text-slate-800">
                                     {formatIDR(m.price)}
                                 </td>
-                                <td className="px-6 py-4 text-center">
+                                <td className="px-4 py-4 text-center">
                                     {m.discount_percent ? (
                                         <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
                                             {m.discount_percent}%
@@ -814,15 +818,15 @@ function MembershipList({ items, onEdit, onDelete }) {
                                         </span>
                                     )}
                                 </td>
-                                <td className="px-6 py-4 text-center">
+                                <td className="px-4 py-4 text-center">
                                     <MemberBadge
                                         count={m.customer_memberships_count}
                                     />
                                 </td>
-                                <td className="px-6 py-4 text-center">
+                                <td className="px-4 py-4 text-center">
                                     <StatusBadge active={m.is_active} />
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-4">
                                     <RowActions
                                         item={m}
                                         onEdit={onEdit}

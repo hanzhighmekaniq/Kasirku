@@ -5,6 +5,10 @@ import Dropdown from "@/Components/Dropdown";
 import OfflineIndicator from "@/Components/OfflineIndicator";
 import { useStoreModules } from "@/Hooks/useStoreModules";
 import { buildNavGroups } from "@/Config/navConfig";
+import {
+    useSidebarOrder,
+    applyCustomOrderToItems,
+} from "@/Hooks/useSidebarOrder";
 import { NavIcons, GroupIcons } from "@/Components/NavIcons";
 
 /* ─── Type-mismatch modal ───────────────────────────────────── */
@@ -136,9 +140,43 @@ function Badge({ label, color = "indigo" }) {
 }
 
 /* ─── Nav item ───────────────────────────────────────────────── */
-function NavItem({ item, collapsed, onClick }) {
+function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
     const active = route().current(item.current);
     const locked = item.locked;
+
+    // ── Reorder mode: unlocked items jadi draggable ──
+    if (reorderMode && !locked) {
+        return (
+            <div
+                draggable
+                onDragStart={(e) =>
+                    onDragStart && onDragStart(e, item.key)
+                }
+                className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition cursor-grab active:cursor-grabbing text-slate-500 hover:bg-slate-50 hover:text-slate-700 select-none"
+            >
+                <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded text-slate-300 group-hover:text-slate-500 transition">
+                    <svg
+                        className="h-3.5 w-3.5"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                    >
+                        <circle cx="9" cy="5" r="1.5" />
+                        <circle cx="15" cy="5" r="1.5" />
+                        <circle cx="9" cy="12" r="1.5" />
+                        <circle cx="15" cy="12" r="1.5" />
+                        <circle cx="9" cy="19" r="1.5" />
+                        <circle cx="15" cy="19" r="1.5" />
+                    </svg>
+                </span>
+                <span className="flex-1 truncate text-[13px] font-medium">
+                    {item.name}
+                </span>
+                {item.badge && !collapsed && (
+                    <Badge label={item.badge} color={item.badgeColor} />
+                )}
+            </div>
+        );
+    }
 
     if (locked) {
         // ── Locked item: transparan, tidak bisa diklik, teks "🔓 Upgrade Plan" ──
@@ -153,7 +191,7 @@ function NavItem({ item, collapsed, onClick }) {
                     <NavIcons name={item.icon} className="h-[15px] w-[15px]" />
                 </span>
                 {!collapsed && (
-                    <span className="flex-1 truncate text-[13px] text-slate-300 line-through decoration-slate-200">
+                    <span className="flex-1 truncate text-[13px] font-medium text-slate-300 line-through decoration-slate-200">
                         {item.name}
                     </span>
                 )}
@@ -179,7 +217,7 @@ function NavItem({ item, collapsed, onClick }) {
                 <NavIcons name={item.icon} className="h-[15px] w-[15px]" />
             </span>
             {!collapsed && (
-                <span className="flex-1 truncate text-[13px]">{item.name}</span>
+                <span className="flex-1 truncate text-[13px] font-medium">{item.name}</span>
             )}
             {!collapsed && item.badge && (
                 <Badge label={item.badge} color={item.badgeColor} />
@@ -195,7 +233,7 @@ function NavItem({ item, collapsed, onClick }) {
             href={item.href}
             onClick={onClick}
             title={collapsed ? item.name : undefined}
-            className={`group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all
+            className={`group flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-all
                 ${active ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}
                 ${collapsed ? "justify-center px-2" : ""}`}
         >
@@ -205,7 +243,13 @@ function NavItem({ item, collapsed, onClick }) {
 }
 
 /* ─── Nav group ──────────────────────────────────────────────── */
-function NavGroup({ group, collapsed, onNavigate }) {
+function NavGroup({
+    group,
+    collapsed,
+    onNavigate,
+    reorderMode,
+    onReorder,
+}) {
     const hasActive = group.items.some((i) => route().current(i.current));
     const [open, setOpen] = useState(() => {
         if (hasActive) return true;
@@ -216,6 +260,61 @@ function NavGroup({ group, collapsed, onNavigate }) {
             return hasActive;
         }
     });
+
+    // ── Drag & drop state ──
+    const [dragOverKey, setDragOverKey] = useState(null);
+    const [dragOverPosition, setDragOverPosition] = useState(null);
+
+    const handleItemDragStart = (e, key) => {
+        e.dataTransfer.setData("text/plain", key);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        const targetKey = e.currentTarget.dataset.itemKey;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        setDragOverKey(targetKey);
+        setDragOverPosition(e.clientY < midY ? "above" : "below");
+    };
+
+    const handleDragLeave = () => {
+        setDragOverKey(null);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        const draggedKey = e.dataTransfer.getData("text/plain");
+        const targetKey = e.currentTarget.dataset.itemKey;
+
+        const unlockedItems = group.items.filter((i) => !i.locked);
+        const fromIndex = unlockedItems.findIndex(
+            (i) => i.key === draggedKey,
+        );
+        if (fromIndex === -1) return;
+
+        const targetItem = group.items.find((i) => i.key === targetKey);
+        let toIndex;
+        if (targetItem?.locked) {
+            // Drop di atas item locked → taruh di akhir unlocked
+            toIndex = unlockedItems.length;
+        } else {
+            toIndex = unlockedItems.findIndex((i) => i.key === targetKey);
+            if (dragOverPosition === "below") toIndex++;
+        }
+
+        // Adjust saat drag ke bawah (elemen bergeser)
+        if (fromIndex < toIndex) toIndex--;
+
+        const newOrder = unlockedItems.map((i) => i.key);
+        const [moved] = newOrder.splice(fromIndex, 1);
+        newOrder.splice(toIndex, 0, moved);
+
+        if (onReorder) onReorder(group.key, newOrder);
+        setDragOverKey(null);
+    };
 
     const toggle = () => {
         const next = !open;
@@ -235,6 +334,7 @@ function NavGroup({ group, collapsed, onNavigate }) {
                         item={item}
                         collapsed
                         onClick={onNavigate}
+                        reorderMode={false}
                     />
                 ))}
             </div>
@@ -269,8 +369,32 @@ function NavGroup({ group, collapsed, onNavigate }) {
                         const showDivider =
                             item.locked && prevItem && !prevItem.locked;
 
+                        // Drop indicator
+                        const isDragOver = dragOverKey === item.key;
+                        const showDropAbove =
+                            isDragOver && dragOverPosition === "above";
+                        const showDropBelow =
+                            isDragOver && dragOverPosition === "below";
+
                         return (
-                            <div key={item.key}>
+                            <div
+                                key={item.key}
+                                data-item-key={item.key}
+                                onDragOver={
+                                    reorderMode
+                                        ? handleDragOver
+                                        : undefined
+                                }
+                                onDragLeave={
+                                    reorderMode
+                                        ? handleDragLeave
+                                        : undefined
+                                }
+                                onDrop={
+                                    reorderMode ? handleDrop : undefined
+                                }
+                                className={`${showDropAbove ? "border-t-2 border-indigo-500" : ""} ${showDropBelow ? "border-b-2 border-indigo-500" : ""}`}
+                            >
                                 {showDivider && (
                                     <div className="my-2 flex items-center gap-2 px-2.5">
                                         <div className="h-px flex-1 bg-slate-100" />
@@ -284,6 +408,8 @@ function NavGroup({ group, collapsed, onNavigate }) {
                                     item={item}
                                     collapsed={false}
                                     onClick={onNavigate}
+                                    reorderMode={reorderMode}
+                                    onDragStart={handleItemDragStart}
                                 />
                             </div>
                         );
@@ -515,7 +641,22 @@ function SidebarContent({ collapsed, onNavigate }) {
     const { currentStore, userStores } = usePage().props;
     const modules = useStoreModules();
     const groups = buildNavGroups(modules);
+    const { customOrder, saveGroupOrder } = useSidebarOrder();
+    const [reorderMode, setReorderMode] = useState(false);
     const navRef = useRef(null);
+
+    // Apply custom ordering — unlocked items ikut urutan user, locked tetap di bawah
+    const orderedGroups = groups.map((group) => ({
+        ...group,
+        items: applyCustomOrderToItems(
+            group.items,
+            customOrder[group.key] || [],
+        ),
+    }));
+
+    const handleReorder = (groupKey, newOrder) => {
+        saveGroupOrder(groupKey, newOrder);
+    };
 
     useEffect(() => {
         if (navRef.current) {
@@ -611,12 +752,14 @@ function SidebarContent({ collapsed, onNavigate }) {
                 className="flex-1 overflow-y-auto px-2 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
                 <div className="space-y-0.5">
-                    {groups.map((group) => (
+                    {orderedGroups.map((group) => (
                         <NavGroup
                             key={group.key}
                             group={group}
                             collapsed={collapsed}
                             onNavigate={onNavigate}
+                            reorderMode={reorderMode}
+                            onReorder={handleReorder}
                         />
                     ))}
                 </div>
@@ -625,9 +768,26 @@ function SidebarContent({ collapsed, onNavigate }) {
             {/* Footer */}
             {!collapsed && (
                 <div className="shrink-0 border-t border-slate-100 px-4 py-2.5">
-                    <span className="text-[10px] text-slate-400">
-                        © {new Date().getFullYear()} SIM-KASIR
-                    </span>
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-slate-400">
+                            © {new Date().getFullYear()} SIM-KASIR
+                        </span>
+                        <button
+                            onClick={() => setReorderMode(!reorderMode)}
+                            className={`text-[10px] transition ${
+                                reorderMode
+                                    ? "font-medium text-indigo-600"
+                                    : "text-slate-400 hover:text-indigo-500"
+                            }`}
+                            title={
+                                reorderMode
+                                    ? "Selesai atur menu"
+                                    : "Atur urutan menu"
+                            }
+                        >
+                            {reorderMode ? "✓ Selesai" : "✎ Atur"}
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
@@ -714,7 +874,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 className={`flex min-h-screen flex-col transition-all duration-200 ${collapsed ? "lg:pl-[60px]" : "lg:pl-[220px]"}`}
             >
                 {/* Topbar */}
-                <header className="sticky top-0 z-20 flex h-[57px] items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-5">
+                <header className="sticky top-0 z-20 flex h-[57px] items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-5   ">
                     {/* Mobile menu */}
                     <button
                         onClick={() => setSidebarOpen(true)}

@@ -47,7 +47,7 @@ export default function Index({ customers, storeType = "retail" }) {
         <AuthenticatedLayout
             header={
                 <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-base font-semibold text-slate-800">
+                    <h2 className="text-lg font-semibold text-slate-800">
                         Pelanggan
                     </h2>
                     <Link
@@ -79,7 +79,7 @@ export default function Index({ customers, storeType = "retail" }) {
 
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 {/* Toolbar */}
-                <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="relative w-full sm:max-w-xs">
                         <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                             <svg
@@ -104,17 +104,23 @@ export default function Index({ customers, storeType = "retail" }) {
                             className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
                     </div>
-                    <p className="text-sm text-slate-500">
-                        Total{" "}
-                        <span className="font-semibold text-slate-700">
-                            {filtered.length}
-                        </span>{" "}
-                        pelanggan
-                    </p>
+                    <div className="pt-4 flex items-center ">
+                        <p className="text-xs text-slate-500">
+                            Menampilkan{" "}
+                            <span className="font-semibold text-slate-700">
+                                {filtered.length}
+                            </span>{" "}
+                            dari{" "}
+                            <span className="font-semibold text-slate-700">
+                                {customers.length}
+                            </span>{" "}
+                            pelanggan
+                        </p>
+                    </div>
                 </div>
 
                 {filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
                             <svg
                                 className="h-8 w-8 text-slate-400"
@@ -248,20 +254,20 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            <th className="px-6 py-3.5">Nama</th>
-                            <th className="px-6 py-3.5">Telepon</th>
-                            <th className="px-6 py-3.5">Email</th>
+                            <th className="px-4 py-3.5">Nama</th>
+                            <th className="px-4 py-3.5">Telepon</th>
+                            <th className="px-4 py-3.5">Email</th>
                             {showLoyalty && (
-                                <th className="px-6 py-3.5 text-center">
+                                <th className="px-4 py-3.5 text-center">
                                     Poin
                                 </th>
                             )}
                             {showLoyalty && (
-                                <th className="px-6 py-3.5 text-center">
+                                <th className="px-4 py-3.5 text-center">
                                     Tier
                                 </th>
                             )}
-                            <th className="px-6 py-3.5 text-right">Aksi</th>
+                            <th className="px-4 py-3.5 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -270,7 +276,7 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                 key={c.id}
                                 className="transition hover:bg-slate-50/70"
                             >
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-4">
                                     <div className="flex items-center gap-3">
                                         <CustomerBadge name={c.name} />
                                         <div className="min-w-0">
@@ -285,21 +291,21 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 text-slate-600">
+                                <td className="px-4 py-4 text-slate-600">
                                     {c.phone || "—"}
                                 </td>
-                                <td className="px-6 py-4 text-slate-600">
+                                <td className="px-4 py-4 text-slate-600">
                                     {c.email || "—"}
                                 </td>
                                 {showLoyalty && (
-                                    <td className="px-6 py-4 text-center">
+                                    <td className="px-4 py-4 text-center">
                                         <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
                                             {c.points || 0}
                                         </span>
                                     </td>
                                 )}
                                 {showLoyalty && (
-                                    <td className="px-6 py-4 text-center">
+                                    <td className="px-4 py-4 text-center">
                                         <span
                                             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${TIER_STYLES[c.tier] || TIER_STYLES.bronze}`}
                                         >
@@ -307,7 +313,7 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                         </span>
                                     </td>
                                 )}
-                                <td className="px-6 py-4">
+                                <td className="px-4 py-4">
                                     <RowActions
                                         customer={c}
                                         onDelete={onDelete}

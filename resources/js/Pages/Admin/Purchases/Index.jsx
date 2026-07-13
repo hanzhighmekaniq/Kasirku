@@ -1,6 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
+import { ChevronDown, Plus } from "lucide-react";
+import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 
 export default function Index({ purchases, stats, storeType = "retail" }) {
@@ -51,28 +53,19 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-base font-semibold text-slate-800">
+                <div className="flex w-full items-center justify-between gap-3">
+                    <h2 className="text-lg font-semibold text-slate-800">
                         {pageTitle}
                     </h2>
                     <Link
                         href={route("admin.purchases.create")}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
                     >
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                            />
-                        </svg>
-                        Tambah {addLabel}
+                        <Plus className="h-4 w-4" strokeWidth={2} />
+                        <span className="hidden sm:inline">
+                            Tambah {addLabel}
+                        </span>
+                        <span className="sm:hidden">Tambah</span>
                     </Link>
                 </div>
             }
@@ -91,7 +84,7 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
             )}
 
             {/* Summary cards */}
-            <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <SummaryCard label="Total" value={stats.total} color="slate" />
                 <SummaryCard label="Draft" value={stats.draft} color="amber" />
                 <SummaryCard
@@ -106,48 +99,56 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                 />
             </div>
 
-            {/* Search + filter */}
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-                <div className="relative flex-1">
-                    <svg
-                        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.8}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                        />
-                    </svg>
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder={searchPlaceholder}
-                        className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                    />
+            {/* Table card */}
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                {/* Toolbar */}
+                <div className="border-b border-slate-100 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="relative flex-1">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                            </span>
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder={searchPlaceholder}
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            />
+                        </div>
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <button className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                                    <span className={filterStatus !== "all" ? "text-slate-700" : "text-slate-400"}>
+                                        {filterStatus === "draft" ? "Draft" : filterStatus === "completed" ? "Selesai" : filterStatus === "cancelled" ? "Dibatalkan" : "Semua Status"}
+                                    </span>
+                                    <ChevronDown className="h-3.5 w-3.5 text-slate-400" strokeWidth={2} />
+                                </button>
+                            </Dropdown.Trigger>
+                            <Dropdown.Content width="48">
+                                <button onClick={() => setFilterStatus("all")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "all" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Semua Status</button>
+                                <button onClick={() => setFilterStatus("draft")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "draft" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Draft</button>
+                                <button onClick={() => setFilterStatus("completed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "completed" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Selesai</button>
+                                <button onClick={() => setFilterStatus("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "cancelled" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Dibatalkan</button>
+                            </Dropdown.Content>
+                        </Dropdown>
+                    </div>
+                    <div className="pt-4 flex items-center justify-between">
+                        <p className="text-xs text-slate-500">
+                            Menampilkan{" "}
+                            <span className="font-semibold text-slate-700">{filtered.length}</span>{" "}
+                            dari{" "}
+                            <span className="font-semibold text-slate-700">{purchases.length}</span>{" "}
+                            {pageTitle.toLowerCase()}
+                        </p>
+                    </div>
                 </div>
-                <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                >
-                    <option value="all">Semua Status</option>
-                    <option value="draft">Draft</option>
-                    <option value="completed">Selesai</option>
-                    <option value="cancelled">Dibatalkan</option>
-                </select>
-            </div>
 
-            {/* Table */}
-            <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
-                <div className="overflow-x-auto">
+                {/* Table (desktop) */}
+                <div className="hidden overflow-x-auto lg:block">
                     <table className="w-full text-left text-sm">
                         <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50">
+                            <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                                 <th className="px-5 py-3 text-xs font-semibold text-slate-500">
                                     No. Faktur
                                 </th>
@@ -273,10 +274,9 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-            {/* Mobile cards */}
-            <div className="space-y-3 lg:hidden">
+                {/* Mobile cards */}
+                <div className="space-y-3 lg:hidden">
                 {filtered.length === 0 ? (
                     <div className="rounded-2xl border border-slate-200 bg-white px-4 py-12 text-center shadow-sm">
                         <svg
@@ -353,6 +353,7 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                     ))
                 )}
             </div>
+            </div>
 
             <ConfirmDeleteModal
                 open={!!deleteTarget}
@@ -385,7 +386,7 @@ function SummaryCard({ label, value, color = "slate" }) {
             className={`rounded-2xl border border-slate-200 border-l-4 bg-white p-4 shadow-sm ${borders[color] ?? ""}`}
         >
             <p className="text-xs font-medium text-slate-400">{label}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-800">{value}</p>
+            <p className="mt-1 text-xl font-bold text-slate-800">{value}</p>
         </div>
     );
 }

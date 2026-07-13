@@ -21,6 +21,7 @@ class Membership extends Model
         "price",
         "discount_percent",
         "point_multiplier",
+        "sort_order",
         "benefits",
         "is_active",
     ];
@@ -33,6 +34,7 @@ class Membership extends Model
             "price" => "decimal:2",
             "discount_percent" => "decimal:2",
             "point_multiplier" => "integer",
+            "sort_order" => "integer",
             "duration_value" => "integer",
         ];
     }

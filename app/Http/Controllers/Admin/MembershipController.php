@@ -14,6 +14,7 @@ class MembershipController extends Controller
         $storeId = session("current_store_id");
         $memberships = Membership::where("store_id", $storeId)
             ->withCount("customerMemberships")
+            ->orderBy("sort_order")
             ->orderBy("name")
             ->get();
 
@@ -31,9 +32,9 @@ class MembershipController extends Controller
             "description" => "nullable|string|max:500",
             "duration_type" => "required|in:day,month,year,visit",
             "duration_value" => "required|integer|min:1",
-            "price" => "required|numeric|min:0",
-            "discount_percent" => "nullable|numeric|min:0|max:100",
-            "point_multiplier" => "nullable|integer|min:1",
+            "price" => "numeric|min:0",
+            "discount_percent" => "required|numeric|min:0|max:100",
+            "point_multiplier" => "required|integer|min:1",
             "benefits" => "nullable|array",
             "is_active" => "boolean",
         ]);
@@ -63,9 +64,9 @@ class MembershipController extends Controller
             "description" => "nullable|string|max:500",
             "duration_type" => "required|in:day,month,year,visit",
             "duration_value" => "required|integer|min:1",
-            "price" => "required|numeric|min:0",
-            "discount_percent" => "nullable|numeric|min:0|max:100",
-            "point_multiplier" => "nullable|integer|min:1",
+            "price" => "numeric|min:0",
+            "discount_percent" => "required|numeric|min:0|max:100",
+            "point_multiplier" => "required|integer|min:1",
             "benefits" => "nullable|array",
             "is_active" => "boolean",
         ]);

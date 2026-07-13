@@ -3,6 +3,8 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import * as ReactDOM from "react-dom";
 import axios from "axios";
+import { ChevronDown, Plus, X } from "lucide-react";
+import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 
 /* ── Order type options per store type ───────────────── */
@@ -329,19 +331,7 @@ export default function Index({
                         href={route("admin.sales.create")}
                         className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
                     >
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                            />
-                        </svg>
+                        <Plus className="h-4 w-4" strokeWidth={2} />
                         Transaksi Baru
                     </Link>
                 </div>
@@ -380,74 +370,206 @@ export default function Index({
                 />
             </div>
 
-            {/* Search + client-side filters */}
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+            {/* Table card */}
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                {/* Toolbar */}
+                <div className="border-b border-slate-100 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div className="relative flex-1">
-                    <svg
-                        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.8}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                        />
-                    </svg>
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                        <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.8}
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                            />
+                        </svg>
+                    </span>
                     <input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari no. struk, pelanggan, atau kasir..."
-                        className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                     />
                 </div>
-                <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                >
-                    <option value="all">Semua Status</option>
-                    <option value="completed">Selesai</option>
-                    <option value="draft">Draft</option>
-                    <option value="cancelled">Dibatalkan</option>
-                </select>
-                <select
-                    value={filterOrderType}
-                    onChange={(e) => setFilterOrderType(e.target.value)}
-                    className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                >
-                    <option value="all">Semua Tipe</option>
-                    {orderTypeOptions.map((opt) => (
-                        <option key={opt.v} value={opt.v}>
-                            {opt.l}
-                        </option>
-                    ))}
-                </select>
+                <Dropdown>
+                    <Dropdown.Trigger>
+                        <button className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                            <span
+                                className={
+                                    filterStatus !== "all"
+                                        ? "text-slate-700"
+                                        : "text-slate-400"
+                                }
+                            >
+                                {filterStatus === "completed"
+                                    ? "Selesai"
+                                    : filterStatus === "draft"
+                                      ? "Draft"
+                                      : filterStatus === "cancelled"
+                                        ? "Dibatalkan"
+                                        : "Semua Status"}
+                            </span>
+                            <ChevronDown className="h-3.5 w-3.5 text-slate-400" strokeWidth={2} />
+                        </button>
+                    </Dropdown.Trigger>
+                    <Dropdown.Content width="48">
+                        <button
+                            onClick={() => setFilterStatus("all")}
+                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                filterStatus === "all"
+                                    ? "bg-indigo-50 font-medium text-indigo-600"
+                                    : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                        >
+                            Semua Status
+                        </button>
+                        <button
+                            onClick={() => setFilterStatus("completed")}
+                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                filterStatus === "completed"
+                                    ? "bg-indigo-50 font-medium text-indigo-600"
+                                    : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                        >
+                            Selesai
+                        </button>
+                        <button
+                            onClick={() => setFilterStatus("draft")}
+                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                filterStatus === "draft"
+                                    ? "bg-indigo-50 font-medium text-indigo-600"
+                                    : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                        >
+                            Draft
+                        </button>
+                        <button
+                            onClick={() => setFilterStatus("cancelled")}
+                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                filterStatus === "cancelled"
+                                    ? "bg-indigo-50 font-medium text-indigo-600"
+                                    : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                        >
+                            Dibatalkan
+                        </button>
+                    </Dropdown.Content>
+                </Dropdown>
+                <Dropdown>
+                    <Dropdown.Trigger>
+                        <button className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                            <span
+                                className={
+                                    filterOrderType !== "all"
+                                        ? "text-slate-700"
+                                        : "text-slate-400"
+                                }
+                            >
+                                {filterOrderType !== "all"
+                                    ? (orderTypeOptions.find(
+                                          (o) => o.v === filterOrderType,
+                                      )?.l ?? filterOrderType)
+                                    : "Semua Tipe"}
+                            </span>
+                            <ChevronDown className="h-3.5 w-3.5 text-slate-400" strokeWidth={2} />
+                        </button>
+                    </Dropdown.Trigger>
+                    <Dropdown.Content width="56">
+                        <button
+                            onClick={() => setFilterOrderType("all")}
+                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                filterOrderType === "all"
+                                    ? "bg-indigo-50 font-medium text-indigo-600"
+                                    : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                        >
+                            Semua Tipe
+                        </button>
+                        {orderTypeOptions.map((opt) => (
+                            <button
+                                key={opt.v}
+                                onClick={() => setFilterOrderType(opt.v)}
+                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                    filterOrderType === opt.v
+                                        ? "bg-indigo-50 font-medium text-indigo-600"
+                                        : "text-slate-600 hover:bg-slate-50"
+                                }`}
+                            >
+                                {opt.l}
+                            </button>
+                        ))}
+                    </Dropdown.Content>
+                </Dropdown>
             </div>
 
-            {/* Server-side filters: branch, date range, payment status */}
-            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-end">
+                    {/* Server-side filters */}
+                    <div className="mt-3 flex flex-wrap items-end gap-3">
                 {/* Branch filter */}
                 {branches.length > 0 && (
                     <div className="flex-1">
                         <label className="mb-1 block text-xs font-medium text-slate-500">
                             Cabang
                         </label>
-                        <select
-                            value={filterBranch}
-                            onChange={(e) => handleBranchChange(e.target.value)}
-                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                        >
-                            <option value="">Semua Cabang</option>
-                            {branches.map((b) => (
-                                <option key={b.id} value={b.id}>
-                                    {b.name}
-                                </option>
-                            ))}
-                        </select>
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                                    <span
+                                        className={
+                                            filterBranch
+                                                ? "text-slate-700"
+                                                : "text-slate-400"
+                                        }
+                                    >
+                                        {filterBranch
+                                            ? (branches.find(
+                                                  (b) =>
+                                                      String(b.id) ===
+                                                      String(filterBranch),
+                                              )?.name ?? "Semua Cabang")
+                                            : "Semua Cabang"}
+                                    </span>
+                                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={2} />
+                                </button>
+                            </Dropdown.Trigger>
+                            <Dropdown.Content width="56">
+                                <button
+                                    onClick={() =>
+                                        handleBranchChange("")
+                                    }
+                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                        !filterBranch
+                                            ? "bg-indigo-50 font-medium text-indigo-600"
+                                            : "text-slate-600 hover:bg-slate-50"
+                                    }`}
+                                >
+                                    Semua Cabang
+                                </button>
+                                {branches.map((b) => (
+                                    <button
+                                        key={b.id}
+                                        onClick={() =>
+                                            handleBranchChange(String(b.id))
+                                        }
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                            String(filterBranch) ===
+                                            String(b.id)
+                                                ? "bg-indigo-50 font-medium text-indigo-600"
+                                                : "text-slate-600 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        {b.name}
+                                    </button>
+                                ))}
+                            </Dropdown.Content>
+                        </Dropdown>
                     </div>
                 )}
 
@@ -484,16 +606,78 @@ export default function Index({
                     <label className="mb-1 block text-xs font-medium text-slate-500">
                         Status Bayar
                     </label>
-                    <select
-                        value={filterPayment}
-                        onChange={(e) => handlePaymentFilter(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                    >
-                        <option value="all">Semua</option>
-                        <option value="paid">Lunas</option>
-                        <option value="partial">Sebagian</option>
-                        <option value="unpaid">Belum Bayar</option>
-                    </select>
+                    <Dropdown>
+                        <Dropdown.Trigger>
+                            <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                                <span
+                                    className={
+                                        filterPayment !== "all"
+                                            ? "text-slate-700"
+                                            : "text-slate-400"
+                                    }
+                                >
+                                    {filterPayment === "paid"
+                                        ? "Lunas"
+                                        : filterPayment === "partial"
+                                          ? "Sebagian"
+                                          : filterPayment === "unpaid"
+                                            ? "Belum Bayar"
+                                            : "Semua"}
+                                </span>
+                                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={2} />
+                            </button>
+                        </Dropdown.Trigger>
+                        <Dropdown.Content width="48">
+                            <button
+                                onClick={() =>
+                                    handlePaymentFilter("all")
+                                }
+                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                    filterPayment === "all"
+                                        ? "bg-indigo-50 font-medium text-indigo-600"
+                                        : "text-slate-600 hover:bg-slate-50"
+                                }`}
+                            >
+                                Semua
+                            </button>
+                            <button
+                                onClick={() =>
+                                    handlePaymentFilter("paid")
+                                }
+                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                    filterPayment === "paid"
+                                        ? "bg-indigo-50 font-medium text-indigo-600"
+                                        : "text-slate-600 hover:bg-slate-50"
+                                }`}
+                            >
+                                Lunas
+                            </button>
+                            <button
+                                onClick={() =>
+                                    handlePaymentFilter("partial")
+                                }
+                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                    filterPayment === "partial"
+                                        ? "bg-indigo-50 font-medium text-indigo-600"
+                                        : "text-slate-600 hover:bg-slate-50"
+                                }`}
+                            >
+                                Sebagian
+                            </button>
+                            <button
+                                onClick={() =>
+                                    handlePaymentFilter("unpaid")
+                                }
+                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                    filterPayment === "unpaid"
+                                        ? "bg-indigo-50 font-medium text-indigo-600"
+                                        : "text-slate-600 hover:bg-slate-50"
+                                }`}
+                            >
+                                Belum Bayar
+                            </button>
+                        </Dropdown.Content>
+                    </Dropdown>
                 </div>
 
                 {/* Clear button */}
@@ -502,26 +686,28 @@ export default function Index({
                         onClick={clearAllServerFilters}
                         className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50"
                     >
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.8}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
+                        <X className="h-4 w-4" strokeWidth={1.8} />
                         Reset
                     </button>
                 )}
+                    </div>
+                <div className="pt-4 flex items-center justify-between">
+                    <p className="text-xs text-slate-500">
+                        Menampilkan{" "}
+                        <span className="font-semibold text-slate-700">
+                            {filtered.length}
+                        </span>{" "}
+                        dari{" "}
+                        <span className="font-semibold text-slate-700">
+                            {sales.length}
+                        </span>{" "}
+                        {pageTitle.toLowerCase()}
+                    </p>
+                </div>
             </div>
 
             {/* Table (desktop) */}
-            <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm lg:block">
+            <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full text-left text-sm">
                     <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/60">
@@ -900,6 +1086,7 @@ export default function Index({
                         </div>
                     ))
                 )}
+            </div>
             </div>
 
             <ConfirmDeleteModal

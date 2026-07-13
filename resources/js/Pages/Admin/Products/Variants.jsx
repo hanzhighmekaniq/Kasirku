@@ -245,9 +245,7 @@ export default function Variants({ product }) {
                             <h2 className="text-lg font-semibold text-slate-800">
                                 Varian Produk
                             </h2>
-                            <p className="text-sm text-slate-500">
-                                {product.name} &middot; SKU: {product.sku}
-                            </p>
+
                         </div>
                     </div>
                     <button

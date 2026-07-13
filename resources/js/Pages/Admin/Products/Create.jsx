@@ -79,7 +79,6 @@ export default function Create({
     const defaultType = DEFAULT_TYPE[storeType] ?? "finished_goods";
     const feat = {
         barcode: true, // selalu tampilkan barcode
-        supplier: has("supplier"), // retail, fnb, rental
         costPrice: has("purchase"), // retail, fnb, rental
         prepTime: has("kitchen"), // fnb
         isComposable: has("recipe"), // fnb
@@ -315,42 +314,23 @@ export default function Create({
                                         </div>
                                     )}
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Field
-                                        label="Kategori"
-                                        hint="opsional"
-                                        error={errors.category_id}
-                                    >
-                                        <TreePicker
-                                            categories={categories}
-                                            value={data.category_id}
-                                            onChange={(v) =>
-                                                setData("category_id", v)
-                                            }
-                                            onClear={() =>
-                                                setData("category_id", "")
-                                            }
-                                            placeholder="Kategori produk..."
-                                        />
-                                    </Field>
-                                    {feat.supplier && (
-                                        <Select
-                                            label="Supplier"
-                                            hint="opsional"
-                                            options={suppliers.map((s) => ({
-                                                value: s.id,
-                                                label: s.name,
-                                            }))}
-                                            value={data.supplier_id}
-                                            onChange={(v) =>
-                                                setData("supplier_id", v)
-                                            }
-                                            placeholder="Pilih Supplier"
-                                            error={errors.supplier_id}
-                                            searchable
-                                        />
-                                    )}
-                                </div>
+                                <Field
+                                    label="Kategori"
+                                    hint="opsional"
+                                    error={errors.category_id}
+                                >
+                                    <TreePicker
+                                        categories={categories}
+                                        value={data.category_id}
+                                        onChange={(v) =>
+                                            setData("category_id", v)
+                                        }
+                                        onClear={() =>
+                                            setData("category_id", "")
+                                        }
+                                        placeholder="Kategori produk..."
+                                    />
+                                </Field>
                             </div>
                         </SectionCard>
 

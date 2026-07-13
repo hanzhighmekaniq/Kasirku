@@ -1,6 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
+import { Plus } from "lucide-react";
+import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "@/Pages/Admin/Products/ConfirmDeleteModal";
 
 const STATUS_STYLES = {
@@ -109,19 +111,7 @@ export default function Index({ employees, storeType = "retail" }) {
                         href={route("admin.employees.create")}
                         className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
                     >
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                            />
-                        </svg>
+                        <Plus className="h-4 w-4" strokeWidth={2} />
                         <span className="hidden sm:inline">{addLabel}</span>
                         <span className="sm:hidden">Tambah</span>
                     </Link>
@@ -141,64 +131,146 @@ export default function Index({ employees, storeType = "retail" }) {
                 </div>
             )}
 
-            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <StatCard
-                    label={`Total ${pageLabel}`}
-                    value={employees.length}
-                />
-                <StatCard
-                    label="Ada Akun Login"
-                    value={employees.filter((e) => e.user).length}
-                    tone="sky"
-                />
-                <StatCard label="Aktif" value={activeCount} tone="emerald" />
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-indigo-400 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-medium text-slate-400">
+                        Total {pageLabel}
+                    </p>
+                    <p className="mt-1 text-xl font-bold text-slate-800">
+                        {employees.length}
+                    </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-sky-400 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-medium text-slate-400">
+                        Ada Akun Login
+                    </p>
+                    <p className="mt-1 text-xl font-bold text-slate-800">
+                        {employees.filter((e) => e.user).length}
+                    </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-emerald-400 bg-white p-4 shadow-sm">
+                    <p className="text-xs font-medium text-slate-400">Aktif</p>
+                    <p className="mt-1 text-xl font-bold text-slate-800">
+                        {activeCount}
+                    </p>
+                </div>
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="relative w-full sm:max-w-xs">
-                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.8}
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                />
-                            </svg>
-                        </span>
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Cari nama, kode, cabang..."
-                            className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                        />
+                <div className="border-b border-slate-100 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="relative flex-1">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                                <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.8}
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                                    />
+                                </svg>
+                            </span>
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Cari nama, kode, cabang..."
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Dropdown>
+                                <Dropdown.Trigger>
+                                    <button className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                                        <span className={statusFilter ? "text-slate-700" : "text-slate-400"}>
+                                            {statusFilter
+                                                ? STATUS_LABELS[statusFilter]
+                                                : "Semua Status"}
+                                        </span>
+                                        <svg
+                                            className="h-3.5 w-3.5 text-slate-400"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={2}
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                                            />
+                                        </svg>
+                                    </button>
+                                </Dropdown.Trigger>
+                                <Dropdown.Content width="48">
+                                    <button
+                                        onClick={() => setStatusFilter("")}
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                            !statusFilter
+                                                ? "bg-indigo-50 font-medium text-indigo-600"
+                                                : "text-slate-600 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        Semua Status
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setStatusFilter("active")
+                                        }
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                            statusFilter === "active"
+                                                ? "bg-indigo-50 font-medium text-indigo-600"
+                                                : "text-slate-600 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        Aktif
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setStatusFilter("inactive")
+                                        }
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                            statusFilter === "inactive"
+                                                ? "bg-indigo-50 font-medium text-indigo-600"
+                                                : "text-slate-600 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        Nonaktif
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            setStatusFilter("terminated")
+                                        }
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                            statusFilter === "terminated"
+                                                ? "bg-indigo-50 font-medium text-indigo-600"
+                                                : "text-slate-600 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        Berhenti
+                                    </button>
+                                </Dropdown.Content>
+                            </Dropdown>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                        >
-                            <option value="">Semua Status</option>
-                            <option value="active">Aktif</option>
-                            <option value="inactive">Nonaktif</option>
-                            <option value="terminated">Berhenti</option>
-                        </select>
+                    <div className="pt-4 flex items-center justify-between">
+                        <p className="text-xs text-slate-500">
+                            Menampilkan{" "}
+                            <span className="font-semibold text-slate-700">
+                                {filtered.length}
+                            </span>{" "}
+                            dari{" "}
+                            <span className="font-semibold text-slate-700">
+                                {employees.length}
+                            </span>{" "}
+                            {pageLabel.toLowerCase()}
+                        </p>
                     </div>
-                    <p className="text-sm text-slate-500">
-                        Total{" "}
-                        <span className="font-semibold text-slate-700">
-                            {filtered.length}
-                        </span>{" "}
-                        {pageLabel.toLowerCase()}
-                    </p>
                 </div>
 
                 {filtered.length === 0 ? (
@@ -233,19 +305,7 @@ export default function Index({ employees, storeType = "retail" }) {
                                 href={route("admin.employees.create")}
                                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
                             >
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M12 4.5v15m7.5-7.5h-15"
-                                    />
-                                </svg>
+                                <Plus className="h-4 w-4" strokeWidth={2} />
                                 Tambah Karyawan
                             </Link>
                         )}
@@ -272,25 +332,6 @@ export default function Index({ employees, storeType = "retail" }) {
                 onClose={() => !deleting && setTarget(null)}
             />
         </AuthenticatedLayout>
-    );
-}
-
-function StatCard({ label, value, tone = "indigo" }) {
-    const tones = {
-        indigo: "bg-indigo-50 text-indigo-700 border-indigo-100",
-        emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
-        sky: "bg-sky-50 text-sky-700 border-sky-100",
-    };
-
-    return (
-        <div
-            className={`rounded-2xl border px-4 py-3 shadow-sm ${tones[tone]}`}
-        >
-            <p className="text-xs font-medium uppercase tracking-wide opacity-70">
-                {label}
-            </p>
-            <p className="mt-1 text-2xl font-semibold">{value}</p>
-        </div>
     );
 }
 

@@ -1,6 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
+import { ChevronDown, Plus } from "lucide-react";
+import Dropdown from "@/Components/Dropdown";
 
 const fmt = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 const fmtDt = (d) =>
@@ -76,29 +78,18 @@ export default function Index({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-base font-semibold text-slate-800">
+                <div className="flex w-full items-center justify-between gap-3">
+                    <h2 className="text-lg font-semibold text-slate-800">
                         Shift Kasir
                     </h2>
                     {canOpen && (
                         <Link
                             href={route("admin.cashier-shifts.create")}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700"
+                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
                         >
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M12 4.5v15m7.5-7.5h-15"
-                                />
-                            </svg>
-                            Buka Shift
+                            <Plus className="h-4 w-4" strokeWidth={2} />
+                            <span className="hidden sm:inline">Buka Shift</span>
+                            <span className="sm:hidden">Buka</span>
                         </Link>
                     )}
                 </div>
@@ -132,52 +123,55 @@ export default function Index({
                     </div>
                 )}
 
-                <div className="flex flex-wrap items-center gap-2">
-                    <form
-                        onSubmit={applySearch}
-                        className="flex items-center gap-2"
-                    >
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Cari no.shift / kasir..."
-                            className="rounded-lg border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-200"
-                        />
-                        <button
-                            type="submit"
-                            className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-200"
-                        >
-                            Cari
-                        </button>
-                    </form>
-
-                    <div className="ml-auto flex items-center gap-1">
-                        {[
-                            ["", "Semua"],
-                            ["open", "Berjalan"],
-                            ["closed", "Tutup"],
-                        ].map(([val, lbl]) => (
-                            <button
-                                key={val}
-                                onClick={() => applyFilter(val)}
-                                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                                    status === val
-                                        ? "bg-indigo-100 text-indigo-700"
-                                        : "border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-                                }`}
-                            >
-                                {lbl}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
+                {/* Table card */}
                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    {/* Toolbar */}
+                    <div className="border-b border-slate-100 p-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                            <div className="relative flex-1">
+                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                                </span>
+                                <form onSubmit={(e) => { e.preventDefault(); applySearch(e); }} className="flex-1">
+                                    <input
+                                        type="text"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        placeholder="Cari no. shift / kasir..."
+                                        className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    />
+                                </form>
+                            </div>
+                            <Dropdown>
+                                <Dropdown.Trigger>
+                                    <button className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                                        <span className={status ? "text-slate-700" : "text-slate-400"}>
+                                            {status === "open" ? "Berjalan" : status === "closed" ? "Tutup" : "Semua Status"}
+                                        </span>
+                                        <ChevronDown className="h-3.5 w-3.5 text-slate-400" strokeWidth={2} />
+                                    </button>
+                                </Dropdown.Trigger>
+                                <Dropdown.Content width="48">
+                                    <button onClick={() => applyFilter("")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${!status ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Semua</button>
+                                    <button onClick={() => applyFilter("open")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "open" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Berjalan</button>
+                                    <button onClick={() => applyFilter("closed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "closed" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Tutup</button>
+                                </Dropdown.Content>
+                            </Dropdown>
+                        </div>
+                        <div className="pt-4 flex items-center justify-between">
+                            <p className="text-xs text-slate-500">
+                                Menampilkan{" "}
+                                <span className="font-semibold text-slate-700">{list.length}</span>{" "}
+                                dari{" "}
+                                <span className="font-semibold text-slate-700">{shifts.total}</span>{" "}
+                                shift
+                            </p>
+                        </div>
+                    </div>
                     <div className="overflow-x-auto">
                         <table className="w-full min-w-[640px] text-left text-sm">
-                            <thead className="border-b border-slate-100 bg-slate-50">
-                                <tr>
+                            <thead>
+                                <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     {[
                                         "No. Shift",
                                         "Kasir",
@@ -298,39 +292,36 @@ export default function Index({
                             </tbody>
                         </table>
                     </div>
-                </div>
 
-                {(shifts?.last_page ?? 1) > 1 && (
-                    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs">
-                        <span className="text-slate-500">
-                            {shifts.from}–{shifts.to} dari {shifts.total}
-                        </span>
-                        <div className="flex gap-1">
-                            {(shifts.links ?? []).map((link, i) => (
-                                <button
-                                    key={i}
-                                    disabled={!link.url}
-                                    onClick={() =>
-                                        link.url &&
-                                        router.visit(link.url, {
-                                            preserveState: true,
-                                        })
-                                    }
-                                    className={`rounded-lg px-3 py-1.5 font-medium transition ${
-                                        link.active
-                                            ? "bg-indigo-100 text-indigo-700"
-                                            : link.url
-                                              ? "text-slate-500 hover:bg-slate-100"
-                                              : "cursor-default text-slate-300"
-                                    }`}
-                                    dangerouslySetInnerHTML={{
-                                        __html: link.label,
-                                    }}
-                                />
-                            ))}
+                    {(shifts?.last_page ?? 1) > 1 && (
+                        <div className="flex flex-col gap-3 border-t border-slate-100 px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="text-xs text-slate-500">
+                                {shifts.total} shift &bull; Halaman{" "}
+                                {shifts.current_page} dari{" "}
+                                {shifts.last_page}
+                            </span>
+                            <div className="flex items-center gap-1">
+                                {(shifts.links ?? []).map((link, i) => (
+                                    <Link
+                                        key={i}
+                                        href={link.url || "#"}
+                                        preserveScroll
+                                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                                            link.active
+                                                ? "bg-indigo-600 text-white shadow-sm"
+                                                : link.url
+                                                  ? "text-slate-600 hover:bg-slate-100"
+                                                  : "cursor-not-allowed text-slate-300"
+                                        }`}
+                                        dangerouslySetInnerHTML={{
+                                            __html: link.label,
+                                        }}
+                                    />
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {deleteTarget && (

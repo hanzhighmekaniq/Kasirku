@@ -194,6 +194,11 @@ class PurchaseController extends Controller
                         );
                         $stock->increment("quantity", $item->quantity);
 
+                        // Auto-set supplier default pada produk
+                        $product->update([
+                            "supplier_id" => $purchase->supplier_id,
+                        ]);
+
                         // Update moving average cost
                         $this->updateMovingAverageCost(
                             $product,
