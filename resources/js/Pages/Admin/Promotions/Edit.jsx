@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 import PromotionForm from './PromotionForm';
 
 export default function Edit({ promotion, products }) {
@@ -36,9 +37,7 @@ export default function Edit({ promotion, products }) {
                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
                         aria-label="Kembali"
                     >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                        </svg>
+                        <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
                     <h2 className="text-lg font-semibold text-slate-800">Edit Promo</h2>
                 </div>

@@ -86,7 +86,7 @@ export default function PromotionForm({
     };
 
     const inputCls = (field) =>
-        `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
+        `block w-full rounded-xl border bg-white px-3 py-2.5 text-sm shadow-sm transition focus:ring-2 ${
             errors[field]
                 ? "border-red-300 focus:border-red-500 focus:ring-red-200"
                 : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-200"
@@ -216,7 +216,7 @@ export default function PromotionForm({
                                         )
                                     }
                                     placeholder="10"
-                                    className={`block w-full rounded-xl border border-slate-300 pr-10 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${errors.discount_value ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""}`}
+                                    className={`${inputCls("discount_value")} pr-10`}
                                 />
                             ) : showTierPrice ? (
                                 <input
@@ -228,7 +228,7 @@ export default function PromotionForm({
                                         setData("tier_price", e.target.value)
                                     }
                                     placeholder="Harga spesial"
-                                    className={`block w-full rounded-xl border border-slate-300 pl-10 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${errors.tier_price ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""}`}
+                                    className={`${inputCls("tier_price")} pl-10`}
                                 />
                             ) : (
                                 <input
@@ -247,7 +247,7 @@ export default function PromotionForm({
                                         )
                                     }
                                     placeholder={showBuyQty ? "3" : "5000"}
-                                    className={`block w-full rounded-xl border border-slate-300 pl-10 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${errors.discount_value ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""}`}
+                                    className={`${inputCls("discount_value")} pl-10`}
                                 />
                             )}
                             <span
@@ -301,7 +301,7 @@ export default function PromotionForm({
                                     )
                                 }
                                 placeholder="0"
-                                className={`block w-full rounded-xl border border-slate-300 pl-10 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${errors.min_purchase_amount ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""}`}
+                                className={`${inputCls("min_purchase_amount")} pl-10`}
                             />
                             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
                                 Rp
@@ -335,7 +335,7 @@ export default function PromotionForm({
                                         )
                                     }
                                     placeholder="Tanpa batas"
-                                    className={`block w-full rounded-xl border border-slate-300 pl-10 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${errors.max_discount_amount ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""}`}
+                                    className={`${inputCls("max_discount_amount")} pl-10`}
                                 />
                                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
                                     Rp
@@ -462,7 +462,7 @@ export default function PromotionForm({
                                 onChange={(e) =>
                                     setData("start_hour", e.target.value)
                                 }
-                                className={`mt-1 ${inputCls("start_hour")}`}
+                                className={`mt-1.5 ${inputCls("start_hour")}`}
                             />
                             {errors.start_hour && (
                                 <p className="mt-1 text-sm text-red-600">
@@ -480,7 +480,7 @@ export default function PromotionForm({
                                 onChange={(e) =>
                                     setData("end_hour", e.target.value)
                                 }
-                                className={`mt-1 ${inputCls("end_hour")}`}
+                                className={`mt-1.5 ${inputCls("end_hour")}`}
                             />
                             {errors.end_hour && (
                                 <p className="mt-1 text-sm text-red-600">
@@ -659,7 +659,7 @@ export default function PromotionForm({
                                             setProductSearch(e.target.value)
                                         }
                                         placeholder="Cari produk..."
-                                        className="block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                        className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                         autoFocus
                                     />
                                 </div>
