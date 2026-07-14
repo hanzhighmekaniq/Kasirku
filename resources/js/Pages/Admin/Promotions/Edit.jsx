@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import SectionCard from '@/Components/ui/SectionCard';
 import PromotionForm from './PromotionForm';
 
 export default function Edit({ promotion, products }) {
@@ -46,26 +47,21 @@ export default function Edit({ promotion, products }) {
             <Head title={`Edit ${promotion.name}`} />
 
             <div className="mx-auto max-w-2xl">
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
-                        <h3 className="text-base font-semibold text-slate-900">Detail Promo</h3>
-                        <p className="mt-0.5 text-sm text-slate-500">
-                            Edit informasi promo <span className="font-medium text-indigo-600">{promotion.name}</span>
-                        </p>
-                    </div>
-                    <div className="p-6">
-                        <PromotionForm
-                            data={data}
-                            setData={setData}
-                            errors={errors}
-                            processing={processing}
-                            onSubmit={submit}
-                            submitLabel="Update Promo"
-                            cancelHref={route('admin.promotions.index')}
-                            products={products}
-                        />
-                    </div>
-                </div>
+                <SectionCard
+                    title="Detail Promo"
+                    subtitle={`Edit informasi promo ${promotion.name}`}
+                >
+                    <PromotionForm
+                        data={data}
+                        setData={setData}
+                        errors={errors}
+                        processing={processing}
+                        onSubmit={submit}
+                        submitLabel="Update Promo"
+                        cancelHref={route('admin.promotions.index')}
+                        products={products}
+                    />
+                </SectionCard>
             </div>
         </AuthenticatedLayout>
     );

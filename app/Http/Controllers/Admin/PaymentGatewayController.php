@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PaymentGatewayTransaction;
+use App\Models\ProductStock;
 use App\Models\Sale;
 use App\Models\SalePayment;
+use App\Models\Store;
 use App\Models\StorePaymentGateway;
 use App\Services\PaymentGateway\PaymentGatewayFactory;
 use Illuminate\Http\Request;
@@ -18,82 +20,200 @@ class PaymentGatewayController extends Controller
     /** Ambil store_id dari session. */
     private function getStoreId(): int
     {
-        return session('current_store_id') ?? \App\Models\Store::first()->id;
+        return session('current_store_id') ?? Store::first()->id;
     }
 
-    // ── Settings page ──────────────────────────────
+    // ── CRUD: Gateway configuration ───────────────
 
-    public function settings()
+    public function index()
     {
-        $storeId   = $this->getStoreId();
-        $configs   = StorePaymentGateway::where('store_id', $storeId)->get()->keyBy('provider');
-        $providers = StorePaymentGateway::availableProviders();
-
-        return Inertia::render('Admin/Settings/PaymentGateway', [
-            'providers' => $providers,
-            'configs'   => $configs->map(fn($c) => [
-                'id'              => $c->id,
-                'provider'        => $c->provider,
-                'is_active'       => $c->is_active,
-                'environment'     => $c->environment,
-                'merchant_id'     => $c->merchant_id,
+        $storeId = $this->getStoreId();
+        $gateways = StorePaymentGateway::where('store_id', $storeId)->get()
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'provider' => $c->provider,
+                'is_active' => $c->is_active,
+                'environment' => $c->environment,
+                'merchant_id' => $c->merchant_id,
                 'enabled_methods' => $c->enabled_methods,
-                // Keys ditampilkan sebagai masked
-                'has_server_key'  => !empty($c->server_key),
-                'has_client_key'  => !empty($c->client_key),
-            ]),
+                'has_server_key' => ! empty($c->server_key),
+                'has_client_key' => ! empty($c->client_key),
+            ]);
+
+        $stats = [
+            'total' => $gateways->count(),
+            'active' => $gateways->where('is_active', true)->count(),
+            'inactive' => $gateways->where('is_active', false)->count(),
+        ];
+
+        return Inertia::render('Admin/PaymentGateway/Index', [
+            'gateways' => $gateways->values(),
+            'stats' => $stats,
         ]);
     }
 
-    public function saveSettings(Request $request, string $provider)
+    public function create()
+    {
+        $storeId = $this->getStoreId();
+        $allProviders = StorePaymentGateway::availableProviders();
+        $configured = StorePaymentGateway::where('store_id', $storeId)
+            ->pluck('provider')->toArray();
+
+        $availableProviders = array_filter(
+            $allProviders,
+            fn ($key) => ! in_array($key, $configured),
+            ARRAY_FILTER_USE_KEY,
+        );
+
+        return Inertia::render('Admin/PaymentGateway/Create', [
+            'availableProviders' => $availableProviders,
+        ]);
+    }
+
+    public function store(Request $request)
     {
         $storeId = $this->getStoreId();
 
         $validated = $request->validate([
-            'is_active'       => 'boolean',
-            'environment'     => 'required|in:sandbox,production',
-            'server_key'      => 'nullable|string|max:500',
-            'client_key'      => 'nullable|string|max:500',
-            'merchant_id'     => 'nullable|string|max:100',
+            'provider' => 'required|string|max:50',
+            'is_active' => 'boolean',
+            'environment' => 'required|in:sandbox,production',
+            'server_key' => 'nullable|string|max:500',
+            'client_key' => 'nullable|string|max:500',
+            'merchant_id' => 'nullable|string|max:100',
             'enabled_methods' => 'nullable|array',
             'enabled_methods.*' => 'string',
         ]);
 
-        $config = StorePaymentGateway::firstOrNew([
+        $isActive = $validated['is_active'] ?? false;
+
+        // Hanya 1 gateway aktif — nonaktifkan yang lain
+        if ($isActive) {
+            StorePaymentGateway::where('store_id', $storeId)
+                ->update(['is_active' => false]);
+        }
+
+        $gateway = StorePaymentGateway::create([
             'store_id' => $storeId,
-            'provider' => $provider,
+            'provider' => $validated['provider'],
+            'is_active' => $isActive,
+            'environment' => $validated['environment'],
+            'server_key' => $validated['server_key'] ?? null,
+            'client_key' => $validated['client_key'] ?? null,
+            'merchant_id' => $validated['merchant_id'] ?? null,
+            'enabled_methods' => $validated['enabled_methods'] ?? [],
         ]);
 
-        $config->is_active       = $validated['is_active'] ?? false;
-        $config->environment     = $validated['environment'];
-        $config->merchant_id     = $validated['merchant_id'] ?? null;
-        $config->enabled_methods = $validated['enabled_methods'] ?? [];
+        PaymentGatewayFactory::flushCache($storeId, $validated['provider']);
 
-        // Hanya update key jika dikirim (bukan masked placeholder)
-        if (!empty($validated['server_key']) && $validated['server_key'] !== '••••••••') {
-            $config->server_key = $validated['server_key'];
+        return redirect()
+            ->route('admin.payment-gateway.index')
+            ->with('success', "Gateway {$validated['provider']} berhasil ditambahkan.");
+    }
+
+    public function edit(StorePaymentGateway $storePaymentGateway)
+    {
+        return Inertia::render('Admin/PaymentGateway/Edit', [
+            'gateway' => [
+                'id' => $storePaymentGateway->id,
+                'provider' => $storePaymentGateway->provider,
+                'is_active' => $storePaymentGateway->is_active,
+                'environment' => $storePaymentGateway->environment,
+                'merchant_id' => $storePaymentGateway->merchant_id,
+                'enabled_methods' => $storePaymentGateway->enabled_methods,
+                'has_server_key' => ! empty($storePaymentGateway->server_key),
+                'has_client_key' => ! empty($storePaymentGateway->client_key),
+            ],
+        ]);
+    }
+
+    public function update(Request $request, StorePaymentGateway $storePaymentGateway)
+    {
+        $validated = $request->validate([
+            'is_active' => 'boolean',
+            'environment' => 'required|in:sandbox,production',
+            'server_key' => 'nullable|string|max:500',
+            'client_key' => 'nullable|string|max:500',
+            'merchant_id' => 'nullable|string|max:100',
+            'enabled_methods' => 'nullable|array',
+            'enabled_methods.*' => 'string',
+        ]);
+
+        $isActive = $validated['is_active'] ?? false;
+
+        // Hanya 1 gateway aktif — nonaktifkan yang lain
+        if ($isActive) {
+            StorePaymentGateway::where('store_id', $storePaymentGateway->store_id)
+                ->where('id', '!=', $storePaymentGateway->id)
+                ->update(['is_active' => false]);
         }
-        if (!empty($validated['client_key']) && $validated['client_key'] !== '••••••••') {
-            $config->client_key = $validated['client_key'];
+
+        $storePaymentGateway->is_active = $isActive;
+        $storePaymentGateway->environment = $validated['environment'];
+        $storePaymentGateway->merchant_id = $validated['merchant_id'] ?? null;
+        $storePaymentGateway->enabled_methods = $validated['enabled_methods'] ?? [];
+
+        if (! empty($validated['server_key']) && $validated['server_key'] !== '••••••••') {
+            $storePaymentGateway->server_key = $validated['server_key'];
+        }
+        if (! empty($validated['client_key']) && $validated['client_key'] !== '••••••••') {
+            $storePaymentGateway->client_key = $validated['client_key'];
         }
 
-        $config->save();
+        $storePaymentGateway->save();
 
-        PaymentGatewayFactory::flushCache($storeId, $provider);
+        PaymentGatewayFactory::flushCache($storePaymentGateway->store_id, $storePaymentGateway->provider);
 
-        return back()->with('success', "Konfigurasi {$provider} berhasil disimpan.");
+        return redirect()
+            ->route('admin.payment-gateway.index')
+            ->with('success', "Gateway {$storePaymentGateway->provider} berhasil diperbarui.");
+    }
+
+    public function destroy(StorePaymentGateway $storePaymentGateway)
+    {
+        $storePaymentGateway->delete();
+
+        return redirect()
+            ->route('admin.payment-gateway.index')
+            ->with('success', "Gateway {$storePaymentGateway->provider} berhasil dihapus.");
+    }
+
+    public function toggle(StorePaymentGateway $storePaymentGateway)
+    {
+        $newStatus = ! $storePaymentGateway->is_active;
+
+        // Hanya 1 gateway aktif — nonaktifkan yang lain saat mengaktifkan
+        if ($newStatus) {
+            StorePaymentGateway::where('store_id', $storePaymentGateway->store_id)
+                ->where('id', '!=', $storePaymentGateway->id)
+                ->update(['is_active' => false]);
+        }
+
+        $storePaymentGateway->update(['is_active' => $newStatus]);
+        PaymentGatewayFactory::flushCache($storePaymentGateway->store_id, $storePaymentGateway->provider);
+
+        return back()->with('success', "Status {$storePaymentGateway->provider} diubah.");
+    }
+
+    public function toggleEnv(StorePaymentGateway $storePaymentGateway)
+    {
+        $newEnv = $storePaymentGateway->environment === 'production' ? 'sandbox' : 'production';
+        $storePaymentGateway->update(['environment' => $newEnv]);
+        PaymentGatewayFactory::flushCache($storePaymentGateway->store_id, $storePaymentGateway->provider);
+
+        return back()->with('success', "{$storePaymentGateway->provider} beralih ke ".($newEnv === 'production' ? 'Production' : 'Sandbox').'.');
     }
 
     // ── Create PG transaction (from Kasir) ──────────
 
     public function createTransaction(Request $request)
     {
-        $user    = Auth::user();
+        $user = Auth::user();
         $storeId = session('current_store_id');
 
         $validated = $request->validate([
-            'sale_id'      => 'required|exists:sales,id',
-            'provider'     => 'required|string',
+            'sale_id' => 'required|exists:sales,id',
+            'provider' => 'required|string',
             'payment_type' => 'required|string',
         ]);
 
@@ -105,18 +225,18 @@ class PaymentGatewayController extends Controller
         try {
             $gateway = PaymentGatewayFactory::make($validated['provider'], $storeId);
 
-            $orderId = 'SL-' . $sale->id . '-' . time();
+            $orderId = 'SL-'.$sale->id.'-'.time();
 
             $result = $gateway->createTransaction([
-                'order_id'     => $orderId,
-                'amount'       => $sale->grand_total,
+                'order_id' => $orderId,
+                'amount' => $sale->grand_total,
                 'payment_type' => $validated['payment_type'],
-                'customer'     => [
-                    'name'  => $sale->customer?->name  ?? $user->name,
+                'customer' => [
+                    'name' => $sale->customer?->name ?? $user->name,
                     'email' => $sale->customer?->email ?? $user->email,
                     'phone' => $sale->customer?->phone ?? null,
                 ],
-                'items' => $sale->items()->get()->map(fn($i) => [
+                'items' => $sale->items()->get()->map(fn ($i) => [
                     'id' => (string) $i->product_id,
                     'price' => (int) round($i->price),
                     'quantity' => $i->quantity,
@@ -126,26 +246,26 @@ class PaymentGatewayController extends Controller
 
             // Simpan record transaksi PG
             $pgTrx = PaymentGatewayTransaction::create([
-                'sale_id'      => $sale->id,
-                'provider'     => $validated['provider'],
-                'external_id'  => $orderId,
+                'sale_id' => $sale->id,
+                'provider' => $validated['provider'],
+                'external_id' => $orderId,
                 'payment_type' => $validated['payment_type'],
-                'status'       => 'pending',
-                'amount'       => $sale->grand_total,
+                'status' => 'pending',
+                'amount' => $sale->grand_total,
                 'raw_response' => $result['raw'] ?? [],
             ]);
 
             return response()->json([
-                'success'        => true,
-                'pg_trx_id'      => $pgTrx->id,
-                'external_id'    => $orderId,
-                'payment_url'    => $result['payment_url']   ?? null,
-                'qr_code'        => $result['qr_code']       ?? null,
-                'qr_image_url'   => $result['qr_image_url']  ?? null,
-                'va_number'      => $result['va_number']     ?? null,
-                'va_bank'        => $result['va_bank']       ?? null,
-                'payment_type'   => $validated['payment_type'],
-                'amount'         => $sale->grand_total,
+                'success' => true,
+                'pg_trx_id' => $pgTrx->id,
+                'external_id' => $orderId,
+                'payment_url' => $result['payment_url'] ?? null,
+                'qr_code' => $result['qr_code'] ?? null,
+                'qr_image_url' => $result['qr_image_url'] ?? null,
+                'va_number' => $result['va_number'] ?? null,
+                'va_bank' => $result['va_bank'] ?? null,
+                'payment_type' => $validated['payment_type'],
+                'amount' => $sale->grand_total,
             ]);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
@@ -161,19 +281,19 @@ class PaymentGatewayController extends Controller
         // Kalau sudah paid/expired/failed, return cached status
         if (in_array($pgTrx->status, ['paid', 'expired', 'failed'])) {
             return response()->json([
-                'status'    => $pgTrx->status,
-                'sale_id'   => $pgTrx->sale_id,
-                'sale_no'   => $pgTrx->sale?->sale_no,
+                'status' => $pgTrx->status,
+                'sale_id' => $pgTrx->sale_id,
+                'sale_no' => $pgTrx->sale?->sale_no,
             ]);
         }
 
         try {
             $storeId = $this->getStoreId();
             $gateway = PaymentGatewayFactory::make($pgTrx->provider, $storeId);
-            $result  = $gateway->getStatus($pgTrx->external_id);
+            $result = $gateway->getStatus($pgTrx->external_id);
 
             $pgTrx->update([
-                'status'       => $result['status'],
+                'status' => $result['status'],
                 'raw_response' => $result['raw'],
             ]);
 
@@ -182,7 +302,7 @@ class PaymentGatewayController extends Controller
             }
 
             return response()->json([
-                'status'  => $result['status'],
+                'status' => $result['status'],
                 'sale_id' => $pgTrx->sale_id,
                 'sale_no' => $pgTrx->sale?->sale_no,
             ]);
@@ -198,20 +318,20 @@ class PaymentGatewayController extends Controller
         $storeId = $this->getStoreId();
 
         $pending = PaymentGatewayTransaction::with('sale')
-            ->whereHas('sale', fn($q) => $q->where('store_id', $storeId))
+            ->whereHas('sale', fn ($q) => $q->where('store_id', $storeId))
             ->where('status', 'pending')
             ->where('created_at', '>=', now()->subHours(2))
             ->orderByDesc('created_at')
             ->get()
-            ->map(fn($trx) => [
-                'pg_trx_id'    => $trx->id,
-                'external_id'  => $trx->external_id,
-                'sale_id'      => $trx->sale_id,
-                'sale_no'      => $trx->sale?->sale_no,
-                'provider'     => $trx->provider,
+            ->map(fn ($trx) => [
+                'pg_trx_id' => $trx->id,
+                'external_id' => $trx->external_id,
+                'sale_id' => $trx->sale_id,
+                'sale_no' => $trx->sale?->sale_no,
+                'provider' => $trx->provider,
                 'payment_type' => $trx->payment_type,
-                'amount'       => $trx->amount,
-                'created_at'   => $trx->created_at->toISOString(),
+                'amount' => $trx->amount,
+                'created_at' => $trx->created_at->toISOString(),
             ]);
 
         return response()->json(['transactions' => $pending]);
@@ -221,17 +341,19 @@ class PaymentGatewayController extends Controller
 
     public function finalizeSale(Sale $sale, PaymentGatewayTransaction $pgTrx): void
     {
-        if ($sale->status === 'completed') return;
+        if ($sale->status === 'completed') {
+            return;
+        }
 
         DB::transaction(function () use ($sale, $pgTrx) {
             // Buat SalePayment
             SalePayment::firstOrCreate(
                 ['sale_id' => $sale->id, 'payment_method_id' => null],
                 [
-                    'paid_at'      => now(),
-                    'amount'       => $pgTrx->amount,
+                    'paid_at' => now(),
+                    'amount' => $pgTrx->amount,
                     'reference_no' => $pgTrx->external_id,
-                    'note'         => "PG: {$pgTrx->provider} / {$pgTrx->payment_type}",
+                    'note' => "PG: {$pgTrx->provider} / {$pgTrx->payment_type}",
                 ]
             );
 
@@ -239,7 +361,9 @@ class PaymentGatewayController extends Controller
             $sale->load('items.product');
             foreach ($sale->items as $item) {
                 $product = $item->product;
-                if (!$product) continue;
+                if (! $product) {
+                    continue;
+                }
 
                 // Cek resep
                 $product->load('recipes.rawMaterial.stocks');
@@ -248,16 +372,18 @@ class PaymentGatewayController extends Controller
                         $needed = $recipe->quantity * $item->quantity;
                         if ($recipe->is_nullable) {
                             $avail = $recipe->rawMaterial->stocks->where('store_id', $sale->store_id)->sum('quantity');
-                            if ($avail <= 0) continue;
+                            if ($avail <= 0) {
+                                continue;
+                            }
                         }
-                        $stock = \App\Models\ProductStock::firstOrCreate(
+                        $stock = ProductStock::firstOrCreate(
                             ['product_id' => $recipe->raw_material_id, 'store_id' => $sale->store_id],
                             ['quantity' => 0, 'reserved_quantity' => 0]
                         );
                         $stock->decrement('quantity', $needed);
                     }
                 } elseif ($product->track_stock) {
-                    $stock = \App\Models\ProductStock::firstOrCreate(
+                    $stock = ProductStock::firstOrCreate(
                         ['product_id' => $item->product_id, 'store_id' => $sale->store_id],
                         ['quantity' => 0, 'reserved_quantity' => 0]
                     );
@@ -266,10 +392,10 @@ class PaymentGatewayController extends Controller
             }
 
             $sale->update([
-                'status'         => 'completed',
+                'status' => 'completed',
                 'payment_status' => 'paid',
-                'paid_amount'    => $pgTrx->amount,
-                'change_amount'  => 0,
+                'paid_amount' => $pgTrx->amount,
+                'change_amount' => 0,
             ]);
         });
     }

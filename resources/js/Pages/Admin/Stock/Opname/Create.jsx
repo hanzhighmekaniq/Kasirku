@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 
 export default function Create({ products }) {
     const { flash } = usePage().props;
@@ -73,7 +74,7 @@ export default function Create({ products }) {
             header={
                 <div className="flex items-center gap-3">
                     <Link href={route('admin.stock-opnames.index')} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Kembali">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                        <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
                     <h2 className="text-lg font-semibold text-slate-800">Buat Opname Stok</h2>
                 </div>
@@ -138,7 +139,7 @@ export default function Create({ products }) {
                                                             <p className="text-xs text-slate-400">{item.product_sku}</p>
                                                         </div>
                                                         <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500">
-                                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                            <Trash2 className="h-4 w-4" strokeWidth={1.8} />
                                                         </button>
                                                     </div>
                                                     <div className="mt-3 grid grid-cols-3 gap-3">

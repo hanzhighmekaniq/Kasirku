@@ -6,6 +6,7 @@ export default function ConfirmDeleteModal({
     description = 'Tindakan ini tidak dapat dibatalkan.',
     confirmLabel = 'Hapus',
     processing = false,
+    error = '',
     onConfirm,
     onClose,
 }) {
@@ -55,6 +56,9 @@ export default function ConfirmDeleteModal({
                     <div className="min-w-0 flex-1">
                         <h3 className="text-base font-semibold text-slate-900">{title}</h3>
                         <p className="mt-1 text-sm text-slate-500">{description}</p>
+                        {error && (
+                            <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>
+                        )}
                     </div>
                 </div>
                 <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">

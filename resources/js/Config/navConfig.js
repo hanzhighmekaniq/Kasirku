@@ -505,9 +505,9 @@ export function buildNavGroups(modules) {
             {
                 key: "payment-gateways",
                 name: "Payment Gateway",
-                href: r("admin.payment-gateways.index"),
+                href: r("admin.payment-gateway.index"),
                 icon: "paymentGw",
-                current: "admin.payment-gateways.*",
+                current: "admin.payment-gateway.*",
             },
         );
         add(

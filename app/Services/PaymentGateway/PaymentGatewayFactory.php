@@ -10,6 +10,9 @@ class PaymentGatewayFactory
     /** Map provider slug → concrete class */
     private static array $map = [
         'midtrans' => MidtransGateway::class,
+        'xendit' => XenditGateway::class,
+        'doku' => DokuGateway::class,
+        'duitku' => DuitkuGateway::class,
     ];
 
     /**
@@ -19,7 +22,7 @@ class PaymentGatewayFactory
     public static function make(string $provider, int $storeId): PaymentGatewayInterface
     {
         $class = self::$map[$provider] ?? null;
-        if (!$class) {
+        if (! $class) {
             throw new \InvalidArgumentException("Payment gateway provider '{$provider}' not supported.");
         }
 
@@ -32,16 +35,16 @@ class PaymentGatewayFactory
                 ->first()
         );
 
-        if (!$config) {
+        if (! $config) {
             throw new \RuntimeException("Payment gateway '{$provider}' not configured or inactive for store {$storeId}.");
         }
 
         return new $class([
-            'provider'        => $provider,
-            'server_key'      => $config->server_key,
-            'client_key'      => $config->client_key,
-            'merchant_id'     => $config->merchant_id,
-            'environment'     => $config->environment,
+            'provider' => $provider,
+            'server_key' => $config->server_key,
+            'client_key' => $config->client_key,
+            'merchant_id' => $config->merchant_id,
+            'environment' => $config->environment,
             'enabled_methods' => $config->enabled_methods ?? [],
         ]);
     }

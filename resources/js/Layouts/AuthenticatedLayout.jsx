@@ -342,15 +342,22 @@ function NavGroup({
     }
 
     return (
-        <div className="pb-1">
+        <div className="pb-2">
             <button
                 onClick={toggle}
-                className="flex w-full items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400 transition hover:text-slate-500"
+                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-all ${
+                    hasActive
+                        ? "bg-indigo-50/80 text-indigo-600"
+                        : "text-slate-400 hover:bg-slate-50 hover:text-slate-500"
+                }`}
             >
-                <GroupIcons name={group.icon} className="h-3 w-3" />
+                <GroupIcons name={group.icon} className={`h-4 w-4 ${hasActive ? "" : "opacity-60"}`} />
                 <span className="flex-1 text-left">{group.label}</span>
+                {hasActive && !open && (
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
+                )}
                 <svg
-                    className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`}
+                    className={`h-3.5 w-3.5 shrink-0 transition-transform ${hasActive ? "text-indigo-400" : "text-slate-300"} ${open ? "rotate-180" : ""}`}
                     viewBox="0 0 20 20"
                     fill="currentColor"
                 >
@@ -362,7 +369,7 @@ function NavGroup({
                 </svg>
             </button>
             {open && (
-                <div className="mt-0.5 space-y-0.5">
+                <div className="mt-1 space-y-0.5 border-l-2 border-indigo-100 pl-2 ml-4">
                     {group.items.map((item, index) => {
                         // Tambahkan divider sebelum item LOCKED pertama
                         const prevItem = group.items[index - 1];

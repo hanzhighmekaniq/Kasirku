@@ -15,9 +15,9 @@ class StorePaymentGateway extends Model
     ];
 
     protected $casts = [
-        'is_active'       => 'boolean',
+        'is_active' => 'boolean',
         'enabled_methods' => 'array',
-        'config_json'     => 'array',
+        'config_json' => 'array',
     ];
 
     /** Keys yang dienkripsi sebelum disimpan */
@@ -39,8 +39,14 @@ class StorePaymentGateway extends Model
 
     public function getServerKeyAttribute(?string $value): ?string
     {
-        if (!$value) return null;
-        try { return Crypt::decryptString($value); } catch (\Throwable) { return null; }
+        if (! $value) {
+            return null;
+        }
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function setClientKeyAttribute(?string $value): void
@@ -50,8 +56,14 @@ class StorePaymentGateway extends Model
 
     public function getClientKeyAttribute(?string $value): ?string
     {
-        if (!$value) return null;
-        try { return Crypt::decryptString($value); } catch (\Throwable) { return null; }
+        if (! $value) {
+            return null;
+        }
+        try {
+            return Crypt::decryptString($value);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     // ── Helpers ───────────────────────────────────
@@ -60,9 +72,24 @@ class StorePaymentGateway extends Model
     {
         return [
             'midtrans' => [
-                'label'   => 'Midtrans',
-                'logo'    => '🟢',
+                'label' => 'Midtrans',
                 'methods' => ['qris', 'gopay', 'shopeepay', 'dana', 'ovo', 'bca_va', 'mandiri_va', 'bri_va', 'bni_va', 'permata_va'],
+                'fields' => ['server_key', 'client_key', 'merchant_id'],
+            ],
+            'xendit' => [
+                'label' => 'Xendit',
+                'methods' => ['qris', 'bca_va', 'mandiri_va', 'bri_va', 'bni_va', 'gopay', 'ovo', 'dana'],
+                'fields' => ['server_key'],
+            ],
+            'doku' => [
+                'label' => 'DOKU',
+                'methods' => ['qris', 'bca_va', 'mandiri_va', 'bri_va', 'bni_va', 'permata_va'],
+                'fields' => ['client_key', 'server_key'],
+            ],
+            'duitku' => [
+                'label' => 'Duitku',
+                'methods' => ['qris', 'bca_va', 'mandiri_va', 'bri_va', 'bni_va', 'gopay', 'ovo', 'shopeepay'],
+                'fields' => ['server_key', 'merchant_id'],
             ],
         ];
     }

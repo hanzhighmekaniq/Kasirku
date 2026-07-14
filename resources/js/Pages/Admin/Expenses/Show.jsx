@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { ArrowLeft, Check, X, AlertTriangle } from 'lucide-react';
 
 const STATUS_CONFIG = {
     draft: { label: 'Draft', className: 'bg-amber-100 text-amber-700', dotColor: 'bg-amber-500' },
@@ -58,9 +59,7 @@ export default function Show({ expense }) {
                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
                         aria-label="Kembali"
                     >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                        </svg>
+                        <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
                     <h2 className="text-lg font-semibold text-slate-800">Detail Pengeluaran</h2>
                 </div>
@@ -116,18 +115,14 @@ export default function Show({ expense }) {
                                     onClick={() => handleStatusChange('posted')}
                                     className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/30 transition hover:bg-emerald-700"
                                 >
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                    </svg>
+                                    <Check className="h-4 w-4" strokeWidth={2} />
                                     Post
                                 </button>
                                 <button
                                     onClick={() => handleStatusChange('cancelled')}
                                     className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                                 >
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    <X className="h-4 w-4" strokeWidth={2} />
                                     Batalkan
                                 </button>
                             </>
@@ -137,9 +132,7 @@ export default function Show({ expense }) {
                                 onClick={() => handleStatusChange('cancelled')}
                                 className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                             >
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <X className="h-4 w-4" strokeWidth={2} />
                                 Batalkan
                             </button>
                         )}
@@ -155,9 +148,7 @@ export default function Show({ expense }) {
                         href={route('admin.expenses.index')}
                         className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                        </svg>
+                        <ArrowLeft className="h-4 w-4" strokeWidth={1.8} />
                         Kembali ke Daftar
                     </Link>
                 </div>
@@ -174,14 +165,9 @@ export default function Show({ expense }) {
                         <div className="flex items-start gap-4">
                             <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${nextStatus === 'posted' ? 'bg-emerald-100' : 'bg-amber-100'}`}>
                                 {nextStatus === 'posted' ? (
-                                    <svg className="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                    </svg>
+                                    <Check className="h-6 w-6 text-emerald-600" strokeWidth={1.8} />
                                 ) : (
-                                    <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15.75h.007v.008H12v-.008z" />
-                                    </svg>
+                                    <AlertTriangle className="h-6 w-6 text-amber-600" strokeWidth={1.8} />
                                 )}
                             </div>
                             <div className="min-w-0 flex-1">

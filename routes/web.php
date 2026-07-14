@@ -243,7 +243,7 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 Route::post('/payment-gateway/create', [
                     PaymentGatewayController::class,
                     'createTransaction',
-                ])->name('payment-gateway.create');
+                ])->name('payment-gateway.create-transaction');
                 Route::get('/payment-gateway/{pgTrxId}/status', [
                     PaymentGatewayController::class,
                     'checkStatus',
@@ -924,6 +924,47 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 PaymentMethodController::class,
                 'savePgSettings',
             ])->name('payment-methods.pg.save');
+        });
+
+        // ─────────────────────────────────────────────────────────────────
+        // PAYMENT GATEWAY — permission: setting.edit
+        // ─────────────────────────────────────────────────────────────────
+        Route::middleware([
+            'feature:payment_gateway',
+            'permission:setting.edit',
+        ])->group(function () {
+            Route::get('/payment-gateway', [
+                PaymentGatewayController::class,
+                'index',
+            ])->name('payment-gateway.index');
+            Route::get('/payment-gateway/create', [
+                PaymentGatewayController::class,
+                'create',
+            ])->name('payment-gateway.create');
+            Route::post('/payment-gateway', [
+                PaymentGatewayController::class,
+                'store',
+            ])->name('payment-gateway.store');
+            Route::get('/payment-gateway/{store_payment_gateway}/edit', [
+                PaymentGatewayController::class,
+                'edit',
+            ])->name('payment-gateway.edit');
+            Route::put('/payment-gateway/{store_payment_gateway}', [
+                PaymentGatewayController::class,
+                'update',
+            ])->name('payment-gateway.update');
+            Route::delete('/payment-gateway/{store_payment_gateway}', [
+                PaymentGatewayController::class,
+                'destroy',
+            ])->name('payment-gateway.destroy');
+            Route::patch('/payment-gateway/{store_payment_gateway}/toggle', [
+                PaymentGatewayController::class,
+                'toggle',
+            ])->name('payment-gateway.toggle');
+            Route::patch('/payment-gateway/{store_payment_gateway}/env', [
+                PaymentGatewayController::class,
+                'toggleEnv',
+            ])->name('payment-gateway.toggle-env');
         });
 
         // ─────────────────────────────────────────────────────────────────

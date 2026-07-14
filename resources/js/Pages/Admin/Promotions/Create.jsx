@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
+import SectionCard from '@/Components/ui/SectionCard';
 import PromotionForm from './PromotionForm';
 
 export default function Create({ products }) {
@@ -46,26 +47,21 @@ export default function Create({ products }) {
             <Head title="Tambah Promo" />
 
             <div className="mx-auto max-w-2xl">
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
-                        <h3 className="text-base font-semibold text-slate-900">Detail Promo</h3>
-                        <p className="mt-0.5 text-sm text-slate-500">
-                            Buat promo baru untuk meningkatkan penjualan
-                        </p>
-                    </div>
-                    <div className="p-6">
-                        <PromotionForm
-                            data={data}
-                            setData={setData}
-                            errors={errors}
-                            processing={processing}
-                            onSubmit={submit}
-                            submitLabel="Simpan Promo"
-                            cancelHref={route('admin.promotions.index')}
-                            products={products}
-                        />
-                    </div>
-                </div>
+                <SectionCard
+                    title="Detail Promo"
+                    subtitle="Buat promo baru untuk meningkatkan penjualan"
+                >
+                    <PromotionForm
+                        data={data}
+                        setData={setData}
+                        errors={errors}
+                        processing={processing}
+                        onSubmit={submit}
+                        submitLabel="Simpan Promo"
+                        cancelHref={route('admin.promotions.index')}
+                        products={products}
+                    />
+                </SectionCard>
             </div>
         </AuthenticatedLayout>
     );
