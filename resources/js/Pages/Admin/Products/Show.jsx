@@ -2,7 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import QuickStockModal from "@/Components/QuickStockModal";
+import QuickStockModal from "./QuickStockModal";
 import {
     ArrowLeft,
     BarChart3,

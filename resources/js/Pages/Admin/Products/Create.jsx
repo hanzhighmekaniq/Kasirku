@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import BarcodeScanner from "@/Components/BarcodeScanner";
 import TreePicker from "@/Components/TreePicker";
@@ -9,6 +9,7 @@ import {
     ChevronLeft,
     ClipboardList,
     DollarSign,
+    ExternalLink,
     FileText,
     Image,
     Package,
@@ -71,32 +72,6 @@ export default function Create({
 }) {
     const [imagePreview, setImagePreview] = useState(null);
     const [showScanner, setShowScanner] = useState(false);
-    const [showQuickCategory, setShowQuickCategory] = useState(false);
-    const [quickCatName, setQuickCatName] = useState("");
-    const [quickCatParent, setQuickCatParent] = useState("");
-    const [quickCatSubmitting, setQuickCatSubmitting] = useState(false);
-
-    const submitQuickCategory = (e) => {
-        e.preventDefault();
-        if (!quickCatName.trim()) return;
-        setQuickCatSubmitting(true);
-        router.post(route('admin.categories.store'), {
-            name: quickCatName.trim(),
-            parent_id: quickCatParent || undefined,
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: (page) => {
-                setQuickCatName("");
-                setQuickCatParent("");
-                setShowQuickCategory(false);
-                setQuickCatSubmitting(false);
-                const newCat = page.props.categories?.find(c => c.name === quickCatName.trim());
-                if (newCat) setData('category_id', String(newCat.id));
-            },
-            onError: () => setQuickCatSubmitting(false),
-        });
-    };
 
     const { storeTypeFeatures = [] } = usePage().props;
     const has = (f) => storeTypeFeatures.includes(f);
@@ -359,57 +334,14 @@ export default function Create({
                                                 placeholder="Kategori produk..."
                                             />
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowQuickCategory(!showQuickCategory)}
+                                        <Link
+                                            href={route("admin.categories.index")}
                                             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 transition hover:border-indigo-300 hover:text-indigo-600"
-                                            title="Tambah Kategori Baru"
+                                            title="Kelola Kategori"
                                         >
-                                            <Plus className="h-5 w-5" strokeWidth={2} />
-                                        </button>
+                                            <ExternalLink className="h-4 w-4" strokeWidth={2} />
+                                        </Link>
                                     </div>
-                                    {showQuickCategory && (
-                                        <div className="mt-2 rounded-xl border border-indigo-200 bg-indigo-50/50 p-3">
-                                            <p className="mb-2 text-xs font-semibold text-indigo-700">Tambah Kategori Baru</p>
-                                            <div className="flex flex-col gap-2 sm:flex-row">
-                                                <input
-                                                    type="text"
-                                                    value={quickCatName}
-                                                    onChange={(e) => setQuickCatName(e.target.value)}
-                                                    placeholder="Nama kategori..."
-                                                    className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                                                    autoFocus
-                                                />
-                                                <select
-                                                    value={quickCatParent}
-                                                    onChange={(e) => setQuickCatParent(e.target.value)}
-                                                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600"
-                                                >
-                                                    <option value="">Tanpa Parent</option>
-                                                    {categories.map((c) => (
-                                                        <option key={c.id} value={c.id}>{c.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div className="mt-2 flex justify-end gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setShowQuickCategory(false); setQuickCatName(""); }}
-                                                    className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 transition hover:bg-white"
-                                                >
-                                                    Batal
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={submitQuickCategory}
-                                                    disabled={quickCatSubmitting || !quickCatName.trim()}
-                                                    className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
-                                                >
-                                                    {quickCatSubmitting ? "Menyimpan..." : "Simpan"}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
                                 </Field>
                             </div>
                         </SectionCard>

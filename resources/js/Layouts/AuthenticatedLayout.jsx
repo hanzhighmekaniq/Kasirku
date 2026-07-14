@@ -630,7 +630,7 @@ function BranchSwitcher({ currentBranch, branches }) {
 
 /* ─── Sidebar ────────────────────────────────────────────────── */
 function SidebarContent({ collapsed, onNavigate }) {
-    const { currentStore, userStores } = usePage().props;
+
     const modules = useStoreModules();
     const groups = buildNavGroups(modules);
     const { customOrder, saveGroupOrder } = useSidebarOrder();
@@ -667,15 +667,6 @@ function SidebarContent({ collapsed, onNavigate }) {
         return () => document.removeEventListener("keydown", handler);
     }, [reorderMode]);
 
-    /** Helper: extract store type code as string, whether accessor returns string or object */
-    const storeTypeCode = (() => {
-        const st =
-            currentStore?.store_type ?? currentStore?.storeType ?? "retail";
-        if (typeof st === "string") return st;
-        if (st && typeof st === "object") return st?.code ?? "retail";
-        return "retail";
-    })();
-
     return (
         <div className="flex h-full flex-col overflow-hidden bg-white border-r border-slate-200">
             {/* Brand */}
@@ -700,51 +691,6 @@ function SidebarContent({ collapsed, onNavigate }) {
                 </div>
             </div>
 
-            {/* Store info */}
-            {currentStore && (
-                <div
-                    className={`mx-3 mt-3 shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-50 transition-all duration-300 ease-in-out ${collapsed ? "max-h-0 opacity-0 mt-0 border-0" : "max-h-24 opacity-100"}`}
-                >
-                    <div className="px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-100 text-xs font-bold text-indigo-600">
-                                {currentStore.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="truncate text-xs font-semibold text-slate-700">
-                                    {currentStore.name}
-                                </p>
-                                <span
-                                    className={`mt-0.5 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium ${TYPE_COLOR[storeTypeCode] ?? TYPE_COLOR.retail}`}
-                                >
-                                    {TYPE_LABEL[storeTypeCode] ?? storeTypeCode}
-                                </span>
-                            </div>
-                            {userStores?.length > 1 && (
-                                <Link
-                                    href={route("admin.store.select")}
-                                    title="Ganti Toko"
-                                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-slate-200 hover:text-slate-600"
-                                >
-                                    <svg
-                                        className="h-3.5 w-3.5"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        strokeWidth={2}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
-                                        />
-                                    </svg>
-                                </Link>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Nav */}
             <nav
