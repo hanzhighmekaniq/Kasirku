@@ -903,6 +903,15 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 SettingController::class,
                 'update',
             ])->name('settings.update');
+
+        });
+        Route::middleware([
+            'feature:sidebar_order',
+            'permission:setting.edit',
+        ])->group(function () {
+            Route::get('/sidebar-order', function () {
+                return inertia('Admin/Settings/SidebarOrder');
+            })->name('sidebar-order');
         });
         Route::middleware([
             'feature:payment_method',

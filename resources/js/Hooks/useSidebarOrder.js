@@ -1,7 +1,8 @@
 import { usePage } from "@inertiajs/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 const STORAGE_PREFIX = "sidebar-order-";
+const CHANGE_EVENT = "sidebar-order-changed";
 
 /**
  * Hook untuk menyimpan dan mengelola custom ordering sidebar per user.
@@ -14,18 +15,60 @@ export function useSidebarOrder() {
     const userId = auth?.user?.id ?? "guest";
     const storageKey = STORAGE_PREFIX + userId;
 
-    const [customOrder, setCustomOrder] = useState(() => {
+    const readFromStorage = () => {
         try {
             return JSON.parse(localStorage.getItem(storageKey)) || {};
         } catch {
             return {};
         }
-    });
+    };
+
+    const [customOrder, setCustomOrder] = useState(readFromStorage);
+
+    // Listen for changes from other pages / other tabs
+    useEffect(() => {
+        const handleStorage = (e) => {
+            if (e.key === storageKey) {
+                setCustomOrder(readFromStorage());
+            }
+        };
+
+        const handleCustomEvent = () => {
+            setCustomOrder(readFromStorage());
+        };
+
+        window.addEventListener("storage", handleStorage);
+        window.addEventListener(CHANGE_EVENT, handleCustomEvent);
+
+        return () => {
+            window.removeEventListener("storage", handleStorage);
+            window.removeEventListener(CHANGE_EVENT, handleCustomEvent);
+        };
+    }, [storageKey]);
+
+    // Notify other listeners when we write
+    const notify = () => {
+        window.dispatchEvent(new Event(CHANGE_EVENT));
+    };
 
     /** Ambil custom order untuk sebuah group */
     const getGroupOrder = useCallback(
         (groupKey) => customOrder[groupKey] || [],
         [customOrder],
+    );
+
+    /** Simpan full order array untuk sebuah group */
+    const saveGroupOrder = useCallback(
+        (groupKey, newOrder) => {
+            setCustomOrder((prev) => {
+                const next = { ...prev, [groupKey]: newOrder };
+                localStorage.setItem(storageKey, JSON.stringify(next));
+                return next;
+            });
+            // Notify after state update (use setTimeout to let React batch)
+            setTimeout(notify, 0);
+        },
+        [storageKey],
     );
 
     /** Pindahkan item dalam group (reorder via drag & drop) */
@@ -49,11 +92,12 @@ export function useSidebarOrder() {
                 localStorage.setItem(storageKey, JSON.stringify(next));
                 return next;
             });
+            setTimeout(notify, 0);
         },
         [storageKey],
     );
 
-    return { customOrder, getGroupOrder, moveItem };
+    return { customOrder, getGroupOrder, saveGroupOrder, moveItem };
 }
 
 /**

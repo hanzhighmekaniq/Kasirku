@@ -13,8 +13,8 @@ use Symfony\Component\HttpFoundation\Response;
  * Kasir: branch dari employee record (wajib ada).
  * Owner/role lain:
  *   - Single branch → auto-set
- *   - Multi branch → redirect ke select-branch jika belum pilih
- *     (kecuali sudah di halaman select-branch itu sendiri)
+ *   - Multi branch → auto-set branch PERTAMA (bisa ganti dari topbar)
+ *   - Tanpa branch → biarkan (store tanpa cabang)
  */
 class BranchMiddleware
 {
@@ -31,6 +31,7 @@ class BranchMiddleware
         'admin.profile.update',
         'admin.profile.destroy',
         'admin.activity-logs.index',
+        'sidebar-order',
     ];
 
     public function handle(Request $request, Closure $next): Response
@@ -50,7 +51,7 @@ class BranchMiddleware
         $branchId = $request->session()->get('current_branch_id')
                  ?? $request->session()->get('branch_id');
 
-        // ── User tanpa sale.void (kasir): branch wajib dari employee record ──
+        // ── Kasir (tanpa sale.void): branch dari employee record ──
         if (!$user->can('sale.void') && !$branchId) {
             $empBranch = $user->employee?->branch_id;
             if (!$empBranch) {
@@ -77,33 +78,18 @@ class BranchMiddleware
             }
         }
 
-        // ── Owner/role lain: resolve branch ───────────────────────────
+        // ── Auto-set branch ──────────────────────────────────────────
         if ($storeId && !$branchId) {
             $branches = Branch::where('store_id', $storeId)
                 ->where('is_active', true)
+                ->orderBy('id')
                 ->get(['id']);
 
-            if ($branches->count() === 1) {
-                // Satu cabang → auto-set
+            if ($branches->count() >= 1) {
+                // Auto-set branch pertama — user bisa ganti dari topbar
                 $branchId = $branches->first()->id;
                 $request->session()->put('current_branch_id', $branchId);
                 $request->session()->put('branch_id', $branchId);
-            } elseif ($branches->count() > 1) {
-                // Multi-branch & belum pilih — redirect ke select-branch
-                // kecuali sedang di route yang exempt
-                $currentRoute = $request->route()?->getName() ?? '';
-                $isExempt     = in_array($currentRoute, self::BRANCH_EXEMPT_ROUTES, true)
-                    || str_starts_with($currentRoute, 'admin.branch.')
-                    || str_starts_with($currentRoute, 'admin.store.');
-
-                if (!$isExempt) {
-                    // Simpan intended URL supaya balik ke sini setelah pilih cabang
-                    $request->session()->put('url.intended', $request->url());
-
-                    return redirect()->route('admin.branch.select');
-                }
-                // Kalau exempt → biarkan branchId null, halaman tersebut
-                // tidak butuh branch spesifik
             }
             // count = 0 → store tanpa cabang, biarkan null
         }

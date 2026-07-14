@@ -27,6 +27,7 @@ class StoreMiddleware
         "admin.profile.update",
         "admin.profile.destroy",
         "admin.activity-logs.index",
+        "sidebar-order",
     ];
 
     public function handle(Request $request, Closure $next): Response

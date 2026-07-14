@@ -10,6 +10,7 @@ import {
     applyCustomOrderToItems,
 } from "@/Hooks/useSidebarOrder";
 import { NavIcons, GroupIcons } from "@/Components/NavIcons";
+import { Check, GripVertical } from "lucide-react";
 
 /* ─── Type-mismatch modal ───────────────────────────────────── */
 /**
@@ -149,24 +150,11 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
         return (
             <div
                 draggable
-                onDragStart={(e) =>
-                    onDragStart && onDragStart(e, item.key)
-                }
+                onDragStart={(e) => onDragStart && onDragStart(e, item.key)}
                 className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition cursor-grab active:cursor-grabbing text-slate-500 hover:bg-slate-50 hover:text-slate-700 select-none"
             >
-                <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded text-slate-300 group-hover:text-slate-500 transition">
-                    <svg
-                        className="h-3.5 w-3.5"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                    >
-                        <circle cx="9" cy="5" r="1.5" />
-                        <circle cx="15" cy="5" r="1.5" />
-                        <circle cx="9" cy="12" r="1.5" />
-                        <circle cx="15" cy="12" r="1.5" />
-                        <circle cx="9" cy="19" r="1.5" />
-                        <circle cx="15" cy="19" r="1.5" />
-                    </svg>
+                <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded text-slate-300 group-hover:text-slate-600 transition">
+                    <GripVertical className="h-4 w-4" strokeWidth={1.8} />
                 </span>
                 <span className="flex-1 truncate text-[13px] font-medium">
                     {item.name}
@@ -216,14 +204,22 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
             >
                 <NavIcons name={item.icon} className="h-[15px] w-[15px]" />
             </span>
-            {!collapsed && (
-                <span className="flex-1 truncate text-[13px] font-medium">{item.name}</span>
+            <span
+                className={`flex-1 truncate text-[13px] font-medium transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"}`}
+            >
+                {item.name}
+            </span>
+            {item.badge && (
+                <span
+                    className={`shrink-0 transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"}`}
+                >
+                    <Badge label={item.badge} color={item.badgeColor} />
+                </span>
             )}
-            {!collapsed && item.badge && (
-                <Badge label={item.badge} color={item.badgeColor} />
-            )}
-            {active && !collapsed && (
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
+            {active && (
+                <span
+                    className={`h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500 transition-all duration-300 ease-in-out ${collapsed ? "opacity-0" : "opacity-100"}`}
+                />
             )}
         </>
     );
@@ -243,13 +239,7 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
 }
 
 /* ─── Nav group ──────────────────────────────────────────────── */
-function NavGroup({
-    group,
-    collapsed,
-    onNavigate,
-    reorderMode,
-    onReorder,
-}) {
+function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
     const hasActive = group.items.some((i) => route().current(i.current));
     const [open, setOpen] = useState(() => {
         if (hasActive) return true;
@@ -290,9 +280,7 @@ function NavGroup({
         const targetKey = e.currentTarget.dataset.itemKey;
 
         const unlockedItems = group.items.filter((i) => !i.locked);
-        const fromIndex = unlockedItems.findIndex(
-            (i) => i.key === draggedKey,
-        );
+        const fromIndex = unlockedItems.findIndex((i) => i.key === draggedKey);
         if (fromIndex === -1) return;
 
         const targetItem = group.items.find((i) => i.key === targetKey);
@@ -351,7 +339,10 @@ function NavGroup({
                         : "text-slate-400 hover:bg-slate-50 hover:text-slate-500"
                 }`}
             >
-                <GroupIcons name={group.icon} className={`h-4 w-4 ${hasActive ? "" : "opacity-60"}`} />
+                <GroupIcons
+                    name={group.icon}
+                    className={`h-4 w-4 ${hasActive ? "" : "opacity-60"}`}
+                />
                 <span className="flex-1 text-left">{group.label}</span>
                 {hasActive && !open && (
                     <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
@@ -388,18 +379,12 @@ function NavGroup({
                                 key={item.key}
                                 data-item-key={item.key}
                                 onDragOver={
-                                    reorderMode
-                                        ? handleDragOver
-                                        : undefined
+                                    reorderMode ? handleDragOver : undefined
                                 }
                                 onDragLeave={
-                                    reorderMode
-                                        ? handleDragLeave
-                                        : undefined
+                                    reorderMode ? handleDragLeave : undefined
                                 }
-                                onDrop={
-                                    reorderMode ? handleDrop : undefined
-                                }
+                                onDrop={reorderMode ? handleDrop : undefined}
                                 className={`${showDropAbove ? "border-t-2 border-indigo-500" : ""} ${showDropBelow ? "border-b-2 border-indigo-500" : ""}`}
                             >
                                 {showDivider && (
@@ -672,6 +657,16 @@ function SidebarContent({ collapsed, onNavigate }) {
         }
     }, []);
 
+    // Escape key to exit reorder mode
+    useEffect(() => {
+        if (!reorderMode) return;
+        const handler = (e) => {
+            if (e.key === "Escape") setReorderMode(false);
+        };
+        document.addEventListener("keydown", handler);
+        return () => document.removeEventListener("keydown", handler);
+    }, [reorderMode]);
+
     /** Helper: extract store type code as string, whether accessor returns string or object */
     const storeTypeCode = (() => {
         const st =
@@ -692,57 +687,61 @@ function SidebarContent({ collapsed, onNavigate }) {
                         <ApplicationLogo className="h-4 w-4 fill-current text-white" />
                         <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-white bg-emerald-400" />
                     </div>
-                    {!collapsed && (
-                        <div className="leading-none">
-                            <span className="block text-[13px] font-bold tracking-tight text-slate-800">
-                                SIM-KASIR
-                            </span>
-                            <span className="block text-[10px] text-slate-400">
-                                Point of Sale
-                            </span>
-                        </div>
-                    )}
+                    <div
+                        className={`leading-none transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0 overflow-hidden ml-0" : "opacity-100 w-auto ml-1"}`}
+                    >
+                        <span className="block text-[13px] font-bold tracking-tight text-slate-800 whitespace-nowrap">
+                            SIM-KASIR
+                        </span>
+                        <span className="block text-[10px] text-slate-400 whitespace-nowrap">
+                            Point of Sale
+                        </span>
+                    </div>
                 </div>
             </div>
 
             {/* Store info */}
-            {!collapsed && currentStore && (
-                <div className="mx-3 mt-3 shrink-0 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-100 text-xs font-bold text-indigo-600">
-                            {currentStore.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-semibold text-slate-700">
-                                {currentStore.name}
-                            </p>
-                            <span
-                                className={`mt-0.5 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium ${TYPE_COLOR[storeTypeCode] ?? TYPE_COLOR.retail}`}
-                            >
-                                {TYPE_LABEL[storeTypeCode] ?? storeTypeCode}
-                            </span>
-                        </div>
-                        {userStores?.length > 1 && (
-                            <Link
-                                href={route("admin.store.select")}
-                                title="Ganti Toko"
-                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-slate-200 hover:text-slate-600"
-                            >
-                                <svg
-                                    className="h-3.5 w-3.5"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
+            {currentStore && (
+                <div
+                    className={`mx-3 mt-3 shrink-0 overflow-hidden rounded-lg border border-slate-100 bg-slate-50 transition-all duration-300 ease-in-out ${collapsed ? "max-h-0 opacity-0 mt-0 border-0" : "max-h-24 opacity-100"}`}
+                >
+                    <div className="px-3 py-2.5">
+                        <div className="flex items-center gap-2">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-100 text-xs font-bold text-indigo-600">
+                                {currentStore.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-semibold text-slate-700">
+                                    {currentStore.name}
+                                </p>
+                                <span
+                                    className={`mt-0.5 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium ${TYPE_COLOR[storeTypeCode] ?? TYPE_COLOR.retail}`}
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
-                                    />
-                                </svg>
-                            </Link>
-                        )}
+                                    {TYPE_LABEL[storeTypeCode] ?? storeTypeCode}
+                                </span>
+                            </div>
+                            {userStores?.length > 1 && (
+                                <Link
+                                    href={route("admin.store.select")}
+                                    title="Ganti Toko"
+                                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+                                >
+                                    <svg
+                                        className="h-3.5 w-3.5"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        strokeWidth={2}
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
+                                        />
+                                    </svg>
+                                </Link>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -759,6 +758,13 @@ function SidebarContent({ collapsed, onNavigate }) {
                 className="flex-1 overflow-y-auto px-2 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
                 <div className="space-y-0.5">
+                    {reorderMode && (
+                        <div className="mb-2 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-center">
+                            <p className="text-[10px] font-medium text-indigo-600">
+                                Drag & drop untuk mengatur urutan menu
+                            </p>
+                        </div>
+                    )}
                     {orderedGroups.map((group) => (
                         <NavGroup
                             key={group.key}
@@ -773,30 +779,15 @@ function SidebarContent({ collapsed, onNavigate }) {
             </nav>
 
             {/* Footer */}
-            {!collapsed && (
-                <div className="shrink-0 border-t border-slate-100 px-4 py-2.5">
-                    <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-slate-400">
-                            © {new Date().getFullYear()} SIM-KASIR
-                        </span>
-                        <button
-                            onClick={() => setReorderMode(!reorderMode)}
-                            className={`text-[10px] transition ${
-                                reorderMode
-                                    ? "font-medium text-indigo-600"
-                                    : "text-slate-400 hover:text-indigo-500"
-                            }`}
-                            title={
-                                reorderMode
-                                    ? "Selesai atur menu"
-                                    : "Atur urutan menu"
-                            }
-                        >
-                            {reorderMode ? "✓ Selesai" : "✎ Atur"}
-                        </button>
-                    </div>
+            <div
+                className={`shrink-0 overflow-hidden border-t border-slate-100 transition-all duration-300 ease-in-out ${collapsed ? "max-h-0 opacity-0 border-t-0" : "max-h-10 opacity-100"}`}
+            >
+                <div className="px-4 py-2.5 text-center">
+                    <span className="text-[10px] text-slate-400">
+                        © {new Date().getFullYear()} SIM-KASIR
+                    </span>
                 </div>
-            )}
+            </div>
         </div>
     );
 }
@@ -856,7 +847,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
             {/* Desktop sidebar */}
             <aside
-                className={`fixed inset-y-0 left-0 z-30 hidden overflow-hidden transition-all duration-200 lg:block ${sidebarW}`}
+                className={`fixed inset-y-0 left-0 z-30 hidden overflow-hidden transition-[width] duration-300 ease-in-out lg:block ${sidebarW}`}
             >
                 <SidebarContent collapsed={collapsed} onNavigate={onNavigate} />
             </aside>
@@ -870,7 +861,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     className={`absolute inset-0 bg-black/20 backdrop-blur-[2px] transition-opacity ${sidebarOpen ? "opacity-100" : "opacity-0"}`}
                 />
                 <aside
-                    className={`absolute inset-y-0 left-0 w-[220px] overflow-hidden shadow-xl transition-transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+                    className={`absolute inset-y-0 left-0 w-[220px] overflow-hidden shadow-xl transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
                 >
                     <SidebarContent collapsed={false} onNavigate={onNavigate} />
                 </aside>
@@ -878,7 +869,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
             {/* Main */}
             <div
-                className={`flex min-h-screen flex-col transition-all duration-200 ${collapsed ? "lg:pl-[60px]" : "lg:pl-[220px]"}`}
+                className={`flex min-h-screen flex-col transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-[60px]" : "lg:pl-[220px]"}`}
             >
                 {/* Topbar */}
                 <header className="sticky top-0 z-20 flex h-[57px] items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-5   ">

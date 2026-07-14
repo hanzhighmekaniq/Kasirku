@@ -156,6 +156,8 @@ export function buildNavGroups(modules) {
         lockedRoleManagement,
         hasActivityLog,
         lockedActivityLog,
+        hasSidebarOrder,
+        lockedSidebarOrder,
     } = modules;
 
     /* Normalize ke bentuk sederhana — semua fitur gated murni oleh hasFeature (type + plan) */
@@ -580,6 +582,18 @@ export function buildNavGroups(modules) {
                 href: r("admin.activity-logs.index"),
                 icon: "log",
                 current: "admin.activity-logs.*",
+            },
+        );
+        add(
+            items,
+            (hasSidebarOrder || lockedSidebarOrder) && can("setting.edit"),
+            hasSidebarOrder && can("setting.edit"),
+            {
+                key: "sidebar-order",
+                name: "Urutan Sidebar",
+                href: r("sidebar-order"),
+                icon: "list",
+                current: "sidebar-order",
             },
         );
         if (items.length > 0)

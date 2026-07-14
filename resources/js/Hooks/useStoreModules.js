@@ -120,6 +120,7 @@ export function useStoreModules() {
     const lockedUserManagement = isFeatureLocked("user_management");
     const lockedRoleManagement = isFeatureLocked("role_management");
     const lockedActivityLog = isFeatureLocked("activity_log");
+    const lockedSidebarOrder = isFeatureLocked("sidebar_order");
 
     // Operasional mode-specific — mode flag hanya untuk badge/cosmetics
     const needsTable = hasFeature("table");
@@ -160,6 +161,7 @@ export function useStoreModules() {
     const hasUserManagement = hasFeature("user_management");
     const hasRoleManagement = hasFeature("role_management");
     const hasActivityLog = hasFeature("activity_log");
+    const hasSidebarOrder = hasFeature("sidebar_order");
 
     // Backward-compat aliases (masih dipakai kode lama)
     const needsStock_compat = needsStock;
@@ -232,6 +234,7 @@ export function useStoreModules() {
         hasUserManagement,
         hasRoleManagement,
         hasActivityLog,
+        hasSidebarOrder,
         // Locked flags
         lockedDashboard,
         lockedPos,
@@ -267,6 +270,7 @@ export function useStoreModules() {
         lockedUserManagement,
         lockedRoleManagement,
         lockedActivityLog,
+        lockedSidebarOrder,
         // Backward-compat
         needsStock: needsStock_compat,
         needsSupplier: needsSupplier_compat,
