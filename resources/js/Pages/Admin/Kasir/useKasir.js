@@ -381,18 +381,22 @@ export default function useKasir({
         variant = null,
         modifiers = [],
         itemNote = "",
+        packagingUnit = null,
     ) => {
-        const price = variant
-            ? Number(variant.price)
-            : Number(product.sell_price);
+        const price = packagingUnit
+            ? Number(packagingUnit.sell_price)
+            : variant
+              ? Number(variant.price)
+              : Number(product.sell_price);
         const modExtra = modifiers.reduce(
             (s, m) => s + (m.price_addition ?? 0),
             0,
         );
         const effectivePrice = price + modExtra;
 
-        // find existing identical item (same product+variant+modifiers)
-        const key = `${product.id}-${variant?.id ?? 0}-${JSON.stringify(modifiers)}`;
+        // find existing identical item (same product+variant+modifiers+unit)
+        const unitId = packagingUnit?.id ?? 0;
+        const key = `${product.id}-${variant?.id ?? 0}-${unitId}-${JSON.stringify(modifiers)}`;
         const existing = cart.find((c) => c.key === key && c.note === itemNote);
 
         if (existing) {
@@ -409,6 +413,9 @@ export default function useKasir({
                 key,
                 productId: product.id,
                 variantId: variant?.id ?? null,
+                packagingUnitId: packagingUnit?.id ?? null,
+                packagingUnitName: packagingUnit?.name ?? null,
+                conversionQty: packagingUnit?.conversion_qty ?? 1,
                 name: product.name,
                 variantName: variant?.name ?? null,
                 price: effectivePrice,
@@ -506,6 +513,20 @@ export default function useKasir({
                     );
                     playBeep();
                     addToCart(p, variant);
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        // 3. Cari packaging unit (barcode di packaging unit)
+        if (!found) {
+            for (const p of products) {
+                const pu = p.packaging_units?.find((u) => u.barcode === barcode);
+                if (pu) {
+                    console.log("[Scan] Packaging unit ketemu:", p.name, "-", pu.name);
+                    playBeep();
+                    addToCart(p, null, [], "", pu);
                     found = true;
                     break;
                 }
@@ -706,6 +727,9 @@ export default function useKasir({
             items: cart.map((c) => ({
                 product_id: c.productId,
                 variant_id: c.variantId,
+                packaging_unit_id: c.packagingUnitId || null,
+                unit_name: c.packagingUnitName || null,
+                unit_conversion_qty: c.conversionQty || 1,
                 quantity: c.qty,
                 price: Number(product_sell_price(c)),
                 discount_amount: 0,
@@ -1419,6 +1443,10 @@ export default function useKasir({
     // helper: original base price (without modifier)
     function product_sell_price(cartItem) {
         const prod = products.find((p) => p.id === cartItem.productId);
+        if (cartItem.packagingUnitId) {
+            const pu = prod?.packaging_units?.find((u) => u.id === cartItem.packagingUnitId);
+            if (pu) return Number(pu.sell_price);
+        }
         const vari = prod?.variants?.find((v) => v.id === cartItem.variantId);
         return vari
             ? Number(vari.price)

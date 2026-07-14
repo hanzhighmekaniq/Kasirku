@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SaleItem extends Model
@@ -11,16 +11,17 @@ class SaleItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sale_id', 'product_id', 'variant_id', 'product_batch_id',
+        'sale_id', 'product_id', 'variant_id', 'packaging_unit_id',
+        'unit_name', 'unit_conversion_qty', 'product_batch_id',
         'promotion_id', 'quantity', 'price', 'discount_amount', 'promo_discount', 'subtotal',
         'modifiers', 'recipe_snapshot', 'ingredient_cost', 'notes',
     ];
 
     protected $casts = [
-        'modifiers'       => 'array',
+        'modifiers' => 'array',
         'recipe_snapshot' => 'array',
         'ingredient_cost' => 'decimal:2',
-        'promo_discount'  => 'decimal:2',
+        'promo_discount' => 'decimal:2',
     ];
 
     public function sale(): BelongsTo
@@ -46,5 +47,10 @@ class SaleItem extends Model
     public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class);
+    }
+
+    public function packagingUnit(): BelongsTo
+    {
+        return $this->belongsTo(ProductPackagingUnit::class);
     }
 }

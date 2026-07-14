@@ -10,7 +10,7 @@ import {
     applyCustomOrderToItems,
 } from "@/Hooks/useSidebarOrder";
 import { NavIcons, GroupIcons } from "@/Components/NavIcons";
-import { Check, GripVertical } from "lucide-react";
+import { Check, GripVertical, Search, Moon, Sun, Settings, LogOut, User } from "lucide-react";
 
 /* ─── Type-mismatch modal ───────────────────────────────────── */
 /**
@@ -122,6 +122,16 @@ const TYPE_LABEL = {
     session: "Rental",
     parking: "Parkir",
 };
+const TYPE_ICON = {
+    retail: "🏪",
+    fnb: "☕",
+    service: "✂️",
+    rental: "🔑",
+    ticket: "🎟️",
+    hospitality: "🏨",
+    parking: "🅿️",
+    session: "🎮",
+};
 
 /* ─── Badge ─────────────────────────────────────────────────── */
 const BADGE_BG = {
@@ -151,10 +161,10 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
             <div
                 draggable
                 onDragStart={(e) => onDragStart && onDragStart(e, item.key)}
-                className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition cursor-grab active:cursor-grabbing text-slate-500 hover:bg-slate-50 hover:text-slate-700 select-none"
+                className="group flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition cursor-grab active:cursor-grabbing text-slate-500 hover:bg-slate-100 hover:text-slate-700 select-none"
             >
-                <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded text-slate-300 group-hover:text-slate-600 transition">
-                    <GripVertical className="h-4 w-4" strokeWidth={1.8} />
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-300 group-hover:text-slate-600 transition">
+                    <GripVertical className="h-4 w-4" strokeWidth={2} />
                 </span>
                 <span className="flex-1 truncate text-[13px] font-medium">
                     {item.name}
@@ -166,16 +176,36 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
         );
     }
 
-    if (locked) {
-        // ── Locked item: transparan, tidak bisa diklik, teks "🔓 Upgrade Plan" ──
+    if (collapsed) {
+        // ── Collapsed: ikon presisi center, tinggi konsisten ──
         return (
-            <div
-                className={`group relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition cursor-not-allowed ${
-                    collapsed ? "justify-center" : ""
-                }`}
-                title="🔓 Upgrade Plan untuk mengakses fitur ini"
+            <Link
+                href={locked ? "#" : item.href}
+                onClick={locked ? (e) => e.preventDefault() : onClick}
+                title={item.name}
+                className={`group relative flex h-9 w-full items-center justify-center rounded-lg transition-all
+                    ${locked
+                        ? "cursor-not-allowed text-slate-300"
+                        : active
+                          ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200/50"
+                          : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"}`}
             >
-                <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md text-slate-300">
+                {/* Active left indicator */}
+                {active && !locked && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-white" />
+                )}
+                <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
+                    <NavIcons name={item.icon} className="h-[17px] w-[17px]" />
+                </span>
+            </Link>
+        );
+    }
+
+    // ── Locked item (expanded) ──
+    if (locked) {
+        return (
+            <div className="group relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left transition cursor-not-allowed" title="🔓 Upgrade Plan untuk mengakses fitur ini">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-slate-300">
                     <NavIcons name={item.icon} className="h-[15px] w-[15px]" />
                 </span>
                 {!collapsed && (
@@ -184,7 +214,7 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
                     </span>
                 )}
                 {!collapsed && (
-                    <span className="shrink-0 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600">
+                    <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
                         🔓
                     </span>
                 )}
@@ -196,10 +226,10 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
     const content = (
         <>
             <span
-                className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md transition ${
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition ${
                     active
-                        ? "text-indigo-600"
-                        : "text-slate-400 group-hover:text-slate-600"
+                        ? "text-white"
+                        : "text-slate-500 group-hover:text-indigo-600"
                 }`}
             >
                 <NavIcons name={item.icon} className="h-[15px] w-[15px]" />
@@ -216,11 +246,6 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
                     <Badge label={item.badge} color={item.badgeColor} />
                 </span>
             )}
-            {active && (
-                <span
-                    className={`h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500 transition-all duration-300 ease-in-out ${collapsed ? "opacity-0" : "opacity-100"}`}
-                />
-            )}
         </>
     );
 
@@ -229,9 +254,11 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
             href={item.href}
             onClick={onClick}
             title={collapsed ? item.name : undefined}
-            className={`group flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-all
-                ${active ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}
-                ${collapsed ? "justify-center px-2" : ""}`}
+            className={`group flex items-center gap-2.5 rounded-lg px-1 py-2.5 transition-all
+                ${active 
+                    ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-200/50" 
+                    : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"}
+                ${collapsed ? "justify-center px-0" : ""}`}
         >
             {content}
         </Link>
@@ -271,7 +298,7 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
     };
 
     const handleDragLeave = () => {
-        setDragOverKey(null);
+        setDragOverKey(null);perbaiki 
     };
 
     const handleDrop = (e) => {
@@ -314,8 +341,8 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
 
     if (collapsed) {
         return (
-            <div className="space-y-0.5 pb-1">
-                <div className="my-2 mx-3 h-px bg-slate-100" />
+            <div className="space-y-0.5 pb-1.5">
+                <div className="my-2 mx-auto w-6 h-px bg-slate-200/60" />
                 {group.items.map((item) => (
                     <NavItem
                         key={item.key}
@@ -333,22 +360,22 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
         <div className="pb-2">
             <button
                 onClick={toggle}
-                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-all ${
+                className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
                     hasActive
-                        ? "bg-indigo-50/80 text-indigo-600"
-                        : "text-slate-400 hover:bg-slate-50 hover:text-slate-500"
+                        ? "bg-indigo-50 text-indigo-700"
+                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
                 }`}
             >
                 <GroupIcons
                     name={group.icon}
-                    className={`h-4 w-4 ${hasActive ? "" : "opacity-60"}`}
+                    className={`h-3.5 w-3.5 ${hasActive ? "text-indigo-600" : "text-slate-400"}`}
                 />
                 <span className="flex-1 text-left">{group.label}</span>
-                {hasActive && !open && (
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
-                )}
+                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${hasActive ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-500"}`}>
+                    {group.items.filter(i => !i.locked).length}
+                </span>
                 <svg
-                    className={`h-3.5 w-3.5 shrink-0 transition-transform ${hasActive ? "text-indigo-400" : "text-slate-300"} ${open ? "rotate-180" : ""}`}
+                    className={`h-3 w-3 shrink-0 transition-transform ${hasActive ? "text-indigo-500" : "text-slate-400"} ${open ? "rotate-180" : ""}`}
                     viewBox="0 0 20 20"
                     fill="currentColor"
                 >
@@ -360,7 +387,7 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                 </svg>
             </button>
             {open && (
-                <div className="mt-1 space-y-0.5 border-l-2 border-indigo-100 pl-2 ml-4">
+                <div className="mt-1 space-y-0.5 ml-2 pl-3 border-l-2 border-slate-200">
                     {group.items.map((item, index) => {
                         // Tambahkan divider sebelum item LOCKED pertama
                         const prevItem = group.items[index - 1];
@@ -388,12 +415,12 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                                 className={`${showDropAbove ? "border-t-2 border-indigo-500" : ""} ${showDropBelow ? "border-b-2 border-indigo-500" : ""}`}
                             >
                                 {showDivider && (
-                                    <div className="my-2 flex items-center gap-2 px-2.5">
-                                        <div className="h-px flex-1 bg-slate-100" />
-                                        <span className="text-[10px] font-medium text-slate-400">
-                                            🔒 Upgrade Plan
+                                    <div className="my-2 flex items-center gap-2 px-3">
+                                        <div className="h-px flex-1 bg-slate-200" />
+                                        <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                                            🔒 PREMIUM
                                         </span>
-                                        <div className="h-px flex-1 bg-slate-100" />
+                                        <div className="h-px flex-1 bg-slate-200" />
                                     </div>
                                 )}
                                 <NavItem
@@ -629,12 +656,20 @@ function BranchSwitcher({ currentBranch, branches }) {
 }
 
 /* ─── Sidebar ────────────────────────────────────────────────── */
-function SidebarContent({ collapsed, onNavigate }) {
+function SidebarContent({ collapsed, onNavigate, user, currentStore }) {
 
     const modules = useStoreModules();
     const groups = buildNavGroups(modules);
     const { customOrder, saveGroupOrder } = useSidebarOrder();
     const [reorderMode, setReorderMode] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [darkMode, setDarkMode] = useState(() => {
+        try {
+            return localStorage.getItem("theme") === "dark";
+        } catch {
+            return false;
+        }
+    });
     const navRef = useRef(null);
 
     // Apply custom ordering — unlocked items ikut urutan user, locked tetap di bawah
@@ -648,6 +683,26 @@ function SidebarContent({ collapsed, onNavigate }) {
 
     const handleReorder = (groupKey, newOrder) => {
         saveGroupOrder(groupKey, newOrder);
+    };
+
+    // Filter groups berdasarkan search query
+    const filteredGroups = searchQuery.trim() 
+        ? orderedGroups.map(group => ({
+            ...group,
+            items: group.items.filter(item => 
+                item.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+        })).filter(group => group.items.length > 0)
+        : orderedGroups;
+
+    const toggleTheme = () => {
+        const next = !darkMode;
+        setDarkMode(next);
+        try {
+            localStorage.setItem("theme", next ? "dark" : "light");
+            // Implementasi dark mode bisa ditambahkan di root
+            document.documentElement.classList.toggle("dark", next);
+        } catch {}
     };
 
     useEffect(() => {
@@ -667,30 +722,81 @@ function SidebarContent({ collapsed, onNavigate }) {
         return () => document.removeEventListener("keydown", handler);
     }, [reorderMode]);
 
+    const TYPE_COLOR_MAPS = {
+        retail: "bg-blue-100 text-blue-700",
+        fnb: "bg-orange-100 text-orange-700",
+        service: "bg-violet-100 text-violet-700",
+        rental: "bg-yellow-100 text-yellow-700",
+        ticket: "bg-rose-100 text-rose-700",
+        hospitality: "bg-amber-100 text-amber-700",
+    };
+
     return (
-        <div className="flex h-full flex-col overflow-hidden bg-white border-r border-slate-200">
+        <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-slate-50 to-white border-r border-slate-200">
             {/* Brand */}
             <div
-                className={`flex h-[57px] shrink-0 items-center border-b border-slate-100 ${collapsed ? "justify-center px-3" : "px-4"}`}
+                className={`flex h-[68px] shrink-0 items-center border-b border-slate-100 bg-white/80 backdrop-blur-sm ${collapsed ? "justify-center px-3" : "px-5"}`}
             >
-                <div className="flex items-center gap-2.5">
-                    <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 shadow-sm">
-                        <ApplicationLogo className="h-4 w-4 fill-current text-white" />
-                        <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-white bg-emerald-400" />
+                <div className="flex items-center gap-3">
+                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 shadow-lg shadow-indigo-200/50">
+                        <ApplicationLogo className="h-5 w-5 fill-current text-white" />
+                        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400 ring-2 ring-emerald-100" />
                     </div>
                     <div
-                        className={`leading-none transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0 overflow-hidden ml-0" : "opacity-100 w-auto ml-1"}`}
+                        className={`leading-tight transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0 overflow-hidden ml-0" : "opacity-100 w-auto"}`}
                     >
-                        <span className="block text-[13px] font-bold tracking-tight text-slate-800 whitespace-nowrap">
-                            SIM-KASIR
+                        <span className="block text-[15px] font-bold tracking-tight text-slate-900 whitespace-nowrap">
+                            KasirKu
                         </span>
-                        <span className="block text-[10px] text-slate-400 whitespace-nowrap">
-                            Point of Sale
+                        <span className="block text-[11px] font-medium text-slate-500 whitespace-nowrap">
+                            Point of Sale System
                         </span>
                     </div>
                 </div>
             </div>
 
+            {/* Search & Theme Toggle */}
+            {!collapsed && (
+                <div className="shrink-0 space-y-3 px-4 pt-4 pb-3">
+                    {/* Search Bar */}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Cari menu..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 py-2.5 text-sm text-slate-700 placeholder-slate-400 transition focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                        />
+                    </div>
+
+                    {/* Theme Toggle */}
+                    <div className="flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3.5 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100">
+                                {darkMode ? (
+                                    <Moon className="h-4 w-4 text-slate-600" />
+                                ) : (
+                                    <Sun className="h-4 w-4 text-amber-600" />
+                                )}
+                            </div>
+                            <span className="text-sm font-medium text-slate-700">Tema</span>
+                        </div>
+                        <button
+                            onClick={toggleTheme}
+                            className={`relative h-6 w-11 rounded-full transition-colors ${
+                                darkMode ? "bg-indigo-600" : "bg-slate-300"
+                            }`}
+                        >
+                            <span
+                                className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                                    darkMode ? "translate-x-5" : "translate-x-0"
+                                }`}
+                            />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Nav */}
             <nav
@@ -701,17 +807,17 @@ function SidebarContent({ collapsed, onNavigate }) {
                         String(e.target.scrollTop),
                     )
                 }
-                className="flex-1 overflow-y-auto px-2 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className="flex-1 overflow-y-auto px-3 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-                <div className="space-y-0.5">
-                    {reorderMode && (
-                        <div className="mb-2 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-center">
-                            <p className="text-[10px] font-medium text-indigo-600">
-                                Drag & drop untuk mengatur urutan menu
+                <div className="space-y-1">
+                    {reorderMode && !collapsed && (
+                        <div className="mb-3 rounded-xl bg-gradient-to-r from-indigo-50 to-indigo-100 border border-indigo-200 px-3 py-2.5 text-center">
+                            <p className="text-xs font-semibold text-indigo-700">
+                                🎯 Drag & drop untuk mengatur urutan menu
                             </p>
                         </div>
                     )}
-                    {orderedGroups.map((group) => (
+                    {filteredGroups.map((group) => (
                         <NavGroup
                             key={group.key}
                             group={group}
@@ -721,18 +827,73 @@ function SidebarContent({ collapsed, onNavigate }) {
                             onReorder={handleReorder}
                         />
                     ))}
+                    {searchQuery && filteredGroups.length === 0 && !collapsed && (
+                        <div className="py-12 text-center">
+                            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                                <Search className="h-6 w-6 text-slate-400" />
+                            </div>
+                            <p className="text-sm font-medium text-slate-600">Menu tidak ditemukan</p>
+                            <p className="mt-1 text-xs text-slate-400">Coba kata kunci lain</p>
+                        </div>
+                    )}
                 </div>
             </nav>
 
-            {/* Footer */}
+            {/* User Profile Card */}
             <div
-                className={`shrink-0 overflow-hidden border-t border-slate-100 transition-all duration-300 ease-in-out ${collapsed ? "max-h-0 opacity-0 border-t-0" : "max-h-10 opacity-100"}`}
+                className={`shrink-0 border-t border-slate-200 bg-white transition-all duration-300 ease-in-out ${collapsed ? "p-2" : "p-3"}`}
             >
-                <div className="px-4 py-2.5 text-center">
-                    <span className="text-[10px] text-slate-400">
-                        © {new Date().getFullYear()} SIM-KASIR
-                    </span>
-                </div>
+                {collapsed ? (
+                    <div className="flex justify-center">
+                        <button
+                            onClick={() => router.visit(route("admin.profile.edit"))}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-xs font-bold text-white shadow-sm hover:shadow-md transition-all"
+                        >
+                            {user?.name?.charAt(0).toUpperCase()}
+                        </button>
+                    </div>
+                ) : (
+                    <div className="rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 p-3 shadow-lg">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 text-sm font-bold text-white shadow-md">
+                                    {user?.name?.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-900 bg-emerald-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="truncate text-xs font-semibold text-white">
+                                    {user?.name}
+                                </p>
+                                <p className="truncate text-[10px] text-slate-400">
+                                    {user?.email}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => router.post(route("logout"))}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-700/50 text-slate-300 hover:bg-red-500/20 hover:text-red-400 transition-all"
+                                title="Keluar"
+                            >
+                                <LogOut className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                        
+                        {/* Store Type Badge */}
+                        {currentStore?.type && (
+                            <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-slate-700/30 px-1.5 py-1">
+                                <svg className="h-2.5 w-2.5 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.375.375 0 01.375.375v1.875c0 .207-.168.375-.375.375H6.75a.375.375 0 01-.375-.375v-1.875A.375.375 0 016.75 18z" />
+                                </svg>
+                                <span className="text-[9px] font-medium text-slate-300">
+                                    {currentStore.name}
+                                </span>
+                                <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[8px] font-bold ${TYPE_COLOR_MAPS[currentStore.type] || "bg-slate-100 text-slate-700"}`}>
+                                    {TYPE_LABEL[currentStore.type] || currentStore.type}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -781,7 +942,7 @@ export default function AuthenticatedLayout({ header, children }) {
     };
 
     const onNavigate = () => setSidebarOpen(false);
-    const sidebarW = collapsed ? "w-[60px]" : "w-[220px]";
+    const sidebarW = collapsed ? "w-[70px]" : "w-[280px]";
 
     return (
         <div className="min-h-screen bg-[#f8f9fb]">
@@ -795,7 +956,7 @@ export default function AuthenticatedLayout({ header, children }) {
             <aside
                 className={`fixed inset-y-0 left-0 z-30 hidden overflow-hidden transition-[width] duration-300 ease-in-out lg:block ${sidebarW}`}
             >
-                <SidebarContent collapsed={collapsed} onNavigate={onNavigate} />
+                <SidebarContent collapsed={collapsed} onNavigate={onNavigate} user={user} currentStore={currentStore} />
             </aside>
 
             {/* Mobile drawer */}
@@ -807,25 +968,25 @@ export default function AuthenticatedLayout({ header, children }) {
                     className={`absolute inset-0 bg-black/20 backdrop-blur-[2px] transition-opacity ${sidebarOpen ? "opacity-100" : "opacity-0"}`}
                 />
                 <aside
-                    className={`absolute inset-y-0 left-0 w-[220px] overflow-hidden shadow-xl transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+                    className={`absolute inset-y-0 left-0 w-[280px] overflow-hidden shadow-xl transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
                 >
-                    <SidebarContent collapsed={false} onNavigate={onNavigate} />
+                    <SidebarContent collapsed={false} onNavigate={onNavigate} user={user} currentStore={currentStore} />
                 </aside>
             </div>
 
             {/* Main */}
             <div
-                className={`flex min-h-screen flex-col transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-[60px]" : "lg:pl-[220px]"}`}
+                className={`flex min-h-screen flex-col transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-[70px]" : "lg:pl-[280px]"}`}
             >
                 {/* Topbar */}
-                <header className="sticky top-0 z-20 flex h-[57px] items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-5   ">
+                <header className="sticky top-0 z-20 flex h-[56px] items-center gap-2.5 border-b border-slate-200 bg-white/80 backdrop-blur-md px-4 sm:px-6 shadow-sm">
                     {/* Mobile menu */}
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 lg:hidden"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors lg:hidden"
                     >
                         <svg
-                            className="h-5 w-5"
+                            className="h-4 w-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={2}
@@ -842,7 +1003,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     {/* Desktop collapse */}
                     <button
                         onClick={toggleCollapse}
-                        className="hidden h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 lg:flex"
+                        className="hidden h-7 w-7 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors lg:flex"
                     >
                         <svg
                             className="h-4 w-4"
@@ -859,11 +1020,13 @@ export default function AuthenticatedLayout({ header, children }) {
                         </svg>
                     </button>
 
-                    <div className="h-5 w-px bg-slate-200" />
+                    <div className="h-6 w-px bg-slate-200 hidden sm:block" />
 
                     {/* Page title */}
-                    <div className="min-w-0 flex-1 truncate text-sm text-slate-700">
-                        {header}
+                    <div className="min-w-0 flex-1">
+                        <h1 className="truncate text-sm font-semibold text-slate-900">
+                            {header}
+                        </h1>
                     </div>
 
                     {/* Right side */}
@@ -882,9 +1045,9 @@ export default function AuthenticatedLayout({ header, children }) {
                         {currentBranch &&
                             // Karyawan biasa: badge static saja, tidak bisa ganti branch
                             (!canSwitchContext ? (
-                                <span className="hidden items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 sm:flex">
+                                <span className="hidden items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600 sm:flex">
                                     <svg
-                                        className="h-3.5 w-3.5 text-slate-400"
+                                        className="h-3 w-3 text-slate-400"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         strokeWidth={1.8}
@@ -898,7 +1061,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                     </svg>
                                     <span>{currentBranch.name}</span>
                                     <svg
-                                        className="h-3 w-3 text-slate-300"
+                                        className="h-2.5 w-2.5 text-slate-300"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         strokeWidth={2}
@@ -912,12 +1075,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                     </svg>
                                 </span>
                             ) : branches?.length > 1 ? (
-                                <BranchSwitcher
-                                    currentBranch={currentBranch}
-                                    branches={branches}
-                                />
+                                <span className="hidden sm:inline-flex">
+                                    <BranchSwitcher
+                                        currentBranch={currentBranch}
+                                        branches={branches}
+                                    />
+                                </span>
                             ) : (
-                                <span className="hidden items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 sm:flex">
+                                <span className="hidden items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600 sm:flex">
                                     <svg
                                         className="h-3.5 w-3.5 text-slate-400"
                                         fill="none"
@@ -937,14 +1102,22 @@ export default function AuthenticatedLayout({ header, children }) {
 
                         <OfflineIndicator />
 
+                        {/* Store Type Badge — visible on sm+ (hidden on mobile) */}
+                        {currentStore?.type && (
+                            <span className={`hidden sm:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${TYPE_COLOR[currentStore.type] || "bg-slate-50 text-slate-600 ring-slate-200"}`}>
+                                <span className="text-sm leading-none">{TYPE_ICON[currentStore.type] || "🏬"}</span>
+                                <span>{TYPE_LABEL[currentStore.type] || currentStore.type}</span>
+                            </span>
+                        )}
+
                         {/* User menu */}
                         <Dropdown>
                             <Dropdown.Trigger>
-                                <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
+                                <button className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-[10px] font-bold text-white shadow-sm">
                                         {user?.name?.charAt(0).toUpperCase()}
                                     </span>
-                                    <span className="hidden max-w-[8rem] truncate sm:block text-xs">
+                                    <span className="hidden max-w-[8rem] truncate sm:block text-xs font-semibold">
                                         {user?.name}
                                     </span>
                                     <svg
@@ -961,18 +1134,56 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content>
+                                {/* Mobile-only store info */}
+                                <div className="lg:hidden px-3 py-2.5">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-sm font-bold text-white shadow-sm">
+                                            {user?.name?.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="truncate text-xs font-semibold text-slate-800">{user?.name}</p>
+                                            <p className="truncate text-[10px] text-slate-500">{user?.email}</p>
+                                        </div>
+                                    </div>
+                                    {currentStore?.type && (
+                                        <div className="mt-2.5 flex items-center gap-1.5">
+                                            <span className="text-sm leading-none">{TYPE_ICON[currentStore.type] || "🏬"}</span>
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${TYPE_COLOR[currentStore.type] || "bg-slate-50 text-slate-600 ring-slate-200"}`}>
+                                                {TYPE_LABEL[currentStore.type] || currentStore.type}
+                                            </span>
+                                            {currentBranch && (
+                                                <span className="text-[10px] text-slate-400">• 📍 {currentBranch.name}</span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="lg:hidden my-1.5 border-t border-slate-100" />
                                 <Dropdown.Link
                                     href={route("admin.profile.edit")}
                                 >
-                                    Profil Saya
+                                    <span className="flex items-center gap-2">
+                                        <User className="h-3.5 w-3.5 text-slate-400" />
+                                        Profil Saya
+                                    </span>
                                 </Dropdown.Link>
-                                <div className="my-1 border-t border-slate-100" />
+                                <Dropdown.Link
+                                    href={route("admin.settings.index")}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <Settings className="h-3.5 w-3.5 text-slate-400" />
+                                        Pengaturan
+                                    </span>
+                                </Dropdown.Link>
+                                <div className="my-1.5 border-t border-slate-100" />
                                 <Dropdown.Link
                                     href={route("logout")}
                                     method="post"
                                     as="button"
                                 >
-                                    Keluar
+                                    <span className="flex items-center gap-2">
+                                        <LogOut className="h-3.5 w-3.5 text-rose-400" />
+                                        <span className="text-rose-600">Keluar</span>
+                                    </span>
                                 </Dropdown.Link>
                             </Dropdown.Content>
                         </Dropdown>

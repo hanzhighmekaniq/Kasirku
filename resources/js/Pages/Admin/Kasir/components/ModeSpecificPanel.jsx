@@ -22,6 +22,11 @@ export default function ModeSpecificPanel({ k }) {
         return () => document.removeEventListener("mousedown", handle);
     }, [showDesc]);
 
+    // Jangan render panel untuk mode Retail (tidak ada input khusus)
+    if (k.isRetail) {
+        return null;
+    }
+
     return (
         <div className={sectionClass}>
             <div className="border-b border-slate-100 bg-indigo-50/60 px-3 py-2">
@@ -141,10 +146,6 @@ export default function ModeSpecificPanel({ k }) {
                                 className={inputClass}
                             />
                         </div>
-                        <p className="text-[11px] text-slate-500">
-                            Ticket untuk bioskop, futsal, event — booking slot
-                            terjadwal, check-in, dan refund.
-                        </p>
                     </>
                 )}
 
@@ -591,19 +592,6 @@ export default function ModeSpecificPanel({ k }) {
                     </>
                 )}
 
-                {k.isRetail && (
-                    <p className="text-[11px] text-slate-500">
-                        Retail memakai alur cepat: scan/pilih produk, validasi
-                        stok, bayar, stok berkurang, lalu struk.
-                    </p>
-                )}
-
-                {k.isFnb && (
-                    <p className="text-[11px] text-slate-500">
-                        F&B memakai order type, meja untuk dine-in,
-                        modifier/topping, delivery info, dan status dapur.
-                    </p>
-                )}
             </div>
         </div>
     );

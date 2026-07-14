@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Head, Link } from "@inertiajs/react";
 import axios from "axios";
 import * as ReactDOM from "react-dom";
@@ -20,6 +20,31 @@ import ModeSpecificPanel from "./components/ModeSpecificPanel";
 export default function Kasir(props) {
     const k = useKasir(props);
     const [showExtraFees, setShowExtraFees] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    // Fullscreen keyboard shortcuts
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.key === "Escape" && isFullscreen) {
+                setIsFullscreen(false);
+                e.preventDefault();
+            }
+            if (e.key === "F11") {
+                e.preventDefault();
+                setIsFullscreen((p) => !p);
+            }
+            if (
+                e.key === "/" &&
+                !isFullscreen &&
+                document.activeElement?.tagName !== "INPUT"
+            ) {
+                e.preventDefault();
+                k.barcodeRef?.current?.focus();
+            }
+        };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+    }, [isFullscreen]);
     const {
         tables,
         categories,
@@ -32,62 +57,105 @@ export default function Kasir(props) {
         employees = [],
     } = props;
 
-    return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-slate-800">
-                        Kasir
-                    </h2>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => k.setShowHistory(true)}
-                            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+    const headerContent = (
+        <div className="flex w-full items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold text-slate-800">Kasir</h2>
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm">
+                    {k.modeConfig.icon} {k.modeConfig.label}
+                </span>
+            </div>
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={() => k.setShowHistory(true)}
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-all hover:shadow-md"
+                    title="Riwayat Transaksi"
+                >
+                    <svg
+                        className={`h-4 w-4 ${k.historyPrintLoading ? "animate-spin text-indigo-600" : "text-slate-500"}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                    >
+                        {k.historyPrintLoading ? (
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                        ) : (
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                        )}
+                    </svg>
+                    <span className="hidden sm:inline">Riwayat</span>
+                </button>
+                <button
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition-all hover:shadow-md"
+                    title={
+                        isFullscreen
+                            ? "Keluar Fullscreen (Esc)"
+                            : "Fullscreen (F11)"
+                    }
+                >
+                    {isFullscreen ? (
+                        <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
                         >
-                            <svg
-                                className={`h-5 w-5 ${k.historyPrintLoading ? "animate-spin text-indigo-600" : "text-slate-400"}`}
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                            >
-                                {k.historyPrintLoading ? (
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                                    />
-                                ) : (
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                )}
-                            </svg>
-                            Riwayat
-                        </button>
-                        <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500 sm:inline">
-                            {k.modeConfig.icon} {k.modeConfig.label}
-                        </span>
-                    </div>
-                </div>
-            }
-        >
-            <Head title="Kasir" />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"
+                            />
+                        </svg>
+                    ) : (
+                        <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
+                            />
+                        </svg>
+                    )}
+                    <span className="hidden sm:inline">
+                        {isFullscreen ? "Keluar" : "Fullscreen"}
+                    </span>
+                </button>
+            </div>
+        </div>
+    );
 
-            <div className="flex h-[calc(100vh-65px)] gap-42 overflow-hidden sm:h-[calc(100vh-73px)]">
+    const posContent = (topPadding) => (
+        <>
+            <Head title="Kasir" />
+            <div className={`flex gap-3 overflow-hidden ${topPadding}`}>
                 {/* ── LEFT: Product panel ── */}
-                <div className="flex p-3 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+                    {/* Shift Status Banner */}
                     {!activeShift ? (
-                        <div className="mb-2 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+                        <div className="flex items-center gap-2 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3">
                             <span className="inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-500" />
-                            <span className="flex-1 text-xs font-medium text-amber-800">
+                            <span className="flex-1 text-sm font-medium text-amber-800">
                                 Buka shift dulu untuk mulai transaksi
                             </span>
                             <Link
                                 href={route("admin.cashier-shifts.create")}
-                                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-600"
+                                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-600"
                             >
                                 <svg
                                     className="h-3.5 w-3.5"
@@ -106,55 +174,63 @@ export default function Kasir(props) {
                             </Link>
                         </div>
                     ) : (
-                        <div className=" rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white px-2 py-2 shadow-sm">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-4 w-4 items-center justify-center rounded-lg bg-emerald-500">
-                                        <svg
-                                            className="h-4 w-4 text-white"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth={1.8}
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                                            />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-medium text-emerald-800">
-                                            Shift Aktif:{" "}
-                                            <span className="font-semibold">
-                                                {activeShift.shift_no}
-                                            </span>
-                                        </p>
-                                        <p className="text-xs text-emerald-600">
-                                            Kas awal:{" "}
-                                            {k.fmt(activeShift.opening_cash)}
-                                        </p>
-                                    </div>
+                        <div className="flex items-center justify-between border-b border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50/50 px-4 py-3">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 shadow-sm">
+                                    <svg
+                                        className="h-4 w-4 text-white"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={2}
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
                                 </div>
-                                <Link
-                                    href={route(
-                                        "admin.cashier-shifts.show",
-                                        activeShift.id,
-                                    )}
-                                    className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50"
-                                >
-                                    Detail Shift
-                                </Link>
+                                <div>
+                                    <p className="text-sm font-semibold text-emerald-800">
+                                        Shift: {activeShift.shift_no}
+                                    </p>
+                                    <p className="text-xs text-emerald-600">
+                                        Kas awal: {k.fmt(activeShift.opening_cash)}
+                                    </p>
+                                </div>
                             </div>
+                            <Link
+                                href={route(
+                                    "admin.cashier-shifts.show",
+                                    activeShift.id,
+                                )}
+                                className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+                                title="Detail Shift"
+                            >
+                                <svg
+                                    className="h-3.5 w-3.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                                    />
+                                </svg>
+                                <span className="hidden sm:inline">Detail</span>
+                            </Link>
                         </div>
                     )}
                     {/* Search + barcode */}
-                    <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
+                    <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/50 px-4 py-3">
                         <div className="relative flex-1">
                             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                                 <svg
-                                    className="h-3.5 w-3.5"
+                                    className="h-4 w-4"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     strokeWidth={2}
@@ -173,35 +249,41 @@ export default function Kasir(props) {
                                 value={k.search}
                                 onChange={(e) => k.setSearch(e.target.value)}
                                 placeholder="Cari produk atau scan barcode..."
-                                className="block w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border-slate-300 bg-white pl-10 pr-3 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
                             />
                         </div>
                         <button
                             onClick={() => k.setShowScanner(true)}
-                            className="shrink-0 bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition"
+                            className="shrink-0 flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition shadow-sm"
                             title="Scan Barcode"
                         >
                             <svg
-                                className="w-5 h-5"
+                                className="w-4 h-4"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
+                                strokeWidth={2}
                             >
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"
+                                />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z"
                                 />
                             </svg>
+                            <span className="hidden sm:inline text-sm font-medium">Scan</span>
                         </button>
                     </div>
 
                     {/* Category chips */}
-                    <div className="flex gap-2 overflow-x-auto border-b border-slate-100 px-3 py-2.5 scrollbar-thin">
+                    <div className="flex gap-2 overflow-x-auto border-b border-slate-100 px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         <button
                             onClick={() => k.setActiveCat("")}
-                            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition ${!k.activeCat ? "bg-indigo-500 text-white shadow" : "border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+                            className={`shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${!k.activeCat ? "bg-indigo-600 text-white shadow-md shadow-indigo-200" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
                         >
                             Semua
                         </button>
@@ -215,10 +297,10 @@ export default function Kasir(props) {
                                             : String(c.id),
                                     )
                                 }
-                                className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition ${String(c.id) === k.activeCat ? "bg-indigo-500 text-white shadow" : "border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+                                className={`shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${String(c.id) === k.activeCat ? "bg-indigo-600 text-white shadow-md shadow-indigo-200" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
                             >
                                 {c.name}{" "}
-                                <span className="opacity-60">
+                                <span className="opacity-70">
                                     ({c.products_count})
                                 </span>
                             </button>
@@ -226,35 +308,45 @@ export default function Kasir(props) {
                     </div>
 
                     {/* Product grid */}
-                    <div className="flex-1 overflow-y-auto p-3">
+                    <div className="flex-1 overflow-y-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {k.filtered.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-center">
-                                <svg
-                                    className="mb-3 h-12 w-12 text-slate-200"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
-                                    />
-                                </svg>
-                                <p className="text-sm text-slate-400">
+                            <div className="flex flex-col items-center justify-center py-20 text-center">
+                                <div className="mb-4 rounded-full bg-slate-100 p-6">
+                                    <svg
+                                        className="h-16 w-16 text-slate-300"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.5}
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
+                                        />
+                                    </svg>
+                                </div>
+                                <p className="text-base font-medium text-slate-600">
                                     {k.search
-                                        ? "Produk tidak ditemukan."
-                                        : "Tidak ada produk."}
+                                        ? "Produk tidak ditemukan"
+                                        : "Tidak ada produk"}
+                                </p>
+                                <p className="mt-1 text-sm text-slate-400">
+                                    {k.search
+                                        ? "Coba kata kunci lain"
+                                        : "Tambahkan produk terlebih dahulu"}
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                            <div className="grid grid-cols-2 gap-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
                                 {k.filtered.map((p) => (
                                     <ProductCard
                                         key={p.id}
                                         product={p}
                                         onClick={() => k.handleProductClick(p)}
+                                        onUnitClick={(unit) =>
+                                            k.addToCart(p, null, [], "", unit)
+                                        }
                                     />
                                 ))}
                             </div>
@@ -264,23 +356,76 @@ export default function Kasir(props) {
 
                 {/* ── RIGHT: Cart + summary ── */}
                 <div
-                    className={`flex w-72 shrink-0 flex-col gap-1 xl:w-80 md:relative md:flex max-md:fixed max-md:inset-y-0 max-md:right-0 max-md:z-50 max-md:w-72 max-md:bg-white max-md:shadow-2xl max-md:transition-transform max-md:duration-300 sm:max-md:w-80 ${k.cartPanelOpen ? "max-md:translate-x-0" : "max-md:translate-x-full max-md:hidden"}`}
+                    className={`flex w-96 shrink-0 flex-col gap-3 md:relative md:flex max-md:fixed max-md:inset-y-0 max-md:right-0 max-md:z-50 max-md:w-96 max-md:bg-slate-50 max-md:shadow-2xl max-md:transition-transform max-md:duration-300 ${k.cartPanelOpen ? "max-md:translate-x-0" : "max-md:translate-x-full max-md:hidden"}`}
                 >
                     {/* Order options */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex border-b border-slate-100">
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+                        {/* Fullscreen mode: Exit and History buttons */}
+                        {isFullscreen && (
+                            <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/80 px-3 py-2">
+                                <button
+                                    onClick={() => k.setShowHistory(true)}
+                                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-all hover:shadow-md"
+                                    title="Riwayat Transaksi"
+                                >
+                                    <svg
+                                        className={`h-4 w-4 ${k.historyPrintLoading ? "animate-spin text-indigo-600" : "text-slate-500"}`}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={2}
+                                        stroke="currentColor"
+                                    >
+                                        {k.historyPrintLoading ? (
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                            />
+                                        ) : (
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                                            />
+                                        )}
+                                    </svg>
+                                    <span>Riwayat</span>
+                                </button>
+                                <button
+                                    onClick={() => setIsFullscreen(false)}
+                                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-all hover:shadow-md"
+                                    title="Keluar Fullscreen (Esc)"
+                                >
+                                    <svg
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={2}
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"
+                                        />
+                                    </svg>
+                                    <span>Keluar</span>
+                                </button>
+                            </div>
+                        )}
+                        <div className="grid grid-cols-3 border-b border-slate-100">
                             {k.orderOpts.map((o) => (
                                 <button
                                     key={o.v}
                                     onClick={() => k.handleOrderTypeChange(o.v)}
-                                    className={`flex-1 py-2.5 text-xs font-semibold transition ${k.orderType === o.v ? "bg-indigo-500 text-white" : "text-slate-500 hover:bg-slate-50"}`}
+                                    className={`py-3 text-sm font-bold transition-all ${k.orderType === o.v ? "bg-indigo-600 text-white shadow-inner" : "text-slate-600 hover:bg-slate-50"}`}
                                 >
                                     {o.l}
                                 </button>
                             ))}
                         </div>
 
-                        <div className="flex flex-wrap gap-1.5 p-2">
+                        <div className="flex flex-wrap gap-2 p-3">
                             {/* Table selector — searchable dropdown */}
                             {(k.isCafe || k.isBooth || k.isHospitality) &&
                                 k.orderType === "dine_in" &&
@@ -935,8 +1080,8 @@ export default function Kasir(props) {
 
                     {/* Takeaway — Nama Pemesan (compact inline) */}
                     {k.orderType === "takeaway" && (
-                        <div className="flex shrink-0 items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/60 px-3 py-2 shadow-sm">
-                            <span className="shrink-0 text-xs font-semibold text-emerald-700">
+                        <div className="flex shrink-0 items-center gap-2 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50/50 px-4 py-3 shadow-md">
+                            <span className="shrink-0 text-sm font-bold text-emerald-700">
                                 📦 Nama
                             </span>
                             <input
@@ -946,21 +1091,21 @@ export default function Kasir(props) {
                                     k.setTakeawayCustomerName(e.target.value)
                                 }
                                 placeholder="Nama pemesan..."
-                                className="flex-1 rounded-lg border-emerald-200 bg-white py-1 text-xs focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                                className="flex-1 rounded-lg border-emerald-200 bg-white py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
                             />
                         </div>
                     )}
                     {/* Delivery fields */}
                     {k.orderType === "delivery" && (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md">
                             <button
                                 type="button"
                                 onClick={() =>
                                     k.setDeliveryInfoOpen(!k.deliveryInfoOpen)
                                 }
-                                className="flex w-full items-center justify-between border-b border-slate-100 bg-slate-50/60 px-4 py-2.5 transition hover:bg-slate-100/50"
+                                className="flex w-full items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3 transition hover:bg-slate-100/80"
                             >
-                                <h3 className="text-xs font-semibold text-slate-700">
+                                <h3 className="text-sm font-bold text-slate-800">
                                     Info Pengiriman
                                 </h3>
                                 <svg
@@ -978,7 +1123,7 @@ export default function Kasir(props) {
                                 </svg>
                             </button>
                             {k.deliveryInfoOpen && (
-                                <div className="space-y-2 p-2">
+                                <div className="space-y-3 p-3">
                                     {/* Nama Penerima */}
                                     <div>
                                         <label className="mb-1 block text-xs font-medium text-slate-600">
@@ -1048,44 +1193,46 @@ export default function Kasir(props) {
                     <ModeSpecificPanel k={k} />
 
                     {/* Cart items */}
-                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                            <h3 className="text-sm font-semibold text-slate-800">
+                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+                        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-4 py-3">
+                            <h3 className="text-sm font-bold text-slate-800">
                                 Keranjang{" "}
-                                <span className="text-slate-400">
+                                <span className="text-slate-500">
                                     ({k.cart.length})
                                 </span>
                             </h3>
                             {k.cart.length > 0 && (
                                 <button
                                     onClick={k.clearCart}
-                                    className="text-xs text-red-500 hover:text-red-700 transition"
+                                    className="text-sm font-medium text-red-500 hover:text-red-700 transition"
                                 >
                                     Kosongkan
                                 </button>
                             )}
                         </div>
-                        <div className="flex-1 overflow-y-auto space-y-1.5 p-2">
+                        <div className="flex-1 overflow-y-auto space-y-2 p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             {k.cart.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-10 text-center">
-                                    <svg
-                                        className="mb-2 h-10 w-10 text-slate-200"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.3}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
-                                        />
-                                    </svg>
-                                    <p className="text-sm text-slate-400">
+                                <div className="flex flex-col items-center justify-center py-16 text-center">
+                                    <div className="mb-4 rounded-full bg-slate-100 p-5">
+                                        <svg
+                                            className="h-12 w-12 text-slate-300"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={1.5}
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <p className="text-sm font-medium text-slate-600">
                                         Keranjang kosong
                                     </p>
-                                    <p className="text-xs text-slate-400">
-                                        Pilih produk di sebelah kiri
+                                    <p className="mt-1 text-xs text-slate-400">
+                                        Pilih produk untuk memulai
                                     </p>
                                 </div>
                             ) : (
@@ -1095,6 +1242,11 @@ export default function Kasir(props) {
                                         item={item}
                                         onQty={k.changeQty}
                                         onRemove={k.removeItem}
+                                        productImage={
+                                            props.products.find(
+                                                (p) => p.id === item.productId,
+                                            )?.image || null
+                                        }
                                     />
                                 ))
                             )}
@@ -1102,19 +1254,19 @@ export default function Kasir(props) {
 
                         {/* Note */}
                         {k.cart.length > 0 && (
-                            <div className="border-t border-slate-100 px-2 py-1.5">
+                            <div className="border-t border-slate-100 bg-slate-50/50 px-3 py-2">
                                 <input
                                     type="text"
                                     value={k.note}
                                     onChange={(e) => k.setNote(e.target.value)}
                                     placeholder="📝 Catatan transaksi..."
-                                    className="block w-full rounded-xl border-slate-200 bg-slate-50 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="block w-full rounded-xl border-slate-200 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                                 />
                             </div>
                         )}
 
                         {/* Totals */}
-                        <div className="border-t border-slate-200 p-2 space-y-1.5">
+                        <div className="border-t-2 border-slate-200 bg-slate-50/80 p-3 space-y-2">
                             {/* Subtotal */}
                             <div className="flex items-center justify-between text-xs text-slate-500">
                                 <span>Subtotal</span>
@@ -1298,11 +1450,11 @@ export default function Kasir(props) {
                             </div>
 
                             {/* Grand Total */}
-                            <div className="flex items-center justify-between rounded-xl bg-indigo-50 px-3 py-2">
-                                <span className="text-sm font-semibold text-indigo-800">
-                                    Total
+                            <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-3 shadow-lg">
+                                <span className="text-sm font-bold text-white">
+                                    Total Bayar
                                 </span>
-                                <span className="text-lg font-bold text-indigo-700">
+                                <span className="text-xl font-extrabold text-white">
                                     {k.fmt(k.grandTotal)}
                                 </span>
                             </div>
@@ -1318,7 +1470,7 @@ export default function Kasir(props) {
                                         !k.selectedTable)
                                 }
                                 onClick={() => k.setShowPayment(true)}
-                                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 transition hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-4 text-base font-extrabold text-white shadow-xl shadow-emerald-500/30 transition-all hover:from-emerald-600 hover:to-teal-700 hover:shadow-2xl hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                             >
                                 {k.submitting
                                     ? "Memproses..."
@@ -1328,7 +1480,7 @@ export default function Kasir(props) {
                                           (k.isCafe || k.isBooth) &&
                                           !k.selectedTable
                                         ? "Pilih meja dulu"
-                                        : `Bayar ${k.cart.length > 0 ? k.fmt(k.grandTotal) : ""}`}
+                                        : `💳 Bayar ${k.cart.length > 0 ? k.fmt(k.grandTotal) : ""}`}
                             </button>
                         </div>
                     </div>
@@ -1347,13 +1499,13 @@ export default function Kasir(props) {
             <button
                 type="button"
                 onClick={() => k.setCartPanelOpen(true)}
-                className={`fixed bottom-4 right-4 z-30 flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-3 text-sm font-bold text-white shadow-xl transition hover:from-indigo-600 hover:to-violet-700 md:hidden ${k.cartPanelOpen ? "hidden" : ""}`}
+                className={`fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 text-sm font-extrabold text-white shadow-2xl shadow-indigo-500/50 transition-all hover:from-indigo-700 hover:to-violet-700 hover:scale-110 active:scale-95 md:hidden ${k.cartPanelOpen ? "hidden" : ""}`}
             >
                 <svg
-                    className="h-5 w-5"
+                    className="h-6 w-6"
                     fill="none"
                     viewBox="0 0 24 24"
-                    strokeWidth={1.8}
+                    strokeWidth={2}
                     stroke="currentColor"
                 >
                     <path
@@ -1364,7 +1516,7 @@ export default function Kasir(props) {
                 </svg>
                 Keranjang
                 {k.cart.length > 0 && (
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-indigo-600">
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-extrabold text-indigo-600 shadow-md">
                         {k.cart.length}
                     </span>
                 )}
@@ -1444,6 +1596,20 @@ export default function Kasir(props) {
                 onClose={() => k.setShowScanner(false)}
                 onScan={k.handleBarcodeScan}
             />
+        </>
+    );
+
+    if (isFullscreen) {
+        return (
+            <div className="fixed inset-0 z-[100] flex flex-col bg-[#f1f3f6]">
+                {posContent("h-screen")}
+            </div>
+        );
+    }
+
+    return (
+        <AuthenticatedLayout header={headerContent}>
+            {posContent("h-[calc(100vh-65px)] sm:h-[calc(100vh-73px)]")}
         </AuthenticatedLayout>
     );
 }
