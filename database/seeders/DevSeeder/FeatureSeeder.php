@@ -366,6 +366,7 @@ class FeatureSeeder extends Seeder
             'customer',
             'employee',
             'expense',
+            'sidebar_order',
         ];
 
         // Feature code yang termasuk plan Basic
