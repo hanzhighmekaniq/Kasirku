@@ -2,10 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Feature;
+use App\Models\Store;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Symfony\Component\HttpFoundation\Response;
 
 class CheckFeatureAccess
 {
@@ -24,35 +25,35 @@ class CheckFeatureAccess
         Request $request,
         Closure $next,
         string $feature,
-    ): Response {
-        /** @var \App\Models\Store|null $store */
-        $store = session("current_store_id")
-            ? \App\Models\Store::with([
-                "planModel.features",
-                "storeType.features",
-            ])->find(session("current_store_id"))
+    ) {
+        /** @var Store|null $store */
+        $store = session('current_store_id')
+            ? Store::with([
+                'planModel.features',
+                'storeType.features',
+            ])->find(session('current_store_id'))
             : null;
 
         // Kalau belum ada store di session, lanjut saja (biarkan StoreMiddleware yang handle)
-        if (!$store) {
+        if (! $store) {
             return $next($request);
         }
 
         // Ambil info fitur dari DB untuk label yang ramah pengguna
-        $featureModel = \App\Models\Feature::with("storeTypes")
-            ->where("code", $feature)
+        $featureModel = Feature::with('storeTypes')
+            ->where('code', $feature)
             ->first();
         $featureLabel = $featureModel?->label ?? $feature;
 
         // ── Cek 1: Store type mendukung fitur ini? ────────────────────────
-        $typeFeatureCodes = $store->getRelationValue("storeType")
+        $typeFeatureCodes = $store->getRelationValue('storeType')
             ? $store
-                ->getRelationValue("storeType")
-                ->features->pluck("code")
+                ->getRelationValue('storeType')
+                ->features->pluck('code')
                 ->toArray()
             : [];
 
-        if (!in_array($feature, $typeFeatureCodes)) {
+        if (! in_array($feature, $typeFeatureCodes)) {
             return $this->denyType(
                 $request,
                 $feature,
@@ -63,7 +64,7 @@ class CheckFeatureAccess
         }
 
         // ── Cek 2: Plan mengizinkan fitur ini? ───────────────────────────
-        if (!$store->planAllowsFeature($feature)) {
+        if (! $store->planAllowsFeature($feature)) {
             return $this->denyPlan($request, $feature, $featureLabel, $store);
         }
 
@@ -79,41 +80,42 @@ class CheckFeatureAccess
         Request $request,
         string $feature,
         string $featureLabel,
-        \App\Models\Store $store,
-        ?\App\Models\Feature $featureModel,
+        Store $store,
+        ?Feature $featureModel,
     ) {
-        $currentType = $store->getRelationValue("storeType");
+        $currentType = $store->getRelationValue('storeType');
 
         // Tipe toko yang BISA menggunakan fitur ini
         $supportedTypes = $featureModel
             ? $featureModel->storeTypes
-                ->where("is_active", true)
-                ->map(fn($t) => ["code" => $t->code, "label" => $t->label])
+                ->where('is_active', true)
+                ->map(fn ($t) => ['code' => $t->code, 'label' => $t->label])
                 ->values()
                 ->toArray()
             : [];
 
-        if ($request->header("X-Inertia")) {
+        if ($request->header('X-Inertia')) {
             return redirect()
-                ->back(302, [], route("admin.dashboard"))
-                ->with("typeBlock", [
-                    "feature" => $feature,
-                    "featureLabel" => $featureLabel,
-                    "currentType" => $currentType
+                ->back(302, [], route('admin.dashboard'))
+                ->with('typeBlock', [
+                    'feature' => $feature,
+                    'featureLabel' => $featureLabel,
+                    'currentType' => $currentType
                         ? [
-                            "code" => $currentType->code,
-                            "label" => $currentType->label,
+                            'code' => $currentType->code,
+                            'label' => $currentType->label,
                         ]
                         : null,
-                    "supportedTypes" => $supportedTypes,
+                    'supportedTypes' => $supportedTypes,
                 ]);
         }
 
-        $typeLabel = $currentType?->label ?? "tipe toko Anda";
+        $typeLabel = $currentType?->label ?? 'tipe toko Anda';
+
         return redirect()
-            ->route("admin.dashboard")
+            ->route('admin.dashboard')
             ->with(
-                "error",
+                'error',
                 "Fitur \"{$featureLabel}\" tidak tersedia untuk {$typeLabel}.",
             );
     }
@@ -127,32 +129,32 @@ class CheckFeatureAccess
         Request $request,
         string $feature,
         string $featureLabel,
-        \App\Models\Store $store,
+        Store $store,
     ) {
-        if ($request->header("X-Inertia")) {
+        if ($request->header('X-Inertia')) {
             $planCode = $store->effectivePlanCode();
             $planModel = $store->planModel;
 
-            return Inertia::render("Blocked/FeatureLocked", [
-                "feature" => $feature,
-                "featureLabel" => $featureLabel,
-                "storePlan" => [
-                    "plan" => $planCode,
-                    "label" => $planModel?->label ?? ucfirst($planCode),
+            return Inertia::render('Blocked/FeatureLocked', [
+                'feature' => $feature,
+                'featureLabel' => $featureLabel,
+                'storePlan' => [
+                    'plan' => $planCode,
+                    'label' => $planModel?->label ?? ucfirst($planCode),
                 ],
-                "storeType" => $store->getRelationValue("storeType")
+                'storeType' => $store->getRelationValue('storeType')
                     ? [
-                        "code" => $store->getRelationValue("storeType")->code,
-                        "label" => $store->getRelationValue("storeType")->label,
+                        'code' => $store->getRelationValue('storeType')->code,
+                        'label' => $store->getRelationValue('storeType')->label,
                     ]
                     : null,
-            ]);
+            ])->toResponse($request);
         }
 
         return redirect()
-            ->route("admin.dashboard")
+            ->route('admin.dashboard')
             ->with(
-                "error",
+                'error',
                 "Fitur \"{$featureLabel}\" tidak tersedia untuk paket Anda. Upgrade plan untuk mengaksesnya.",
             );
     }

@@ -591,9 +591,9 @@ export function buildNavGroups(modules) {
             {
                 key: "sidebar-order",
                 name: "Urutan Sidebar",
-                href: r("sidebar-order"),
+                href: r("admin.sidebar-order"),
                 icon: "list",
-                current: "sidebar-order",
+                current: "admin.sidebar-order",
             },
         );
         if (items.length > 0)
