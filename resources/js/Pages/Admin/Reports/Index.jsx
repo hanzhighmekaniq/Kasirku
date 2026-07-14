@@ -112,15 +112,6 @@ export default function Index({
     const applyPreset = (preset) => {
         setStartDate(preset.start);
         setEndDate(preset.end);
-        // Auto-apply after a tick
-        setTimeout(() => {
-            const params = { start_date: preset.start, end_date: preset.end };
-            if (hasBranchFilter) params.branch_ids = pendingBranchIds;
-            router.get(route("admin.reports.index"), params, {
-                preserveState: false,
-                replace: true,
-            });
-        }, 50);
     };
 
     return (
@@ -138,72 +129,10 @@ export default function Index({
             <div className="space-y-5">
                 {/* ── Filters ──────────────────────────────── */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:flex-wrap">
-                        {/* Quick presets */}
-                        <div className="flex items-center gap-1.5">
-                            {presets.map((p) => (
-                                <button
-                                    key={p.label}
-                                    type="button"
-                                    onClick={() => applyPreset(p)}
-                                    className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:border-indigo-400 hover:text-indigo-700"
-                                >
-                                    {p.label}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="flex items-center gap-2 ml-auto">
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-slate-500">
-                                    Dari
-                                </label>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) =>
-                                        setStartDate(e.target.value)
-                                    }
-                                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                                />
-                            </div>
-                            <span className="mt-5 text-slate-400">—</span>
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-slate-500">
-                                    Sampai
-                                </label>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                                />
-                            </div>
-                            <button
-                                onClick={applyFilters}
-                                className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
-                            >
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                    />
-                                </svg>
-                                Tampilkan
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Branch filter */}
+                    {/* Branch filter — paling atas */}
                     {branches.length > 1 && (
-                        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-3">
-                            <span className="text-xs text-slate-400 mr-1">
+                        <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                            <span className="mr-1 text-xs font-medium text-slate-400">
                                 Cabang:
                             </span>
                             {branches.map((b) => (
@@ -219,9 +148,7 @@ export default function Index({
                                 >
                                     <input
                                         type="checkbox"
-                                        checked={pendingBranchIds.includes(
-                                            b.id,
-                                        )}
+                                        checked={pendingBranchIds.includes(b.id)}
                                         onChange={() => toggleBranch(b.id)}
                                         className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                                     />
@@ -230,6 +157,77 @@ export default function Index({
                             ))}
                         </div>
                     )}
+
+                    {/* Divider setelah cabang */}
+                    {branches.length > 1 && (
+                        <div className="mb-3 border-t border-slate-100" />
+                    )}
+
+                    {/* Date range + Presets + Tombol Tampilkan */}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:flex-wrap">
+                        {/* Date inputs */}
+                        <div className="flex items-end gap-2">
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                    Dari
+                                </label>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                />
+                            </div>
+                            <span className="pb-2 text-slate-400">—</span>
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                    Sampai
+                                </label>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Quick presets */}
+                        <div className="flex flex-wrap items-center gap-1.5 sm:ml-4">
+                            {presets.map((p) => (
+                                <button
+                                    key={p.label}
+                                    type="button"
+                                    onClick={() => applyPreset(p)}
+                                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-indigo-400 hover:text-indigo-700"
+                                >
+                                    {p.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Tombol Tampilkan */}
+                        <button
+                            onClick={applyFilters}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 sm:ml-auto"
+                        >
+                            <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                                />
+                            </svg>
+                            <span className="sm:hidden">Cari</span>
+                            <span className="hidden sm:inline">Tampilkan</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* ── Summary Cards ────────────────────────── */}
@@ -298,8 +296,8 @@ export default function Index({
                 </div>
 
                 {/* ── Daily Chart ─────────────────────────── */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="mb-4 text-sm font-semibold text-slate-700">
+                <div className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-5 shadow-sm">
+                    <h3 className="mb-4 px-1 text-sm font-semibold text-slate-700">
                         Tren Penjualan Harian
                     </h3>
                     {dailyBreakdown.length === 0 ? (
@@ -308,13 +306,13 @@ export default function Index({
                         </p>
                     ) : (
                         <div className="overflow-x-auto">
-                            <div className="flex items-end gap-1.5 h-52 min-w-[500px]">
+                            <div className="flex items-end gap-1 sm:gap-1.5 h-44 sm:h-52 min-w-[400px] sm:min-w-[500px]">
                                 {dailyBreakdown.map((d, i) => (
                                     <div
                                         key={i}
                                         className="flex flex-1 flex-col items-center justify-end gap-1"
                                     >
-                                        <span className="text-[10px] font-medium text-slate-500">
+                                        <span className="hidden sm:block text-[10px] font-medium text-slate-500">
                                             {fmt(d.total)
                                                 .replace("Rp", "")
                                                 .trim()}
@@ -328,7 +326,7 @@ export default function Index({
                                             }}
                                             title={`${fmtDate(d.date)}: ${fmt(d.total)} (${d.count} transaksi)`}
                                         />
-                                        <span className="mt-1 text-[10px] text-slate-400 whitespace-nowrap">
+                                        <span className="mt-1 text-[9px] sm:text-[10px] text-slate-400 whitespace-nowrap">
                                             {new Date(
                                                 d.date,
                                             ).toLocaleDateString("id-ID", {
@@ -344,9 +342,9 @@ export default function Index({
                 </div>
 
                 {/* ── Bottom grid ─────────────────────────── */}
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     {/* Top Products */}
-                    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                         <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3.5">
                             <h3 className="text-sm font-semibold text-slate-700">
                                 Produk Terlaris
@@ -381,20 +379,20 @@ export default function Index({
                                                 key={i}
                                                 className="transition hover:bg-slate-50/50"
                                             >
-                                                <td className="px-5 py-3">
+                                                <td className="px-4 sm:px-5 py-3">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">
+                                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">
                                                             {i + 1}
                                                         </span>
-                                                        <span className="font-medium text-slate-800">
+                                                        <span className="truncate max-w-[140px] sm:max-w-[200px] font-medium text-slate-800">
                                                             {p.name}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-5 py-3 text-right text-slate-600">
+                                                <td className="px-3 sm:px-5 py-3 text-right text-slate-600">
                                                     {p.qty}
                                                 </td>
-                                                <td className="px-5 py-3 text-right font-medium text-slate-800">
+                                                <td className="px-4 sm:px-5 py-3 text-right text-xs sm:text-sm font-medium text-slate-800">
                                                     {fmt(p.revenue)}
                                                 </td>
                                             </tr>
@@ -420,7 +418,7 @@ export default function Index({
                                         Belum ada data.
                                     </p>
                                 ) : (
-                                    <div className="space-y-2">
+                                    <div className="space-y-3 overflow-hidden">
                                         {paymentBreakdown.map((p, i) => {
                                             const total =
                                                 paymentBreakdown.reduce(
@@ -435,27 +433,14 @@ export default function Index({
                                                       100
                                                     : 0;
                                             return (
-                                                <div
-                                                    key={i}
-                                                    className="flex items-center gap-3"
-                                                >
-                                                    <div
-                                                        className="h-2.5 rounded-full transition-all"
-                                                        style={{
-                                                            width: `${Math.max(pct, 3)}%`,
-                                                            backgroundColor:
-                                                                CHART_COLORS[
-                                                                    i %
-                                                                        CHART_COLORS.length
-                                                                ],
-                                                        }}
-                                                    />
-                                                    <span className="text-xs text-slate-500 whitespace-nowrap min-w-[100px]">
-                                                        {p.name}
-                                                    </span>
-                                                    <span className="ml-auto text-xs font-semibold text-slate-700">
-                                                        {fmt(p.total)}
-                                                    </span>
+                                                <div key={i}>
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-xs font-medium text-slate-600">{p.name}</span>
+                                                        <span className="text-xs font-semibold text-slate-700">{fmt(p.total)}</span>
+                                                    </div>
+                                                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                                                    </div>
                                                 </div>
                                             );
                                         })}
@@ -477,7 +462,7 @@ export default function Index({
                                         Belum ada data.
                                     </p>
                                 ) : (
-                                    <div className="space-y-2">
+                                    <div className="space-y-3 overflow-hidden">
                                         {categoryBreakdown.map((c, i) => {
                                             const total =
                                                 categoryBreakdown.reduce(
@@ -492,27 +477,14 @@ export default function Index({
                                                       100
                                                     : 0;
                                             return (
-                                                <div
-                                                    key={i}
-                                                    className="flex items-center gap-3"
-                                                >
-                                                    <div
-                                                        className="h-2.5 rounded-full"
-                                                        style={{
-                                                            width: `${Math.max(pct, 3)}%`,
-                                                            backgroundColor:
-                                                                CHART_COLORS[
-                                                                    (i + 2) %
-                                                                        CHART_COLORS.length
-                                                                ],
-                                                        }}
-                                                    />
-                                                    <span className="text-xs text-slate-500 whitespace-nowrap min-w-[100px]">
-                                                        {c.name}
-                                                    </span>
-                                                    <span className="ml-auto text-xs font-semibold text-slate-700">
-                                                        {fmt(c.revenue)}
-                                                    </span>
+                                                <div key={i}>
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-xs font-medium text-slate-600">{c.name}</span>
+                                                        <span className="text-xs font-semibold text-slate-700">{fmt(c.revenue)}</span>
+                                                    </div>
+                                                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: CHART_COLORS[(i + 2) % CHART_COLORS.length] }} />
+                                                    </div>
                                                 </div>
                                             );
                                         })}
@@ -534,19 +506,12 @@ function SummaryCard({
     color = "emerald",
     highlight = false,
 }) {
-    const borderMap = {
-        emerald: "border-emerald-200",
-        indigo: "border-indigo-200",
-        amber: "border-amber-200",
-        red: "border-red-200",
-        violet: "border-violet-200",
-    };
-    const bgMap = {
-        emerald: "bg-emerald-50",
-        indigo: "bg-indigo-50",
-        amber: "bg-amber-50",
-        red: "bg-red-50",
-        violet: "bg-violet-50",
+    const gradientMap = {
+        emerald: "from-emerald-50 to-emerald-100/40",
+        indigo: "from-indigo-50 to-indigo-100/40",
+        amber: "from-amber-50 to-amber-100/40",
+        red: "from-red-50 to-red-100/40",
+        violet: "from-violet-50 to-violet-100/40",
     };
     const textMap = {
         emerald: "text-emerald-600",
@@ -555,12 +520,22 @@ function SummaryCard({
         red: "text-red-600",
         violet: "text-violet-600",
     };
+    const accentMap = {
+        emerald: "border-emerald-400",
+        indigo: "border-indigo-400",
+        amber: "border-amber-400",
+        red: "border-red-400",
+        violet: "border-violet-400",
+    };
+
+    const cardBg = highlight ? `bg-gradient-to-br ${gradientMap[color]}` : "bg-white";
+    const cardBorder = highlight ? accentMap[color] : "border-slate-200";
 
     return (
         <div
-            className={`rounded-2xl border ${highlight ? `border-${color}-300 ${bgMap[color]}` : "border-slate-200 bg-white"} p-4 shadow-sm`}
+            className={`rounded-2xl border-l-4 border ${cardBg} ${cardBorder} p-4 shadow-sm transition-all hover:shadow-md`}
         >
-            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-100">
                 <svg
                     className={`h-5 w-5 ${textMap[color]}`}
                     fill="none"
@@ -571,9 +546,9 @@ function SummaryCard({
                     {icon}
                 </svg>
             </div>
-            <p className="text-xs font-medium text-slate-500">{label}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
             <p
-                className={`mt-1 text-xl font-bold ${highlight ? textMap[color] : "text-slate-800"}`}
+                className={`mt-0.5 text-lg font-bold ${highlight ? textMap[color] : "text-slate-800"}`}
             >
                 {value}
             </p>
