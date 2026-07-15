@@ -74,6 +74,10 @@ const EXTRA_COL = {
     },
     parking: { header: "Plat Nomor", render: (s) => s.plate_number ?? "-" },
     session: { header: "Unit/Sesi", render: (s) => s.unit_name ?? "-" },
+    ticket: {
+        header: "No. Booking",
+        render: (s) => s.extra_data?.booking_or_queue ?? "-",
+    },
 };
 
 /* ── Extra status badge per store type ───────────────── */
@@ -146,6 +150,24 @@ function ExtraStatusBadge({ sale, storeType }) {
             </span>
         );
     }
+    if (storeType === "parking" && (sale.exit_at || sale.entry_at)) {
+        const map = {
+            active: "bg-blue-100 text-blue-700",
+            exited: "bg-emerald-100 text-emerald-700",
+        };
+        const label = {
+            active: "🟢 Di Parkir",
+            exited: "✅ Keluar",
+        };
+        const status = sale.exit_at ? "exited" : "active";
+        return (
+            <span
+                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status]}`}
+            >
+                {label[status]}
+            </span>
+        );
+    }
     return null;
 }
 
@@ -183,6 +205,19 @@ export default function Index({
         session: "Transaksi Sesi",
     };
     const pageTitle = PAGE_TITLE[storeType] ?? "Penjualan";
+
+    // Summary card labels per store type
+    const STATS_LABEL = {
+        retail: { total: "Total Penjualan", completed: "Selesai", draft: "Draft", revenue: "Pendapatan" },
+        fnb: { total: "Total Transaksi", completed: "Selesai", draft: "Draft", revenue: "Pendapatan" },
+        service: { total: "Total Layanan", completed: "Selesai", draft: "Draft", revenue: "Pendapatan" },
+        rental: { total: "Total Sewa", completed: "Dikembalikan", draft: "Aktif", revenue: "Pendapatan" },
+        ticket: { total: "Total Tiket", completed: "Selesai", draft: "Draft", revenue: "Pendapatan" },
+        hospitality: { total: "Total Menginap", completed: "Check-out", draft: "Check-in", revenue: "Pendapatan" },
+        parking: { total: "Total Kendaraan", completed: "Keluar", draft: "Di Parkir", revenue: "Pendapatan" },
+        session: { total: "Total Sesi", completed: "Selesai", draft: "Aktif", revenue: "Pendapatan" },
+    };
+    const statsLabel = STATS_LABEL[storeType] ?? STATS_LABEL.retail;
 
     // Server-side filter state
     const [filterBranch, setFilterBranch] = useState(
@@ -353,18 +388,22 @@ export default function Index({
             {/* Summary cards */}
             <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <SummaryCard
-                    label="Total Transaksi"
+                    label={statsLabel.total}
                     value={stats.total}
                     color="slate"
                 />
                 <SummaryCard
-                    label="Selesai"
+                    label={statsLabel.completed}
                     value={stats.completed}
                     color="emerald"
                 />
-                <SummaryCard label="Draft" value={stats.draft} color="amber" />
                 <SummaryCard
-                    label="Pendapatan"
+                    label={statsLabel.draft}
+                    value={stats.draft}
+                    color="amber"
+                />
+                <SummaryCard
+                    label={statsLabel.revenue}
                     value={fmtRp(stats.totalRevenue)}
                     color="indigo"
                 />
@@ -745,6 +784,7 @@ export default function Index({
                                 "service",
                                 "session",
                                 "hospitality",
+                                "parking",
                             ].includes(storeType) && (
                                 <th className="px-5 py-3.5 font-medium text-slate-500">
                                     Status Ops
@@ -770,6 +810,7 @@ export default function Index({
                                             "service",
                                             "session",
                                             "hospitality",
+                                            "parking",
                                         ].includes(storeType)
                                             ? 1
                                             : 0)
@@ -835,6 +876,7 @@ export default function Index({
                                         "service",
                                         "session",
                                         "hospitality",
+                                        "parking",
                                     ].includes(storeType) && (
                                         <td className="px-5 py-3.5">
                                             <ExtraStatusBadge
@@ -1035,6 +1077,7 @@ export default function Index({
                                     "service",
                                     "session",
                                     "hospitality",
+                                    "parking",
                                 ].includes(storeType) && (
                                     <div>
                                         <span className="text-slate-400">

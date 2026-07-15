@@ -25,12 +25,25 @@ export default function Index({
     filters,
     canOpen,
     canManage,
+    storeType = "retail",
 }) {
     const [search, setSearch] = useState(filters?.search ?? "");
     const [status, setStatus] = useState(filters?.status ?? "");
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [reopening, setReopening] = useState(null);
+
+    const PAGE_LABEL = {
+        retail: "Shift Kasir",
+        fnb: "Shift Kasir",
+        service: "Shift Layanan",
+        rental: "Shift Staf",
+        ticket: "Shift Operator",
+        hospitality: "Shift Resepsionis",
+        parking: "Shift Petugas",
+        session: "Shift Operator",
+    };
+    const pageLabel = PAGE_LABEL[storeType] ?? "Shift Kasir";
 
     const navigate = (newStatus, newSearch) => {
         router.get(
@@ -80,7 +93,7 @@ export default function Index({
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold text-slate-800">
-                        Shift Kasir
+                        {pageLabel}
                     </h2>
                     {canOpen && (
                         <Link
@@ -95,7 +108,7 @@ export default function Index({
                 </div>
             }
         >
-            <Head title="Shift Kasir" />
+            <Head title={pageLabel} />
 
             <div className="space-y-4">
                 {activeShift && (

@@ -2,17 +2,63 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
-export default function Create({ products, customers, paymentMethods, tables }) {
+/* ── Order type options per store type — konsisten dengan Sales/Index.jsx ── */
+const ORDER_TYPE_OPTIONS = {
+    retail: [
+        { v: 'takeaway', l: 'Ambil' },
+        { v: 'delivery', l: 'Antar' },
+        { v: 'wholesale', l: 'Grosir' },
+    ],
+    fnb: [
+        { v: 'dine_in', l: 'Dine-in' },
+        { v: 'takeaway', l: 'Takeaway' },
+        { v: 'delivery', l: 'Delivery' },
+    ],
+    service: [
+        { v: 'walk_in', l: 'Walk-in' },
+        { v: 'booking', l: 'Booking' },
+        { v: 'pickup_delivery', l: 'Jemput & Antar' },
+    ],
+    rental: [
+        { v: 'per_hour', l: 'Per Jam' },
+        { v: 'per_day', l: 'Per Hari' },
+        { v: 'per_week', l: 'Per Minggu' },
+    ],
+    ticket: [
+        { v: 'online', l: 'Booking Online' },
+        { v: 'walk_in', l: 'Walk-in' },
+        { v: 'group', l: 'Group' },
+    ],
+    hospitality: [
+        { v: 'check_in', l: 'Check-in' },
+        { v: 'reservation', l: 'Reservasi' },
+        { v: 'short_stay', l: 'Short Stay' },
+    ],
+    parking: [
+        { v: 'entry', l: 'Masuk' },
+        { v: 'exit', l: 'Keluar' },
+        { v: 'lost_ticket', l: 'Tiket Hilang' },
+    ],
+    session: [
+        { v: 'postpaid', l: 'Postpaid' },
+        { v: 'prepaid', l: 'Prepaid' },
+        { v: 'booking', l: 'Booking' },
+    ],
+};
+
+export default function Create({ products, customers, paymentMethods, tables, storeType = 'retail' }) {
     const { flash } = usePage().props;
     const [selectedProduct, setSelectedProduct] = useState('');
     const [selectedQty, setSelectedQty] = useState(1);
     const [selectedPrice, setSelectedPrice] = useState('');
 
+    const orderTypeOptions = ORDER_TYPE_OPTIONS[storeType] ?? ORDER_TYPE_OPTIONS.retail;
+
     const { data, setData, post, processing, errors } = useForm({
         customer_id: '',
         table_id: '',
         sale_date: new Date().toISOString().split('T')[0],
-        order_type: 'takeaway',
+        order_type: orderTypeOptions[0]?.v ?? 'takeaway',
         discount_amount: '',
         tax_amount: '',
         shipping_amount: '',
@@ -120,9 +166,9 @@ export default function Create({ products, customers, paymentMethods, tables }) 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <Field label="Tipe Pesanan" required error={errors.order_type}>
                                     <select value={data.order_type} onChange={(e) => setData('order_type', e.target.value)} className={inputCls(!!errors.order_type)}>
-                                        <option value="takeaway">Take Away</option>
-                                        <option value="dine_in">Dine In</option>
-                                        <option value="delivery">Delivery</option>
+                                        {orderTypeOptions.map((opt) => (
+                                            <option key={opt.v} value={opt.v}>{opt.l}</option>
+                                        ))}
                                     </select>
                                 </Field>
                                 <Field label="Tanggal" required error={errors.sale_date}>

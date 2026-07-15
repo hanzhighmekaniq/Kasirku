@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import EmployeeForm from './EmployeeForm';
 
-export default function Edit({ employee, branches, roles = [] }) {
+export default function Edit({ employee, branches, roles = [], storeType = "retail" }) {
     const { data, setData, put, processing, errors } = useForm({
         employee_code:     employee.employee_code || '',
         branch_id:         employee.branch_id || '',
@@ -18,6 +18,19 @@ export default function Edit({ employee, branches, roles = [] }) {
         password:          '',
         password_confirmation: '',
     });
+
+    const PAGE_LABEL = {
+        retail: "Karyawan",
+        fnb: "Karyawan",
+        service: "Terapis / Staf",
+        rental: "Staf",
+        ticket: "Staf & Operator",
+        hospitality: "Staf Hotel",
+        parking: "Petugas Parkir",
+        session: "Operator",
+    };
+    const pageLabel = PAGE_LABEL[storeType] ?? "Karyawan";
+    const showCommission = ["service", "ticket"].includes(storeType);
 
     const submit = (e) => {
         e.preventDefault();
@@ -37,17 +50,17 @@ export default function Edit({ employee, branches, roles = [] }) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                         </svg>
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">Edit Karyawan / User</h2>
+                    <h2 className="text-lg font-semibold text-slate-800">Edit {pageLabel}</h2>
                 </div>
             }
         >
-            <Head title="Edit Karyawan / User" />
+            <Head title={`Edit ${pageLabel}`} />
 
             <div className="mx-auto max-w-3xl">
                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                     <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
                         <h3 className="text-base font-semibold text-slate-900">Informasi Karyawan</h3>
-                        <p className="mt-0.5 text-sm text-slate-500">Perbarui detail karyawan "{employee.name}".</p>
+                        <p className="mt-0.5 text-sm text-slate-500">Perbarui detail {pageLabel.toLowerCase()} "{employee.name}".</p>
                     </div>
                     <div className="p-6">
                         <EmployeeForm
@@ -57,6 +70,8 @@ export default function Edit({ employee, branches, roles = [] }) {
                             submitLabel="Simpan Perubahan"
                             cancelHref={route('admin.employees.index')}
                             editing
+                            storeType={storeType}
+                            showCommission={showCommission}
                         />
                     </div>
                 </div>

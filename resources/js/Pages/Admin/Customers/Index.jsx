@@ -335,11 +335,13 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                 <p className="truncate font-medium text-slate-800">
                                     {c.name}
                                 </p>
-                                <span
-                                    className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${TIER_STYLES[c.tier] || TIER_STYLES.bronze}`}
-                                >
-                                    {c.tier || "bronze"}
-                                </span>
+                                {showLoyalty && (
+                                    <span
+                                        className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${TIER_STYLES[c.tier] || TIER_STYLES.bronze}`}
+                                    >
+                                        {c.tier || "bronze"}
+                                    </span>
+                                )}
                             </div>
                             {c.phone && (
                                 <p className="mt-0.5 text-sm text-slate-500">
@@ -352,9 +354,11 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                 </p>
                             )}
                             <div className="mt-2 flex items-center gap-3">
-                                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                                    {c.points || 0} poin
-                                </span>
+                                {showLoyalty && (
+                                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                                        {c.points || 0} poin
+                                    </span>
+                                )}
                                 <div className="flex items-center gap-1">
                                     <Link
                                         href={route(

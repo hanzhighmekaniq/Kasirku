@@ -2,10 +2,24 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 
-export default function Show({ purchase }) {
+const PAGE_TITLE = {
+    retail: "Pembelian",
+    fnb: "Pembelian Bahan Baku",
+    rental: "Pembelian Unit",
+};
+const PRODUCT_LABEL = {
+    retail: "Produk",
+    fnb: "Bahan Baku",
+    rental: "Unit",
+};
+
+export default function Show({ purchase, storeType = "retail" }) {
     const { flash } = usePage().props;
     const [confirmingStatus, setConfirmingStatus] = useState(null);
     const [processing, setProcessing] = useState(false);
+
+    const pageTitle = PAGE_TITLE[storeType] ?? "Pembelian";
+    const productLabel = PRODUCT_LABEL[storeType] ?? "Produk";
 
     const { supplier, items, payments, user } = purchase;
 
@@ -72,13 +86,13 @@ export default function Show({ purchase }) {
                             {purchase.purchase_no}
                         </h2>
                         <p className="text-sm text-slate-400">
-                            Detail Pembelian
+                            Detail {pageTitle}
                         </p>
                     </div>
                 </div>
             }
         >
-            <Head title={`Pembelian ${purchase.purchase_no}`} />
+            <Head title={`${pageTitle} ${purchase.purchase_no}`} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -160,7 +174,7 @@ export default function Show({ purchase }) {
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
                             <h3 className="text-base font-semibold text-slate-900">
-                                Informasi Pembelian
+                                Informasi {pageTitle}
                             </h3>
                         </div>
                         <div className="p-6">
@@ -189,7 +203,7 @@ export default function Show({ purchase }) {
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
                             <h3 className="text-base font-semibold text-slate-900">
-                                Item Pembelian
+                                Item {pageTitle}
                             </h3>
                         </div>
                         <div className="p-0">
@@ -201,7 +215,7 @@ export default function Show({ purchase }) {
                                                 #
                                             </th>
                                             <th className="px-6 py-3 font-medium text-slate-500">
-                                                Produk
+                                                {productLabel}
                                             </th>
                                             <th className="px-6 py-3 text-right font-medium text-slate-500">
                                                 Qty

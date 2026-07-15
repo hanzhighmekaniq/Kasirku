@@ -22,7 +22,9 @@ export default function CustomerForm({
     onSubmit,
     submitLabel = "Simpan",
     cancelHref,
+    storeType = "retail",
 }) {
+    const showDeposit = ["service", "rental", "hospitality", "parking", "session"].includes(storeType);
     return (
         <form onSubmit={onSubmit} className="space-y-5">
             <Field label="Nama Pelanggan" required error={errors.name}>
@@ -83,6 +85,27 @@ export default function CustomerForm({
                     className={inp(errors.address)}
                 />
             </Field>
+
+            {showDeposit && (
+                <Field label="Saldo Deposit" error={errors.deposit_balance}>
+                    <div className="relative">
+                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                            Rp
+                        </span>
+                        <input
+                            type="number"
+                            value={data.deposit_balance ?? ""}
+                            onChange={(e) => setData("deposit_balance", e.target.value)}
+                            min="0"
+                            placeholder="0"
+                            className={`${inp(errors.deposit_balance)} pl-9`}
+                        />
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                        Saldo deposit pelanggan (untuk pembayaran prepaid)
+                    </p>
+                </Field>
+            )}
 
             <Field label="Catatan" error={errors.notes}>
                 <textarea

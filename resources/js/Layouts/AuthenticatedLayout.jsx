@@ -10,7 +10,7 @@ import {
     applyCustomOrderToItems,
 } from "@/Hooks/useSidebarOrder";
 import { NavIcons, GroupIcons } from "@/Components/NavIcons";
-import { Check, GripVertical, Search, Moon, Sun, Settings, LogOut, User } from "lucide-react";
+import { GripVertical, Search, Moon, Sun, Settings, LogOut, User } from "lucide-react";
 
 /* ─── Type-mismatch modal ───────────────────────────────────── */
 /**
@@ -298,7 +298,7 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
     };
 
     const handleDragLeave = () => {
-        setDragOverKey(null);perbaiki 
+        setDragOverKey(null);perbaiki   
     };
 
     const handleDrop = (e) => {
@@ -439,216 +439,210 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
     );
 }
 
-/* ─── Store Switcher (topbar) ────────────────────────────────── */
-function StoreSwitcher({ currentStore, userStores }) {
+/* ─── Workspace Switcher (sidebar: toko + cabang jadi satu panel) ── */
+function WorkspaceSwitcher({
+    collapsed,
+    currentStore,
+    userStores = [],
+    currentBranch,
+    branches = [],
+    canSwitch,
+}) {
     const [open, setOpen] = useState(false);
-    const ref = useRef(null);
+    const [pos, setPos] = useState({ top: 0, left: 0, width: 260 });
+    const btnRef = useRef(null);
+    const panelRef = useRef(null);
 
     useEffect(() => {
+        if (!open) return;
         const handler = (e) => {
-            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+            if (panelRef.current?.contains(e.target)) return;
+            if (btnRef.current?.contains(e.target)) return;
+            setOpen(false);
         };
         document.addEventListener("mousedown", handler);
         return () => document.removeEventListener("mousedown", handler);
-    }, []);
+    }, [open]);
+
+    if (!currentStore) return null;
+
+    const hasStoreChoice = canSwitch && userStores.length > 1;
+    const hasBranchChoice = canSwitch && branches.length > 1;
+    const clickable = hasStoreChoice || hasBranchChoice;
+
+    const toggle = () => {
+        if (!clickable) return;
+        if (!open && btnRef.current) {
+            const rect = btnRef.current.getBoundingClientRect();
+            setPos({
+                top: rect.bottom + 6,
+                left: rect.left,
+                width: collapsed ? 260 : rect.width,
+            });
+        }
+        setOpen((o) => !o);
+    };
 
     const switchStore = (storeId) => {
         setOpen(false);
         router.post(
             route("admin.store.switch"),
             { store_id: storeId },
-            {
-                preserveState: false,
-            },
+            { preserveState: false },
         );
     };
-
-    return (
-        <div ref={ref} className="relative hidden sm:block">
-            <button
-                onClick={() => setOpen(!open)}
-                className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
-            >
-                <svg
-                    className="h-3.5 w-3.5 text-slate-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.8}
-                    stroke="currentColor"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.375.375 0 01.375.375v1.875c0 .207-.168.375-.375.375H6.75a.375.375 0 01-.375-.375v-1.875A.375.375 0 016.75 18z"
-                    />
-                </svg>
-                <span className="max-w-[7rem] truncate">
-                    {currentStore.name}
-                </span>
-                <svg
-                    className={`h-3 w-3 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                >
-                    <path
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                    />
-                </svg>
-            </button>
-
-            {open && (
-                <div className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-                    <div className="border-b border-slate-100 px-3 py-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                            Ganti Toko
-                        </p>
-                    </div>
-                    {userStores.map((s) => (
-                        <button
-                            key={s.id}
-                            onClick={() => switchStore(s.id)}
-                            className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-slate-50 ${
-                                s.id === currentStore.id
-                                    ? "bg-indigo-50 text-indigo-700 font-semibold"
-                                    : "text-slate-700"
-                            }`}
-                        >
-                            <span
-                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
-                                    s.id === currentStore.id
-                                        ? "bg-indigo-500 text-white"
-                                        : "bg-slate-200 text-slate-600"
-                                }`}
-                            >
-                                {s.name.charAt(0).toUpperCase()}
-                            </span>
-                            <span className="flex-1 truncate">{s.name}</span>
-                            {s.id === currentStore.id && (
-                                <svg
-                                    className="ml-auto h-3.5 w-3.5 shrink-0 text-indigo-500"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2.5}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-                            )}
-                        </button>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-}
-
-/* ─── Branch Switcher (topbar) ───────────────────────────────── */
-function BranchSwitcher({ currentBranch, branches }) {
-    const [open, setOpen] = useState(false);
-    const ref = useRef(null);
-
-    useEffect(() => {
-        const handler = (e) => {
-            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-        };
-        document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
-    }, []);
 
     const switchBranch = (branchId) => {
         setOpen(false);
         router.post(
             route("admin.branch.switch"),
             { branch_id: branchId },
-            {
-                preserveState: false,
-            },
+            { preserveState: false },
         );
     };
 
-    return (
-        <div ref={ref} className="relative hidden sm:block">
-            <button
-                onClick={() => setOpen(!open)}
-                className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
-            >
-                <svg
-                    className="h-3.5 w-3.5 text-slate-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.8}
-                    stroke="currentColor"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3.75 21h16.5M4.5 21V8.25A2.25 2.25 0 016.75 6h10.5a2.25 2.25 0 012.25 2.25V21"
-                    />
-                </svg>
-                {currentBranch.name}
-                <svg
-                    className={`h-3 w-3 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                >
-                    <path
-                        fillRule="evenodd"
-                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                    />
-                </svg>
-            </button>
+    const typeIcon = TYPE_ICON[currentStore.type] || "🏬";
+    const typeLabel = TYPE_LABEL[currentStore.type] || currentStore.type;
+    const typeColor = TYPE_COLOR[currentStore.type] || "bg-slate-50 text-slate-600 ring-1 ring-slate-200";
 
-            {open && (
-                <div className="absolute right-0 top-full z-50 mt-1.5 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-                    <div className="border-b border-slate-100 px-3 py-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                            Ganti Cabang
-                        </p>
-                    </div>
-                    {branches.map((b) => (
-                        <button
-                            key={b.id}
-                            onClick={() => switchBranch(b.id)}
-                            className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-slate-50 ${
-                                b.id === currentBranch.id
-                                    ? "bg-indigo-50 text-indigo-700 font-semibold"
-                                    : "text-slate-700"
-                            }`}
-                        >
-                            <span
-                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
-                                    b.id === currentBranch.id
-                                        ? "bg-indigo-500 text-white"
-                                        : "bg-slate-200 text-slate-600"
-                                }`}
+    const Trigger = clickable ? "button" : "div";
+
+    return (
+        <div className={collapsed ? "flex justify-center" : "px-4"}>
+            <Trigger
+                ref={btnRef}
+                type={clickable ? "button" : undefined}
+                onClick={clickable ? toggle : undefined}
+                title={
+                    collapsed
+                        ? `${currentStore.name}${currentBranch ? " · " + currentBranch.name : ""}`
+                        : undefined
+                }
+                className={`flex items-center rounded-xl border transition ${
+                    collapsed
+                        ? "h-9 w-9 justify-center border-slate-200 bg-white"
+                        : "w-full gap-2.5 border-slate-200 bg-white px-3 py-2.5 text-left"
+                } ${clickable ? "hover:border-indigo-300 hover:bg-indigo-50/50 cursor-pointer" : "cursor-default"}`}
+            >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm">
+                    {typeIcon}
+                </span>
+                {!collapsed && (
+                    <>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-semibold text-slate-800">
+                                {currentStore.name}
+                            </p>
+                            <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                                {currentBranch && (
+                                    <span className="truncate">📍 {currentBranch.name}</span>
+                                )}
+                                <span className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${typeColor}`}>
+                                    {typeLabel}
+                                </span>
+                            </div>
+                        </div>
+                        {clickable && (
+                            <svg
+                                className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
                             >
-                                {b.code?.charAt(0) ?? b.name.charAt(0)}
-                            </span>
-                            {b.name}
-                            {b.id === currentBranch.id && (
-                                <svg
-                                    className="ml-auto h-3.5 w-3.5 text-indigo-500"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2.5}
-                                    stroke="currentColor"
+                                <path
+                                    fillRule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        )}
+                    </>
+                )}
+            </Trigger>
+
+            {open && clickable && (
+                <div
+                    ref={panelRef}
+                    style={{
+                        position: "fixed",
+                        top: pos.top,
+                        left: pos.left,
+                        width: pos.width,
+                    }}
+                    className="z-50 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+                >
+                    {hasStoreChoice && (
+                        <>
+                            <div className="border-b border-slate-100 px-3 py-2">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Toko
+                                </p>
+                            </div>
+                            {userStores.map((s) => (
+                                <button
+                                    key={s.id}
+                                    onClick={() => switchStore(s.id)}
+                                    className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-slate-50 ${
+                                        s.id === currentStore.id
+                                            ? "bg-indigo-50 text-indigo-700 font-semibold"
+                                            : "text-slate-700"
+                                    }`}
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-                            )}
-                        </button>
-                    ))}
+                                    <span
+                                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
+                                            s.id === currentStore.id
+                                                ? "bg-indigo-500 text-white"
+                                                : "bg-slate-200 text-slate-600"
+                                        }`}
+                                    >
+                                        {s.name.charAt(0).toUpperCase()}
+                                    </span>
+                                    <span className="flex-1 truncate">{s.name}</span>
+                                    {s.id === currentStore.id && (
+                                        <svg className="ml-auto h-3.5 w-3.5 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                    )}
+                                </button>
+                            ))}
+                        </>
+                    )}
+
+                    {hasBranchChoice && (
+                        <>
+                            <div className={`border-b border-slate-100 px-3 py-2 ${hasStoreChoice ? "border-t" : ""}`}>
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                    Cabang
+                                </p>
+                            </div>
+                            {branches.map((b) => (
+                                <button
+                                    key={b.id}
+                                    onClick={() => switchBranch(b.id)}
+                                    className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-slate-50 ${
+                                        b.id === currentBranch?.id
+                                            ? "bg-indigo-50 text-indigo-700 font-semibold"
+                                            : "text-slate-700"
+                                    }`}
+                                >
+                                    <span
+                                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
+                                            b.id === currentBranch?.id
+                                                ? "bg-indigo-500 text-white"
+                                                : "bg-slate-200 text-slate-600"
+                                        }`}
+                                    >
+                                        {b.code?.charAt(0) ?? b.name.charAt(0)}
+                                    </span>
+                                    <span className="flex-1 truncate">{b.name}</span>
+                                    {b.id === currentBranch?.id && (
+                                        <svg className="ml-auto h-3.5 w-3.5 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                    )}
+                                </button>
+                            ))}
+                        </>
+                    )}
                 </div>
             )}
         </div>
@@ -656,7 +650,16 @@ function BranchSwitcher({ currentBranch, branches }) {
 }
 
 /* ─── Sidebar ────────────────────────────────────────────────── */
-function SidebarContent({ collapsed, onNavigate, user, currentStore }) {
+function SidebarContent({
+    collapsed,
+    onNavigate,
+    user,
+    currentStore,
+    userStores,
+    currentBranch,
+    branches,
+    canSwitchContext,
+}) {
 
     const modules = useStoreModules();
     const groups = buildNavGroups(modules);
@@ -722,15 +725,6 @@ function SidebarContent({ collapsed, onNavigate, user, currentStore }) {
         return () => document.removeEventListener("keydown", handler);
     }, [reorderMode]);
 
-    const TYPE_COLOR_MAPS = {
-        retail: "bg-blue-100 text-blue-700",
-        fnb: "bg-orange-100 text-orange-700",
-        service: "bg-violet-100 text-violet-700",
-        rental: "bg-yellow-100 text-yellow-700",
-        ticket: "bg-rose-100 text-rose-700",
-        hospitality: "bg-amber-100 text-amber-700",
-    };
-
     return (
         <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-slate-50 to-white border-r border-slate-200">
             {/* Brand */}
@@ -755,9 +749,21 @@ function SidebarContent({ collapsed, onNavigate, user, currentStore }) {
                 </div>
             </div>
 
+            {/* Workspace switcher — toko & cabang */}
+            <div className={`shrink-0 ${collapsed ? "pt-3 pb-1" : "pt-4 pb-1"}`}>
+                <WorkspaceSwitcher
+                    collapsed={collapsed}
+                    currentStore={currentStore}
+                    userStores={userStores}
+                    currentBranch={currentBranch}
+                    branches={branches}
+                    canSwitch={canSwitchContext}
+                />
+            </div>
+
             {/* Search & Theme Toggle */}
             {!collapsed && (
-                <div className="shrink-0 space-y-3 px-4 pt-4 pb-3">
+                <div className="shrink-0 space-y-3 px-4 pt-3 pb-3">
                     {/* Search Bar */}
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -877,21 +883,6 @@ function SidebarContent({ collapsed, onNavigate, user, currentStore }) {
                                 <LogOut className="h-3.5 w-3.5" />
                             </button>
                         </div>
-                        
-                        {/* Store Type Badge */}
-                        {currentStore?.type && (
-                            <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-slate-700/30 px-1.5 py-1">
-                                <svg className="h-2.5 w-2.5 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.375.375 0 01.375.375v1.875c0 .207-.168.375-.375.375H6.75a.375.375 0 01-.375-.375v-1.875A.375.375 0 016.75 18z" />
-                                </svg>
-                                <span className="text-[9px] font-medium text-slate-300">
-                                    {currentStore.name}
-                                </span>
-                                <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[8px] font-bold ${TYPE_COLOR_MAPS[currentStore.type] || "bg-slate-100 text-slate-700"}`}>
-                                    {TYPE_LABEL[currentStore.type] || currentStore.type}
-                                </span>
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
@@ -956,7 +947,16 @@ export default function AuthenticatedLayout({ header, children }) {
             <aside
                 className={`fixed inset-y-0 left-0 z-30 hidden overflow-hidden transition-[width] duration-300 ease-in-out lg:block ${sidebarW}`}
             >
-                <SidebarContent collapsed={collapsed} onNavigate={onNavigate} user={user} currentStore={currentStore} />
+                <SidebarContent
+                    collapsed={collapsed}
+                    onNavigate={onNavigate}
+                    user={user}
+                    currentStore={currentStore}
+                    userStores={userStores}
+                    currentBranch={currentBranch}
+                    branches={branches}
+                    canSwitchContext={canSwitchContext}
+                />
             </aside>
 
             {/* Mobile drawer */}
@@ -970,7 +970,16 @@ export default function AuthenticatedLayout({ header, children }) {
                 <aside
                     className={`absolute inset-y-0 left-0 w-[280px] overflow-hidden shadow-xl transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
                 >
-                    <SidebarContent collapsed={false} onNavigate={onNavigate} user={user} currentStore={currentStore} />
+                    <SidebarContent
+                        collapsed={false}
+                        onNavigate={onNavigate}
+                        user={user}
+                        currentStore={currentStore}
+                        userStores={userStores}
+                        currentBranch={currentBranch}
+                        branches={branches}
+                        canSwitchContext={canSwitchContext}
+                    />
                 </aside>
             </div>
 
@@ -1031,84 +1040,8 @@ export default function AuthenticatedLayout({ header, children }) {
 
                     {/* Right side */}
                     <div className="flex items-center gap-2">
-                        {/* Store switcher — hanya owner/manager yang punya multi-store */}
-                        {currentStore &&
-                            userStores?.length > 1 &&
-                            canSwitchContext && (
-                                <StoreSwitcher
-                                    currentStore={currentStore}
-                                    userStores={userStores}
-                                />
-                            )}
-
-                        {/* Branch badge / switcher */}
-                        {currentBranch &&
-                            // Karyawan biasa: badge static saja, tidak bisa ganti branch
-                            (!canSwitchContext ? (
-                                <span className="hidden items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600 sm:flex">
-                                    <svg
-                                        className="h-3 w-3 text-slate-400"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.8}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M3.75 21h16.5M4.5 21V8.25A2.25 2.25 0 016.75 6h10.5a2.25 2.25 0 012.25 2.25V21"
-                                        />
-                                    </svg>
-                                    <span>{currentBranch.name}</span>
-                                    <svg
-                                        className="h-2.5 w-2.5 text-slate-300"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-                                        />
-                                    </svg>
-                                </span>
-                            ) : branches?.length > 1 ? (
-                                <span className="hidden sm:inline-flex">
-                                    <BranchSwitcher
-                                        currentBranch={currentBranch}
-                                        branches={branches}
-                                    />
-                                </span>
-                            ) : (
-                                <span className="hidden items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600 sm:flex">
-                                    <svg
-                                        className="h-3.5 w-3.5 text-slate-400"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.8}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M3.75 21h16.5M4.5 21V8.25A2.25 2.25 0 016.75 6h10.5a2.25 2.25 0 012.25 2.25V21"
-                                        />
-                                    </svg>
-                                    {currentBranch.name}
-                                </span>
-                            ))}
-
+                        {/* Toko & cabang kini dikelola dari sidebar (WorkspaceSwitcher) */}
                         <OfflineIndicator />
-
-                        {/* Store Type Badge — visible on sm+ (hidden on mobile) */}
-                        {currentStore?.type && (
-                            <span className={`hidden sm:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ${TYPE_COLOR[currentStore.type] || "bg-slate-50 text-slate-600 ring-slate-200"}`}>
-                                <span className="text-sm leading-none">{TYPE_ICON[currentStore.type] || "🏬"}</span>
-                                <span>{TYPE_LABEL[currentStore.type] || currentStore.type}</span>
-                            </span>
-                        )}
 
                         {/* User menu */}
                         <Dropdown>
@@ -1134,7 +1067,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content>
-                                {/* Mobile-only store info */}
+                                {/* Mobile-only user info (toko/cabang sudah ada di sidebar) */}
                                 <div className="lg:hidden px-3 py-2.5">
                                     <div className="flex items-center gap-2.5">
                                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-sm font-bold text-white shadow-sm">
@@ -1145,17 +1078,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                             <p className="truncate text-[10px] text-slate-500">{user?.email}</p>
                                         </div>
                                     </div>
-                                    {currentStore?.type && (
-                                        <div className="mt-2.5 flex items-center gap-1.5">
-                                            <span className="text-sm leading-none">{TYPE_ICON[currentStore.type] || "🏬"}</span>
-                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${TYPE_COLOR[currentStore.type] || "bg-slate-50 text-slate-600 ring-slate-200"}`}>
-                                                {TYPE_LABEL[currentStore.type] || currentStore.type}
-                                            </span>
-                                            {currentBranch && (
-                                                <span className="text-[10px] text-slate-400">• 📍 {currentBranch.name}</span>
-                                            )}
-                                        </div>
-                                    )}
                                 </div>
                                 <div className="lg:hidden my-1.5 border-t border-slate-100" />
                                 <Dropdown.Link

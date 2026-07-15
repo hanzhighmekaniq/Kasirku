@@ -314,21 +314,9 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
         // ─────────────────────────────────────────────────────────────────
         // PENJUALAN — permission: sale.view / sale.create
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware(['feature:basic_pos', 'permission:sale.view'])->group(
-            function () {
-                Route::get('/sales', [SaleController::class, 'index'])->name(
-                    'sales.index',
-                );
-                Route::get('/sales/{sale}', [
-                    SaleController::class,
-                    'show',
-                ])->name('sales.show');
-                Route::get('/sales/{sale}/print', [
-                    SaleController::class,
-                    'print',
-                ])->name('sales.print');
-            },
-        );
+        // PENTING: rute statis (/sales/create) HARUS didaftarkan sebelum
+        // rute wildcard (/sales/{sale}), agar Laravel tidak salah mencocokkan
+        // "create" sebagai parameter {sale}.
         Route::middleware([
             'feature:basic_pos',
             'permission:sale.create',
@@ -345,6 +333,21 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 'switchPayment',
             ])->name('sales.switchPayment');
         });
+        Route::middleware(['feature:basic_pos', 'permission:sale.view'])->group(
+            function () {
+                Route::get('/sales', [SaleController::class, 'index'])->name(
+                    'sales.index',
+                );
+                Route::get('/sales/{sale}', [
+                    SaleController::class,
+                    'show',
+                ])->name('sales.show');
+                Route::get('/sales/{sale}/print', [
+                    SaleController::class,
+                    'print',
+                ])->name('sales.print');
+            },
+        );
         Route::middleware(['feature:basic_pos', 'permission:sale.void'])->group(
             function () {
                 Route::patch('/sales/{sale}/status', [

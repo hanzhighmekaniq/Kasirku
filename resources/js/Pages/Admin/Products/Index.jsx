@@ -157,15 +157,17 @@ export default function Index({
     // Kolom yang tampil — derived from storeTypeFeatures (database)
     const showStock = has("stock");
     const showMargin = has("purchase");
-    const showCapacity = storeType === "ticket";
-    const showDuration = ["session", "parking"].includes(storeType);
+    const showCapacity = ["ticket", "hospitality"].includes(storeType);
+    const showDuration = ["session", "parking", "ticket"].includes(storeType);
     const showRateHour = [
         "session",
         "parking",
         "rental",
         "hospitality",
     ].includes(storeType);
-    const showDeposit = storeType === "rental";
+    const showDeposit = ["rental", "hospitality", "parking", "session"].includes(
+        storeType,
+    );
     const showMaxGuests = storeType === "hospitality";
     const showPrepTime = has("kitchen");
 
@@ -614,11 +616,19 @@ export default function Index({
                                                     )}
                                                 </td>
                                             )}
-                                            {/* Durasi Paket — session/parking */}
+                                            {/* Durasi — session/parking (session_duration_minutes) atau ticket (valid_duration_minutes) */}
                                             {showDuration && (
                                                 <td className="px-4 py-4 text-center text-slate-600 hidden lg:table-cell">
-                                                    {product.session_duration_minutes ===
-                                                    0 ? (
+                                                    {storeType === "ticket" ? (
+                                                        product.valid_duration_minutes ? (
+                                                            `${product.valid_duration_minutes} mnt`
+                                                        ) : (
+                                                            <span className="text-slate-300">
+                                                                —
+                                                            </span>
+                                                        )
+                                                    ) : product.session_duration_minutes ===
+                                                      0 ? (
                                                         <span className="text-xs text-emerald-600 font-medium">
                                                             Unlimited
                                                         </span>
@@ -919,12 +929,16 @@ export default function Index({
                                                     )}
                                                 {showDuration && (
                                                     <span className="text-xs text-slate-500">
-                                                        {product.session_duration_minutes ===
-                                                        0
-                                                            ? "Unlimited"
-                                                            : product.session_duration_minutes
-                                                              ? `${product.session_duration_minutes} mnt`
-                                                              : null}
+                                                        {storeType === "ticket"
+                                                            ? product.valid_duration_minutes
+                                                                ? `${product.valid_duration_minutes} mnt`
+                                                                : null
+                                                            : product.session_duration_minutes ===
+                                                                0
+                                                              ? "Unlimited"
+                                                              : product.session_duration_minutes
+                                                                ? `${product.session_duration_minutes} mnt`
+                                                                : null}
                                                     </span>
                                                 )}
                                                 {showDeposit &&

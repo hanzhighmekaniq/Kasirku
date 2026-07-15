@@ -3,7 +3,7 @@ import { Head, Link, useForm } from "@inertiajs/react";
 import SectionCard from "@/Components/ui/SectionCard";
 import CustomerForm from "./CustomerForm";
 
-export default function Create() {
+export default function Create({ storeType = "retail" }) {
     const { data, setData, post, processing, errors } = useForm({
         name: "",
         phone: "",
@@ -13,6 +13,10 @@ export default function Create() {
         gender: "",
         notes: "",
     });
+
+    const subtitle = ["retail", "fnb", "service", "hospitality"].includes(storeType)
+        ? "Tambahkan pelanggan baru untuk program loyalitas."
+        : "Tambahkan pelanggan baru.";
     const submit = (e) => {
         e.preventDefault();
         post(route("admin.customers.store"));
@@ -52,7 +56,7 @@ export default function Create() {
             <div className="mx-auto max-w-2xl">
                 <SectionCard
                     title="Informasi Pelanggan"
-                    subtitle="Tambahkan pelanggan baru untuk program loyalitas."
+                    subtitle={subtitle}
                 >
                     <CustomerForm
                         data={data}
@@ -62,6 +66,7 @@ export default function Create() {
                         onSubmit={submit}
                         submitLabel="Simpan Pelanggan"
                         cancelHref={route("admin.customers.index")}
+                        storeType={storeType}
                     />
                 </SectionCard>
             </div>

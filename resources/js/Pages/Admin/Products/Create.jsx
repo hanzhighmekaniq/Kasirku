@@ -85,6 +85,8 @@ export default function Create({
         isComposable: has("recipe"), // fnb
         isSellable: true, // selalu tampilkan is_sellable
         trackStock: has("stock"), // retail, fnb, rental
+        supplier: has("supplier"), // retail, fnb, rental
+        multiUnit: ["retail", "fnb", "rental"].includes(storeType),
     };
 
     const { data, setData, post, processing, errors } = useForm({
@@ -343,6 +345,29 @@ export default function Create({
                                         </Link>
                                     </div>
                                 </Field>
+
+                                {feat.supplier && (
+                                    <Field
+                                        label="Supplier"
+                                        hint="opsional"
+                                        error={errors.supplier_id}
+                                    >
+                                        <Select
+                                            options={(suppliers ?? []).map(
+                                                (s) => ({
+                                                    value: s.id,
+                                                    label: s.name,
+                                                }),
+                                            )}
+                                            value={data.supplier_id}
+                                            onChange={(v) =>
+                                                setData("supplier_id", v)
+                                            }
+                                            placeholder="Pilih supplier..."
+                                            error={errors.supplier_id}
+                                        />
+                                    </Field>
+                                )}
                             </div>
                         </SectionCard>
 
@@ -450,7 +475,8 @@ export default function Create({
                                 )}
                         </SectionCard>
 
-                        {/* SECTION: Multi-Satuan */}
+                        {/* SECTION: Multi-Satuan — hanya retail, fnb, rental */}
+                        {feat.multiUnit && (
                         <SectionCard
                             title="Multi-Satuan"
                             subtitle="Kemasan grosir seperti dus, box, karton"
@@ -621,6 +647,7 @@ export default function Create({
                                 )}
                             </div>
                         </SectionCard>
+                        )}
 
                         {/* SECTION: Detail spesifik per tipe */}
                         {(data.type === "time_based" ||
@@ -737,8 +764,10 @@ export default function Create({
                                             </Field>
                                         )}
 
-                                    {/* capacity — untuk ticket */}
-                                    {storeType === "ticket" && (
+                                    {/* capacity — untuk ticket & hospitality */}
+                                    {["ticket", "hospitality"].includes(
+                                        storeType,
+                                    ) && (
                                         <Field
                                             label="Kapasitas (orang/slot)"
                                             error={errors.capacity}

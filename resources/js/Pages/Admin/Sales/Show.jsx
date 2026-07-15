@@ -3,10 +3,35 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import axios from "axios";
 import { useState } from "react";
 
-export default function Show({ sale, paymentMethods, pgConfigs, canUpdateServiceStatus, canUpdateRentalStatus, canCheckInTicket, canCheckOutHospitality, canExitParking, canEndSession }) {
+export default function Show({ sale, paymentMethods, pgConfigs, canUpdateServiceStatus, canUpdateRentalStatus, canCheckInTicket, canCheckOutHospitality, canExitParking, canEndSession, storeType = "retail" }) {
     const { flash } = usePage().props;
     const [confirmingStatus, setConfirmingStatus] = useState(null);
     const [processing, setProcessing] = useState(false);
+
+    // Page title & label per store type
+    const PAGE_TITLE = {
+        retail: "Penjualan",
+        fnb: "Transaksi",
+        service: "Transaksi Jasa",
+        rental: "Transaksi Sewa",
+        ticket: "Penjualan Tiket",
+        hospitality: "Transaksi Penginapan",
+        parking: "Transaksi Parkir",
+        session: "Transaksi Sesi",
+    };
+    const pageTitle = PAGE_TITLE[storeType] ?? "Penjualan";
+
+    const ORDER_TYPE_LABEL = {
+        retail: "Tipe Pesanan",
+        fnb: "Tipe Pesanan",
+        service: "Tipe Layanan",
+        rental: "Tipe Sewa",
+        ticket: "Tipe Tiket",
+        hospitality: "Tipe Menginap",
+        parking: "Tipe Parkir",
+        session: "Tipe Sesi",
+    };
+    const orderTypeLabel = ORDER_TYPE_LABEL[storeType] ?? "Tipe Pesanan";
 
     const {
         customer,
@@ -269,13 +294,13 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                             {sale.sale_no}
                         </h2>
                         <p className="text-sm text-slate-400">
-                            Detail Penjualan
+                            Detail {pageTitle}
                         </p>
                     </div>
                 </div>
             }
         >
-            <Head title={`Penjualan ${sale.sale_no}`} />
+            <Head title={`${pageTitle} ${sale.sale_no}`} />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -339,7 +364,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
                             <h3 className="text-base font-semibold text-slate-900">
-                                Informasi Penjualan
+                                Informasi {pageTitle}
                             </h3>
                         </div>
                         <div className="p-6">
@@ -361,7 +386,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     value={user?.name ?? "-"}
                                 />
                                 <InfoRow
-                                    label="Tipe Pesanan"
+                                    label={orderTypeLabel}
                                     value={
                                         <OrderTypeBadge
                                             type={sale.order_type}
@@ -822,7 +847,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
                             <h3 className="text-base font-semibold text-slate-900">
-                                Item Penjualan
+                                Item {pageTitle}
                             </h3>
                         </div>
                         <div className="p-0">
@@ -1458,12 +1483,43 @@ function PaymentBadge({ status }) {
 
 function OrderTypeBadge({ type }) {
     const map = {
+        // FnB
         dine_in: { label: "Dine In", cls: "bg-blue-100 text-blue-700" },
-        takeaway: { label: "Take Away", cls: "bg-orange-100 text-orange-700" },
+        takeaway: { label: "Takeaway", cls: "bg-orange-100 text-orange-700" },
         delivery: { label: "Delivery", cls: "bg-purple-100 text-purple-700" },
+        // Retail
+        wholesale: { label: "Grosir", cls: "bg-cyan-100 text-cyan-700" },
+        // Service
+        walk_in: { label: "Walk-in", cls: "bg-emerald-100 text-emerald-700" },
+        booking: { label: "Booking", cls: "bg-violet-100 text-violet-700" },
+        pickup_delivery: {
+            label: "Jemput & Antar",
+            cls: "bg-purple-100 text-purple-700",
+        },
+        // Rental
+        per_hour: { label: "Per Jam", cls: "bg-amber-100 text-amber-700" },
+        per_day: { label: "Per Hari", cls: "bg-amber-100 text-amber-700" },
+        per_week: { label: "Per Minggu", cls: "bg-amber-100 text-amber-700" },
+        // Ticket
+        online: { label: "Online", cls: "bg-rose-100 text-rose-700" },
+        group: { label: "Group", cls: "bg-pink-100 text-pink-700" },
+        // Hospitality
+        check_in: { label: "Check-in", cls: "bg-teal-100 text-teal-700" },
+        reservation: {
+            label: "Reservasi",
+            cls: "bg-indigo-100 text-indigo-700",
+        },
+        short_stay: { label: "Short Stay", cls: "bg-sky-100 text-sky-700" },
+        // Parking
+        entry: { label: "Masuk", cls: "bg-slate-100 text-slate-700" },
+        exit: { label: "Keluar", cls: "bg-slate-200 text-slate-600" },
+        lost_ticket: { label: "Tiket Hilang", cls: "bg-red-100 text-red-600" },
+        // Session
+        postpaid: { label: "Postpaid", cls: "bg-indigo-100 text-indigo-700" },
+        prepaid: { label: "Prepaid", cls: "bg-violet-100 text-violet-700" },
     };
     const config = map[type] ?? {
-        label: type,
+        label: type ?? "-",
         cls: "bg-slate-100 text-slate-600",
     };
     return (

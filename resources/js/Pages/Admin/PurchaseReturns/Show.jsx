@@ -32,7 +32,14 @@ function StatusBadge({ status }) {
     );
 }
 
-export default function Show({ purchaseReturn }) {
+const PAGE_TITLE = {
+    retail: 'Retur Pembelian',
+    fnb: 'Retur Bahan Baku',
+    rental: 'Retur Pembelian Unit',
+};
+
+export default function Show({ purchaseReturn, storeType = 'retail' }) {
+    const pageTitle = PAGE_TITLE[storeType] ?? 'Retur Pembelian';
     const [processing, setProcessing] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
 
@@ -58,13 +65,13 @@ export default function Show({ purchaseReturn }) {
                         </svg>
                     </Link>
                     <div className="flex items-center gap-3">
-                        <h2 className="text-lg font-semibold text-slate-800">Detail Retur</h2>
+                        <h2 className="text-lg font-semibold text-slate-800">Detail {pageTitle}</h2>
                         <StatusBadge status={purchaseReturn.status} />
                     </div>
                 </div>
             }
         >
-            <Head title={`Retur ${purchaseReturn.return_no}`} />
+            <Head title={`${pageTitle} ${purchaseReturn.return_no}`} />
 
             <div className="mx-auto max-w-3xl space-y-6">
                 {/* Header Card */}

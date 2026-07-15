@@ -1,8 +1,10 @@
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { Head, Link, useForm } from "@inertiajs/react";
 import Field from "@/Components/ui/Field";
 import SectionCard from "@/Components/ui/SectionCard";
 import CustomerForm from "./CustomerForm";
 
-export default function Edit({ customer }) {
+export default function Edit({ customer, storeType = "retail" }) {
     const { data, setData, put, processing, errors } = useForm({
         name: customer.name || "",
         phone: customer.phone || "",
@@ -11,6 +13,7 @@ export default function Edit({ customer }) {
         birth_date: customer.birth_date || "",
         gender: customer.gender || "",
         notes: customer.notes || "",
+        deposit_balance: customer.deposit_balance ?? 0,
     });
     const submit = (e) => {
         e.preventDefault();
@@ -61,6 +64,7 @@ export default function Edit({ customer }) {
                         onSubmit={submit}
                         submitLabel="Simpan Perubahan"
                         cancelHref={route("admin.customers.index")}
+                        storeType={storeType}
                     />
                 </SectionCard>
             </div>

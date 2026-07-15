@@ -874,7 +874,10 @@ export default function Create({
                                 <div className="flex justify-between">
                                     <dt className="text-slate-500">Item</dt>
                                     <dd className="font-medium text-slate-700">
-                                        {data.items.length} produk
+                                        {data.items.length}{" "}
+                                        {storeType === "fnb"
+                                            ? "bahan baku"
+                                            : "produk"}
                                     </dd>
                                 </div>
                                 <div className="flex justify-between">

@@ -149,7 +149,14 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
     );
 }
 
-export default function Create({ purchases }) {
+const PAGE_TITLE = {
+    retail: 'Retur Pembelian',
+    fnb: 'Retur Bahan Baku',
+    rental: 'Retur Pembelian Unit',
+};
+
+export default function Create({ purchases, storeType = 'retail' }) {
+    const pageTitle = PAGE_TITLE[storeType] ?? 'Retur Pembelian';
     const { data, setData, post, processing, errors } = useForm({
         purchase_id: '',
         return_date: new Date().toISOString().slice(0, 10),
@@ -261,11 +268,11 @@ export default function Create({ purchases }) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                         </svg>
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">Buat Retur Pembelian</h2>
+                    <h2 className="text-lg font-semibold text-slate-800">Buat {pageTitle}</h2>
                 </div>
             }
         >
-            <Head title="Buat Retur Pembelian" />
+            <Head title={`Buat ${pageTitle}`} />
 
             <form onSubmit={submit} className="mx-auto max-w-3xl space-y-6">
                 {/* Header Info */}

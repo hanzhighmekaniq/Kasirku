@@ -522,8 +522,8 @@ export default function Show({
                         )}
 
                         {/* ── TYPE-SPECIFIC SUMMARY ── */}
-                        {/* Komisi Karyawan — service/laundry */}
-                        {["service", "laundry"].includes(storeType) &&
+                        {/* Komisi Karyawan — service/ticket */}
+                        {["service", "ticket"].includes(storeType) &&
                             (typeSummary?.commissions ?? []).length > 0 && (
                                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                                     <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 flex items-center justify-between">

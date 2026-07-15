@@ -2,23 +2,27 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HasStoreScope;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\CafeTable;
+use App\Models\Customer;
+use App\Models\PaymentMethod;
+use App\Models\Product;
+use App\Models\ProductStock;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SalePayment;
-use App\Models\Customer;
-use App\Models\Product;
-use App\Models\ProductStock;
-use App\Models\PaymentMethod;
-use App\Models\CafeTable;
-use App\Models\PaymentGatewayTransaction;
+use App\Models\Store;
+use App\Models\StorePaymentGateway;
+use App\Models\StoreType;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use App\Models\User;
-use App\Http\Controllers\Concerns\HasStoreScope;
 
 class SaleController extends Controller
 {
@@ -28,121 +32,124 @@ class SaleController extends Controller
     {
         /** @var User|null $user */
         $user = Auth::user();
-        $storeId = session("current_store_id");
+        $storeId = session('current_store_id');
 
         // Branch filter: query param > session
         // User tanpa sale.void (kasir) selalu terkunci ke branch-nya sendiri
-        $canViewAll = $user->can("sale.void");
+        $canViewAll = $user->can('sale.void');
 
         $branchId =
-            $request->input("branch_id") ?:
-            session("current_branch_id") ?? session("branch_id");
+            $request->input('branch_id') ?:
+            session('current_branch_id') ?? session('branch_id');
 
         // Jika tidak punya sale.void, paksa ke branch sendiri
-        if (!$canViewAll && !$branchId) {
+        if (! $canViewAll && ! $branchId) {
             $branchId = $user->branch_id ?? null;
         }
 
-        $branches = Branch::where("store_id", $storeId)
-            ->where("is_active", true)
-            ->get(["id", "code", "name"]);
+        $branches = Branch::where('store_id', $storeId)
+            ->where('is_active', true)
+            ->get(['id', 'code', 'name']);
 
-        $query = Sale::where("store_id", $storeId)
-            ->with(["customer", "user", "branch", "table"])
+        $query = Sale::where('store_id', $storeId)
+            ->with(['customer', 'user', 'branch', 'table'])
             ->latest();
 
         if ($branchId) {
-            $query->where("branch_id", $branchId);
+            $query->where('branch_id', $branchId);
         }
 
         // User tanpa sale.void hanya lihat transaksi miliknya sendiri
-        if (!$canViewAll) {
-            $query->where("user_id", $user->id);
+        if (! $canViewAll) {
+            $query->where('user_id', $user->id);
         }
 
         // Filter: date range
-        if ($request->filled("date_from")) {
-            $query->whereDate("sale_date", ">=", $request->input("date_from"));
+        if ($request->filled('date_from')) {
+            $query->whereDate('sale_date', '>=', $request->input('date_from'));
         }
-        if ($request->filled("date_to")) {
-            $query->whereDate("sale_date", "<=", $request->input("date_to"));
+        if ($request->filled('date_to')) {
+            $query->whereDate('sale_date', '<=', $request->input('date_to'));
         }
 
         // Filter: payment status
         if (
-            $request->filled("payment_status") &&
-            $request->input("payment_status") !== "all"
+            $request->filled('payment_status') &&
+            $request->input('payment_status') !== 'all'
         ) {
-            $query->where("payment_status", $request->input("payment_status"));
+            $query->where('payment_status', $request->input('payment_status'));
         }
 
         $sales = $query->get();
 
         $stats = [
-            "total" => $sales->count(),
-            "completed" => $sales->where("status", "completed")->count(),
-            "draft" => $sales->where("status", "draft")->count(),
-            "cancelled" => $sales->where("status", "cancelled")->count(),
-            "totalRevenue" => $sales
-                ->where("status", "completed")
-                ->sum("grand_total"),
+            'total' => $sales->count(),
+            'completed' => $sales->where('status', 'completed')->count(),
+            'draft' => $sales->where('status', 'draft')->count(),
+            'cancelled' => $sales->where('status', 'cancelled')->count(),
+            'totalRevenue' => $sales
+                ->where('status', 'completed')
+                ->sum('grand_total'),
         ];
 
         $activeFilters = [
-            "branch_id" => $request->input("branch_id", ""),
-            "date_from" => $request->input("date_from", ""),
-            "date_to" => $request->input("date_to", ""),
-            "payment_status" => $request->input("payment_status", "all"),
+            'branch_id' => $request->input('branch_id', ''),
+            'date_from' => $request->input('date_from', ''),
+            'date_to' => $request->input('date_to', ''),
+            'payment_status' => $request->input('payment_status', 'all'),
         ];
 
-        $store = \App\Models\Store::with("storeType")->find($storeId);
+        $store = Store::with('storeType')->find($storeId);
 
-        return Inertia::render("Admin/Sales/Index", [
-            "sales" => $sales,
-            "stats" => $stats,
-            "branches" => $branches,
-            "currentBranchId" => $branchId ? (string) $branchId : "",
-            "activeFilters" => $activeFilters,
-            "storeType" => $store?->getRelation("storeType")?->code ?? "retail",
+        return Inertia::render('Admin/Sales/Index', [
+            'sales' => $sales,
+            'stats' => $stats,
+            'branches' => $branches,
+            'currentBranchId' => $branchId ? (string) $branchId : '',
+            'activeFilters' => $activeFilters,
+            'storeType' => $store?->getRelation('storeType')?->code ?? 'retail',
         ]);
     }
 
     public function create()
     {
-        $storeId = session("current_store_id");
+        $storeId = session('current_store_id');
+        $store = Store::with('storeType')->find($storeId);
+        $storeType = $store?->getRelation('storeType')?->code ?? 'retail';
 
-        return Inertia::render("Admin/Sales/Create", [
-            "products" => Product::forStore($storeId)
-                ->where("is_active", true)
-                ->where("is_sellable", true)
-                ->with("stocks")
-                ->orderBy("name")
+        return Inertia::render('Admin/Sales/Create', [
+            'products' => Product::forStore($storeId)
+                ->where('is_active', true)
+                ->where('is_sellable', true)
+                ->with('stocks')
+                ->orderBy('name')
                 ->get(),
-            "customers" => Customer::where("store_id", $storeId)
-                ->orderBy("name")
+            'customers' => Customer::where('store_id', $storeId)
+                ->orderBy('name')
                 ->get(),
-            "paymentMethods" => PaymentMethod::forStore($storeId)
-                ->where("is_active", true)
+            'paymentMethods' => PaymentMethod::forStore($storeId)
+                ->where('is_active', true)
                 ->get(),
-            "tables" => CafeTable::where("store_id", $storeId)
-                ->orderBy("table_number")
+            'tables' => CafeTable::where('store_id', $storeId)
+                ->orderBy('table_number')
                 ->get(),
+            'storeType' => $storeType,
         ]);
     }
 
     public function store(Request $request)
     {
-        $storeId = session("current_store_id");
-        $store = \App\Models\Store::with("storeType")->find($storeId);
-        $storeType = $store?->getRelation("storeType")?->code ?? "retail";
+        $storeId = session('current_store_id');
+        $store = Store::with('storeType')->find($storeId);
+        $storeType = $store?->getRelation('storeType')?->code ?? 'retail';
 
         // Order types valid per store type — ambil dari StoreType model
-        $storeTypeModel = \App\Models\StoreType::where(
-            "code",
+        $storeTypeModel = StoreType::where(
+            'code',
             $storeType,
         )->first();
         $validOrderTypes = collect($storeTypeModel?->order_types ?? [])
-            ->pluck("v")
+            ->pluck('v')
             ->filter()
             ->values()
             ->toArray();
@@ -150,169 +157,166 @@ class SaleController extends Controller
         // Fallback jika StoreType belum ada di DB
         if (empty($validOrderTypes)) {
             $validOrderTypes = [
-                "takeaway",
-                "delivery",
-                "dine_in",
-                "walk_in",
-                "booking",
-                "per_hour",
-                "per_day",
-                "per_week",
-                "online",
-                "group",
-                "check_in",
-                "reservation",
-                "short_stay",
-                "entry",
-                "exit",
-                "lost_ticket",
-                "postpaid",
-                "prepaid",
-                "wholesale",
-                "pickup_delivery",
+                'takeaway',
+                'delivery',
+                'dine_in',
+                'walk_in',
+                'booking',
+                'per_hour',
+                'per_day',
+                'per_week',
+                'online',
+                'group',
+                'check_in',
+                'reservation',
+                'short_stay',
+                'entry',
+                'exit',
+                'lost_ticket',
+                'postpaid',
+                'prepaid',
+                'wholesale',
+                'pickup_delivery',
             ];
         }
 
         $validated = $request->validate([
-            "customer_id" => "nullable|exists:customers,id",
-            "table_id" => "nullable|integer",
-            "sale_date" => "required|date",
-            "order_type" => [
-                "required",
-                "string",
-                \Illuminate\Validation\Rule::in($validOrderTypes),
+            'customer_id' => 'nullable|exists:customers,id',
+            'table_id' => 'nullable|integer',
+            'sale_date' => 'required|date',
+            'order_type' => [
+                'required',
+                'string',
+                Rule::in($validOrderTypes),
             ],
-            "discount_amount" => "nullable|numeric|min:0",
-            "tax_amount" => "nullable|numeric|min:0",
-            "shipping_amount" => "nullable|numeric|min:0",
-            "payment_method_id" => "nullable|exists:payment_methods,id",
-            "paid_amount" => "required|numeric|min:0",
-            "notes" => "nullable|string|max:500",
-            "items" => "required|array|min:1",
-            "items.*.product_id" => "required|exists:products,id",
-            "items.*.quantity" => "required|integer|min:1",
-            "items.*.price" => "required|numeric|min:0",
-            "items.*.discount_amount" => "nullable|numeric|min:0",
+            'discount_amount' => 'nullable|numeric|min:0',
+            'tax_amount' => 'nullable|numeric|min:0',
+            'shipping_amount' => 'nullable|numeric|min:0',
+            'payment_method_id' => 'nullable|exists:payment_methods,id',
+            'paid_amount' => 'required|numeric|min:0',
+            'notes' => 'nullable|string|max:500',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.discount_amount' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
 
         try {
             // Generate sale number: SL-YYYYMMDD-NNN
-            $date = \Carbon\Carbon::parse($validated["sale_date"]);
-            $prefix = "SL-" . $date->format("Ymd") . "-";
-            $lastSale = Sale::where("sale_no", "like", $prefix . "%")
-                ->orderByDesc("sale_no")
+            $date = Carbon::parse($validated['sale_date']);
+            $prefix = 'SL-'.$date->format('Ymd').'-';
+            $lastSale = Sale::where('sale_no', 'like', $prefix.'%')
+                ->orderByDesc('sale_no')
                 ->first();
             $seq = 1;
             if ($lastSale) {
                 $seq = (int) substr($lastSale->sale_no, -3) + 1;
             }
-            $saleNo = $prefix . str_pad($seq, 3, "0", STR_PAD_LEFT);
+            $saleNo = $prefix.str_pad($seq, 3, '0', STR_PAD_LEFT);
 
             // Calculate subtotal from items
             $subtotal = 0;
-            foreach ($validated["items"] as $item) {
-                $itemDiscount = $item["discount_amount"] ?? 0;
+            foreach ($validated['items'] as $item) {
+                $itemDiscount = $item['discount_amount'] ?? 0;
                 $itemSubtotal =
-                    $item["quantity"] * $item["price"] - $itemDiscount;
+                    $item['quantity'] * $item['price'] - $itemDiscount;
                 $subtotal += $itemSubtotal;
             }
 
-            $discount = $validated["discount_amount"] ?? 0;
-            $tax = $validated["tax_amount"] ?? 0;
-            $shipping = $validated["shipping_amount"] ?? 0;
+            $discount = $validated['discount_amount'] ?? 0;
+            $tax = $validated['tax_amount'] ?? 0;
+            $shipping = $validated['shipping_amount'] ?? 0;
             $grandTotal = $subtotal - $discount + $tax + $shipping;
-            $paidAmount = $validated["paid_amount"];
+            $paidAmount = $validated['paid_amount'];
             $changeAmount = max(0, $paidAmount - $grandTotal);
 
             // Determine statuses
-            $paymentStatus = "unpaid";
+            $paymentStatus = 'unpaid';
             if ($paidAmount >= $grandTotal && $grandTotal > 0) {
-                $paymentStatus = "paid";
+                $paymentStatus = 'paid';
             } elseif ($paidAmount > 0) {
-                $paymentStatus = "partial";
+                $paymentStatus = 'partial';
             }
 
             $sale = Sale::create([
-                "store_id" =>
-                    session("current_store_id") ?? $request->user()?->store_id,
-                "branch_id" =>
-                    session("current_branch_id") ?? session("branch_id"),
-                "table_id" => $validated["table_id"] ?? null,
-                "customer_id" => $validated["customer_id"] ?? null,
-                "user_id" => $request->user()?->id,
-                "sale_no" => $saleNo,
-                "sale_date" => $validated["sale_date"],
-                "subtotal" => $subtotal,
-                "discount_amount" => $discount,
-                "tax_amount" => $tax,
-                "shipping_amount" => $shipping,
-                "grand_total" => $grandTotal,
-                "paid_amount" => $paidAmount,
-                "change_amount" => $changeAmount,
-                "status" => "completed",
-                "payment_status" => $paymentStatus,
-                "order_type" => $validated["order_type"],
-                "notes" => $validated["notes"] ?? null,
+                'store_id' => session('current_store_id') ?? $request->user()?->store_id,
+                'branch_id' => session('current_branch_id') ?? session('branch_id'),
+                'table_id' => $validated['table_id'] ?? null,
+                'customer_id' => $validated['customer_id'] ?? null,
+                'user_id' => $request->user()?->id,
+                'sale_no' => $saleNo,
+                'sale_date' => $validated['sale_date'],
+                'subtotal' => $subtotal,
+                'discount_amount' => $discount,
+                'tax_amount' => $tax,
+                'shipping_amount' => $shipping,
+                'grand_total' => $grandTotal,
+                'paid_amount' => $paidAmount,
+                'change_amount' => $changeAmount,
+                'status' => 'completed',
+                'payment_status' => $paymentStatus,
+                'order_type' => $validated['order_type'],
+                'notes' => $validated['notes'] ?? null,
             ]);
 
             // Create sale items and deduct stock
-            foreach ($validated["items"] as $item) {
-                $itemDiscount = $item["discount_amount"] ?? 0;
+            foreach ($validated['items'] as $item) {
+                $itemDiscount = $item['discount_amount'] ?? 0;
                 $itemSubtotal =
-                    $item["quantity"] * $item["price"] - $itemDiscount;
+                    $item['quantity'] * $item['price'] - $itemDiscount;
 
                 SaleItem::create([
-                    "sale_id" => $sale->id,
-                    "product_id" => $item["product_id"],
-                    "quantity" => $item["quantity"],
-                    "price" => $item["price"],
-                    "discount_amount" => $itemDiscount,
-                    "subtotal" => $itemSubtotal,
+                    'sale_id' => $sale->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'discount_amount' => $itemDiscount,
+                    'subtotal' => $itemSubtotal,
                 ]);
 
                 // Deduct stock
-                $product = Product::find($item["product_id"]);
+                $product = Product::find($item['product_id']);
                 if ($product && $product->track_stock) {
                     $stock = ProductStock::firstOrCreate(
                         [
-                            "product_id" => $item["product_id"],
-                            "store_id" =>
-                                session("current_store_id") ??
+                            'product_id' => $item['product_id'],
+                            'store_id' => session('current_store_id') ??
                                 $request->user()?->store_id,
-                            "branch_id" =>
-                                session("current_branch_id") ??
-                                session("branch_id"),
+                            'branch_id' => session('current_branch_id') ??
+                                session('branch_id'),
                         ],
-                        ["quantity" => 0, "reserved_quantity" => 0],
+                        ['quantity' => 0, 'reserved_quantity' => 0],
                     );
-                    $stock->decrement("quantity", $item["quantity"]);
+                    $stock->decrement('quantity', $item['quantity']);
                 }
             }
 
             // Create payment record if paid
-            if ($paidAmount > 0 && ($validated["payment_method_id"] ?? false)) {
+            if ($paidAmount > 0 && ($validated['payment_method_id'] ?? false)) {
                 SalePayment::create([
-                    "sale_id" => $sale->id,
-                    "payment_method_id" => $validated["payment_method_id"],
-                    "paid_at" => $validated["sale_date"],
-                    "amount" => $paidAmount,
+                    'sale_id' => $sale->id,
+                    'payment_method_id' => $validated['payment_method_id'],
+                    'paid_at' => $validated['sale_date'],
+                    'amount' => $paidAmount,
                 ]);
             }
 
             DB::commit();
 
             return redirect()
-                ->route("admin.sales.show", $sale->id)
-                ->with("success", "Penjualan berhasil disimpan.");
+                ->route('admin.sales.show', $sale->id)
+                ->with('success', 'Penjualan berhasil disimpan.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()
                 ->withInput()
                 ->with(
-                    "error",
-                    "Gagal menyimpan penjualan: " . $e->getMessage(),
+                    'error',
+                    'Gagal menyimpan penjualan: '.$e->getMessage(),
                 );
         }
     }
@@ -320,63 +324,61 @@ class SaleController extends Controller
     public function show(Sale $sale)
     {
         $sale->load([
-            "customer",
-            "user",
-            "items.product",
-            "payments.paymentMethod",
-            "table",
+            'customer',
+            'user',
+            'items.product',
+            'payments.paymentMethod',
+            'table',
         ]);
         $sale->load([
-            "pgTransactions" => function ($q) {
-                $q->orderByDesc("created_at");
+            'pgTransactions' => function ($q) {
+                $q->orderByDesc('created_at');
             },
         ]);
 
         // Load payment methods & PG config for switch payment feature
         $paymentMethods = PaymentMethod::forStore($sale->store_id)
-            ->where("is_active", true)
+            ->where('is_active', true)
             ->get();
-        $pgConfigs = \App\Models\StorePaymentGateway::where(
-            "store_id",
+        $pgConfigs = StorePaymentGateway::where(
+            'store_id',
             $sale->store_id,
         )
-            ->where("is_active", true)
+            ->where('is_active', true)
             ->get()
             ->map(
-                fn($c) => [
-                    "provider" => $c->provider,
-                    "enabled_methods" => $c->enabled_methods,
+                fn ($c) => [
+                    'provider' => $c->provider,
+                    'enabled_methods' => $c->enabled_methods,
                 ],
             );
 
-        return Inertia::render("Admin/Sales/Show", [
-            "sale" => $sale,
-            "paymentMethods" => $paymentMethods,
-            "pgConfigs" => $pgConfigs,
-            "canUpdateServiceStatus" =>
-                in_array($sale->pos_mode, ["service", "laundry"]) &&
-                (request()->user()->can("sale.create") ||
-                    request()->user()->can("sale.void")),
-            "canUpdateRentalStatus" =>
-                $sale->pos_mode === "rental" &&
-                (request()->user()->can("sale.create") ||
-                    request()->user()->can("sale.void")),
-            "canCheckInTicket" =>
-                $sale->pos_mode === "ticket" &&
-                (request()->user()->can("sale.create") ||
-                    request()->user()->can("sale.void")),
-            "canCheckOutHospitality" =>
-                $sale->pos_mode === "hospitality" &&
-                (request()->user()->can("sale.create") ||
-                    request()->user()->can("sale.void")),
-            "canExitParking" =>
-                $sale->pos_mode === "parking" &&
-                (request()->user()->can("sale.create") ||
-                    request()->user()->can("sale.void")),
-            "canEndSession" =>
-                $sale->pos_mode === "session" &&
-                (request()->user()->can("sale.create") ||
-                    request()->user()->can("sale.void")),
+        $store = Store::with('storeType')->find($sale->store_id);
+        $storeType = $store?->getRelation('storeType')?->code ?? 'retail';
+
+        return Inertia::render('Admin/Sales/Show', [
+            'sale' => $sale,
+            'paymentMethods' => $paymentMethods,
+            'pgConfigs' => $pgConfigs,
+            'storeType' => $storeType,
+            'canUpdateServiceStatus' => in_array($sale->pos_mode, ['service', 'laundry']) &&
+                (request()->user()->can('sale.create') ||
+                    request()->user()->can('sale.void')),
+            'canUpdateRentalStatus' => $sale->pos_mode === 'rental' &&
+                (request()->user()->can('sale.create') ||
+                    request()->user()->can('sale.void')),
+            'canCheckInTicket' => $sale->pos_mode === 'ticket' &&
+                (request()->user()->can('sale.create') ||
+                    request()->user()->can('sale.void')),
+            'canCheckOutHospitality' => $sale->pos_mode === 'hospitality' &&
+                (request()->user()->can('sale.create') ||
+                    request()->user()->can('sale.void')),
+            'canExitParking' => $sale->pos_mode === 'parking' &&
+                (request()->user()->can('sale.create') ||
+                    request()->user()->can('sale.void')),
+            'canEndSession' => $sale->pos_mode === 'session' &&
+                (request()->user()->can('sale.create') ||
+                    request()->user()->can('sale.void')),
         ]);
     }
 
@@ -385,67 +387,67 @@ class SaleController extends Controller
         /** @var User|null $user */
         $user = Auth::user();
 
-        if (!$user) {
-            abort(401, "Unauthenticated.");
+        if (! $user) {
+            abort(401, 'Unauthenticated.');
         }
 
-        $storeId = session("current_store_id");
+        $storeId = session('current_store_id');
 
         if ($storeId && (int) $sale->store_id !== (int) $storeId) {
             abort(
                 403,
-                "Akses ditolak. Transaksi ini bukan dari toko aktif kamu.",
+                'Akses ditolak. Transaksi ini bukan dari toko aktif kamu.',
             );
         }
 
         if (
-            !$user->can("sale.void") &&
+            ! $user->can('sale.void') &&
             (int) $sale->user_id !== (int) $user->id
         ) {
             abort(
                 403,
-                "Akses ditolak. Struk ini bukan transaksi milik akun kamu.",
+                'Akses ditolak. Struk ini bukan transaksi milik akun kamu.',
             );
         }
 
         $sale->load([
-            "customer",
-            "user",
-            "items.product",
-            "payments.paymentMethod",
-            "table",
+            'customer',
+            'user',
+            'items.product',
+            'payments.paymentMethod',
+            'table',
         ]);
 
-        $store = \App\Models\Store::find($sale->store_id);
+        $store = Store::find($sale->store_id);
 
         // JSON response untuk modal di Index (Accept: application/json)
         if (request()->expectsJson()) {
             return response()->json([
-                "sale" => $sale,
-                "storeName" => $store?->name ?? "Toko",
+                'sale' => $sale,
+                'storeName' => $store?->name ?? 'Toko',
             ]);
         }
 
-        return Inertia::render("Admin/Sales/Print", [
-            "sale" => $sale,
-            "storeName" => $store?->name ?? "Toko",
+        return Inertia::render('Admin/Sales/Print', [
+            'sale' => $sale,
+            'storeName' => $store?->name ?? 'Toko',
         ]);
     }
 
     public function destroy(Sale $sale)
     {
-        if ($sale->status === "completed") {
+        if ($sale->status === 'completed') {
             // Reverse stock for completed sales
             foreach ($sale->items as $item) {
                 $product = $item->product;
                 if ($product && $product->track_stock) {
                     $stock = ProductStock::where([
-                        "product_id" => $item->product_id,
-                        "store_id" => $sale->store_id,
-                        "branch_id" => $sale->branch_id,
+                        'product_id' => $item->product_id,
+                        'store_id' => $sale->store_id,
+                        'branch_id' => $sale->branch_id,
                     ])->first();
                     if ($stock) {
-                        $stock->increment("quantity", $item->quantity);
+                        $stock->increment('quantity', $item->quantity);
                     }
                 }
             }
@@ -454,238 +456,239 @@ class SaleController extends Controller
         $sale->delete();
 
         return redirect()
-            ->route("admin.sales.index")
-            ->with("success", "Penjualan berhasil dihapus.");
+            ->route('admin.sales.index')
+            ->with('success', 'Penjualan berhasil dihapus.');
     }
 
     public function updateStatus(Request $request, Sale $sale)
     {
         $validated = $request->validate([
-            "status" => "required|in:completed,cancelled",
+            'status' => 'required|in:completed,cancelled',
         ]);
 
         $oldStatus = $sale->status;
-        $newStatus = $validated["status"];
+        $newStatus = $validated['status'];
 
         DB::beginTransaction();
 
         try {
-            if ($oldStatus !== "completed" && $newStatus === "completed") {
+            if ($oldStatus !== 'completed' && $newStatus === 'completed') {
                 // Mark as completed — deduct stock
                 foreach ($sale->items as $item) {
                     $product = $item->product;
                     if ($product && $product->track_stock) {
                         $stock = ProductStock::firstOrCreate(
                             [
-                                "product_id" => $item->product_id,
-                                "store_id" => $sale->store_id,
-                                "branch_id" => $sale->branch_id,
+                                'product_id' => $item->product_id,
+                                'store_id' => $sale->store_id,
+                                'branch_id' => $sale->branch_id,
                             ],
-                            ["quantity" => 0, "reserved_quantity" => 0],
+                            ['quantity' => 0, 'reserved_quantity' => 0],
                         );
-                        $stock->decrement("quantity", $item->quantity);
+                        $stock->decrement('quantity', $item->quantity);
                     }
                 }
             } elseif (
-                $oldStatus === "completed" &&
-                $newStatus === "cancelled"
+                $oldStatus === 'completed' &&
+                $newStatus === 'cancelled'
             ) {
                 // Cancel completed — reverse stock
                 foreach ($sale->items as $item) {
                     $product = $item->product;
                     if ($product && $product->track_stock) {
                         $stock = ProductStock::where([
-                            "product_id" => $item->product_id,
-                            "store_id" => $sale->store_id,
-                            "branch_id" => $sale->branch_id,
+                            'product_id' => $item->product_id,
+                            'store_id' => $sale->store_id,
+                            'branch_id' => $sale->branch_id,
                         ])->first();
                         if ($stock) {
-                            $stock->increment("quantity", $item->quantity);
+                            $stock->increment('quantity', $item->quantity);
                         }
                     }
                 }
             }
 
             $paymentStatus = $sale->payment_status;
-            if ($newStatus === "cancelled") {
-                $paymentStatus = "unpaid";
+            if ($newStatus === 'cancelled') {
+                $paymentStatus = 'unpaid';
             }
 
             $sale->update([
-                "status" => $newStatus,
-                "payment_status" => $paymentStatus,
+                'status' => $newStatus,
+                'payment_status' => $paymentStatus,
             ]);
 
             // Free the table only if sale is cancelled (customer left)
             // For completed: staff manually frees via "Kosongkan" button
-            if ($sale->table_id && $newStatus === "cancelled") {
-                \App\Models\CafeTable::where("id", $sale->table_id)->update([
-                    "status" => "available",
+            if ($sale->table_id && $newStatus === 'cancelled') {
+                CafeTable::where('id', $sale->table_id)->update([
+                    'status' => 'available',
                 ]);
             }
 
             DB::commit();
 
             return back()->with(
-                "success",
-                "Status penjualan berhasil diperbarui.",
+                'success',
+                'Status penjualan berhasil diperbarui.',
             );
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->with(
-                "error",
-                "Gagal memperbarui status: " . $e->getMessage(),
+                'error',
+                'Gagal memperbarui status: '.$e->getMessage(),
             );
         }
     }
 
     public function updateServiceStatus(Request $request, Sale $sale)
     {
-        $storeId = session("current_store_id");
+        $storeId = session('current_store_id');
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
         abort_unless(
-            $request->user()->can("sale.create") ||
-                $request->user()->can("sale.void"),
+            $request->user()->can('sale.create') ||
+                $request->user()->can('sale.void'),
             403,
         );
 
         $validated = $request->validate([
-            "service_status" => ["required", "in:waiting,in_progress,done"],
+            'service_status' => ['required', 'in:waiting,in_progress,done'],
         ]);
 
-        $update = ["service_status" => $validated["service_status"]];
+        $update = ['service_status' => $validated['service_status']];
 
         // Catat waktu mulai dan selesai otomatis
         if (
-            $validated["service_status"] === "in_progress" &&
-            !$sale->service_started_at
+            $validated['service_status'] === 'in_progress' &&
+            ! $sale->service_started_at
         ) {
-            $update["service_started_at"] = now();
+            $update['service_started_at'] = now();
         }
         if (
-            $validated["service_status"] === "done" &&
-            !$sale->service_finished_at
+            $validated['service_status'] === 'done' &&
+            ! $sale->service_finished_at
         ) {
-            $update["service_finished_at"] = now();
+            $update['service_finished_at'] = now();
         }
 
         $sale->update($update);
 
-        return back()->with("success", "Status pengerjaan diperbarui.");
+        return back()->with('success', 'Status pengerjaan diperbarui.');
     }
 
     public function updateRentalStatus(Request $request, Sale $sale)
     {
-        $storeId = session("current_store_id");
+        $storeId = session('current_store_id');
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
         abort_unless(
-            $request->user()->can("sale.create") ||
-                $request->user()->can("sale.void"),
+            $request->user()->can('sale.create') ||
+                $request->user()->can('sale.void'),
             403,
         );
 
         $validated = $request->validate([
-            "rental_status" => [
-                "required",
-                "in:active,returned,overdue,cancelled",
+            'rental_status' => [
+                'required',
+                'in:active,returned,overdue,cancelled',
             ],
         ]);
 
-        $update = ["rental_status" => $validated["rental_status"]];
+        $update = ['rental_status' => $validated['rental_status']];
 
-        if ($validated["rental_status"] === "returned") {
-            $update["actual_return_at"] = now();
+        if ($validated['rental_status'] === 'returned') {
+            $update['actual_return_at'] = now();
         }
 
         $sale->update($update);
 
-        return back()->with("success", "Status sewa diperbarui.");
+        return back()->with('success', 'Status sewa diperbarui.');
     }
 
     public function checkOutHospitality(Request $request, Sale $sale)
     {
-        $storeId = session("current_store_id");
+        $storeId = session('current_store_id');
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
         abort_unless(
-            $request->user()->can("sale.create") ||
-                $request->user()->can("sale.void"),
+            $request->user()->can('sale.create') ||
+                $request->user()->can('sale.void'),
             403,
         );
         abort_unless(
-            $sale->pos_mode === "hospitality",
+            $sale->pos_mode === 'hospitality',
             422,
-            "Bukan transaksi hospitality.",
+            'Bukan transaksi hospitality.',
         );
 
-        if ($sale->rental_status === "returned") {
-            return back()->with("error", "Tamu ini sudah check-out.");
+        if ($sale->rental_status === 'returned') {
+            return back()->with('error', 'Tamu ini sudah check-out.');
         }
 
         $sale->update([
-            "rental_status" => "returned",
-            "actual_return_at" => now(),
+            'rental_status' => 'returned',
+            'actual_return_at' => now(),
         ]);
 
-        return back()->with("success", "Check-out berhasil dicatat.");
+        return back()->with('success', 'Check-out berhasil dicatat.');
     }
 
     public function exitParking(Request $request, Sale $sale)
     {
-        $storeId = session("current_store_id");
+        $storeId = session('current_store_id');
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
         abort_unless(
-            $request->user()->can("sale.create") ||
-                $request->user()->can("sale.void"),
+            $request->user()->can('sale.create') ||
+                $request->user()->can('sale.void'),
             403,
         );
         abort_unless(
-            $sale->pos_mode === "parking",
+            $sale->pos_mode === 'parking',
             422,
-            "Bukan transaksi parkir.",
+            'Bukan transaksi parkir.',
         );
 
         if ($sale->exit_at) {
             return back()->with(
-                "error",
-                "Kendaraan ini sudah tercatat keluar.",
+                'error',
+                'Kendaraan ini sudah tercatat keluar.',
             );
         }
 
-        $sale->update(["exit_at" => now()]);
+        $sale->update(['exit_at' => now()]);
 
         return back()->with(
-            "success",
-            "Kendaraan berhasil dicatat keluar. " . ($sale->plate_number ?? ""),
+            'success',
+            'Kendaraan berhasil dicatat keluar. '.($sale->plate_number ?? ''),
         );
     }
 
     public function endSession(Request $request, Sale $sale)
     {
-        $storeId = session("current_store_id");
+        $storeId = session('current_store_id');
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
         abort_unless(
-            $request->user()->can("sale.create") ||
-                $request->user()->can("sale.void"),
+            $request->user()->can('sale.create') ||
+                $request->user()->can('sale.void'),
             403,
         );
         abort_unless(
-            $sale->pos_mode === "session",
+            $sale->pos_mode === 'session',
             422,
-            "Bukan transaksi session.",
+            'Bukan transaksi session.',
         );
 
-        if ($sale->session_status === "ended") {
-            return back()->with("error", "Sesi ini sudah berakhir.");
+        if ($sale->session_status === 'ended') {
+            return back()->with('error', 'Sesi ini sudah berakhir.');
         }
 
         $sale->update([
-            "session_status" => "ended",
-            "session_ended_at" => now(),
+            'session_status' => 'ended',
+            'session_ended_at' => now(),
         ]);
 
         return back()->with(
-            "success",
-            "Sesi " . ($sale->unit_name ?? "") . " berhasil diakhiri.",
+            'success',
+            'Sesi '.($sale->unit_name ?? '').' berhasil diakhiri.',
         );
     }
 
@@ -699,15 +702,14 @@ class SaleController extends Controller
     public function switchPayment(Request $request, Sale $sale)
     {
         $validated = $request->validate([
-            "payment_method_id" =>
-                "required_if:is_pg,false|nullable|exists:payment_methods,id",
-            "is_pg" => "nullable|boolean",
-            "pg_provider" => "required_if:is_pg,true|nullable|string",
-            "pg_method" => "required_if:is_pg,true|nullable|string",
+            'payment_method_id' => 'required_if:is_pg,false|nullable|exists:payment_methods,id',
+            'is_pg' => 'nullable|boolean',
+            'pg_provider' => 'required_if:is_pg,true|nullable|string',
+            'pg_method' => 'required_if:is_pg,true|nullable|string',
         ]);
 
         $oldStatus = $sale->status;
-        $isPgPayment = $validated["is_pg"] ?? false;
+        $isPgPayment = $validated['is_pg'] ?? false;
 
         DB::beginTransaction();
         try {
@@ -716,40 +718,40 @@ class SaleController extends Controller
             // If current sale has pending PG transactions → cancel them
             $pendingPg = $sale
                 ->pgTransactions()
-                ->where("status", "pending")
+                ->where('status', 'pending')
                 ->get();
             $oldPgType = $pendingPg->first()?->payment_type;
-            $pendingPg->each(fn($pg) => $pg->update(["status" => "cancelled"]));
+            $pendingPg->each(fn ($pg) => $pg->update(['status' => 'cancelled']));
 
             // If current sale was completed → reverse stock
-            if ($oldStatus === "completed") {
+            if ($oldStatus === 'completed') {
                 foreach ($sale->items as $item) {
                     $product = $item->product;
-                    if (!$product) {
+                    if (! $product) {
                         continue;
                     }
 
                     if ($product->recipes && $product->recipes->isNotEmpty()) {
-                        $product->load("recipes.rawMaterial.stocks");
+                        $product->load('recipes.rawMaterial.stocks');
                         foreach ($product->recipes as $recipe) {
                             $needed = $recipe->quantity * $item->quantity;
                             $stock = ProductStock::where([
-                                "product_id" => $recipe->raw_material_id,
-                                "store_id" => $sale->store_id,
-                                "branch_id" => null,
+                                'product_id' => $recipe->raw_material_id,
+                                'store_id' => $sale->store_id,
+                                'branch_id' => null,
                             ])->first();
                             if ($stock) {
-                                $stock->increment("quantity", $needed);
+                                $stock->increment('quantity', $needed);
                             }
                         }
                     } elseif ($product->track_stock) {
                         $stock = ProductStock::where([
-                            "product_id" => $item->product_id,
-                            "store_id" => $sale->store_id,
-                            "branch_id" => null,
+                            'product_id' => $item->product_id,
+                            'store_id' => $sale->store_id,
+                            'branch_id' => null,
                         ])->first();
                         if ($stock) {
-                            $stock->increment("quantity", $item->quantity);
+                            $stock->increment('quantity', $item->quantity);
                         }
                     }
                 }
@@ -763,103 +765,101 @@ class SaleController extends Controller
             if ($isPgPayment) {
                 // ── New payment is PG → set to pending, frontend will create PG transaction ──
                 $sale->update([
-                    "status" => "pending",
-                    "payment_status" => "pending",
-                    "paid_amount" => 0,
-                    "change_amount" => 0,
+                    'status' => 'pending',
+                    'payment_status' => 'pending',
+                    'paid_amount' => 0,
+                    'change_amount' => 0,
                 ]);
 
                 DB::commit();
 
                 return response()->json([
-                    "success" => true,
-                    "need_pg" => true,
-                    "sale_id" => $sale->id,
-                    "message" =>
-                        "Penjualan diubah ke pembayaran online. Silakan buat transaksi PG baru.",
+                    'success' => true,
+                    'need_pg' => true,
+                    'sale_id' => $sale->id,
+                    'message' => 'Penjualan diubah ke pembayaran online. Silakan buat transaksi PG baru.',
                 ]);
             } else {
                 // ── New payment is non-PG (tunai/card) → complete the sale ──
                 $grandTotal = $sale->grand_total;
 
                 $sale->update([
-                    "status" => "completed",
-                    "payment_status" => "paid",
-                    "paid_amount" => $grandTotal,
-                    "change_amount" => 0,
+                    'status' => 'completed',
+                    'payment_status' => 'paid',
+                    'paid_amount' => $grandTotal,
+                    'change_amount' => 0,
                 ]);
 
                 // Create payment record
                 SalePayment::create([
-                    "sale_id" => $sale->id,
-                    "payment_method_id" => $validated["payment_method_id"],
-                    "paid_at" => now(),
-                    "amount" => $grandTotal,
-                    "reference_no" => null,
-                    "note" =>
-                        "Ganti metode bayar dari " .
+                    'sale_id' => $sale->id,
+                    'payment_method_id' => $validated['payment_method_id'],
+                    'paid_at' => now(),
+                    'amount' => $grandTotal,
+                    'reference_no' => null,
+                    'note' => 'Ganti metode bayar dari '.
                         ($oldPgType
                             ? strtoupper(
-                                str_replace("_va", " VA", $oldPgType ?? ""),
+                                str_replace('_va', ' VA', $oldPgType ?? ''),
                             )
-                            : "metode sebelumnya"),
+                            : 'metode sebelumnya'),
                 ]);
 
                 // Deduct stock
                 foreach ($sale->items as $item) {
                     $product = $item->product;
-                    if (!$product) {
+                    if (! $product) {
                         continue;
                     }
 
                     if ($product->recipes && $product->recipes->isNotEmpty()) {
-                        $product->load("recipes.rawMaterial.stocks");
+                        $product->load('recipes.rawMaterial.stocks');
                         foreach ($product->recipes as $recipe) {
                             $needed = $recipe->quantity * $item->quantity;
                             if ($recipe->is_nullable) {
                                 $avail = $recipe->rawMaterial->stocks
-                                    ->where("store_id", $sale->store_id)
-                                    ->sum("quantity");
+                                    ->where('store_id', $sale->store_id)
+                                    ->sum('quantity');
                                 if ($avail <= 0) {
                                     continue;
                                 }
                             }
                             $stock = ProductStock::firstOrCreate(
                                 [
-                                    "product_id" => $recipe->raw_material_id,
-                                    "store_id" => $sale->store_id,
+                                    'product_id' => $recipe->raw_material_id,
+                                    'store_id' => $sale->store_id,
                                 ],
-                                ["quantity" => 0, "reserved_quantity" => 0],
+                                ['quantity' => 0, 'reserved_quantity' => 0],
                             );
-                            $stock->decrement("quantity", $needed);
+                            $stock->decrement('quantity', $needed);
                         }
                     } elseif ($product->track_stock) {
                         $stock = ProductStock::firstOrCreate(
                             [
-                                "product_id" => $item->product_id,
-                                "store_id" => $sale->store_id,
+                                'product_id' => $item->product_id,
+                                'store_id' => $sale->store_id,
                             ],
-                            ["quantity" => 0, "reserved_quantity" => 0],
+                            ['quantity' => 0, 'reserved_quantity' => 0],
                         );
-                        $stock->decrement("quantity", $item->quantity);
+                        $stock->decrement('quantity', $item->quantity);
                     }
                 }
 
                 DB::commit();
 
                 return response()->json([
-                    "success" => true,
-                    "need_pg" => false,
-                    "message" => "Metode bayar berhasil diubah.",
+                    'success' => true,
+                    'need_pg' => false,
+                    'message' => 'Metode bayar berhasil diubah.',
                 ]);
             }
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(
                 [
-                    "success" => false,
-                    "message" =>
-                        "Gagal mengganti metode bayar: " . $e->getMessage(),
+                    'success' => false,
+                    'message' => 'Gagal mengganti metode bayar: '.$e->getMessage(),
                 ],
                 500,
             );

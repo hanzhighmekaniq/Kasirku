@@ -5,22 +5,35 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductStock;
-use App\Models\StockMovement;
 use App\Models\Purchase;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
+use App\Models\StockMovement;
+use App\Models\Store;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
 
 class PurchaseReturnController extends Controller
 {
+    /**
+     * Resolve store type code dari toko aktif di session.
+     */
+    private function resolveStoreType(): string
+    {
+        $storeId = session('current_store_id');
+
+        return Store::with('storeType')
+            ->find($storeId)
+            ?->getRelation('storeType')?->code ?? 'retail';
+    }
+
     public function index()
     {
         $storeId = session('current_store_id');
 
-        $returns = PurchaseReturn::whereHas('purchase', fn($q) => $q->where('store_id', $storeId))
+        $returns = PurchaseReturn::whereHas('purchase', fn ($q) => $q->where('store_id', $storeId))
             ->with(['supplier', 'purchase'])
             ->withCount('items')
             ->latest()
@@ -28,6 +41,7 @@ class PurchaseReturnController extends Controller
 
         return Inertia::render('Admin/PurchaseReturns/Index', [
             'purchaseReturns' => $returns,
+            'storeType' => $this->resolveStoreType(),
         ]);
     }
 
@@ -45,21 +59,22 @@ class PurchaseReturnController extends Controller
 
         return Inertia::render('Admin/PurchaseReturns/Create', [
             'purchases' => $purchases,
+            'storeType' => $this->resolveStoreType(),
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'purchase_id'      => 'required|exists:purchases,id',
-            'return_date'      => 'required|date',
-            'notes'            => 'nullable|string|max:1000',
-            'items'            => 'required|array|min:1',
-            'items.*.product_id'    => 'required|exists:products,id',
+            'purchase_id' => 'required|exists:purchases,id',
+            'return_date' => 'required|date',
+            'notes' => 'nullable|string|max:1000',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
             'items.*.purchase_item_id' => 'nullable|exists:purchase_items,id',
-            'items.*.quantity'      => 'required|integer|min:1',
-            'items.*.cost_price'    => 'required|numeric|min:0',
-            'items.*.reason'        => 'nullable|string|max:500',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.cost_price' => 'required|numeric|min:0',
+            'items.*.reason' => 'nullable|string|max:500',
         ]);
 
         $purchase = Purchase::findOrFail($validated['purchase_id']);
@@ -67,13 +82,13 @@ class PurchaseReturnController extends Controller
         // Validate: each return qty must not exceed returnable qty
         foreach ($validated['items'] as $item) {
             $purchaseItem = $purchase->items()->where('product_id', $item['product_id'])->first();
-            if (!$purchaseItem) {
+            if (! $purchaseItem) {
                 abort(422, "Produk {$item['product_id']} tidak ditemukan di pembelian ini.");
             }
 
             // Calculate already returned qty for this purchase_item
             $alreadyReturned = PurchaseReturnItem::where('purchase_item_id', $purchaseItem->id)
-                ->whereHas('purchaseReturn', fn($q) => $q->where('status', '!=', 'cancelled'))
+                ->whereHas('purchaseReturn', fn ($q) => $q->where('status', '!=', 'cancelled'))
                 ->sum('quantity');
 
             $returnable = $purchaseItem->quantity - $alreadyReturned;
@@ -87,7 +102,7 @@ class PurchaseReturnController extends Controller
             $dateStr = now()->format('Ymd');
             $lastReturn = PurchaseReturn::where('return_no', 'like', "RET-{$dateStr}-%")
                 ->count();
-            $returnNo = 'RET-' . $dateStr . '-' . str_pad($lastReturn + 1, 3, '0', STR_PAD_LEFT);
+            $returnNo = 'RET-'.$dateStr.'-'.str_pad($lastReturn + 1, 3, '0', STR_PAD_LEFT);
 
             // Calculate totals
             $subtotal = 0;
@@ -96,15 +111,15 @@ class PurchaseReturnController extends Controller
             }
 
             $return = PurchaseReturn::create([
-                'purchase_id'  => $purchase->id,
-                'supplier_id'  => $purchase->supplier_id,
-                'user_id'      => Auth::user()->id,
-                'return_no'    => $returnNo,
-                'return_date'  => $validated['return_date'],
-                'subtotal'     => $subtotal,
+                'purchase_id' => $purchase->id,
+                'supplier_id' => $purchase->supplier_id,
+                'user_id' => Auth::user()->id,
+                'return_no' => $returnNo,
+                'return_date' => $validated['return_date'],
+                'subtotal' => $subtotal,
                 'total_amount' => $subtotal,
-                'notes'        => $validated['notes'] ?? null,
-                'status'       => 'completed',
+                'notes' => $validated['notes'] ?? null,
+                'status' => 'completed',
             ]);
 
             // Create return items
@@ -113,11 +128,11 @@ class PurchaseReturnController extends Controller
 
                 $return->items()->create([
                     'purchase_item_id' => $item['purchase_item_id'] ?? null,
-                    'product_id'       => $item['product_id'],
-                    'quantity'         => $item['quantity'],
-                    'cost_price'       => $item['cost_price'],
-                    'subtotal'         => $itemSubtotal,
-                    'reason'           => $item['reason'] ?? null,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'cost_price' => $item['cost_price'],
+                    'subtotal' => $itemSubtotal,
+                    'reason' => $item['reason'] ?? null,
                 ]);
 
                 // Reduce stock
@@ -128,17 +143,17 @@ class PurchaseReturnController extends Controller
                 if ($product?->track_stock) {
                     $supplierName = $purchase->supplier->name ?? 'supplier';
                     StockMovement::create([
-                        'product_id'     => $item['product_id'],
-                        'store_id'       => $purchase->store_id,
-                        'branch_id'      => $purchase->branch_id,
+                        'product_id' => $item['product_id'],
+                        'store_id' => $purchase->store_id,
+                        'branch_id' => $purchase->branch_id,
                         'reference_type' => PurchaseReturn::class,
-                        'reference_id'   => $return->id,
-                        'movement_type'  => 'return_out',
-                        'quantity'       => $item['quantity'],
-                        'unit_cost'      => $item['cost_price'],
-                        'reference_no'   => $returnNo,
-                        'notes'          => "Retur #{$returnNo} ke {$supplierName}",
-                        'moved_at'       => now(),
+                        'reference_id' => $return->id,
+                        'movement_type' => 'return_out',
+                        'quantity' => $item['quantity'],
+                        'unit_cost' => $item['cost_price'],
+                        'reference_no' => $returnNo,
+                        'notes' => "Retur #{$returnNo} ke {$supplierName}",
+                        'moved_at' => now(),
                     ]);
                 }
             }
@@ -153,7 +168,7 @@ class PurchaseReturnController extends Controller
                 $paymentStatus = 'partial';
             }
             $purchase->update([
-                'paid_amount'    => $newPaid,
+                'paid_amount' => $newPaid,
                 'payment_status' => $paymentStatus,
             ]);
 
@@ -174,6 +189,7 @@ class PurchaseReturnController extends Controller
 
         return Inertia::render('Admin/PurchaseReturns/Show', [
             'purchaseReturn' => $purchaseReturn,
+            'storeType' => $this->resolveStoreType(),
         ]);
     }
 
@@ -212,17 +228,17 @@ class PurchaseReturnController extends Controller
                 $product = Product::find($item['product_id']);
                 if ($product?->track_stock) {
                     StockMovement::create([
-                        'product_id'     => $item['product_id'],
-                        'store_id'       => $purchase->store_id,
-                        'branch_id'      => $purchase->branch_id,
+                        'product_id' => $item['product_id'],
+                        'store_id' => $purchase->store_id,
+                        'branch_id' => $purchase->branch_id,
                         'reference_type' => PurchaseReturn::class,
-                        'reference_id'   => $purchaseReturn->id,
-                        'movement_type'  => 'return_in',
-                        'quantity'       => $item['quantity'],
-                        'unit_cost'      => $item['cost_price'],
-                        'reference_no'   => $purchaseReturn->return_no,
-                        'notes'          => "Retur #{$purchaseReturn->return_no} dibatalkan — stok dikembalikan",
-                        'moved_at'       => now(),
+                        'reference_id' => $purchaseReturn->id,
+                        'movement_type' => 'return_in',
+                        'quantity' => $item['quantity'],
+                        'unit_cost' => $item['cost_price'],
+                        'reference_no' => $purchaseReturn->return_no,
+                        'notes' => "Retur #{$purchaseReturn->return_no} dibatalkan — stok dikembalikan",
+                        'moved_at' => now(),
                     ]);
                 }
             }
@@ -239,7 +255,7 @@ class PurchaseReturnController extends Controller
             }
 
             $purchase->update([
-                'paid_amount'    => $newPaid,
+                'paid_amount' => $newPaid,
                 'payment_status' => $paymentStatus,
             ]);
 
@@ -259,22 +275,23 @@ class PurchaseReturnController extends Controller
 
         return response()->json([
             'purchase' => [
-                'id'         => $purchase->id,
+                'id' => $purchase->id,
                 'purchase_no' => $purchase->purchase_no,
-                'supplier'   => ['id' => $purchase->supplier->id, 'name' => $purchase->supplier->name],
-                'items'      => $purchase->items->map(function ($item) {
+                'supplier' => ['id' => $purchase->supplier->id, 'name' => $purchase->supplier->name],
+                'items' => $purchase->items->map(function ($item) {
                     $alreadyReturned = PurchaseReturnItem::where('purchase_item_id', $item->id)
-                        ->whereHas('purchaseReturn', fn($q) => $q->where('status', '!=', 'cancelled'))
+                        ->whereHas('purchaseReturn', fn ($q) => $q->where('status', '!=', 'cancelled'))
                         ->sum('quantity');
+
                     return [
-                        'id'             => $item->id,
-                        'product_id'     => $item->product_id,
-                        'product_name'   => $item->product->name,
-                        'product_sku'    => $item->product->sku,
-                        'quantity'       => $item->quantity,
-                        'cost_price'     => $item->cost_price,
-                        'subtotal'       => $item->subtotal,
-                        'returned_qty'   => $alreadyReturned,
+                        'id' => $item->id,
+                        'product_id' => $item->product_id,
+                        'product_name' => $item->product->name,
+                        'product_sku' => $item->product->sku,
+                        'quantity' => $item->quantity,
+                        'cost_price' => $item->cost_price,
+                        'subtotal' => $item->subtotal,
+                        'returned_qty' => $alreadyReturned,
                         'returnable_qty' => $item->quantity - $alreadyReturned,
                     ];
                 }),
@@ -285,7 +302,9 @@ class PurchaseReturnController extends Controller
     private function adjustStock(int $productId, int $quantity, Purchase $purchase, bool $isReversal = false): void
     {
         $product = Product::find($productId);
-        if (!$product?->track_stock) return;
+        if (! $product?->track_stock) {
+            return;
+        }
 
         $qtyChange = $isReversal ? $quantity : -$quantity;
 

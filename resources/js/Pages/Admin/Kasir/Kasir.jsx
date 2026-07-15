@@ -65,7 +65,8 @@ export default function Kasir(props) {
                     {k.modeConfig.icon} {k.modeConfig.label}
                 </span>
             </div>
-            <div className="flex items-center gap-2">
+            {/* Riwayat & Fullscreen — di mobile dipindah ke baris status shift (lebih mudah dijangkau) */}
+            <div className="hidden items-center gap-2 sm:flex">
                 <button
                     onClick={() => k.setShowHistory(true)}
                     className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-all hover:shadow-md"
@@ -140,6 +141,76 @@ export default function Kasir(props) {
         </div>
     );
 
+    // Tombol ikon Riwayat & Fullscreen versi ringkas — dipakai di baris status shift (mobile only)
+    const mobileQuickActions = (
+        <div className="flex items-center gap-1.5 sm:hidden">
+            <button
+                onClick={() => k.setShowHistory(true)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/70 shadow-sm transition hover:bg-white"
+                title="Riwayat Transaksi"
+            >
+                <svg
+                    className={`h-4 w-4 ${k.historyPrintLoading ? "animate-spin text-indigo-600" : "text-slate-500"}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                >
+                    {k.historyPrintLoading ? (
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                    ) : (
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                    )}
+                </svg>
+            </button>
+            <button
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/70 text-slate-500 shadow-sm transition hover:bg-white"
+                title={
+                    isFullscreen ? "Keluar Fullscreen (Esc)" : "Fullscreen (F11)"
+                }
+            >
+                {isFullscreen ? (
+                    <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"
+                        />
+                    </svg>
+                ) : (
+                    <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
+                        />
+                    </svg>
+                )}
+            </button>
+        </div>
+    );
+
     const posContent = (topPadding) => (
         <>
             <Head title="Kasir" />
@@ -153,6 +224,7 @@ export default function Kasir(props) {
                             <span className="flex-1 text-sm font-medium text-amber-800">
                                 Buka shift dulu untuk mulai transaksi
                             </span>
+                            {mobileQuickActions}
                             <Link
                                 href={route("admin.cashier-shifts.create")}
                                 className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-600"
@@ -200,29 +272,32 @@ export default function Kasir(props) {
                                     </p>
                                 </div>
                             </div>
-                            <Link
-                                href={route(
-                                    "admin.cashier-shifts.show",
-                                    activeShift.id,
-                                )}
-                                className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100"
-                                title="Detail Shift"
-                            >
-                                <svg
-                                    className="h-3.5 w-3.5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
+                            <div className="flex items-center gap-1.5">
+                                {mobileQuickActions}
+                                <Link
+                                    href={route(
+                                        "admin.cashier-shifts.show",
+                                        activeShift.id,
+                                    )}
+                                    className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+                                    title="Detail Shift"
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-                                    />
-                                </svg>
-                                <span className="hidden sm:inline">Detail</span>
-                            </Link>
+                                    <svg
+                                        className="h-3.5 w-3.5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={2}
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                                        />
+                                    </svg>
+                                    <span className="hidden sm:inline">Detail</span>
+                                </Link>
+                            </div>
                         </div>
                     )}
                     {/* Search + barcode */}
@@ -338,7 +413,7 @@ export default function Kasir(props) {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                                 {k.filtered.map((p) => (
                                     <ProductCard
                                         key={p.id}
@@ -356,8 +431,35 @@ export default function Kasir(props) {
 
                 {/* ── RIGHT: Cart + summary ── */}
                 <div
-                    className={`flex w-96 shrink-0 flex-col gap-3 md:relative md:flex max-md:fixed max-md:inset-y-0 max-md:right-0 max-md:z-50 max-md:w-96 max-md:bg-slate-50 max-md:shadow-2xl max-md:transition-transform max-md:duration-300 ${k.cartPanelOpen ? "max-md:translate-x-0" : "max-md:translate-x-full max-md:hidden"}`}
+                    className={`flex w-96 shrink-0 flex-col gap-3 md:relative md:flex max-md:fixed max-md:inset-y-0 max-md:right-0 max-md:z-50 max-md:w-full max-md:overflow-y-auto max-md:bg-slate-50 max-md:shadow-2xl max-md:transition-transform max-md:duration-300 ${k.cartPanelOpen ? "max-md:translate-x-0" : "max-md:translate-x-full max-md:hidden"}`}
                 >
+                    {/* Mobile-only: header panel keranjang dengan tombol tutup */}
+                    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 shadow-sm md:hidden">
+                        <h3 className="text-sm font-bold text-slate-800">
+                            Keranjang
+                        </h3>
+                        <button
+                            type="button"
+                            onClick={() => k.setCartPanelOpen(false)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition"
+                            title="Tutup Keranjang"
+                        >
+                            <svg
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2.5}
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+
                     {/* Order options */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
                         {/* Fullscreen mode: Exit and History buttons */}

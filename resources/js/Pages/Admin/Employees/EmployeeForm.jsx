@@ -45,11 +45,23 @@ export default function EmployeeForm({
     submitLabel = "Simpan",
     cancelHref,
     editing = false,
+    storeType = "retail",
+    showCommission = false,
 }) {
     const showAccountFields = data.create_account;
     const assignableRoles = roles.filter(
         (r) => r.name !== "owner" && r.name !== "developer",
     );
+
+    const POSITION_HINT = {
+        service: "cth. Terapis, Receptionist",
+        rental: "cth. Operator, Admin",
+        ticket: "cth. Operator Loket, Guide",
+        hospitality: "cth. Resepsionis, Housekeeping",
+        parking: "cth. Petugas Loket, Security",
+        session: "cth. Operator, Admin",
+    };
+    const positionPlaceholder = POSITION_HINT[storeType] ?? "cth. Kasir, Manager Shift";
 
     return (
         <form onSubmit={onSubmit} className="space-y-5">
@@ -138,7 +150,7 @@ export default function EmployeeForm({
                             onChange={(e) =>
                                 setData("position", e.target.value)
                             }
-                            placeholder="cth. Kasir, Manager Shift"
+                            placeholder={positionPlaceholder}
                             className={inputCls(!!errors.position)}
                         />
                     </Field>
@@ -155,7 +167,8 @@ export default function EmployeeForm({
                 </div>
             </div>
 
-            {/* Komisi */}
+            {/* Komisi — hanya untuk store type dengan feature commission */}
+            {showCommission && (
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h3 className="mb-4 text-sm font-semibold text-slate-700">
                     Komisi
@@ -229,6 +242,7 @@ export default function EmployeeForm({
                     )}
                 </div>
             </div>
+            )}
 
             {/* Akun Login */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

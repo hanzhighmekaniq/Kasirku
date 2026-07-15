@@ -29,7 +29,14 @@ function StatusBadge({ status }) {
     );
 }
 
-export default function Index({ purchaseReturns }) {
+const PAGE_TITLE = {
+    retail: 'Retur Pembelian',
+    fnb: 'Retur Bahan Baku',
+    rental: 'Retur Pembelian Unit',
+};
+
+export default function Index({ purchaseReturns, storeType = 'retail' }) {
+    const pageTitle = PAGE_TITLE[storeType] ?? 'Retur Pembelian';
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [deleteTarget, setDeleteTarget] = useState(null);
@@ -69,7 +76,7 @@ export default function Index({ purchaseReturns }) {
         <AuthenticatedLayout
             header={
                 <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-slate-800">Retur Pembelian</h2>
+                    <h2 className="text-lg font-semibold text-slate-800">{pageTitle}</h2>
                     <Link
                         href={route('admin.purchase-returns.create')}
                         className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
@@ -81,7 +88,7 @@ export default function Index({ purchaseReturns }) {
                 </div>
             }
         >
-            <Head title="Retur Pembelian" />
+            <Head title={pageTitle} />
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -173,7 +180,7 @@ export default function Index({ purchaseReturns }) {
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
                                                 </svg>
                                             </div>
-                                            <p className="mt-4 text-sm font-medium text-slate-600">Belum ada retur pembelian</p>
+                                            <p className="mt-4 text-sm font-medium text-slate-600">Belum ada {pageTitle.toLowerCase()}</p>
                                             <p className="mt-1 text-xs text-slate-400">Klik "Buat Retur" untuk membuat retur baru</p>
                                         </div>
                                     </td>
@@ -246,7 +253,7 @@ export default function Index({ purchaseReturns }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
                             </svg>
                         </div>
-                        <p className="mt-4 text-sm font-medium text-slate-600">Belum ada retur pembelian</p>
+                        <p className="mt-4 text-sm font-medium text-slate-600">Belum ada {pageTitle.toLowerCase()}</p>
                     </div>
                 ) : (
                     filtered.map((retur) => (

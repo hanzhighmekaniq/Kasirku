@@ -546,7 +546,8 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                                         {emp.position}
                                     </span>
                                 )}
-                                {emp.commission_type &&
+                                {showCommission &&
+                                    emp.commission_type &&
                                     emp.commission_type !== "none" && (
                                         <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
                                             {emp.commission_type === "percent"

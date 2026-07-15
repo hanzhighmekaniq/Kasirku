@@ -1,11 +1,23 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 
-export default function Create({ branchName, suggestedShiftNo }) {
+export default function Create({ branchName, suggestedShiftNo, storeType = "retail" }) {
     const { data, setData, post, processing, errors } = useForm({
         opening_cash: "",
         opening_note: "",
     });
+
+    const PAGE_LABEL = {
+        retail: "Shift Kasir",
+        fnb: "Shift Kasir",
+        service: "Shift Layanan",
+        rental: "Shift Staf",
+        ticket: "Shift Operator",
+        hospitality: "Shift Resepsionis",
+        parking: "Shift Petugas",
+        session: "Shift Operator",
+    };
+    const pageLabel = PAGE_LABEL[storeType] ?? "Shift Kasir";
 
     const submit = (e) => {
         e.preventDefault();
@@ -36,7 +48,7 @@ export default function Create({ branchName, suggestedShiftNo }) {
                     </Link>
                     <div>
                         <h2 className="text-base font-semibold text-slate-800">
-                            Buka Shift Kasir
+                            Buka {pageLabel}
                         </h2>
                         {branchName && (
                             <p className="text-xs text-slate-400">
@@ -47,7 +59,7 @@ export default function Create({ branchName, suggestedShiftNo }) {
                 </div>
             }
         >
-            <Head title="Buka Shift" />
+            <Head title={`Buka ${pageLabel}`} />
 
             <div className="mx-auto max-w-lg">
                 <form
