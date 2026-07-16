@@ -102,6 +102,9 @@ class StoreRoleService
                     'supplier.create',
                     'supplier.edit',
                     'supplier.delete',
+                    'debt.view',
+                    'debt.create',
+                    'debt.pay',
                 ],
             ],
             'supervisor' => [
@@ -167,6 +170,7 @@ class StoreRoleService
                     'queue.manage',
                     'booking.view',
                     'booking.create',
+                    'debt.create',
                 ],
             ],
             'gudang' => [

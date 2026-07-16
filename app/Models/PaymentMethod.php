@@ -2,28 +2,28 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PaymentMethod extends Model
 {
     protected $fillable = [
-        "store_id",
-        "code",
-        "name",
-        "type",
-        "provider",
-        "is_active",
-        "sort_order",
+        'store_id',
+        'code',
+        'name',
+        'type',
+        'provider',
+        'is_active',
+        'sort_order',
     ];
 
     protected static function booted(): void
     {
         static::creating(function ($method) {
             if (is_null($method->store_id)) {
-                $method->store_id = session("current_store_id", 1);
+                $method->store_id = session('current_store_id', 1);
             }
         });
     }
@@ -35,12 +35,12 @@ class PaymentMethod extends Model
 
     public function scopeForStore(Builder $query, int $storeId): Builder
     {
-        return $query->where("store_id", $storeId);
+        return $query->where('store_id', $storeId);
     }
 
     protected $casts = [
-        "is_active" => "boolean",
-        "sort_order" => "integer",
+        'is_active' => 'boolean',
+        'sort_order' => 'integer',
     ];
 
     // ── Relationships ────────────────────────────
@@ -59,7 +59,7 @@ class PaymentMethod extends Model
 
     public function scopeActive($query)
     {
-        return $query->where("is_active", true);
+        return $query->where('is_active', true);
     }
 
     // ── Helpers ──────────────────────────────────
@@ -69,6 +69,6 @@ class PaymentMethod extends Model
      */
     public static function types(): array
     {
-        return ["cash", "digital", "card", "credit"];
+        return ['cash', 'digital', 'card', 'credit', 'debt'];
     }
 }

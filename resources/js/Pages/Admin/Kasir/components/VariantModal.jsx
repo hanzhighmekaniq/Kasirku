@@ -50,6 +50,9 @@ export default function VariantModal({ product, onConfirm, onClose }) {
                         <div className="grid grid-cols-2 gap-2">
                             {variants.map((v) => {
                                 const isActive = selected === v.id;
+                                // Tier berlaku untuk qty saat ini
+                                const variantTiers = (v.price_tiers ?? []).sort((a, b) => a.min_qty - b.min_qty);
+                                const lowestTier = variantTiers[0];
                                 return (
                                     <button
                                         key={v.id}
@@ -67,6 +70,11 @@ export default function VariantModal({ product, onConfirm, onClose }) {
                                         <span className={`mt-0.5 text-sm font-bold ${isActive ? "text-indigo-600" : "text-indigo-500"}`}>
                                             {fmt(v.price)}
                                         </span>
+                                        {lowestTier && (
+                                            <span className="mt-1 text-[10px] text-emerald-600 font-medium">
+                                                Grosir {lowestTier.min_qty}+ → {fmt(lowestTier.price)}
+                                            </span>
+                                        )}
                                         {v.sku && (
                                             <span className="mt-0.5 text-[10px] text-slate-400">{v.sku}</span>
                                         )}

@@ -25,6 +25,8 @@ return new class extends Migration
             $table->timestamp('last_visit_at')->nullable();
             // Deposit/saldo titipan (untuk mode rental, langganan, dll)
             $table->decimal('deposit_balance', 15, 2)->default(0);
+            $table->decimal('debt_balance', 15, 2)->default(0);
+            $table->decimal('credit_limit', 15, 2)->default(0);
             $table->text('notes')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

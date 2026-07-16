@@ -21,6 +21,7 @@ export default function Create({ products }) {
         end_hour: '',
         free_product_id: '',
         is_active: true,
+        max_usage: '',
         product_ids: [],
     });
 

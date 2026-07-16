@@ -2,6 +2,29 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\DatabaseSeeder\BranchSeeder;
+use Database\Seeders\DatabaseSeeder\CafeTableSeeder;
+use Database\Seeders\DatabaseSeeder\CashierShiftSeeder;
+use Database\Seeders\DatabaseSeeder\CategorySeeder;
+use Database\Seeders\DatabaseSeeder\CustomerSeeder;
+use Database\Seeders\DatabaseSeeder\EmployeeSeeder;
+use Database\Seeders\DatabaseSeeder\ExpenseCategorySeeder;
+use Database\Seeders\DatabaseSeeder\ExpenseSeeder;
+use Database\Seeders\DatabaseSeeder\FeatureDetailSeeder;
+use Database\Seeders\DatabaseSeeder\FeatureSeeder;
+use Database\Seeders\DatabaseSeeder\PaymentMethodSeeder;
+use Database\Seeders\DatabaseSeeder\PermissionSeeder;
+use Database\Seeders\DatabaseSeeder\PlanSeeder;
+use Database\Seeders\DatabaseSeeder\ProductSeeder;
+use Database\Seeders\DatabaseSeeder\ProductStockSeeder;
+use Database\Seeders\DatabaseSeeder\PurchaseSeeder;
+use Database\Seeders\DatabaseSeeder\RoleSeeder;
+use Database\Seeders\DatabaseSeeder\SaleSeeder;
+use Database\Seeders\DatabaseSeeder\StockMovementSeeder;
+use Database\Seeders\DatabaseSeeder\StoreSeeder;
+use Database\Seeders\DatabaseSeeder\StoreTypeSeeder;
+use Database\Seeders\DatabaseSeeder\SupplierSeeder;
+use Database\Seeders\DatabaseSeeder\UserSeeder;
 use Illuminate\Database\Seeder;
 
 /**
@@ -18,31 +41,33 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             // ── Sistem ─────────────────────────────────────────────
-            \Database\Seeders\DatabaseSeeder\StoreTypeSeeder::class,
-            \Database\Seeders\DatabaseSeeder\FeatureSeeder::class,
-            \Database\Seeders\DatabaseSeeder\FeatureDetailSeeder::class,
-            \Database\Seeders\DatabaseSeeder\PlanSeeder::class,
-            \Database\Seeders\DatabaseSeeder\PermissionSeeder::class,
+            StoreTypeSeeder::class,
+            FeatureSeeder::class,
+            FeatureDetailSeeder::class,
+            PlanSeeder::class,
+            PermissionSeeder::class,
 
             // ── Struktur ───────────────────────────────────────────
-            \Database\Seeders\DatabaseSeeder\StoreSeeder::class,
-            \Database\Seeders\DatabaseSeeder\BranchSeeder::class,
-            \Database\Seeders\DatabaseSeeder\UserSeeder::class,
-            \Database\Seeders\DatabaseSeeder\RoleSeeder::class,
-            \Database\Seeders\DatabaseSeeder\PaymentMethodSeeder::class,
+            StoreSeeder::class,
+            BranchSeeder::class,
+            UserSeeder::class,
+            RoleSeeder::class,
+            PaymentMethodSeeder::class,
 
             // ── Data Operasional ───────────────────────────────────
-            \Database\Seeders\DatabaseSeeder\EmployeeSeeder::class,
-            \Database\Seeders\DatabaseSeeder\SupplierSeeder::class,
-            \Database\Seeders\DatabaseSeeder\CustomerSeeder::class,
-            \Database\Seeders\DatabaseSeeder\ProductSeeder::class,
-            \Database\Seeders\DatabaseSeeder\CafeTableSeeder::class,
-            \Database\Seeders\DatabaseSeeder\CashierShiftSeeder::class,
-            \Database\Seeders\DatabaseSeeder\SaleSeeder::class,
-            \Database\Seeders\DatabaseSeeder\PurchaseSeeder::class,
-            \Database\Seeders\DatabaseSeeder\ExpenseCategorySeeder::class,
-            \Database\Seeders\DatabaseSeeder\ExpenseSeeder::class,
-            \Database\Seeders\DatabaseSeeder\StockMovementSeeder::class,
+            EmployeeSeeder::class,
+            SupplierSeeder::class,
+            CustomerSeeder::class,
+            CategorySeeder::class,
+            ProductSeeder::class,
+            ProductStockSeeder::class,
+            CafeTableSeeder::class,
+            CashierShiftSeeder::class,
+            SaleSeeder::class,
+            PurchaseSeeder::class,
+            ExpenseCategorySeeder::class,
+            ExpenseSeeder::class,
+            StockMovementSeeder::class,
         ]);
     }
 }

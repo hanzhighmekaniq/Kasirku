@@ -3,6 +3,7 @@
 namespace Database\Seeders\DatabaseSeeder;
 
 use App\Models\Branch;
+use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\PurchasePayment;
@@ -14,213 +15,133 @@ class PurchaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // User lookups by email
-        $owner1 = User::where("email", "owner1@gmail.com")->value("id");
-        $owner2 = User::where("email", "owner2@gmail.com")->value("id");
+        $owner1 = User::where('email', 'owner1@gmail.com')->value('id');
+        $owner2 = User::where('email', 'owner2@gmail.com')->value('id');
 
-        // Store & branch lookups by code
-        $storeKopiSenja = Store::where("code", "STORE002")->value("id");
-        $storeMinimarket = Store::where("code", "STORE001")->value("id");
-        $branchKopiMalioboro = Branch::where("code", "BR2A")->value("id");
-        $branchMiniPusat = Branch::where("code", "BR1A")->value("id");
-        $branchMiniBabarsari = Branch::where("code", "BR1B")->value("id");
+        $storeKopiSenja = Store::where('code', 'STORE002')->value('id');
+        $storeMinimarket = Store::where('code', 'STORE001')->value('id');
+        $branchKopiMalioboro = Branch::where('code', 'BR2A')->value('id');
+        $branchMiniPusat = Branch::where('code', 'BR1A')->value('id');
+        $branchMiniBabarsari = Branch::where('code', 'BR1B')->value('id');
+
+        // Helper: product_id by SKU
+        $pid = fn ($storeId, $sku) => Product::where('store_id', $storeId)->where('sku', $sku)->value('id');
 
         $purchases = [
-            // ═══ Store STORE002 — Kopi Senja, Bahan Baku Cafe ══════════════
-            // Branch BR2A (Malioboro)
+            // ═══ Store STORE002 — Kopi Senja ═══
             [
-                "purchase_no" => "PO-20260615-001",
-                "purchase_date" => "2026-06-15 09:00:00",
-                "store_id" => $storeKopiSenja,
-                "branch_id" => $branchKopiMalioboro,
-                "supplier_id" => 1,
-                "user_id" => $owner1,
-                "items" => [
-                    [
-                        "product_id" => 1,
-                        "quantity" => 10,
-                        "cost_price" => 120000,
-                    ], // 10 kg Arabika
-                    ["product_id" => 2, "quantity" => 5, "cost_price" => 85000], // 5 kg Robusta
+                'purchase_no' => 'PO-20260615-001',
+                'purchase_date' => '2026-06-15 09:00:00',
+                'store_id' => $storeKopiSenja,
+                'branch_id' => $branchKopiMalioboro,
+                'supplier_id' => 1,
+                'user_id' => $owner1,
+                'items' => [
+                    ['product_id' => $pid($storeKopiSenja, 'S2-001'), 'quantity' => 10, 'cost_price' => 8000],
+                    ['product_id' => $pid($storeKopiSenja, 'S2-002'), 'quantity' => 5, 'cost_price' => 5000],
                 ],
-                "paid_amount" => 1625000,
-                "payment_method_id" => 3, // BCA
+                'paid_amount' => 105000,
+                'payment_method_id' => 3,
             ],
             [
-                "purchase_no" => "PO-20260612-002",
-                "purchase_date" => "2026-06-12 10:30:00",
-                "store_id" => $storeKopiSenja,
-                "branch_id" => $branchKopiMalioboro,
-                "supplier_id" => 2,
-                "user_id" => $owner1,
-                "items" => [
-                    [
-                        "product_id" => 3,
-                        "quantity" => 20,
-                        "cost_price" => 18000,
-                    ], // 20L Susu Fresh
-                    [
-                        "product_id" => 4,
-                        "quantity" => 10,
-                        "cost_price" => 22000,
-                    ], // 10L Susu Evap
+                'purchase_no' => 'PO-20260612-002',
+                'purchase_date' => '2026-06-12 10:30:00',
+                'store_id' => $storeKopiSenja,
+                'branch_id' => $branchKopiMalioboro,
+                'supplier_id' => 2,
+                'user_id' => $owner1,
+                'items' => [
+                    ['product_id' => $pid($storeKopiSenja, 'S2-004'), 'quantity' => 20, 'cost_price' => 9000],
+                    ['product_id' => $pid($storeKopiSenja, 'S2-006'), 'quantity' => 10, 'cost_price' => 8000],
                 ],
-                "paid_amount" => 580000,
-                "payment_method_id" => 1, // Cash
-            ],
-            [
-                "purchase_no" => "PO-20260610-003",
-                "purchase_date" => "2026-06-10 08:00:00",
-                "store_id" => $storeKopiSenja,
-                "branch_id" => $branchKopiMalioboro,
-                "supplier_id" => 3,
-                "user_id" => $owner1,
-                "items" => [
-                    [
-                        "product_id" => 5,
-                        "quantity" => 10,
-                        "cost_price" => 14000,
-                    ], // 10kg Gula
-                    ["product_id" => 9, "quantity" => 30, "cost_price" => 2200], // 30kg Telur
-                    [
-                        "product_id" => 11,
-                        "quantity" => 20,
-                        "cost_price" => 8000,
-                    ], // 20kg Nasi
-                ],
-                "paid_amount" => 346000,
-                "payment_method_id" => 1,
+                'paid_amount' => 260000,
+                'payment_method_id' => 1,
             ],
 
-            // ═══ Store STORE001 — Minimarket Sejahtera ═════════════════════
-            // Branch BR1A (Pusat) — stok minimarket
+            // ═══ Store STORE001 — Minimarket Sejahtera ═══
             [
-                "purchase_no" => "PO-20260608-004",
-                "purchase_date" => "2026-06-08 14:00:00",
-                "store_id" => $storeMinimarket,
-                "branch_id" => $branchMiniPusat,
-                "supplier_id" => 5,
-                "user_id" => $owner2,
-                "items" => [
-                    [
-                        "product_id" => 25,
-                        "quantity" => 100,
-                        "cost_price" => 2500,
-                    ], // 100 Indomie
-                    [
-                        "product_id" => 26,
-                        "quantity" => 48,
-                        "cost_price" => 3500,
-                    ], // 48 Teh Botol
-                    [
-                        "product_id" => 27,
-                        "quantity" => 60,
-                        "cost_price" => 3000,
-                    ], // 60 Aqua
-                    [
-                        "product_id" => 32,
-                        "quantity" => 60,
-                        "cost_price" => 2000,
-                    ], // 60 Kopi Torabika
+                'purchase_no' => 'PO-20260608-004',
+                'purchase_date' => '2026-06-08 14:00:00',
+                'store_id' => $storeMinimarket,
+                'branch_id' => $branchMiniPusat,
+                'supplier_id' => 5,
+                'user_id' => $owner2,
+                'items' => [
+                    ['product_id' => $pid($storeMinimarket, 'S1-001'), 'quantity' => 100, 'cost_price' => 2800],
+                    ['product_id' => $pid($storeMinimarket, 'S1-008'), 'quantity' => 48, 'cost_price' => 3500],
+                    ['product_id' => $pid($storeMinimarket, 'S1-006'), 'quantity' => 60, 'cost_price' => 2500],
+                    ['product_id' => $pid($storeMinimarket, 'S1-019'), 'quantity' => 60, 'cost_price' => 2000],
                 ],
-                "paid_amount" => 756000,
-                "payment_method_id" => 3,
+                'paid_amount' => 628000,
+                'payment_method_id' => 3,
             ],
             [
-                "purchase_no" => "PO-20260605-005",
-                "purchase_date" => "2026-06-05 11:00:00",
-                "store_id" => $storeMinimarket,
-                "branch_id" => $branchMiniPusat,
-                "supplier_id" => 4,
-                "user_id" => $owner2,
-                "items" => [
-                    [
-                        "product_id" => 28,
-                        "quantity" => 15,
-                        "cost_price" => 55000,
-                    ], // 15 Beras 5kg
-                    [
-                        "product_id" => 29,
-                        "quantity" => 20,
-                        "cost_price" => 14000,
-                    ], // 20 Minyak 1L
-                    [
-                        "product_id" => 30,
-                        "quantity" => 25,
-                        "cost_price" => 12000,
-                    ], // 25 Gula 1kg
-                    [
-                        "product_id" => 31,
-                        "quantity" => 24,
-                        "cost_price" => 8000,
-                    ], // 24 Susu Kental
+                'purchase_no' => 'PO-20260605-005',
+                'purchase_date' => '2026-06-05 11:00:00',
+                'store_id' => $storeMinimarket,
+                'branch_id' => $branchMiniPusat,
+                'supplier_id' => 4,
+                'user_id' => $owner2,
+                'items' => [
+                    ['product_id' => $pid($storeMinimarket, 'S1-002'), 'quantity' => 15, 'cost_price' => 60000],
+                    ['product_id' => $pid($storeMinimarket, 'S1-003'), 'quantity' => 20, 'cost_price' => 15000],
+                    ['product_id' => $pid($storeMinimarket, 'S1-004'), 'quantity' => 25, 'cost_price' => 12000],
+                    ['product_id' => $pid($storeMinimarket, 'S1-020'), 'quantity' => 24, 'cost_price' => 8000],
                 ],
-                "paid_amount" => 1573000,
-                "payment_method_id" => 3,
+                'paid_amount' => 1542000,
+                'payment_method_id' => 3,
             ],
-
-            // Branch BR1B (Babarsari) — pembelian kecil
             [
-                "purchase_no" => "PO-20260618-006",
-                "purchase_date" => "2026-06-18 09:00:00",
-                "store_id" => $storeMinimarket,
-                "branch_id" => $branchMiniBabarsari,
-                "supplier_id" => 5,
-                "user_id" => $owner2,
-                "items" => [
-                    [
-                        "product_id" => 25,
-                        "quantity" => 30,
-                        "cost_price" => 2500,
-                    ], // 30 Indomie
-                    [
-                        "product_id" => 27,
-                        "quantity" => 24,
-                        "cost_price" => 3000,
-                    ], // 24 Aqua
+                'purchase_no' => 'PO-20260618-006',
+                'purchase_date' => '2026-06-18 09:00:00',
+                'store_id' => $storeMinimarket,
+                'branch_id' => $branchMiniBabarsari,
+                'supplier_id' => 5,
+                'user_id' => $owner2,
+                'items' => [
+                    ['product_id' => $pid($storeMinimarket, 'S1-001'), 'quantity' => 30, 'cost_price' => 2800],
+                    ['product_id' => $pid($storeMinimarket, 'S1-006'), 'quantity' => 24, 'cost_price' => 2500],
                 ],
-                "paid_amount" => 147000,
-                "payment_method_id" => 1,
+                'paid_amount' => 144000,
+                'payment_method_id' => 1,
             ],
         ];
 
         foreach ($purchases as $data) {
-            $items = $data["items"];
-            $paymentMethodId = $data["payment_method_id"] ?? 1;
-            unset($data["items"]);
-            unset($data["payment_method_id"]);
+            $items = $data['items'];
+            $paymentMethodId = $data['payment_method_id'] ?? 1;
+            unset($data['items'], $data['payment_method_id']);
 
             $subtotal = 0;
             foreach ($items as $item) {
-                $subtotal += $item["cost_price"] * $item["quantity"];
+                $subtotal += $item['cost_price'] * $item['quantity'];
             }
 
-            $data["subtotal"] = $subtotal;
-            $data["discount_amount"] = 0;
-            $data["tax_amount"] = 0;
-            $data["shipping_amount"] = 0;
-            $data["grand_total"] = $subtotal;
-            $data["status"] = "received";
-            $data["payment_status"] = "paid";
+            $data['subtotal'] = $subtotal;
+            $data['discount_amount'] = 0;
+            $data['tax_amount'] = 0;
+            $data['shipping_amount'] = 0;
+            $data['grand_total'] = $subtotal;
+            $data['status'] = 'received';
+            $data['payment_status'] = 'paid';
 
             $purchase = Purchase::create($data);
 
             foreach ($items as $item) {
-                $itemSubtotal = $item["cost_price"] * $item["quantity"];
                 PurchaseItem::create([
-                    "purchase_id" => $purchase->id,
-                    "product_id" => $item["product_id"],
-                    "quantity" => $item["quantity"],
-                    "cost_price" => $item["cost_price"],
-                    "subtotal" => $itemSubtotal,
+                    'purchase_id' => $purchase->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'cost_price' => $item['cost_price'],
+                    'subtotal' => $item['cost_price'] * $item['quantity'],
                 ]);
             }
 
             PurchasePayment::create([
-                "purchase_id" => $purchase->id,
-                "payment_method_id" => $paymentMethodId,
-                "paid_at" => $data["purchase_date"],
-                "amount" => $data["paid_amount"],
+                'purchase_id' => $purchase->id,
+                'payment_method_id' => $paymentMethodId,
+                'paid_at' => $data['purchase_date'],
+                'amount' => $data['paid_amount'],
             ]);
         }
     }

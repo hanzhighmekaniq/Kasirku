@@ -58,6 +58,7 @@ class PromotionController extends Controller
             'end_hour' => 'nullable|string|max:5',
             'free_product_id' => 'nullable|exists:products,id',
             'is_active' => 'boolean',
+            'max_usage' => 'nullable|integer|min:0',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
         ]);
@@ -78,6 +79,7 @@ class PromotionController extends Controller
                 'start_hour',
                 'end_hour',
                 'free_product_id',
+                'max_usage',
             ] as $field
         ) {
             if (isset($validated[$field]) && $validated[$field] === '') {
@@ -134,6 +136,7 @@ class PromotionController extends Controller
             'end_hour' => 'nullable|string|max:5',
             'free_product_id' => 'nullable|exists:products,id',
             'is_active' => 'boolean',
+            'max_usage' => 'nullable|integer|min:0',
             'product_ids' => 'nullable|array',
             'product_ids.*' => 'exists:products,id',
         ]);
@@ -154,6 +157,7 @@ class PromotionController extends Controller
                 'start_hour',
                 'end_hour',
                 'free_product_id',
+                'max_usage',
             ] as $field
         ) {
             if (isset($validated[$field]) && $validated[$field] === '') {

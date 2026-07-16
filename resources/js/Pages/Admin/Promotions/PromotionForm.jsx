@@ -37,6 +37,7 @@ export default function PromotionForm({
     submitLabel = 'Simpan',
     cancelHref,
     products = [],
+    promotion = null,
 }) {
     const [productSearch, setProductSearch] = useState('');
     const [showProductPicker, setShowProductPicker] = useState(false);
@@ -334,25 +335,46 @@ export default function PromotionForm({
                 </Field>
             </div>
 
-            {/* Aktif toggle */}
-            <div className="flex items-center gap-3">
-                <button
-                    type="button"
-                    onClick={() => setData('is_active', !data.is_active)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                        data.is_active ? 'bg-indigo-600' : 'bg-slate-200'
-                    }`}
-                >
-                    <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                            data.is_active ? 'translate-x-5' : 'translate-x-0'
+            {/* Aktif toggle & Limit */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setData('is_active', !data.is_active)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                            data.is_active ? 'bg-indigo-600' : 'bg-slate-200'
                         }`}
-                    />
-                </button>
-                <div>
-                    <p className="text-sm font-medium text-slate-700">Aktif</p>
-                    <p className="text-xs text-slate-400">Promo akan tampil di POS jika aktif</p>
+                    >
+                        <span
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                                data.is_active ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                        />
+                    </button>
+                    <div>
+                        <p className="text-sm font-medium text-slate-700">Aktif</p>
+                        <p className="text-xs text-slate-400">Promo akan tampil di POS jika aktif</p>
+                    </div>
                 </div>
+
+                <Field label="Limit Pemakaian" error={errors.max_usage}>
+                    <div className="mt-1.5">
+                        <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={data.max_usage ?? ''}
+                            onChange={(e) => setData('max_usage', e.target.value)}
+                            placeholder="0 = tanpa batas"
+                            className={inputCls('max_usage')}
+                        />
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                        {Number(data.max_usage) > 0
+                            ? `Promo berhenti setelah ${data.max_usage}x transaksi${promotion ? ` (sudah ${promotion.used_count ?? 0}x dipakai)` : ''}`
+                            : 'Kosongkan atau 0 untuk tanpa batas'}
+                    </p>
+                </Field>
             </div>
 
             {/* Product Selection — only for scope=item */}

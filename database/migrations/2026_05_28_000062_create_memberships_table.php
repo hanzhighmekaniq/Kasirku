@@ -4,9 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Master paket membership (Gym, Laundry langganan, Kursus, dll)
- */
 return new class extends Migration
 {
     public function up(): void
@@ -17,17 +14,18 @@ return new class extends Migration
             $table->string('code', 50);
             $table->string('name');
             $table->text('description')->nullable();
-            // duration_type: day / month / year / visit (berbasis kunjungan)
             $table->string('duration_type', 20)->default('month');
-            $table->unsignedInteger('duration_value')->default(1)->comment('Misal: 1 bulan, 30 hari, 10 kunjungan');
+            $table->unsignedInteger('duration_value')->default(1);
             $table->decimal('price', 15, 2)->default(0);
-            $table->decimal('discount_percent', 5, 2)->default(0)->comment('Diskon member saat transaksi');
-            $table->unsignedInteger('point_multiplier')->default(1)->comment('Kelipatan poin yang didapat');
-            $table->json('benefits')->nullable()->comment('Benefit tambahan dalam format JSON');
+            $table->decimal('discount_percent', 5, 2)->default(0);
+            $table->unsignedInteger('point_multiplier')->default(1);
+            $table->unsignedInteger('sort_order')->default(0);
+            $table->json('benefits')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
             $table->unique(['store_id', 'code']);
+            $table->unique(['store_id', 'name']);
         });
     }
 

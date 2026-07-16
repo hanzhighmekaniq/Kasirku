@@ -63,6 +63,34 @@ function findPgPaymentMethod(pgMethod, paymentMethods) {
     });
 }
 
+/** Ambil harga tier yang berlaku untuk qty tertentu — variant-aware dengan fallback ke product level */
+function getTierPrice(product, qty, variantId = null) {
+    if (variantId !== null) {
+        // Cek tier khusus variant dulu
+        const variant = (product.variants ?? []).find((v) => v.id === variantId);
+        if (variant?.price_tiers?.length) {
+            const tiers = [...variant.price_tiers].sort((a, b) => a.min_qty - b.min_qty);
+            let matched = null;
+            for (const tier of tiers) {
+                if (qty >= tier.min_qty) matched = tier;
+                else break;
+            }
+            if (matched) return Number(matched.price);
+        }
+    }
+
+    // Fallback ke tier product-level (variant_id = NULL)
+    const productTiers = (product.price_tiers ?? []).filter((t) => !t.variant_id);
+    if (!productTiers.length) return null;
+    const tiers = [...productTiers].sort((a, b) => a.min_qty - b.min_qty);
+    let matched = null;
+    for (const tier of tiers) {
+        if (qty >= tier.min_qty) matched = tier;
+        else break;
+    }
+    return matched ? Number(matched.price) : null;
+}
+
 export default function useKasir({
     products,
     categories,
@@ -78,6 +106,7 @@ export default function useKasir({
     activeShift = null,
     posMode,
     employees = [],
+    storeFeatureSettings = {},
 }) {
     /* ── mode detection ─────────────────────────────────── */
     const activeMode = normalizePosMode(posMode || storeType);
@@ -97,12 +126,21 @@ export default function useKasir({
     const orderOpts = modeConfig.orderTypes;
     const hasModeFeature = (feature) => modeHasFeature(activeMode, feature);
 
+    // Label & order type pemicu pemilih ruang — "Meja" untuk fnb (dine_in),
+    // "Kamar" untuk hospitality (check_in). Order type-nya BEDA per mode,
+    // jangan disamakan jadi "dine_in" untuk semua.
+    const tableLabel = isHospitality ? "Kamar" : "Meja";
+    const tableTriggerOrderType = isHospitality ? "check_in" : "dine_in";
+
     /* ── state ── */
     const [customers, setCustomers] = useState(initialCustomers || []);
     const [search, setSearch] = useState("");
     const [activeCat, setActiveCat] = useState("");
     const [cart, setCart] = useState([]);
-    const [cartIdSeq, setCartIdSeq] = useState(0);
+    // Ref (bukan state) untuk penomoran cartId — dibaca & ditulis secara
+    // synchronous di dalam addToCart, jadi aman dari stale closure walau
+    // addToCart dipanggil berkali-kali sebelum React sempat re-render.
+    const cartIdSeqRef = useRef(0);
 
     /* ── scanner state ── */
     const [showScanner, setShowScanner] = useState(false);
@@ -139,8 +177,16 @@ export default function useKasir({
     });
     const [note, setNote] = useState("");
 
-    /* mode-specific state */
-    const [serviceWeight, setServiceWeight] = useState("");
+    /* mode-specific state
+     *
+     * PERHATIAN: ticketEvent, ticketSlot, dan roomNumber di-reuse lintas
+     * mode dengan ARTI BERBEDA tergantung activeMode saat ini (bukan bug,
+     * tapi technical debt penamaan — hati-hati saat menambah fitur baru):
+     *
+     * - ticketEvent : nama event (ticket) | nama petugas fallback (service) | plat nomor kendaraan (parking)
+     * - ticketSlot  : no. booking/slot (ticket) | no. booking-antrian (service) | jenis kendaraan (parking)
+     * - roomNumber  : no. kamar (hospitality) | nama unit sewa (rental) | no. tiket (parking) | nama unit PC/PS (session)
+     */
     const [rentalDuration, setRentalDuration] = useState(1);
     const [rentalUnit, setRentalUnit] = useState("per_hour");
     const [ticketEvent, setTicketEvent] = useState("");
@@ -161,6 +207,8 @@ export default function useKasir({
     const [historyList, setHistoryList] = useState(todaySales);
     const [cartPanelOpen, setCartPanelOpen] = useState(false);
     const [pgModalData, setPgModalData] = useState(null);
+    // { productName, available, requested } | null — dipakai StockAlertModal
+    const [stockAlert, setStockAlert] = useState(null);
 
     /* ── refs ── */
     const customerDropdownRef = useRef(null);
@@ -376,14 +424,49 @@ export default function useKasir({
     };
 
     /* ── cart helpers ── */
+    /**
+     * Tambah produk ke keranjang.
+     *
+     * PENTING: jangan panggil fungsi ini berkali-kali dalam loop untuk
+     * menambah qty > 1 (misal `for (let i=0;i<qty;i++) addToCart(...)`).
+     * Karena setCart bersifat asinkron, tiap iterasi loop akan membaca
+     * state `cart` yang belum ter-update oleh iterasi sebelumnya (stale
+     * closure) — akibatnya item yang sama malah tercatat sebagai beberapa
+     * baris terpisah di keranjang alih-alih qty-nya bertambah.
+     * Gunakan parameter `qty` di bawah untuk menambah lebih dari 1 sekaligus
+     * dalam satu update state.
+     */
     const addToCart = (
         product,
         variant = null,
         modifiers = [],
         itemNote = "",
         packagingUnit = null,
+        qty = 1,
     ) => {
-        const price = packagingUnit
+        // ── Cek stok sebelum masuk keranjang ──
+        if (product.track_stock) {
+            const conversionQty = packagingUnit?.conversion_qty ?? 1;
+            const requestedQty = qty * conversionQty;
+
+            // Hitung qty yang sudah ada di keranjang untuk produk ini
+            const currentCartQty = cart
+                .filter((c) => c.productId === product.id)
+                .reduce((sum, c) => sum + c.qty * (c.conversionQty ?? 1), 0);
+
+            const availableStock = (product.stock ?? 0) - currentCartQty;
+
+            if (requestedQty > availableStock) {
+                setStockAlert({
+                    productName: product.name,
+                    available: Math.max(0, availableStock),
+                    requested: requestedQty,
+                });
+                return;
+            }
+        }
+
+        const basePrice = packagingUnit
             ? Number(packagingUnit.sell_price)
             : variant
               ? Number(variant.price)
@@ -392,24 +475,33 @@ export default function useKasir({
             (s, m) => s + (m.price_addition ?? 0),
             0,
         );
-        const effectivePrice = price + modExtra;
+
+        // Cek tier price untuk qty yang diminta — variant-aware
+        const tierPrice = !packagingUnit
+            ? getTierPrice(product, qty, variant?.id ?? null)
+            : null;
+        const effectivePrice = (tierPrice ?? basePrice) + modExtra;
 
         // find existing identical item (same product+variant+modifiers+unit)
         const unitId = packagingUnit?.id ?? 0;
         const key = `${product.id}-${variant?.id ?? 0}-${unitId}-${JSON.stringify(modifiers)}`;
-        const existing = cart.find((c) => c.key === key && c.note === itemNote);
 
-        if (existing) {
-            setCart((prev) =>
-                prev.map((c) => {
-                    if (c.cartId !== existing.cartId) return c;
-                    const updated = { ...c, qty: c.qty + 1 };
-                    return recalcPromo(updated);
-                }),
+        setCart((prev) => {
+            const existing = prev.find(
+                (c) => c.key === key && c.note === itemNote,
             );
-        } else {
+
+            if (existing) {
+                return prev.map((c) => {
+                    if (c.cartId !== existing.cartId) return c;
+                    const updated = { ...c, qty: c.qty + qty };
+                    return recalcPromo(updated);
+                });
+            }
+
+            cartIdSeqRef.current += 1;
             const newItem = {
-                cartId: cartIdSeq + 1,
+                cartId: cartIdSeqRef.current,
                 key,
                 productId: product.id,
                 variantId: variant?.id ?? null,
@@ -419,26 +511,76 @@ export default function useKasir({
                 name: product.name,
                 variantName: variant?.name ?? null,
                 price: effectivePrice,
-                qty: 1,
+                qty,
                 modifiers,
                 note: itemNote,
             };
             const withPromo = recalcPromo(newItem);
-            setCartIdSeq((s) => s + 1);
-            setCart((prev) => [...prev, withPromo]);
-        }
+            return [...prev, withPromo];
+        });
     };
 
     const changeQty = (cartId, delta) => {
-        setCart((prev) =>
-            prev
-                .map((c) =>
-                    c.cartId === cartId
-                        ? recalcPromo({ ...c, qty: Math.max(1, c.qty + delta) })
-                        : c,
-                )
-                .filter((c) => c.qty > 0),
-        );
+        setCart((prev) => {
+            const item = prev.find((c) => c.cartId === cartId);
+            if (!item) return prev;
+
+            // Cek stok jika menambah qty
+            if (delta > 0) {
+                const product = products.find((p) => p.id === item.productId);
+                if (product?.track_stock) {
+                    const currentTotal = prev
+                        .filter((c) => c.productId === item.productId)
+                        .reduce((sum, c) => sum + c.qty * (c.conversionQty ?? 1), 0);
+                    const available = (product.stock ?? 0) - currentTotal;
+                    const requested = delta * (item.conversionQty ?? 1);
+
+                    if (requested > available) {
+                        setStockAlert({
+                            productName: item.name,
+                            available: Math.max(0, available),
+                            requested,
+                        });
+                        return prev;
+                    }
+                }
+            }
+
+            return prev
+                .map((c) => {
+                    if (c.cartId !== cartId) return c;
+                    const newQty = Math.max(1, c.qty + delta);
+
+                    // Recalculate tier price if product has tiers
+                    const product = products.find((p) => p.id === c.productId);
+                    let newPrice = c.price;
+                    // Recalculate tier price — variant-aware
+                    const hasTiers = product?.price_tiers?.length ||
+                        (product?.variants ?? []).some((v) => v.id === c.variantId && v.price_tiers?.length);
+                    if (hasTiers && !c.packagingUnitId) {
+                        const tierPrice = getTierPrice(product, newQty, c.variantId ?? null);
+                        if (tierPrice !== null) {
+                            const modExtra = (c.modifiers ?? []).reduce(
+                                (s, m) => s + (m.price_addition ?? 0), 0,
+                            );
+                            newPrice = tierPrice + modExtra;
+                        } else {
+                            // No tier matches — fallback to base price (variant or product)
+                            const variant = c.variantId
+                                ? (product?.variants ?? []).find((v) => v.id === c.variantId)
+                                : null;
+                            const basePrice = variant ? Number(variant.price) : Number(product?.sell_price ?? c.price);
+                            const modExtra = (c.modifiers ?? []).reduce(
+                                (s, m) => s + (m.price_addition ?? 0), 0,
+                            );
+                            newPrice = basePrice + modExtra;
+                        }
+                    }
+
+                    return recalcPromo({ ...c, qty: newQty, price: newPrice });
+                })
+                .filter((c) => c.qty > 0);
+        });
     };
 
     const removeItem = (cartId) =>
@@ -646,6 +788,34 @@ export default function useKasir({
             Number(deliveryFee || 0),
     );
 
+    /* ── cash rounding ── */
+    const cashRoundingSettings = storeFeatureSettings?.cash_rounding;
+    const cashRoundingEnabled = !!cashRoundingSettings;
+    const cashRoundingNearest = cashRoundingSettings?.cash_rounding_nearest ?? 100;
+
+    const roundedGrandTotal = cashRoundingEnabled
+        ? Math.round(grandTotal / cashRoundingNearest) * cashRoundingNearest
+        : grandTotal;
+    const roundingAdjustment = cashRoundingEnabled
+        ? roundedGrandTotal - grandTotal
+        : 0;
+
+    /* ── field wajib per mode yang belum terisi — dipakai untuk disable
+       tombol Bayar & tampilkan pesan kontekstual SEBELUM user klik bayar,
+       bukan cuma alert() setelah modal pembayaran terbuka ── */
+    const missingRequiredField = (() => {
+        if ((isService || isRental || isHospitality) && !selectedCustomer) {
+            return "Pilih pelanggan dulu";
+        }
+        if (isParking && !ticketEvent.trim()) {
+            return "Isi plat nomor dulu";
+        }
+        if (isSession && !roomNumber.trim()) {
+            return "Isi nama unit dulu";
+        }
+        return null;
+    })();
+
     /* ── submit ── */
     const handleConfirmPayment = async (payments, change) => {
         if (!activeShift) {
@@ -708,6 +878,7 @@ export default function useKasir({
             tax_amount: Number(tax),
             shipping_amount:
                 orderType === "delivery" ? Number(deliveryFee || 0) : 0,
+            rounding_adjustment: roundingAdjustment,
             delivery_address: orderType === "delivery" ? deliveryAddress : null,
             customer_name:
                 orderType === "delivery"
@@ -1488,6 +1659,8 @@ export default function useKasir({
         isCafe,
         isBooth,
         orderOpts,
+        tableLabel,
+        tableTriggerOrderType,
 
         /* state */
         customers,
@@ -1498,8 +1671,6 @@ export default function useKasir({
         setActiveCat,
         cart,
         setCart,
-        cartIdSeq,
-        setCartIdSeq,
         showScanner,
         setShowScanner,
         scanning,
@@ -1512,6 +1683,7 @@ export default function useKasir({
         setOrderType,
         selectedCustomer,
         setSelectedCustomer,
+        customers,
         customerSearch,
         setCustomerSearch,
         showCustomerDropdown,
@@ -1548,8 +1720,6 @@ export default function useKasir({
         setNote,
 
         /* mode-specific state */
-        serviceWeight,
-        setServiceWeight,
         rentalDuration,
         setRentalDuration,
         rentalUnit,
@@ -1589,6 +1759,8 @@ export default function useKasir({
         setCartPanelOpen,
         pgModalData,
         setPgModalData,
+        stockAlert,
+        setStockAlert,
 
         /* refs */
         customerDropdownRef,
@@ -1605,6 +1777,10 @@ export default function useKasir({
         cartPromoDiscount,
         cartPromoName,
         grandTotal,
+        roundedGrandTotal,
+        roundingAdjustment,
+        cashRoundingEnabled,
+        missingRequiredField,
 
         /* handlers */
         addToCart,

@@ -58,6 +58,7 @@ const ICONS = {
     modifier: ListChecks,
     report: BarChart3,
     payment: CreditCard,
+    debt: Banknote,
     settings: Cog,
     table: Table,
     kitchen: CookingPot,
@@ -77,6 +78,7 @@ const GROUP_ICONS = {
     database: Database,
     arrowsRightLeft: ArrowLeftRight,
     archiveBox: Archive,
+    currencyDollar: DollarSign,
     cog: Cog,
 };
 

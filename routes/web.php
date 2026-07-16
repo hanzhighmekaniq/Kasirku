@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\CashierShiftController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DebtController;
 use App\Http\Controllers\Admin\EmployeeCommissionController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\ExpenseCategoryController;
@@ -692,6 +693,18 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
             'permission:customer.view',
         ])->group(function () {
             Route::resource('customers', CustomerController::class);
+            Route::post('/customers/{customer}/pay-debt', [CustomerController::class, 'payDebt'])->name('customers.pay-debt');
+        });
+
+        // ─────────────────────────────────────────────────────────────────
+        // HUTANG / KASBON — permission: debt.*
+        // ─────────────────────────────────────────────────────────────────
+        Route::middleware([
+            'feature:debt',
+            'permission:debt.view',
+        ])->group(function () {
+            Route::get('/debts', [DebtController::class, 'index'])->name('debts.index');
+            Route::post('/debts/{customer}/pay', [DebtController::class, 'pay'])->name('debts.pay');
         });
 
         // ─────────────────────────────────────────────────────────────────
@@ -906,6 +919,10 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 SettingController::class,
                 'update',
             ])->name('settings.update');
+            Route::post('/settings/features', [
+                SettingController::class,
+                'updateFeatures',
+            ])->name('settings.features.update');
 
         });
         Route::middleware([

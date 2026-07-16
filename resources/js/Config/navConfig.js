@@ -148,6 +148,8 @@ export function buildNavGroups(modules) {
         lockedPaymentGw,
         hasPaymentMethod,
         lockedPaymentMethod,
+        hasDebt,
+        lockedDebt,
         hasSettings,
         lockedSettings,
         hasUserManagement,
@@ -522,6 +524,18 @@ export function buildNavGroups(modules) {
                 href: r("admin.payment-methods.index"),
                 icon: "payment",
                 current: "admin.payment-methods.*",
+            },
+        );
+        add(
+            items,
+            (hasDebt || lockedDebt) && can("debt.view"),
+            hasDebt && can("debt.view"),
+            {
+                key: "debts",
+                name: "Hutang / Kasbon",
+                href: r("admin.debts.index"),
+                icon: "debt",
+                current: "admin.debts.*",
             },
         );
         if (items.length > 0)

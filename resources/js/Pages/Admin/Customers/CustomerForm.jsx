@@ -1,4 +1,5 @@
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
+import { useState } from "react";
 import Field from "@/Components/ui/Field";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 
@@ -23,8 +24,26 @@ export default function CustomerForm({
     submitLabel = "Simpan",
     cancelHref,
     storeType = "retail",
+    customer = null,
 }) {
     const showDeposit = ["service", "rental", "hospitality", "parking", "session"].includes(storeType);
+    const [payAmount, setPayAmount] = useState("");
+    const [payProcessing, setPayProcessing] = useState(false);
+
+    const handlePayDebt = () => {
+        if (!payAmount || Number(payAmount) <= 0) return;
+        setPayProcessing(true);
+        router.post(
+            route("admin.customers.pay-debt", customer.id),
+            { amount: Number(payAmount) },
+            {
+                preserveScroll: true,
+                onSuccess: () => setPayAmount(""),
+                onFinish: () => setPayProcessing(false),
+            },
+        );
+    };
+
     return (
         <form onSubmit={onSubmit} className="space-y-5">
             <Field label="Nama Pelanggan" required error={errors.name}>
@@ -106,6 +125,77 @@ export default function CustomerForm({
                     </p>
                 </Field>
             )}
+
+            {/* Hutang Section */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+                <h4 className="text-sm font-semibold text-slate-700">Hutang / Kasbon</h4>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field label="Limit Kredit" error={errors.credit_limit}>
+                        <div className="relative">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                Rp
+                            </span>
+                            <input
+                                type="number"
+                                value={data.credit_limit ?? ""}
+                                onChange={(e) => setData("credit_limit", e.target.value)}
+                                min="0"
+                                placeholder="0"
+                                className={`${inp(errors.credit_limit)} pl-9`}
+                            />
+                        </div>
+                        <p className="mt-1 text-xs text-slate-400">
+                            Batas maksimal hutang (0 = tanpa limit)
+                        </p>
+                    </Field>
+                    <Field label="Saldo Hutang Saat Ini">
+                        <div className="relative">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                Rp
+                            </span>
+                            <input
+                                type="text"
+                                value={Number(data.debt_balance ?? 0).toLocaleString("id-ID")}
+                                disabled
+                                className={`${inp()} pl-9 bg-slate-100 text-slate-500`}
+                            />
+                        </div>
+                    </Field>
+                </div>
+
+                {/* Pay Debt */}
+                {customer && (data.debt_balance ?? 0) > 0 && (
+                    <div className="flex items-end gap-3 border-t border-slate-200 pt-3">
+                        <div className="flex-1">
+                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Bayar Hutang
+                            </label>
+                            <div className="relative">
+                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                    Rp
+                                </span>
+                                <input
+                                    type="number"
+                                    value={payAmount}
+                                    onChange={(e) => setPayAmount(e.target.value)}
+                                    min="0"
+                                    max={data.debt_balance}
+                                    placeholder="0"
+                                    className={`${inp()} pl-9`}
+                                />
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handlePayDebt}
+                            disabled={payProcessing || !payAmount || Number(payAmount) <= 0}
+                            className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                            {payProcessing ? "..." : "Bayar"}
+                        </button>
+                    </div>
+                )}
+            </div>
 
             <Field label="Catatan" error={errors.notes}>
                 <textarea

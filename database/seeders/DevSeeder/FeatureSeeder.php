@@ -299,6 +299,22 @@ class FeatureSeeder extends Seeder
                 'sort_order' => 35,
                 'applicable_types' => self::ALL_TYPES,
             ],
+            [
+                'code' => 'cash_rounding',
+                'label' => 'Pembulatan Kas',
+                'description' => 'Bulatkan total ke kelipatan terdekat (50/100/500/1000)',
+                'category' => 'pos',
+                'sort_order' => 36,
+                'applicable_types' => self::ALL_TYPES,
+            ],
+            [
+                'code' => 'debt',
+                'label' => 'Hutang / Kasbon',
+                'description' => 'Catat pembayaran hutang pelanggan, atur limit kredit, & pelunasan',
+                'category' => 'finance',
+                'sort_order' => 37,
+                'applicable_types' => self::ALL_TYPES,
+            ],
 
             // ── Legacy (keep for backward compat, not shown in sidebar) ──
             [
@@ -367,6 +383,8 @@ class FeatureSeeder extends Seeder
             'employee',
             'expense',
             'sidebar_order',
+            'cash_rounding',
+            'debt',
         ];
 
         // Feature code yang termasuk plan Basic
@@ -406,6 +424,8 @@ class FeatureSeeder extends Seeder
             'role_management',
             'activity_log',
             'sidebar_order',
+            'cash_rounding',
+            'debt',
         ];
 
         $free = Plan::where('code', 'free')->first();

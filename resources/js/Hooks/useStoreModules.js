@@ -11,7 +11,7 @@ import { usePage } from "@inertiajs/react";
  * can() = layer tambahan khusus karyawan (permission Spatie).
  */
 export function useStoreModules() {
-    const { currentStore, auth, storePlan, storeTypeFeatures } =
+    const { currentStore, auth, storePlan, storeTypeFeatures, storeFeatureOverrides } =
         usePage().props ?? {};
 
     const modules = currentStore?.modules ?? {};
@@ -29,6 +29,9 @@ export function useStoreModules() {
     const planFeatures = storePlan?.features ?? [];
     const planAllAll = planFeatures.length === 1 && planFeatures[0] === "*";
 
+    // Layer 3 — store feature overrides (disabled by store owner)
+    const storeDisabled = storeFeatureOverrides ?? [];
+
     const planAllows = (feature) => {
         if (planAllAll) return true;
         return planFeatures.includes(feature);
@@ -44,12 +47,16 @@ export function useStoreModules() {
         return moduleFeatures.includes(feature);
     };
 
+    const storeDisabledCheck = (feature) => {
+        return storeDisabled.includes(feature);
+    };
+
     /**
-     * hasFeature = tipe toko support DAN plan mengizinkan.
+     * hasFeature = tipe toko support DAN plan mengizinkan DAN tidak dimatikan oleh toko.
      * Muncul normal, bisa diklik.
      */
     const hasFeature = (feature) =>
-        typeSupports(feature) && planAllows(feature);
+        typeSupports(feature) && planAllows(feature) && !storeDisabledCheck(feature);
 
     /**
      * isFeatureLocked = tipe toko support TAPI plan TIDAK mengizinkan.
@@ -155,6 +162,8 @@ export function useStoreModules() {
     const needsReport = hasFeature("report");
     const needsPaymentGw = hasFeature("payment_gateway");
     const hasPaymentMethod = hasFeature("payment_method");
+    const hasDebt = hasFeature("debt");
+    const lockedDebt = isFeatureLocked("debt");
 
     // Sistem
     const hasSettings = hasFeature("settings");
@@ -173,6 +182,7 @@ export function useStoreModules() {
         moduleFeatures,
         typeFeatures,
         planFeatures,
+        storeDisabled,
         permissions,
         // Plan info
         plan: storePlan?.plan ?? "free",
@@ -230,6 +240,7 @@ export function useStoreModules() {
         needsReport,
         needsPaymentGw,
         hasPaymentMethod,
+        hasDebt,
         hasSettings,
         hasUserManagement,
         hasRoleManagement,
@@ -266,6 +277,7 @@ export function useStoreModules() {
         lockedReport,
         lockedPaymentGw,
         lockedPaymentMethod,
+        lockedDebt,
         lockedSettings,
         lockedUserManagement,
         lockedRoleManagement,

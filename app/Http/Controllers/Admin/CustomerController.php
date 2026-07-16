@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\CustomerDebtLog;
 use App\Models\Store;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -63,6 +65,7 @@ class CustomerController extends Controller
             'gender' => 'nullable|in:male,female',
             'notes' => 'nullable|string|max:500',
             'deposit_balance' => 'nullable|numeric|min:0',
+            'credit_limit' => 'nullable|numeric|min:0',
         ]);
 
         $validated['store_id'] = $storeId;
@@ -106,6 +109,7 @@ class CustomerController extends Controller
             'gender' => 'nullable|in:male,female',
             'notes' => 'nullable|string|max:500',
             'deposit_balance' => 'nullable|numeric|min:0',
+            'credit_limit' => 'nullable|numeric|min:0',
         ]);
 
         $customer->update($validated);
@@ -124,6 +128,39 @@ class CustomerController extends Controller
         return redirect()
             ->route('admin.customers.index')
             ->with('success', 'Pelanggan berhasil dihapus.');
+    }
+
+    public function payDebt(Request $request, Customer $customer)
+    {
+        $this->ensureSameStore($customer);
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $amount = (float) $validated['amount'];
+        $currentDebt = (float) $customer->debt_balance;
+
+        if ($amount > $currentDebt) {
+            return back()->with('error', 'Jumlah pelunasan melebihi hutang. Hutang saat ini: Rp'.number_format($currentDebt));
+        }
+
+        $newBalance = $currentDebt - $amount;
+
+        CustomerDebtLog::create([
+            'customer_id' => $customer->id,
+            'store_id' => $customer->store_id,
+            'type' => 'payment',
+            'amount' => $amount,
+            'balance_after' => $newBalance,
+            'notes' => $validated['notes'] ?? 'Pelunasan hutang',
+            'created_by' => Auth::id(),
+        ]);
+
+        $customer->update(['debt_balance' => $newBalance]);
+
+        return back()->with('success', 'Pelunasan berhasil. Sisa hutang: Rp'.number_format($newBalance));
     }
 
     // ── Helpers ──────────────────────────────────────────

@@ -109,15 +109,23 @@ export default function ModeSpecificPanel({ k }) {
                                     ))}
                                 </select>
                             ) : (
-                                <input
-                                    type="text"
-                                    value={k.ticketEvent}
-                                    onChange={(e) =>
-                                        k.setTicketEvent(e.target.value)
-                                    }
-                                    placeholder="Nama petugas / penjaga"
-                                    className={inputClass}
-                                />
+                                <>
+                                    <input
+                                        type="text"
+                                        value={k.ticketEvent}
+                                        onChange={(e) =>
+                                            k.setTicketEvent(e.target.value)
+                                        }
+                                        placeholder="Nama petugas / penjaga"
+                                        className={inputClass}
+                                    />
+                                    <p className="mt-1 text-[10px] text-amber-600">
+                                        💡 Tambahkan data karyawan di menu{" "}
+                                        <strong>Karyawan</strong> agar bisa
+                                        pilih dari daftar dan komisi dihitung
+                                        otomatis.
+                                    </p>
+                                </>
                             )}
                         </div>
                         <div>
@@ -190,15 +198,23 @@ export default function ModeSpecificPanel({ k }) {
                                     ))}
                                 </select>
                             ) : (
-                                <input
-                                    type="text"
-                                    value={k.ticketEvent}
-                                    onChange={(e) =>
-                                        k.setTicketEvent(e.target.value)
-                                    }
-                                    placeholder="Nama pegawai / teknisi"
-                                    className={inputClass}
-                                />
+                                <>
+                                    <input
+                                        type="text"
+                                        value={k.ticketEvent}
+                                        onChange={(e) =>
+                                            k.setTicketEvent(e.target.value)
+                                        }
+                                        placeholder="Nama pegawai / teknisi"
+                                        className={inputClass}
+                                    />
+                                    <p className="mt-1 text-[10px] text-amber-600">
+                                        💡 Tambahkan data karyawan di menu{" "}
+                                        <strong>Karyawan</strong> agar bisa
+                                        pilih dari daftar dan komisi dihitung
+                                        otomatis.
+                                    </p>
+                                </>
                             )}
                         </div>
                         <div>

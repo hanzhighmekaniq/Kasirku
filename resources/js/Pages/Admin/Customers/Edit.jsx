@@ -14,6 +14,8 @@ export default function Edit({ customer, storeType = "retail" }) {
         gender: customer.gender || "",
         notes: customer.notes || "",
         deposit_balance: customer.deposit_balance ?? 0,
+        debt_balance: customer.debt_balance ?? 0,
+        credit_limit: customer.credit_limit ?? 0,
     });
     const submit = (e) => {
         e.preventDefault();
@@ -65,6 +67,7 @@ export default function Edit({ customer, storeType = "retail" }) {
                         submitLabel="Simpan Perubahan"
                         cancelHref={route("admin.customers.index")}
                         storeType={storeType}
+                        customer={customer}
                     />
                 </SectionCard>
             </div>

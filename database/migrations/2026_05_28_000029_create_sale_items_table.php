@@ -13,20 +13,21 @@ return new class extends Migration
             $table->foreignId('sale_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->unsignedBigInteger('variant_id')->nullable();
+            $table->unsignedBigInteger('packaging_unit_id')->nullable();
+            $table->string('unit_name')->nullable();
+            $table->integer('unit_conversion_qty')->default(1);
             $table->foreignId('product_batch_id')->nullable()->constrained('product_batches')->nullOnDelete();
             $table->foreignId('promotion_id')->nullable()->constrained('promotions')->nullOnDelete();
-            // employee yang melayani item ini (untuk komisi barber/salon/jasa)
             $table->foreignId('employee_id')->nullable()->constrained('employees')->nullOnDelete();
             $table->decimal('quantity', 15, 4);
             $table->decimal('price', 15, 2)->default(0);
             $table->decimal('discount_amount', 15, 2)->default(0);
-            $table->decimal('promo_discount', 15, 2)->default(0)->comment('Diskon otomatis dari promo aktif');
+            $table->decimal('promo_discount', 15, 2)->default(0);
             $table->decimal('subtotal', 15, 2)->default(0);
-            // status per item: pending / cooking / ready / served (untuk FnB/kitchen)
             $table->string('item_status', 20)->default('pending');
-            $table->json('modifiers')->nullable()->comment('[{id, name, price_addition}]');
-            $table->json('recipe_snapshot')->nullable()->comment('Snapshot resep saat transaksi');
-            $table->decimal('ingredient_cost', 15, 2)->default(0)->comment('Total HPP bahan baku dari resep');
+            $table->json('modifiers')->nullable();
+            $table->json('recipe_snapshot')->nullable();
+            $table->decimal('ingredient_cost', 15, 2)->default(0);
             $table->text('notes')->nullable();
             $table->timestamps();
 

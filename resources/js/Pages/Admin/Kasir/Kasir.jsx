@@ -16,6 +16,7 @@ import HistoryPanel from "./components/HistoryPanel";
 import ProductCard from "./components/ProductCard";
 import CartRow from "./components/CartRow";
 import ModeSpecificPanel from "./components/ModeSpecificPanel";
+import StockAlertModal from "./components/StockAlertModal";
 
 export default function Kasir(props) {
     const k = useKasir(props);
@@ -97,7 +98,7 @@ export default function Kasir(props) {
                 </button>
                 <button
                     onClick={() => setIsFullscreen(!isFullscreen)}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition-all hover:shadow-md"
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all hover:shadow-md"
                     title={
                         isFullscreen
                             ? "Keluar Fullscreen (Esc)"
@@ -300,40 +301,43 @@ export default function Kasir(props) {
                             </div>
                         </div>
                     )}
-                    {/* Search + barcode */}
-                    <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/50 px-4 py-3">
-                        <div className="relative flex-1">
-                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                    />
-                                </svg>
-                            </span>
+                    {/* Search + barcode — flat, monokrom ala mockup */}
+                    <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-3.5">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
+                            <svg
+                                className="h-5 w-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"
+                                />
+                            </svg>
+                        </div>
+                        <div className="flex-1">
+                            <div className="text-[10.5px] font-medium uppercase tracking-wider text-slate-400">
+                                Barcode scanner
+                            </div>
                             <input
                                 ref={k.barcodeRef}
                                 type="text"
                                 value={k.search}
                                 onChange={(e) => k.setSearch(e.target.value)}
                                 placeholder="Cari produk atau scan barcode..."
-                                className="block w-full rounded-xl border-slate-300 bg-white pl-10 pr-3 py-2.5 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                                className="mt-0.5 block w-full border-0 bg-transparent p-0 text-[15px] font-medium text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-0"
                             />
                         </div>
                         <button
                             onClick={() => k.setShowScanner(true)}
-                            className="shrink-0 flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition shadow-sm"
+                            className="shrink-0 flex items-center gap-1.5 bg-slate-900 text-white px-4 py-2.5 rounded-xl hover:bg-slate-700 transition text-[12.5px] font-medium"
                             title="Scan Barcode"
                         >
                             <svg
-                                className="w-4 h-4"
+                                className="w-3.5 h-3.5"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -342,25 +346,20 @@ export default function Kasir(props) {
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
-                                    d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"
-                                />
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z"
+                                    d="M12 4.5v15m7.5-7.5h-15"
                                 />
                             </svg>
-                            <span className="hidden sm:inline text-sm font-medium">Scan</span>
+                            <span className="hidden sm:inline">Add to cart</span>
                         </button>
                     </div>
 
-                    {/* Category chips */}
-                    <div className="flex gap-2 overflow-x-auto border-b border-slate-100 px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {/* Category chips — pill hitam untuk aktif, outline untuk lainnya */}
+                    <div className="flex items-center gap-2 overflow-x-auto border-b border-slate-100 px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         <button
                             onClick={() => k.setActiveCat("")}
-                            className={`shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${!k.activeCat ? "bg-indigo-600 text-white shadow-md shadow-indigo-200" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-colors ${!k.activeCat ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600 hover:text-slate-900"}`}
                         >
-                            Semua
+                            All
                         </button>
                         {categories.map((c) => (
                             <button
@@ -372,18 +371,34 @@ export default function Kasir(props) {
                                             : String(c.id),
                                     )
                                 }
-                                className={`shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${String(c.id) === k.activeCat ? "bg-indigo-600 text-white shadow-md shadow-indigo-200" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+                                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-colors ${String(c.id) === k.activeCat ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600 hover:text-slate-900"}`}
                             >
                                 {c.name}{" "}
-                                <span className="opacity-70">
+                                <span className="opacity-60">
                                     ({c.products_count})
                                 </span>
                             </button>
                         ))}
+                        <button className="ml-auto shrink-0 flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-medium text-slate-500">
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+                            </svg>
+                            Filters
+                        </button>
                     </div>
 
                     {/* Product grid */}
                     <div className="flex-1 overflow-y-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <div className="mb-3 flex items-end justify-between">
+                            <div>
+                                <p className="text-[15px] font-semibold tracking-tight text-slate-900">
+                                    Products
+                                </p>
+                                <p className="mt-0.5 text-[11.5px] text-slate-400">
+                                    {k.filtered.length} items
+                                </p>
+                            </div>
+                        </div>
                         {k.filtered.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 text-center">
                                 <div className="mb-4 rounded-full bg-slate-100 p-6">
@@ -413,14 +428,14 @@ export default function Kasir(props) {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                                 {k.filtered.map((p) => (
                                     <ProductCard
                                         key={p.id}
                                         product={p}
                                         onClick={() => k.handleProductClick(p)}
-                                        onUnitClick={(unit) =>
-                                            k.addToCart(p, null, [], "", unit)
+                                        onUnitClick={(unit, qty) =>
+                                            k.addToCart(p, null, [], "", unit, qty)
                                         }
                                     />
                                 ))}
@@ -520,7 +535,7 @@ export default function Kasir(props) {
                                 <button
                                     key={o.v}
                                     onClick={() => k.handleOrderTypeChange(o.v)}
-                                    className={`py-3 text-sm font-bold transition-all ${k.orderType === o.v ? "bg-indigo-600 text-white shadow-inner" : "text-slate-600 hover:bg-slate-50"}`}
+                                    className={`py-3 text-[13px] font-semibold transition-all ${k.orderType === o.v ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
                                 >
                                     {o.l}
                                 </button>
@@ -528,22 +543,16 @@ export default function Kasir(props) {
                         </div>
 
                         <div className="flex flex-wrap gap-2 p-3">
-                            {/* Table selector — searchable dropdown */}
+                            {/* Table/Room selector — searchable dropdown */}
                             {(k.isCafe || k.isBooth || k.isHospitality) &&
-                                k.orderType === "dine_in" &&
+                                k.orderType === k.tableTriggerOrderType &&
                                 tables.length > 0 && (
                                     <div className="w-full relative">
                                         {k.selectedTable ? (
                                             /* Show selected table */
-                                            <div
-                                                className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 ${
-                                                    !k.selectedTable
-                                                        ? "border-amber-400 bg-amber-50"
-                                                        : "border-indigo-200 bg-indigo-50"
-                                                }`}
-                                            >
+                                            <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5">
                                                 <svg
-                                                    className="h-3.5 w-3.5 text-indigo-500 shrink-0"
+                                                    className="h-3.5 w-3.5 text-slate-500 shrink-0"
                                                     fill="none"
                                                     viewBox="0 0 24 24"
                                                     strokeWidth={2}
@@ -555,8 +564,8 @@ export default function Kasir(props) {
                                                         d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
                                                     />
                                                 </svg>
-                                                <span className="text-xs font-medium text-indigo-700">
-                                                    Meja{" "}
+                                                <span className="text-xs font-medium text-slate-700">
+                                                    {k.tableLabel}{" "}
                                                     {
                                                         tables.find(
                                                             (t) =>
@@ -572,7 +581,7 @@ export default function Kasir(props) {
                                                         k.setSelectedTable("");
                                                         k.setTableSearch("");
                                                     }}
-                                                    className="ml-auto shrink-0 rounded-full p-0.5 text-indigo-400 hover:bg-indigo-100 hover:text-indigo-600 transition"
+                                                    className="ml-auto shrink-0 rounded-full p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
                                                 >
                                                     <svg
                                                         className="h-3 w-3"
@@ -608,7 +617,7 @@ export default function Kasir(props) {
                                                 <input
                                                     ref={k.tableInputRef}
                                                     type="text"
-                                                    placeholder="Cari meja..."
+                                                    placeholder={`Cari ${k.tableLabel.toLowerCase()}...`}
                                                     value={k.tableSearch}
                                                     onFocus={(e) => {
                                                         const r =
@@ -645,20 +654,16 @@ export default function Kasir(props) {
                                                             true,
                                                         );
                                                     }}
-                                                    className={`w-full rounded-xl border py-1.5 pl-8 pr-2 text-xs focus:ring-2 focus:ring-indigo-200 outline-none ${
-                                                        !k.selectedTable
-                                                            ? "border-amber-400 bg-amber-50 focus:border-amber-500"
-                                                            : "border-slate-300 focus:border-indigo-500"
-                                                    }`}
+                                                    className="w-full rounded-xl border border-slate-300 py-1.5 pl-8 pr-2 text-xs focus:border-slate-500 focus:ring-2 focus:ring-slate-200 outline-none"
                                                 />
                                             </div>
                                         )}
 
-                                        {/* Warning kalau belum pilih meja */}
-                                        {k.orderType === "dine_in" &&
+                                        {/* Warning kalau belum pilih meja/kamar */}
+                                        {k.orderType === k.tableTriggerOrderType &&
                                             !k.selectedTable && (
-                                                <p className="mt-1 text-xs text-amber-600">
-                                                    ⚠ Pilih meja untuk dine-in
+                                                <p className="mt-1 text-xs text-slate-400">
+                                                    Pilih {k.tableLabel.toLowerCase()} untuk melanjutkan
                                                 </p>
                                             )}
 
@@ -705,8 +710,8 @@ export default function Kasir(props) {
                                                         ) {
                                                             return (
                                                                 <p className="px-3 py-3 text-center text-xs text-slate-400">
-                                                                    Tidak ada
-                                                                    meja
+                                                                    Tidak ada{" "}
+                                                                    {k.tableLabel.toLowerCase()}
                                                                 </p>
                                                             );
                                                         }
@@ -728,7 +733,7 @@ export default function Kasir(props) {
                                                                                 "",
                                                                             );
                                                                         }}
-                                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-indigo-50"
+                                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-slate-50"
                                                                     >
                                                                         <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">
                                                                             {
@@ -737,7 +742,7 @@ export default function Kasir(props) {
                                                                         </span>
                                                                         <div className="min-w-0 flex-1">
                                                                             <p className="font-medium text-slate-700">
-                                                                                Meja{" "}
+                                                                                {k.tableLabel}{" "}
                                                                                 {
                                                                                     t.table_number
                                                                                 }
@@ -764,9 +769,9 @@ export default function Kasir(props) {
                             <div className="relative flex-1">
                                 {k.selectedCustomer ? (
                                     /* Show selected customer with clear button */
-                                    <div className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-1.5">
+                                    <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5">
                                         <svg
-                                            className="h-3.5 w-3.5 text-indigo-500 shrink-0"
+                                            className="h-3.5 w-3.5 text-slate-500 shrink-0"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             strokeWidth={2}
@@ -778,7 +783,7 @@ export default function Kasir(props) {
                                                 d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
                                             />
                                         </svg>
-                                        <span className="text-xs font-medium text-indigo-700 truncate">
+                                        <span className="text-xs font-medium text-slate-700 truncate">
                                             {
                                                 k.customers.find(
                                                     (c) =>
@@ -794,7 +799,7 @@ export default function Kasir(props) {
                                                 k.setSelectedCustomer("");
                                                 k.setCustomerSearch("");
                                             }}
-                                            className="ml-auto shrink-0 rounded-full p-0.5 text-indigo-400 hover:bg-indigo-100 hover:text-indigo-600 transition"
+                                            className="ml-auto shrink-0 rounded-full p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
                                         >
                                             <svg
                                                 className="h-3 w-3"
@@ -857,7 +862,7 @@ export default function Kasir(props) {
                                                 }
                                                 k.setShowCustomerDropdown(true);
                                             }}
-                                            className="w-full rounded-xl border border-slate-300 py-1.5 pl-8 pr-2 text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none"
+                                            className="w-full rounded-xl border border-slate-300 py-1.5 pl-8 pr-2 text-xs focus:border-slate-500 focus:ring-2 focus:ring-slate-200 outline-none"
                                         />
                                     </div>
                                 )}
@@ -926,7 +931,7 @@ export default function Kasir(props) {
                                                     onClick={() =>
                                                         k.setQuickAddOpen(true)
                                                     }
-                                                    className="flex w-full items-center gap-2 px-3 py-2 text-xs text-indigo-600 hover:bg-indigo-50 transition font-medium"
+                                                    className="flex w-full items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 transition font-medium"
                                                 >
                                                     <svg
                                                         className="h-3.5 w-3.5"
@@ -954,7 +959,7 @@ export default function Kasir(props) {
                                                                 e.target.value,
                                                             )
                                                         }
-                                                        className="block w-full rounded-lg border-slate-300 py-1.5 px-2 text-xs shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                        className="block w-full rounded-lg border-slate-300 py-1.5 px-2 text-xs shadow-sm focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                                                     />
                                                     <input
                                                         type="text"
@@ -965,7 +970,7 @@ export default function Kasir(props) {
                                                                 e.target.value,
                                                             )
                                                         }
-                                                        className="block w-full rounded-lg border-slate-300 py-1.5 px-2 text-xs shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                        className="block w-full rounded-lg border-slate-300 py-1.5 px-2 text-xs shadow-sm focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                                                     />
                                                     <div className="flex gap-2">
                                                         <button
@@ -1066,7 +1071,7 @@ export default function Kasir(props) {
                                                                     );
                                                                 }
                                                             }}
-                                                            className="flex-1 rounded-lg bg-indigo-600 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                                                            className="flex-1 rounded-lg bg-slate-900 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
                                                         >
                                                             {k.quickAdding
                                                                 ? "Menyimpan..."
@@ -1144,10 +1149,10 @@ export default function Kasir(props) {
                                                             );
                                                         }
                                                     }}
-                                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-indigo-50 transition"
+                                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-slate-50 transition"
                                                 >
                                                     <span
-                                                        className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${k.TIER_COLORS[c.tier] ? "bg-gradient-to-br from-indigo-400 to-indigo-600" : "bg-slate-300"}`}
+                                                        className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${k.TIER_COLORS[c.tier] ? "bg-slate-700" : "bg-slate-300"}`}
                                                     >
                                                         {c.name
                                                             ?.charAt(0)
@@ -1182,9 +1187,9 @@ export default function Kasir(props) {
 
                     {/* Takeaway — Nama Pemesan (compact inline) */}
                     {k.orderType === "takeaway" && (
-                        <div className="flex shrink-0 items-center gap-2 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50/50 px-4 py-3 shadow-md">
-                            <span className="shrink-0 text-sm font-bold text-emerald-700">
-                                📦 Nama
+                        <div className="flex shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                            <span className="shrink-0 text-sm font-semibold text-slate-700">
+                                Nama
                             </span>
                             <input
                                 type="text"
@@ -1193,7 +1198,7 @@ export default function Kasir(props) {
                                     k.setTakeawayCustomerName(e.target.value)
                                 }
                                 placeholder="Nama pemesan..."
-                                className="flex-1 rounded-lg border-emerald-200 bg-white py-2 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                                className="flex-1 rounded-lg border-slate-200 bg-white py-2 text-sm focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                             />
                         </div>
                     )}
@@ -1243,7 +1248,7 @@ export default function Kasir(props) {
                                                 )
                                             }
                                             placeholder="Ketik nama atau pilih pelanggan di bawah..."
-                                            className="block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                            className="block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                                         />
                                     </div>
                                     <div>
@@ -1262,7 +1267,7 @@ export default function Kasir(props) {
                                                 )
                                             }
                                             placeholder="Jl. Contoh No. 123, Kecamatan..."
-                                            className="block w-full rounded-lg border-slate-300 text-xs shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                            className="block w-full rounded-lg border-slate-300 text-xs shadow-sm focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                                         />
                                     </div>
                                     <div>
@@ -1283,7 +1288,7 @@ export default function Kasir(props) {
                                                     )
                                                 }
                                                 placeholder="0"
-                                                className="block w-full rounded-lg border-slate-300 py-1.5 pl-8 text-xs shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                className="block w-full rounded-lg border-slate-300 py-1.5 pl-8 text-xs shadow-sm focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                                             />
                                         </div>
                                     </div>
@@ -1362,7 +1367,7 @@ export default function Kasir(props) {
                                     value={k.note}
                                     onChange={(e) => k.setNote(e.target.value)}
                                     placeholder="📝 Catatan transaksi..."
-                                    className="block w-full rounded-xl border-slate-200 bg-white text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="block w-full rounded-xl border-slate-200 bg-white text-sm shadow-sm focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                                 />
                             </div>
                         )}
@@ -1486,7 +1491,7 @@ export default function Kasir(props) {
                                         Diskon &amp; Pajak
                                         {(Number(k.discount) > 0 ||
                                             Number(k.tax) > 0) && (
-                                            <span className="ml-1 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[9px] font-semibold text-indigo-600">
+                                            <span className="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-slate-600">
                                                 aktif
                                             </span>
                                         )}
@@ -1552,11 +1557,11 @@ export default function Kasir(props) {
                             </div>
 
                             {/* Grand Total */}
-                            <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-3 shadow-lg">
-                                <span className="text-sm font-bold text-white">
-                                    Total Bayar
+                            <div className="flex items-baseline justify-between border-t border-dashed border-slate-200 pt-2.5">
+                                <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">
+                                    Total
                                 </span>
-                                <span className="text-xl font-extrabold text-white">
+                                <span className="text-2xl font-semibold tracking-tight tabular-nums text-slate-900">
                                     {k.fmt(k.grandTotal)}
                                 </span>
                             </div>
@@ -1567,22 +1572,33 @@ export default function Kasir(props) {
                                     k.cart.length === 0 ||
                                     k.submitting ||
                                     !activeShift ||
-                                    (k.orderType === "dine_in" &&
-                                        (k.isCafe || k.isBooth) &&
+                                    !!k.missingRequiredField ||
+                                    (k.orderType === k.tableTriggerOrderType &&
+                                        (k.isCafe || k.isBooth || k.isHospitality) &&
                                         !k.selectedTable)
                                 }
                                 onClick={() => k.setShowPayment(true)}
-                                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-4 text-base font-extrabold text-white shadow-xl shadow-emerald-500/30 transition-all hover:from-emerald-600 hover:to-teal-700 hover:shadow-2xl hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                className="w-full rounded-xl bg-slate-900 py-3.5 text-[14px] font-semibold tracking-tight text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {k.submitting
                                     ? "Memproses..."
                                     : !activeShift
-                                      ? "⚠ Buka Shift"
-                                      : k.orderType === "dine_in" &&
-                                          (k.isCafe || k.isBooth) &&
+                                      ? "Buka Shift dulu"
+                                      : k.orderType === k.tableTriggerOrderType &&
+                                          (k.isCafe || k.isBooth || k.isHospitality) &&
                                           !k.selectedTable
-                                        ? "Pilih meja dulu"
-                                        : `💳 Bayar ${k.cart.length > 0 ? k.fmt(k.grandTotal) : ""}`}
+                                        ? `Pilih ${k.tableLabel.toLowerCase()} dulu`
+                                        : k.missingRequiredField
+                                          ? k.missingRequiredField
+                                          : `Charge ${k.cart.length > 0 ? k.fmt(k.grandTotal) : ""}`}
+                                {!k.submitting &&
+                                    activeShift &&
+                                    !k.missingRequiredField &&
+                                    k.cart.length > 0 && (
+                                        <span className="text-white/60 text-[12px] font-normal">
+                                            ⏎
+                                        </span>
+                                    )}
                             </button>
                         </div>
                     </div>
@@ -1601,7 +1617,7 @@ export default function Kasir(props) {
             <button
                 type="button"
                 onClick={() => k.setCartPanelOpen(true)}
-                className={`fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 text-sm font-extrabold text-white shadow-2xl shadow-indigo-500/50 transition-all hover:from-indigo-700 hover:to-violet-700 hover:scale-110 active:scale-95 md:hidden ${k.cartPanelOpen ? "hidden" : ""}`}
+                className={`fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-slate-900 px-5 py-4 text-sm font-semibold text-white shadow-xl transition-all hover:opacity-90 hover:scale-105 active:scale-95 md:hidden ${k.cartPanelOpen ? "hidden" : ""}`}
             >
                 <svg
                     className="h-6 w-6"
@@ -1639,11 +1655,16 @@ export default function Kasir(props) {
                 <VariantModal
                     product={k.variantTarget}
                     onConfirm={(variant, qty, note) => {
-                        // addToCart dengan key yang sama akan auto-increment qty,
-                        // jadi loop sebanyak qty untuk mendapatkan jumlah yang benar
-                        for (let i = 0; i < qty; i++) {
-                            k.addToCart(k.variantTarget, variant, [], note);
-                        }
+                        // Kirim qty langsung dalam satu panggilan (bukan loop)
+                        // supaya tidak kena stale closure & jadi duplikat item.
+                        k.addToCart(
+                            k.variantTarget,
+                            variant,
+                            [],
+                            note,
+                            null,
+                            qty,
+                        );
                         k.setVariantTarget(null);
                     }}
                     onClose={() => k.setVariantTarget(null)}
@@ -1652,11 +1673,16 @@ export default function Kasir(props) {
             {k.showPayment && (
                 <PaymentModal
                     grandTotal={k.grandTotal}
+                    roundedGrandTotal={k.roundedGrandTotal}
+                    roundingAdjustment={k.roundingAdjustment}
                     paymentMethods={paymentMethods}
                     pgMethods={pgMethods}
                     onConfirm={k.handleConfirmPayment}
                     onClose={() => k.setShowPayment(false)}
                     submitting={k.submitting}
+                    selectedCustomer={k.selectedCustomer}
+                    customers={k.customers}
+                    onSelectCustomer={k.setSelectedCustomer}
                 />
             )}
             {k.showReceipt && k.receiptData && (
@@ -1698,6 +1724,16 @@ export default function Kasir(props) {
                 onClose={() => k.setShowScanner(false)}
                 onScan={k.handleBarcodeScan}
             />
+
+            {/* Stok tidak cukup / habis */}
+            {k.stockAlert && (
+                <StockAlertModal
+                    productName={k.stockAlert.productName}
+                    available={k.stockAlert.available}
+                    requested={k.stockAlert.requested}
+                    onClose={() => k.setStockAlert(null)}
+                />
+            )}
         </>
     );
 

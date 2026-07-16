@@ -21,6 +21,7 @@ export default function Edit({ promotion, products }) {
         end_hour: promotion.end_hour || '',
         free_product_id: promotion.free_product_id || '',
         is_active: promotion.is_active ?? true,
+        max_usage: promotion.max_usage ?? '',
         product_ids: (promotion.products || []).map((p) => p.id),
     });
 
@@ -57,9 +58,10 @@ export default function Edit({ promotion, products }) {
                         errors={errors}
                         processing={processing}
                         onSubmit={submit}
-                        submitLabel="Update Promo"
+                        submitLabel="Simpan Perubahan"
                         cancelHref={route('admin.promotions.index')}
                         products={products}
+                        promotion={promotion}
                     />
                 </SectionCard>
             </div>

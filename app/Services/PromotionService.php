@@ -22,6 +22,11 @@ class PromotionService
             ->where(function ($q) {
                 $q->whereNull('end_hour')
                     ->orWhere('end_hour', '>=', now()->format('H:i'));
+            })
+            ->where(function ($q) {
+                $q->where('max_usage', 0)
+                    ->orWhereNull('max_usage')
+                    ->orWhereColumn('used_count', '<', 'max_usage');
             });
     }
 
@@ -30,19 +35,21 @@ class PromotionService
         $promotions = $this->activePromosQuery()
             ->where('scope', 'item')
             ->where(function ($q) use ($productId) {
-                $q->whereHas('products', fn($q2) => $q2->where('products.id', $productId))
-                  ->orWhereDoesntHave('products');
+                $q->whereHas('products', fn ($q2) => $q2->where('products.id', $productId))
+                    ->orWhereDoesntHave('products');
             })
             ->get();
 
-        if ($promotions->isEmpty()) return null;
+        if ($promotions->isEmpty()) {
+            return null;
+        }
 
         $itemTotal = $quantity * $unitPrice;
         $bestDiscount = 0;
         $bestPromo = null;
 
         foreach ($promotions as $promo) {
-            if ($promo->products->isNotEmpty() && !$promo->products->contains('id', $productId)) {
+            if ($promo->products->isNotEmpty() && ! $promo->products->contains('id', $productId)) {
                 continue;
             }
             if ($promo->min_purchase_amount > 0 && $itemTotal < $promo->min_purchase_amount) {
@@ -73,14 +80,14 @@ class PromotionService
     private function calculateDiscount(Promotion $promo, int $quantity, float $unitPrice, float $itemTotal, ?string $customerTier): float
     {
         return match ($promo->type) {
-            'percentage'   => $this->calculatePercentage($promo, $unitPrice, $quantity),
+            'percentage' => $this->calculatePercentage($promo, $unitPrice, $quantity),
             'fixed_amount' => $this->calculateFixedAmount($promo),
-            'buy_x_get_y'  => $this->calculateBuyXGetY($promo, $quantity, $unitPrice),
-            'bundle'       => $this->calculateBundle($promo, $unitPrice, $quantity),
-            'tiered'       => $this->calculateTiered($promo, $quantity, $unitPrice),
+            'buy_x_get_y' => $this->calculateBuyXGetY($promo, $quantity, $unitPrice),
+            'bundle' => $this->calculateBundle($promo, $unitPrice, $quantity),
+            'tiered' => $this->calculateTiered($promo, $quantity, $unitPrice),
             'member_price' => $this->calculateMemberPrice($promo, $quantity, $unitPrice),
-            'bogo'         => $this->calculateBogo($promo, $quantity),
-            default        => 0,
+            'bogo' => $this->calculateBogo($promo, $quantity),
+            default => 0,
         };
     }
 
@@ -90,6 +97,7 @@ class PromotionService
         if ($promo->max_discount_amount > 0) {
             $discount = min($discount, $promo->max_discount_amount);
         }
+
         return $discount;
     }
 
@@ -101,7 +109,10 @@ class PromotionService
     private function calculateBuyXGetY(Promotion $promo, int $quantity, float $unitPrice): float
     {
         $buyQty = (int) $promo->discount_value;
-        if ($buyQty <= 0 || $quantity < ($buyQty + 1)) return 0;
+        if ($buyQty <= 0 || $quantity < ($buyQty + 1)) {
+            return 0;
+        }
+
         return floor($quantity / ($buyQty + 1)) * $unitPrice;
     }
 
@@ -112,21 +123,30 @@ class PromotionService
 
     private function calculateTiered(Promotion $promo, int $quantity, float $unitPrice): float
     {
-        if ($promo->tier_price <= 0 || $unitPrice <= $promo->tier_price) return 0;
+        if ($promo->tier_price <= 0 || $unitPrice <= $promo->tier_price) {
+            return 0;
+        }
+
         return ($unitPrice - $promo->tier_price) * $quantity;
     }
 
     private function calculateMemberPrice(Promotion $promo, int $quantity, float $unitPrice): float
     {
-        if ($promo->tier_price <= 0 || $unitPrice <= $promo->tier_price) return 0;
+        if ($promo->tier_price <= 0 || $unitPrice <= $promo->tier_price) {
+            return 0;
+        }
+
         return ($unitPrice - $promo->tier_price) * $quantity;
     }
 
     private function calculateBogo(Promotion $promo, int $quantity): float
     {
         $buyQty = (int) $promo->discount_value;
-        if ($buyQty <= 0 || !$promo->free_product_id || $quantity < $buyQty) return 0;
+        if ($buyQty <= 0 || ! $promo->free_product_id || $quantity < $buyQty) {
+            return 0;
+        }
         $freeCount = floor($quantity / $buyQty);
+
         return $freeCount * ($promo->freeProduct?->sell_price ?? 0);
     }
 
@@ -136,7 +156,9 @@ class PromotionService
             ->where('scope', 'cart')
             ->get();
 
-        if ($promotions->isEmpty()) return null;
+        if ($promotions->isEmpty()) {
+            return null;
+        }
 
         $bestDiscount = 0;
         $bestPromo = null;
@@ -190,10 +212,10 @@ class PromotionService
 
                 if ($best['promotion']->type === 'fixed_amount') {
                     $promoId = $best['promotion']->id;
-                    if (!isset($fixedAmountPromos[$promoId])) {
+                    if (! isset($fixedAmountPromos[$promoId])) {
                         $fixedAmountPromos[$promoId] = [
-                            'discount'  => $best['discount'],
-                            'indices'   => [],
+                            'discount' => $best['discount'],
+                            'indices' => [],
                             'subtotals' => [],
                         ];
                     }
@@ -214,7 +236,9 @@ class PromotionService
 
         foreach ($fixedAmountPromos as $data) {
             $totalSubtotal = array_sum($data['subtotals']);
-            if ($totalSubtotal <= 0) continue;
+            if ($totalSubtotal <= 0) {
+                continue;
+            }
             foreach ($data['indices'] as $i => $idx) {
                 $proportion = $data['subtotals'][$i] / $totalSubtotal;
                 $result[$idx]['promo_discount'] = round($data['discount'] * $proportion, 2);

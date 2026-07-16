@@ -11,13 +11,15 @@ use Inertia\Inertia;
 class CheckFeatureAccess
 {
     /**
-     * Cek 2 hal:
+     * Cek 3 hal:
      * 1. Store type mendukung fitur ini (via store_type_feature)
      * 2. Plan toko mengizinkan fitur ini (via plan_features)
+     * 3. Toko tidak menonaktifkan fitur ini (via store_features)
      *
-     * Urutan cek: type dulu, baru plan.
+     * Urutan cek: type dulu, baru plan, baru store toggle.
      * Kalau type tidak support → popup "tipe toko salah" (upgrade plan tidak akan membantu)
      * Kalau plan tidak allow → halaman "Upgrade Plan"
+     * Kalau store toggle off → redirect back dengan pesan "fitur dimatikan oleh toko"
      *
      * Usage: ->middleware('feature:kitchen')
      */
@@ -66,6 +68,16 @@ class CheckFeatureAccess
         // ── Cek 2: Plan mengizinkan fitur ini? ───────────────────────────
         if (! $store->planAllowsFeature($feature)) {
             return $this->denyPlan($request, $feature, $featureLabel, $store);
+        }
+
+        // ── Cek 3: Toko menonaktifkan fitur ini? ─────────────────────────
+        $storeFeature = $store
+            ->storeFeatures()
+            ->whereHas('feature', fn ($q) => $q->where('code', $feature))
+            ->first();
+
+        if ($storeFeature && ! $storeFeature->is_enabled) {
+            return $this->denyStoreToggle($request, $feature, $featureLabel);
         }
 
         return $next($request);
@@ -156,6 +168,33 @@ class CheckFeatureAccess
             ->with(
                 'error',
                 "Fitur \"{$featureLabel}\" tidak tersedia untuk paket Anda. Upgrade plan untuk mengaksesnya.",
+            );
+    }
+
+    /**
+     * Fitur dinonaktifkan oleh pengaturan toko (gate ke-3).
+     * → Inertia: redirect back + flash error
+     * → Non-Inertia: redirect dashboard dengan pesan error
+     */
+    private function denyStoreToggle(
+        Request $request,
+        string $feature,
+        string $featureLabel,
+    ) {
+        if ($request->header('X-Inertia')) {
+            return redirect()
+                ->back(302)
+                ->with(
+                    'error',
+                    "Fitur \"{$featureLabel}\" dimatikan oleh pengaturan toko Anda.",
+                );
+        }
+
+        return redirect()
+            ->route('admin.dashboard')
+            ->with(
+                'error',
+                "Fitur \"{$featureLabel}\" dimatikan oleh pengaturan toko Anda.",
             );
     }
 }

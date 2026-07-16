@@ -267,6 +267,7 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                     Tier
                                 </th>
                             )}
+                            <th className="px-4 py-3.5 text-right">Hutang</th>
                             <th className="px-4 py-3.5 text-right">Aksi</th>
                         </tr>
                     </thead>
@@ -313,6 +314,15 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                         </span>
                                     </td>
                                 )}
+                                <td className="px-4 py-4 text-right">
+                                    {(c.debt_balance ?? 0) > 0 ? (
+                                        <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-600">
+                                            Rp{Number(c.debt_balance).toLocaleString("id-ID")}
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs text-slate-400">—</span>
+                                    )}
+                                </td>
                                 <td className="px-4 py-4">
                                     <RowActions
                                         customer={c}

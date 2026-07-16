@@ -115,6 +115,9 @@ export default function Create({
         session_duration_minutes: "",
         deposit_amount: "",
         packaging_units: [],
+        price_tiers: [],
+        is_variant: false,
+        variants: [],
     });
 
     // Apakah tipe yang dipilih tidak punya stok fisik
@@ -417,66 +420,80 @@ export default function Create({
                             icon={DollarSign}
                             accent="emerald"
                         >
-                            <div
-                                className={`grid gap-4 ${feat.costPrice ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}
-                            >
-                                <Field
-                                    label={priceLabel}
-                                    required
-                                    error={errors.sell_price}
-                                >
-                                    <CurrencyInput
-                                        value={data.sell_price}
-                                        onChange={(v) =>
-                                            setData("sell_price", v)
-                                        }
-                                        error={!!errors.sell_price}
-                                    />
-                                </Field>
-                                {feat.costPrice && (
-                                    <Field
-                                        label="Harga Beli (Modal)"
-                                        hint="Harga pokok awal. Akan diperbarui otomatis setiap pembelian dari supplier."
-                                        error={errors.cost_price}
-                                    >
-                                        <CurrencyInput
-                                            value={data.cost_price}
-                                            onChange={(v) =>
-                                                setData("cost_price", v)
+                            {/* Toggle is_variant */}
+                            <div className="mb-4">
+                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.is_variant}
+                                        onChange={(e) => {
+                                            setData("is_variant", e.target.checked);
+                                            if (e.target.checked) {
+                                                setData("sell_price", "");
+                                                setData("packaging_units", []);
+                                                setData("price_tiers", []);
+                                            } else {
+                                                setData("variants", []);
                                             }
-                                            error={!!errors.cost_price}
-                                        />
-                                    </Field>
-                                )}
-                            </div>
-                            {feat.costPrice &&
-                                Number(data.sell_price) > 0 &&
-                                Number(data.cost_price) > 0 && (
-                                    <div className="mt-3 rounded-xl bg-slate-50 px-4 py-2.5 text-xs text-slate-500">
-                                        Margin:{" "}
-                                        <strong className="text-slate-700">
-                                            Rp{" "}
-                                            {(
-                                                Number(data.sell_price) -
-                                                Number(data.cost_price)
-                                            ).toLocaleString("id-ID")}
-                                        </strong>
-                                        <span className="ml-1">
-                                            (
-                                            {(
-                                                ((Number(data.sell_price) -
-                                                    Number(data.cost_price)) /
-                                                    Number(data.sell_price)) *
-                                                100
-                                            ).toFixed(1)}
-                                            %)
-                                        </span>
+                                        }}
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                    <div>
+                                        <p className="text-sm font-medium text-slate-700">Produk Punya Variant</p>
+                                        <p className="text-xs text-slate-400">
+                                            Aktifkan jika produk punya pilihan (cth: ukuran S/M/L, rasa Coklat/Vanilla). Harga, grosir, dan multi-satuan diatur per variant.
+                                        </p>
                                     </div>
-                                )}
+                                </label>
+                            </div>
+
+                            {!data.is_variant && (
+                                <>
+                                    <div className={`grid gap-4 ${feat.costPrice ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}>
+                                        <Field label={priceLabel} required error={errors.sell_price}>
+                                            <CurrencyInput
+                                                value={data.sell_price}
+                                                onChange={(v) => setData("sell_price", v)}
+                                                error={!!errors.sell_price}
+                                            />
+                                        </Field>
+                                        {feat.costPrice && (
+                                            <Field
+                                                label="Harga Beli (Modal)"
+                                                hint="Harga pokok awal. Akan diperbarui otomatis setiap pembelian dari supplier."
+                                                error={errors.cost_price}
+                                            >
+                                                <CurrencyInput
+                                                    value={data.cost_price}
+                                                    onChange={(v) => setData("cost_price", v)}
+                                                    error={!!errors.cost_price}
+                                                />
+                                            </Field>
+                                        )}
+                                    </div>
+                                    {feat.costPrice && Number(data.sell_price) > 0 && Number(data.cost_price) > 0 && (
+                                        <div className="mt-3 rounded-xl bg-slate-50 px-4 py-2.5 text-xs text-slate-500">
+                                            Margin:{" "}
+                                            <strong className="text-slate-700">
+                                                Rp {(Number(data.sell_price) - Number(data.cost_price)).toLocaleString("id-ID")}
+                                            </strong>
+                                            <span className="ml-1">
+                                                ({(((Number(data.sell_price) - Number(data.cost_price)) / Number(data.sell_price)) * 100).toFixed(1)}%)
+                                            </span>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {data.is_variant && (
+                                <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5 text-xs text-indigo-700">
+                                    💡 Harga diatur per variant di bawah. Produk ini tidak punya harga tunggal.
+                                </div>
+                            )}
                         </SectionCard>
 
                         {/* SECTION: Multi-Satuan — hanya retail, fnb, rental */}
-                        {feat.multiUnit && (
+                        {feat.multiUnit && !data.is_variant && (
                         <SectionCard
                             title="Multi-Satuan"
                             subtitle="Kemasan grosir seperti dus, box, karton"
@@ -647,6 +664,149 @@ export default function Create({
                                 )}
                             </div>
                         </SectionCard>
+                        )}
+
+                        {/* SECTION: Harga Grosir Bertingkat */}
+                        {!data.is_variant && (
+                        <SectionCard
+                            title="Harga Grosir"
+                            subtitle="Harga otomatis turun sesuai quantity"
+                            icon={BarChart3}
+                            accent="emerald"
+                        >
+                            <div className="space-y-3">
+                                {data.price_tiers.map((tier, i) => (
+                                    <div
+                                        key={i}
+                                        className="flex items-end gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-3"
+                                    >
+                                        <div className="flex-1">
+                                            <label className="mb-1 block text-xs font-semibold text-slate-500">Min. Qty</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={tier.min_qty}
+                                                onChange={(e) => {
+                                                    const updated = [...data.price_tiers];
+                                                    updated[i].min_qty = Number(e.target.value);
+                                                    setData("price_tiers", updated);
+                                                }}
+                                                placeholder="12"
+                                                className="block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="mb-1 block text-xs font-semibold text-slate-500">Harga / pcs</label>
+                                            <CurrencyInput
+                                                value={tier.price}
+                                                onChange={(val) => {
+                                                    const updated = [...data.price_tiers];
+                                                    updated[i].price = val;
+                                                    setData("price_tiers", updated);
+                                                }}
+                                                placeholder="8.500"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setData(
+                                                    "price_tiers",
+                                                    data.price_tiers.filter((_, j) => j !== i),
+                                                )
+                                            }
+                                            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ))}
+
+                                {data.price_tiers.length < 5 && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setData("price_tiers", [
+                                                ...data.price_tiers,
+                                                { min_qty: "", price: "" },
+                                            ])
+                                        }
+                                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 py-2.5 text-sm font-medium text-slate-500 transition hover:border-indigo-400 hover:text-indigo-600"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Tambah Tier (maks 5)
+                                    </button>
+                                )}
+
+                                {data.price_tiers.length === 0 && (
+                                    <p className="text-center text-xs text-slate-400">
+                                        Atau kosongkan jika tidak perlu harga grosir.
+                                    </p>
+                                )}
+                            </div>
+                        </SectionCard>
+                        )}
+
+                        {/* SECTION: Variant — hanya jika is_variant = true */}
+                        {data.is_variant && (
+                            <SectionCard
+                                title="Daftar Variant"
+                                subtitle="Setiap variant punya harga, grosir, dan multi-satuan sendiri"
+                                icon={BarChart3}
+                                accent="indigo"
+                            >
+                                <div className="space-y-4">
+                                    {data.variants.map((v, vi) => (
+                                        <VariantCard
+                                            key={vi}
+                                            variant={v}
+                                            index={vi}
+                                            unit={data.unit}
+                                            feat={feat}
+                                            errors={errors}
+                                            onUpdate={(updated) => {
+                                                const all = [...data.variants];
+                                                all[vi] = updated;
+                                                setData("variants", all);
+                                            }}
+                                            onRemove={() =>
+                                                setData(
+                                                    "variants",
+                                                    data.variants.filter((_, j) => j !== vi),
+                                                )
+                                            }
+                                        />
+                                    ))}
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setData("variants", [
+                                                ...data.variants,
+                                                {
+                                                    name: "",
+                                                    sku: "",
+                                                    price: "",
+                                                    cost_price: "",
+                                                    barcode: "",
+                                                    price_tiers: [],
+                                                    packaging_units: [],
+                                                },
+                                            ])
+                                        }
+                                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 py-2.5 text-sm font-medium text-slate-500 transition hover:border-indigo-400 hover:text-indigo-600"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Tambah Variant
+                                    </button>
+
+                                    {data.variants.length === 0 && (
+                                        <p className="text-center text-xs text-slate-400">
+                                            Tambah minimal satu variant (cth: S, M, L atau Merah, Biru).
+                                        </p>
+                                    )}
+                                </div>
+                            </SectionCard>
                         )}
 
                         {/* SECTION: Detail spesifik per tipe */}
@@ -1289,4 +1449,234 @@ function SummaryRow({ label, value, active }) {
 
 function inputCls(hasError) {
     return `block w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3.5 text-sm shadow-sm transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 ${hasError ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""}`;
+}
+
+/**
+ * VariantCard — dipakai di Create.jsx dan Edit.jsx.
+ * Menampilkan satu variant dengan sub-section harga, grosir, multi-satuan.
+ */
+export function VariantCard({ variant, index, unit, feat, errors, onUpdate, onRemove }) {
+    const update = (key, val) => onUpdate({ ...variant, [key]: val });
+
+    return (
+        <div className="rounded-2xl border border-indigo-100 bg-indigo-50/20 p-4 space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
+                    Variant {index + 1}
+                </span>
+                <button
+                    type="button"
+                    onClick={onRemove}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                >
+                    <X className="h-4 w-4" />
+                </button>
+            </div>
+
+            {/* Nama + SKU + Barcode */}
+            <div className="grid grid-cols-2 gap-3">
+                <Field label="Nama Variant" required>
+                    <input
+                        type="text"
+                        value={variant.name}
+                        onChange={(e) => update("name", e.target.value)}
+                        placeholder="cth. Merah, S, 500ml"
+                        className={inputCls(false)}
+                    />
+                </Field>
+                <Field label="SKU" required>
+                    <input
+                        type="text"
+                        value={variant.sku}
+                        onChange={(e) => update("sku", e.target.value)}
+                        placeholder="PRD-001-S"
+                        className={inputCls(false)}
+                    />
+                </Field>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <Field label="Harga Jual" required>
+                    <CurrencyInput
+                        value={variant.price}
+                        onChange={(v) => update("price", v)}
+                    />
+                </Field>
+                {feat.costPrice && (
+                    <Field label="Harga Modal">
+                        <CurrencyInput
+                            value={variant.cost_price}
+                            onChange={(v) => update("cost_price", v)}
+                        />
+                    </Field>
+                )}
+            </div>
+
+            <Field label="Barcode" hint="opsional">
+                <input
+                    type="text"
+                    value={variant.barcode}
+                    onChange={(e) => update("barcode", e.target.value)}
+                    placeholder="EAN-13"
+                    className={inputCls(false)}
+                />
+            </Field>
+
+            {/* Harga Grosir per variant */}
+            <div>
+                <p className="mb-2 text-xs font-semibold text-slate-600">Harga Grosir (opsional)</p>
+                <div className="space-y-2">
+                    {(variant.price_tiers ?? []).map((tier, ti) => (
+                        <div key={ti} className="flex items-end gap-2 rounded-lg border border-slate-200 bg-white p-2.5">
+                            <div className="flex-1">
+                                <label className="mb-1 block text-[10px] font-semibold text-slate-500">Min. Qty</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={tier.min_qty}
+                                    onChange={(e) => {
+                                        const tiers = [...(variant.price_tiers ?? [])];
+                                        tiers[ti] = { ...tiers[ti], min_qty: Number(e.target.value) };
+                                        update("price_tiers", tiers);
+                                    }}
+                                    placeholder="12"
+                                    className="block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <label className="mb-1 block text-[10px] font-semibold text-slate-500">Harga</label>
+                                <CurrencyInput
+                                    value={tier.price}
+                                    onChange={(v) => {
+                                        const tiers = [...(variant.price_tiers ?? [])];
+                                        tiers[ti] = { ...tiers[ti], price: v };
+                                        update("price_tiers", tiers);
+                                    }}
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    update("price_tiers", (variant.price_tiers ?? []).filter((_, j) => j !== ti))
+                                }
+                                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500"
+                            >
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    ))}
+                    {(variant.price_tiers ?? []).length < 5 && (
+                        <button
+                            type="button"
+                            onClick={() =>
+                                update("price_tiers", [
+                                    ...(variant.price_tiers ?? []),
+                                    { min_qty: "", price: "" },
+                                ])
+                            }
+                            className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-slate-300 py-1.5 text-xs font-medium text-slate-500 hover:border-indigo-400 hover:text-indigo-600 transition"
+                        >
+                            <Plus className="h-3.5 w-3.5" /> Tambah Tier
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Multi-Satuan per variant */}
+            {feat.multiUnit && (
+                <div>
+                    <p className="mb-2 text-xs font-semibold text-slate-600">Multi-Satuan (opsional)</p>
+                    <div className="space-y-2">
+                        {(variant.packaging_units ?? []).map((pu, pi) => (
+                            <div key={pi} className="rounded-lg border border-slate-200 bg-white p-2.5 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Kemasan {pi + 1}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            update("packaging_units", (variant.packaging_units ?? []).filter((_, j) => j !== pi))
+                                        }
+                                        className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="mb-1 block text-[10px] font-semibold text-slate-500">Nama</label>
+                                        <input
+                                            type="text"
+                                            value={pu.name}
+                                            onChange={(e) => {
+                                                const units = [...(variant.packaging_units ?? [])];
+                                                units[pi] = { ...units[pi], name: e.target.value };
+                                                update("packaging_units", units);
+                                            }}
+                                            placeholder="Dus"
+                                            className="block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-[10px] font-semibold text-slate-500">Isi ({unit})</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={pu.conversion_qty}
+                                            onChange={(e) => {
+                                                const units = [...(variant.packaging_units ?? [])];
+                                                units[pi] = { ...units[pi], conversion_qty: e.target.value };
+                                                update("packaging_units", units);
+                                            }}
+                                            placeholder="12"
+                                            className="block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="mb-1 block text-[10px] font-semibold text-slate-500">Harga</label>
+                                        <CurrencyInput
+                                            value={pu.sell_price}
+                                            onChange={(v) => {
+                                                const units = [...(variant.packaging_units ?? [])];
+                                                units[pi] = { ...units[pi], sell_price: v };
+                                                update("packaging_units", units);
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-[10px] font-semibold text-slate-500">Barcode</label>
+                                        <input
+                                            type="text"
+                                            value={pu.barcode}
+                                            onChange={(e) => {
+                                                const units = [...(variant.packaging_units ?? [])];
+                                                units[pi] = { ...units[pi], barcode: e.target.value };
+                                                update("packaging_units", units);
+                                            }}
+                                            placeholder="opsional"
+                                            className="block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={() =>
+                                update("packaging_units", [
+                                    ...(variant.packaging_units ?? []),
+                                    { name: "", conversion_qty: "", sell_price: "", barcode: "" },
+                                ])
+                            }
+                            className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-slate-300 py-1.5 text-xs font-medium text-slate-500 hover:border-amber-400 hover:text-amber-600 transition"
+                        >
+                            <Plus className="h-3.5 w-3.5" /> Tambah Satuan
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 }

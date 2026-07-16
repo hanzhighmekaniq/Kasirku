@@ -3,17 +3,28 @@ import { fmt, PG_METHOD_LABELS, findPgPaymentMethod } from "./helpers";
 
 export default function PaymentModal({
     grandTotal,
+    roundedGrandTotal,
+    roundingAdjustment = 0,
     paymentMethods,
     pgMethods,
     onConfirm,
     onClose,
     submitting,
+    selectedCustomer = null,
+    customers = [],
+    onSelectCustomer,
 }) {
-    const [mode, setMode] = useState(null); // null = choose, 'offline', 'online'
+    const displayTotal = roundedGrandTotal ?? grandTotal;
+
+    // Metode non-hutang dipakai di mode "offline" — hutang punya alur sendiri.
+    const offlineMethods = paymentMethods.filter((m) => m.type !== "debt");
+    const debtMethod = paymentMethods.find((m) => m.type === "debt");
+
+    const [mode, setMode] = useState(null); // null = choose, 'offline', 'online', 'debt'
     const [payments, setPayments] = useState([
         {
-            method_id: paymentMethods[0]?.id ?? "",
-            amount: grandTotal,
+            method_id: offlineMethods[0]?.id ?? "",
+            amount: displayTotal,
             reference_no: "",
             is_pg: false,
             pg_provider: "",
@@ -21,13 +32,34 @@ export default function PaymentModal({
         },
     ]);
 
+    const customer = customers.find(
+        (c) => String(c.id) === String(selectedCustomer),
+    );
+    const availableCredit = customer
+        ? (customer.credit_limit ?? 0) - (customer.debt_balance ?? 0)
+        : 0;
+
+    // Pencarian pelanggan — dipakai saat mode hutang & belum ada yang dipilih
+    const [customerQuery, setCustomerQuery] = useState("");
+    // null = belum pilih, 'full' = full hutang, 'partial' = bayar sebagian
+    const [debtSubMode, setDebtSubMode] = useState(null);
+    const filteredCustomers = customers.filter((c) => {
+        const q = customerQuery.trim().toLowerCase();
+        if (!q) return true;
+        return (
+            c.name?.toLowerCase().includes(q) ||
+            c.phone?.includes(q) ||
+            c.code?.toLowerCase().includes(q)
+        );
+    });
+
     /** When a PG method button is clicked */
     const selectPgMethod = (pg) => {
         const matched = findPgPaymentMethod(pg.payment_type, paymentMethods);
         setPayments([
             {
-                method_id: matched?.id ?? paymentMethods[0]?.id ?? "",
-                amount: grandTotal,
+                method_id: matched?.id ?? offlineMethods[0]?.id ?? "",
+                amount: displayTotal,
                 reference_no: "",
                 is_pg: true,
                 pg_provider: pg.provider,
@@ -41,8 +73,8 @@ export default function PaymentModal({
     const goOffline = () => {
         setPayments([
             {
-                method_id: paymentMethods[0]?.id ?? "",
-                amount: grandTotal,
+                method_id: offlineMethods[0]?.id ?? "",
+                amount: displayTotal,
                 reference_no: "",
                 is_pg: false,
                 pg_provider: "",
@@ -52,11 +84,28 @@ export default function PaymentModal({
         setMode("offline");
     };
 
+    /** Switch to debt/kasbon mode */
+    const goDebt = () => {
+        setPayments([
+            {
+                method_id: debtMethod?.id ?? "",
+                amount: displayTotal,
+                reference_no: "",
+                is_pg: false,
+                pg_provider: "",
+                pg_method: "",
+            },
+        ]);
+        setCustomerQuery("");
+        setDebtSubMode(null);
+        setMode("debt");
+    };
+
     /** Go back to mode chooser */
     const goBack = () => {
         setPayments([
             {
-                method_id: paymentMethods[0]?.id ?? "",
+                method_id: offlineMethods[0]?.id ?? "",
                 amount: grandTotal,
                 reference_no: "",
                 is_pg: false,
@@ -70,8 +119,18 @@ export default function PaymentModal({
     const isPgPayment = payments.some((p) => p.is_pg);
 
     const totalPaid = payments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
-    const change = Math.max(0, totalPaid - grandTotal);
-    const remaining = Math.max(0, grandTotal - totalPaid);
+    const change = Math.max(0, totalPaid - displayTotal);
+    const remaining = Math.max(0, displayTotal - totalPaid);
+
+    // Porsi yang dibayar via metode hutang pada mode debt (dipakai utk cek limit)
+    const debtPortion = payments
+        .filter((p) => p.method_id === debtMethod?.id)
+        .reduce((s, p) => s + (Number(p.amount) || 0), 0);
+    const debtExceedsLimit =
+        mode === "debt" &&
+        customer &&
+        Number(customer.credit_limit) > 0 &&
+        Number(customer.debt_balance) + debtPortion > Number(customer.credit_limit);
 
     const update = (i, key, val) =>
         setPayments((prev) =>
@@ -81,7 +140,7 @@ export default function PaymentModal({
         setPayments((prev) => [
             ...prev,
             {
-                method_id: paymentMethods[0]?.id ?? "",
+                method_id: offlineMethods[0]?.id ?? "",
                 amount: remaining,
                 reference_no: "",
                 is_pg: false,
@@ -96,10 +155,24 @@ export default function PaymentModal({
     const quickCash = cashMethod
         ? [
               grandTotal,
-              Math.ceil(grandTotal / 10000) * 10000,
-              Math.ceil(grandTotal / 50000) * 50000,
+              Math.ceil(displayTotal / 10000) * 10000,
+              Math.ceil(displayTotal / 50000) * 50000,
           ].filter((v, i, a) => a.indexOf(v) === i)
         : [];
+
+    /** Tambah baris tunai untuk split bayar-sebagian di mode hutang */
+    const addCashSplit = () =>
+        setPayments((prev) => [
+            ...prev,
+            {
+                method_id: cashMethod?.id ?? offlineMethods[0]?.id ?? "",
+                amount: remaining,
+                reference_no: "",
+                is_pg: false,
+                pg_provider: "",
+                pg_method: "",
+            },
+        ]);
 
     return (
         <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
@@ -108,8 +181,8 @@ export default function PaymentModal({
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
 
-            <div className="relative w-full max-w-md rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
-                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
+                <div className="shrink-0 flex items-center justify-between border-b border-slate-100 px-5 py-4">
                     <div className="flex items-center gap-2">
                         {mode && (
                             <button
@@ -137,7 +210,9 @@ export default function PaymentModal({
                                 ? "Pilih Metode Pembayaran"
                                 : mode === "offline"
                                   ? "Pembayaran Offline"
-                                  : "Pembayaran Online"}
+                                  : mode === "debt"
+                                    ? "Hutang / Kasbon"
+                                    : "Pembayaran Online"}
                         </h3>
                     </div>
                     <button
@@ -161,20 +236,34 @@ export default function PaymentModal({
                 </div>
 
                 {/* Total */}
-                <div className="bg-indigo-50 px-5 py-4">
+                <div className="shrink-0 bg-indigo-50 px-5 py-4">
+                    {roundingAdjustment !== 0 && (
+                        <div className="flex justify-between mb-1">
+                            <span className="text-xs text-slate-500">Subtotal</span>
+                            <span className="text-xs text-slate-500">{fmt(grandTotal)}</span>
+                        </div>
+                    )}
+                    {roundingAdjustment !== 0 && (
+                        <div className="flex justify-between mb-1">
+                            <span className="text-xs text-slate-500">Pembulatan</span>
+                            <span className="text-xs text-emerald-600">
+                                {roundingAdjustment > 0 ? '+' : ''}{fmt(roundingAdjustment)}
+                            </span>
+                        </div>
+                    )}
                     <div className="flex justify-between">
                         <span className="text-sm text-slate-600">
-                            Total Belanja
+                            Total Bayar
                         </span>
                         <span className="text-xl font-bold text-indigo-700">
-                            {fmt(grandTotal)}
+                            {fmt(displayTotal)}
                         </span>
                     </div>
                 </div>
 
                 {/* ═══ MODE: CHOOSE ═══ */}
                 {!mode && (
-                    <div className="px-5 py-6 space-y-3">
+                    <div className="flex-1 overflow-y-auto min-h-0 px-5 py-6 space-y-3">
                         <button
                             type="button"
                             onClick={goOffline}
@@ -238,14 +327,46 @@ export default function PaymentModal({
                                 </svg>
                             </button>
                         )}
+
+                        {debtMethod && (
+                            <button
+                                type="button"
+                                onClick={goDebt}
+                                className="group flex w-full items-center gap-4 rounded-2xl border-2 border-slate-200 bg-white p-5 text-left transition hover:border-amber-400 hover:bg-amber-50 hover:shadow-md"
+                            >
+                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-2xl transition group-hover:bg-amber-200">
+                                    📒
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-base font-bold text-slate-900 group-hover:text-amber-700">
+                                        Hutang / Kasbon
+                                    </p>
+                                    <p className="text-xs text-slate-500">
+                                        Catat sebagai hutang pelanggan
+                                    </p>
+                                </div>
+                                <svg
+                                    className="h-5 w-5 text-slate-300 group-hover:text-amber-500 transition"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                                    />
+                                </svg>
+                            </button>
+                        )}
                     </div>
                 )}
 
                 {/* ═══ MODE: OFFLINE ═══ */}
                 {mode === "offline" && (
-                    <div className="flex flex-col max-h-80">
-                        {/* Scrollable: quick cash + payment rows + add button */}
-                        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 min-h-0">
+                    <>
+                        <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-3">
                             {/* Quick cash buttons */}
                             {payments.length === 1 &&
                                 cashMethod &&
@@ -284,7 +405,7 @@ export default function PaymentModal({
                                             }
                                             className="flex-1 rounded-xl border-slate-300 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
                                         >
-                                            {paymentMethods.map((m) => (
+                                            {offlineMethods.map((m) => (
                                                 <option key={m.id} value={m.id}>
                                                     {m.name}
                                                     {m.provider
@@ -357,7 +478,7 @@ export default function PaymentModal({
                                 </div>
                             ))}
 
-                            {payments.length < paymentMethods.length && (
+                            {payments.length < offlineMethods.length && (
                                 <button
                                     type="button"
                                     onClick={add}
@@ -369,7 +490,7 @@ export default function PaymentModal({
                         </div>
 
                         {/* Fixed: Summary */}
-                        <div className="shrink-0 border-t border-slate-100 px-5 py-3 bg-white rounded-b-2xl">
+                        <div className="shrink-0 border-t border-slate-100 px-5 py-3 bg-white">
                             <div className="rounded-xl bg-slate-50 px-4 py-3 space-y-1 text-sm">
                                 <div className="flex justify-between">
                                     <span className="text-slate-500">
@@ -401,12 +522,349 @@ export default function PaymentModal({
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </>
+                )}
+
+                {/* ═══ MODE: DEBT / KASBON ═══ */}
+                {mode === "debt" && (
+                    <>
+                        <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-3">
+                            {/* ── Pelanggan belum dipilih: tampilkan pencarian ── */}
+                            {!customer && (
+                                <div>
+                                    <p className="mb-2 text-sm font-semibold text-slate-800">
+                                        Pilih Pelanggan <span className="text-red-500">*</span>
+                                    </p>
+                                    <div className="relative mb-2">
+                                        <svg
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={2}
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                                            />
+                                        </svg>
+                                        <input
+                                            type="text"
+                                            value={customerQuery}
+                                            onChange={(e) => setCustomerQuery(e.target.value)}
+                                            placeholder="Cari nama, telepon, atau kode..."
+                                            className="w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        {filteredCustomers.length === 0 ? (
+                                            <p className="px-2 py-4 text-center text-xs text-slate-400">
+                                                Pelanggan tidak ditemukan
+                                            </p>
+                                        ) : (
+                                            filteredCustomers.map((c) => {
+                                                const cCredit =
+                                                    (c.credit_limit ?? 0) - (c.debt_balance ?? 0);
+                                                return (
+                                                    <button
+                                                        key={c.id}
+                                                        type="button"
+                                                        onClick={() => onSelectCustomer?.(c.id)}
+                                                        className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200 px-3 py-2 text-left transition hover:border-amber-300 hover:bg-amber-50"
+                                                    >
+                                                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
+                                                            {c.name?.charAt(0)?.toUpperCase()}
+                                                        </span>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="truncate text-sm font-medium text-slate-800">
+                                                                {c.name}
+                                                            </p>
+                                                            <p className="truncate text-[10.5px] text-slate-400">
+                                                                {c.phone ? c.phone : c.code ?? ""}
+                                                            </p>
+                                                        </div>
+                                                        {c.credit_limit > 0 && (
+                                                            <span className="shrink-0 text-[10px] font-semibold text-slate-500">
+                                                                Sisa limit{" "}
+                                                                <span className={cCredit > 0 ? "text-emerald-600" : "text-red-500"}>
+                                                                    {fmt(cCredit)}
+                                                                </span>
+                                                            </span>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ── Pelanggan sudah dipilih: tampilkan info + form ── */}
+                            {customer && (
+                                <>
+                                    <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+                                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-200 text-sm font-bold text-amber-800">
+                                            {customer.name?.charAt(0)?.toUpperCase()}
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-semibold text-slate-800">
+                                                {customer.name}
+                                            </p>
+                                            <p className="truncate text-[10.5px] text-slate-500">
+                                                {customer.phone ?? customer.code ?? ""}
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => onSelectCustomer?.("")}
+                                            className="shrink-0 rounded-full p-1 text-amber-500 hover:bg-amber-200 hover:text-amber-800 transition"
+                                            title="Ganti pelanggan"
+                                        >
+                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    {/* Detail hutang pelanggan — ringkas tapi lengkap */}
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wide text-slate-400">
+                                                Hutang saat ini
+                                            </p>
+                                            <p className="mt-0.5 text-sm font-bold text-slate-800">
+                                                {fmt(customer.debt_balance ?? 0)}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-xl bg-slate-50 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wide text-slate-400">
+                                                Limit kredit
+                                            </p>
+                                            <p className="mt-0.5 text-sm font-bold text-slate-800">
+                                                {customer.credit_limit > 0
+                                                    ? fmt(customer.credit_limit)
+                                                    : "Tanpa limit"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {customer.credit_limit > 0 && (
+                                        <div className="rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                                            Sisa limit tersedia:{" "}
+                                            <strong>{fmt(availableCredit)}</strong>
+                                        </div>
+                                    )}
+
+                                    {/* ─── Pilihan: Full Hutang vs Bayar Sebagian ─── */}
+                                    {debtSubMode === null && (
+                                        <div className="space-y-2 pt-1">
+                                            <p className="text-xs font-medium text-slate-500">
+                                                Bagaimana pelanggan ingin membayar?
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setDebtSubMode("full");
+                                                    setPayments([{
+                                                        method_id: debtMethod?.id ?? "",
+                                                        amount: displayTotal,
+                                                        reference_no: "",
+                                                        is_pg: false,
+                                                        pg_provider: "",
+                                                        pg_method: "",
+                                                    }]);
+                                                }}
+                                                className="group flex w-full items-center gap-3 rounded-2xl border-2 border-slate-200 bg-white p-4 text-left transition hover:border-amber-400 hover:bg-amber-50 hover:shadow-sm"
+                                            >
+                                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-xl transition group-hover:bg-amber-200">
+                                                    📒
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-bold text-slate-900 group-hover:text-amber-700">
+                                                        Full Hutang
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-500">
+                                                        Seluruh {fmt(displayTotal)} dicatat sebagai hutang
+                                                    </p>
+                                                </div>
+                                                <svg className="h-5 w-5 text-slate-300 group-hover:text-amber-500 transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setDebtSubMode("partial");
+                                                    // Default: hutang separuh, bayar separuh
+                                                    const halfDebt = Math.ceil(displayTotal / 2);
+                                                    setPayments([
+                                                        {
+                                                            method_id: cashMethod?.id ?? offlineMethods[0]?.id ?? "",
+                                                            amount: displayTotal - halfDebt,
+                                                            reference_no: "",
+                                                            is_pg: false,
+                                                            pg_provider: "",
+                                                            pg_method: "",
+                                                        },
+                                                        {
+                                                            method_id: debtMethod?.id ?? "",
+                                                            amount: halfDebt,
+                                                            reference_no: "",
+                                                            is_pg: false,
+                                                            pg_provider: "",
+                                                            pg_method: "",
+                                                        },
+                                                    ]);
+                                                }}
+                                                className="group flex w-full items-center gap-3 rounded-2xl border-2 border-slate-200 bg-white p-4 text-left transition hover:border-emerald-400 hover:bg-emerald-50 hover:shadow-sm"
+                                            >
+                                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-xl transition group-hover:bg-emerald-200">
+                                                    💵
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-bold text-slate-900 group-hover:text-emerald-700">
+                                                        Bayar Sebagian
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-500">
+                                                        Bayar tunai/transfer dulu, sisanya hutang
+                                                    </p>
+                                                </div>
+                                                <svg className="h-5 w-5 text-slate-300 group-hover:text-emerald-500 transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* ─── Full Hutang — konfirmasi ringkas ─── */}
+                                    {debtSubMode === "full" && (
+                                        <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm font-semibold text-amber-800">
+                                                    Seluruhnya dihutang
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDebtSubMode(null)}
+                                                    className="text-[11px] font-medium text-amber-600 hover:text-amber-800 underline underline-offset-2"
+                                                >
+                                                    Ubah
+                                                </button>
+                                            </div>
+                                            <p className="text-2xl font-bold text-amber-700 tabular-nums">
+                                                {fmt(displayTotal)}
+                                            </p>
+                                            <p className="text-[11px] text-slate-500">
+                                                Hutang {customer.name} akan bertambah menjadi{" "}
+                                                <strong>{fmt((customer.debt_balance ?? 0) + displayTotal)}</strong>
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* ─── Bayar Sebagian — form split ─── */}
+                                    {debtSubMode === "partial" && (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm font-semibold text-slate-800">
+                                                    Bayar Sebagian
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDebtSubMode(null)}
+                                                    className="text-[11px] font-medium text-slate-500 hover:text-slate-800 underline underline-offset-2"
+                                                >
+                                                    Ubah
+                                                </button>
+                                            </div>
+
+                                            {/* Baris pertama: bayar tunai/kartu */}
+                                            <div className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/30 p-3">
+                                                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">
+                                                    Dibayar sekarang
+                                                </p>
+                                                <div className="flex items-center gap-2">
+                                                    <select
+                                                        value={payments[0]?.method_id ?? ""}
+                                                        onChange={(e) => update(0, "method_id", Number(e.target.value))}
+                                                        className="flex-1 rounded-xl border-slate-300 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                                                    >
+                                                        {offlineMethods.map((m) => (
+                                                            <option key={m.id} value={m.id}>{m.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="relative">
+                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                                    <input
+                                                        type="number"
+                                                        value={payments[0]?.amount ?? ""}
+                                                        onChange={(e) => {
+                                                            const cashAmt = Number(e.target.value) || 0;
+                                                            const debtAmt = Math.max(0, displayTotal - cashAmt);
+                                                            update(0, "amount", e.target.value);
+                                                            if (payments[1]) update(1, "amount", debtAmt);
+                                                        }}
+                                                        className="block w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Baris kedua: sisa menjadi hutang */}
+                                            <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50/30 p-3">
+                                                <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-600">
+                                                    Dicatat sebagai hutang
+                                                </p>
+                                                <p className="text-lg font-bold text-amber-700 tabular-nums">
+                                                    {fmt(Number(payments[1]?.amount) || 0)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {debtExceedsLimit && (
+                                        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                                            Hutang melebihi limit kredit. Kurangi jumlah hutang atau tambah pembayaran tunai.
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+
+                        {/* Fixed: Summary */}
+                        {customer && debtSubMode && (
+                            <div className="shrink-0 border-t border-slate-100 px-5 py-3 bg-white">
+                                <div className="rounded-xl bg-slate-50 px-4 py-3 space-y-1 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-500">Dicatat sebagai hutang</span>
+                                        <span className="font-semibold text-amber-600">{fmt(debtPortion)}</span>
+                                    </div>
+                                    {debtSubMode === "partial" && (
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-500">Dibayar tunai</span>
+                                            <span className="font-semibold text-slate-800">{fmt(totalPaid - debtPortion)}</span>
+                                        </div>
+                                    )}
+                                    {remaining > 0 && (
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-500">Kurang</span>
+                                            <span className="font-bold text-red-600">{fmt(remaining)}</span>
+                                        </div>
+                                    )}
+                                    {change > 0 && (
+                                        <div className="flex justify-between">
+                                            <span className="text-slate-500">Kembalian</span>
+                                            <span className="font-bold text-emerald-600">{fmt(change)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* ═══ MODE: ONLINE — PG method chooser ═══ */}
                 {mode === "online" && !isPgPayment && pgMethods?.length > 0 && (
-                    <div className="px-5 py-5 space-y-3">
+                    <div className="flex-1 overflow-y-auto min-h-0 px-5 py-5 space-y-3">
                         <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                             Pilih metode pembayaran online
                         </p>
@@ -456,7 +914,7 @@ export default function PaymentModal({
 
                 {/* ═══ MODE: ONLINE — selected PG, showing info ═══ */}
                 {mode === "online" && isPgPayment && (
-                    <div className="px-5 py-4 space-y-3">
+                    <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-3">
                         <div className="flex items-center gap-3 rounded-xl bg-indigo-50 p-4">
                             <span className="text-2xl">
                                 {PG_METHOD_LABELS[payments[0]?.pg_method]
@@ -468,7 +926,7 @@ export default function PaymentModal({
                                         ?.label ?? payments[0]?.pg_method}
                                 </p>
                                 <p className="text-xs text-slate-500">
-                                    {fmt(grandTotal)}
+                                    {fmt(displayTotal)}
                                 </p>
                             </div>
                         </div>
@@ -485,7 +943,7 @@ export default function PaymentModal({
                             <div className="flex justify-between">
                                 <span className="text-slate-500">Total</span>
                                 <span className="font-semibold text-slate-800">
-                                    {fmt(grandTotal)}
+                                    {fmt(displayTotal)}
                                 </span>
                             </div>
                         </div>
@@ -493,11 +951,11 @@ export default function PaymentModal({
                 )}
 
                 {/* ═══ BOTTOM BUTTON ═══ */}
-                <div className="border-t border-slate-100 px-5 py-4">
+                <div className="shrink-0 border-t border-slate-100 px-5 py-4">
                     {mode === "offline" && (
                         <button
                             type="button"
-                            disabled={totalPaid < grandTotal || submitting}
+                            disabled={totalPaid < displayTotal || submitting}
                             onClick={() => onConfirm(payments, change)}
                             className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 transition hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -524,10 +982,41 @@ export default function PaymentModal({
                                     </svg>
                                     Memproses...
                                 </span>
-                            ) : totalPaid < grandTotal ? (
+                            ) : totalPaid < displayTotal ? (
                                 `Kurang ${fmt(remaining)}`
                             ) : (
                                 "Proses Pembayaran"
+                            )}
+                        </button>
+                    )}
+                    {mode === "debt" && customer && debtSubMode && (
+                        <button
+                            type="button"
+                            disabled={
+                                submitting ||
+                                debtExceedsLimit ||
+                                totalPaid < displayTotal ||
+                                debtPortion <= 0
+                            }
+                            onClick={() => onConfirm(payments, change)}
+                            className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/30 transition hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {submitting ? (
+                                <span className="inline-flex items-center gap-2">
+                                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    Memproses...
+                                </span>
+                            ) : debtExceedsLimit ? (
+                                "Melebihi limit kredit"
+                            ) : totalPaid < displayTotal ? (
+                                `Kurang ${fmt(remaining)}`
+                            ) : debtSubMode === "full" ? (
+                                `Catat Hutang — ${fmt(displayTotal)}`
+                            ) : (
+                                `Proses — Hutang ${fmt(debtPortion)}`
                             )}
                         </button>
                     )}

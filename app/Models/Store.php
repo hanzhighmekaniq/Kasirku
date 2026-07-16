@@ -2,48 +2,46 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Plan;
-use App\Models\StoreType;
 
 class Store extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        "user_id",
-        "code",
-        "name",
-        "store_type_id",
-        "logo",
-        "currency",
-        "decimal_places",
-        "timezone",
-        "tax_inclusive",
-        "default_tax_rate",
-        "receipt_header",
-        "receipt_footer",
-        "phone",
-        "email",
-        "address",
-        "is_active",
-        "plan_id",
-        "plan_expires_at",
-        "max_users",
-        "max_branches",
+        'user_id',
+        'code',
+        'name',
+        'store_type_id',
+        'logo',
+        'currency',
+        'decimal_places',
+        'timezone',
+        'tax_inclusive',
+        'default_tax_rate',
+        'receipt_header',
+        'receipt_footer',
+        'phone',
+        'email',
+        'address',
+        'is_active',
+        'plan_id',
+        'plan_expires_at',
+        'max_users',
+        'max_branches',
     ];
 
     protected function casts(): array
     {
         return [
-            "is_active" => "boolean",
-            "tax_inclusive" => "boolean",
-            "default_tax_rate" => "decimal:2",
-            "plan_expires_at" => "date",
+            'is_active' => 'boolean',
+            'tax_inclusive' => 'boolean',
+            'default_tax_rate' => 'decimal:2',
+            'plan_expires_at' => 'date',
         ];
     }
 
@@ -51,17 +49,17 @@ class Store extends Model
 
     public function owner(): BelongsTo
     {
-        return $this->belongsTo(User::class, "user_id");
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function storeType(): BelongsTo
     {
-        return $this->belongsTo(StoreType::class, "store_type_id");
+        return $this->belongsTo(StoreType::class, 'store_type_id');
     }
 
     public function planModel(): BelongsTo
     {
-        return $this->belongsTo(Plan::class, "plan_id");
+        return $this->belongsTo(Plan::class, 'plan_id');
     }
 
     /**
@@ -70,7 +68,8 @@ class Store extends Model
      */
     public function getStoreTypeAttribute(): ?string
     {
-        $type = $this->getRelationValue("storeType");
+        $type = $this->getRelationValue('storeType');
+
         return $type?->code;
     }
 
@@ -79,7 +78,8 @@ class Store extends Model
      */
     public function getPlanAttribute(): ?string
     {
-        $plan = $this->getRelationValue("planModel");
+        $plan = $this->getRelationValue('planModel');
+
         return $plan?->code;
     }
 
@@ -87,7 +87,7 @@ class Store extends Model
     {
         return $this->belongsToMany(
             User::class,
-            "user_store",
+            'user_store',
         )->withTimestamps();
     }
 
@@ -151,6 +151,11 @@ class Store extends Model
         return $this->hasMany(Promotion::class);
     }
 
+    public function storeFeatures(): HasMany
+    {
+        return $this->hasMany(StoreFeature::class);
+    }
+
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
@@ -170,10 +175,10 @@ class Store extends Model
     public static function defaultPlanConfig(): array
     {
         return [
-            "label" => "Free",
-            "max_users" => 1,
-            "max_branches" => 1,
-            "features" => [],
+            'label' => 'Free',
+            'max_users' => 1,
+            'max_branches' => 1,
+            'features' => [],
         ];
     }
 
@@ -185,23 +190,23 @@ class Store extends Model
     public static function planConfig(): array
     {
         return [
-            "free" => [
-                "label" => "Free",
-                "max_users" => 1,
-                "max_branches" => 1,
-                "features" => [],
+            'free' => [
+                'label' => 'Free',
+                'max_users' => 1,
+                'max_branches' => 1,
+                'features' => [],
             ],
-            "basic" => [
-                "label" => "Basic",
-                "max_users" => 5,
-                "max_branches" => 3,
-                "features" => [],
+            'basic' => [
+                'label' => 'Basic',
+                'max_users' => 5,
+                'max_branches' => 3,
+                'features' => [],
             ],
-            "pro" => [
-                "label" => "Pro",
-                "max_users" => 999,
-                "max_branches" => 999,
-                "features" => [],
+            'pro' => [
+                'label' => 'Pro',
+                'max_users' => 999,
+                'max_branches' => 999,
+                'features' => [],
             ],
         ];
     }
@@ -209,31 +214,32 @@ class Store extends Model
     /** Ambil semua plan dari database (dengan fallback ke hardcoded) */
     public static function allPlans(): array
     {
-        $dbPlans = Plan::with("features")
-            ->where("is_active", true)
-            ->orderBy("sort_order")
+        $dbPlans = Plan::with('features')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
             ->get();
         if ($dbPlans->isNotEmpty()) {
             return $dbPlans
                 ->map(
-                    fn($p) => [
-                        "id" => $p->id,
-                        "key" => $p->code,
-                        "label" => $p->label,
-                        "description" => $p->description,
-                        "max_users" => $p->max_users,
-                        "max_branches" => $p->max_branches,
-                        "price" => (float) $p->price,
-                        "trial_days" => $p->trial_days,
-                        "features" => $p->featureCodes(),
+                    fn ($p) => [
+                        'id' => $p->id,
+                        'key' => $p->code,
+                        'label' => $p->label,
+                        'description' => $p->description,
+                        'max_users' => $p->max_users,
+                        'max_branches' => $p->max_branches,
+                        'price' => (float) $p->price,
+                        'trial_days' => $p->trial_days,
+                        'features' => $p->featureCodes(),
                     ],
                 )
                 ->values()
                 ->toArray();
         }
+
         // Fallback ke hardcoded (tanpa id)
         return collect(self::planConfig())
-            ->map(fn($p, $k) => array_merge($p, ["id" => null, "key" => $k]))
+            ->map(fn ($p, $k) => array_merge($p, ['id' => null, 'key' => $k]))
             ->values()
             ->toArray();
     }
@@ -242,22 +248,22 @@ class Store extends Model
     public function activePlanConfig(): array
     {
         // Coba dari relasi Plan model
-        $plan = $this->getRelation("planModel");
-        if (!$plan) {
+        $plan = $this->getRelation('planModel');
+        if (! $plan) {
             // Fallback ke plan "free" di DB
-            $plan = \App\Models\Plan::where("code", "free")->first();
+            $plan = Plan::where('code', 'free')->first();
         }
 
-        if (!$plan) {
+        if (! $plan) {
             // DB kosong sama sekali — pakai default hardcoded
             return self::defaultPlanConfig();
         }
 
         return [
-            "label" => $plan->label,
-            "max_users" => $plan->max_users,
-            "max_branches" => $plan->max_branches,
-            "features" => $plan->featureCodes(),
+            'label' => $plan->label,
+            'max_users' => $plan->max_users,
+            'max_branches' => $plan->max_branches,
+            'features' => $plan->featureCodes(),
         ];
     }
 
@@ -265,26 +271,26 @@ class Store extends Model
     public function effectiveMaxUsers(): int
     {
         return $this->max_users ??
-            ($this->activePlanConfig()["max_users"] ?? 1);
+            ($this->activePlanConfig()['max_users'] ?? 1);
     }
 
     /** Efektif max branches: override toko ?? ambil dari plan */
     public function effectiveMaxBranches(): int
     {
         return $this->max_branches ??
-            ($this->activePlanConfig()["max_branches"] ?? 1);
+            ($this->activePlanConfig()['max_branches'] ?? 1);
     }
 
     /** Cek apakah plan mengizinkan fitur tertentu */
     public function planAllowsFeature(string $feature): bool
     {
-        $plan = $this->getRelation("planModel");
-        if (!$plan) {
+        $plan = $this->getRelation('planModel');
+        if (! $plan) {
             // Fallback ke plan "free" di DB
-            $plan = \App\Models\Plan::where("code", "free")->first();
+            $plan = Plan::where('code', 'free')->first();
         }
 
-        if (!$plan) {
+        if (! $plan) {
             // DB kosong — default free plan tidak punya fitur apapun
             // (defaultPlanConfig().features = [])
             return false;
@@ -293,32 +299,49 @@ class Store extends Model
         // Cek di relasi plan_feature
         return $plan
             ->features()
-            ->where("features.code", $feature)
-            ->where("features.is_active", true)
+            ->where('features.code', $feature)
+            ->where('features.is_active', true)
             ->exists();
     }
 
-    /** Cek apakah fitur aktif - ambil dari relasi store_type dan plan */
+    /** Cek apakah fitur aktif - ambil dari relasi store_type, plan, dan store_features */
     public function hasFeature(string $feature): bool
     {
         // Cek apakah fitur diizinkan oleh store type
-        $storeType = $this->getRelation("storeType");
-        if (!$storeType) {
+        $storeType = $this->getRelation('storeType');
+        if (! $storeType) {
             return false;
         }
 
         $storeTypeHasFeature = $storeType
             ->features()
-            ->where("features.code", $feature)
-            ->where("features.is_active", true)
+            ->where('features.code', $feature)
+            ->where('features.is_active', true)
             ->exists();
 
-        if (!$storeTypeHasFeature) {
+        if (! $storeTypeHasFeature) {
             return false;
         }
 
         // Cek apakah fitur diizinkan oleh plan
-        return $this->planAllowsFeature($feature);
+        if (! $this->planAllowsFeature($feature)) {
+            return false;
+        }
+
+        // Cek gate ke-3: store_features (toggle per-toko)
+        // Tidak ada baris → default ikut 2 gate sebelumnya (enabled)
+        // is_enabled=false → disabled oleh toko
+        // is_enabled=true → enabled
+        $storeFeature = $this
+            ->storeFeatures()
+            ->whereHas('feature', fn ($q) => $q->where('code', $feature))
+            ->first();
+
+        if ($storeFeature && ! $storeFeature->is_enabled) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -332,51 +355,51 @@ class Store extends Model
     public function hasFeatureDetail(string $detailCode): bool
     {
         // 1. Cari feature parent dari detail ini
-        $detail = \App\Models\FeatureDetail::where("code", $detailCode)
-            ->where("is_active", true)
+        $detail = FeatureDetail::where('code', $detailCode)
+            ->where('is_active', true)
             ->first();
-        if (!$detail) {
+        if (! $detail) {
             return false;
         }
 
         // 2. Pastikan feature parent-nya aktif
         $feature = $detail->feature;
-        if (!$feature || !$feature->is_active) {
+        if (! $feature || ! $feature->is_active) {
             return false;
         }
 
         // 3. Cek apakah store_type mengizinkan feature parent
-        $storeType = $this->getRelation("storeType");
-        if (!$storeType) {
+        $storeType = $this->getRelation('storeType');
+        if (! $storeType) {
             return false;
         }
 
         $storeTypeHasFeature = $storeType
             ->features()
-            ->where("features.code", $feature->code)
-            ->where("features.is_active", true)
+            ->where('features.code', $feature->code)
+            ->where('features.is_active', true)
             ->exists();
 
-        if (!$storeTypeHasFeature) {
+        if (! $storeTypeHasFeature) {
             return false;
         }
 
         // 4. Cek apakah plan mengizinkan feature parent
-        $plan = $this->getRelation("planModel");
-        if (!$plan) {
-            $plan = \App\Models\Plan::where("code", "free")->first();
+        $plan = $this->getRelation('planModel');
+        if (! $plan) {
+            $plan = Plan::where('code', 'free')->first();
         }
-        if (!$plan) {
+        if (! $plan) {
             return false;
         }
 
         $planHasFeature = $plan
             ->features()
-            ->where("features.code", $feature->code)
-            ->where("features.is_active", true)
+            ->where('features.code', $feature->code)
+            ->where('features.is_active', true)
             ->exists();
 
-        if (!$planHasFeature) {
+        if (! $planHasFeature) {
             return false;
         }
 
@@ -387,7 +410,8 @@ class Store extends Model
     public function hasPosMode(string $mode): bool
     {
         // POS mode ditentukan oleh store_type
-        $storeTypeCode = $this->getRelation("storeType")?->code ?? "retail";
+        $storeTypeCode = $this->getRelation('storeType')?->code ?? 'retail';
+
         return $storeTypeCode === $mode;
     }
 
@@ -414,9 +438,10 @@ class Store extends Model
     public function effectivePlanCode(): string
     {
         if ($this->isPlanExpired()) {
-            return "free";
+            return 'free';
         }
-        return $this->planModel?->code ?? "free";
+
+        return $this->planModel?->code ?? 'free';
     }
 
     /** @deprecated Gunakan effectivePlanCode() */

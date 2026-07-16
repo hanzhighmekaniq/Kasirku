@@ -23,10 +23,13 @@ return new class extends Migration
             $table->decimal('total_sales', 15, 2)->default(0);
             $table->decimal('total_refunds', 15, 2)->default(0);
             $table->decimal('total_expenses', 15, 2)->default(0);
-            $table->string('status', 20)->default('open'); // open / closed
+            $table->string('status', 20)->default('open');
             $table->text('opening_note')->nullable();
             $table->text('closing_note')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+            $table->unsignedBigInteger('deleted_by')->nullable();
+            $table->foreign('deleted_by')->references('id')->on('users')->nullOnDelete();
 
             $table->index(['store_id', 'branch_id', 'status']);
             $table->index(['user_id', 'status']);

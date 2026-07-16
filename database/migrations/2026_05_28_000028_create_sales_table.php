@@ -30,6 +30,7 @@ return new class extends Migration
             $table->decimal('discount_amount', 15, 2)->default(0);
             $table->decimal('tax_amount', 15, 2)->default(0);
             $table->decimal('shipping_amount', 15, 2)->default(0);
+            $table->decimal('rounding_adjustment', 12, 2)->default(0);
             $table->decimal('grand_total', 15, 2)->default(0);
             $table->decimal('paid_amount', 15, 2)->default(0);
             $table->decimal('change_amount', 15, 2)->default(0);
@@ -59,7 +60,7 @@ return new class extends Migration
 
             // --- Service / Barbershop / Salon ---
             $table->foreignId('employee_id')->nullable()->constrained('employees')->nullOnDelete()
-                  ->comment('Karyawan utama yang handle transaksi');
+                ->comment('Karyawan utama yang handle transaksi');
             // service_status: waiting | in_progress | done
             $table->string('service_status', 20)->nullable();
             $table->dateTime('service_started_at')->nullable();

@@ -8,6 +8,7 @@ use App\Models\CafeTable;
 use App\Models\CashierShift;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\CustomerDebtLog;
 use App\Models\Employee;
 use App\Models\EmployeeCommission;
 use App\Models\PaymentMethod;
@@ -20,7 +21,6 @@ use App\Models\SalePayment;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StorePaymentGateway;
-use App\Models\StoreType;
 use App\Services\PromotionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -42,16 +42,22 @@ class KasirController extends Controller
             $user->stores()->with('storeType')->first();
         $storeTypeCode = $store?->getRelation('storeType')?->code ?? 'retail';
 
+        // Load relations needed for hasFeature() gate check
+        $store?->load(['planModel.features', 'storeFeatures.feature']);
+
         $products = Product::forStore($storeId)
             ->where('is_active', true)
             ->where('is_sellable', true)
             ->with([
                 'category:id,name',
                 'variants:id,product_id,name,sku,price,cost_price,is_active',
+                'variants.priceTiers',
+                'variants.packagingUnits',
                 'modifierGroups.modifiers',
                 'recipes.rawMaterial:id,name,unit,base_unit,cost_price',
                 'stocks' => fn ($q) => $q->where('store_id', $storeId),
                 'packagingUnits' => fn ($q) => $q->where('sell_price', '>', 0),
+                'priceTiers',
             ])
             ->get()
             ->map(function ($p) use ($storeId) {
@@ -82,50 +88,54 @@ class KasirController extends Controller
 
         $paymentMethods = PaymentMethod::forStore($storeId)
             ->active()
+            ->when(! $store->hasFeature('debt'), fn ($q) => $q->where('type', '!=', 'debt'))
             ->orderBy('sort_order')
             ->orderBy('type')
             ->get(['id', 'code', 'name', 'type', 'provider']);
 
         // Active promotions with their associated products
-        $promotions = Promotion::forStore($storeId)
-            ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('start_date')->orWhere('start_date', '<=', now());
-            })
-            ->where(function ($q) {
-                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
-            })
-            ->where(function ($q) {
-                $q->whereNull('start_hour')->orWhere(
+        // Gate check: skip if promo feature is disabled for this store
+        $promotions = $store->hasFeature('promo')
+            ? Promotion::forStore($storeId)
+                ->where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNull('start_date')->orWhere('start_date', '<=', now());
+                })
+                ->where(function ($q) {
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                })
+                ->where(function ($q) {
+                    $q->whereNull('start_hour')->orWhere(
+                        'start_hour',
+                        '<=',
+                        now()->format('H:i'),
+                    );
+                })
+                ->where(function ($q) {
+                    $q->whereNull('end_hour')->orWhere(
+                        'end_hour',
+                        '>=',
+                        now()->format('H:i'),
+                    );
+                })
+                ->with(['products:id', 'freeProduct:id,sell_price'])
+                ->get([
+                    'id',
+                    'code',
+                    'name',
+                    'type',
+                    'scope',
+                    'discount_value',
+                    'min_purchase_amount',
+                    'max_discount_amount',
+                    'min_quantity',
+                    'tier_price',
+                    'customer_tier',
                     'start_hour',
-                    '<=',
-                    now()->format('H:i'),
-                );
-            })
-            ->where(function ($q) {
-                $q->whereNull('end_hour')->orWhere(
                     'end_hour',
-                    '>=',
-                    now()->format('H:i'),
-                );
-            })
-            ->with(['products:id', 'freeProduct:id,sell_price'])
-            ->get([
-                'id',
-                'code',
-                'name',
-                'type',
-                'scope',
-                'discount_value',
-                'min_purchase_amount',
-                'max_discount_amount',
-                'min_quantity',
-                'tier_price',
-                'customer_tier',
-                'start_hour',
-                'end_hour',
-                'free_product_id',
-            ]);
+                    'free_product_id',
+                ])
+            : collect();
 
         $customers = Customer::where('store_id', $storeId)
             ->orderBy('name')
@@ -137,6 +147,8 @@ class KasirController extends Controller
                 'tier',
                 'points',
                 'total_spent',
+                'debt_balance',
+                'credit_limit',
             ]);
 
         $tables = [];
@@ -188,12 +200,31 @@ class KasirController extends Controller
             ->where('status', 'open')
             ->first();
 
-        $orderTypes = StoreType::where(
-            'code',
-            $storeTypeCode,
-        )->value('order_types');
+        // NOTE: order type per store type SEKARANG hanya bersumber dari
+        // resources/js/Pages/Admin/Kasir/config/posModes.js (frontend).
+        // StoreType::order_types di database tidak dipakai untuk render POS —
+        // dulu dikirim sebagai prop 'orderTypes' tapi tidak pernah dikonsumsi
+        // oleh useKasir.js, jadi dihapus supaya tidak jadi dead output yang
+        // menyesatkan. Kalau nanti ada kebutuhan admin bisa kustomisasi order
+        // type per toko dari database, sinkronkan dulu dengan posModes.js.
 
-        return Inertia::render('Admin/Kasir/Kasir', [
+        // Map store type to the correct Inertia page component.
+        // Retail uses the new dedicated mode page; others fall back to the
+        // generic Kasir page for now (will be migrated one by one).
+        $modePages = [
+            'retail' => 'Admin/Kasir/modes/RetailKasir',
+            'fnb' => 'Admin/Kasir/modes/FnBKasir',
+            'service' => 'Admin/Kasir/modes/ServiceKasir',
+            'rental' => 'Admin/Kasir/modes/RentalKasir',
+            'ticket' => 'Admin/Kasir/modes/TicketKasir',
+            'hospitality' => 'Admin/Kasir/modes/HospitalityKasir',
+            'parking' => 'Admin/Kasir/modes/ParkingKasir',
+            'session' => 'Admin/Kasir/modes/SessionKasir',
+        ];
+
+        $page = $modePages[$storeTypeCode] ?? 'Admin/Kasir/Kasir';
+
+        return Inertia::render($page, [
             'products' => $products,
             'categories' => $categories,
             'paymentMethods' => $paymentMethods,
@@ -201,7 +232,6 @@ class KasirController extends Controller
             'initialCustomers' => $customers,
             'tables' => $tables,
             'todaySales' => $todaySales,
-            'orderTypes' => $orderTypes,
             'storeType' => $storeTypeCode,
             'posMode' => $storeTypeCode,
             'storeName' => $store?->name ?? '',
@@ -329,10 +359,9 @@ class KasirController extends Controller
             'items.*.unit_conversion_qty' => 'nullable|integer|min:1',
             'delivery_address' => 'required_if:order_type,delivery|nullable|string|max:500',
             'shipping_amount' => 'nullable|numeric|min:0',
+            'rounding_adjustment' => 'nullable|numeric',
             'customer_name' => 'nullable|string|max:200',
             // ── Mode-specific fields ──────────────────────────────────────
-            // Service / Ticket
-            'service_weight' => 'nullable|numeric|min:0',
             // Rental
             'rental_duration' => 'nullable|integer|min:1',
             'rental_unit' => 'nullable|in:per_hour,per_day,per_week',
@@ -378,6 +407,9 @@ class KasirController extends Controller
             $store = Store::with('storeType')->find($storeId);
             $storeTypeCode =
                 $store?->getRelation('storeType')?->code ?? 'retail';
+
+            // Load relations needed for hasFeature() gate check
+            $store?->load(['planModel.features', 'storeFeatures.feature']);
             $now = now();
 
             $prefix = 'SL-'.$now->format('Ymd').'-';
@@ -397,8 +429,11 @@ class KasirController extends Controller
             }
 
             // ── Auto-apply promosi per item ──
+            $promoEnabled = $store->hasFeature('promo');
             $promoService = new PromotionService;
-            $items = $promoService->applyPromosToCart($items, $customerTier);
+            if ($promoEnabled) {
+                $items = $promoService->applyPromosToCart($items, $customerTier);
+            }
 
             // ── Hitung subtotal (termasuk promo discount) ──
             $subtotal = 0;
@@ -417,10 +452,12 @@ class KasirController extends Controller
             $tax = $validated['tax_amount'] ?? 0;
 
             // ── Auto-apply cart-level promo ──
-            $cartPromoResult = $promoService->findBestCartPromo(
-                $subtotal,
-                $customerTier,
-            );
+            $cartPromoResult = $promoEnabled
+                ? $promoService->findBestCartPromo(
+                    $subtotal,
+                    $customerTier,
+                )
+                : null;
             $cartPromoDiscount = 0;
             $cartPromoId = null;
             if ($cartPromoResult) {
@@ -428,12 +465,14 @@ class KasirController extends Controller
                 $cartPromoId = $cartPromoResult['promotion']->id;
             }
 
+            $roundingAdjustment = (float) ($validated['rounding_adjustment'] ?? 0);
             $grandTotal =
                 $subtotal -
                 $discount -
                 $cartPromoDiscount +
                 $tax +
-                ($validated['shipping_amount'] ?? 0);
+                ($validated['shipping_amount'] ?? 0) +
+                $roundingAdjustment;
             $paidTotal = collect($validated['payments'])->sum('amount');
             $change = max(0, $paidTotal - $grandTotal);
 
@@ -469,6 +508,7 @@ class KasirController extends Controller
                 'discount_amount' => $discount + $cartPromoDiscount,
                 'tax_amount' => $tax,
                 'shipping_amount' => $validated['shipping_amount'] ?? 0,
+                'rounding_adjustment' => $roundingAdjustment,
                 'delivery_address' => $validated['delivery_address'] ?? null,
                 'customer_name' => $validated['customer_name'] ?? null,
                 'grand_total' => $grandTotal,
@@ -586,6 +626,34 @@ class KasirController extends Controller
                 CafeTable::where('id', $validated['table_id'])
                     ->where('store_id', $storeId)
                     ->update(['status' => 'occupied']);
+            }
+
+            // ── Pre-validate stock for all items (before any deduction) ──
+            if (! $hasPgPayment) {
+                foreach ($items as $item) {
+                    $product = Product::find($item['product_id']);
+                    if (! $product || ! $product->track_stock) {
+                        continue;
+                    }
+                    $hasRecipe = $product->recipes()->exists();
+                    if ($hasRecipe) {
+                        continue;
+                    }
+
+                    $conversionQty = $item['unit_conversion_qty'] ?? 1;
+                    $actualQty = $item['quantity'] * $conversionQty;
+
+                    $currentStock = ProductStock::where('product_id', $item['product_id'])
+                        ->where('store_id', $storeId)
+                        ->sum('quantity');
+
+                    if ($currentStock < $actualQty) {
+                        throw new \Exception(
+                            "Stok \"{$product->name}\" tidak cukup. ".
+                            "Dibutuhkan {$actualQty}, tersedia {$currentStock}.",
+                        );
+                    }
+                }
             }
 
             foreach ($items as $item) {
@@ -737,6 +805,7 @@ class KasirController extends Controller
             }
 
             // Only create SalePayment for non-PG payments (PG creates it on callback)
+            $debtTotal = 0;
             foreach ($validated['payments'] as $pay) {
                 if (empty($pay['is_pg'])) {
                     SalePayment::create([
@@ -746,10 +815,58 @@ class KasirController extends Controller
                         'amount' => $pay['amount'],
                         'reference_no' => $pay['reference_no'] ?? null,
                     ]);
+
+                    // Track debt payments
+                    $method = PaymentMethod::find($pay['method_id']);
+                    if ($method && $method->type === 'debt') {
+                        $debtTotal += $pay['amount'];
+                    }
                 }
             }
 
+            // Process debt payments
+            if ($debtTotal > 0) {
+                if (! auth()->user()->can('debt.create')) {
+                    throw new \Exception('Anda tidak memiliki izin untuk menerima pembayaran hutang.');
+                }
+
+                $customer = Customer::find($validated['customer_id'] ?? null);
+                if (! $customer) {
+                    throw new \Exception('Pilih pelanggan terlebih dahulu untuk pembayaran hutang.');
+                }
+
+                $newDebt = (float) $customer->debt_balance + $debtTotal;
+                if ($customer->credit_limit > 0 && $newDebt > $customer->credit_limit) {
+                    throw new \Exception(
+                        'Hutang melebihi limit. Limit: Rp'.number_format($customer->credit_limit).
+                        ', Hutang saat ini: Rp'.number_format($customer->debt_balance).
+                        ', Ditambah: Rp'.number_format($debtTotal),
+                    );
+                }
+
+                CustomerDebtLog::create([
+                    'customer_id' => $customer->id,
+                    'store_id' => $storeId,
+                    'sale_id' => $sale->id,
+                    'type' => 'add',
+                    'amount' => $debtTotal,
+                    'balance_after' => $newDebt,
+                    'notes' => "Hutang dari penjualan #{$saleNo}",
+                    'created_by' => $user->id,
+                ]);
+                $customer->update(['debt_balance' => $newDebt]);
+            }
+
             DB::commit();
+
+            // Increment used_count for applied promotions
+            $promoIds = collect($items)->pluck('promotion_id')->filter()->unique();
+            if ($cartPromoId) {
+                $promoIds->push($cartPromoId);
+            }
+            if ($promoIds->isNotEmpty()) {
+                Promotion::whereIn('id', $promoIds)->increment('used_count');
+            }
 
             // Hitung komisi untuk mode service/ticket (setelah commit berhasil)
             if (

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -16,6 +16,7 @@ class Sale extends Model
         'sale_no', 'sale_date',
         'pos_mode', 'order_type',
         'subtotal', 'discount_amount', 'tax_amount', 'shipping_amount',
+        'rounding_adjustment',
         'grand_total', 'paid_amount', 'change_amount',
         'status', 'payment_status',
         'customer_name', 'customer_phone',
@@ -40,34 +41,35 @@ class Sale extends Model
     protected function casts(): array
     {
         return [
-            'sale_date'           => 'datetime',
-            'kitchen_printed_at'  => 'datetime',
-            'served_at'           => 'datetime',
-            'service_started_at'  => 'datetime',
+            'sale_date' => 'datetime',
+            'kitchen_printed_at' => 'datetime',
+            'served_at' => 'datetime',
+            'service_started_at' => 'datetime',
             'service_finished_at' => 'datetime',
-            'estimated_done_at'   => 'datetime',
-            'picked_up_at'        => 'datetime',
-            'rent_start_at'       => 'datetime',
-            'rent_end_at'         => 'datetime',
-            'actual_return_at'    => 'datetime',
-            'entry_at'            => 'datetime',
-            'exit_at'             => 'datetime',
-            'session_started_at'  => 'datetime',
-            'session_ended_at'    => 'datetime',
-            'subtotal'            => 'decimal:2',
-            'discount_amount'     => 'decimal:2',
-            'tax_amount'          => 'decimal:2',
-            'shipping_amount'     => 'decimal:2',
-            'grand_total'         => 'decimal:2',
-            'paid_amount'         => 'decimal:2',
-            'change_amount'       => 'decimal:2',
-            'deposit_amount'      => 'decimal:2',
-            'deposit_paid'        => 'decimal:2',
-            'deposit_refunded'    => 'decimal:2',
-            'overdue_charge'      => 'decimal:2',
-            'weight_kg'           => 'decimal:3',
-            'rate_per_hour'       => 'decimal:2',
-            'extra_data'          => 'array',
+            'estimated_done_at' => 'datetime',
+            'picked_up_at' => 'datetime',
+            'rent_start_at' => 'datetime',
+            'rent_end_at' => 'datetime',
+            'actual_return_at' => 'datetime',
+            'entry_at' => 'datetime',
+            'exit_at' => 'datetime',
+            'session_started_at' => 'datetime',
+            'session_ended_at' => 'datetime',
+            'subtotal' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'tax_amount' => 'decimal:2',
+            'shipping_amount' => 'decimal:2',
+            'rounding_adjustment' => 'decimal:2',
+            'grand_total' => 'decimal:2',
+            'paid_amount' => 'decimal:2',
+            'change_amount' => 'decimal:2',
+            'deposit_amount' => 'decimal:2',
+            'deposit_paid' => 'decimal:2',
+            'deposit_refunded' => 'decimal:2',
+            'overdue_charge' => 'decimal:2',
+            'weight_kg' => 'decimal:3',
+            'rate_per_hour' => 'decimal:2',
+            'extra_data' => 'array',
         ];
     }
 
@@ -135,13 +137,44 @@ class Sale extends Model
 
     // --- Helpers ---
 
-    public function isFnb(): bool          { return $this->pos_mode === 'fnb'; }
-    public function isService(): bool      { return $this->pos_mode === 'service'; }
-    public function isRental(): bool       { return $this->pos_mode === 'rental'; }
-    public function isTicket(): bool       { return $this->pos_mode === 'ticket'; }
-    public function isHospitality(): bool  { return $this->pos_mode === 'hospitality'; }
+    public function isFnb(): bool
+    {
+        return $this->pos_mode === 'fnb';
+    }
+
+    public function isService(): bool
+    {
+        return $this->pos_mode === 'service';
+    }
+
+    public function isRental(): bool
+    {
+        return $this->pos_mode === 'rental';
+    }
+
+    public function isTicket(): bool
+    {
+        return $this->pos_mode === 'ticket';
+    }
+
+    public function isHospitality(): bool
+    {
+        return $this->pos_mode === 'hospitality';
+    }
+
     // Backward-compat aliases
-    public function isLaundry(): bool { return $this->isService(); }
-    public function isSession(): bool { return $this->isRental(); }
-    public function isParking(): bool { return false; } // belum diimplementasi
+    public function isLaundry(): bool
+    {
+        return $this->isService();
+    }
+
+    public function isSession(): bool
+    {
+        return $this->isRental();
+    }
+
+    public function isParking(): bool
+    {
+        return false;
+    } // belum diimplementasi
 }

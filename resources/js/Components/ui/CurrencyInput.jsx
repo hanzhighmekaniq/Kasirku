@@ -39,7 +39,7 @@ export default function CurrencyInput({
         const raw = e.target.value.replace(/[^0-9]/g, "");
         if (raw === "") {
             setDisplay("");
-            onChange?.("");
+            onChange?.("0");
             return;
         }
         const num = parseInt(raw, 10);
