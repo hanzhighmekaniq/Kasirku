@@ -8,6 +8,7 @@ import {
     normalizePosMode,
     POS_MODES,
 } from "./config/posModes";
+import { getTierPrice as sharedGetTierPrice } from "./components/helpers";
 
 /* ── formatters ──────────────────────────────────────── */
 const fmt = (n) =>
@@ -64,32 +65,7 @@ function findPgPaymentMethod(pgMethod, paymentMethods) {
 }
 
 /** Ambil harga tier yang berlaku untuk qty tertentu — variant-aware dengan fallback ke product level */
-function getTierPrice(product, qty, variantId = null) {
-    if (variantId !== null) {
-        // Cek tier khusus variant dulu
-        const variant = (product.variants ?? []).find((v) => v.id === variantId);
-        if (variant?.price_tiers?.length) {
-            const tiers = [...variant.price_tiers].sort((a, b) => a.min_qty - b.min_qty);
-            let matched = null;
-            for (const tier of tiers) {
-                if (qty >= tier.min_qty) matched = tier;
-                else break;
-            }
-            if (matched) return Number(matched.price);
-        }
-    }
-
-    // Fallback ke tier product-level (variant_id = NULL)
-    const productTiers = (product.price_tiers ?? []).filter((t) => !t.variant_id);
-    if (!productTiers.length) return null;
-    const tiers = [...productTiers].sort((a, b) => a.min_qty - b.min_qty);
-    let matched = null;
-    for (const tier of tiers) {
-        if (qty >= tier.min_qty) matched = tier;
-        else break;
-    }
-    return matched ? Number(matched.price) : null;
-}
+const getTierPrice = sharedGetTierPrice;
 
 export default function useKasir({
     products,
@@ -198,6 +174,12 @@ export default function useKasir({
     /* ── modal / UI state ── */
     const [modifierTarget, setModifierTarget] = useState(null);
     const [variantTarget, setVariantTarget] = useState(null);
+    // Non-retail multi-satuan (legacy UnitModal) — dipakai mode selain retail
+    // yang produknya punya packaging_units tapi tanpa variant/modifier.
+    const [unitTarget, setUnitTarget] = useState(null);
+    // Retail-only: modal adaptif tunggal (variant → unit → qty → notes)
+    // menggantikan VariantModal + UnitModal untuk mode retail.
+    const [retailProductTarget, setRetailProductTarget] = useState(null);
     const [showPayment, setShowPayment] = useState(false);
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState(null);
@@ -614,6 +596,15 @@ export default function useKasir({
         const hasModifiers = (product.modifier_groups ?? []).length > 0;
         const hasVariants =
             (product.variants ?? []).filter((v) => v.is_active).length > 0;
+        const hasUnits = (product.packaging_units ?? []).length > 0;
+
+        // Retail: selalu pakai RetailProductModal — bahkan untuk produk
+        // simple yang punya tier/unit sekalipun — supaya alur variant →
+        // unit → qty → notes → subtotal konsisten dalam satu modal.
+        if (isRetail && !hasModifiers) {
+            setRetailProductTarget(product);
+            return;
+        }
 
         if (hasModifiers) {
             // Produk dengan modifier — buka ModifierModal (behaviour lama)
@@ -621,6 +612,9 @@ export default function useKasir({
         } else if (hasVariants) {
             // Produk dengan variant tapi tanpa modifier — buka VariantModal
             setVariantTarget(product);
+        } else if (hasUnits) {
+            // Produk non-retail dengan multi-satuan — buka UnitModal (legacy)
+            setUnitTarget(product);
         } else {
             // Produk biasa — langsung masuk cart
             addToCart(product);
@@ -1741,6 +1735,10 @@ export default function useKasir({
         setModifierTarget,
         variantTarget,
         setVariantTarget,
+        unitTarget,
+        setUnitTarget,
+        retailProductTarget,
+        setRetailProductTarget,
         showPayment,
         setShowPayment,
         showReceipt,

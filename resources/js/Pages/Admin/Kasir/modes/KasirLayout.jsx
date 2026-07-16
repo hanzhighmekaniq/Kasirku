@@ -7,7 +7,8 @@ import PGPaymentModal from "@/Pages/Admin/PGPaymentModal";
 import BarcodeScanner from "@/Components/BarcodeScanner";
 
 import ModifierModal from "../components/ModifierModal";
-import VariantModal from "../components/VariantModal";
+import VariantModal from "../components/legacy/VariantModal";
+import UnitModal from "../components/legacy/UnitModal";
 import PaymentModal from "../components/PaymentModal";
 import ReceiptModal from "../components/ReceiptModal";
 import HistoryPanel from "../components/HistoryPanel";
@@ -489,6 +490,9 @@ export default function KasirLayout({ k, props, mainContent, searchBar, category
             )}
             {k.variantTarget && (
                 <VariantModal product={k.variantTarget} onConfirm={(variant, qty, note) => { k.addToCart(k.variantTarget, variant, [], note, null, qty); k.setVariantTarget(null); }} onClose={() => k.setVariantTarget(null)} />
+            )}
+            {k.unitTarget && (
+                <UnitModal product={k.unitTarget} onConfirm={(unit, qty) => { k.addToCart(k.unitTarget, null, [], "", unit, qty); k.setUnitTarget(null); }} onClose={() => k.setUnitTarget(null)} />
             )}
             {k.showPayment && (
                 <PaymentModal grandTotal={k.grandTotal} roundedGrandTotal={k.roundedGrandTotal} roundingAdjustment={k.roundingAdjustment} paymentMethods={paymentMethods} pgMethods={pgMethods} onConfirm={k.handleConfirmPayment} onClose={() => k.setShowPayment(false)} submitting={k.submitting} selectedCustomer={k.selectedCustomer} customers={k.customers} onSelectCustomer={k.setSelectedCustomer} />

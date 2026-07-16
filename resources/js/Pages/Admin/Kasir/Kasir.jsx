@@ -9,7 +9,8 @@ import BarcodeScanner from "@/Components/BarcodeScanner";
 import useKasir from "./useKasir";
 import IconBtn from "./components/IconBtn";
 import ModifierModal from "./components/ModifierModal";
-import VariantModal from "./components/VariantModal";
+import VariantModal from "./components/legacy/VariantModal";
+import UnitModal from "./components/legacy/UnitModal";
 import PaymentModal from "./components/PaymentModal";
 import ReceiptModal from "./components/ReceiptModal";
 import HistoryPanel from "./components/HistoryPanel";
@@ -434,9 +435,6 @@ export default function Kasir(props) {
                                         key={p.id}
                                         product={p}
                                         onClick={() => k.handleProductClick(p)}
-                                        onUnitClick={(unit, qty) =>
-                                            k.addToCart(p, null, [], "", unit, qty)
-                                        }
                                     />
                                 ))}
                             </div>
@@ -1668,6 +1666,16 @@ export default function Kasir(props) {
                         k.setVariantTarget(null);
                     }}
                     onClose={() => k.setVariantTarget(null)}
+                />
+            )}
+            {k.unitTarget && (
+                <UnitModal
+                    product={k.unitTarget}
+                    onConfirm={(unit, qty) => {
+                        k.addToCart(k.unitTarget, null, [], "", unit, qty);
+                        k.setUnitTarget(null);
+                    }}
+                    onClose={() => k.setUnitTarget(null)}
                 />
             )}
             {k.showPayment && (

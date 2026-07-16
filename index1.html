@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>POS · Product Showcase</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'] },
+        colors: {
+          ink: { 950:'#0a0a0b', 900:'#111114', 700:'#3f3f46', 500:'#71717a', 300:'#d4d4d8', 100:'#f4f4f5' },
+          brand: { 50:'#eef4ff', 100:'#dbe6ff', 500:'#4f6bff', 600:'#3b57f0', 700:'#2f47c9' }
+        },
+        boxShadow: {
+          card: '0 1px 2px rgba(16,24,40,.04), 0 8px 24px -12px rgba(16,24,40,.10)',
+          cardHover: '0 10px 30px -12px rgba(16,24,40,.18), 0 2px 6px rgba(16,24,40,.06)',
+          modal: '0 30px 80px -20px rgba(16,24,40,.35)'
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html,body{background:#fafaf9;}
+  body{font-family:'Inter',system-ui,sans-serif;color:#0a0a0b;-webkit-font-smoothing:antialiased;}
+  .grain::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(79,107,255,.08), transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, rgba(255,180,120,.08), transparent 60%);
+  }
+  .card{transition:transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s;}
+  .card:hover{transform:translateY(-4px);}
+  .add-btn{transition:transform .25s cubic-bezier(.2,.7,.2,1), box-shadow .25s, background-color .2s;}
+  .card:hover .add-btn{transform:scale(1.06);}
+  .add-btn:active{transform:scale(.94);}
+  .modal-backdrop{background:rgba(10,10,11,.45);backdrop-filter:blur(8px);}
+  .modal-panel{transition:opacity .25s ease, transform .25s cubic-bezier(.2,.7,.2,1);}
+  .hidden-modal{opacity:0;pointer-events:none;}
+  .hidden-modal .modal-panel{opacity:0;transform:translateY(20px) scale(.98);}
+  .option{transition:all .2s cubic-bezier(.2,.7,.2,1);}
+  .option.selected{border-color:#4f6bff;background:linear-gradient(180deg,#f4f7ff, #ffffff);box-shadow:0 0 0 4px rgba(79,107,255,.08);}
+  .wholesale{max-height:0;overflow:hidden;transition:max-height .35s ease;}
+  .wholesale.open{max-height:240px;}
+  .chev{transition:transform .3s;}
+  .chev.open{transform:rotate(180deg);}
+  .no-scrollbar::-webkit-scrollbar{display:none;}
+  .pill{background:linear-gradient(180deg,#111114,#26262b);}
+  input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+  input[type=number]{-moz-appearance:textfield;}
+</style>
+</head>
+<body class="grain">
+<main class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 py-10 sm:py-16">
+
+  <div class="mb-10 sm:mb-14">
+    <div class="inline-flex items-center gap-2 rounded-full border border-ink-100 bg-white/70 backdrop-blur px-3 py-1 text-xs text-ink-500 shadow-sm">
+      <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span> Retail POS · Product Catalog
+    </div>
+    <h1 class="mt-4 text-3xl sm:text-5xl font-semibold tracking-tight text-ink-950">Today's Products</h1>
+    <p class="mt-2 text-ink-500 max-w-xl">A curated selection ready to ring up. Tap a card to configure variants, units and quantity.</p>
+  </div>
+
+  <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+</main>
+
+<!-- Modal -->
+<div id="modal" class="fixed inset-0 z-50 hidden-modal flex items-end sm:items-center justify-center p-0 sm:p-6">
+  <div class="modal-backdrop absolute inset-0" data-close></div>
+  <div class="modal-panel relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-modal overflow-hidden flex flex-col max-h-[92vh]">
+    <!-- Header -->
+    <div class="flex items-start gap-4 p-5 sm:p-6 border-b border-ink-100">
+      <div id="m-img" class="h-16 w-16 rounded-2xl bg-ink-100 bg-cover bg-center shrink-0"></div>
+      <div class="min-w-0 flex-1">
+        <div id="m-name" class="text-base font-semibold text-ink-950 truncate"></div>
+        <div id="m-sku" class="text-xs text-ink-500 mt-0.5"></div>
+      </div>
+      <button data-close class="h-9 w-9 grid place-items-center rounded-full hover:bg-ink-100 text-ink-500">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="flex-1 overflow-y-auto no-scrollbar px-5 sm:px-6 py-5 space-y-7">
+      <!-- Variants -->
+      <section id="sec-variants">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-ink-950">Choose Variant</h3>
+          <span class="text-[11px] text-ink-500">Required</span>
+        </div>
+        <div id="variant-list" class="space-y-2.5"></div>
+      </section>
+
+      <!-- Units -->
+      <section>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-ink-950">Choose Unit</h3>
+          <span class="text-[11px] text-ink-500">Multi-unit</span>
+        </div>
+        <div id="unit-list" class="grid grid-cols-1 gap-2.5"></div>
+      </section>
+
+      <!-- Qty -->
+      <section>
+        <h3 class="text-sm font-semibold text-ink-950 mb-3">Quantity</h3>
+        <div class="inline-flex items-center gap-2 rounded-2xl border border-ink-100 bg-white p-1.5 shadow-sm">
+          <button id="qty-dec" class="h-10 w-10 rounded-xl bg-ink-100 hover:bg-ink-300/60 grid place-items-center text-ink-900">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14"/></svg>
+          </button>
+          <input id="qty" type="number" min="1" value="1" class="w-16 text-center text-base font-semibold outline-none bg-transparent" />
+          <button id="qty-inc" class="h-10 w-10 rounded-xl bg-ink-950 hover:bg-black text-white grid place-items-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Notes -->
+      <section>
+        <h3 class="text-sm font-semibold text-ink-950 mb-3">Item Notes</h3>
+        <textarea id="notes" rows="3" placeholder="Special request..." class="w-full resize-none rounded-2xl border border-ink-100 bg-white p-4 text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition"></textarea>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t border-ink-100 bg-white/80 backdrop-blur px-5 sm:px-6 py-4 flex items-center gap-3">
+      <div class="flex-1">
+        <div class="text-[11px] uppercase tracking-wide text-ink-500">Subtotal</div>
+        <div id="subtotal" class="text-lg font-semibold text-ink-950">Rp0</div>
+      </div>
+      <button data-close class="h-11 px-4 rounded-2xl bg-ink-100 hover:bg-ink-300/60 text-ink-900 text-sm font-medium">Cancel</button>
+      <button id="add-cart" class="h-11 px-5 rounded-2xl pill text-white text-sm font-semibold shadow-lg shadow-black/10 hover:opacity-95">Add to Cart</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] opacity-0 translate-y-3 transition-all duration-300 pointer-events-none">
+  <div class="rounded-full pill text-white text-sm px-5 py-3 shadow-2xl flex items-center gap-2">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+    <span id="toast-msg">Added to cart</span>
+  </div>
+</div>
+
+<script>
+const fmt = n => 'Rp' + n.toLocaleString('id-ID');
+
+const products = [
+  {
+    id:'p1', type:1, name:'Arabica Cold Brew Concentrate', sku:'BEV-ACB-001', unit:'BTL',
+    img:'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?q=80&w=800&auto=format&fit=crop',
+    tint:'from-amber-50 to-orange-100',
+    variants:[
+      {name:'250 ml · Original', sku:'ACB-250-OR', price:38000, tiers:[{q:10,p:35000},{q:24,p:33000},{q:50,p:31000}]},
+      {name:'500 ml · Original', sku:'ACB-500-OR', price:68000, tiers:[{q:6,p:64000},{q:12,p:60000},{q:24,p:56000}]},
+      {name:'500 ml · Vanilla',  sku:'ACB-500-VA', price:72000, tiers:[{q:6,p:68000},{q:12,p:64000},{q:24,p:60000}]}
+    ],
+    units:[{u:'BTL',eq:'',price:38000},{u:'PACK',eq:'1 PACK = 6 BTL',price:216000},{u:'BOX',eq:'1 BOX = 24 BTL',price:820000}]
+  },
+  {
+    id:'p2', type:2, name:'Artisan Sourdough Loaf', sku:'BKY-SDL-014', unit:'PCS',
+    img:'https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=800&auto=format&fit=crop',
+    tint:'from-stone-50 to-amber-100',
+    price:45000,
+    units:[{u:'PCS',eq:'',price:45000},{u:'PACK',eq:'1 PACK = 4 PCS',price:170000}]
+  },
+  {
+    id:'p3', type:1, name:'Organic Matcha Powder', sku:'TEA-MCH-002', unit:'GRAM',
+    img:'https://images.unsplash.com/photo-1536520002442-39764a41e987?q=80&w=800&auto=format&fit=crop',
+    tint:'from-emerald-50 to-lime-100',
+    variants:[
+      {name:'Ceremonial · 30g', sku:'MCH-CER-30', price:145000, tiers:[{q:5,p:138000},{q:10,p:130000},{q:20,p:122000}]},
+      {name:'Culinary · 100g',  sku:'MCH-CUL-100', price:210000, tiers:[{q:5,p:198000},{q:10,p:186000},{q:20,p:174000}]}
+    ],
+    units:[{u:'PACK',eq:'',price:145000},{u:'BOX',eq:'1 BOX = 12 PACK',price:1650000}]
+  },
+  {
+    id:'p4', type:2, name:'Himalayan Pink Salt', sku:'GRC-HPS-088', unit:'KG',
+    img:'https://images.unsplash.com/photo-1600334129128-685c5582fd35?q=80&w=800&auto=format&fit=crop',
+    tint:'from-rose-50 to-pink-100',
+    price:32000,
+    units:[{u:'KG',eq:'',price:32000},{u:'SACK',eq:'1 SACK = 10 KG',price:295000}]
+  },
+  {
+    id:'p5', type:1, name:'Single-Origin Espresso Beans', sku:'COF-SOE-021', unit:'GRAM',
+    img:'https://images.unsplash.com/photo-1559525839-d9acfd0b7ac2?q=80&w=800&auto=format&fit=crop',
+    tint:'from-neutral-100 to-stone-200',
+    variants:[
+      {name:'Ethiopia Yirgacheffe · 250g', sku:'SOE-ETH-250', price:135000, tiers:[{q:5,p:128000},{q:10,p:120000},{q:20,p:112000}]},
+      {name:'Colombia Huila · 250g',       sku:'SOE-COL-250', price:118000, tiers:[{q:5,p:112000},{q:10,p:106000},{q:20,p:99000}]},
+      {name:'Brazil Cerrado · 1kg',        sku:'SOE-BRZ-1K',  price:395000, tiers:[{q:3,p:380000},{q:6,p:365000},{q:12,p:350000}]}
+    ],
+    units:[{u:'PACK',eq:'',price:135000},{u:'BOX',eq:'1 BOX = 8 PACK',price:1050000}]
+  },
+  {
+    id:'p6', type:2, name:'Extra Virgin Olive Oil', sku:'OIL-EVO-045', unit:'BTL',
+    img:'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?q=80&w=800&auto=format&fit=crop',
+    tint:'from-yellow-50 to-lime-100',
+    price:98000,
+    units:[{u:'BTL',eq:'',price:98000},{u:'PACK',eq:'1 PACK = 6 BTL',price:560000},{u:'BOX',eq:'1 BOX = 12 BTL',price:1090000}]
+  },
+  {
+    id:'p7', type:1, name:'Craft Chocolate Bar', sku:'CNF-CCB-033', unit:'PCS',
+    img:'https://images.unsplash.com/photo-1548907040-4baa42d10919?q=80&w=800&auto=format&fit=crop',
+    tint:'from-amber-50 to-orange-100',
+    variants:[
+      {name:'70% Dark · 80g',      sku:'CCB-70-80', price:45000, tiers:[{q:10,p:42000},{q:20,p:39000},{q:50,p:36000}]},
+      {name:'Milk Hazelnut · 80g', sku:'CCB-MH-80', price:48000, tiers:[{q:10,p:45000},{q:20,p:42000},{q:50,p:39000}]}
+    ],
+    units:[{u:'PCS',eq:'',price:45000},{u:'PACK',eq:'1 PACK = 6 PCS',price:255000},{u:'BOX',eq:'1 BOX = 24 PCS',price:980000}]
+  },
+  {
+    id:'p8', type:2, name:'Fresh Cold-Pressed Juice', sku:'BEV-CPJ-101', unit:'BTL',
+    img:'https://images.unsplash.com/photo-1622597467836-f3e6707e1191?q=80&w=800&auto=format&fit=crop',
+    tint:'from-orange-50 to-rose-100',
+    price:35000,
+    units:[{u:'BTL',eq:'',price:35000},{u:'PACK',eq:'1 PACK = 4 BTL',price:132000}]
+  }
+];
+
+// ---------- Card rendering ----------
+const grid = document.getElementById('grid');
+grid.innerHTML = products.map(p => cardHTML(p)).join('');
+
+function cardHTML(p){
+  const badge = p.type === 1
+    ? `<span class="inline-flex items-center gap-1.5 rounded-full bg-brand-50 text-brand-700 text-[11px] font-semibold px-2.5 py-1">
+         <span class="h-1.5 w-1.5 rounded-full bg-brand-500"></span>Has Variants
+       </span>`
+    : `<span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold px-2.5 py-1">
+         <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>In Stock
+       </span>`;
+
+  const priceBlock = p.type === 1
+    ? `<div class="text-[13px] text-ink-500">Starting from <span class="font-semibold text-ink-950">${fmt(Math.min(...p.variants.map(v=>v.price)))}</span></div>`
+    : `<div class="text-lg font-semibold text-ink-950 tracking-tight">${fmt(p.price)}</div>`;
+
+  const multiUnit = p.type === 2 && p.units.length > 1
+    ? `<div class="mt-1 text-[11px] text-ink-500">${p.units.filter(u=>u.eq).map(u=>u.eq).join(' · ')}</div>` : '';
+
+  return `
+  <article class="card group relative rounded-3xl bg-white shadow-card hover:shadow-cardHover border border-ink-100 overflow-hidden">
+    <div class="relative aspect-[4/3] overflow-hidden bg-gradient-to-br ${p.tint}">
+      <img src="${p.img}" alt="${p.name}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]" loading="lazy" />
+      <div class="absolute top-3 left-3">${badge}</div>
+      <button data-open="${p.id}" class="add-btn absolute bottom-3 right-3 h-12 w-12 rounded-2xl bg-ink-950 text-white grid place-items-center shadow-lg shadow-black/20 hover:bg-black">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+    <div class="p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h3 class="text-[15px] font-semibold text-ink-950 truncate">${p.name}</h3>
+          <div class="mt-0.5 text-xs text-ink-500">SKU · ${p.sku}</div>
+        </div>
+        <span class="shrink-0 inline-flex items-center rounded-lg bg-ink-100 text-ink-700 text-[11px] font-medium px-2 py-1">${p.unit}</span>
+      </div>
+      <div class="mt-4 flex items-end justify-between gap-3">
+        <div>
+          ${priceBlock}
+          ${multiUnit}
+        </div>
+      </div>
+    </div>
+  </article>`;
+}
+
+// ---------- Modal ----------
+const modal = document.getElementById('modal');
+const mImg = document.getElementById('m-img');
+const mName = document.getElementById('m-name');
+const mSku = document.getElementById('m-sku');
+const secVariants = document.getElementById('sec-variants');
+const variantList = document.getElementById('variant-list');
+const unitList = document.getElementById('unit-list');
+const qtyInput = document.getElementById('qty');
+const subtotalEl = document.getElementById('subtotal');
+const notesEl = document.getElementById('notes');
+
+let current = null;
+let selVariant = null;
+let selUnit = null;
+
+document.addEventListener('click', e => {
+  const openBtn = e.target.closest('[data-open]');
+  if (openBtn) openModal(openBtn.dataset.open);
+  if (e.target.closest('[data-close]')) closeModal();
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function openModal(id){
+  const p = products.find(x=>x.id===id);
+  current = p;
+  mName.textContent = p.name;
+  mSku.textContent = `SKU · ${p.sku} · ${p.unit}`;
+  mImg.style.backgroundImage = `url('${p.img}')`;
+  notesEl.value = '';
+  qtyInput.value = 1;
+
+  if (p.type === 1){
+    secVariants.classList.remove('hidden');
+    selVariant = p.variants[0];
+    variantList.innerHTML = p.variants.map((v,i)=>variantHTML(v,i)).join('');
+    bindVariants();
+  } else {
+    secVariants.classList.add('hidden');
+    selVariant = null;
+  }
+
+  selUnit = p.units[0];
+  unitList.innerHTML = p.units.map((u,i)=>unitHTML(u,i)).join('');
+  bindUnits();
+
+  updateSubtotal();
+  modal.classList.remove('hidden-modal');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  modal.classList.add('hidden-modal');
+  document.body.style.overflow='';
+}
+
+function variantHTML(v,i){
+  const sel = i===0 ? 'selected' : '';
+  return `
+  <div class="option ${sel} rounded-2xl border border-ink-100 bg-white overflow-hidden" data-vi="${i}">
+    <div class="flex items-center gap-3 p-3.5 cursor-pointer" data-pick-variant="${i}">
+      <div class="h-9 w-9 rounded-xl border border-ink-100 grid place-items-center bg-white check">
+        <svg class="opacity-0 transition" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f6bff" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="text-sm font-semibold text-ink-950 truncate">${v.name}</div>
+        <div class="text-[11px] text-ink-500 mt-0.5">SKU · ${v.sku}</div>
+      </div>
+      <div class="text-right">
+        <div class="text-sm font-semibold text-ink-950">${fmt(v.price)}</div>
+        <div class="text-[10px] text-ink-500">Retail</div>
+      </div>
+      <button class="chev h-8 w-8 grid place-items-center rounded-lg hover:bg-ink-100 text-ink-500" data-toggle="${i}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+    </div>
+    <div class="wholesale px-3.5">
+      <div class="border-t border-ink-100 pt-3 pb-4 space-y-1.5">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-ink-500">Retail</span>
+          <span class="font-medium text-ink-900">${fmt(v.price)}</span>
+        </div>
+        ${v.tiers.map(t=>`
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-ink-500">${t.q}+ pcs</span>
+            <span class="font-medium text-emerald-600">${fmt(t.p)}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function unitHTML(u,i){
+  const sel = i===0 ? 'selected' : '';
+  return `
+  <div class="option ${sel} rounded-2xl border border-ink-100 bg-white p-3.5 flex items-center gap-3 cursor-pointer" data-pick-unit="${i}">
+    <div class="h-9 w-9 rounded-xl border border-ink-100 grid place-items-center bg-white check">
+      <svg class="opacity-0 transition" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f6bff" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+    </div>
+    <div class="min-w-0 flex-1">
+      <div class="text-sm font-semibold text-ink-950">${u.u}</div>
+      ${u.eq?`<div class="text-[11px] text-ink-500 mt-0.5">${u.eq}</div>`:''}
+    </div>
+    <div class="text-sm font-semibold text-ink-950">${fmt(u.price)}</div>
+  </div>`;
+}
+
+function bindVariants(){
+  variantList.querySelectorAll('[data-pick-variant]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      if(e.target.closest('[data-toggle]')) return;
+      const i = +el.dataset.pickVariant;
+      selVariant = current.variants[i];
+      variantList.querySelectorAll('.option').forEach(o=>{
+        o.classList.remove('selected');
+        o.querySelector('.check svg').style.opacity=0;
+      });
+      const card = variantList.querySelector(`[data-vi="${i}"]`);
+      card.classList.add('selected');
+      card.querySelector('.check svg').style.opacity=1;
+      updateSubtotal();
+    });
+  });
+  variantList.querySelectorAll('[data-toggle]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const i = btn.dataset.toggle;
+      const card = variantList.querySelector(`[data-vi="${i}"]`);
+      card.querySelector('.wholesale').classList.toggle('open');
+      btn.classList.toggle('open');
+    });
+  });
+  // init check icon
+  const first = variantList.querySelector('.option.selected');
+  if(first) first.querySelector('.check svg').style.opacity=1;
+}
+
+function bindUnits(){
+  unitList.querySelectorAll('[data-pick-unit]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const i = +el.dataset.pickUnit;
+      selUnit = current.units[i];
+      unitList.querySelectorAll('.option').forEach(o=>{
+        o.classList.remove('selected');
+        o.querySelector('.check svg').style.opacity=0;
+      });
+      el.classList.add('selected');
+      el.querySelector('.check svg').style.opacity=1;
+      updateSubtotal();
+    });
+  });
+  const first = unitList.querySelector('.option.selected');
+  if(first) first.querySelector('.check svg').style.opacity=1;
+}
+
+document.getElementById('qty-inc').addEventListener('click', ()=>{ qtyInput.value = Math.max(1, (+qtyInput.value||0)+1); updateSubtotal();});
+document.getElementById('qty-dec').addEventListener('click', ()=>{ qtyInput.value = Math.max(1, (+qtyInput.value||1)-1); updateSubtotal();});
+qtyInput.addEventListener('input', ()=>{ if((+qtyInput.value||0)<1) qtyInput.value=1; updateSubtotal();});
+
+function updateSubtotal(){
+  const q = +qtyInput.value || 1;
+  let base = selUnit ? selUnit.price : 0;
+  // For variants with retail unit selected, prefer variant-tier pricing
+  if (current && current.type===1 && selVariant && selUnit && selUnit.u === current.unit){
+    let price = selVariant.price;
+    for (const t of selVariant.tiers) if (q >= t.q) price = t.p;
+    base = price;
+  }
+  subtotalEl.textContent = fmt(base * q);
+}
+
+document.getElementById('add-cart').addEventListener('click', ()=>{
+  showToast(`${current.name} · ×${qtyInput.value} added`);
+  closeModal();
+});
+
+const toast = document.getElementById('toast');
+const toastMsg = document.getElementById('toast-msg');
+let toastT;
+function showToast(msg){
+  toastMsg.textContent = msg;
+  toast.style.opacity=1; toast.style.transform='translate(-50%,0)';
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>{ toast.style.opacity=0; toast.style.transform='translate(-50%,12px)'; }, 2200);
+}
+</script>
+</body>
+</html>

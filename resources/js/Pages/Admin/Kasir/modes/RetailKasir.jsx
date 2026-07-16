@@ -1,5 +1,6 @@
 import useKasir from "../useKasir";
 import ProductCard from "../components/ProductCard";
+import RetailProductModal from "../components/retail/RetailProductModal";
 import KasirLayout from "./KasirLayout";
 
 export default function RetailKasir(props) {
@@ -53,12 +54,26 @@ export default function RetailKasir(props) {
             ) : (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                     {k.filtered.map((p) => (
-                        <ProductCard key={p.id} product={p} onClick={() => k.handleProductClick(p)} onUnitClick={(unit, qty) => k.addToCart(p, null, [], "", unit, qty)} />
+                        <ProductCard key={p.id} product={p} onClick={() => k.handleProductClick(p)} />
                     ))}
                 </div>
             )}
         </div>
     );
 
-    return <KasirLayout k={k} props={props} mainContent={mainContent} categoryChips={categoryChips} />;
+    return (
+        <>
+            <KasirLayout k={k} props={props} mainContent={mainContent} categoryChips={categoryChips} />
+            {k.retailProductTarget && (
+                <RetailProductModal
+                    product={k.retailProductTarget}
+                    onConfirm={(variant, packagingUnit, qty, note) => {
+                        k.addToCart(k.retailProductTarget, variant, [], note, packagingUnit, qty);
+                        k.setRetailProductTarget(null);
+                    }}
+                    onClose={() => k.setRetailProductTarget(null)}
+                />
+            )}
+        </>
+    );
 }

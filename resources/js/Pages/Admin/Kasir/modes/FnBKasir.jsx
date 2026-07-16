@@ -144,7 +144,7 @@ export default function FnBKasir(props) {
             ) : (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                     {k.filtered.map((p) => (
-                        <ProductCard key={p.id} product={p} onClick={() => k.handleProductClick(p)} onUnitClick={(unit, qty) => k.addToCart(p, null, [], "", unit, qty)} />
+                        <ProductCard key={p.id} product={p} onClick={() => k.handleProductClick(p)} />
                     ))}
                 </div>
             )}
