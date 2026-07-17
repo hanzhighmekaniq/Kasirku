@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
 use App\Models\StockMovement;
@@ -126,17 +127,26 @@ class PurchaseReturnController extends Controller
             foreach ($validated['items'] as $item) {
                 $itemSubtotal = $item['quantity'] * $item['cost_price'];
 
+                // Ambil bucket dari PurchaseItem asal
+                $purchaseItem = $item['purchase_item_id']
+                    ? PurchaseItem::find($item['purchase_item_id'])
+                    : null;
+                $variantId = $purchaseItem?->variant_id;
+                $packagingUnitId = $purchaseItem?->packaging_unit_id;
+
                 $return->items()->create([
                     'purchase_item_id' => $item['purchase_item_id'] ?? null,
                     'product_id' => $item['product_id'],
+                    'variant_id' => $variantId,
+                    'packaging_unit_id' => $packagingUnitId,
                     'quantity' => $item['quantity'],
                     'cost_price' => $item['cost_price'],
                     'subtotal' => $itemSubtotal,
                     'reason' => $item['reason'] ?? null,
                 ]);
 
-                // Reduce stock
-                $this->adjustStock($item['product_id'], $item['quantity'], $purchase);
+                // Reduce stock — bucket-aware
+                $this->adjustStock($item['product_id'], $variantId, $packagingUnitId, $item['quantity'], $purchase);
 
                 // Record stock movement for return
                 $product = Product::find($item['product_id']);
@@ -144,6 +154,8 @@ class PurchaseReturnController extends Controller
                     $supplierName = $purchase->supplier->name ?? 'supplier';
                     StockMovement::create([
                         'product_id' => $item['product_id'],
+                        'variant_id' => $variantId,
+                        'packaging_unit_id' => $packagingUnitId,
                         'store_id' => $purchase->store_id,
                         'branch_id' => $purchase->branch_id,
                         'reference_type' => PurchaseReturn::class,
@@ -184,6 +196,8 @@ class PurchaseReturnController extends Controller
             'supplier',
             'user',
             'items.product',
+            'items.variant',
+            'items.packagingUnit',
             'items.purchaseItem',
         ]);
 
@@ -220,15 +234,17 @@ class PurchaseReturnController extends Controller
         return DB::transaction(function () use ($purchaseReturn) {
             $purchase = $purchaseReturn->purchase;
 
-            // Reverse stock adjustments
+            // Reverse stock adjustments — bucket-aware
             foreach ($purchaseReturn->items as $item) {
-                $this->adjustStock($item['product_id'], $item['quantity'], $purchase, true);
+                $this->adjustStock($item['product_id'], $item->variant_id, $item->packaging_unit_id, $item['quantity'], $purchase, true);
 
                 // Record stock movement for reversal
                 $product = Product::find($item['product_id']);
                 if ($product?->track_stock) {
                     StockMovement::create([
                         'product_id' => $item['product_id'],
+                        'variant_id' => $item->variant_id,
+                        'packaging_unit_id' => $item->packaging_unit_id,
                         'store_id' => $purchase->store_id,
                         'branch_id' => $purchase->branch_id,
                         'reference_type' => PurchaseReturn::class,
@@ -271,7 +287,7 @@ class PurchaseReturnController extends Controller
      */
     public function getPurchaseItems(Purchase $purchase)
     {
-        $purchase->load(['items.product', 'supplier']);
+        $purchase->load(['items.product', 'items.variant', 'items.packagingUnit', 'supplier']);
 
         return response()->json([
             'purchase' => [
@@ -286,6 +302,10 @@ class PurchaseReturnController extends Controller
                     return [
                         'id' => $item->id,
                         'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
+                        'packaging_unit_id' => $item->packaging_unit_id,
+                        'variant_name' => $item->variant?->name,
+                        'packaging_unit_name' => $item->packagingUnit?->name,
                         'product_name' => $item->product->name,
                         'product_sku' => $item->product->sku,
                         'quantity' => $item->quantity,
@@ -299,7 +319,7 @@ class PurchaseReturnController extends Controller
         ]);
     }
 
-    private function adjustStock(int $productId, int $quantity, Purchase $purchase, bool $isReversal = false): void
+    private function adjustStock(int $productId, ?int $variantId, ?int $packagingUnitId, int $quantity, Purchase $purchase, bool $isReversal = false): void
     {
         $product = Product::find($productId);
         if (! $product?->track_stock) {
@@ -308,9 +328,15 @@ class PurchaseReturnController extends Controller
 
         $qtyChange = $isReversal ? $quantity : -$quantity;
 
+        // Bucket-aware: key lengkap dengan variant_id + packaging_unit_id
         $stock = ProductStock::firstOrCreate(
-            ['product_id' => $productId, 'store_id' => $purchase->store_id],
-            ['quantity' => 0, 'reserved_quantity' => 0]
+            [
+                'product_id' => $productId,
+                'variant_id' => $variantId,
+                'packaging_unit_id' => $packagingUnitId,
+                'store_id' => $purchase->store_id,
+            ],
+            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
         );
         $stock->increment('quantity', $qtyChange);
     }

@@ -61,9 +61,39 @@ class KasirController extends Controller
             ])
             ->get()
             ->map(function ($p) use ($storeId) {
+                // Bucket base produk (variant_id=null, packaging_unit_id=null) —
+                // ini stok yang dipakai untuk produk simple tanpa variant/unit.
+                $baseStocks = $p->stocks->filter(
+                    fn ($s) => $s->variant_id === null && $s->packaging_unit_id === null,
+                );
                 $p->stock =
-                    $p->stocks->sum('quantity') -
-                    $p->stocks->sum('reserved_quantity');
+                    $baseStocks->sum('quantity') -
+                    $baseStocks->sum('reserved_quantity');
+
+                // Stok per variant (bucket variant_id=X, packaging_unit_id=null)
+                $p->variants->each(function ($v) use ($p) {
+                    $variantStocks = $p->stocks->filter(
+                        fn ($s) => $s->variant_id === $v->id && $s->packaging_unit_id === null,
+                    );
+                    $v->stock = $variantStocks->sum('quantity') - $variantStocks->sum('reserved_quantity');
+
+                    // Stok per packaging unit milik variant ini
+                    $v->packagingUnits->each(function ($u) use ($p) {
+                        $unitStocks = $p->stocks->filter(
+                            fn ($s) => $s->packaging_unit_id === $u->id,
+                        );
+                        $u->stock = $unitStocks->sum('quantity') - $unitStocks->sum('reserved_quantity');
+                    });
+                });
+
+                // Stok per packaging unit level produk (tanpa variant)
+                $p->packagingUnits->each(function ($u) use ($p) {
+                    $unitStocks = $p->stocks->filter(
+                        fn ($s) => $s->packaging_unit_id === $u->id,
+                    );
+                    $u->stock = $unitStocks->sum('quantity') - $unitStocks->sum('reserved_quantity');
+                });
+
                 // Sertakan stok bahan baku agar frontend bisa cek kecukupan
                 $p->recipes->each(function ($r) use ($storeId) {
                     if ($r->rawMaterial) {
@@ -629,6 +659,12 @@ class KasirController extends Controller
             }
 
             // ── Pre-validate stock for all items (before any deduction) ──
+            // Setiap item dicek dari bucket-nya sendiri (product + variant +
+            // packaging_unit) — menjual dus tidak boleh mengurangi/mengecek
+            // stok bucket pcs milik variant yang sama, dan sebaliknya. Bucket
+            // tidak melakukan konversi otomatis: qty yang dicek/dipotong
+            // selalu dalam satuan bucket itu sendiri (mis. bucket dus dalam
+            // satuan dus, bukan dikali conversion_qty ke pcs).
             if (! $hasPgPayment) {
                 foreach ($items as $item) {
                     $product = Product::find($item['product_id']);
@@ -640,16 +676,18 @@ class KasirController extends Controller
                         continue;
                     }
 
-                    $conversionQty = $item['unit_conversion_qty'] ?? 1;
-                    $actualQty = $item['quantity'] * $conversionQty;
+                    $actualQty = $item['quantity'];
 
                     $currentStock = ProductStock::where('product_id', $item['product_id'])
+                        ->where('variant_id', $item['variant_id'] ?? null)
+                        ->where('packaging_unit_id', $item['packaging_unit_id'] ?? null)
                         ->where('store_id', $storeId)
                         ->sum('quantity');
 
                     if ($currentStock < $actualQty) {
+                        $unitLabel = ! empty($item['unit_name']) ? " ({$item['unit_name']})" : '';
                         throw new \Exception(
-                            "Stok \"{$product->name}\" tidak cukup. ".
+                            "Stok \"{$product->name}{$unitLabel}\" tidak cukup. ".
                             "Dibutuhkan {$actualQty}, tersedia {$currentStock}.",
                         );
                     }
@@ -748,9 +786,11 @@ class KasirController extends Controller
                         $stock = ProductStock::firstOrCreate(
                             [
                                 'product_id' => $recipe->raw_material_id,
+                                'variant_id' => null,
+                                'packaging_unit_id' => null,
                                 'store_id' => $storeId,
                             ],
-                            ['quantity' => 0, 'reserved_quantity' => 0],
+                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
                         );
                         $stock->decrement('quantity', $needed);
 
@@ -770,17 +810,24 @@ class KasirController extends Controller
                         ]);
                     }
                 } else {
-                    // Potong stok produk langsung (minimarket behavior)
+                    // Potong stok dari bucket yang tepat (product + variant +
+                    // packaging_unit) — minimarket behavior. Menjual per dus
+                    // hanya mengurangi bucket dus (dalam satuan dus itu
+                    // sendiri, tidak ada konversi otomatis ke pcs), tidak
+                    // menyentuh bucket pcs.
                     if ($product?->track_stock) {
-                        $conversionQty = $item['unit_conversion_qty'] ?? 1;
-                        $actualQty = $item['quantity'] * $conversionQty;
+                        $actualQty = $item['quantity'];
+                        $variantId = $item['variant_id'] ?? null;
+                        $packagingUnitId = $item['packaging_unit_id'] ?? null;
 
                         $stock = ProductStock::firstOrCreate(
                             [
                                 'product_id' => $item['product_id'],
+                                'variant_id' => $variantId,
+                                'packaging_unit_id' => $packagingUnitId,
                                 'store_id' => $storeId,
                             ],
-                            ['quantity' => 0, 'reserved_quantity' => 0],
+                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
                         );
                         $stock->decrement('quantity', $actualQty);
 
@@ -789,13 +836,15 @@ class KasirController extends Controller
                         // Catat riwayat pergerakan stok produk (branch_id untuk audit)
                         StockMovement::create([
                             'product_id' => $item['product_id'],
+                            'variant_id' => $variantId,
+                            'packaging_unit_id' => $packagingUnitId,
                             'store_id' => $storeId,
                             'branch_id' => $branchId,
                             'reference_type' => Sale::class,
                             'reference_id' => $sale->id,
                             'movement_type' => 'sale_out',
                             'quantity' => $actualQty,
-                            'unit_cost' => $product?->cost_price ?? 0,
+                            'unit_cost' => $stock->average_cost > 0 ? $stock->average_cost : ($product?->cost_price ?? 0),
                             'reference_no' => $saleNo,
                             'notes' => "Penjualan #{$saleNo} — {$item['quantity']}x{$unitLabel} {$item['product_id']}",
                             'moved_at' => $now,

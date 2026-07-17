@@ -3,6 +3,11 @@
 namespace Database\Seeders\DatabaseSeeder;
 
 use App\Models\Branch;
+use App\Models\Customer;
+use App\Models\PaymentMethod;
+use App\Models\Product;
+use App\Models\ProductStock;
+use App\Models\ProductVariant;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SalePayment;
@@ -14,222 +19,162 @@ class SaleSeeder extends Seeder
 {
     public function run(): void
     {
-        // Store STORE002 = Warung Kopi Senja (cafe), Branch BR2A = Malioboro
-        // product_ids: 3=kopi hitam(18k), 4=kopi susu(28k), 5=espresso(22k),
-        //   6=cappuccino(30k), 7=latte(32k), 8=matcha(30k), 9=teh tarik(20k),
-        //   10=jus jeruk(22k), 11=nasi goreng(28k), 12=mie goreng(22k),
-        //   13=roti bakar(18k), 14=pisang goreng(15k), 15=combo(38k)
-        // payment_methods: 1=CASH, 2=QRIS, 3=BCA, 5=GoPay
-        $storeId = Store::where("code", "STORE002")->value("id");
-        $branchId = Branch::where("code", "BR2A")->value("id");
+        $store = Store::where('code', 'STORE001')->firstOrFail();
+        $branchPusat = Branch::where('store_id', $store->id)->where('code', 'BR1A')->value('id');
+        $kasir = User::where('email', 'kasir.pusat@gmail.com')->value('id');
 
-        // User lookups by email (Kopi Senja employees)
-        $andi = User::where("email", "kasir.s2a@gmail.com")->value("id");
-        $dewi = User::where("email", "barista.s2a@gmail.com")->value("id");
+        $pid = fn ($sku) => Product::where('store_id', $store->id)->where('sku', $sku)->value('id');
+        $vid = fn ($sku, $name) => ProductVariant::whereHas('product', fn ($q) => $q->where('store_id', $store->id)->where('sku', $sku))->where('name', $name)->value('id');
+        $cid = fn ($code) => Customer::where('store_id', $store->id)->where('code', $code)->value('id');
 
         $sales = [
-            // === Hari ini 21 Juni 2026 ===
+            // Hari ini
             [
-                "sale_no" => "SJ-20260621-001",
-                "sale_date" => "2026-06-21 08:15:00",
-                "user_id" => $andi,
-                "customer_id" => null,
-                "order_type" => "takeaway",
-                "items" => [
-                    ["product_id" => 4, "quantity" => 2, "price" => 28000], // 2 Kopi Susu
-                    ["product_id" => 13, "quantity" => 1, "price" => 38000], // 1 Combo
+                'sale_no' => 'SL-20260717-001', 'sale_date' => '2026-07-17 08:30:00',
+                'user_id' => $kasir, 'customer_id' => null, 'order_type' => 'takeaway',
+                'items' => [
+                    ['product_id' => $pid('S1-001'), 'variant_id' => $vid('S1-001', 'Original'), 'quantity' => 5, 'price' => 4000],
+                    ['product_id' => $pid('S1-006'), 'variant_id' => null, 'quantity' => 2, 'price' => 4000],
                 ],
-                "payment_method_id" => 2, // QRIS
-                "paid_amount" => 94000,
+                'payment_method_code' => 'CASH', 'paid_amount' => 28000,
             ],
             [
-                "sale_no" => "SJ-20260621-002",
-                "sale_date" => "2026-06-21 09:30:00",
-                "user_id" => $dewi,
-                "customer_id" => 1, // Rina
-                "order_type" => "dine_in",
-                "items" => [
-                    ["product_id" => 6, "quantity" => 2, "price" => 30000], // 2 Cappuccino
-                    ["product_id" => 11, "quantity" => 1, "price" => 28000], // 1 Nasi Goreng
+                'sale_no' => 'SL-20260717-002', 'sale_date' => '2026-07-17 09:15:00',
+                'user_id' => $kasir, 'customer_id' => $cid('CST001'), 'order_type' => 'takeaway',
+                'items' => [
+                    ['product_id' => $pid('S1-001'), 'variant_id' => $vid('S1-001', 'Rendang'), 'quantity' => 3, 'price' => 4500],
+                    ['product_id' => $pid('S1-007'), 'variant_id' => $vid('S1-007', 'Full Cream'), 'quantity' => 2, 'price' => 5500],
+                    ['product_id' => $pid('S1-010'), 'variant_id' => null, 'quantity' => 1, 'price' => 12000],
                 ],
-                "payment_method_id" => 1, // Cash
-                "paid_amount" => 100000,
+                'payment_method_code' => 'QRIS', 'paid_amount' => 36500,
             ],
             [
-                "sale_no" => "SJ-20260621-003",
-                "sale_date" => "2026-06-21 10:05:00",
-                "user_id" => $andi,
-                "customer_id" => null,
-                "order_type" => "takeaway",
-                "items" => [
-                    ["product_id" => 3, "quantity" => 1, "price" => 18000], // Kopi Hitam
-                    ["product_id" => 14, "quantity" => 2, "price" => 15000], // 2 Pisang Goreng
+                'sale_no' => 'SL-20260717-003', 'sale_date' => '2026-07-17 10:00:00',
+                'user_id' => $kasir, 'customer_id' => null, 'order_type' => 'takeaway',
+                'items' => [
+                    ['product_id' => $pid('S1-008'), 'variant_id' => $vid('S1-008', 'Original'), 'quantity' => 4, 'price' => 5000],
+                    ['product_id' => $pid('S1-019'), 'variant_id' => null, 'quantity' => 10, 'price' => 3500],
                 ],
-                "payment_method_id" => 5, // GoPay
-                "paid_amount" => 48000,
+                'payment_method_code' => 'CASH', 'paid_amount' => 55000,
+            ],
+            // Kemarin
+            [
+                'sale_no' => 'SL-20260716-001', 'sale_date' => '2026-07-16 08:00:00',
+                'user_id' => $kasir, 'customer_id' => null, 'order_type' => 'takeaway',
+                'items' => [
+                    ['product_id' => $pid('S1-001'), 'variant_id' => $vid('S1-001', 'Original'), 'quantity' => 10, 'price' => 4000],
+                    ['product_id' => $pid('S1-006'), 'variant_id' => null, 'quantity' => 5, 'price' => 4000],
+                ],
+                'payment_method_code' => 'CASH', 'paid_amount' => 60000,
             ],
             [
-                "sale_no" => "SJ-20260621-004",
-                "sale_date" => "2026-06-21 11:45:00",
-                "user_id" => $andi,
-                "customer_id" => 2, // Dedi
-                "order_type" => "dine_in",
-                "items" => [
-                    ["product_id" => 8, "quantity" => 1, "price" => 30000], // Matcha
-                    ["product_id" => 7, "quantity" => 1, "price" => 32000], // Latte
+                'sale_no' => 'SL-20260716-002', 'sale_date' => '2026-07-16 10:30:00',
+                'user_id' => $kasir, 'customer_id' => $cid('CST003'), 'order_type' => 'takeaway',
+                'items' => [
+                    ['product_id' => $pid('S1-002'), 'variant_id' => null, 'quantity' => 1, 'price' => 72000],
+                    ['product_id' => $pid('S1-003'), 'variant_id' => null, 'quantity' => 2, 'price' => 21000],
+                    ['product_id' => $pid('S1-004'), 'variant_id' => null, 'quantity' => 2, 'price' => 16000],
                 ],
-                "payment_method_id" => 1,
-                "paid_amount" => 70000,
+                'payment_method_code' => 'QRIS', 'paid_amount' => 146000,
             ],
             [
-                "sale_no" => "SJ-20260621-005",
-                "sale_date" => "2026-06-21 13:20:00",
-                "user_id" => $andi,
-                "customer_id" => null,
-                "order_type" => "takeaway",
-                "items" => [
-                    ["product_id" => 4, "quantity" => 3, "price" => 28000], // 3 Kopi Susu
-                    ["product_id" => 9, "quantity" => 1, "price" => 20000], // Teh Tarik
+                'sale_no' => 'SL-20260716-003', 'sale_date' => '2026-07-16 14:00:00',
+                'user_id' => $kasir, 'customer_id' => null, 'order_type' => 'takeaway',
+                'items' => [
+                    ['product_id' => $pid('S1-007'), 'variant_id' => $vid('S1-007', 'Coklat'), 'quantity' => 3, 'price' => 5500],
+                    ['product_id' => $pid('S1-011'), 'variant_id' => null, 'quantity' => 2, 'price' => 10500],
                 ],
-                "payment_method_id" => 2,
-                "paid_amount" => 104000,
+                'payment_method_code' => 'CASH', 'paid_amount' => 37500,
             ],
-            // === Kemarin 20 Juni 2026 ===
+            // 2 hari lalu
             [
-                "sale_no" => "SJ-20260620-001",
-                "sale_date" => "2026-06-20 08:00:00",
-                "user_id" => $andi,
-                "customer_id" => null,
-                "order_type" => "takeaway",
-                "items" => [
-                    ["product_id" => 5, "quantity" => 2, "price" => 22000], // 2 Espresso
+                'sale_no' => 'SL-20260715-001', 'sale_date' => '2026-07-15 09:00:00',
+                'user_id' => $kasir, 'customer_id' => $cid('CST001'), 'order_type' => 'takeaway',
+                'items' => [
+                    ['product_id' => $pid('S1-001'), 'variant_id' => $vid('S1-001', 'Original'), 'quantity' => 20, 'price' => 4000],
+                    ['product_id' => $pid('S1-001'), 'variant_id' => $vid('S1-001', 'Rendang'), 'quantity' => 10, 'price' => 4500],
                 ],
-                "payment_method_id" => 1,
-                "paid_amount" => 44000,
+                'payment_method_code' => 'CASH', 'paid_amount' => 125000,
             ],
             [
-                "sale_no" => "SJ-20260620-002",
-                "sale_date" => "2026-06-20 10:30:00",
-                "user_id" => $andi,
-                "customer_id" => 3, // Maya
-                "order_type" => "dine_in",
-                "items" => [
-                    ["product_id" => 4, "quantity" => 1, "price" => 28000],
-                    ["product_id" => 12, "quantity" => 1, "price" => 22000],
+                'sale_no' => 'SL-20260715-002', 'sale_date' => '2026-07-15 12:00:00',
+                'user_id' => $kasir, 'customer_id' => null, 'order_type' => 'takeaway',
+                'items' => [
+                    ['product_id' => $pid('S1-017'), 'variant_id' => null, 'quantity' => 2, 'price' => 22000],
+                    ['product_id' => $pid('S1-018'), 'variant_id' => null, 'quantity' => 1, 'price' => 28000],
+                    ['product_id' => $pid('S1-009'), 'variant_id' => null, 'quantity' => 3, 'price' => 6500],
                 ],
-                "payment_method_id" => 1,
-                "paid_amount" => 50000,
+                'payment_method_code' => 'CASH', 'paid_amount' => 91500,
             ],
             [
-                "sale_no" => "SJ-20260620-003",
-                "sale_date" => "2026-06-20 14:15:00",
-                "user_id" => $andi,
-                "customer_id" => null,
-                "order_type" => "takeaway",
-                "items" => [
-                    ["product_id" => 6, "quantity" => 2, "price" => 30000],
-                    ["product_id" => 10, "quantity" => 1, "price" => 22000],
+                'sale_no' => 'SL-20260715-003', 'sale_date' => '2026-07-15 15:30:00',
+                'user_id' => $kasir, 'customer_id' => $cid('CST002'), 'order_type' => 'takeaway',
+                'items' => [
+                    ['product_id' => $pid('S1-013'), 'variant_id' => null, 'quantity' => 2, 'price' => 8500],
+                    ['product_id' => $pid('S1-014'), 'variant_id' => null, 'quantity' => 1, 'price' => 22000],
+                    ['product_id' => $pid('S1-015'), 'variant_id' => null, 'quantity' => 1, 'price' => 18000],
                 ],
-                "payment_method_id" => 3, // BCA
-                "paid_amount" => 82000,
-            ],
-            [
-                "sale_no" => "SJ-20260620-004",
-                "sale_date" => "2026-06-20 16:00:00",
-                "user_id" => $dewi,
-                "customer_id" => null,
-                "order_type" => "dine_in",
-                "items" => [
-                    ["product_id" => 7, "quantity" => 1, "price" => 32000],
-                    ["product_id" => 13, "quantity" => 1, "price" => 38000],
-                ],
-                "payment_method_id" => 2,
-                "paid_amount" => 70000,
-            ],
-            // === 19 Juni 2026 ===
-            [
-                "sale_no" => "SJ-20260619-001",
-                "sale_date" => "2026-06-19 09:00:00",
-                "user_id" => $andi,
-                "customer_id" => 4, // Fajar
-                "order_type" => "dine_in",
-                "items" => [
-                    ["product_id" => 4, "quantity" => 2, "price" => 28000],
-                    ["product_id" => 11, "quantity" => 1, "price" => 28000],
-                ],
-                "payment_method_id" => 1,
-                "paid_amount" => 100000,
-            ],
-            [
-                "sale_no" => "SJ-20260619-002",
-                "sale_date" => "2026-06-19 12:00:00",
-                "user_id" => $dewi,
-                "customer_id" => null,
-                "order_type" => "takeaway",
-                "items" => [
-                    ["product_id" => 9, "quantity" => 2, "price" => 20000],
-                    ["product_id" => 14, "quantity" => 1, "price" => 15000],
-                ],
-                "payment_method_id" => 5,
-                "paid_amount" => 55000,
-            ],
-            [
-                "sale_no" => "SJ-20260619-003",
-                "sale_date" => "2026-06-19 15:30:00",
-                "user_id" => $andi,
-                "customer_id" => null,
-                "order_type" => "takeaway",
-                "items" => [
-                    ["product_id" => 8, "quantity" => 3, "price" => 30000],
-                    ["product_id" => 3, "quantity" => 1, "price" => 18000],
-                ],
-                "payment_method_id" => 1,
-                "paid_amount" => 115000,
+                'payment_method_code' => 'CASH', 'paid_amount' => 57000,
             ],
         ];
 
         foreach ($sales as $data) {
-            $items = $data["items"];
-            $paymentMethodId = $data["payment_method_id"];
-            unset($data["items"]);
-            unset($data["payment_method_id"]);
+            $items = $data['items'];
+            $paidAmount = $data['paid_amount'];
+            $methodCode = $data['payment_method_code'] ?? 'CASH';
+            unset($data['items'], $data['paid_amount'], $data['payment_method_code']);
 
             $subtotal = 0;
             foreach ($items as $item) {
-                $subtotal += $item["price"] * $item["quantity"];
+                $subtotal += $item['price'] * $item['quantity'];
             }
 
-            $data["subtotal"] = $subtotal;
-            $data["discount_amount"] = 0;
-            $data["tax_amount"] = 0;
-            $data["shipping_amount"] = 0;
-            $data["grand_total"] = $subtotal;
-            $data["change_amount"] = $data["paid_amount"] - $subtotal;
-            $data["pos_mode"] = "fnb";
-            $data["status"] = "completed";
-            $data["payment_status"] = "paid";
-            $data["store_id"] = $storeId;
-            $data["branch_id"] = $branchId;
+            $data['store_id'] = $store->id;
+            $data['branch_id'] = $branchPusat;
+            $data['subtotal'] = $subtotal;
+            $data['discount_amount'] = 0;
+            $data['tax_amount'] = 0;
+            $data['shipping_amount'] = 0;
+            $data['grand_total'] = $subtotal;
+            $data['change_amount'] = $paidAmount - $subtotal;
+            $data['paid_amount'] = $paidAmount;
+            $data['pos_mode'] = 'retail';
+            $data['status'] = 'completed';
+            $data['payment_status'] = 'paid';
 
             $sale = Sale::create($data);
 
             foreach ($items as $item) {
-                $itemSubtotal = $item["price"] * $item["quantity"];
+                $itemSubtotal = $item['price'] * $item['quantity'];
                 SaleItem::create([
-                    "sale_id" => $sale->id,
-                    "product_id" => $item["product_id"],
-                    "quantity" => $item["quantity"],
-                    "price" => $item["price"],
-                    "discount_amount" => 0,
-                    "subtotal" => $itemSubtotal,
+                    'sale_id' => $sale->id,
+                    'product_id' => $item['product_id'],
+                    'variant_id' => $item['variant_id'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'discount_amount' => 0,
+                    'subtotal' => $itemSubtotal,
                 ]);
+
+                // Kurangi stok — bucket-aware
+                $stock = ProductStock::where('product_id', $item['product_id'])
+                    ->where('variant_id', $item['variant_id'] ?? null)
+                    ->where('packaging_unit_id', null)
+                    ->where('store_id', $store->id)
+                    ->where('branch_id', $branchPusat)
+                    ->first();
+
+                if ($stock) {
+                    $stock->decrement('quantity', $item['quantity']);
+                }
             }
 
+            $methodId = PaymentMethod::where('store_id', $store->id)->where('code', 'like', $methodCode.'%')->value('id');
             SalePayment::create([
-                "sale_id" => $sale->id,
-                "payment_method_id" => $paymentMethodId,
-                "paid_at" => $data["sale_date"],
-                "amount" => $data["paid_amount"],
+                'sale_id' => $sale->id,
+                'payment_method_id' => $methodId,
+                'paid_at' => $data['sale_date'],
+                'amount' => $paidAmount,
             ]);
         }
     }

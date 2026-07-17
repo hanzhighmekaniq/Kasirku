@@ -14,8 +14,10 @@ import {
     Image,
     Package,
     Plus,
+    RefreshCw,
     ScanLine,
     Settings,
+    Sparkles,
     Wrench,
     X,
 } from "lucide-react";
@@ -23,21 +25,16 @@ import CurrencyInput from "@/Components/ui/CurrencyInput";
 
 const UNIT_OPTIONS = [
     "pcs",
+    "botol",
+    "cup",
+    "pack",
     "kg",
     "gram",
     "liter",
-    "ml",
-    "box",
-    "pack",
-    "lusin",
-    "karton",
+    "jam",
+    "orang",
 ];
 
-// UI field visibility — derived from storeTypeFeatures (database)
-// Mapping: supplier→supplier, purchase→costPrice, kitchen→prepTime,
-//          recipe→isComposable, stock→trackStock, product→barcode/isSellable
-
-// Tipe produk yang relevan per store type
 const RELEVANT_TYPES = {
     retail: ["finished_goods", "raw_material", "combo"],
     fnb: ["finished_goods", "raw_material", "combo"],
@@ -60,7 +57,6 @@ const DEFAULT_TYPE = {
     session: "time_based",
 };
 
-// Tipe yang tidak punya stok fisik
 const NO_STOCK_TYPES = ["service", "time_based"];
 
 export default function Create({
@@ -79,13 +75,13 @@ export default function Create({
     const availableTypes = RELEVANT_TYPES[storeType] ?? ["finished_goods"];
     const defaultType = DEFAULT_TYPE[storeType] ?? "finished_goods";
     const feat = {
-        barcode: true, // selalu tampilkan barcode
-        costPrice: has("purchase"), // retail, fnb, rental
-        prepTime: has("kitchen"), // fnb
-        isComposable: has("recipe"), // fnb
-        isSellable: true, // selalu tampilkan is_sellable
-        trackStock: has("stock"), // retail, fnb, rental
-        supplier: has("supplier"), // retail, fnb, rental
+        barcode: true,
+        costPrice: has("purchase"),
+        prepTime: has("kitchen"),
+        isComposable: has("recipe"),
+        isSellable: true,
+        trackStock: has("stock"),
+        supplier: has("supplier"),
         multiUnit: ["retail", "fnb", "rental"].includes(storeType),
     };
 
@@ -116,14 +112,10 @@ export default function Create({
         deposit_amount: "",
         packaging_units: [],
         price_tiers: [],
-        is_variant: false,
-        variants: [],
     });
 
-    // Apakah tipe yang dipilih tidak punya stok fisik
     const isNoStock = NO_STOCK_TYPES.includes(data.type);
 
-    // Label harga dinamis berdasarkan tipe
     const priceLabel =
         data.type === "time_based"
             ? "Tarif / Harga"
@@ -133,7 +125,6 @@ export default function Create({
                 ? "Tarif Sewa"
                 : "Harga Jual";
 
-    // Satuan dinamis berdasarkan tipe
     const unitOptionsForType =
         data.type === "time_based"
             ? ["jam", "menit", "hari", "malam", "sesi"]
@@ -143,7 +134,6 @@ export default function Create({
                 ? ["unit", "pcs", "set", "hari"]
                 : UNIT_OPTIONS;
 
-    // Handler perubahan tipe: auto-update track_stock
     const handleTypeChange = (newType) => {
         setData("type", newType);
         if (NO_STOCK_TYPES.includes(newType)) {
@@ -160,6 +150,26 @@ export default function Create({
         setImagePreview(URL.createObjectURL(file));
     };
 
+    const marginRp = (Number(data.sell_price) || 0) - (Number(data.cost_price) || 0);
+    const marginPct =
+        Number(data.cost_price) > 0
+            ? (marginRp / Number(data.cost_price)) * 100
+            : Number(data.sell_price) > 0
+              ? 100
+              : 0;
+
+    const autoGenerateSku = () => {
+        const slug = (data.name || "PRD")
+            .toUpperCase()
+            .replace(/[^A-Z0-9]+/g, "-")
+            .split("-")
+            .filter(Boolean)
+            .slice(0, 3)
+            .join("-");
+        const rand = Math.floor(Math.random() * 9000 + 1000);
+        setData("sku", `${slug || "PRD"}-${rand}`);
+    };
+
     const submit = (e) => {
         e.preventDefault();
         post(route("admin.products.store"), { forceFormData: true });
@@ -168,301 +178,221 @@ export default function Create({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route("admin.products.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                        aria-label="Kembali"
-                    >
-                        <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
-                    </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">
-                        Tambah Produk
-                    </h2>
+                <div className="flex w-full items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href={route("admin.products.index")}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                            aria-label="Kembali"
+                        >
+                            <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
+                        </Link>
+                        <div className="leading-tight">
+                            <div className="text-sm font-semibold text-slate-900">Retail POS</div>
+                            <div className="text-[11px] text-slate-500">Manajemen Produk</div>
+                        </div>
+                    </div>
+                    <nav className="hidden md:flex items-center text-xs text-slate-500 gap-2">
+                        <Link href={route("admin.products.index")} className="hover:text-slate-800">
+                            Produk
+                        </Link>
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                        <span className="text-slate-900 font-medium">Tambah Produk</span>
+                    </nav>
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href={route("admin.products.index")}
+                            className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                        >
+                            <X className="h-4 w-4" />
+                            <span className="hidden sm:inline">Batal</span>
+                        </Link>
+                    </div>
                 </div>
             }
         >
             <Head title="Tambah Produk" />
 
-            <form onSubmit={submit}>
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-                    {/* ── Main columns ── */}
-                    <div className="space-y-5 lg:col-span-2">
-                        {/* SECTION: Informasi Dasar */}
-                        <SectionCard
-                            title="Informasi Dasar"
-                            subtitle="Identitas dan klasifikasi produk"
-                            icon={ClipboardList}
-                        >
-                            <div className="space-y-4">
-                                <Field
-                                    label="Nama Produk"
-                                    required
-                                    error={errors.name}
-                                >
-                                    <input
-                                        type="text"
-                                        value={data.name}
-                                        onChange={(e) =>
-                                            setData("name", e.target.value)
-                                        }
-                                        placeholder="Contoh: Kopi Susu Gula Aren"
-                                        className={inputCls(!!errors.name)}
-                                    />
-                                </Field>
+            {/* Hero */}
+            <section className="mb-6">
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700">
+                                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                                Produk baru
+                            </span>
+                            <span className="text-slate-400">·</span>
+                            <span>{productTypes[data.type] ?? data.type}</span>
+                        </div>
+                        <h1 className="text-2xl font-bold tracking-tighter text-slate-900 sm:text-3xl">
+                            Buat{" "}
+                            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                                produk baru
+                            </span>{" "}
+                            untuk katalogmu
+                        </h1>
+                        <p className="mt-2 max-w-xl text-sm text-slate-500">
+                            Lengkapi detail produk — mulai dari identitas, harga, kemasan, sampai varian. Ringkasan di kanan akan berubah otomatis seiring kamu mengisi.
+                        </p>
+                    </div>
+                 
+                </div>
+            </section>
 
-                                <div className={`grid gap-4 grid-cols-2`}>
-                                    <Field
-                                        label="SKU"
-                                        required
-                                        error={errors.sku}
-                                    >
+            <form id="productForm" onSubmit={submit}>
+                <div className="grid grid-cols-1 gap-6 pb-16 lg:grid-cols-12">
+                    {/* ── Main columns ── */}
+                    <div className="space-y-6 lg:col-span-8">
+                        {/* SECTION: Informasi Dasar */}
+                        <SectionCard step={1} title="Informasi Dasar" subtitle="Identitas produk yang akan tampil di kasir & katalog">
+                            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                                <div className="md:col-span-4">
+                                    <Field label="Nama Produk" required error={errors.name}>
                                         <input
                                             type="text"
-                                            value={data.sku}
-                                            onChange={(e) =>
-                                                setData("sku", e.target.value)
-                                            }
-                                            placeholder="PRD-001"
-                                            className={inputCls(!!errors.sku)}
+                                            value={data.name}
+                                            onChange={(e) => setData("name", e.target.value)}
+                                            placeholder="cth. Kopi Susu Gula Aren 250ml"
+                                            className={inputCls(!!errors.name)}
+                                            required
                                         />
                                     </Field>
-                                    {feat.barcode ? (
-                                        <Field
-                                            label="Barcode"
-                                            hint="opsional"
-                                            error={errors.barcode}
-                                        >
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={data.barcode}
-                                                    onChange={(e) =>
-                                                        setData(
-                                                            "barcode",
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    placeholder="EAN-13 (opsional)"
-                                                    className={`${inputCls(!!errors.barcode)} flex-1`}
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setShowScanner(true)
-                                                    }
-                                                    className="shrink-0 inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-                                                    title="Scan Barcode dari Label"
-                                                >
-                                                    <ScanLine className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </Field>
-                                    ) : (
-                                        <Field
-                                            label="Kode Referensi"
-                                            hint="opsional"
-                                            error={errors.barcode}
-                                        >
+                                </div>
+                                <div className="md:col-span-2">
+                                    <Field label="Tipe Produk" required error={errors.type}>
+                                        <Select
+                                            options={availableTypes.map((t) => ({
+                                                value: t,
+                                                label: productTypes[t] ?? t,
+                                            }))}
+                                            value={data.type}
+                                            onChange={handleTypeChange}
+                                            error={errors.type}
+                                        />
+                                    </Field>
+                                </div>
+
+                                <div className="md:col-span-3">
+                                    <Field label="SKU" required error={errors.sku}>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={data.sku}
+                                                onChange={(e) => setData("sku", e.target.value)}
+                                                placeholder="cth. KPS-GA-250"
+                                                className={`${inputCls(!!errors.sku)} flex-1`}
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={autoGenerateSku}
+                                                className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3 py-2.5 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100"
+                                            >
+                                                <RefreshCw className="h-3.5 w-3.5" />
+                                                Auto
+                                            </button>
+                                        </div>
+                                    </Field>
+                                </div>
+                                <div className="md:col-span-3">
+                                    <Field label="Barcode" hint="opsional" error={errors.barcode}>
+                                        <div className="flex gap-2">
                                             <input
                                                 type="text"
                                                 value={data.barcode}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "barcode",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Kode internal (opsional)"
-                                                className={inputCls(
-                                                    !!errors.barcode,
-                                                )}
+                                                onChange={(e) => setData("barcode", e.target.value)}
+                                                placeholder="cth. 8991234567890"
+                                                className={`${inputCls(!!errors.barcode)} flex-1`}
                                             />
-                                        </Field>
-                                    )}
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowScanner(true)}
+                                                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-indigo-700"
+                                            >
+                                                <ScanLine className="h-4 w-4" />
+                                                Scan
+                                            </button>
+                                        </div>
+                                    </Field>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Select
-                                        label="Tipe Produk"
-                                        options={availableTypes.map((t) => ({
-                                            value: t,
-                                            label: productTypes[t] ?? t,
-                                        }))}
-                                        value={data.type}
-                                        onChange={handleTypeChange}
-                                        error={errors.type}
-                                    />
-                                    <Select
-                                        label="Satuan"
-                                        options={unitOptionsForType.map(
-                                            (u) => ({
+                                <div className="md:col-span-2">
+                                    <Field label="Satuan Dasar" required error={errors.unit}>
+                                        <Select
+                                            options={unitOptionsForType.map((u) => ({
                                                 value: u,
                                                 label: u,
-                                            }),
-                                        )}
-                                        value={data.unit}
-                                        onChange={(v) => setData("unit", v)}
-                                        error={errors.unit}
-                                    />
+                                            }))}
+                                            value={data.unit}
+                                            onChange={(v) => setData("unit", v)}
+                                            error={errors.unit}
+                                        />
+                                    </Field>
                                 </div>
-                                {data.type !== "finished_goods" &&
-                                    data.type !== "raw_material" && (
-                                        <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5 text-xs text-indigo-700">
-                                            {data.type === "service" &&
-                                                "✂️ Produk jasa: tidak ada stok fisik, harga adalah tarif layanan"}
-                                            {data.type === "rental_item" &&
-                                                "🔑 Item rental: stok = jumlah unit yang bisa disewakan"}
-                                            {data.type === "time_based" &&
-                                                "⏱️ Berbasis waktu: tarif per durasi (jam/malam/sesi)"}
-                                            {data.type === "combo" &&
-                                                "📦 Combo: gabungan beberapa produk dalam 1 paket"}
-                                        </div>
-                                    )}
-
-                                <Field
-                                    label="Kategori"
-                                    hint="opsional"
-                                    error={errors.category_id}
-                                >
-                                    <div className="flex items-start gap-2">
-                                        <div className="flex-1">
-                                            <TreePicker
-                                                categories={categories}
-                                                value={data.category_id}
-                                                onChange={(v) =>
-                                                    setData("category_id", v)
-                                                }
-                                                onClear={() =>
-                                                    setData("category_id", "")
-                                                }
-                                                placeholder="Kategori produk..."
-                                            />
-                                        </div>
-                                        <Link
-                                            href={route("admin.categories.index")}
-                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 transition hover:border-indigo-300 hover:text-indigo-600"
-                                            title="Kelola Kategori"
-                                        >
-                                            <ExternalLink className="h-4 w-4" strokeWidth={2} />
-                                        </Link>
-                                    </div>
-                                </Field>
-
-                                {feat.supplier && (
-                                    <Field
-                                        label="Supplier"
-                                        hint="opsional"
-                                        error={errors.supplier_id}
-                                    >
+                                <div className="md:col-span-2">
+                                    <Field label="Kategori" hint="opsional" error={errors.category_id}>
+                                        <TreePicker
+                                            categories={categories}
+                                            value={data.category_id}
+                                            onChange={(v) => setData("category_id", v)}
+                                            onClear={() => setData("category_id", "")}
+                                            placeholder="Pilih kategori…"
+                                        />
+                                    </Field>
+                                </div>
+                                <div className="md:col-span-2">
+                                    <Field label="Supplier" hint="opsional" error={errors.supplier_id}>
                                         <Select
-                                            options={(suppliers ?? []).map(
-                                                (s) => ({
-                                                    value: s.id,
-                                                    label: s.name,
-                                                }),
-                                            )}
+                                            options={(suppliers ?? []).map((s) => ({
+                                                value: s.id,
+                                                label: s.name,
+                                            }))}
                                             value={data.supplier_id}
-                                            onChange={(v) =>
-                                                setData("supplier_id", v)
-                                            }
+                                            onChange={(v) => setData("supplier_id", v)}
                                             placeholder="Pilih supplier..."
                                             error={errors.supplier_id}
                                         />
                                     </Field>
-                                )}
+                                </div>
                             </div>
-                        </SectionCard>
 
-                        {/* SECTION: Deskripsi */}
-                        <SectionCard
-                            title="Deskripsi"
-                            subtitle="Penjelasan produk/layanan untuk customer"
-                            icon={FileText}
-                            accent="violet"
-                        >
-                            <Field
-                                label="Deskripsi"
-                                hint="opsional"
-                                error={errors.description}
-                            >
-                                <textarea
-                                    value={data.description}
-                                    onChange={(e) =>
-                                        setData("description", e.target.value)
-                                    }
-                                    rows={3}
-                                    placeholder={
-                                        data.type === "service"
-                                            ? "Contoh: Potong rambut + keramas + blow dry"
-                                            : data.type === "rental_item"
-                                              ? "Contoh: Motor matic 125cc, bensin full, helm tersedia"
-                                              : data.type === "time_based"
-                                                ? "Contoh: Akses internet unlimited, PC gaming spec tinggi"
-                                                : data.type === "hospitality"
-                                                  ? "Contoh: Kamar AC, 2 kasur single, sarapan termasuk"
-                                                  : "Deskripsi produk (opsional)"
-                                    }
-                                    className={`${inputCls(!!errors.description)} resize-none`}
-                                    maxLength={2000}
-                                />
-                                <p className="mt-1 text-xs text-slate-400">
-                                    {(data.description || "").length}/2000
-                                    karakter
-                                </p>
-                            </Field>
+                            {/* Deskripsi */}
+                            <div className="mt-5">
+                                <Field label="Deskripsi" hint="opsional" error={errors.description}>
+                                    <textarea
+                                        value={data.description}
+                                        onChange={(e) => setData("description", e.target.value)}
+                                        maxLength={2000}
+                                        rows={3}
+                                        placeholder="Tulis deskripsi singkat produk (opsional)…"
+                                        className={`${inputCls(!!errors.description)} resize-y`}
+                                    />
+                                    <div className="flex justify-end mt-1 text-[11px] text-slate-400">
+                                        {(data.description || "").length}/2000
+                                    </div>
+                                </Field>
+                            </div>
                         </SectionCard>
 
                         {/* SECTION: Harga */}
                         <SectionCard
+                            step={2}
                             title="Harga"
-                            subtitle="Harga beli dan jual produk"
-                            icon={DollarSign}
-                            accent="emerald"
+                            subtitle="Atur harga jual, modal, grosir bertingkat, dan kemasan"
                         >
-                            {/* Toggle is_variant */}
-                            <div className="mb-4">
-                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.is_variant}
-                                        onChange={(e) => {
-                                            setData("is_variant", e.target.checked);
-                                            if (e.target.checked) {
-                                                setData("sell_price", "");
-                                                setData("packaging_units", []);
-                                                setData("price_tiers", []);
-                                            } else {
-                                                setData("variants", []);
-                                            }
-                                        }}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                    />
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-700">Produk Punya Variant</p>
-                                        <p className="text-xs text-slate-400">
-                                            Aktifkan jika produk punya pilihan (cth: ukuran S/M/L, rasa Coklat/Vanilla). Harga, grosir, dan multi-satuan diatur per variant.
-                                        </p>
-                                    </div>
-                                </label>
-                            </div>
-
-                            {!data.is_variant && (
-                                <>
-                                    <div className={`grid gap-4 ${feat.costPrice ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}>
+                            <div className="space-y-5">
+                                    <div className={`grid gap-4 ${feat.costPrice ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1 md:grid-cols-2"}`}>
                                         <Field label={priceLabel} required error={errors.sell_price}>
                                             <CurrencyInput
                                                 value={data.sell_price}
                                                 onChange={(v) => setData("sell_price", v)}
                                                 error={!!errors.sell_price}
+                                                required
                                             />
                                         </Field>
                                         {feat.costPrice && (
-                                            <Field
-                                                label="Harga Beli (Modal)"
-                                                hint="Harga pokok awal. Akan diperbarui otomatis setiap pembelian dari supplier."
-                                                error={errors.cost_price}
-                                            >
+                                            <Field label="Harga Beli / Modal" error={errors.cost_price}>
                                                 <CurrencyInput
                                                     value={data.cost_price}
                                                     onChange={(v) => setData("cost_price", v)}
@@ -470,783 +400,472 @@ export default function Create({
                                                 />
                                             </Field>
                                         )}
-                                    </div>
-                                    {feat.costPrice && Number(data.sell_price) > 0 && Number(data.cost_price) > 0 && (
-                                        <div className="mt-3 rounded-xl bg-slate-50 px-4 py-2.5 text-xs text-slate-500">
-                                            Margin:{" "}
-                                            <strong className="text-slate-700">
-                                                Rp {(Number(data.sell_price) - Number(data.cost_price)).toLocaleString("id-ID")}
-                                            </strong>
-                                            <span className="ml-1">
-                                                ({(((Number(data.sell_price) - Number(data.cost_price)) / Number(data.sell_price)) * 100).toFixed(1)}%)
-                                            </span>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-
-                            {data.is_variant && (
-                                <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5 text-xs text-indigo-700">
-                                    💡 Harga diatur per variant di bawah. Produk ini tidak punya harga tunggal.
-                                </div>
-                            )}
-                        </SectionCard>
-
-                        {/* SECTION: Multi-Satuan — hanya retail, fnb, rental */}
-                        {feat.multiUnit && !data.is_variant && (
-                        <SectionCard
-                            title="Multi-Satuan"
-                            subtitle="Kemasan grosir seperti dus, box, karton"
-                            icon={Package}
-                            accent="amber"
-                        >
-                            <div className="space-y-3">
-                                {data.packaging_units.map((pu, i) => (
-                                    <div
-                                        key={i}
-                                        className="relative rounded-xl border border-slate-200 bg-slate-50/50 p-4"
-                                    >
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setData(
-                                                    "packaging_units",
-                                                    data.packaging_units.filter(
-                                                        (_, j) => j !== i,
-                                                    ),
-                                                )
-                                            }
-                                            className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500"
-                                            title="Hapus satuan"
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </button>
-
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <Field label="Nama Satuan" required>
-                                                <input
-                                                    type="text"
-                                                    value={pu.name}
-                                                    onChange={(e) => {
-                                                        const updated = [
-                                                            ...data.packaging_units,
-                                                        ];
-                                                        updated[i].name =
-                                                            e.target.value;
-                                                        setData(
-                                                            "packaging_units",
-                                                            updated,
-                                                        );
-                                                    }}
-                                                    placeholder="cth. Dus, Box"
-                                                    className={inputCls(false)}
-                                                />
-                                            </Field>
-                                            <Field
-                                                label={`1 ${pu.name || "..."} = ? ${data.unit}`}
-                                                required
-                                            >
-                                                <input
-                                                    type="number"
-                                                    value={pu.conversion_qty}
-                                                    onChange={(e) => {
-                                                        const updated = [
-                                                            ...data.packaging_units,
-                                                        ];
-                                                        updated[
-                                                            i
-                                                        ].conversion_qty =
-                                                            e.target.value;
-                                                        setData(
-                                                            "packaging_units",
-                                                            updated,
-                                                        );
-                                                    }}
-                                                    min="1"
-                                                    placeholder={`Isi per ${pu.name || "satuan"}`}
-                                                    className={inputCls(false)}
-                                                />
-                                            </Field>
-                                        </div>
-                                        <div className="mt-3 grid grid-cols-2 gap-3">
-                                            <Field
-                                                label={`Harga per ${pu.name || "Satuan"}`}
-                                            >
-                                                <div className="relative">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
-                                                        Rp
-                                                    </span>
-                                                    <input
-                                                        type="number"
-                                                        value={pu.sell_price}
-                                                        onChange={(e) => {
-                                                            const updated = [
-                                                                ...data.packaging_units,
-                                                            ];
-                                                            updated[
-                                                                i
-                                                            ].sell_price =
-                                                                e.target.value;
-                                                            setData(
-                                                                "packaging_units",
-                                                                updated,
-                                                            );
-                                                        }}
-                                                        min="0"
-                                                        placeholder="0"
-                                                        className={`${inputCls(false)} pl-9`}
-                                                    />
+                                        {feat.costPrice && (
+                                            <Field label="Margin">
+                                                <div className="flex gap-2">
+                                                    <div className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50"}`}>
+                                                        <div className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                                                            Rupiah
+                                                        </div>
+                                                        <div className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-rose-700" : "text-emerald-800"}`}>
+                                                            Rp {marginRp.toLocaleString("id-ID")}
+                                                        </div>
+                                                    </div>
+                                                    <div className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50"}`}>
+                                                        <div className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-rose-600" : "text-emerald-700"}`}>
+                                                            Persen
+                                                        </div>
+                                                        <div className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-rose-700" : "text-emerald-800"}`}>
+                                                            {marginPct.toFixed(1)}%
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                {pu.conversion_qty > 0 &&
-                                                    pu.sell_price > 0 && (
-                                                        <p className="mt-1 text-[11px] text-slate-400">
-                                                            ≈ Rp{" "}
-                                                            {(
-                                                                pu.sell_price /
-                                                                pu.conversion_qty
-                                                            ).toLocaleString(
-                                                                "id-ID",
-                                                            )}{" "}
-                                                            / {data.unit}
-                                                        </p>
-                                                    )}
-                                            </Field>
-                                            <Field label="Barcode (opsional)">
-                                                <input
-                                                    type="text"
-                                                    value={pu.barcode}
-                                                    onChange={(e) => {
-                                                        const updated = [
-                                                            ...data.packaging_units,
-                                                        ];
-                                                        updated[i].barcode =
-                                                            e.target.value;
-                                                        setData(
-                                                            "packaging_units",
-                                                            updated,
-                                                        );
-                                                    }}
-                                                    placeholder="Barcode kemasan"
-                                                    className={inputCls(false)}
-                                                />
-                                            </Field>
-                                        </div>
-                                    </div>
-                                ))}
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setData("packaging_units", [
-                                            ...data.packaging_units,
-                                            {
-                                                name: "",
-                                                conversion_qty: "",
-                                                sell_price: "",
-                                                barcode: "",
-                                            },
-                                        ])
-                                    }
-                                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 py-2.5 text-sm font-medium text-slate-500 transition hover:border-indigo-400 hover:text-indigo-600"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    Tambah Satuan
-                                </button>
-
-                                {data.packaging_units.length === 0 && (
-                                    <p className="text-center text-xs text-slate-400">
-                                        Tambahkan kemasan grosir seperti dus,
-                                        box, atau karton.
-                                        <br />
-                                        Contoh: 1 Dus = 12 Pcs dengan harga &
-                                        barcode sendiri.
-                                    </p>
-                                )}
-                            </div>
-                        </SectionCard>
-                        )}
-
-                        {/* SECTION: Harga Grosir Bertingkat */}
-                        {!data.is_variant && (
-                        <SectionCard
-                            title="Harga Grosir"
-                            subtitle="Harga otomatis turun sesuai quantity"
-                            icon={BarChart3}
-                            accent="emerald"
-                        >
-                            <div className="space-y-3">
-                                {data.price_tiers.map((tier, i) => (
-                                    <div
-                                        key={i}
-                                        className="flex items-end gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-3"
-                                    >
-                                        <div className="flex-1">
-                                            <label className="mb-1 block text-xs font-semibold text-slate-500">Min. Qty</label>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={tier.min_qty}
-                                                onChange={(e) => {
-                                                    const updated = [...data.price_tiers];
-                                                    updated[i].min_qty = Number(e.target.value);
-                                                    setData("price_tiers", updated);
-                                                }}
-                                                placeholder="12"
-                                                className="block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                            />
-                                        </div>
-                                        <div className="flex-1">
-                                            <label className="mb-1 block text-xs font-semibold text-slate-500">Harga / pcs</label>
-                                            <CurrencyInput
-                                                value={tier.price}
-                                                onChange={(val) => {
-                                                    const updated = [...data.price_tiers];
-                                                    updated[i].price = val;
-                                                    setData("price_tiers", updated);
-                                                }}
-                                                placeholder="8.500"
-                                            />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setData(
-                                                    "price_tiers",
-                                                    data.price_tiers.filter((_, j) => j !== i),
-                                                )
-                                            }
-                                            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500"
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                ))}
-
-                                {data.price_tiers.length < 5 && (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setData("price_tiers", [
-                                                ...data.price_tiers,
-                                                { min_qty: "", price: "" },
-                                            ])
-                                        }
-                                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 py-2.5 text-sm font-medium text-slate-500 transition hover:border-indigo-400 hover:text-indigo-600"
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                        Tambah Tier (maks 5)
-                                    </button>
-                                )}
-
-                                {data.price_tiers.length === 0 && (
-                                    <p className="text-center text-xs text-slate-400">
-                                        Atau kosongkan jika tidak perlu harga grosir.
-                                    </p>
-                                )}
-                            </div>
-                        </SectionCard>
-                        )}
-
-                        {/* SECTION: Variant — hanya jika is_variant = true */}
-                        {data.is_variant && (
-                            <SectionCard
-                                title="Daftar Variant"
-                                subtitle="Setiap variant punya harga, grosir, dan multi-satuan sendiri"
-                                icon={BarChart3}
-                                accent="indigo"
-                            >
-                                <div className="space-y-4">
-                                    {data.variants.map((v, vi) => (
-                                        <VariantCard
-                                            key={vi}
-                                            variant={v}
-                                            index={vi}
-                                            unit={data.unit}
-                                            feat={feat}
-                                            errors={errors}
-                                            onUpdate={(updated) => {
-                                                const all = [...data.variants];
-                                                all[vi] = updated;
-                                                setData("variants", all);
-                                            }}
-                                            onRemove={() =>
-                                                setData(
-                                                    "variants",
-                                                    data.variants.filter((_, j) => j !== vi),
-                                                )
-                                            }
-                                        />
-                                    ))}
-
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setData("variants", [
-                                                ...data.variants,
-                                                {
-                                                    name: "",
-                                                    sku: "",
-                                                    price: "",
-                                                    cost_price: "",
-                                                    barcode: "",
-                                                    price_tiers: [],
-                                                    packaging_units: [],
-                                                },
-                                            ])
-                                        }
-                                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 py-2.5 text-sm font-medium text-slate-500 transition hover:border-indigo-400 hover:text-indigo-600"
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                        Tambah Variant
-                                    </button>
-
-                                    {data.variants.length === 0 && (
-                                        <p className="text-center text-xs text-slate-400">
-                                            Tambah minimal satu variant (cth: S, M, L atau Merah, Biru).
-                                        </p>
-                                    )}
-                                </div>
-                            </SectionCard>
-                        )}
-
-                        {/* SECTION: Detail spesifik per tipe */}
-                        {(data.type === "time_based" ||
-                            data.type === "rental_item" ||
-                            [
-                                "ticket",
-                                "hospitality",
-                                "session",
-                                "parking",
-                                "rental",
-                            ].includes(storeType)) && (
-                            <SectionCard
-                                title="Detail Spesifik"
-                                subtitle="Informasi tambahan sesuai tipe produk"
-                                icon={Wrench}
-                                accent="amber"
-                            >
-                                <div className="space-y-4">
-                                    {/* price_per_hour — untuk time_based dan rental */}
-                                    {(data.type === "time_based" ||
-                                        data.type === "rental_item") && (
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <Field
-                                                label="Tarif Per Jam"
-                                                error={errors.price_per_hour}
-                                            >
-                                                <div className="relative">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
-                                                        Rp
-                                                    </span>
-                                                    <input
-                                                        type="number"
-                                                        value={
-                                                            data.price_per_hour
-                                                        }
-                                                        onChange={(e) =>
-                                                            setData(
-                                                                "price_per_hour",
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        min="0"
-                                                        placeholder="0"
-                                                        className={`${inputCls(!!errors.price_per_hour)} pl-9`}
-                                                    />
-                                                </div>
-                                                <p className="mt-1 text-xs text-slate-400">
-                                                    Tarif per jam (opsional,
-                                                    selain harga dasar)
-                                                </p>
-                                            </Field>
-                                            <Field
-                                                label="Durasi Minimum (menit)"
-                                                error={
-                                                    errors.min_duration_minutes
-                                                }
-                                            >
-                                                <input
-                                                    type="number"
-                                                    value={
-                                                        data.min_duration_minutes
-                                                    }
-                                                    onChange={(e) =>
-                                                        setData(
-                                                            "min_duration_minutes",
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    min="0"
-                                                    placeholder="Contoh: 60"
-                                                    className={inputCls(
-                                                        !!errors.min_duration_minutes,
-                                                    )}
-                                                />
-                                                <p className="mt-1 text-xs text-slate-400">
-                                                    Minimal durasi pemakaian
-                                                </p>
-                                            </Field>
-                                        </div>
-                                    )}
-
-                                    {/* session_duration_minutes — untuk session/time_based di store session */}
-                                    {(storeType === "session" ||
-                                        storeType === "parking") &&
-                                        data.type === "time_based" && (
-                                            <Field
-                                                label="Durasi Paket (menit)"
-                                                error={
-                                                    errors.session_duration_minutes
-                                                }
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <input
-                                                        type="number"
-                                                        value={
-                                                            data.session_duration_minutes
-                                                        }
-                                                        onChange={(e) =>
-                                                            setData(
-                                                                "session_duration_minutes",
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        min="0"
-                                                        placeholder="60 = 1 jam, 0 = unlimited"
-                                                        className={`${inputCls(!!errors.session_duration_minutes)} max-w-xs`}
-                                                    />
-                                                </div>
-                                                <p className="mt-1 text-xs text-slate-400">
-                                                    0 = unlimited. Misal: 60 (1
-                                                    jam), 120 (2 jam), 180 (3
-                                                    jam)
-                                                </p>
                                             </Field>
                                         )}
+                                    </div>
 
-                                    {/* capacity — untuk ticket & hospitality */}
-                                    {["ticket", "hospitality"].includes(
-                                        storeType,
-                                    ) && (
-                                        <Field
-                                            label="Kapasitas (orang/slot)"
-                                            error={errors.capacity}
-                                        >
-                                            <input
-                                                type="number"
-                                                value={data.capacity}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "capacity",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                min="1"
-                                                placeholder="Contoh: 10"
-                                                className={`${inputCls(!!errors.capacity)} max-w-xs`}
-                                            />
-                                            <p className="mt-1 text-xs text-slate-400">
-                                                Berapa orang yang bisa pakai
-                                                slot/tiket ini
-                                            </p>
-                                        </Field>
-                                    )}
-
-                                    {/* valid_duration_minutes — untuk ticket */}
-                                    {storeType === "ticket" && (
-                                        <Field
-                                            label="Berlaku (menit)"
-                                            error={
-                                                errors.valid_duration_minutes
-                                            }
-                                        >
-                                            <input
-                                                type="number"
-                                                value={
-                                                    data.valid_duration_minutes
-                                                }
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "valid_duration_minutes",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                min="0"
-                                                placeholder="Contoh: 90 = 1,5 jam. Kosongkan jika tidak terbatas"
-                                                className={`${inputCls(!!errors.valid_duration_minutes)} max-w-xs`}
-                                            />
-                                            <p className="mt-1 text-xs text-slate-400">
-                                                Tiket berlaku berapa menit
-                                                setelah check-in
-                                            </p>
-                                        </Field>
-                                    )}
-
-                                    {/* max_guests — untuk hospitality */}
-                                    {storeType === "hospitality" && (
-                                        <Field
-                                            label="Kapasitas Tamu"
-                                            error={errors.max_guests}
-                                        >
-                                            <input
-                                                type="number"
-                                                value={data.max_guests}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "max_guests",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                min="1"
-                                                placeholder="Contoh: 2"
-                                                className={`${inputCls(!!errors.max_guests)} max-w-xs`}
-                                            />
-                                            <p className="mt-1 text-xs text-slate-400">
-                                                Maksimal tamu yang bisa menginap
-                                            </p>
-                                        </Field>
-                                    )}
-
-                                    {/* deposit_amount — untuk rental */}
-                                    {(storeType === "rental" ||
-                                        data.type === "rental_item") && (
-                                        <Field
-                                            label="Deposit"
-                                            error={errors.deposit_amount}
-                                        >
-                                            <div className="relative max-w-xs">
-                                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
-                                                    Rp
-                                                </span>
-                                                <input
-                                                    type="number"
-                                                    value={data.deposit_amount}
-                                                    onChange={(e) =>
-                                                        setData(
-                                                            "deposit_amount",
-                                                            e.target.value,
-                                                        )
+                                    {/* MULTI SATUAN */}
+                                    {feat.multiUnit && (
+                                        <div className="rounded-xl border border-amber-200/70 bg-amber-50/40 p-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
+                                                        <Package className="h-4 w-4 text-amber-700" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-semibold text-slate-900">Multi Satuan (Kemasan)</div>
+                                                        <div className="text-[11px] text-slate-500">
+                                                            cth. Dus berisi 12 {data.unit}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setData("packaging_units", [
+                                                            ...data.packaging_units,
+                                                            { name: "", conversion_qty: "", sell_price: "", barcode: "" },
+                                                        ])
                                                     }
-                                                    min="0"
-                                                    placeholder="0"
-                                                    className={`${inputCls(!!errors.deposit_amount)} pl-9`}
-                                                />
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100"
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                    Tambah kemasan
+                                                </button>
                                             </div>
-                                            <p className="mt-1 text-xs text-slate-400">
-                                                Deposit yang perlu dibayar
-                                                penyewa (dikembalikan saat
-                                                return)
-                                            </p>
-                                        </Field>
+                                            <div className="space-y-2">
+                                                {data.packaging_units.map((pu, i) => (
+                                                    <div key={i} className="grid grid-cols-12 gap-2 items-center rounded-xl bg-white p-2.5 border border-amber-100">
+                                                        <div className="col-span-12 sm:col-span-3">
+                                                            <input
+                                                                type="text"
+                                                                value={pu.name}
+                                                                onChange={(e) => {
+                                                                    const updated = [...data.packaging_units];
+                                                                    updated[i].name = e.target.value;
+                                                                    setData("packaging_units", updated);
+                                                                }}
+                                                                placeholder="Nama (Dus, Box…)"
+                                                                className="block w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-6 sm:col-span-2">
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="number"
+                                                                    value={pu.conversion_qty}
+                                                                    onChange={(e) => {
+                                                                        const updated = [...data.packaging_units];
+                                                                        updated[i].conversion_qty = e.target.value;
+                                                                        setData("packaging_units", updated);
+                                                                    }}
+                                                                    min="1"
+                                                                    placeholder="12"
+                                                                    className="block w-full rounded-lg border border-slate-200 px-3 py-2 pr-8 text-xs"
+                                                                />
+                                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                                    {data.unit}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="col-span-6 sm:col-span-3">
+                                                            <div className="relative">
+                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                                    Rp
+                                                                </span>
+                                                                <input
+                                                                    type="number"
+                                                                    value={pu.sell_price}
+                                                                    onChange={(e) => {
+                                                                        const updated = [...data.packaging_units];
+                                                                        updated[i].sell_price = e.target.value;
+                                                                        setData("packaging_units", updated);
+                                                                    }}
+                                                                    min="0"
+                                                                    placeholder="Harga"
+                                                                    className="block w-full rounded-lg border border-slate-200 py-2 pl-7 pr-3 text-xs"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="col-span-10 sm:col-span-3">
+                                                            <input
+                                                                type="text"
+                                                                value={pu.barcode}
+                                                                onChange={(e) => {
+                                                                    const updated = [...data.packaging_units];
+                                                                    updated[i].barcode = e.target.value;
+                                                                    setData("packaging_units", updated);
+                                                                }}
+                                                                placeholder="Barcode (opsional)"
+                                                                className="block w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-2 sm:col-span-1 flex items-center justify-end">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    setData("packaging_units", data.packaging_units.filter((_, j) => j !== i))
+                                                                }
+                                                                className="rounded-lg p-1.5 text-rose-500 transition hover:bg-rose-50"
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                        {pu.conversion_qty > 0 && pu.sell_price > 0 && (
+                                                            <div className="col-span-12 text-[11px] text-slate-500 pl-1">
+                                                                ≈ <span className="font-semibold text-emerald-700">
+                                                                    Rp {Math.round(pu.sell_price / pu.conversion_qty).toLocaleString("id-ID")} / {data.unit}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                                {data.packaging_units.length === 0 && (
+                                                    <p className="text-xs text-slate-500 italic text-center py-4">
+                                                        Belum ada kemasan tambahan.
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
                                     )}
-                                </div>
-                            </SectionCard>
-                        )}
 
-                        {/* SECTION: Stok */}
-                        {!isNoStock ? (
-                            <SectionCard
-                                title="Stok"
-                                subtitle="Peringatan jika stok menipis"
-                                icon={Package}
-                            >
-                                <Field
-                                    label="Stok Minimum"
-                                    hint="peringatan stok rendah"
-                                    error={errors.stock_minimum}
-                                >
-                                    <div className="max-w-xs">
+                                    {/* GROSIR TIERS */}
+                                    <div className="rounded-xl border border-slate-200 bg-white/50 p-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50">
+                                                    <BarChart3 className="h-4 w-4 text-indigo-600" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-semibold text-slate-900">Harga Grosir Bertingkat</div>
+                                                    <div className="text-[11px] text-slate-500">Maks 5 tier · beli lebih banyak, harga lebih murah</div>
+                                                </div>
+                                            </div>
+                                            {data.price_tiers.length < 5 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setData("price_tiers", [
+                                                            ...data.price_tiers,
+                                                            { min_qty: "", price: "" },
+                                                        ])
+                                                    }
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100"
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                    Tambah tier
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            {data.price_tiers.map((tier, i) => (
+                                                <div key={i} className="grid grid-cols-12 gap-2 items-center rounded-xl bg-white p-2.5 border border-slate-200">
+                                                    <div className="col-span-2 flex items-center justify-center">
+                                                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 border border-indigo-100">
+                                                            Tier {i + 1}
+                                                        </span>
+                                                    </div>
+                                                    <div className="col-span-5 sm:col-span-4">
+                                                        <label className="text-[10px] font-semibold text-slate-500">Min. Qty</label>
+                                                        <div className="relative">
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                value={tier.min_qty}
+                                                                onChange={(e) => {
+                                                                    const updated = [...data.price_tiers];
+                                                                    updated[i].min_qty = Number(e.target.value);
+                                                                    setData("price_tiers", updated);
+                                                                }}
+                                                                placeholder="0"
+                                                                className="block w-full rounded-lg border border-slate-200 px-3 py-2 pr-10 text-xs"
+                                                            />
+                                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                                {data.unit}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-span-4 sm:col-span-5">
+                                                        <label className="text-[10px] font-semibold text-slate-500">Harga per Unit</label>
+                                                        <div className="relative">
+                                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                                Rp
+                                                            </span>
+                                                            <input
+                                                                type="number"
+                                                                value={tier.price}
+                                                                onChange={(e) => {
+                                                                    const updated = [...data.price_tiers];
+                                                                    updated[i].price = e.target.value;
+                                                                    setData("price_tiers", updated);
+                                                                }}
+                                                                placeholder="0"
+                                                                className="block w-full rounded-lg border border-slate-200 py-2 pl-7 pr-3 text-xs"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-span-1 flex items-end justify-end">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setData("price_tiers", data.price_tiers.filter((_, j) => j !== i))
+                                                            }
+                                                            className="rounded-lg p-1.5 text-rose-500 transition hover:bg-rose-50"
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {data.price_tiers.length === 0 && (
+                                                <p className="text-xs text-slate-500 italic text-center py-4">
+                                                    Belum ada tier grosir.
+                                                </p>
+                                            )}
+                                        </div>
+                                </div>
+                            </div>
+                        </SectionCard>
+
+                        {/* SECTION: Stok & Pengaturan */}
+                        <SectionCard
+                            step={3}
+                            title="Stok & Pengaturan"
+                            subtitle="Kelola inventori dan opsi operasional produk"
+                        >
+                            <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 mb-5 ${isNoStock ? "opacity-50 pointer-events-none" : ""}`}>
+                                <Field label="Stok Minimum" error={errors.stock_minimum}>
+                                    <div className="relative">
                                         <input
                                             type="number"
                                             value={data.stock_minimum}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "stock_minimum",
-                                                    e.target.value,
-                                                )
-                                            }
+                                            onChange={(e) => setData("stock_minimum", e.target.value)}
                                             min="0"
-                                            placeholder="Contoh: 10"
-                                            disabled={!data.track_stock}
-                                            className={`${inputCls(!!errors.stock_minimum)} disabled:bg-slate-100 disabled:text-slate-400`}
+                                            placeholder="0"
+                                            disabled={isNoStock}
+                                            className={`${inputCls(!!errors.stock_minimum)} pr-16`}
                                         />
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                            {data.unit}
+                                        </span>
                                     </div>
-                                    <p className="mt-1 text-xs text-slate-400">
-                                        Sistem akan memberi notifikasi jika stok
-                                        di bawah angka ini.
+                                    <p className="text-[11px] text-slate-500 mt-1">
+                                        Kasir akan diingatkan ketika stok mencapai angka ini.
                                     </p>
                                 </Field>
-                            </SectionCard>
-                        ) : (
-                            <SectionCard
-                                title="Stok"
-                                subtitle="Tidak berlaku untuk tipe ini"
-                                icon={Package}
-                            >
-                                <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-500 flex items-center gap-2">
-                                    <span>ℹ️</span>
-                                    <span>
-                                        {data.type === "service"
-                                            ? "Layanan jasa tidak memiliki stok fisik."
-                                            : data.type === "time_based"
-                                              ? "Produk berbasis waktu tidak memiliki stok."
-                                              : "Tipe ini tidak memiliki stok."}
-                                    </span>
-                                </div>
-                            </SectionCard>
-                        )}
-
-                        {/* SECTION: Pengaturan Tambahan */}
-                        <SectionCard
-                            title="Pengaturan Tambahan"
-                            subtitle="Opsi lanjutan untuk produk"
-                            icon={Settings}
-                            accent="violet"
-                        >
-                            <div className="space-y-4">
-                                {/* Waktu persiapan — hanya FnB */}
                                 {feat.prepTime && (
-                                    <Field
-                                        label="Waktu Persiapan"
-                                        hint="menit"
-                                        error={errors.preparation_time}
-                                    >
-                                        <div className="relative max-w-xs">
+                                    <Field label="Waktu Persiapan" error={errors.preparation_time}>
+                                        <div className="relative">
                                             <input
                                                 type="number"
                                                 value={data.preparation_time}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "preparation_time",
-                                                        e.target.value,
-                                                    )
-                                                }
+                                                onChange={(e) => setData("preparation_time", e.target.value)}
                                                 min="0"
-                                                placeholder="Kosongkan jika tidak perlu"
-                                                className={inputCls(
-                                                    !!errors.preparation_time,
-                                                )}
+                                                placeholder="0"
+                                                className={`${inputCls(!!errors.preparation_time)} pr-16`}
                                             />
-                                            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-slate-400">
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
                                                 menit
                                             </span>
                                         </div>
                                     </Field>
                                 )}
-                                <div className="grid grid-cols-2 gap-3">
-                                    {/* Pantau Stok — hanya store yang punya stok fisik */}
-                                    {feat.trackStock && !isNoStock && (
-                                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
-                                            <input
-                                                type="checkbox"
-                                                checked={data.track_stock}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "track_stock",
-                                                        e.target.checked,
-                                                    )
-                                                }
-                                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                            />
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-700">
-                                                    Pantau Stok
-                                                </p>
-                                                <p className="text-xs text-slate-400">
-                                                    Lacak jumlah stok produk ini
-                                                </p>
-                                            </div>
-                                        </label>
-                                    )}
-                                    {/* Bisa Dijual — hanya untuk non-retail (raw_material dll) */}
-                                    {feat.isSellable &&
-                                        data.type !== "finished_goods" && (
-                                            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={data.is_sellable}
-                                                    onChange={(e) =>
-                                                        setData(
-                                                            "is_sellable",
-                                                            e.target.checked,
-                                                        )
-                                                    }
-                                                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                                <div>
-                                                    <p className="text-sm font-medium text-slate-700">
-                                                        Bisa Dijual
-                                                    </p>
-                                                    <p className="text-xs text-slate-400">
-                                                        Nonaktifkan untuk bahan
-                                                        baku
-                                                    </p>
-                                                </div>
-                                            </label>
-                                        )}
-                                    {/* Produk Komposisi — hanya FnB */}
-                                    {feat.isComposable && (
-                                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
-                                            <input
-                                                type="checkbox"
-                                                checked={data.is_composable}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "is_composable",
-                                                        e.target.checked,
-                                                    )
-                                                }
-                                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                            />
-                                            <div>
-                                                <p className="text-sm font-medium text-slate-700">
-                                                    Produk Komposisi
-                                                </p>
-                                                <p className="text-xs text-slate-400">
-                                                    Tersusun dari produk lain
-                                                    (combo)
-                                                </p>
-                                            </div>
-                                        </label>
-                                    )}
-                                    {/* Produk Aktif — selalu tampil */}
-                                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
-                                        <input
-                                            type="checkbox"
-                                            checked={data.is_active}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "is_active",
-                                                    e.target.checked,
-                                                )
-                                            }
-                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                        />
-                                        <div>
-                                            <p className="text-sm font-medium text-slate-700">
-                                                Produk Aktif
-                                            </p>
-                                            <p className="text-xs text-slate-400">
-                                                Tampil di kasir & daftar produk
-                                            </p>
-                                        </div>
-                                    </label>
-                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {feat.trackStock && !isNoStock && (
+                                    <SettingToggle
+                                        label="Pantau Stok"
+                                        description="Kurangi stok otomatis setiap penjualan"
+                                        checked={data.track_stock}
+                                        onChange={(v) => setData("track_stock", v)}
+                                    />
+                                )}
+                                <SettingToggle
+                                    label="Bisa Dijual"
+                                    description="Tampilkan produk di layar kasir"
+                                    checked={data.is_sellable}
+                                    onChange={(v) => setData("is_sellable", v)}
+                                />
+                                {feat.isComposable && (
+                                    <SettingToggle
+                                        label="Produk Komposisi"
+                                        description="Terdiri dari bahan/resep lain"
+                                        checked={data.is_composable}
+                                        onChange={(v) => setData("is_composable", v)}
+                                    />
+                                )}
+                                <SettingToggle
+                                    label="Produk Aktif"
+                                    description="Nonaktifkan untuk menyembunyikan sementara"
+                                    checked={data.is_active}
+                                    onChange={(v) => setData("is_active", v)}
+                                />
                             </div>
                         </SectionCard>
+
+                        {/* SECTION: Detail Spesifik */}
+                        {(data.type === "time_based" || data.type === "rental_item") && (
+                            <SectionCard
+                                step={4}
+                                title="Detail Spesifik Tipe Produk"
+                                subtitle="Field ini muncul menyesuaikan tipe produk yang kamu pilih"
+                            >
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {(data.type === "time_based" || data.type === "rental_item") && (
+                                        <>
+                                            <Field label="Tarif Per Jam" error={errors.price_per_hour}>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                        Rp
+                                                    </span>
+                                                    <input
+                                                        type="number"
+                                                        value={data.price_per_hour}
+                                                        onChange={(e) => setData("price_per_hour", e.target.value)}
+                                                        min="0"
+                                                        placeholder="0"
+                                                        className={`${inputCls(!!errors.price_per_hour)} pl-9`}
+                                                    />
+                                                </div>
+                                            </Field>
+                                            <Field label="Durasi Minimum" error={errors.min_duration_minutes}>
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        value={data.min_duration_minutes}
+                                                        onChange={(e) => setData("min_duration_minutes", e.target.value)}
+                                                        min="0"
+                                                        placeholder="0"
+                                                        className={`${inputCls(!!errors.min_duration_minutes)} pr-16`}
+                                                    />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                        menit
+                                                    </span>
+                                                </div>
+                                            </Field>
+                                        </>
+                                    )}
+                                    {(storeType === "session" || storeType === "parking") && data.type === "time_based" && (
+                                        <Field label="Durasi Paket" error={errors.session_duration_minutes}>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    value={data.session_duration_minutes}
+                                                    onChange={(e) => setData("session_duration_minutes", e.target.value)}
+                                                    min="0"
+                                                    placeholder="60"
+                                                    className={`${inputCls(!!errors.session_duration_minutes)} pr-16`}
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                    menit
+                                                </span>
+                                            </div>
+                                        </Field>
+                                    )}
+                                    {["ticket", "hospitality"].includes(storeType) && (
+                                        <Field label="Kapasitas" error={errors.capacity}>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    value={data.capacity}
+                                                    onChange={(e) => setData("capacity", e.target.value)}
+                                                    min="1"
+                                                    placeholder="0"
+                                                    className={`${inputCls(!!errors.capacity)} pr-16`}
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                    orang
+                                                </span>
+                                            </div>
+                                        </Field>
+                                    )}
+                                    {storeType === "ticket" && (
+                                        <Field label="Berlaku Selama" error={errors.valid_duration_minutes}>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    value={data.valid_duration_minutes}
+                                                    onChange={(e) => setData("valid_duration_minutes", e.target.value)}
+                                                    min="0"
+                                                    placeholder="0"
+                                                    className={`${inputCls(!!errors.valid_duration_minutes)} pr-16`}
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                    menit
+                                                </span>
+                                            </div>
+                                        </Field>
+                                    )}
+                                    {storeType === "hospitality" && (
+                                        <Field label="Kapasitas Tamu" error={errors.max_guests}>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    value={data.max_guests}
+                                                    onChange={(e) => setData("max_guests", e.target.value)}
+                                                    min="1"
+                                                    placeholder="0"
+                                                    className={`${inputCls(!!errors.max_guests)} pr-16`}
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                    orang
+                                                </span>
+                                            </div>
+                                        </Field>
+                                    )}
+                                    {(storeType === "rental" || data.type === "rental_item") && (
+                                        <Field label="Jumlah Deposit" error={errors.deposit_amount}>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                    Rp
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    value={data.deposit_amount}
+                                                    onChange={(e) => setData("deposit_amount", e.target.value)}
+                                                    min="0"
+                                                    placeholder="0"
+                                                    className={`${inputCls(!!errors.deposit_amount)} pl-9`}
+                                                />
+                                            </div>
+                                        </Field>
+                                    )}
+                                </div>
+                            </SectionCard>
+                        )}
+
                     </div>
 
                     {/* ── Sidebar (sticky) ── */}
-                    <div className="space-y-5 self-start lg:sticky lg:top-16">
+                    <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-20 self-start">
                         {/* Gambar */}
-                        <SectionCard
-                            title="Gambar Produk"
-                            subtitle="JPG, PNG, WEBP. Maks 2MB."
-                            icon={Image}
-                            accent="violet"
-                        >
+                        <SectionCard title="Gambar Produk" accent="violet">
                             <div className="space-y-3">
-                                <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border-2 border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-indigo-50/30 transition hover:border-indigo-400 hover:from-indigo-50/20 hover:to-violet-50/20">
+                                <div
+                                    className="group relative aspect-square w-full overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-gradient-to-br from-indigo-50/30 to-violet-50/30 transition hover:border-indigo-400 hover:bg-indigo-50/40 cursor-pointer"
+                                    onClick={() => document.getElementById("imageInput").click()}
+                                >
                                     {imagePreview ? (
                                         <img
                                             src={imagePreview}
@@ -1254,35 +873,22 @@ export default function Create({
                                             className="aspect-square h-full w-full object-cover"
                                         />
                                     ) : (
-                                        <div className="flex h-full flex-col items-center justify-center p-4">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-                                                <Image
-                                                    className="h-6 w-6 text-indigo-400"
-                                                    strokeWidth={1.5}
-                                                />
+                                        <div className="flex h-full flex-col items-center justify-center p-6">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30 mb-2">
+                                                <Image className="h-6 w-6 text-white" strokeWidth={1.5} />
                                             </div>
-                                            <p className="mt-3 text-xs font-medium text-slate-500">
-                                                Klik untuk upload
-                                            </p>
-                                            <p className="mt-0.5 text-[10px] text-slate-400">
-                                                JPG, PNG, WEBP
-                                            </p>
+                                            <p className="text-sm font-semibold text-slate-800">Drag & drop gambar</p>
+                                            <p className="text-[11px] text-slate-500 mt-0.5">atau klik untuk pilih file · PNG, JPG (maks 2MB)</p>
                                         </div>
                                     )}
                                 </div>
-                                <label className="block cursor-pointer">
-                                    <span className="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-sm font-medium text-slate-600 shadow-sm transition hover:border-indigo-300 hover:text-indigo-600">
-                                        {imagePreview
-                                            ? "Ganti Gambar"
-                                            : "Pilih Gambar"}
-                                    </span>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                        className="hidden"
-                                    />
-                                </label>
+                                <input
+                                    id="imageInput"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="hidden"
+                                />
                                 {imagePreview && (
                                     <button
                                         type="button"
@@ -1296,57 +902,40 @@ export default function Create({
                                     </button>
                                 )}
                                 {errors.image && (
-                                    <p className="text-xs text-red-500">
-                                        {errors.image}
-                                    </p>
+                                    <p className="text-xs text-red-500">{errors.image}</p>
                                 )}
                             </div>
                         </SectionCard>
 
                         {/* Ringkasan */}
-                        <SectionCard
-                            title="Ringkasan"
-                            icon={BarChart3}
-                            accent="emerald"
-                        >
-                            <dl className="space-y-2 text-sm">
-                                <SummaryRow
-                                    label="Tipe"
-                                    value={productTypes[data.type] ?? data.type}
-                                />
-                                <SummaryRow label="Satuan" value={data.unit} />
-                                {data.packaging_units.length > 0 && (
-                                    <SummaryRow
-                                        label="Multi-Satuan"
-                                        value={`${data.packaging_units.length} kemasan`}
-                                    />
+                        <SectionCard title="Ringkasan Konfigurasi" accent="emerald">
+                            <dl className="space-y-3 text-sm">
+                                <SummaryRow label="Nama" value={data.name || "—"} />
+                                <SummaryRow label="Tipe" value={productTypes[data.type] ?? data.type} />
+                                <SummaryRow label="Satuan Dasar" value={data.unit} />
+                                {feat.multiUnit && (
+                                    <SummaryRow label="Kemasan Tambahan" value={`${data.packaging_units.length} kemasan`} />
                                 )}
-                                <SummaryRow
-                                    label="Dipantau"
-                                    value={data.track_stock ? "Ya" : "Tidak"}
-                                    active={data.track_stock}
-                                />
-                                <SummaryRow
-                                    label="Bisa Dijual"
-                                    value={data.is_sellable ? "Ya" : "Tidak"}
-                                    active={data.is_sellable}
-                                />
-                                <SummaryRow
-                                    label="Status"
-                                    value={
-                                        data.is_active ? "Aktif" : "Nonaktif"
-                                    }
-                                    active={data.is_active}
-                                />
                             </dl>
+                            <div className="mt-3 flex flex-wrap gap-1.5 border-t border-dashed border-slate-200 pt-3">
+                                {feat.trackStock && !isNoStock && (
+                                    <SummaryChip active={data.track_stock} label="Dipantau" />
+                                )}
+                                <SummaryChip active={data.is_sellable} label="Bisa dijual" />
+                                <SummaryChip active={data.is_active} label="Aktif" />
+                                {feat.isComposable && data.is_composable && (
+                                    <SummaryChip active={data.is_composable} label="Komposisi" />
+                                )}
+                            </div>
                         </SectionCard>
 
-                        {/* Actions */}
-                        <div className="flex flex-col gap-2.5">
+                        {/* Actions — desktop only */}
+                        <div className="hidden lg:flex flex-col gap-2.5">
                             <button
                                 type="submit"
+                                form="productForm"
                                 disabled={processing}
-                                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-indigo-600 hover:to-violet-700 hover:shadow-indigo-500/40 disabled:opacity-60"
+                                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
                             >
                                 {processing ? "Menyimpan..." : "Simpan Produk"}
                             </button>
@@ -1357,9 +946,42 @@ export default function Create({
                                 Batal
                             </Link>
                         </div>
-                    </div>
+
+                        <p className="text-[11px] text-slate-400 text-center px-3">
+                            Perubahan tersimpan otomatis sebagai draft di perangkat ini.
+                        </p>
+                    </aside>
                 </div>
             </form>
+
+            {/* Floating Action Buttons — mobile/tablet only */}
+            <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 lg:hidden">
+                <Link
+                    href={route("admin.products.index")}
+                    className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-slate-500 shadow-lg ring-1 ring-slate-200 transition hover:bg-red-50 hover:text-red-500 hover:ring-red-200"
+                    title="Batal"
+                >
+                    <X className="h-5 w-5" strokeWidth={2} />
+                </Link>
+                <button
+                    type="submit"
+                    form="productForm"
+                    disabled={processing}
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-xl shadow-indigo-500/40 transition hover:shadow-2xl hover:shadow-indigo-500/50 disabled:opacity-60"
+                    title="Simpan Produk"
+                >
+                    {processing ? (
+                        <svg className="h-6 w-6 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                    ) : (
+                        <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    )}
+                </button>
+            </div>
 
             {/* Barcode Scanner Modal */}
             <BarcodeScanner
@@ -1375,55 +997,99 @@ export default function Create({
 }
 
 /* ── Reusable components ── */
-function SectionCard({
-    title,
-    subtitle,
-    icon: Icon,
-    accent = "indigo",
-    children,
-}) {
+
+function SectionCard({ step, title, subtitle, accent = "indigo", headerRight, children }) {
     const accents = {
-        indigo: "border-l-indigo-500 bg-indigo-50/30",
-        violet: "border-l-violet-500 bg-violet-50/30",
-        emerald: "border-l-emerald-500 bg-emerald-50/30",
-        amber: "border-l-amber-500 bg-amber-50/30",
+        indigo: "from-indigo-50/60 to-violet-50/60",
+        violet: "from-violet-50/60 to-purple-50/60",
+        emerald: "from-emerald-50/60 to-teal-50/60",
+        amber: "from-amber-50/60 to-orange-50/60",
     };
+
     return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
-            <div
-                className={`border-b border-slate-100 bg-gradient-to-r ${accents[accent] ?? accents.indigo} px-5 py-4`}
-            >
-                <div className="flex items-center gap-2.5">
-                    {Icon && (
-                        <Icon
-                            className="h-5 w-5 text-slate-500"
-                            strokeWidth={1.7}
-                        />
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className={`flex items-start justify-between gap-3 border-b border-slate-100 bg-gradient-to-r ${accents[accent] ?? accents.indigo} px-5 py-4 sm:px-6 rounded-t-2xl`}>
+                <div className="flex items-start gap-3">
+                    {step && (
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-violet-50 text-sm font-bold text-indigo-600">
+                            {String(step).padStart(2, "0")}
+                        </span>
                     )}
-                    <div>
-                        <h3 className="text-sm font-semibold text-slate-800">
+                    <div className="min-w-0">
+                        <h3 className="text-base font-semibold text-slate-900 tracking-tight">
                             {title}
                         </h3>
                         {subtitle && (
-                            <p className="mt-0.5 text-xs text-slate-500">
-                                {subtitle}
-                            </p>
+                            <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>
                         )}
                     </div>
                 </div>
+                {headerRight}
             </div>
-            <div className="p-5">{children}</div>
+            <div className="p-5 sm:p-6">{children}</div>
+        </section>
+    );
+}
+
+function ToggleSwitch({ checked, onChange, disabled = false }) {
+    return (
+        <button
+            type="button"
+            role="switch"
+            aria-checked={checked}
+            disabled={disabled}
+            onClick={() => onChange(!checked)}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${
+                checked
+                    ? "bg-gradient-to-r from-indigo-500 to-violet-500"
+                    : "bg-slate-300"
+            } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+        >
+            <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ${
+                    checked ? "translate-x-5" : "translate-x-0.5"
+                }`}
+            />
+        </button>
+    );
+}
+
+function SettingToggle({ label, description, checked, onChange, show = true }) {
+    if (!show) return null;
+    return (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-indigo-200 cursor-pointer">
+            <div>
+                <p className="text-sm font-semibold text-slate-900">{label}</p>
+                <p className="text-[11px] text-slate-500">{description}</p>
+            </div>
+            <ToggleSwitch checked={checked} onChange={onChange} />
         </div>
+    );
+}
+
+function SummaryChip({ label, active, show = true }) {
+    if (!show) return null;
+    return (
+        <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                active
+                    ? "border border-emerald-100 bg-emerald-50 text-emerald-700"
+                    : "border border-slate-200 bg-slate-100 text-slate-500"
+            }`}
+        >
+            <span className={`h-1.5 w-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-slate-400"}`} />
+            {label}
+        </span>
     );
 }
 
 function Field({ label, required, error, hint, children }) {
     return (
         <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                {label} {required && <span className="text-red-400">*</span>}
+            <label className="mb-1.5 block text-[0.8rem] font-semibold tracking-wide text-slate-600">
+                {label} {required && <span className="text-rose-500">*</span>}
                 {hint && (
-                    <span className="ml-1 text-[10px] font-normal normal-case tracking-normal text-slate-400">
+                    <span className="ml-1 text-[11px] font-normal text-slate-400">
                         ({hint})
                     </span>
                 )}
@@ -1434,13 +1100,11 @@ function Field({ label, required, error, hint, children }) {
     );
 }
 
-function SummaryRow({ label, value, active }) {
+function SummaryRow({ label, value }) {
     return (
-        <div className="flex items-center justify-between py-1.5">
+        <div className="flex items-start justify-between gap-3">
             <dt className="text-xs text-slate-500">{label}</dt>
-            <dd
-                className={`text-xs font-semibold ${active === undefined ? "text-slate-700" : active ? "text-emerald-600" : "text-slate-400"}`}
-            >
+            <dd className="text-xs font-semibold text-slate-900 text-right max-w-[65%] truncate">
                 {value}
             </dd>
         </div>
@@ -1448,235 +1112,7 @@ function SummaryRow({ label, value, active }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3.5 text-sm shadow-sm transition focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 ${hasError ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""}`;
-}
-
-/**
- * VariantCard — dipakai di Create.jsx dan Edit.jsx.
- * Menampilkan satu variant dengan sub-section harga, grosir, multi-satuan.
- */
-export function VariantCard({ variant, index, unit, feat, errors, onUpdate, onRemove }) {
-    const update = (key, val) => onUpdate({ ...variant, [key]: val });
-
-    return (
-        <div className="rounded-2xl border border-indigo-100 bg-indigo-50/20 p-4 space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-                    Variant {index + 1}
-                </span>
-                <button
-                    type="button"
-                    onClick={onRemove}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500"
-                >
-                    <X className="h-4 w-4" />
-                </button>
-            </div>
-
-            {/* Nama + SKU + Barcode */}
-            <div className="grid grid-cols-2 gap-3">
-                <Field label="Nama Variant" required>
-                    <input
-                        type="text"
-                        value={variant.name}
-                        onChange={(e) => update("name", e.target.value)}
-                        placeholder="cth. Merah, S, 500ml"
-                        className={inputCls(false)}
-                    />
-                </Field>
-                <Field label="SKU" required>
-                    <input
-                        type="text"
-                        value={variant.sku}
-                        onChange={(e) => update("sku", e.target.value)}
-                        placeholder="PRD-001-S"
-                        className={inputCls(false)}
-                    />
-                </Field>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-                <Field label="Harga Jual" required>
-                    <CurrencyInput
-                        value={variant.price}
-                        onChange={(v) => update("price", v)}
-                    />
-                </Field>
-                {feat.costPrice && (
-                    <Field label="Harga Modal">
-                        <CurrencyInput
-                            value={variant.cost_price}
-                            onChange={(v) => update("cost_price", v)}
-                        />
-                    </Field>
-                )}
-            </div>
-
-            <Field label="Barcode" hint="opsional">
-                <input
-                    type="text"
-                    value={variant.barcode}
-                    onChange={(e) => update("barcode", e.target.value)}
-                    placeholder="EAN-13"
-                    className={inputCls(false)}
-                />
-            </Field>
-
-            {/* Harga Grosir per variant */}
-            <div>
-                <p className="mb-2 text-xs font-semibold text-slate-600">Harga Grosir (opsional)</p>
-                <div className="space-y-2">
-                    {(variant.price_tiers ?? []).map((tier, ti) => (
-                        <div key={ti} className="flex items-end gap-2 rounded-lg border border-slate-200 bg-white p-2.5">
-                            <div className="flex-1">
-                                <label className="mb-1 block text-[10px] font-semibold text-slate-500">Min. Qty</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={tier.min_qty}
-                                    onChange={(e) => {
-                                        const tiers = [...(variant.price_tiers ?? [])];
-                                        tiers[ti] = { ...tiers[ti], min_qty: Number(e.target.value) };
-                                        update("price_tiers", tiers);
-                                    }}
-                                    placeholder="12"
-                                    className="block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
-                                />
-                            </div>
-                            <div className="flex-1">
-                                <label className="mb-1 block text-[10px] font-semibold text-slate-500">Harga</label>
-                                <CurrencyInput
-                                    value={tier.price}
-                                    onChange={(v) => {
-                                        const tiers = [...(variant.price_tiers ?? [])];
-                                        tiers[ti] = { ...tiers[ti], price: v };
-                                        update("price_tiers", tiers);
-                                    }}
-                                />
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    update("price_tiers", (variant.price_tiers ?? []).filter((_, j) => j !== ti))
-                                }
-                                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500"
-                            >
-                                <X className="h-3.5 w-3.5" />
-                            </button>
-                        </div>
-                    ))}
-                    {(variant.price_tiers ?? []).length < 5 && (
-                        <button
-                            type="button"
-                            onClick={() =>
-                                update("price_tiers", [
-                                    ...(variant.price_tiers ?? []),
-                                    { min_qty: "", price: "" },
-                                ])
-                            }
-                            className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-slate-300 py-1.5 text-xs font-medium text-slate-500 hover:border-indigo-400 hover:text-indigo-600 transition"
-                        >
-                            <Plus className="h-3.5 w-3.5" /> Tambah Tier
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* Multi-Satuan per variant */}
-            {feat.multiUnit && (
-                <div>
-                    <p className="mb-2 text-xs font-semibold text-slate-600">Multi-Satuan (opsional)</p>
-                    <div className="space-y-2">
-                        {(variant.packaging_units ?? []).map((pu, pi) => (
-                            <div key={pi} className="rounded-lg border border-slate-200 bg-white p-2.5 space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Kemasan {pi + 1}</span>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            update("packaging_units", (variant.packaging_units ?? []).filter((_, j) => j !== pi))
-                                        }
-                                        className="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500"
-                                    >
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label className="mb-1 block text-[10px] font-semibold text-slate-500">Nama</label>
-                                        <input
-                                            type="text"
-                                            value={pu.name}
-                                            onChange={(e) => {
-                                                const units = [...(variant.packaging_units ?? [])];
-                                                units[pi] = { ...units[pi], name: e.target.value };
-                                                update("packaging_units", units);
-                                            }}
-                                            placeholder="Dus"
-                                            className="block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="mb-1 block text-[10px] font-semibold text-slate-500">Isi ({unit})</label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={pu.conversion_qty}
-                                            onChange={(e) => {
-                                                const units = [...(variant.packaging_units ?? [])];
-                                                units[pi] = { ...units[pi], conversion_qty: e.target.value };
-                                                update("packaging_units", units);
-                                            }}
-                                            placeholder="12"
-                                            className="block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label className="mb-1 block text-[10px] font-semibold text-slate-500">Harga</label>
-                                        <CurrencyInput
-                                            value={pu.sell_price}
-                                            onChange={(v) => {
-                                                const units = [...(variant.packaging_units ?? [])];
-                                                units[pi] = { ...units[pi], sell_price: v };
-                                                update("packaging_units", units);
-                                            }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="mb-1 block text-[10px] font-semibold text-slate-500">Barcode</label>
-                                        <input
-                                            type="text"
-                                            value={pu.barcode}
-                                            onChange={(e) => {
-                                                const units = [...(variant.packaging_units ?? [])];
-                                                units[pi] = { ...units[pi], barcode: e.target.value };
-                                                update("packaging_units", units);
-                                            }}
-                                            placeholder="opsional"
-                                            className="block w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        <button
-                            type="button"
-                            onClick={() =>
-                                update("packaging_units", [
-                                    ...(variant.packaging_units ?? []),
-                                    { name: "", conversion_qty: "", sell_price: "", barcode: "" },
-                                ])
-                            }
-                            className="flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-slate-300 py-1.5 text-xs font-medium text-slate-500 hover:border-amber-400 hover:text-amber-600 transition"
-                        >
-                            <Plus className="h-3.5 w-3.5" /> Tambah Satuan
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+    return `block w-full rounded-xl border border-slate-200 bg-white py-2.5 px-3.5 text-sm transition outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 ${
+        hasError ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""
+    }`;
 }

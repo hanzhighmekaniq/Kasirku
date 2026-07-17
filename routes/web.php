@@ -317,23 +317,9 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
         // ─────────────────────────────────────────────────────────────────
         // PENTING: rute statis (/sales/create) HARUS didaftarkan sebelum
         // rute wildcard (/sales/{sale}), agar Laravel tidak salah mencocokkan
-        // "create" sebagai parameter {sale}.
-        Route::middleware([
-            'feature:basic_pos',
-            'permission:sale.create',
-        ])->group(function () {
-            Route::get('/sales/create', [
-                SaleController::class,
-                'create',
-            ])->name('sales.create');
-            Route::post('/sales', [SaleController::class, 'store'])->name(
-                'sales.store',
-            );
-            Route::post('/sales/{sale}/switch-payment', [
-                SaleController::class,
-                'switchPayment',
-            ])->name('sales.switchPayment');
-        });
+        // ─────────────────────────────────────────────────────────────────
+        // PENJUALAN — riwayat read-only (create/store via Kasir POS saja)
+        // ─────────────────────────────────────────────────────────────────
         Route::middleware(['feature:basic_pos', 'permission:sale.view'])->group(
             function () {
                 Route::get('/sales', [SaleController::class, 'index'])->name(
@@ -349,18 +335,16 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 ])->name('sales.print');
             },
         );
-        Route::middleware(['feature:basic_pos', 'permission:sale.void'])->group(
+        // destroy: owner-only (sale.delete)
+        Route::middleware(['feature:basic_pos', 'permission:sale.delete'])->group(
             function () {
-                Route::patch('/sales/{sale}/status', [
-                    SaleController::class,
-                    'updateStatus',
-                ])->name('sales.updateStatus');
                 Route::delete('/sales/{sale}', [
                     SaleController::class,
                     'destroy',
                 ])->name('sales.destroy');
             },
         );
+        // Lifecycle endpoints untuk tipe toko non-retail (service/rental/hospitality/parking/session)
         Route::middleware([
             'feature:basic_pos',
             'permission:sale.create',

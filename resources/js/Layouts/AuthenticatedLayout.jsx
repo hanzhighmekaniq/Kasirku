@@ -10,7 +10,15 @@ import {
     applyCustomOrderToItems,
 } from "@/Hooks/useSidebarOrder";
 import { NavIcons, GroupIcons } from "@/Components/NavIcons";
-import { GripVertical, Search, Moon, Sun, Settings, LogOut, User } from "lucide-react";
+import {
+    GripVertical,
+    Search,
+    Moon,
+    Sun,
+    Settings,
+    LogOut,
+    User,
+} from "lucide-react";
 
 /* ─── Type-mismatch modal ───────────────────────────────────── */
 /**
@@ -184,11 +192,13 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
                 onClick={locked ? (e) => e.preventDefault() : onClick}
                 title={item.name}
                 className={`group relative flex h-9 w-full items-center justify-center rounded-lg transition-all
-                    ${locked
-                        ? "cursor-not-allowed text-slate-300"
-                        : active
-                          ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200/50"
-                          : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"}`}
+                    ${
+                        locked
+                            ? "cursor-not-allowed text-slate-300"
+                            : active
+                              ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200/50"
+                              : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    }`}
             >
                 {/* Active left indicator */}
                 {active && !locked && (
@@ -204,7 +214,10 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
     // ── Locked item (expanded) ──
     if (locked) {
         return (
-            <div className="group relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left transition cursor-not-allowed" title="🔓 Upgrade Plan untuk mengakses fitur ini">
+            <div
+                className="group relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left transition cursor-not-allowed"
+                title="🔓 Upgrade Plan untuk mengakses fitur ini"
+            >
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-slate-300">
                     <NavIcons name={item.icon} className="h-[15px] w-[15px]" />
                 </span>
@@ -255,9 +268,11 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
             onClick={onClick}
             title={collapsed ? item.name : undefined}
             className={`group flex items-center gap-2.5 rounded-lg px-1 py-2.5 transition-all
-                ${active 
-                    ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-200/50" 
-                    : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"}
+                ${
+                    active
+                        ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-200/50"
+                        : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
+                }
                 ${collapsed ? "justify-center px-0" : ""}`}
         >
             {content}
@@ -298,7 +313,8 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
     };
 
     const handleDragLeave = () => {
-        setDragOverKey(null);perbaiki   
+        setDragOverKey(null);
+        perbaiki;
     };
 
     const handleDrop = (e) => {
@@ -371,8 +387,10 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                     className={`h-3.5 w-3.5 ${hasActive ? "text-indigo-600" : "text-slate-400"}`}
                 />
                 <span className="flex-1 text-left">{group.label}</span>
-                <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${hasActive ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-500"}`}>
-                    {group.items.filter(i => !i.locked).length}
+                <span
+                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${hasActive ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-500"}`}
+                >
+                    {group.items.filter((i) => !i.locked).length}
                 </span>
                 <svg
                     className={`h-3 w-3 shrink-0 transition-transform ${hasActive ? "text-indigo-500" : "text-slate-400"} ${open ? "rotate-180" : ""}`}
@@ -503,7 +521,9 @@ function WorkspaceSwitcher({
 
     const typeIcon = TYPE_ICON[currentStore.type] || "🏬";
     const typeLabel = TYPE_LABEL[currentStore.type] || currentStore.type;
-    const typeColor = TYPE_COLOR[currentStore.type] || "bg-slate-50 text-slate-600 ring-1 ring-slate-200";
+    const typeColor =
+        TYPE_COLOR[currentStore.type] ||
+        "bg-slate-50 text-slate-600 ring-1 ring-slate-200";
 
     const Trigger = clickable ? "button" : "div";
 
@@ -535,9 +555,13 @@ function WorkspaceSwitcher({
                             </p>
                             <div className="flex items-center gap-1 text-[11px] text-slate-500">
                                 {currentBranch && (
-                                    <span className="truncate">📍 {currentBranch.name}</span>
+                                    <span className="truncate">
+                                        📍 {currentBranch.name}
+                                    </span>
                                 )}
-                                <span className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${typeColor}`}>
+                                <span
+                                    className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${typeColor}`}
+                                >
                                     {typeLabel}
                                 </span>
                             </div>
@@ -596,10 +620,22 @@ function WorkspaceSwitcher({
                                     >
                                         {s.name.charAt(0).toUpperCase()}
                                     </span>
-                                    <span className="flex-1 truncate">{s.name}</span>
+                                    <span className="flex-1 truncate">
+                                        {s.name}
+                                    </span>
                                     {s.id === currentStore.id && (
-                                        <svg className="ml-auto h-3.5 w-3.5 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                        <svg
+                                            className="ml-auto h-3.5 w-3.5 shrink-0 text-indigo-500"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={2.5}
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M4.5 12.75l6 6 9-13.5"
+                                            />
                                         </svg>
                                     )}
                                 </button>
@@ -609,7 +645,9 @@ function WorkspaceSwitcher({
 
                     {hasBranchChoice && (
                         <>
-                            <div className={`border-b border-slate-100 px-3 py-2 ${hasStoreChoice ? "border-t" : ""}`}>
+                            <div
+                                className={`border-b border-slate-100 px-3 py-2 ${hasStoreChoice ? "border-t" : ""}`}
+                            >
                                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                                     Cabang
                                 </p>
@@ -633,10 +671,22 @@ function WorkspaceSwitcher({
                                     >
                                         {b.code?.charAt(0) ?? b.name.charAt(0)}
                                     </span>
-                                    <span className="flex-1 truncate">{b.name}</span>
+                                    <span className="flex-1 truncate">
+                                        {b.name}
+                                    </span>
                                     {b.id === currentBranch?.id && (
-                                        <svg className="ml-auto h-3.5 w-3.5 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                        <svg
+                                            className="ml-auto h-3.5 w-3.5 shrink-0 text-indigo-500"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={2.5}
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M4.5 12.75l6 6 9-13.5"
+                                            />
                                         </svg>
                                     )}
                                 </button>
@@ -660,7 +710,6 @@ function SidebarContent({
     branches,
     canSwitchContext,
 }) {
-
     const modules = useStoreModules();
     const groups = buildNavGroups(modules);
     const { customOrder, saveGroupOrder } = useSidebarOrder();
@@ -689,13 +738,17 @@ function SidebarContent({
     };
 
     // Filter groups berdasarkan search query
-    const filteredGroups = searchQuery.trim() 
-        ? orderedGroups.map(group => ({
-            ...group,
-            items: group.items.filter(item => 
-                item.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-        })).filter(group => group.items.length > 0)
+    const filteredGroups = searchQuery.trim()
+        ? orderedGroups
+              .map((group) => ({
+                  ...group,
+                  items: group.items.filter((item) =>
+                      item.name
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()),
+                  ),
+              }))
+              .filter((group) => group.items.length > 0)
         : orderedGroups;
 
     const toggleTheme = () => {
@@ -750,7 +803,9 @@ function SidebarContent({
             </div>
 
             {/* Workspace switcher — toko & cabang */}
-            <div className={`shrink-0 ${collapsed ? "pt-3 pb-1" : "pt-4 pb-1"}`}>
+            <div
+                className={`shrink-0 ${collapsed ? "pt-3 pb-1" : "pt-4 pb-1"}`}
+            >
                 <WorkspaceSwitcher
                     collapsed={collapsed}
                     currentStore={currentStore}
@@ -786,7 +841,9 @@ function SidebarContent({
                                     <Sun className="h-4 w-4 text-amber-600" />
                                 )}
                             </div>
-                            <span className="text-sm font-medium text-slate-700">Tema</span>
+                            <span className="text-sm font-medium text-slate-700">
+                                Tema
+                            </span>
                         </div>
                         <button
                             onClick={toggleTheme}
@@ -833,15 +890,21 @@ function SidebarContent({
                             onReorder={handleReorder}
                         />
                     ))}
-                    {searchQuery && filteredGroups.length === 0 && !collapsed && (
-                        <div className="py-12 text-center">
-                            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-                                <Search className="h-6 w-6 text-slate-400" />
+                    {searchQuery &&
+                        filteredGroups.length === 0 &&
+                        !collapsed && (
+                            <div className="py-12 text-center">
+                                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                                    <Search className="h-6 w-6 text-slate-400" />
+                                </div>
+                                <p className="text-sm font-medium text-slate-600">
+                                    Menu tidak ditemukan
+                                </p>
+                                <p className="mt-1 text-xs text-slate-400">
+                                    Coba kata kunci lain
+                                </p>
                             </div>
-                            <p className="text-sm font-medium text-slate-600">Menu tidak ditemukan</p>
-                            <p className="mt-1 text-xs text-slate-400">Coba kata kunci lain</p>
-                        </div>
-                    )}
+                        )}
                 </div>
             </nav>
 
@@ -852,7 +915,9 @@ function SidebarContent({
                 {collapsed ? (
                     <div className="flex justify-center">
                         <button
-                            onClick={() => router.visit(route("admin.profile.edit"))}
+                            onClick={() =>
+                                router.visit(route("admin.profile.edit"))
+                            }
                             className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-xs font-bold text-white shadow-sm hover:shadow-md transition-all"
                         >
                             {user?.name?.charAt(0).toUpperCase()}
@@ -1071,11 +1136,17 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <div className="lg:hidden px-3 py-2.5">
                                     <div className="flex items-center gap-2.5">
                                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-sm font-bold text-white shadow-sm">
-                                            {user?.name?.charAt(0).toUpperCase()}
+                                            {user?.name
+                                                ?.charAt(0)
+                                                .toUpperCase()}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="truncate text-xs font-semibold text-slate-800">{user?.name}</p>
-                                            <p className="truncate text-[10px] text-slate-500">{user?.email}</p>
+                                            <p className="truncate text-xs font-semibold text-slate-800">
+                                                {user?.name}
+                                            </p>
+                                            <p className="truncate text-[10px] text-slate-500">
+                                                {user?.email}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -1104,7 +1175,9 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     <span className="flex items-center gap-2">
                                         <LogOut className="h-3.5 w-3.5 text-rose-400" />
-                                        <span className="text-rose-600">Keluar</span>
+                                        <span className="text-rose-600">
+                                            Keluar
+                                        </span>
                                     </span>
                                 </Dropdown.Link>
                             </Dropdown.Content>
@@ -1129,7 +1202,11 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
                 )}
 
-                <main className="flex-1 p-1 sm:p-2">{children}</main>
+                <main className="flex-1 p-4">
+                    <div className="mx-auto w-full max-w-[1600px]">
+                        {children}
+                    </div>
+                </main>
             </div>
         </div>
     );

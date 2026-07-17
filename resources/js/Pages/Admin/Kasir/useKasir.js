@@ -427,22 +427,39 @@ export default function useKasir({
         qty = 1,
     ) => {
         // ── Cek stok sebelum masuk keranjang ──
+        // Stok dicek dari bucket yang sesuai (product+variant+packaging_unit),
+        // bukan flat product.stock — bucket tidak melakukan konversi otomatis,
+        // jadi qty yang dicek adalah qty asli dalam satuan bucket itu sendiri.
         if (product.track_stock) {
-            const conversionQty = packagingUnit?.conversion_qty ?? 1;
-            const requestedQty = qty * conversionQty;
+            const bucketStock = packagingUnit
+                ? Number(packagingUnit.stock ?? 0)
+                : variant
+                  ? Number(variant.stock ?? 0)
+                  : Number(product.stock ?? 0);
 
-            // Hitung qty yang sudah ada di keranjang untuk produk ini
+            // Hitung qty yang sudah ada di keranjang untuk bucket yang sama
             const currentCartQty = cart
-                .filter((c) => c.productId === product.id)
-                .reduce((sum, c) => sum + c.qty * (c.conversionQty ?? 1), 0);
+                .filter(
+                    (c) =>
+                        c.productId === product.id &&
+                        (c.variantId ?? null) === (variant?.id ?? null) &&
+                        (c.packagingUnitId ?? null) === (packagingUnit?.id ?? null),
+                )
+                .reduce((sum, c) => sum + c.qty, 0);
 
-            const availableStock = (product.stock ?? 0) - currentCartQty;
+            const availableStock = bucketStock - currentCartQty;
 
-            if (requestedQty > availableStock) {
+            if (qty > availableStock) {
+                const unitLabel = packagingUnit?.name ?? product.unit ?? "pcs";
                 setStockAlert({
-                    productName: product.name,
+                    productName: variant
+                        ? `${product.name} (${variant.name}${packagingUnit ? ` - ${packagingUnit.name}` : ""})`
+                        : packagingUnit
+                          ? `${product.name} (${packagingUnit.name})`
+                          : product.name,
                     available: Math.max(0, availableStock),
-                    requested: requestedQty,
+                    requested: qty,
+                    unitLabel,
                 });
                 return;
             }
@@ -507,21 +524,43 @@ export default function useKasir({
             const item = prev.find((c) => c.cartId === cartId);
             if (!item) return prev;
 
-            // Cek stok jika menambah qty
+            // Cek stok bucket jika menambah qty — bucket yang sama persis
+            // (product + variant + packaging_unit), tanpa konversi otomatis.
             if (delta > 0) {
                 const product = products.find((p) => p.id === item.productId);
                 if (product?.track_stock) {
-                    const currentTotal = prev
-                        .filter((c) => c.productId === item.productId)
-                        .reduce((sum, c) => sum + c.qty * (c.conversionQty ?? 1), 0);
-                    const available = (product.stock ?? 0) - currentTotal;
-                    const requested = delta * (item.conversionQty ?? 1);
+                    const variant = item.variantId
+                        ? (product.variants ?? []).find((v) => v.id === item.variantId)
+                        : null;
+                    const packagingUnit = item.packagingUnitId
+                        ? (variant?.packaging_units ?? product.packaging_units ?? []).find(
+                              (u) => u.id === item.packagingUnitId,
+                          )
+                        : null;
 
-                    if (requested > available) {
+                    const bucketStock = packagingUnit
+                        ? Number(packagingUnit.stock ?? 0)
+                        : variant
+                          ? Number(variant.stock ?? 0)
+                          : Number(product.stock ?? 0);
+
+                    const currentBucketQty = prev
+                        .filter(
+                            (c) =>
+                                c.productId === item.productId &&
+                                (c.variantId ?? null) === (item.variantId ?? null) &&
+                                (c.packagingUnitId ?? null) === (item.packagingUnitId ?? null),
+                        )
+                        .reduce((sum, c) => sum + c.qty, 0);
+
+                    const available = bucketStock - currentBucketQty;
+
+                    if (delta > available) {
                         setStockAlert({
                             productName: item.name,
                             available: Math.max(0, available),
-                            requested,
+                            requested: delta,
+                            unitLabel: packagingUnit?.name ?? product.unit ?? "pcs",
                         });
                         return prev;
                     }
@@ -598,18 +637,24 @@ export default function useKasir({
             (product.variants ?? []).filter((v) => v.is_active).length > 0;
         const hasUnits = (product.packaging_units ?? []).length > 0;
 
-        // Retail: selalu pakai RetailProductModal — bahkan untuk produk
-        // simple yang punya tier/unit sekalipun — supaya alur variant →
-        // unit → qty → notes → subtotal konsisten dalam satu modal.
-        if (isRetail && !hasModifiers) {
+        if (hasModifiers) {
+            // Produk dengan modifier — buka ModifierModal (behaviour lama)
+            setModifierTarget(product);
+            return;
+        }
+
+        // Retail: produk dengan variant atau multi-satuan → RetailProductModal
+        // Produk simple (tanpa variant & tanpa multi-satuan) → langsung cart
+        if (isRetail) {
+            if (!hasVariants && !hasUnits) {
+                addToCart(product);
+                return;
+            }
             setRetailProductTarget(product);
             return;
         }
 
-        if (hasModifiers) {
-            // Produk dengan modifier — buka ModifierModal (behaviour lama)
-            setModifierTarget(product);
-        } else if (hasVariants) {
+        if (hasVariants) {
             // Produk dengan variant tapi tanpa modifier — buka VariantModal
             setVariantTarget(product);
         } else if (hasUnits) {

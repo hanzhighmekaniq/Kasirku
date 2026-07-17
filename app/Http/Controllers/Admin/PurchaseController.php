@@ -76,15 +76,54 @@ class PurchaseController extends Controller
 
         return Inertia::render('Admin/Purchases/Create', [
             'suppliers' => Supplier::where('store_id', $storeId)->get(),
-            'products' => Product::where('store_id', $storeId)
-                ->where('is_active', true)
-                ->get(),
+            'products' => $this->productsForPurchaseForm($storeId),
             'paymentMethods' => PaymentMethod::forStore($storeId)
                 ->where('is_active', true)
                 ->get(),
             'storeType' => $storeTypeCode,
             'prefill' => $prefill,
         ]);
+    }
+
+    /**
+     * Produk untuk form pembelian, lengkap dengan variant + packaging unit +
+     * stok per bucket, supaya staf bisa pilih persis "Produk → Variant →
+     * Unit" dan lihat stok masing-masing sebelum input qty pembelian.
+     */
+    private function productsForPurchaseForm(int $storeId)
+    {
+        return Product::where('store_id', $storeId)
+            ->where('is_active', true)
+            ->with([
+                'variants' => fn ($q) => $q->where('is_active', true),
+                'variants.packagingUnits',
+                'packagingUnits' => fn ($q) => $q->whereNull('variant_id'),
+                'stocks' => fn ($q) => $q->where('store_id', $storeId),
+            ])
+            ->get()
+            ->map(function ($p) {
+                $bucketStock = fn ($variantId, $packagingUnitId) => $p->stocks
+                    ->where('variant_id', $variantId)
+                    ->where('packaging_unit_id', $packagingUnitId)
+                    ->sum('quantity');
+
+                $p->stock = $bucketStock(null, null);
+
+                $p->variants->each(function ($v) use ($bucketStock) {
+                    $v->stock = $bucketStock($v->id, null);
+                    $v->packagingUnits->each(function ($u) use ($bucketStock, $v) {
+                        $u->stock = $bucketStock($v->id, $u->id);
+                    });
+                });
+
+                $p->packagingUnits->each(function ($u) use ($bucketStock) {
+                    $u->stock = $bucketStock(null, $u->id);
+                });
+
+                unset($p->stocks);
+
+                return $p;
+            });
     }
 
     public function store(Request $request)
@@ -102,6 +141,9 @@ class PurchaseController extends Controller
             'notes' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
+            'items.*.variant_id' => 'nullable|exists:product_variants,id',
+            'items.*.packaging_unit_id' => 'nullable|exists:product_packaging_units,id',
+            'items.*.unit_name' => 'nullable|string|max:50',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.cost_price' => 'required|numeric|min:0',
         ]);
@@ -162,6 +204,9 @@ class PurchaseController extends Controller
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
                     'product_id' => $item['product_id'],
+                    'variant_id' => $item['variant_id'] ?? null,
+                    'packaging_unit_id' => $item['packaging_unit_id'] ?? null,
+                    'unit_name' => $item['unit_name'] ?? null,
                     'quantity' => $item['quantity'],
                     'cost_price' => $item['cost_price'],
                     'subtotal' => $item['quantity'] * $item['cost_price'],
@@ -186,11 +231,14 @@ class PurchaseController extends Controller
                         $stock = ProductStock::firstOrCreate(
                             [
                                 'product_id' => $item->product_id,
+                                'variant_id' => $item->variant_id,
+                                'packaging_unit_id' => $item->packaging_unit_id,
                                 'store_id' => $storeId,
                                 'branch_id' => $branchId,
                             ],
-                            ['quantity' => 0, 'reserved_quantity' => 0],
+                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
                         );
+                        $oldQty = $stock->quantity;
                         $stock->increment('quantity', $item->quantity);
 
                         // Auto-set supplier default pada produk
@@ -198,16 +246,18 @@ class PurchaseController extends Controller
                             'supplier_id' => $purchase->supplier_id,
                         ]);
 
-                        // Update moving average cost
-                        $this->updateMovingAverageCost(
-                            $product,
+                        // Update moving average cost per bucket
+                        $this->updateBucketAverageCost(
+                            $stock,
                             $item->cost_price,
                             $item->quantity,
-                            $stock->quantity - $item->quantity,
+                            $oldQty,
                         );
 
                         StockMovement::create([
                             'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'packaging_unit_id' => $item->packaging_unit_id,
                             'store_id' => $storeId,
                             'branch_id' => $branchId,
                             'reference_type' => Purchase::class,
@@ -242,6 +292,8 @@ class PurchaseController extends Controller
         $purchase->load([
             'supplier',
             'items.product',
+            'items.variant',
+            'items.packagingUnit',
             'payments.paymentMethod',
             'user',
         ]);
@@ -272,6 +324,8 @@ class PurchaseController extends Controller
         $purchase->load([
             'supplier',
             'items.product',
+            'items.variant',
+            'items.packagingUnit',
             'payments.paymentMethod',
         ]);
 
@@ -281,9 +335,7 @@ class PurchaseController extends Controller
         return Inertia::render('Admin/Purchases/Edit', [
             'purchase' => $purchase,
             'suppliers' => Supplier::where('store_id', $storeId)->get(),
-            'products' => Product::where('store_id', $storeId)
-                ->where('is_active', true)
-                ->get(),
+            'products' => $this->productsForPurchaseForm($storeId),
             'paymentMethods' => PaymentMethod::forStore($storeId)
                 ->where('is_active', true)
                 ->get(),
@@ -314,6 +366,9 @@ class PurchaseController extends Controller
             'paid_amount' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
+            'items.*.variant_id' => 'nullable|exists:product_variants,id',
+            'items.*.packaging_unit_id' => 'nullable|exists:product_packaging_units,id',
+            'items.*.unit_name' => 'nullable|string|max:50',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.cost_price' => 'required|numeric|min:0',
         ]);
@@ -326,6 +381,9 @@ class PurchaseController extends Controller
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
                     'product_id' => $item['product_id'],
+                    'variant_id' => $item['variant_id'] ?? null,
+                    'packaging_unit_id' => $item['packaging_unit_id'] ?? null,
+                    'unit_name' => $item['unit_name'] ?? null,
                     'quantity' => $item['quantity'],
                     'cost_price' => $item['cost_price'],
                     'subtotal' => $item['quantity'] * $item['cost_price'],
@@ -377,30 +435,37 @@ class PurchaseController extends Controller
                         $stock = ProductStock::firstOrCreate(
                             [
                                 'product_id' => $item->product_id,
+                                'variant_id' => $item->variant_id,
+                                'packaging_unit_id' => $item->packaging_unit_id,
                                 'store_id' => $storeId,
                                 'branch_id' => $purchase->branch_id,
                             ],
-                            ['quantity' => 0, 'reserved_quantity' => 0],
+                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
                         );
+                        $oldQty = $stock->quantity;
                         $stock->increment('quantity', $item->quantity);
 
-                        // Update moving average cost
-                        $this->updateMovingAverageCost(
-                            $product,
+                        // Update moving average cost per bucket
+                        $this->updateBucketAverageCost(
+                            $stock,
                             $item->cost_price,
                             $item->quantity,
-                            $stock->quantity - $item->quantity,
+                            $oldQty,
                         );
 
                         $exists = StockMovement::where([
                             'reference_type' => Purchase::class,
                             'reference_id' => $purchase->id,
                             'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'packaging_unit_id' => $item->packaging_unit_id,
                             'movement_type' => 'purchase_in',
                         ])->exists();
                         if (! $exists) {
                             StockMovement::create([
                                 'product_id' => $item->product_id,
+                                'variant_id' => $item->variant_id,
+                                'packaging_unit_id' => $item->packaging_unit_id,
                                 'store_id' => $storeId,
                                 'branch_id' => $purchase->branch_id,
                                 'reference_type' => Purchase::class,
@@ -456,12 +521,14 @@ class PurchaseController extends Controller
     public function destroy(Purchase $purchase)
     {
         if ($purchase->status === 'completed') {
-            // Reverse stock for completed purchases (store-level)
+            // Reverse stock for completed purchases (bucket-level)
             foreach ($purchase->items as $item) {
                 $product = $item->product;
                 if ($product?->track_stock) {
                     $stock = ProductStock::where([
                         'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
+                        'packaging_unit_id' => $item->packaging_unit_id,
                         'store_id' => $purchase->store_id,
                         'branch_id' => $purchase->branch_id,
                     ])->first();
@@ -469,9 +536,9 @@ class PurchaseController extends Controller
                         $oldQty = $stock->quantity;
                         $stock->decrement('quantity', $item->quantity);
 
-                        // Revert moving average cost
-                        $this->revertMovingAverageCost(
-                            $product,
+                        // Revert moving average cost per bucket
+                        $this->revertBucketAverageCost(
+                            $stock,
                             $item->cost_price,
                             $item->quantity,
                             $oldQty,
@@ -479,6 +546,8 @@ class PurchaseController extends Controller
 
                         StockMovement::create([
                             'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'packaging_unit_id' => $item->packaging_unit_id,
                             'store_id' => $purchase->store_id,
                             'branch_id' => $purchase->branch_id,
                             'reference_type' => Purchase::class,
@@ -515,30 +584,35 @@ class PurchaseController extends Controller
 
         try {
             if ($oldStatus !== 'completed' && $newStatus === 'completed') {
-                // Mark as completed — add stock (store-level)
+                // Mark as completed — add stock (bucket-level)
                 foreach ($purchase->items as $item) {
                     $product = $item->product;
                     if ($product?->track_stock) {
                         $stock = ProductStock::firstOrCreate(
                             [
                                 'product_id' => $item->product_id,
+                                'variant_id' => $item->variant_id,
+                                'packaging_unit_id' => $item->packaging_unit_id,
                                 'store_id' => $purchase->store_id,
                                 'branch_id' => $purchase->branch_id,
                             ],
-                            ['quantity' => 0, 'reserved_quantity' => 0],
+                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
                         );
+                        $oldQty = $stock->quantity;
                         $stock->increment('quantity', $item->quantity);
 
-                        // Update moving average cost
-                        $this->updateMovingAverageCost(
-                            $product,
+                        // Update moving average cost per bucket
+                        $this->updateBucketAverageCost(
+                            $stock,
                             $item->cost_price,
                             $item->quantity,
-                            $stock->quantity - $item->quantity,
+                            $oldQty,
                         );
 
                         StockMovement::create([
                             'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'packaging_unit_id' => $item->packaging_unit_id,
                             'store_id' => $purchase->store_id,
                             'branch_id' => $purchase->branch_id,
                             'reference_type' => Purchase::class,
@@ -556,12 +630,14 @@ class PurchaseController extends Controller
                 $oldStatus === 'completed' &&
                 $newStatus === 'cancelled'
             ) {
-                // Cancel completed — reverse stock (store-level)
+                // Cancel completed — reverse stock (bucket-level)
                 foreach ($purchase->items as $item) {
                     $product = $item->product;
                     if ($product?->track_stock) {
                         $stock = ProductStock::where([
                             'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'packaging_unit_id' => $item->packaging_unit_id,
                             'store_id' => $purchase->store_id,
                             'branch_id' => $purchase->branch_id,
                         ])->first();
@@ -570,8 +646,8 @@ class PurchaseController extends Controller
                             $stock->decrement('quantity', $item->quantity);
 
                             // Revert moving average cost when cancelling
-                            $this->revertMovingAverageCost(
-                                $product,
+                            $this->revertBucketAverageCost(
+                                $stock,
                                 $item->cost_price,
                                 $item->quantity,
                                 $oldQty,
@@ -579,6 +655,8 @@ class PurchaseController extends Controller
 
                             StockMovement::create([
                                 'product_id' => $item->product_id,
+                                'variant_id' => $item->variant_id,
+                                'packaging_unit_id' => $item->packaging_unit_id,
                                 'store_id' => $purchase->store_id,
                                 'branch_id' => $purchase->branch_id,
                                 'reference_type' => Purchase::class,
@@ -623,16 +701,18 @@ class PurchaseController extends Controller
     }
 
     /**
-     * Update product cost_price using moving average method.
-     * Called after purchase stock increment.
+     * Update stock bucket's average_cost using moving average method.
+     * Called after purchase stock increment. Each bucket (product + variant +
+     * packaging_unit combination) keeps its own independent average cost —
+     * buying by "dus" and by "pcs" never mix their modal calculation.
      */
-    private function updateMovingAverageCost(
-        Product $product,
+    private function updateBucketAverageCost(
+        ProductStock $stock,
         float $newPrice,
         float $newQty,
         float $oldQtyBefore,
     ): void {
-        $oldCost = $product->cost_price ?? 0;
+        $oldCost = (float) $stock->average_cost;
         $totalQty = $oldQtyBefore + $newQty;
 
         if ($totalQty > 0) {
@@ -642,30 +722,30 @@ class PurchaseController extends Controller
             $avgCost = $newPrice;
         }
 
-        $product->update(['cost_price' => round($avgCost, 2)]);
+        $stock->update(['average_cost' => round($avgCost, 2)]);
     }
 
     /**
-     * Revert product cost_price when purchase is cancelled/deleted.
+     * Revert stock bucket's average_cost when purchase is cancelled/deleted.
      * Removes the purchase contribution from the moving average.
      */
-    private function revertMovingAverageCost(
-        Product $product,
+    private function revertBucketAverageCost(
+        ProductStock $stock,
         float $removedPrice,
         float $removedQty,
         float $oldQtyBefore,
     ): void {
-        $oldCost = $product->cost_price ?? 0;
+        $oldCost = (float) $stock->average_cost;
         $remainingQty = $oldQtyBefore - $removedQty;
 
         if ($remainingQty <= 0) {
-            $product->update(['cost_price' => 0]);
+            $stock->update(['average_cost' => 0]);
         } else {
             $revertCost =
                 ($oldQtyBefore * $oldCost - $removedQty * $removedPrice) /
                 $remainingQty;
-            $product->update([
-                'cost_price' => round(max(0, $revertCost), 2),
+            $stock->update([
+                'average_cost' => round(max(0, $revertCost), 2),
             ]);
         }
     }

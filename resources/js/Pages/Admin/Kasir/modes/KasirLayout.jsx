@@ -514,6 +514,7 @@ export default function KasirLayout({ k, props, mainContent, searchBar, category
                     productName={k.stockAlert.productName}
                     available={k.stockAlert.available}
                     requested={k.stockAlert.requested}
+                    unitLabel={k.stockAlert.unitLabel}
                     onClose={() => k.setStockAlert(null)}
                 />
             )}

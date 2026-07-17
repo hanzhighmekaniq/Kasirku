@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Manajemen Produk - POS Retail</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  html,body{font-family:'Inter',ui-sans-serif,system-ui,sans-serif;}
+  ::-webkit-scrollbar{height:8px;width:8px}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px}
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+  <!-- HEADER -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold text-slate-900">Manajemen Produk</h1>
+      <p class="text-sm text-slate-500 mt-1">Kelola produk, variant, satuan, dan harga grosir</p>
+    </div>
+    <button class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2.5 rounded-lg shadow-sm transition">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+      Tambah Produk
+    </button>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6" id="summaryCards"></div>
+
+  <!-- TABLE CARD -->
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+    <!-- Toolbar -->
+    <div class="p-4 border-b border-slate-200">
+      <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+        <div class="relative flex-1">
+          <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="searchInput" type="text" placeholder="Cari nama, SKU, atau barcode..." class="w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"/>
+        </div>
+        <div class="grid grid-cols-3 lg:flex gap-2">
+          <select id="filterTipe" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            <option value="">Semua Tipe</option>
+            <option>Barang Jadi</option><option>Bahan Baku</option><option>Combo</option>
+          </select>
+          <select id="filterKategori" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            <option value="">Semua Kategori</option>
+            <option>Sembako</option><option>Minuman</option><option>Makanan Ringan</option><option>Kebersihan</option><option>Rokok</option>
+          </select>
+          <select id="filterStatus" class="px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            <option value="">Semua Status</option>
+            <option value="aktif">Aktif</option><option value="nonaktif">Nonaktif</option>
+          </select>
+        </div>
+        <button id="resetBtn" class="px-4 py-2.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition inline-flex items-center gap-2 justify-center">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          Reset
+        </button>
+      </div>
+      <p id="infoText" class="text-sm text-slate-500 mt-3"></p>
+    </div>
+
+    <!-- DESKTOP TABLE -->
+    <div class="hidden lg:block overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wide">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold">Produk</th>
+            <th class="px-4 py-3 text-left font-semibold">Tipe</th>
+            <th class="px-4 py-3 text-left font-semibold">Kategori</th>
+            <th class="px-4 py-3 text-right font-semibold">Harga Beli</th>
+            <th class="px-4 py-3 text-right font-semibold">Harga Jual</th>
+            <th class="px-4 py-3 text-left font-semibold">Badges</th>
+            <th class="px-4 py-3 text-center font-semibold">Stok</th>
+            <th class="px-4 py-3 text-center font-semibold">Status</th>
+            <th class="px-4 py-3 text-center font-semibold">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
+
+    <!-- MOBILE CARDS -->
+    <div id="mobileList" class="lg:hidden divide-y divide-slate-100"></div>
+
+    <!-- PAGINATION -->
+    <div id="pagination" class="p-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"></div>
+  </div>
+</div>
+
+<!-- MODAL HAPUS -->
+<div id="modalHapus" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+        <svg class="w-6 h-6 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-slate-900">Hapus Produk</h3>
+        <p class="text-sm text-slate-500">Tindakan ini tidak dapat dibatalkan.</p>
+      </div>
+    </div>
+    <p class="text-sm text-slate-700 mb-6">Yakin ingin menghapus <span id="hapusName" class="font-semibold"></span>?</p>
+    <div class="flex justify-end gap-2">
+      <button onclick="closeModal('modalHapus')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">Batal</button>
+      <button id="confirmHapus" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL STOK -->
+<div id="modalStok" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="text-lg font-semibold text-slate-900">Penyesuaian Stok</h3>
+        <p id="stokProdukName" class="text-sm text-slate-500"></p>
+      </div>
+      <button onclick="closeModal('modalStok')" class="text-slate-400 hover:text-slate-600">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <div id="variantSelectWrap" class="hidden">
+        <label class="block text-sm font-medium text-slate-700 mb-1">Variant</label>
+        <select id="variantSelect" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></select>
+      </div>
+      <div id="satuanSelectWrap" class="hidden">
+        <label class="block text-sm font-medium text-slate-700 mb-1">Satuan</label>
+        <select id="satuanSelect" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Jenis Pergerakan</label>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2 cursor-pointer has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-500">
+            <input type="radio" name="jenis" value="masuk" checked class="text-emerald-600"/>
+            <span class="text-sm font-medium">Masuk</span>
+          </label>
+          <label class="flex items-center gap-2 border border-slate-300 rounded-lg px-3 py-2 cursor-pointer has-[:checked]:bg-red-50 has-[:checked]:border-red-500">
+            <input type="radio" name="jenis" value="keluar" class="text-red-600"/>
+            <span class="text-sm font-medium">Keluar</span>
+          </label>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Jumlah</label>
+        <input id="jumlahStok" type="number" min="1" value="1" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Catatan (opsional)</label>
+        <textarea id="catatanStok" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"></textarea>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-6">
+      <button onclick="closeModal('modalStok')" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">Batal</button>
+      <button id="simpanStok" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ DATA ============
+let products = [
+  {id:1,name:"Indomie Goreng",sku:"S1-001",barcode:"8991101000011",satuan:"pcs",tipe:"Barang Jadi",kategori:"Sembako",hargaBeli:2800,hargaJual:4000,stok:170,stokMin:50,status:"aktif",
+   variants:[
+     {name:"Original",sku:"S1-001-ORI",hargaJual:4000,hargaModal:2800,stok:80,
+      units:[{name:"Dus",konversi:40,harga:140000,stok:5}],
+      tiers:[{min:10,harga:3500},{min:50,harga:3300},{min:100,harga:3100}]},
+     {name:"Rendang",sku:"S1-001-REN",hargaJual:4500,hargaModal:3200,stok:50,
+      units:[{name:"Dus",konversi:40,harga:162000,stok:3}],
+      tiers:[{min:10,harga:3700},{min:50,harga:3500}]},
+     {name:"Soto",sku:"S1-001-SOT",hargaJual:4200,hargaModal:3000,stok:40,
+      units:[{name:"Dus",konversi:40,harga:151200,stok:2}],tiers:[]},
+   ]},
+  {id:2,name:"Susu Ultra 200ml",sku:"S1-007",barcode:"8999999000031",satuan:"pcs",tipe:"Barang Jadi",kategori:"Minuman",hargaBeli:3800,hargaJual:5500,stok:72,stokMin:30,status:"aktif",
+   variants:[
+     {name:"Full Cream",sku:"S1-007-FC",hargaJual:5500,hargaModal:3800,stok:30,units:[],tiers:[]},
+     {name:"Coklat",sku:"S1-007-CK",hargaJual:5500,hargaModal:3800,stok:24,units:[],tiers:[]},
+     {name:"Strawberry",sku:"S1-007-SB",hargaJual:5500,hargaModal:3800,stok:18,units:[],tiers:[]},
+   ]},
+  {id:3,name:"Teh Botol Sosro 450ml",sku:"S1-008",barcode:"8991106000091",satuan:"pcs",tipe:"Barang Jadi",kategori:"Minuman",hargaBeli:3500,hargaJual:5000,stok:60,stokMin:20,status:"aktif",
+   variants:[
+     {name:"Original",sku:"S1-008-ORI",hargaJual:5000,hargaModal:3500,stok:40,units:[],tiers:[]},
+     {name:"Less Sugar",sku:"S1-008-LS",hargaJual:5500,hargaModal:3800,stok:20,units:[],tiers:[]},
+   ]},
+  {id:4,name:"Aqua 600ml",sku:"S1-006",barcode:"8997225000020",satuan:"pcs",tipe:"Barang Jadi",kategori:"Minuman",hargaBeli:2500,hargaJual:4000,stok:40,stokMin:24,status:"aktif",
+   units:[{name:"Dus",konversi:24,harga:85000,stok:5}],
+   tiers:[{min:24,harga:3500},{min:100,harga:3200}]},
+  {id:5,name:"Beras Rojolele 5kg",sku:"S1-002",barcode:"8991102000051",satuan:"pcs",tipe:"Barang Jadi",kategori:"Sembako",hargaBeli:60000,hargaJual:72000,stok:72,stokMin:10,status:"aktif",
+   units:[{name:"Sak",konversi:10,harga:680000,stok:3}]},
+  {id:6,name:"Minyak Goreng Tropical 1L",sku:"S1-003",barcode:"8991103000061",satuan:"pcs",tipe:"Barang Jadi",kategori:"Sembako",hargaBeli:15000,hargaJual:21000,stok:20,stokMin:12,status:"aktif",
+   units:[{name:"Dus",konversi:12,harga:230000,stok:0}]},
+  {id:7,name:"Gula Pasir 1kg",sku:"S1-004",barcode:"8991104000071",satuan:"pcs",tipe:"Barang Jadi",kategori:"Sembako",hargaBeli:12000,hargaJual:16000,stok:25,stokMin:15,status:"aktif"},
+  {id:8,name:"Tepung Terigu 1kg",sku:"S1-005",barcode:"8991105000081",satuan:"pcs",tipe:"Barang Jadi",kategori:"Sembako",hargaBeli:9000,hargaJual:13000,stok:0,stokMin:10,status:"aktif"},
+  {id:9,name:"Coca Cola 390ml",sku:"S1-009",barcode:"8991107000101",satuan:"pcs",tipe:"Barang Jadi",kategori:"Minuman",hargaBeli:4000,hargaJual:6500,stok:36,stokMin:12,status:"aktif"},
+  {id:10,name:"Chitato Sapi 68g",sku:"S1-010",barcode:"8991108000111",satuan:"pcs",tipe:"Barang Jadi",kategori:"Makanan Ringan",hargaBeli:8500,hargaJual:12000,stok:20,stokMin:10,status:"aktif"},
+  {id:11,name:"Oreo Vanilla 137g",sku:"S1-011",barcode:"8991109000121",satuan:"pcs",tipe:"Barang Jadi",kategori:"Makanan Ringan",hargaBeli:7000,hargaJual:10500,stok:15,stokMin:8,status:"aktif"},
+  {id:12,name:"Taro Net 36g",sku:"S1-012",barcode:"8991110000131",satuan:"pcs",tipe:"Barang Jadi",kategori:"Makanan Ringan",hargaBeli:2000,hargaJual:3500,stok:30,stokMin:15,status:"aktif"},
+  {id:13,name:"Sabun Lifebuoy 100gr",sku:"S1-013",barcode:"8887290000041",satuan:"pcs",tipe:"Barang Jadi",kategori:"Kebersihan",hargaBeli:5500,hargaJual:8500,stok:12,stokMin:6,status:"aktif"},
+  {id:14,name:"Shampoo Sunsilk 160ml",sku:"S1-014",barcode:"8991111000141",satuan:"pcs",tipe:"Barang Jadi",kategori:"Kebersihan",hargaBeli:15000,hargaJual:22000,stok:10,stokMin:6,status:"aktif"},
+  {id:15,name:"Pasta Gigi Pepsodent 190g",sku:"S1-015",barcode:"8991112000151",satuan:"pcs",tipe:"Barang Jadi",kategori:"Kebersihan",hargaBeli:12000,hargaJual:18000,stok:10,stokMin:6,status:"nonaktif"},
+  {id:16,name:"Deterjen Rinso 770g",sku:"S1-016",barcode:"8991113000161",satuan:"pcs",tipe:"Barang Jadi",kategori:"Kebersihan",hargaBeli:14000,hargaJual:20000,stok:8,stokMin:6,status:"aktif"},
+  {id:17,name:"Gudang Garam Surya 12",sku:"S1-017",barcode:"8991114000171",satuan:"pcs",tipe:"Barang Jadi",kategori:"Rokok",hargaBeli:18000,hargaJual:22000,stok:20,stokMin:10,status:"aktif"},
+  {id:18,name:"Sampoerna Mild 16",sku:"S1-018",barcode:"8991115000181",satuan:"pcs",tipe:"Barang Jadi",kategori:"Rokok",hargaBeli:24000,hargaJual:28000,stok:15,stokMin:10,status:"aktif"},
+  {id:19,name:"Kopi Torabika 3in1",sku:"S1-019",barcode:"8991116000191",satuan:"pcs",tipe:"Barang Jadi",kategori:"Rokok",hargaBeli:2000,hargaJual:3500,stok:60,stokMin:30,status:"aktif"},
+  {id:20,name:"Susu Kental Manis 370g",sku:"S1-020",barcode:"8991117000201",satuan:"pcs",tipe:"Barang Jadi",kategori:"Rokok",hargaBeli:8000,hargaJual:12000,stok:24,stokMin:12,status:"nonaktif"},
+];
+
+// ============ UTIL ============
+const rp = n => "Rp " + (n||0).toLocaleString("id-ID");
+const stokBadge = (s,min) => {
+  if(s<=0) return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">Habis</span>`;
+  if(s<=min) return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Menipis</span>`;
+  return `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Cukup</span>`;
+};
+const tipeBadge = t => {
+  const c = t==="Barang Jadi"?"bg-blue-100 text-blue-700":t==="Bahan Baku"?"bg-purple-100 text-purple-700":"bg-pink-100 text-pink-700";
+  return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold ${c}">${t}</span>`;
+};
+const statusBadge = s => s==="aktif"
+  ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>Aktif</span>`
+  : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600"><span class="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>Nonaktif</span>`;
+
+const indicatorBadges = p => {
+  const b = [];
+  if(p.variants?.length) b.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">Variant ${p.variants.length}</span>`);
+  const hasUnits = p.units?.length || p.variants?.some(v=>v.units?.length);
+  if(hasUnits) b.push(`<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200">Multi-Satuan</span>`);
+  const hasTiers = p.tiers?.length || p.variants?.some(v=>v.tiers?.length);
+  if(hasTiers) b.push(`<span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Grosir</span>`);
+  return b.length ? b.join(" ") : `<span class="text-xs text-slate-400">—</span>`;
+};
+
+const placeholder = name => {
+  const initial = name.split(" ").slice(0,2).map(w=>w[0]).join("").toUpperCase();
+  return `<div class="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-500 font-semibold text-xs shrink-0">${initial}</div>`;
+};
+
+const totalStokProduk = p => {
+  if(p.variants?.length) return p.variants.reduce((s,v)=>s+v.stok,0);
+  return p.stok||0;
+};
+
+// ============ STATE ============
+let filters = {search:"",tipe:"",kategori:"",status:""};
+let page = 1;
+const perPage = 8;
+let expanded = new Set();
+let deleteId = null, stokProductId = null;
+
+// ============ FILTER ============
+function getFiltered(){
+  return products.filter(p=>{
+    if(filters.search){
+      const q = filters.search.toLowerCase();
+      if(!p.name.toLowerCase().includes(q) && !p.sku.toLowerCase().includes(q) && !p.barcode.includes(q)) return false;
+    }
+    if(filters.tipe && p.tipe!==filters.tipe) return false;
+    if(filters.kategori && p.kategori!==filters.kategori) return false;
+    if(filters.status && p.status!==filters.status) return false;
+    return true;
+  });
+}
+
+// ============ SUMMARY ============
+function renderSummary(){
+  const filtered = getFiltered();
+  const total = filtered.length;
+  const aktif = filtered.filter(p=>p.status==="aktif").length;
+  const menipis = filtered.filter(p=>{const s=totalStokProduk(p);return s>0 && s<=p.stokMin}).length;
+  const nonaktif = filtered.filter(p=>p.status==="nonaktif").length;
+  const cards = [
+    {label:"Total Produk",val:total,color:"blue",icon:'<path d="M20 7 12 3 4 7v10l8 4 8-4V7Z"/><path d="m4 7 8 4 8-4"/><path d="M12 11v10"/>'},
+    {label:"Aktif",val:aktif,color:"emerald",icon:'<path d="M20 6 9 17l-5-5"/>'},
+    {label:"Stok Menipis",val:menipis,color:"amber",icon:'<path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/>'},
+    {label:"Nonaktif",val:nonaktif,color:"slate",icon:'<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>'},
+  ];
+  document.getElementById("summaryCards").innerHTML = cards.map(c=>`
+    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs sm:text-sm text-slate-500 font-medium">${c.label}</p>
+          <p class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">${c.val}</p>
+        </div>
+        <div class="w-10 h-10 rounded-lg bg-${c.color}-100 text-${c.color}-600 flex items-center justify-center">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${c.icon}</svg>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ============ EXPAND DETAIL ============
+function detailHTML(p){
+  const rows = [];
+  if(p.variants?.length){
+    p.variants.forEach(v=>{
+      const units = v.units?.length ? v.units.map(u=>`${u.name} (${u.konversi} ${p.satuan}): ${rp(u.harga)} <span class="text-slate-400">(stok ${u.stok})</span>`).join("<br>") : '<span class="text-slate-400">—</span>';
+      const tiers = v.tiers?.length ? v.tiers.map(t=>`${t.min}+ ${rp(t.harga)}`).join(" · ") : '<span class="text-slate-400">—</span>';
+      rows.push(`<tr>
+        <td class="px-3 py-2 font-medium text-slate-800">${v.name}</td>
+        <td class="px-3 py-2 text-slate-600 font-mono text-xs">${v.sku}</td>
+        <td class="px-3 py-2 text-right">${rp(v.hargaJual)}</td>
+        <td class="px-3 py-2 text-right text-slate-500">${rp(v.hargaModal)}</td>
+        <td class="px-3 py-2 text-center">${v.stok}</td>
+        <td class="px-3 py-2 text-xs">${units}</td>
+        <td class="px-3 py-2 text-xs">${tiers}</td>
+      </tr>`);
+    });
+  } else {
+    const units = p.units?.length ? p.units.map(u=>`${u.name} (${u.konversi} ${p.satuan}): ${rp(u.harga)} <span class="text-slate-400">(stok ${u.stok})</span>`).join("<br>") : '<span class="text-slate-400">—</span>';
+    const tiers = p.tiers?.length ? p.tiers.map(t=>`${t.min}+ ${rp(t.harga)}`).join(" · ") : '<span class="text-slate-400">—</span>';
+    rows.push(`<tr>
+      <td class="px-3 py-2 font-medium text-slate-800">${p.name}</td>
+      <td class="px-3 py-2 text-slate-600 font-mono text-xs">${p.sku}</td>
+      <td class="px-3 py-2 text-right">${rp(p.hargaJual)}</td>
+      <td class="px-3 py-2 text-right text-slate-500">${rp(p.hargaBeli)}</td>
+      <td class="px-3 py-2 text-center">${p.stok}</td>
+      <td class="px-3 py-2 text-xs">${units}</td>
+      <td class="px-3 py-2 text-xs">${tiers}</td>
+    </tr>`);
+  }
+  return `
+    <div class="p-4 bg-slate-50 border-t border-slate-200">
+      <h4 class="text-xs font-semibold uppercase text-slate-500 mb-2">Detail ${p.variants?.length?"Variant":"Produk"}</h4>
+      <div class="overflow-x-auto bg-white rounded-lg border border-slate-200">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100 text-xs text-slate-600 uppercase">
+            <tr>
+              <th class="px-3 py-2 text-left">${p.variants?.length?"Variant":"Produk"}</th>
+              <th class="px-3 py-2 text-left">SKU</th>
+              <th class="px-3 py-2 text-right">Harga Jual</th>
+              <th class="px-3 py-2 text-right">Harga Modal</th>
+              <th class="px-3 py-2 text-center">Stok</th>
+              <th class="px-3 py-2 text-left">Multi-Satuan</th>
+              <th class="px-3 py-2 text-left">Grosir</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">${rows.join("")}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function hasExpandable(p){
+  return p.variants?.length || p.units?.length || p.tiers?.length;
+}
+
+// ============ RENDER TABLE ============
+function renderTable(){
+  const filtered = getFiltered();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  if(page > totalPages) page = totalPages;
+  const start = (page-1)*perPage;
+  const paged = filtered.slice(start, start+perPage);
+
+  document.getElementById("infoText").textContent = `Menampilkan ${paged.length} dari ${filtered.length} produk`;
+
+  // Desktop
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = paged.map(p=>{
+    const stok = totalStokProduk(p);
+    const isExp = expanded.has(p.id);
+    const canExp = hasExpandable(p);
+    return `
+      <tr class="hover:bg-slate-50 transition">
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-3">
+            ${placeholder(p.name)}
+            <div class="min-w-0">
+              <p class="font-semibold text-slate-900 truncate">${p.name}</p>
+              <p class="text-xs text-slate-500 font-mono">${p.sku} · ${p.barcode}</p>
+              <p class="text-xs text-slate-400">Satuan: ${p.satuan}</p>
+            </div>
+          </div>
+        </td>
+        <td class="px-4 py-3">${tipeBadge(p.tipe)}</td>
+        <td class="px-4 py-3 text-slate-600">${p.kategori}</td>
+        <td class="px-4 py-3 text-right text-slate-500">${rp(p.hargaBeli)}</td>
+        <td class="px-4 py-3 text-right font-semibold text-slate-900">${rp(p.hargaJual)}</td>
+        <td class="px-4 py-3"><div class="flex flex-wrap gap-1">${indicatorBadges(p)}</div></td>
+        <td class="px-4 py-3 text-center">
+          <div class="flex flex-col items-center gap-1">
+            <span class="font-semibold text-slate-900">${stok}</span>
+            ${stokBadge(stok,p.stokMin)}
+          </div>
+        </td>
+        <td class="px-4 py-3 text-center">${statusBadge(p.status)}</td>
+        <td class="px-4 py-3">
+          <div class="flex items-center justify-center gap-1">
+            ${canExp?`<button onclick="toggleExpand(${p.id})" title="Detail" class="p-1.5 rounded hover:bg-slate-100 text-slate-500"><svg class="w-4 h-4 transition ${isExp?'rotate-180':''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>`:`<span class="w-7"></span>`}
+            <button onclick="openStok(${p.id})" title="Stok" class="p-1.5 rounded hover:bg-blue-50 text-blue-600"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3zM5 7v14h14V7M10 12h4"/></svg></button>
+            <button title="Edit" class="p-1.5 rounded hover:bg-amber-50 text-amber-600"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z"/></svg></button>
+            <button onclick="openHapus(${p.id})" title="Hapus" class="p-1.5 rounded hover:bg-red-50 text-red-600"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+          </div>
+        </td>
+      </tr>
+      ${isExp?`<tr><td colspan="9" class="p-0">${detailHTML(p)}</td></tr>`:""}
+    `;
+  }).join("") || `<tr><td colspan="9" class="px-4 py-12 text-center text-slate-400">Tidak ada produk yang cocok</td></tr>`;
+
+  // Mobile
+  const mob = document.getElementById("mobileList");
+  mob.innerHTML = paged.map(p=>{
+    const stok = totalStokProduk(p);
+    const isExp = expanded.has(p.id);
+    const canExp = hasExpandable(p);
+    return `
+      <div class="p-4">
+        <div class="flex items-start gap-3">
+          ${placeholder(p.name)}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between gap-2">
+              <p class="font-semibold text-slate-900">${p.name}</p>
+              ${tipeBadge(p.tipe)}
+            </div>
+            <p class="text-xs text-slate-500 font-mono mt-0.5">${p.sku} · ${p.barcode}</p>
+            <p class="text-xs text-slate-400">${p.kategori} · ${p.satuan}</p>
+            <div class="flex items-baseline gap-2 mt-2">
+              <span class="font-bold text-slate-900">${rp(p.hargaJual)}</span>
+              <span class="text-xs text-slate-400 line-through">${rp(p.hargaBeli)}</span>
+            </div>
+            <div class="flex flex-wrap gap-1 mt-2">${indicatorBadges(p)}</div>
+            <div class="flex flex-wrap items-center gap-2 mt-2">
+              <span class="text-sm">Stok: <b>${stok}</b></span>
+              ${stokBadge(stok,p.stokMin)}
+              ${statusBadge(p.status)}
+            </div>
+            <div class="flex gap-3 mt-3 text-sm font-medium">
+              ${canExp?`<button onclick="toggleExpand(${p.id})" class="text-slate-600">${isExp?"Sembunyikan":"Detail"}</button>`:""}
+              <button onclick="openStok(${p.id})" class="text-blue-600">Stok</button>
+              <button class="text-amber-600">Edit</button>
+              <button onclick="openHapus(${p.id})" class="text-red-600">Hapus</button>
+            </div>
+          </div>
+        </div>
+        ${isExp?detailHTML(p):""}
+      </div>
+    `;
+  }).join("") || `<div class="p-12 text-center text-slate-400">Tidak ada produk</div>`;
+
+  // Pagination
+  renderPagination(filtered.length, totalPages);
+}
+
+function renderPagination(total, totalPages){
+  const el = document.getElementById("pagination");
+  let btns = "";
+  for(let i=1;i<=totalPages;i++){
+    btns += `<button onclick="goPage(${i})" class="w-9 h-9 rounded-lg text-sm font-medium ${i===page?'bg-blue-600 text-white':'border border-slate-300 text-slate-700 hover:bg-slate-50'}">${i}</button>`;
+  }
+  el.innerHTML = `
+    <p class="text-sm text-slate-500">Halaman ${page} dari ${totalPages} · ${total} produk</p>
+    <div class="flex items-center gap-1">
+      <button onclick="goPage(${page-1})" ${page===1?'disabled':''} class="w-9 h-9 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">‹</button>
+      ${btns}
+      <button onclick="goPage(${page+1})" ${page===totalPages?'disabled':''} class="w-9 h-9 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">›</button>
+    </div>`;
+}
+
+function goPage(n){ page = Math.max(1, n); renderTable(); }
+function toggleExpand(id){ expanded.has(id)?expanded.delete(id):expanded.add(id); renderTable(); }
+
+// ============ MODAL HAPUS ============
+function openHapus(id){
+  const p = products.find(x=>x.id===id);
+  deleteId = id;
+  document.getElementById("hapusName").textContent = p.name;
+  document.getElementById("modalHapus").classList.remove("hidden");
+}
+document.getElementById("confirmHapus").onclick = ()=>{
+  products = products.filter(p=>p.id!==deleteId);
+  closeModal("modalHapus");
+  renderAll();
+};
+
+// ============ MODAL STOK ============
+function openStok(id){
+  const p = products.find(x=>x.id===id);
+  stokProductId = id;
+  document.getElementById("stokProdukName").textContent = p.name;
+  const vw = document.getElementById("variantSelectWrap");
+  const vs = document.getElementById("variantSelect");
+  if(p.variants?.length){
+    vw.classList.remove("hidden");
+    vs.innerHTML = p.variants.map((v,i)=>`<option value="${i}">${v.name} — stok ${v.stok}</option>`).join("");
+  } else vw.classList.add("hidden");
+
+  const sw = document.getElementById("satuanSelectWrap");
+  const ss = document.getElementById("satuanSelect");
+  const opts = [`<option value="base">${p.satuan} (dasar)</option>`];
+  (p.units||[]).forEach((u,i)=>opts.push(`<option value="u${i}">${u.name} (${u.konversi} ${p.satuan})</option>`));
+  if(opts.length>1){ sw.classList.remove("hidden"); ss.innerHTML = opts.join(""); }
+  else sw.classList.add("hidden");
+
+  document.getElementById("jumlahStok").value = 1;
+  document.getElementById("catatanStok").value = "";
+  document.getElementById("modalStok").classList.remove("hidden");
+}
+document.getElementById("simpanStok").onclick = ()=>{
+  // dummy: cukup tutup modal
+  closeModal("modalStok");
+};
+
+function closeModal(id){ document.getElementById(id).classList.add("hidden"); }
+
+// ============ INIT ============
+function renderAll(){ renderSummary(); renderTable(); }
+
+document.getElementById("searchInput").addEventListener("input", e=>{filters.search=e.target.value; page=1; renderAll();});
+document.getElementById("filterTipe").addEventListener("change", e=>{filters.tipe=e.target.value; page=1; renderAll();});
+document.getElementById("filterKategori").addEventListener("change", e=>{filters.kategori=e.target.value; page=1; renderAll();});
+document.getElementById("filterStatus").addEventListener("change", e=>{filters.status=e.target.value; page=1; renderAll();});
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  filters={search:"",tipe:"",kategori:"",status:""};
+  document.getElementById("searchInput").value="";
+  document.getElementById("filterTipe").value="";
+  document.getElementById("filterKategori").value="";
+  document.getElementById("filterStatus").value="";
+  page=1; renderAll();
+});
+
+renderAll();
+</script>
+</body>
+</html>

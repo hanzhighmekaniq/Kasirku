@@ -69,6 +69,18 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
     const selectedUnit =
         unitOptions.find((u) => u.key === selectedUnitKey) ?? unitOptions[0];
 
+    // Stok bucket yang relevan dengan kombinasi variant+unit yang sedang
+    // dipilih. Tidak ada konversi otomatis — tiap bucket berdiri sendiri.
+    const currentStock = useMemo(() => {
+        if (selectedUnit && !selectedUnit.isBase) {
+            return Number(selectedUnit.raw?.stock ?? 0);
+        }
+        if (hasActiveVariants) {
+            return selectedVariant ? Number(selectedVariant.stock ?? 0) : null;
+        }
+        return Number(product.stock ?? 0);
+    }, [selectedUnit, hasActiveVariants, selectedVariant, product]);
+
     const handlePickVariant = (variant) => {
         setSelectedVariantId(variant.id);
         setSelectedUnitKey("base"); // reset satuan setiap ganti varian
@@ -89,7 +101,10 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
     }, [selectedUnit, hasActiveVariants, selectedVariant, product, qty]);
 
     const subtotal = unitPrice * qty;
-    const canConfirm = !hasActiveVariants || !!selectedVariant;
+    const stockInsufficient =
+        product.track_stock && currentStock !== null && qty > currentStock;
+    const canConfirm =
+        (!hasActiveVariants || !!selectedVariant) && !stockInsufficient;
 
     const handleConfirm = () => {
         if (!canConfirm) return;
@@ -280,7 +295,14 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
 
                     {/* Quantity */}
                     <section>
-                        <h4 className="mb-3 text-sm font-semibold text-slate-900">Quantity</h4>
+                        <div className="mb-3 flex items-center justify-between">
+                            <h4 className="text-sm font-semibold text-slate-900">Quantity</h4>
+                            {product.track_stock && currentStock !== null && (
+                                <span className={`text-[11px] font-medium ${currentStock <= 0 ? "text-red-500" : "text-slate-500"}`}>
+                                    Stok: {currentStock} {selectedUnit && !selectedUnit.isBase ? selectedUnit.name : product.unit || "pcs"}
+                                </span>
+                            )}
+                        </div>
                         <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
                             <button
                                 type="button"
@@ -345,7 +367,11 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                         onClick={handleConfirm}
                         className="h-11 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        {canConfirm ? "Add to Cart" : "Pilih varian dulu"}
+                        {stockInsufficient
+                            ? "Stok tidak cukup"
+                            : !canConfirm
+                              ? "Pilih varian dulu"
+                              : "Add to Cart"}
                     </button>
                 </div>
             </div>

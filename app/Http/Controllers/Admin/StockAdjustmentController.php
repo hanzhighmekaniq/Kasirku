@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HasStoreScope;
 use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\ProductStock;
 use App\Models\StockAdjustment;
 use App\Models\StockAdjustmentItem;
 use App\Models\StockMovement;
-use App\Models\ProductStock;
-use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-
-use App\Http\Controllers\Concerns\HasStoreScope;
 
 class StockAdjustmentController extends Controller
 {
@@ -22,21 +21,21 @@ class StockAdjustmentController extends Controller
     {
         [$storeId] = $this->storeScope();
 
-        $adjustments = StockAdjustment::with("user")
-            ->where("store_id", $storeId)
+        $adjustments = StockAdjustment::with('user')
+            ->where('store_id', $storeId)
             ->latest()
             ->get();
 
         $stats = [
-            "total" => $adjustments->count(),
-            "draft" => $adjustments->where("status", "draft")->count(),
-            "approved" => $adjustments->where("status", "approved")->count(),
-            "rejected" => $adjustments->where("status", "rejected")->count(),
+            'total' => $adjustments->count(),
+            'draft' => $adjustments->where('status', 'draft')->count(),
+            'approved' => $adjustments->where('status', 'approved')->count(),
+            'rejected' => $adjustments->where('status', 'rejected')->count(),
         ];
 
-        return Inertia::render("Admin/Stock/Adjustment/Index", [
-            "adjustments" => $adjustments,
-            "stats" => $stats,
+        return Inertia::render('Admin/Stock/Adjustment/Index', [
+            'adjustments' => $adjustments,
+            'stats' => $stats,
         ]);
     }
 
@@ -44,16 +43,16 @@ class StockAdjustmentController extends Controller
     {
         [$storeId] = $this->storeScope();
 
-        return Inertia::render("Admin/Stock/Adjustment/Create", [
-            "products" => Product::forStore($storeId)
+        return Inertia::render('Admin/Stock/Adjustment/Create', [
+            'products' => Product::forStore($storeId)
                 ->with([
-                    "stocks" => function ($q) use ($storeId) {
-                        $q->where("store_id", $storeId);
+                    'stocks' => function ($q) use ($storeId) {
+                        $q->where('store_id', $storeId);
                     },
                 ])
-                ->where("is_active", true)
-                ->where("track_stock", true)
-                ->orderBy("name")
+                ->where('is_active', true)
+                ->where('track_stock', true)
+                ->orderBy('name')
                 ->get(),
         ]);
     }
@@ -61,81 +60,97 @@ class StockAdjustmentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            "adjustment_date" => "required|date",
-            "reason" => "nullable|string|max:150",
-            "notes" => "nullable|string",
-            "items" => "required|array|min:1",
-            "items.*.product_id" => "required|exists:products,id",
-            "items.*.system_qty" => "required|integer|min:0",
-            "items.*.actual_qty" => "required|integer|min:0",
-            "items.*.notes" => "nullable|string",
+            'adjustment_date' => 'required|date',
+            'reason' => 'nullable|string|max:150',
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.variant_id' => 'nullable|exists:product_variants,id',
+            'items.*.packaging_unit_id' => 'nullable|exists:product_packaging_units,id',
+            'items.*.system_qty' => 'required|integer|min:0',
+            'items.*.actual_qty' => 'required|integer|min:0',
+            'items.*.notes' => 'nullable|string',
         ]);
 
         $store = $request->user()->store;
-        $storeId = session("current_store_id") ?? $store?->id;
-        $adjNo = $this->generateNumber($validated["adjustment_date"]);
+        $storeId = session('current_store_id') ?? $store?->id;
+        $adjNo = $this->generateNumber($validated['adjustment_date']);
 
         DB::beginTransaction();
         try {
             $adjustment = StockAdjustment::create([
-                "store_id" => $storeId,
-                "user_id" => $request->user()->id,
-                "adjustment_no" => $adjNo,
-                "adjustment_date" => $validated["adjustment_date"],
-                "reason" => $validated["reason"] ?? null,
-                "notes" => $validated["notes"] ?? null,
-                "status" => "draft",
+                'store_id' => $storeId,
+                'user_id' => $request->user()->id,
+                'adjustment_no' => $adjNo,
+                'adjustment_date' => $validated['adjustment_date'],
+                'reason' => $validated['reason'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'status' => 'draft',
             ]);
 
-            foreach ($validated["items"] as $item) {
-                $diff = $item["actual_qty"] - $item["system_qty"];
-                $product = Product::find($item["product_id"]);
-                $unitCost = $product->cost_price ?? 0;
+            foreach ($validated['items'] as $item) {
+                $diff = $item['actual_qty'] - $item['system_qty'];
+                $variantId = $item['variant_id'] ?? null;
+                $packagingUnitId = $item['packaging_unit_id'] ?? null;
+
+                // Ambil average_cost dari bucket yang tepat
+                $stock = ProductStock::where('product_id', $item['product_id'])
+                    ->where('variant_id', $variantId)
+                    ->where('packaging_unit_id', $packagingUnitId)
+                    ->where('store_id', $storeId)
+                    ->first();
+                $unitCost = $stock->average_cost ?? 0;
 
                 StockAdjustmentItem::create([
-                    "stock_adjustment_id" => $adjustment->id,
-                    "product_id" => $item["product_id"],
-                    "system_qty" => $item["system_qty"],
-                    "actual_qty" => $item["actual_qty"],
-                    "difference_qty" => $diff,
-                    "unit_cost" => $unitCost,
-                    "total_cost" => abs($diff) * $unitCost,
-                    "notes" => $item["notes"] ?? null,
+                    'stock_adjustment_id' => $adjustment->id,
+                    'product_id' => $item['product_id'],
+                    'variant_id' => $variantId,
+                    'packaging_unit_id' => $packagingUnitId,
+                    'system_qty' => $item['system_qty'],
+                    'actual_qty' => $item['actual_qty'],
+                    'difference_qty' => $diff,
+                    'unit_cost' => $unitCost,
+                    'total_cost' => abs($diff) * $unitCost,
+                    'notes' => $item['notes'] ?? null,
                 ]);
             }
 
             DB::commit();
+
             return redirect()
-                ->route("admin.stock-adjustments.show", $adjustment)
-                ->with("success", "Penyesuaian stok berhasil dibuat.");
+                ->route('admin.stock-adjustments.show', $adjustment)
+                ->with('success', 'Penyesuaian stok berhasil dibuat.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withErrors([
-                "items" => "Gagal menyimpan: " . $e->getMessage(),
+                'items' => 'Gagal menyimpan: '.$e->getMessage(),
             ]);
         }
     }
 
     public function show(StockAdjustment $stockAdjustment)
     {
-        $stockAdjustment->load(["items.product", "user"]);
-        return Inertia::render("Admin/Stock/Adjustment/Show", [
-            "adjustment" => $stockAdjustment,
+        $stockAdjustment->load(['items.product', 'items.variant', 'items.packagingUnit', 'user']);
+
+        return Inertia::render('Admin/Stock/Adjustment/Show', [
+            'adjustment' => $stockAdjustment,
         ]);
     }
 
     public function destroy(StockAdjustment $stockAdjustment)
     {
-        if ($stockAdjustment->status !== "draft") {
+        if ($stockAdjustment->status !== 'draft') {
             return back()->withErrors([
-                "status" => "Hanya penyesuaian draft yang dapat dihapus.",
+                'status' => 'Hanya penyesuaian draft yang dapat dihapus.',
             ]);
         }
 
         $stockAdjustment->delete();
+
         return redirect()
-            ->route("admin.stock-adjustments.index")
-            ->with("success", "Penyesuaian stok berhasil dihapus.");
+            ->route('admin.stock-adjustments.index')
+            ->with('success', 'Penyesuaian stok berhasil dihapus.');
     }
 
     /**
@@ -145,119 +160,142 @@ class StockAdjustmentController extends Controller
     public function quickStore(Request $request)
     {
         $validated = $request->validate([
-            "product_id" => "required|exists:products,id",
-            "type" => "required|in:in,out",
-            "quantity" => "required|numeric|min:0.0001",
-            "reason" => "nullable|string|max:150",
-            "notes" => "nullable|string|max:2000",
-            "cost_price" => "nullable|numeric|min:0",
+            'product_id' => 'required|exists:products,id',
+            'variant_id' => 'nullable|exists:product_variants,id',
+            'packaging_unit_id' => 'nullable|exists:product_packaging_units,id',
+            'type' => 'required|in:in,out',
+            'quantity' => 'required|numeric|min:0.0001',
+            'reason' => 'nullable|string|max:150',
+            'notes' => 'nullable|string|max:2000',
+            'cost_price' => 'nullable|numeric|min:0',
         ]);
 
-        $storeId = session("current_store_id");
-        $branchId = session("current_branch_id");
-        $product = Product::findOrFail($validated["product_id"]);
+        $storeId = session('current_store_id');
+        $branchId = session('current_branch_id');
+        $product = Product::findOrFail($validated['product_id']);
+        $variantId = $validated['variant_id'] ?? null;
+        $packagingUnitId = $validated['packaging_unit_id'] ?? null;
 
-        $productStock = ProductStock::where("product_id", $product->id)
-            ->where("store_id", $storeId)
-            ->when($branchId, fn($q) => $q->where("branch_id", $branchId))
+        $productStock = ProductStock::where('product_id', $product->id)
+            ->where('variant_id', $variantId)
+            ->where('packaging_unit_id', $packagingUnitId)
+            ->where('store_id', $storeId)
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->first();
         $currentStock = $productStock->quantity ?? 0;
 
         // Validasi: stok tidak mencukupi untuk OUT
         if (
-            $validated["type"] === "out" &&
-            $currentStock < $validated["quantity"]
+            $validated['type'] === 'out' &&
+            $currentStock < $validated['quantity']
         ) {
             return back()->withErrors([
-                "quantity" => "Stok tidak mencukupi. Stok saat ini: {$currentStock}.",
+                'quantity' => "Stok tidak mencukupi. Stok saat ini: {$currentStock}.",
             ]);
         }
 
-        $unitCost = $validated["cost_price"] ?? $product->cost_price ?? 0;
+        $unitCost = $validated['cost_price'] ?? $productStock->average_cost ?? $product->cost_price ?? 0;
 
-        if ($validated["type"] === "in") {
-            // Update cost_price produk jika disediakan
-            if (isset($validated["cost_price"]) && $validated["cost_price"] > 0) {
-                $product->update(["cost_price" => $validated["cost_price"]]);
-            }
+        if ($validated['type'] === 'in') {
             $systemQty = (float) $currentStock;
-            $actualQty = $systemQty + (float) $validated["quantity"];
-            $diff = (float) $validated["quantity"];
+            $actualQty = $systemQty + (float) $validated['quantity'];
+            $diff = (float) $validated['quantity'];
         } else {
             $systemQty = (float) $currentStock;
-            $actualQty = $systemQty - (float) $validated["quantity"];
-            $diff = -(float) $validated["quantity"];
+            $actualQty = $systemQty - (float) $validated['quantity'];
+            $diff = -(float) $validated['quantity'];
         }
 
         DB::beginTransaction();
         try {
             $adjustment = StockAdjustment::create([
-                "store_id" => $storeId,
-                "branch_id" => $branchId,
-                "user_id" => $request->user()->id,
-                "adjustment_no" => $this->generateNumber(now()->toDateString()),
-                "adjustment_date" => now(),
-                "reason" => $validated["reason"] ?? "Penyesuaian cepat",
-                "notes" => $validated["notes"] ?? null,
-                "status" => "approved",
+                'store_id' => $storeId,
+                'branch_id' => $branchId,
+                'user_id' => $request->user()->id,
+                'adjustment_no' => $this->generateNumber(now()->toDateString()),
+                'adjustment_date' => now(),
+                'reason' => $validated['reason'] ?? 'Penyesuaian cepat',
+                'notes' => $validated['notes'] ?? null,
+                'status' => 'approved',
             ]);
 
             StockAdjustmentItem::create([
-                "stock_adjustment_id" => $adjustment->id,
-                "product_id" => $product->id,
-                "system_qty" => $systemQty,
-                "actual_qty" => $actualQty,
-                "difference_qty" => $diff,
-                "unit_cost" => $unitCost,
-                "total_cost" => abs($diff) * $unitCost,
-                "notes" => $validated["notes"] ?? null,
+                'stock_adjustment_id' => $adjustment->id,
+                'product_id' => $product->id,
+                'variant_id' => $variantId,
+                'packaging_unit_id' => $packagingUnitId,
+                'system_qty' => $systemQty,
+                'actual_qty' => $actualQty,
+                'difference_qty' => $diff,
+                'unit_cost' => $unitCost,
+                'total_cost' => abs($diff) * $unitCost,
+                'notes' => $validated['notes'] ?? null,
             ]);
 
+            // Bucket-aware: update stok di bucket yang tepat
             $stock = ProductStock::firstOrCreate(
                 [
-                    "product_id" => $product->id,
-                    "store_id" => $storeId,
+                    'product_id' => $product->id,
+                    'variant_id' => $variantId,
+                    'packaging_unit_id' => $packagingUnitId,
+                    'store_id' => $storeId,
                 ],
                 [
-                    "branch_id" => $branchId,
-                    "quantity" => 0,
-                    "reserved_quantity" => 0,
+                    'branch_id' => $branchId,
+                    'quantity' => 0,
+                    'reserved_quantity' => 0,
+                    'average_cost' => 0,
                 ],
             );
 
             if ($diff > 0) {
-                $stock->increment("quantity", $diff);
-                $type = "adjustment_in";
+                $stock->increment('quantity', $diff);
+                $type = 'adjustment_in';
+
+                // Update average_cost bucket (weighted average)
+                if (isset($validated['cost_price']) && $validated['cost_price'] > 0) {
+                    $oldQty = $currentStock;
+                    $oldCost = $stock->average_cost ?? 0;
+                    $newCost = $validated['cost_price'];
+                    $totalQty = $oldQty + $diff;
+                    if ($totalQty > 0) {
+                        $stock->update([
+                            'average_cost' => (($oldCost * $oldQty) + ($newCost * $diff)) / $totalQty,
+                        ]);
+                    }
+                }
             } else {
-                $stock->decrement("quantity", abs($diff));
-                $type = "adjustment_out";
+                $stock->decrement('quantity', abs($diff));
+                $type = 'adjustment_out';
             }
 
             StockMovement::create([
-                "product_id" => $product->id,
-                "store_id" => $storeId,
-                "branch_id" => $branchId,
-                "reference_type" => StockAdjustment::class,
-                "reference_id" => $adjustment->id,
-                "movement_type" => $type,
-                "quantity" => abs($diff),
-                "unit_cost" => $unitCost,
-                "reference_no" => $adjustment->adjustment_no,
-                "notes" =>
-                    $validated["notes"] ??
+                'product_id' => $product->id,
+                'variant_id' => $variantId,
+                'packaging_unit_id' => $packagingUnitId,
+                'store_id' => $storeId,
+                'branch_id' => $branchId,
+                'reference_type' => StockAdjustment::class,
+                'reference_id' => $adjustment->id,
+                'movement_type' => $type,
+                'quantity' => abs($diff),
+                'unit_cost' => $unitCost,
+                'reference_no' => $adjustment->adjustment_no,
+                'notes' => $validated['notes'] ??
                     "Penyesuaian #{$adjustment->adjustment_no}",
-                "moved_at" => now(),
+                'moved_at' => now(),
             ]);
 
             DB::commit();
 
             return redirect()
                 ->back()
-                ->with("success", "Stok berhasil disesuaikan.");
+                ->with('success', 'Stok berhasil disesuaikan.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withErrors([
-                "items" => "Gagal menyimpan: " . $e->getMessage(),
+                'items' => 'Gagal menyimpan: '.$e->getMessage(),
             ]);
         }
     }
@@ -267,76 +305,88 @@ class StockAdjustmentController extends Controller
         StockAdjustment $stockAdjustment,
     ) {
         $request->validate([
-            "status" => "required|in:approved,rejected",
+            'status' => 'required|in:approved,rejected',
         ]);
 
-        if ($stockAdjustment->status !== "draft") {
+        if ($stockAdjustment->status !== 'draft') {
             return back()->withErrors([
-                "status" =>
-                    "Hanya penyesuaian draft yang dapat diubah statusnya.",
+                'status' => 'Hanya penyesuaian draft yang dapat diubah statusnya.',
             ]);
         }
 
         DB::beginTransaction();
         try {
-            $stockAdjustment->update(["status" => $request->status]);
+            $stockAdjustment->update(['status' => $request->status]);
 
-            if ($request->status === "approved") {
+            if ($request->status === 'approved') {
                 foreach ($stockAdjustment->items as $item) {
                     $diff = $item->difference_qty;
                     if ($diff === 0) {
                         continue;
                     }
 
-                    $stock = ProductStock::firstOrCreate([
-                        "product_id" => $item->product_id,
-                        "store_id" => $stockAdjustment->store_id,
-                    ]);
+                    // Bucket-aware: key lengkap dengan variant_id + packaging_unit_id
+                    $stock = ProductStock::firstOrCreate(
+                        [
+                            'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'packaging_unit_id' => $item->packaging_unit_id,
+                            'store_id' => $stockAdjustment->store_id,
+                        ],
+                        [
+                            'quantity' => 0,
+                            'reserved_quantity' => 0,
+                            'average_cost' => 0,
+                        ],
+                    );
 
                     if ($diff > 0) {
-                        $stock->increment("quantity", $diff);
-                        $type = "adjustment_in";
+                        $stock->increment('quantity', $diff);
+                        $type = 'adjustment_in';
                     } else {
-                        $stock->decrement("quantity", abs($diff));
-                        $type = "adjustment_out";
+                        $stock->decrement('quantity', abs($diff));
+                        $type = 'adjustment_out';
                     }
 
                     StockMovement::create([
-                        "product_id" => $item->product_id,
-                        "store_id" => $stockAdjustment->store_id,
-                        "branch_id" => null,
-                        "reference_type" => StockAdjustment::class,
-                        "reference_id" => $stockAdjustment->id,
-                        "movement_type" => $type,
-                        "quantity" => abs($diff),
-                        "unit_cost" => $item->unit_cost,
-                        "reference_no" => $stockAdjustment->adjustment_no,
-                        "notes" =>
-                            $item->notes ??
+                        'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
+                        'packaging_unit_id' => $item->packaging_unit_id,
+                        'store_id' => $stockAdjustment->store_id,
+                        'branch_id' => null,
+                        'reference_type' => StockAdjustment::class,
+                        'reference_id' => $stockAdjustment->id,
+                        'movement_type' => $type,
+                        'quantity' => abs($diff),
+                        'unit_cost' => $item->unit_cost,
+                        'reference_no' => $stockAdjustment->adjustment_no,
+                        'notes' => $item->notes ??
                             "Penyesuaian #{$stockAdjustment->adjustment_no}",
-                        "moved_at" => now(),
+                        'moved_at' => now(),
                     ]);
                 }
             }
 
             DB::commit();
+
             return back()->with(
-                "success",
-                "Status penyesuaian berhasil diperbarui.",
+                'success',
+                'Status penyesuaian berhasil diperbarui.',
             );
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withErrors([
-                "status" => "Gagal memperbarui status: " . $e->getMessage(),
+                'status' => 'Gagal memperbarui status: '.$e->getMessage(),
             ]);
         }
     }
 
     private function generateNumber($date)
     {
-        $prefix = "ADJ-" . date("Ymd", strtotime($date));
-        $last = StockAdjustment::where("adjustment_no", "like", $prefix . "%")
-            ->orderByDesc("adjustment_no")
+        $prefix = 'ADJ-'.date('Ymd', strtotime($date));
+        $last = StockAdjustment::where('adjustment_no', 'like', $prefix.'%')
+            ->orderByDesc('adjustment_no')
             ->first();
 
         if ($last) {
@@ -345,6 +395,6 @@ class StockAdjustmentController extends Controller
             $seq = 1;
         }
 
-        return $prefix . "-" . str_pad($seq, 3, "0", STR_PAD_LEFT);
+        return $prefix.'-'.str_pad($seq, 3, '0', STR_PAD_LEFT);
     }
 }

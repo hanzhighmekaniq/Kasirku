@@ -15,6 +15,16 @@ function VariantForm({ product, variant, onClose, onSaved }) {
         price: variant?.price ?? product.sell_price ?? "",
         cost_price: variant?.cost_price ?? product.cost_price ?? "",
         is_active: variant?.is_active ?? true,
+        price_tiers: (variant?.price_tiers || []).map((t) => ({
+            min_qty: t.min_qty,
+            price: t.price,
+        })),
+        packaging_units: (variant?.packaging_units || []).map((pu) => ({
+            name: pu.name,
+            conversion_qty: pu.conversion_qty,
+            sell_price: pu.sell_price,
+            barcode: pu.barcode ?? "",
+        })),
     });
 
     const submit = (e) => {
@@ -25,9 +35,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                     product.id,
                     variant.id,
                 ]),
-                {
-                    onSuccess: () => onSaved?.(),
-                },
+                { onSuccess: () => onSaved?.() },
             );
         } else {
             post(route("admin.products.variants.store", product.id), {
@@ -36,13 +44,15 @@ function VariantForm({ product, variant, onClose, onSaved }) {
         }
     };
 
+    const margin = (Number(data.price) || 0) - (Number(data.cost_price) || 0);
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-16">
             <div
                 onClick={onClose}
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
-            <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl sm:p-7">
+            <div className="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl sm:p-7 mb-10">
                 <h3 className="text-base font-semibold text-slate-900">
                     {isEdit ? "Edit Varian" : "Tambah Varian"}
                 </h3>
@@ -50,25 +60,29 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                     Produk: {product.name}
                 </p>
 
-                <form onSubmit={submit} className="mt-5 space-y-4">
-                    <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                            Nama Varian <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={data.name}
-                            onChange={(e) => setData("name", e.target.value)}
-                            className={inputCls}
-                            placeholder="Contoh: Large, Merah, dll"
-                        />
-                        {errors.name && (
-                            <p className="mt-1 text-xs text-red-500">
-                                {errors.name}
-                            </p>
-                        )}
-                    </div>
+                <form onSubmit={submit} className="mt-5 space-y-5">
+                    {/* Info Dasar */}
                     <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                Nama Varian{" "}
+                                <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={data.name}
+                                onChange={(e) =>
+                                    setData("name", e.target.value)
+                                }
+                                className={inputCls}
+                                placeholder="Contoh: Large, Merah, Coklat"
+                            />
+                            {errors.name && (
+                                <p className="mt-1 text-xs text-red-500">
+                                    {errors.name}
+                                </p>
+                            )}
+                        </div>
                         <div>
                             <label className="mb-1.5 block text-sm font-medium text-slate-700">
                                 SKU <span className="text-red-500">*</span>
@@ -76,7 +90,9 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                             <input
                                 type="text"
                                 value={data.sku}
-                                onChange={(e) => setData("sku", e.target.value)}
+                                onChange={(e) =>
+                                    setData("sku", e.target.value)
+                                }
                                 className={inputCls}
                                 placeholder="SKU unik varian"
                             />
@@ -97,7 +113,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                     setData("barcode", e.target.value)
                                 }
                                 className={inputCls}
-                                placeholder="Opsional"
+                                placeholder="Otomatis jika kosong"
                             />
                             {errors.barcode && (
                                 <p className="mt-1 text-xs text-red-500">
@@ -106,22 +122,28 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                             )}
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+
+                    {/* Harga */}
+                    <div className="grid grid-cols-3 gap-4">
                         <div>
                             <label className="mb-1.5 block text-sm font-medium text-slate-700">
                                 Harga Jual{" "}
                                 <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={data.price}
-                                onChange={(e) =>
-                                    setData("price", e.target.value)
-                                }
-                                className={inputCls}
-                            />
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+                                    Rp
+                                </span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={data.price}
+                                    onChange={(e) =>
+                                        setData("price", e.target.value)
+                                    }
+                                    className={`${inputCls} pl-9`}
+                                />
+                            </div>
                             {errors.price && (
                                 <p className="mt-1 text-xs text-red-500">
                                     {errors.price}
@@ -132,33 +154,48 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                             <label className="mb-1.5 block text-sm font-medium text-slate-700">
                                 Harga Beli
                             </label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={data.cost_price}
-                                onChange={(e) =>
-                                    setData("cost_price", e.target.value)
-                                }
-                                className={inputCls}
-                            />
-                            {errors.cost_price && (
-                                <p className="mt-1 text-xs text-red-500">
-                                    {errors.cost_price}
-                                </p>
-                            )}
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+                                    Rp
+                                </span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={data.cost_price}
+                                    onChange={(e) =>
+                                        setData("cost_price", e.target.value)
+                                    }
+                                    className={`${inputCls} pl-9`}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                Margin
+                            </label>
+                            <div
+                                className={`rounded-xl border px-3 py-2 ${margin < 0 ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50"}`}
+                            >
+                                <div
+                                    className={`text-sm font-bold ${margin < 0 ? "text-rose-700" : "text-emerald-800"}`}
+                                >
+                                    Rp {margin.toLocaleString("id-ID")}
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Status */}
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
                             onClick={() =>
                                 setData("is_active", !data.is_active)
                             }
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${data.is_active ? "bg-indigo-600" : "bg-slate-200"}`}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.is_active ? "bg-indigo-600" : "bg-slate-200"}`}
                         >
                             <span
-                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${data.is_active ? "translate-x-5" : "translate-x-0"}`}
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${data.is_active ? "translate-x-5" : "translate-x-0"}`}
                             />
                         </button>
                         <span className="text-sm font-medium text-slate-700">
@@ -166,6 +203,322 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                         </span>
                     </div>
 
+                    {/* Grosir Bertingkat */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <div>
+                                <div className="text-sm font-semibold text-slate-900">
+                                    Grosir Bertingkat
+                                </div>
+                                <div className="text-[11px] text-slate-500">
+                                    Maks 5 tier · beli lebih banyak, harga
+                                    lebih murah
+                                </div>
+                            </div>
+                            {data.price_tiers.length < 5 && (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setData("price_tiers", [
+                                            ...data.price_tiers,
+                                            { min_qty: "", price: "" },
+                                        ])
+                                    }
+                                    className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100"
+                                >
+                                    <svg
+                                        className="h-3.5 w-3.5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={2}
+                                        stroke="currentColor"
+                                    >
+                                        <path d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+                                    Tier
+                                </button>
+                            )}
+                        </div>
+                        {data.price_tiers.length === 0 ? (
+                            <p className="text-xs text-slate-400 italic text-center py-3">
+                                Belum ada tier grosir.
+                            </p>
+                        ) : (
+                            <div className="space-y-2">
+                                {data.price_tiers.map((t, i) => (
+                                    <div
+                                        key={i}
+                                        className="grid grid-cols-12 gap-2 items-center"
+                                    >
+                                        <span className="col-span-2 inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 border border-indigo-100 justify-self-start">
+                                            Tier {i + 1}
+                                        </span>
+                                        <div className="col-span-4 relative">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={t.min_qty}
+                                                onChange={(e) => {
+                                                    const tiers = [
+                                                        ...data.price_tiers,
+                                                    ];
+                                                    tiers[i] = {
+                                                        ...tiers[i],
+                                                        min_qty: e.target.value,
+                                                    };
+                                                    setData(
+                                                        "price_tiers",
+                                                        tiers,
+                                                    );
+                                                }}
+                                                placeholder="Min qty"
+                                                className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 pr-10 text-xs"
+                                            />
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                {product.unit}
+                                            </span>
+                                        </div>
+                                        <div className="col-span-5 relative">
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                Rp
+                                            </span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={t.price}
+                                                onChange={(e) => {
+                                                    const tiers = [
+                                                        ...data.price_tiers,
+                                                    ];
+                                                    tiers[i] = {
+                                                        ...tiers[i],
+                                                        price: e.target.value,
+                                                    };
+                                                    setData(
+                                                        "price_tiers",
+                                                        tiers,
+                                                    );
+                                                }}
+                                                placeholder="Harga"
+                                                className="w-full rounded-lg border border-slate-200 py-1.5 pl-8 pr-2 text-xs"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setData(
+                                                    "price_tiers",
+                                                    data.price_tiers.filter(
+                                                        (_, j) => j !== i,
+                                                    ),
+                                                )
+                                            }
+                                            className="col-span-1 justify-self-end rounded p-1 text-rose-500 hover:bg-rose-50"
+                                        >
+                                            <svg
+                                                className="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                strokeWidth={1.7}
+                                                stroke="currentColor"
+                                            >
+                                                <path d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Multi Satuan / Kemasan */}
+                    <div className="rounded-xl border border-amber-200/70 bg-amber-50/40 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <div>
+                                <div className="text-sm font-semibold text-slate-900">
+                                    Multi Satuan (Kemasan)
+                                </div>
+                                <div className="text-[11px] text-slate-500">
+                                    Cth: Dus berisi 12 {product.unit}
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setData("packaging_units", [
+                                        ...data.packaging_units,
+                                        {
+                                            name: "",
+                                            conversion_qty: "",
+                                            sell_price: "",
+                                            barcode: "",
+                                        },
+                                    ])
+                                }
+                                className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100"
+                            >
+                                <svg
+                                    className="h-3.5 w-3.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                >
+                                    <path d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                                Kemasan
+                            </button>
+                        </div>
+                        {data.packaging_units.length === 0 ? (
+                            <p className="text-xs text-slate-400 italic text-center py-3">
+                                Belum ada kemasan tambahan.
+                            </p>
+                        ) : (
+                            <div className="space-y-2">
+                                {data.packaging_units.map((pu, i) => (
+                                    <div
+                                        key={i}
+                                        className="grid grid-cols-12 gap-2 items-center"
+                                    >
+                                        <div className="col-span-3">
+                                            <input
+                                                type="text"
+                                                value={pu.name}
+                                                onChange={(e) => {
+                                                    const units = [
+                                                        ...data.packaging_units,
+                                                    ];
+                                                    units[i] = {
+                                                        ...units[i],
+                                                        name: e.target.value,
+                                                    };
+                                                    setData(
+                                                        "packaging_units",
+                                                        units,
+                                                    );
+                                                }}
+                                                placeholder="Nama (Dus, Box)"
+                                                className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 relative">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={pu.conversion_qty}
+                                                onChange={(e) => {
+                                                    const units = [
+                                                        ...data.packaging_units,
+                                                    ];
+                                                    units[i] = {
+                                                        ...units[i],
+                                                        conversion_qty:
+                                                            e.target.value,
+                                                    };
+                                                    setData(
+                                                        "packaging_units",
+                                                        units,
+                                                    );
+                                                }}
+                                                placeholder="12"
+                                                className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 pr-8 text-xs"
+                                            />
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                {product.unit}
+                                            </span>
+                                        </div>
+                                        <div className="col-span-3 relative">
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                Rp
+                                            </span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={pu.sell_price}
+                                                onChange={(e) => {
+                                                    const units = [
+                                                        ...data.packaging_units,
+                                                    ];
+                                                    units[i] = {
+                                                        ...units[i],
+                                                        sell_price:
+                                                            e.target.value,
+                                                    };
+                                                    setData(
+                                                        "packaging_units",
+                                                        units,
+                                                    );
+                                                }}
+                                                placeholder="Harga"
+                                                className="w-full rounded-lg border border-slate-200 py-1.5 pl-8 pr-2 text-xs"
+                                            />
+                                        </div>
+                                        <div className="col-span-3">
+                                            <input
+                                                type="text"
+                                                value={pu.barcode}
+                                                onChange={(e) => {
+                                                    const units = [
+                                                        ...data.packaging_units,
+                                                    ];
+                                                    units[i] = {
+                                                        ...units[i],
+                                                        barcode: e.target.value,
+                                                    };
+                                                    setData(
+                                                        "packaging_units",
+                                                        units,
+                                                    );
+                                                }}
+                                                placeholder="Barcode"
+                                                className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setData(
+                                                    "packaging_units",
+                                                    data.packaging_units.filter(
+                                                        (_, j) => j !== i,
+                                                    ),
+                                                )
+                                            }
+                                            className="col-span-1 justify-self-end rounded p-1 text-rose-500 hover:bg-rose-50"
+                                        >
+                                            <svg
+                                                className="h-4 w-4"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                strokeWidth={1.7}
+                                                stroke="currentColor"
+                                            >
+                                                <path d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                        {pu.conversion_qty > 0 &&
+                                            pu.sell_price > 0 && (
+                                                <div className="col-span-12 text-[11px] text-slate-500 pl-1">
+                                                    ≈{" "}
+                                                    <span className="font-semibold text-emerald-700">
+                                                        Rp{" "}
+                                                        {Math.round(
+                                                            pu.sell_price /
+                                                                pu.conversion_qty,
+                                                        ).toLocaleString(
+                                                            "id-ID",
+                                                        )}{" "}
+                                                        / {product.unit}
+                                                    </span>
+                                                </div>
+                                            )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Actions */}
                     <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
                         <button
                             type="button"
@@ -192,6 +545,13 @@ function VariantForm({ product, variant, onClose, onSaved }) {
         </div>
     );
 }
+
+const fmt = (n) =>
+    new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0,
+    }).format(n ?? 0);
 
 export default function Variants({ product }) {
     const { flash } = usePage().props;
@@ -223,7 +583,7 @@ export default function Variants({ product }) {
                 <div className="flex w-full items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <Link
-                            href={route("admin.products.index")}
+                            href={route("admin.products.show", product.id)}
                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
                             aria-label="Kembali"
                         >
@@ -245,7 +605,6 @@ export default function Variants({ product }) {
                             <h2 className="text-lg font-semibold text-slate-800">
                                 Varian Produk
                             </h2>
-
                         </div>
                     </div>
                     <button
@@ -262,11 +621,7 @@ export default function Variants({ product }) {
                             strokeWidth={2}
                             stroke="currentColor"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                            />
+                            <path d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                         <span className="hidden sm:inline">Tambah Varian</span>
                         <span className="sm:hidden">Tambah</span>
@@ -319,23 +674,19 @@ export default function Variants({ product }) {
                         </p>
                         <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm text-slate-500">
                             <span>
-                                Harga Jual:{" "}
-                                <span className="font-medium text-slate-700">
-                                    Rp{" "}
-                                    {Number(
-                                        product.sell_price || 0,
-                                    ).toLocaleString("id-ID")}
+                                SKU:{" "}
+                                <span className="font-mono font-medium text-slate-700">
+                                    {product.sku}
                                 </span>
                             </span>
-                            <span>
-                                Harga Beli:{" "}
-                                <span className="font-medium text-slate-700">
-                                    Rp{" "}
-                                    {Number(
-                                        product.cost_price || 0,
-                                    ).toLocaleString("id-ID")}
+                            {product.barcode && (
+                                <span>
+                                    Barcode:{" "}
+                                    <span className="font-mono font-medium text-slate-700">
+                                        {product.barcode}
+                                    </span>
                                 </span>
-                            </span>
+                            )}
                         </div>
                     </div>
                     <div className="hidden sm:block text-right">
@@ -387,11 +738,7 @@ export default function Variants({ product }) {
                                 strokeWidth={2}
                                 stroke="currentColor"
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M12 4.5v15m7.5-7.5h-15"
-                                />
+                                <path d="M12 4.5v15m7.5-7.5h-15" />
                             </svg>
                             Tambah Varian
                         </button>
@@ -415,6 +762,12 @@ export default function Variants({ product }) {
                                         </th>
                                         <th className="px-5 py-3.5 text-right">
                                             Harga Jual
+                                        </th>
+                                        <th className="px-5 py-3.5 text-center">
+                                            Grosir
+                                        </th>
+                                        <th className="px-5 py-3.5 text-center">
+                                            Kemasan
                                         </th>
                                         <th className="px-5 py-3.5 text-center">
                                             Status
@@ -444,16 +797,38 @@ export default function Variants({ product }) {
                                                 )}
                                             </td>
                                             <td className="px-5 py-4 text-right text-slate-500">
-                                                Rp{" "}
-                                                {Number(
-                                                    v.cost_price || 0,
-                                                ).toLocaleString("id-ID")}
+                                                {fmt(v.cost_price)}
                                             </td>
                                             <td className="px-5 py-4 text-right font-medium text-slate-800">
-                                                Rp{" "}
-                                                {Number(
-                                                    v.price || 0,
-                                                ).toLocaleString("id-ID")}
+                                                {fmt(v.price)}
+                                            </td>
+                                            <td className="px-5 py-4 text-center">
+                                                {v.price_tiers?.length > 0 ? (
+                                                    <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                                                        {v.price_tiers.length}{" "}
+                                                        tier
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-slate-300">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-5 py-4 text-center">
+                                                {v.packaging_units?.length >
+                                                0 ? (
+                                                    <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                                                        {
+                                                            v.packaging_units
+                                                                .length
+                                                        }{" "}
+                                                        kemasan
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-slate-300">
+                                                        —
+                                                    </span>
+                                                )}
                                             </td>
                                             <td className="px-5 py-4 text-center">
                                                 <span
@@ -543,23 +918,42 @@ export default function Variants({ product }) {
                                             </p>
                                             <div className="mt-2 flex items-center gap-3 text-sm">
                                                 <span className="font-semibold text-slate-800">
-                                                    Rp{" "}
-                                                    {Number(
-                                                        v.price || 0,
-                                                    ).toLocaleString("id-ID")}
+                                                    {fmt(v.price)}
                                                 </span>
                                                 {Number(v.cost_price || 0) >
                                                     0 && (
                                                     <span className="text-xs text-slate-500">
-                                                        Beli: Rp{" "}
-                                                        {Number(
-                                                            v.cost_price,
-                                                        ).toLocaleString(
-                                                            "id-ID",
-                                                        )}
+                                                        Beli:{" "}
+                                                        {fmt(v.cost_price)}
                                                     </span>
                                                 )}
                                             </div>
+                                            {(v.price_tiers?.length > 0 ||
+                                                v.packaging_units?.length >
+                                                    0) && (
+                                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                                    {v.price_tiers?.length >
+                                                        0 && (
+                                                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700">
+                                                            {
+                                                                v.price_tiers
+                                                                    .length
+                                                            }{" "}
+                                                            grosir
+                                                        </span>
+                                                    )}
+                                                    {v.packaging_units
+                                                        ?.length > 0 && (
+                                                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                                                            {
+                                                                v.packaging_units
+                                                                    .length
+                                                            }{" "}
+                                                            kemasan
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="mt-3 flex items-center gap-1">
@@ -633,7 +1027,7 @@ export default function Variants({ product }) {
                 title="Hapus varian?"
                 description={
                     target
-                        ? `Varian "${target.name}" akan dihapus permanen.`
+                        ? `Varian "${target.name}" akan dihapus permanen. Data grosir dan kemasan terkait juga akan dihapus.`
                         : ""
                 }
                 processing={deleting}

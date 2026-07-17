@@ -15,50 +15,40 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'dev@gmail.com'],
             [
-                'name'         => 'Dev Admin',
-                'password'     => Hash::make('password'),
+                'name' => 'Dev Admin',
+                'password' => Hash::make('password'),
                 'is_developer' => true,
             ],
         );
 
-        // ── Owners (4 owners, 2 stores each) ────────────────────────────────
-        $owners = [
+        // ── Owner untuk STORE001 ─────────────────────────────────────────────
+        $owner = User::updateOrCreate(
+            ['email' => 'owner1@gmail.com'],
             [
-                'email' => 'owner1@gmail.com',
-                'name'  => 'Budi Santoso',
-                'stores' => ['STORE001', 'STORE002'],
+                'name' => 'Budi Santoso',
+                'password' => Hash::make('password'),
+                'is_developer' => false,
             ],
-            [
-                'email' => 'owner2@gmail.com',
-                'name'  => 'Siti Rahmawati',
-                'stores' => ['STORE003', 'STORE004'],
-            ],
-            [
-                'email' => 'owner3@gmail.com',
-                'name'  => 'Eko Prasetyo',
-                'stores' => ['STORE005', 'STORE006'],
-            ],
-            [
-                'email' => 'owner4@gmail.com',
-                'name'  => 'Linda Wulandari',
-                'stores' => ['STORE007', 'STORE008'],
-            ],
+        );
+
+        $store = Store::where('code', 'STORE001')->firstOrFail();
+        $store->users()->syncWithoutDetaching([$owner->id]);
+
+        // ── Kasir per branch ─────────────────────────────────────────────────
+        $kasirs = [
+            ['email' => 'kasir.pusat@gmail.com', 'name' => 'Rizki Firmansyah'],
+            ['email' => 'kasir.babarsari@gmail.com', 'name' => 'Andi Prasetyo'],
         ];
 
-        foreach ($owners as $ownerData) {
-            $user = User::updateOrCreate(
-                ['email' => $ownerData['email']],
+        foreach ($kasirs as $k) {
+            User::updateOrCreate(
+                ['email' => $k['email']],
                 [
-                    'name'         => $ownerData['name'],
-                    'password'     => Hash::make('password'),
+                    'name' => $k['name'],
+                    'password' => Hash::make('password'),
                     'is_developer' => false,
                 ],
             );
-
-            foreach ($ownerData['stores'] as $storeCode) {
-                $store = Store::where('code', $storeCode)->firstOrFail();
-                $store->users()->syncWithoutDetaching([$user->id]);
-            }
         }
     }
 }

@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { fmt } from "./helpers";
 
 /**
@@ -8,7 +9,22 @@ import { fmt } from "./helpers";
  * parent lewat `onClick` (lihat useKasir.handleProductClick).
  */
 export default function ProductCard({ product, onClick }) {
-    const isOut = product.track_stock && product.stock <= 0;
+    const [showGrosir, setShowGrosir] = useState(false);
+    const grosirRef = useRef(null);
+
+    const packagingUnits = product.packaging_units ?? [];
+    const hasUnits = packagingUnits.length > 0;
+    const activeVariants = (product.variants ?? []).filter((v) => v.is_active);
+    const hasActiveVariants = activeVariants.length > 0;
+
+    // Untuk produk dengan variant, total stok dihitung dari SEMUA bucket
+    // variant (bukan bucket base yang sekarang biasanya kosong untuk produk
+    // ber-variant). Produk simple tetap pakai product.stock seperti biasa.
+    const totalStock = hasActiveVariants
+        ? activeVariants.reduce((sum, v) => sum + Number(v.stock ?? 0), 0)
+        : Number(product.stock ?? 0);
+
+    const isOut = product.track_stock && totalStock <= 0;
     const hasRecipe = product.recipes?.length > 0;
     const ingredientShortage = hasRecipe
         ? product.recipes.filter(
@@ -19,15 +35,26 @@ export default function ProductCard({ product, onClick }) {
         : [];
     const isIngredientOut = ingredientShortage.length > 0;
     const isDisabled = hasRecipe ? isIngredientOut : isOut;
-    const packagingUnits = product.packaging_units ?? [];
-    const hasUnits = packagingUnits.length > 0;
-    const activeVariants = (product.variants ?? []).filter((v) => v.is_active);
-    const hasActiveVariants = activeVariants.length > 0;
     const isLowStock =
         !hasRecipe &&
         product.track_stock &&
-        product.stock > 0 &&
-        product.stock <= 10;
+        totalStock > 0 &&
+        totalStock <= 10;
+
+    const productTiers = (product.price_tiers ?? []).filter((t) => !t.variant_id);
+    const hasGrosir = productTiers.length > 0 && !hasActiveVariants;
+    const showGrosirButton = hasGrosir && !hasUnits && !isDisabled;
+
+    useEffect(() => {
+        if (!showGrosir) return;
+        const handleClickOutside = (e) => {
+            if (grosirRef.current && !grosirRef.current.contains(e.target)) {
+                setShowGrosir(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [showGrosir]);
 
     const handleAddClick = (e) => {
         e.stopPropagation();
@@ -162,11 +189,56 @@ export default function ProductCard({ product, onClick }) {
                                 {unitEquations.join(" · ")}
                             </p>
                         )}
-                        {(product.price_tiers?.length > 0 ||
-                            activeVariants.some((v) => v.price_tiers?.length > 0)) && (
-                            <p className="mt-1 text-[11px] font-medium text-emerald-600">
-                                Ada harga grosir
-                            </p>
+                        {showGrosirButton ? (
+                            <div className="relative mt-1" ref={grosirRef}>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowGrosir((v) => !v);
+                                    }}
+                                    className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 transition hover:bg-emerald-100"
+                                >
+                                    <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-white">
+                                        !
+                                    </span>
+                                    Ada harga grosir
+                                </button>
+                                {showGrosir && (
+                                    <div className="absolute bottom-full left-0 z-50 mb-2 w-56 rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
+                                        <p className="mb-2 text-[11px] font-semibold text-slate-700">
+                                            Harga Grosir
+                                        </p>
+                                        <div className="space-y-1.5">
+                                            {[...productTiers]
+                                                .sort((a, b) => a.min_qty - b.min_qty)
+                                                .map((tier, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="flex items-center justify-between text-[11px]"
+                                                    >
+                                                        <span className="text-slate-500">
+                                                            Min {tier.min_qty} {product.unit || "pcs"}
+                                                        </span>
+                                                        <span className="font-semibold text-slate-800">
+                                                            {fmt(Number(tier.price))}/{product.unit || "pcs"}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                        <div className="mt-2 border-t border-slate-100 pt-2 text-[10px] text-slate-400">
+                                            Harga berlaku otomatis sesuai jumlah
+                                        </div>
+                                        <div className="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 border-b border-r border-slate-200 bg-white" />
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            (hasGrosir || activeVariants.some((v) => v.price_tiers?.length > 0)) && (
+                                <p className="mt-1 text-[11px] font-medium text-emerald-600">
+                                    Ada harga grosir
+                                </p>
+                            )
                         )}
                     </div>
                 </div>

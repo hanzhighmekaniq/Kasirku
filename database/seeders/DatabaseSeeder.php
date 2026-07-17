@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use Database\Seeders\DatabaseSeeder\BranchSeeder;
-use Database\Seeders\DatabaseSeeder\CafeTableSeeder;
 use Database\Seeders\DatabaseSeeder\CashierShiftSeeder;
 use Database\Seeders\DatabaseSeeder\CategorySeeder;
 use Database\Seeders\DatabaseSeeder\CustomerSeeder;
@@ -61,10 +60,9 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             ProductSeeder::class,
             ProductStockSeeder::class,
-            CafeTableSeeder::class,
             CashierShiftSeeder::class,
-            SaleSeeder::class,
             PurchaseSeeder::class,
+            SaleSeeder::class,
             ExpenseCategorySeeder::class,
             ExpenseSeeder::class,
             StockMovementSeeder::class,

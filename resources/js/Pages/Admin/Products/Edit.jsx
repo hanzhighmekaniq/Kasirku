@@ -5,7 +5,6 @@ import BarcodeScanner from "@/Components/BarcodeScanner";
 import TreePicker from "@/Components/TreePicker";
 import Select from "@/Components/ui/Select";
 import CurrencyInput from "@/Components/ui/CurrencyInput";
-import { VariantCard } from "@/Pages/Admin/Products/Create";
 import {
     BarChart3,
     ChevronLeft,
@@ -118,27 +117,6 @@ export default function Edit({
             id: t.id,
             min_qty: t.min_qty,
             price: t.price,
-        })),
-        is_variant: product.is_variant ?? false,
-        variants: (product.variants || []).map((v) => ({
-            id: v.id,
-            name: v.name,
-            sku: v.sku,
-            price: v.price,
-            cost_price: v.cost_price ?? "",
-            barcode: v.barcode ?? "",
-            price_tiers: (v.price_tiers || []).map((t) => ({
-                id: t.id,
-                min_qty: t.min_qty,
-                price: t.price,
-            })),
-            packaging_units: (v.packaging_units || []).map((pu) => ({
-                id: pu.id,
-                name: pu.name,
-                conversion_qty: pu.conversion_qty,
-                sell_price: pu.sell_price,
-                barcode: pu.barcode ?? "",
-            })),
         })),
     });
 
@@ -448,36 +426,7 @@ export default function Edit({
                             icon={DollarSign}
                             accent="emerald"
                         >
-                            {/* Toggle is_variant */}
-                            <div className="mb-4">
-                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.is_variant}
-                                        onChange={(e) => {
-                                            setData("is_variant", e.target.checked);
-                                            if (e.target.checked) {
-                                                setData("sell_price", "");
-                                                setData("packaging_units", []);
-                                                setData("price_tiers", []);
-                                            } else {
-                                                setData("variants", []);
-                                            }
-                                        }}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                    />
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-700">Produk Punya Variant</p>
-                                        <p className="text-xs text-slate-400">
-                                            Aktifkan jika produk punya pilihan (cth: ukuran S/M/L, rasa Coklat/Vanilla). Harga, grosir, dan multi-satuan diatur per variant.
-                                        </p>
-                                    </div>
-                                </label>
-                            </div>
-
-                            {!data.is_variant && (
-                                <>
-                                    <div className={`grid gap-4 ${feat.costPrice ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}>
+                            <div className={`grid gap-4 ${feat.costPrice ? "grid-cols-2" : "grid-cols-1 max-w-xs"}`}>
                                         <Field label={priceLabel} required error={errors.sell_price}>
                                             <CurrencyInput
                                                 value={data.sell_price}
@@ -512,18 +461,10 @@ export default function Edit({
                                             </span>
                                         </div>
                                     )}
-                                </>
-                            )}
-
-                            {data.is_variant && (
-                                <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5 text-xs text-indigo-700">
-                                    💡 Harga diatur per variant di bawah. Produk ini tidak punya harga tunggal.
-                                </div>
-                            )}
                         </SectionCard>
 
                         {/* SECTION: Multi-Satuan — hanya retail, fnb, rental */}
-                        {feat.multiUnit && !data.is_variant && (
+                        {feat.multiUnit && (
                         <SectionCard
                             title="Multi-Satuan"
                             subtitle="Kemasan grosir seperti dus, box, karton"
@@ -687,7 +628,6 @@ export default function Edit({
                         )}
 
                         {/* SECTION: Harga Grosir Bertingkat */}
-                        {!data.is_variant && (
                         <SectionCard
                             title="Harga Grosir"
                             subtitle="Harga otomatis turun sesuai quantity"
@@ -765,54 +705,6 @@ export default function Edit({
                                 )}
                             </div>
                         </SectionCard>
-                        )}
-
-                        {/* SECTION: Variant — hanya jika is_variant = true */}
-                        {data.is_variant && (
-                            <SectionCard
-                                title="Daftar Variant"
-                                subtitle="Setiap variant punya harga, grosir, dan multi-satuan sendiri"
-                                icon={BarChart3}
-                                accent="indigo"
-                            >
-                                <div className="space-y-4">
-                                    {data.variants.map((v, vi) => (
-                                        <VariantCard
-                                            key={vi}
-                                            variant={v}
-                                            index={vi}
-                                            unit={data.unit}
-                                            feat={feat}
-                                            errors={errors}
-                                            onUpdate={(updated) => {
-                                                const all = [...data.variants];
-                                                all[vi] = updated;
-                                                setData("variants", all);
-                                            }}
-                                            onRemove={() =>
-                                                setData(
-                                                    "variants",
-                                                    data.variants.filter((_, j) => j !== vi),
-                                                )
-                                            }
-                                        />
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setData("variants", [
-                                                ...data.variants,
-                                                { name: "", sku: "", price: "", cost_price: "", barcode: "", price_tiers: [], packaging_units: [] },
-                                            ])
-                                        }
-                                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 py-2.5 text-sm font-medium text-slate-500 transition hover:border-indigo-400 hover:text-indigo-600"
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                        Tambah Variant
-                                    </button>
-                                </div>
-                            </SectionCard>
-                        )}
 
                         {/* SECTION: Detail spesifik per tipe */}
                         {(data.type === "time_based" ||

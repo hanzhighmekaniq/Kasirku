@@ -24,6 +24,7 @@ class PermissionSeeder extends Seeder
             'sale.create',
             'sale.view',
             'sale.void',
+            'sale.delete',
             'sale.discount',
             'sale.return',
             // Produk

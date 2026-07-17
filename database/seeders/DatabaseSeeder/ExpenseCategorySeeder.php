@@ -10,69 +10,22 @@ class ExpenseCategorySeeder extends Seeder
 {
     public function run(): void
     {
-        $stores = Store::all();
+        $store = Store::where('code', 'STORE001')->firstOrFail();
 
-        foreach ($stores as $store) {
-            $typeCode = $store->getRelationValue("storeType")?->code;
+        $categories = [
+            ['code' => 'OPERATIONAL', 'name' => 'Operasional', 'description' => 'Listrik, air, internet'],
+            ['code' => 'SUPPLIES', 'name' => 'Perlengkapan', 'description' => 'ATK, kebersihan'],
+            ['code' => 'MAINTENANCE', 'name' => 'Perawatan', 'description' => 'Servis alat, renovasi'],
+            ['code' => 'SALARY', 'name' => 'Gaji Karyawan', 'description' => 'Gaji dan tunjangan'],
+            ['code' => 'MARKETING', 'name' => 'Marketing', 'description' => 'Promosi dan iklan'],
+            ['code' => 'RENT', 'name' => 'Sewa', 'description' => 'Sewa tempat dan fasilitas'],
+        ];
 
-            $categories = match ($typeCode) {
-                "retail" => [
-                    [
-                        "code" => "OPERATIONAL",
-                        "name" => "Operasional",
-                        "description" => "Listrik, air, internet",
-                    ],
-                    [
-                        "code" => "SUPPLIES",
-                        "name" => "Perlengkapan",
-                        "description" => "ATK, kebersihan",
-                    ],
-                    [
-                        "code" => "MAINTENANCE",
-                        "name" => "Perawatan",
-                        "description" => "Servis alat, renovasi",
-                    ],
-                ],
-                "fnb" => [
-                    [
-                        "code" => "INGREDIENTS",
-                        "name" => "Bahan Baku",
-                        "description" => "Bahan makanan & minuman",
-                    ],
-                    [
-                        "code" => "OPERATIONAL",
-                        "name" => "Operasional",
-                        "description" => "Gas, listrik, air",
-                    ],
-                    [
-                        "code" => "EQUIPMENT",
-                        "name" => "Peralatan",
-                        "description" => "Alat masak, mesin kopi",
-                    ],
-                ],
-                default => [
-                    [
-                        "code" => "OPERATIONAL",
-                        "name" => "Operasional",
-                        "description" => "Biaya operasional harian",
-                    ],
-                    [
-                        "code" => "MAINTENANCE",
-                        "name" => "Perawatan",
-                        "description" => "Perbaikan & servis",
-                    ],
-                ],
-            };
-
-            foreach ($categories as $cat) {
-                ExpenseCategory::firstOrCreate(
-                    ["store_id" => $store->id, "code" => $cat["code"]],
-                    [
-                        "name" => $cat["name"],
-                        "description" => $cat["description"],
-                    ],
-                );
-            }
+        foreach ($categories as $cat) {
+            ExpenseCategory::firstOrCreate(
+                ['store_id' => $store->id, 'code' => $cat['code']],
+                ['name' => $cat['name'], 'description' => $cat['description']],
+            );
         }
     }
 }

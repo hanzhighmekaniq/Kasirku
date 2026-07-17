@@ -7,6 +7,7 @@ use App\Models\PaymentGatewayTransaction;
 use App\Models\ProductStock;
 use App\Models\Sale;
 use App\Models\SalePayment;
+use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StorePaymentGateway;
 use App\Services\PaymentGateway\PaymentGatewayFactory;
@@ -357,37 +358,82 @@ class PaymentGatewayController extends Controller
                 ]
             );
 
-            // Potong stok
+            // Potong stok — bucket-aware (pattern Fase 1)
             $sale->load('items.product');
+            $now = now();
+
             foreach ($sale->items as $item) {
                 $product = $item->product;
                 if (! $product) {
                     continue;
                 }
 
-                // Cek resep
+                // Cek resep — bahan baku selalu product-level (variant_id=null, packaging_unit_id=null)
                 $product->load('recipes.rawMaterial.stocks');
                 if ($product->recipes->isNotEmpty()) {
                     foreach ($product->recipes as $recipe) {
                         $needed = $recipe->quantity * $item->quantity;
                         if ($recipe->is_nullable) {
-                            $avail = $recipe->rawMaterial->stocks->where('store_id', $sale->store_id)->sum('quantity');
+                            $avail = $recipe->rawMaterial->stocks
+                                ->where('store_id', $sale->store_id)
+                                ->sum('quantity');
                             if ($avail <= 0) {
                                 continue;
                             }
                         }
                         $stock = ProductStock::firstOrCreate(
-                            ['product_id' => $recipe->raw_material_id, 'store_id' => $sale->store_id],
-                            ['quantity' => 0, 'reserved_quantity' => 0]
+                            [
+                                'product_id' => $recipe->raw_material_id,
+                                'variant_id' => null,
+                                'packaging_unit_id' => null,
+                                'store_id' => $sale->store_id,
+                            ],
+                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
                         );
                         $stock->decrement('quantity', $needed);
+
+                        StockMovement::create([
+                            'product_id' => $recipe->raw_material_id,
+                            'store_id' => $sale->store_id,
+                            'reference_type' => Sale::class,
+                            'reference_id' => $sale->id,
+                            'movement_type' => 'sale_out',
+                            'quantity' => $needed,
+                            'unit_cost' => $recipe->rawMaterial->cost_price ?? 0,
+                            'reference_no' => $pgTrx->external_id,
+                            'notes' => "PG {$pgTrx->provider} #{$pgTrx->external_id} — bahan untuk {$product->name}",
+                            'moved_at' => $now,
+                        ]);
                     }
                 } elseif ($product->track_stock) {
+                    // Bucket-aware: potong stok dari bucket yang tepat
                     $stock = ProductStock::firstOrCreate(
-                        ['product_id' => $item->product_id, 'store_id' => $sale->store_id],
-                        ['quantity' => 0, 'reserved_quantity' => 0]
+                        [
+                            'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'packaging_unit_id' => $item->packaging_unit_id,
+                            'store_id' => $sale->store_id,
+                        ],
+                        ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
                     );
                     $stock->decrement('quantity', $item->quantity);
+
+                    $unitLabel = $item->unit_name ? " ({$item->unit_name})" : '';
+
+                    StockMovement::create([
+                        'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
+                        'packaging_unit_id' => $item->packaging_unit_id,
+                        'store_id' => $sale->store_id,
+                        'reference_type' => Sale::class,
+                        'reference_id' => $sale->id,
+                        'movement_type' => 'sale_out',
+                        'quantity' => $item->quantity,
+                        'unit_cost' => $stock->average_cost > 0 ? $stock->average_cost : ($product->cost_price ?? 0),
+                        'reference_no' => $pgTrx->external_id,
+                        'notes' => "PG {$pgTrx->provider} #{$pgTrx->external_id} — {$item->quantity}x{$unitLabel} {$product->name}",
+                        'moved_at' => $now,
+                    ]);
                 }
             }
 

@@ -4,7 +4,7 @@
  * bawaan agar tampilannya konsisten dengan modal lain di Kasir (Variant,
  * Unit, Modifier).
  */
-export default function StockAlertModal({ productName, available = 0, requested = 0, onClose }) {
+export default function StockAlertModal({ productName, available = 0, requested = 0, unitLabel = "", onClose }) {
     const isEmpty = available <= 0;
 
     return (
@@ -47,12 +47,18 @@ export default function StockAlertModal({ productName, available = 0, requested 
                     <div className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm">
                         <div className="flex-1 text-center">
                             <p className="text-[10.5px] uppercase tracking-wide text-slate-400">Tersedia</p>
-                            <p className="mt-0.5 font-bold text-slate-800">{available}</p>
+                            <p className="mt-0.5 font-bold text-slate-800">
+                                {available}
+                                {unitLabel && <span className="ml-1 text-xs font-normal text-slate-400">{unitLabel}</span>}
+                            </p>
                         </div>
                         <div className="h-8 w-px bg-slate-200" />
                         <div className="flex-1 text-center">
                             <p className="text-[10.5px] uppercase tracking-wide text-slate-400">Diminta</p>
-                            <p className="mt-0.5 font-bold text-red-600">{requested}</p>
+                            <p className="mt-0.5 font-bold text-red-600">
+                                {requested}
+                                {unitLabel && <span className="ml-1 text-xs font-normal text-red-400">{unitLabel}</span>}
+                            </p>
                         </div>
                     </div>
                 </div>

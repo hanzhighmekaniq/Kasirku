@@ -9,18 +9,18 @@ import Select from "@/Components/ui/Select";
 const TYPE_LABEL = {
     finished_goods: {
         label: "Barang Jadi",
-        bg: "bg-indigo-100",
-        text: "text-indigo-700",
+        bg: "bg-blue-100",
+        text: "text-blue-700",
     },
     raw_material: {
         label: "Bahan Baku",
-        bg: "bg-amber-100",
-        text: "text-amber-700",
+        bg: "bg-purple-100",
+        text: "text-purple-700",
     },
     combo: {
         label: "Combo/Paket",
-        bg: "bg-violet-100",
-        text: "text-violet-700",
+        bg: "bg-pink-100",
+        text: "text-pink-700",
     },
     service: {
         label: "Jasa/Layanan",
@@ -93,7 +93,7 @@ function TypeBadge({ type }) {
     };
     return (
         <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${t.bg} ${t.text}`}
+            className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${t.bg} ${t.text}`}
         >
             {t.label}
         </span>
@@ -103,34 +103,248 @@ function TypeBadge({ type }) {
 function StockBadge({ product }) {
     if (!product.track_stock) {
         return (
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
                 Tanpa Stok
             </span>
         );
     }
-    const low = product.stock <= product.stock_minimum;
+    const stock = product.stock ?? 0;
+    const min = product.stock_minimum ?? 0;
+    if (stock <= 0) {
+        return (
+            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                Habis
+            </span>
+        );
+    }
+    if (stock <= min) {
+        return (
+            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                Menipis
+            </span>
+        );
+    }
     return (
-        <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${low ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}
-        >
-            {product.stock} {product.unit}
+        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+            Cukup
         </span>
     );
 }
 
-function SummaryCard({ label, value, color = "slate" }) {
-    const borders = {
-        slate: "border-l-slate-400",
-        emerald: "border-l-emerald-400",
-        rose: "border-l-rose-400",
+function StatusBadge({ isActive }) {
+    return isActive ? (
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+            Aktif
+        </span>
+    ) : (
+        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+            <span className="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+            Nonaktif
+        </span>
+    );
+}
+
+function IndicatorBadges({ product }) {
+    const badges = [];
+    const variantCount = product.variants?.length ?? 0;
+    const hasUnits =
+        (product.packaging_units?.length ?? 0) > 0 ||
+        product.variants?.some((v) => (v.packaging_units?.length ?? 0) > 0);
+    const hasTiers =
+        (product.price_tiers?.length ?? 0) > 0 ||
+        product.variants?.some((v) => (v.price_tiers?.length ?? 0) > 0);
+
+    if (variantCount > 0) {
+        badges.push(
+            <span
+                key="variant"
+                className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
+            >
+                Variant {variantCount}
+            </span>,
+        );
+    }
+    if (hasUnits) {
+        badges.push(
+            <span
+                key="unit"
+                className="inline-flex items-center rounded-md border border-teal-200 bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700"
+            >
+                Multi-Satuan
+            </span>,
+        );
+    }
+    if (hasTiers) {
+        badges.push(
+            <span
+                key="tier"
+                className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"
+            >
+                Grosir
+            </span>,
+        );
+    }
+
+    if (badges.length === 0) {
+        return <span className="text-xs text-slate-400">&mdash;</span>;
+    }
+
+    return <div className="flex flex-wrap gap-1">{badges}</div>;
+}
+
+function SummaryCard({ label, value, color = "slate", icon }) {
+    const bgColors = {
+        blue: "bg-blue-100 text-blue-600",
+        emerald: "bg-emerald-100 text-emerald-600",
+        amber: "bg-amber-100 text-amber-600",
+        slate: "bg-slate-100 text-slate-600",
     };
+
     return (
-        <div
-            className={`rounded-2xl border border-slate-200 border-l-4 bg-white p-4 shadow-sm ${borders[color] ?? ""}`}
-        >
-            <p className="text-xs font-medium text-slate-400">{label}</p>
-            <p className="mt-1 text-xl font-bold text-slate-800">{value}</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-xs font-medium text-slate-500 sm:text-sm">
+                        {label}
+                    </p>
+                    <p className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
+                        {value}
+                    </p>
+                </div>
+                <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${bgColors[color] ?? bgColors.slate}`}
+                >
+                    {icon}
+                </div>
+            </div>
         </div>
+    );
+}
+
+function DetailRow({ product }) {
+    const variants = product.variants ?? [];
+    const packagingUnits = product.packaging_units ?? [];
+    const priceTiers = product.price_tiers ?? [];
+    const hasVariants = variants.length > 0;
+
+    const rows = [];
+
+    if (hasVariants) {
+        variants.forEach((v) => {
+            const units = v.packaging_units?.length
+                ? v.packaging_units
+                      .map(
+                          (u) =>
+                              `${u.name} (${u.conversion_qty} ${product.unit}): Rp ${Number(u.sell_price || 0).toLocaleString("id-ID")}`,
+                      )
+                      .join(", ")
+                : "—";
+            const tiers = v.price_tiers?.length
+                ? v.price_tiers
+                      .map(
+                          (t) =>
+                              `${t.min_qty}+ Rp ${Number(t.price).toLocaleString("id-ID")}`,
+                      )
+                      .join(" · ")
+                : "—";
+
+            rows.push(
+                <tr key={v.id}>
+                    <td className="px-3 py-2 font-medium text-slate-800">
+                        {v.name}
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs text-slate-600">
+                        {v.sku}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                        Rp{" "}
+                        {Number(v.price || 0).toLocaleString("id-ID")}
+                    </td>
+                    <td className="px-3 py-2 text-right text-slate-500">
+                        Rp{" "}
+                        {Number(v.cost_price || 0).toLocaleString("id-ID")}
+                    </td>
+                    <td className="px-3 py-2 text-center text-xs">
+                        {units}
+                    </td>
+                    <td className="px-3 py-2 text-xs">{tiers}</td>
+                </tr>,
+            );
+        });
+    } else {
+        const units = packagingUnits.length
+            ? packagingUnits
+                  .map(
+                      (u) =>
+                          `${u.name} (${u.conversion_qty} ${product.unit}): Rp ${Number(u.sell_price || 0).toLocaleString("id-ID")}`,
+                  )
+                  .join(", ")
+            : "—";
+        const tiers = priceTiers.length
+            ? priceTiers
+                  .map(
+                      (t) =>
+                          `${t.min_qty}+ Rp ${Number(t.price).toLocaleString("id-ID")}`,
+                  )
+                  .join(" · ")
+            : "—";
+
+        rows.push(
+            <tr key={product.id}>
+                <td className="px-3 py-2 font-medium text-slate-800">
+                    {product.name}
+                </td>
+                <td className="px-3 py-2 font-mono text-xs text-slate-600">
+                    {product.sku}
+                </td>
+                <td className="px-3 py-2 text-right">
+                    Rp{" "}
+                    {Number(product.sell_price || 0).toLocaleString("id-ID")}
+                </td>
+                <td className="px-3 py-2 text-right text-slate-500">
+                    Rp{" "}
+                    {Number(product.cost_price || 0).toLocaleString("id-ID")}
+                </td>
+                <td className="px-3 py-2 text-center text-xs">{units}</td>
+                <td className="px-3 py-2 text-xs">{tiers}</td>
+            </tr>,
+        );
+    }
+
+    return (
+        <div className="border-t border-slate-200 bg-slate-50 p-4">
+            <h4 className="mb-2 text-xs font-semibold uppercase text-slate-500">
+                Detail {hasVariants ? "Variant" : "Produk"}
+            </h4>
+            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+                <table className="w-full text-sm">
+                    <thead className="bg-slate-100 text-xs uppercase text-slate-600">
+                        <tr>
+                            <th className="px-3 py-2 text-left">
+                                {hasVariants ? "Variant" : "Produk"}
+                            </th>
+                            <th className="px-3 py-2 text-left">SKU</th>
+                            <th className="px-3 py-2 text-right">Harga Jual</th>
+                            <th className="px-3 py-2 text-right">Harga Modal</th>
+                            <th className="px-3 py-2 text-left">Multi-Satuan</th>
+                            <th className="px-3 py-2 text-left">Grosir</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {rows}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
+
+function hasExpandable(product) {
+    return (
+        (product.variants?.length ?? 0) > 0 ||
+        (product.packaging_units?.length ?? 0) > 0 ||
+        (product.price_tiers?.length ?? 0) > 0
     );
 }
 
@@ -145,16 +359,19 @@ export default function Index({
     const has = (f) => storeTypeFeatures.includes(f);
     const [search, setSearch] = useState(filters?.search ?? "");
     const [filterType, setFilterType] = useState(filters?.type ?? "");
-    const [filterCategory, setFilterCategory] = useState(filters?.category ?? "");
+    const [filterCategory, setFilterCategory] = useState(
+        filters?.category ?? "",
+    );
     const [filterStatus, setFilterStatus] = useState(filters?.status ?? "");
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [stockModal, setStockModal] = useState(null);
+    const [expanded, setExpanded] = useState(new Set());
+    const [showFilter, setShowFilter] = useState(false);
 
     const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
     const filterTypeOptions = FILTER_TYPES[storeType] ?? FILTER_TYPES.retail;
 
-    // Kolom yang tampil — derived from storeTypeFeatures (database)
     const showStock = has("stock");
     const showMargin = has("purchase");
     const showCapacity = ["ticket", "hospitality"].includes(storeType);
@@ -171,15 +388,26 @@ export default function Index({
     const showMaxGuests = storeType === "hospitality";
     const showPrepTime = has("kitchen");
 
-    // Server-side filter
     const applyFilter = (key, value) => {
         router.get(
             route("admin.products.index"),
             {
-                search: key === "search" ? value || undefined : (search || undefined),
-                type: key === "type" ? value || undefined : (filterType || undefined),
-                category: key === "category" ? value || undefined : (filterCategory || undefined),
-                status: key === "status" ? value || undefined : (filterStatus || undefined),
+                search:
+                    key === "search"
+                        ? value || undefined
+                        : search || undefined,
+                type:
+                    key === "type"
+                        ? value || undefined
+                        : filterType || undefined,
+                category:
+                    key === "category"
+                        ? value || undefined
+                        : filterCategory || undefined,
+                status:
+                    key === "status"
+                        ? value || undefined
+                        : filterStatus || undefined,
             },
             { preserveState: true, replace: true },
         );
@@ -200,6 +428,18 @@ export default function Index({
         });
     };
 
+    const toggleExpand = (id) => {
+        setExpanded((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
     const sellPriceLabel =
         storeType === "session" || storeType === "parking"
             ? "Tarif"
@@ -214,93 +454,150 @@ export default function Index({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-slate-800">
-                        Manajemen {pageTitle}
-                    </h2>
-                    <Link
-                        href={route("admin.products.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
-                    >
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                            />
-                        </svg>
-                        <span className="hidden sm:inline">
-                            Tambah {pageTitle}
-                        </span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Link>
+                <div className="flex w-full items-center justify-between">
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+                            Manajemen {pageTitle}
+                        </h2>
+                        <p className="mt-1 text-sm text-slate-500">
+                            Kelola produk, variant, satuan, dan harga grosir
+                        </p>
+                    </div>
                 </div>
             }
         >
             <Head title={`Manajemen ${pageTitle}`} />
 
             {/* Stats */}
-            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 <SummaryCard
                     label={`Total ${pageTitle}`}
                     value={stats.total}
-                    color="slate"
+                    color="blue"
+                    icon={
+                        <svg
+                            className="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <path d="M20 7 12 3 4 7v10l8 4 8-4V7Z" />
+                            <path d="m4 7 8 4 8-4" />
+                            <path d="M12 11v10" />
+                        </svg>
+                    }
                 />
                 <SummaryCard
                     label="Aktif"
                     value={stats.active}
                     color="emerald"
+                    icon={
+                        <svg
+                            className="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                    }
                 />
                 {showStock && (
                     <SummaryCard
                         label="Stok Menipis"
                         value={stats.lowStock}
-                        color="rose"
+                        color="amber"
+                        icon={
+                            <svg
+                                className="h-5 w-5"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M12 9v4M12 17h.01" />
+                                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+                            </svg>
+                        }
                     />
                 )}
                 <SummaryCard
                     label="Nonaktif"
                     value={stats.inactive}
                     color="slate"
+                    icon={
+                        <svg
+                            className="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="m4.9 4.9 14.2 14.2" />
+                        </svg>
+                    }
                 />
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                 {/* Toolbar */}
-                <div className="border-b border-slate-100 p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <div className="relative flex-1">
-                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                <div className="border-b border-slate-200 p-4">
+                    <div className="flex flex-col gap-3">
+                        {/* Search + Filter Toggle */}
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
                                 <svg
-                                    className="h-4 w-4"
-                                    fill="none"
+                                    className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
                                     viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
+                                    fill="none"
                                     stroke="currentColor"
+                                    strokeWidth={2}
                                 >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                    />
+                                    <circle cx="11" cy="11" r="8" />
+                                    <path d="m21 21-4.35-4.35" />
                                 </svg>
-                            </span>
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Cari nama, SKU, atau barcode..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                            />
+                                <input
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            applyFilter("search", search);
+                                        }
+                                    }}
+                                    placeholder="Cari nama, SKU, atau barcode..."
+                                    className="w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            {/* Filter toggle — mobile only */}
+                            <button
+                                onClick={() => setShowFilter(!showFilter)}
+                                className={`inline-flex items-center justify-center rounded-lg border px-3 transition lg:hidden ${
+                                    showFilter || hasFilters
+                                        ? "border-blue-300 bg-blue-50 text-blue-600"
+                                        : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                                }`}
+                            >
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" d="M3 4h18M3 10h12M3 16h6" />
+                                </svg>
+                            </button>
                         </div>
-                        <div className="flex flex-wrap gap-2">
+
+                        {/* Filters — collapsible on mobile, always visible on desktop */}
+                        <div className={`flex-col gap-2 ${showFilter ? "flex" : "hidden"} lg:flex lg:flex-row lg:items-center`}>
                             <Select
                                 options={filterTypeOptions.map(
                                     ([val, lbl]) => ({
@@ -309,15 +606,21 @@ export default function Index({
                                     }),
                                 )}
                                 value={filterType}
-                                onChange={(v) => { setFilterType(v); applyFilter("type", v); }}
+                                onChange={(v) => {
+                                    setFilterType(v);
+                                    applyFilter("type", v);
+                                }}
                                 placeholder="Semua Tipe"
-                                className="min-w-[160px]"
+                                className="min-w-[140px]"
                             />
-                            <div className="min-w-[200px]">
+                            <div className="min-w-[180px]">
                                 <TreePicker
                                     categories={allCategories}
                                     value={filterCategory}
-                                    onChange={(v) => { setFilterCategory(v); applyFilter("category", v); }}
+                                    onChange={(v) => {
+                                        setFilterCategory(v);
+                                        applyFilter("category", v);
+                                    }}
                                     onClear={() => setFilterCategory("")}
                                     placeholder="Semua Kategori"
                                 />
@@ -329,48 +632,55 @@ export default function Index({
                                     { value: "0", label: "Nonaktif" },
                                 ]}
                                 value={filterStatus}
-                                onChange={(v) => { setFilterStatus(v); applyFilter("status", v); }}
+                                onChange={(v) => {
+                                    setFilterStatus(v);
+                                    applyFilter("status", v);
+                                }}
                                 placeholder="Semua Status"
-                                className="min-w-[150px] "
+                                className="min-w-[140px]"
                             />
-                            {hasFilters && (
-                                <button
-                                    onClick={() => {
-                                        setSearch("");
-                                        setFilterType("");
-                                        setFilterCategory("");
-                                        setFilterStatus("");
-                                        router.get(route("admin.products.index"), {}, { preserveState: true, replace: true });
-                                    }}
-                                    className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-                                >
-                                    <svg
-                                        className="h-3.5 w-3.5"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.8}
-                                        stroke="currentColor"
+                            <div className="flex gap-2 lg:ml-auto">
+                                {hasFilters && (
+                                    <button
+                                        onClick={() => {
+                                            setSearch("");
+                                            setFilterType("");
+                                            setFilterCategory("");
+                                            setFilterStatus("");
+                                            router.get(
+                                                route("admin.products.index"),
+                                                {},
+                                                { preserveState: true, replace: true },
+                                            );
+                                        }}
+                                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                                     >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M6 18L18 6M6 6l12 12"
-                                        />
+                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                                            <path d="M3 3v5h5" />
+                                        </svg>
+                                        Reset
+                                    </button>
+                                )}
+                                <Link
+                                    href={route("admin.products.create")}
+                                    className="hidden lg:inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                                >
+                                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                                        <path strokeLinecap="round" d="M12 5v14M5 12h14" />
                                     </svg>
-                                    Reset
-                                </button>
-                            )}
+                                    Tambah {pageTitle}
+                                </Link>
+                            </div>
                         </div>
                     </div>
-                    <div className="pt-4 flex items-center justify-between">
-                        <p className="text-xs text-slate-500">
-                            Menampilkan{" "}
-                            <span className="font-semibold text-slate-700">
-                                {list.length}
-                            </span>{" "}
-                            dari {products.total} {pageTitle.toLowerCase()}
-                        </p>
-                    </div>
+                    <p className="mt-3 text-sm text-slate-500">
+                        Menampilkan{" "}
+                        <span className="font-semibold text-slate-700">
+                            {list.length}
+                        </span>{" "}
+                        dari {products.total} {pageTitle.toLowerCase()}
+                    </p>
                 </div>
 
                 {/* Empty state */}
@@ -404,19 +714,18 @@ export default function Index({
                         {!hasFilters && (
                             <Link
                                 href={route("admin.products.create")}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
                             >
                                 <svg
-                                    className="h-4 w-4"
-                                    fill="none"
+                                    className="h-5 w-5"
                                     viewBox="0 0 24 24"
-                                    strokeWidth={2}
+                                    fill="none"
                                     stroke="currentColor"
+                                    strokeWidth={2.5}
                                 >
                                     <path
                                         strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M12 4.5v15m7.5-7.5h-15"
+                                        d="M12 5v14M5 12h14"
                                     />
                                 </svg>
                                 Tambah {pageTitle}
@@ -426,379 +735,333 @@ export default function Index({
                 ) : (
                     <>
                         {/* Desktop table */}
-                        <div className="hidden overflow-x-auto md:block">
+                        <div className="hidden overflow-x-auto lg:block">
                             <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                        <th className="px-4 py-3.5">Produk</th>
-                                        <th className="px-4 py-3.5">Tipe</th>
-                                        <th className="px-4 py-3.5 hidden lg:table-cell">
+                                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left font-semibold">
+                                            Produk
+                                        </th>
+                                        <th className="px-4 py-3 text-left font-semibold">
+                                            Tipe
+                                        </th>
+                                        <th className="px-4 py-3 text-left font-semibold">
                                             Kategori
                                         </th>
                                         {showMargin && (
-                                            <th className="px-4 py-3.5 text-right hidden xl:table-cell">
+                                            <th className="px-4 py-3 text-right font-semibold">
                                                 Harga Beli
                                             </th>
                                         )}
-                                        <th className="px-4 py-3.5 text-right">
+                                        <th className="px-4 py-3 text-right font-semibold">
                                             {sellPriceLabel}
                                         </th>
-                                        {showRateHour && (
-                                            <th className="px-4 py-3.5 text-right hidden xl:table-cell">
-                                                Per Jam
-                                            </th>
-                                        )}
-                                        {showCapacity && (
-                                            <th className="px-4 py-3.5 text-center hidden lg:table-cell">
-                                                Kapasitas
-                                            </th>
-                                        )}
-                                        {showMaxGuests && (
-                                            <th className="px-4 py-3.5 text-center hidden lg:table-cell">
-                                                Max Tamu
-                                            </th>
-                                        )}
-                                        {showDuration && (
-                                            <th className="px-4 py-3.5 text-center hidden lg:table-cell">
-                                                Durasi
-                                            </th>
-                                        )}
-                                        {showDeposit && (
-                                            <th className="px-4 py-3.5 text-right hidden lg:table-cell">
-                                                Deposit
-                                            </th>
-                                        )}
-                                        {showPrepTime && (
-                                            <th className="px-4 py-3.5 text-center hidden lg:table-cell">
-                                                Prep
-                                            </th>
-                                        )}
+                                        <th className="px-4 py-3 text-left font-semibold">
+                                            Badges
+                                        </th>
                                         {showStock && (
-                                            <th className="px-4 py-3.5 text-center">
+                                            <th className="px-4 py-3 text-center font-semibold">
                                                 Stok
                                             </th>
                                         )}
-                                        <th className="px-4 py-3.5 text-center">
+                                        <th className="px-4 py-3 text-center font-semibold">
                                             Status
                                         </th>
-                                        <th className="px-4 py-3.5 text-right">
+                                        <th className="px-4 py-3 text-center font-semibold">
                                             Aksi
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {list.map((product) => (
-                                        <tr
-                                            key={product.id}
-                                            className="transition hover:bg-slate-50/70"
-                                        >
-                                            <td className="px-4 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    {product.image ? (
-                                                        <img
-                                                            src={`/storage/${product.image}`}
-                                                            alt={product.name}
-                                                            className="h-10 w-10 shrink-0 rounded-xl object-cover border border-slate-200"
-                                                        />
-                                                    ) : (
-                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10">
-                                                            <svg
-                                                                className="h-5 w-5 text-indigo-400"
-                                                                fill="none"
-                                                                viewBox="0 0 24 24"
-                                                                strokeWidth={
-                                                                    1.5
-                                                                }
-                                                                stroke="currentColor"
-                                                            >
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
-                                                                />
-                                                            </svg>
-                                                        </div>
-                                                    )}
-                                                    <div className="min-w-0">
-                                                        <Link
-                                                            href={route(
-                                                                "admin.products.show",
-                                                                product.id,
-                                                            )}
-                                                            className="font-medium text-slate-800 hover:text-indigo-600 transition-colors truncate max-w-[200px] block"
-                                                        >
-                                                            {product.name}
-                                                        </Link>
-                                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                                            <span className="text-xs text-slate-400">
-                                                                SKU:{" "}
-                                                                {product.sku}
-                                                            </span>
-                                                            {product.barcode && (
-                                                                <span className="text-xs text-slate-400">
-                                                                    &middot;{" "}
-                                                                    {
-                                                                        product.barcode
+                                    {list.map((product) => {
+                                        const isExp = expanded.has(product.id);
+                                        const canExp = hasExpandable(product);
+                                        return (
+                                            <>
+                                                <tr
+                                                    key={product.id}
+                                                    className="transition hover:bg-slate-50"
+                                                >
+                                                    <td className="px-4 py-3">
+                                                        <div className="flex items-center gap-3">
+                                                            {product.image ? (
+                                                                <img
+                                                                    src={`/storage/${product.image}`}
+                                                                    alt={
+                                                                        product.name
                                                                     }
-                                                                </span>
+                                                                    className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 text-xs font-semibold text-slate-500">
+                                                                    {product.name
+                                                                        .split(
+                                                                            " ",
+                                                                        )
+                                                                        .slice(
+                                                                            0,
+                                                                            2,
+                                                                        )
+                                                                        .map(
+                                                                            (
+                                                                                w,
+                                                                            ) =>
+                                                                                w[0],
+                                                                        )
+                                                                        .join(
+                                                                            "",
+                                                                        )
+                                                                        .toUpperCase()}
+                                                                </div>
                                                             )}
-                                                        </div>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="text-xs text-slate-400">
-                                                                Satuan:{" "}
-                                                                {product.unit}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <TypeBadge
-                                                    type={product.type}
-                                                />
-                                            </td>
-                                            <td className="px-4 py-4 text-slate-600 hidden lg:table-cell">
-                                                {product.category?.name ?? (
-                                                    <span className="text-slate-300 italic text-xs">
-                                                        &mdash;
-                                                    </span>
-                                                )}
-                                            </td>
-
-                                            {/* Harga Beli — hanya retail/fnb */}
-                                            {showMargin && (
-                                                <td className="px-4 py-4 text-right text-slate-500 hidden xl:table-cell">
-                                                    Rp{" "}
-                                                    {Number(
-                                                        product.cost_price || 0,
-                                                    ).toLocaleString("id-ID")}
-                                                </td>
-                                            )}
-                                            {/* Harga Jual / Tarif */}
-                                            <td className="px-4 py-4 text-right font-medium text-slate-800">
-                                                Rp{" "}
-                                                {Number(
-                                                    product.sell_price || 0,
-                                                ).toLocaleString("id-ID")}
-                                            </td>
-                                            {/* Tarif per jam */}
-                                            {showRateHour && (
-                                                <td className="px-4 py-4 text-right text-slate-600 hidden xl:table-cell">
-                                                    {product.price_per_hour >
-                                                    0 ? (
-                                                        `Rp ${Number(product.price_per_hour).toLocaleString("id-ID")}`
-                                                    ) : (
-                                                        <span className="text-slate-300">
-                                                            —
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            )}
-                                            {/* Kapasitas — ticket */}
-                                            {showCapacity && (
-                                                <td className="px-4 py-4 text-center text-slate-600 hidden lg:table-cell">
-                                                    {product.capacity ?? (
-                                                        <span className="text-slate-300">
-                                                            —
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            )}
-                                            {/* Max Guests — hospitality */}
-                                            {showMaxGuests && (
-                                                <td className="px-4 py-4 text-center text-slate-600 hidden lg:table-cell">
-                                                    {product.max_guests ? (
-                                                        `${product.max_guests} tamu`
-                                                    ) : (
-                                                        <span className="text-slate-300">
-                                                            —
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            )}
-                                            {/* Durasi — session/parking (session_duration_minutes) atau ticket (valid_duration_minutes) */}
-                                            {showDuration && (
-                                                <td className="px-4 py-4 text-center text-slate-600 hidden lg:table-cell">
-                                                    {storeType === "ticket" ? (
-                                                        product.valid_duration_minutes ? (
-                                                            `${product.valid_duration_minutes} mnt`
-                                                        ) : (
-                                                            <span className="text-slate-300">
-                                                                —
-                                                            </span>
-                                                        )
-                                                    ) : product.session_duration_minutes ===
-                                                      0 ? (
-                                                        <span className="text-xs text-emerald-600 font-medium">
-                                                            Unlimited
-                                                        </span>
-                                                    ) : product.session_duration_minutes ? (
-                                                        `${product.session_duration_minutes} mnt`
-                                                    ) : (
-                                                        <span className="text-slate-300">
-                                                            —
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            )}
-                                            {/* Deposit — rental */}
-                                            {showDeposit && (
-                                                <td className="px-4 py-4 text-right text-slate-600 hidden lg:table-cell">
-                                                    {product.deposit_amount >
-                                                    0 ? (
-                                                        `Rp ${Number(product.deposit_amount).toLocaleString("id-ID")}`
-                                                    ) : (
-                                                        <span className="text-slate-300">
-                                                            —
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            )}
-                                            {/* Prep Time — fnb */}
-                                            {showPrepTime && (
-                                                <td className="px-4 py-4 text-center text-slate-500 hidden lg:table-cell">
-                                                    {product.preparation_time ? (
-                                                        `${product.preparation_time}m`
-                                                    ) : (
-                                                        <span className="text-slate-300">
-                                                            —
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            )}
-                                            {/* Stok — hanya yang relevan */}
-                                            {showStock && (
-                                                <td className="px-4 py-3 text-center">
-                                                    <div className="flex flex-col items-center gap-1.5">
-                                                        <StockBadge
-                                                            product={product}
-                                                        />
-                                                        {product.track_stock && (
-                                                            <div className="flex items-center gap-2.5">
-                                                                {/* Button: Stok Manual */}
-                                                                <button
-                                                                    onClick={(
-                                                                        e,
-                                                                    ) => {
-                                                                        e.stopPropagation();
-                                                                        setStockModal(
-                                                                            {
-                                                                                product,
-                                                                            },
-                                                                        );
-                                                                    }}
-                                                                    className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800"
-                                                                    title="Stok Manual — untuk produksi sendiri, stok awal, koreksi, atau barang rusak/hilang. BUKAN untuk pembelian dari supplier."
-                                                                >
-                                                                    <svg
-                                                                        className="h-3.5 w-3.5"
-                                                                        fill="none"
-                                                                        viewBox="0 0 24 24"
-                                                                        strokeWidth={2}
-                                                                        stroke="currentColor"
-                                                                    >
-                                                                        <path
-                                                                            strokeLinecap="round"
-                                                                            strokeLinejoin="round"
-                                                                            d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
-                                                                        />
-                                                                    </svg>
-                                                                    Stok Manual
-                                                                </button>
-                                                                {/* Separator */}
-                                                                <div className="h-5 w-px bg-slate-200" />
-                                                                {/* Button: Beli dari Supplier */}
+                                                            <div className="min-w-0">
                                                                 <Link
                                                                     href={route(
-                                                                            "admin.purchases.create",
-                                                                        ) +
-                                                                        "?product_id=" +
-                                                                        product.id +
-                                                                        (product.supplier_id
-                                                                            ? "&supplier_id=" +
-                                                                                product.supplier_id
-                                                                            : "")}
-                                                                    onClick={(e) =>
-                                                                        e.stopPropagation()
+                                                                        "admin.products.show",
+                                                                        product.id,
+                                                                    )}
+                                                                    className="block max-w-[200px] truncate font-semibold text-slate-900 transition-colors hover:text-blue-600"
+                                                                >
+                                                                    {
+                                                                        product.name
                                                                     }
-                                                                    className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-100"
-                                                                    title="Beli stok dari supplier (Purchase Order)"
+                                                                </Link>
+                                                                <p className="font-mono text-xs text-slate-500">
+                                                                    {product.sku}
+                                                                    {product.barcode
+                                                                        ? ` · ${product.barcode}`
+                                                                        : ""}
+                                                                </p>
+                                                                <p className="text-xs text-slate-400">
+                                                                    Satuan:{" "}
+                                                                    {product.unit}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <TypeBadge
+                                                            type={product.type}
+                                                        />
+                                                    </td>
+                                                    <td className="px-4 py-3 text-slate-600">
+                                                        {product.category
+                                                            ?.name ?? (
+                                                            <span className="text-xs italic text-slate-300">
+                                                                &mdash;
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    {showMargin && (
+                                                        <td className="px-4 py-3 text-right text-slate-500">
+                                                            Rp{" "}
+                                                            {Number(
+                                                                product.cost_price ||
+                                                                    0,
+                                                            ).toLocaleString(
+                                                                "id-ID",
+                                                            )}
+                                                        </td>
+                                                    )}
+                                                    <td className="px-4 py-3 text-right font-semibold text-slate-900">
+                                                        Rp{" "}
+                                                        {Number(
+                                                            product.sell_price ||
+                                                                0,
+                                                        ).toLocaleString(
+                                                            "id-ID",
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <IndicatorBadges
+                                                            product={product}
+                                                        />
+                                                    </td>
+                                                    {showStock && (
+                                                        <td className="px-4 py-3 text-center">
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <span className="font-semibold text-slate-900">
+                                                                    {product.stock ??
+                                                                        0}
+                                                                </span>
+                                                                <StockBadge
+                                                                    product={
+                                                                        product
+                                                                    }
+                                                                />
+                                                                {product.track_stock && (
+                                                                    <div className="mt-1 flex items-center gap-1">
+                                                                        <button
+                                                                            onClick={(
+                                                                                e,
+                                                                            ) => {
+                                                                                e.stopPropagation();
+                                                                                setStockModal(
+                                                                                    {
+                                                                                        product,
+                                                                                        type: "in",
+                                                                                    },
+                                                                                );
+                                                                            }}
+                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
+                                                                            title="Stok Manual"
+                                                                        >
+                                                                            <svg
+                                                                                className="h-3 w-3"
+                                                                                fill="none"
+                                                                                viewBox="0 0 24 24"
+                                                                                strokeWidth={
+                                                                                    2
+                                                                                }
+                                                                                stroke="currentColor"
+                                                                            >
+                                                                                <path
+                                                                                    strokeLinecap="round"
+                                                                                    strokeLinejoin="round"
+                                                                                    d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
+                                                                                />
+                                                                            </svg>
+                                                                        </button>
+                                                                        <Link
+                                                                            href={
+                                                                                route(
+                                                                                    "admin.purchases.create",
+                                                                                ) +
+                                                                                "?product_id=" +
+                                                                                product.id +
+                                                                                (product.supplier_id
+                                                                                    ? "&supplier_id=" +
+                                                                                      product.supplier_id
+                                                                                    : "")
+                                                                            }
+                                                                            onClick={(
+                                                                                e,
+                                                                            ) =>
+                                                                                e.stopPropagation()
+                                                                            }
+                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-blue-200 bg-blue-50 px-2 text-xs font-medium text-blue-700 shadow-sm transition hover:bg-blue-100"
+                                                                            title="Beli dari Supplier"
+                                                                        >
+                                                                            <svg
+                                                                                className="h-3 w-3"
+                                                                                fill="none"
+                                                                                viewBox="0 0 24 24"
+                                                                                strokeWidth={
+                                                                                    2
+                                                                                }
+                                                                                stroke="currentColor"
+                                                                            >
+                                                                                <path
+                                                                                    strokeLinecap="round"
+                                                                                    strokeLinejoin="round"
+                                                                                    d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 003 3h4.5a3 3 0 003-3H18a1.5 1.5 0 001.5-1.5V6.75A1.5 1.5 0 0018 5.25H6.54m1.34 9l-1.06-4m0 0L5.25 3m1.63 7.25h11.24"
+                                                                                />
+                                                                            </svg>
+                                                                        </Link>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                    <td className="px-4 py-3 text-center">
+                                                        <StatusBadge
+                                                            isActive={
+                                                                product.is_active
+                                                            }
+                                                        />
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <div className="flex items-center justify-center gap-1">
+                                                            {canExp && (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        toggleExpand(
+                                                                            product.id,
+                                                                        )
+                                                                    }
+                                                                    className="rounded p-1.5 text-slate-500 transition hover:bg-slate-100"
+                                                                    title="Detail"
                                                                 >
                                                                     <svg
-                                                                        className="h-3.5 w-3.5"
+                                                                        className={`h-4 w-4 transition ${isExp ? "rotate-180" : ""}`}
+                                                                        viewBox="0 0 24 24"
+                                                                        fill="none"
+                                                                        stroke="currentColor"
+                                                                        strokeWidth={
+                                                                            2
+                                                                        }
+                                                                    >
+                                                                        <path d="m6 9 6 6 6-6" />
+                                                                    </svg>
+                                                                </button>
+                                                            )}
+                                                            {["retail", "fnb"].includes(
+                                                                storeType,
+                                                            ) && (
+                                                                <Link
+                                                                    href={route(
+                                                                        "admin.products.variants.index",
+                                                                        product.id,
+                                                                    )}
+                                                                    className="rounded p-1.5 text-slate-500 transition hover:bg-amber-50 hover:text-amber-600"
+                                                                    title="Kelola Varian"
+                                                                >
+                                                                    <svg
+                                                                        className="h-4 w-4"
                                                                         fill="none"
                                                                         viewBox="0 0 24 24"
-                                                                        strokeWidth={2}
+                                                                        strokeWidth={
+                                                                            1.7
+                                                                        }
                                                                         stroke="currentColor"
                                                                     >
                                                                         <path
                                                                             strokeLinecap="round"
                                                                             strokeLinejoin="round"
-                                                                            d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 003 3h4.5a3 3 0 003-3H18a1.5 1.5 0 001.5-1.5V6.75A1.5 1.5 0 0018 5.25H6.54m1.34 9l-1.06-4m0 0L5.25 3m1.63 7.25h11.24"
+                                                                            d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"
                                                                         />
                                                                     </svg>
-                                                                    Beli Stok
                                                                 </Link>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            )}
-                                            <td className="px-4 py-4 text-center">
-                                                <span
-                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${product.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
-                                                >
-                                                    {product.is_active
-                                                        ? "Aktif"
-                                                        : "Nonaktif"}
-                                                </span>
-                                            </td>
-
-                                            <td className="px-4 py-4">
-                                                <div className="flex items-center justify-end gap-1">
-                                                    {/* Tombol Varian — hanya retail/fnb */}
-                                                    {["retail", "fnb"].includes(
-                                                        storeType,
-                                                    ) && (
-                                                        <Link
-                                                            href={route(
-                                                                "admin.products.variants.index",
-                                                                product.id,
                                                             )}
-                                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-amber-50 hover:text-amber-600"
-                                                            title="Kelola Varian"
-                                                        >
-                                                            <svg
-                                                                className="h-5 w-5"
-                                                                fill="none"
-                                                                viewBox="0 0 24 24"
-                                                                strokeWidth={
-                                                                    1.7
-                                                                }
-                                                                stroke="currentColor"
-                                                            >
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"
-                                                                />
-                                                            </svg>
-                                                        </Link>
-                                                    )}
-                                                    {/* Tombol Resep — hanya fnb */}
-                                                    {storeType === "fnb" &&
-                                                        product.type !==
-                                                            "raw_material" && (
+                                                            {storeType ===
+                                                                "fnb" &&
+                                                                product.type !==
+                                                                    "raw_material" && (
+                                                                    <Link
+                                                                        href={route(
+                                                                            "admin.products.recipes.index",
+                                                                            product.id,
+                                                                        )}
+                                                                        className="rounded p-1.5 text-slate-500 transition hover:bg-orange-50 hover:text-orange-600"
+                                                                        title="Kelola Resep"
+                                                                    >
+                                                                        <svg
+                                                                            className="h-4 w-4"
+                                                                            fill="none"
+                                                                            viewBox="0 0 24 24"
+                                                                            strokeWidth={
+                                                                                1.7
+                                                                            }
+                                                                            stroke="currentColor"
+                                                                        >
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15M14.25 3.104c.251.023.501.05.75.082M19.8 15l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.607L5 14.5m14.8.5l.43 2.146a2.25 2.25 0 01-2.19 2.754H6.01a2.25 2.25 0 01-2.19-2.754l.43-2.146M5 14.5l-.43.107"
+                                                                            />
+                                                                        </svg>
+                                                                    </Link>
+                                                                )}
                                                             <Link
                                                                 href={route(
-                                                                    "admin.products.recipes.index",
+                                                                    "admin.products.edit",
                                                                     product.id,
                                                                 )}
-                                                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-orange-50 hover:text-orange-600"
-                                                                title="Kelola Resep"
+                                                                className="rounded p-1.5 text-slate-500 transition hover:bg-amber-50 hover:text-amber-600"
+                                                                title="Edit"
                                                             >
                                                                 <svg
-                                                                    className="h-5 w-5"
+                                                                    className="h-4 w-4"
                                                                     fill="none"
                                                                     viewBox="0 0 24 24"
                                                                     strokeWidth={
@@ -809,343 +1072,216 @@ export default function Index({
                                                                     <path
                                                                         strokeLinecap="round"
                                                                         strokeLinejoin="round"
-                                                                        d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15M14.25 3.104c.251.023.501.05.75.082M19.8 15l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.607L5 14.5m14.8.5l.43 2.146a2.25 2.25 0 01-2.19 2.754H6.01a2.25 2.25 0 01-2.19-2.754l.43-2.146M5 14.5l-.43.107"
+                                                                        d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z"
                                                                     />
                                                                 </svg>
                                                             </Link>
+                                                            <button
+                                                                onClick={() =>
+                                                                    setTarget(
+                                                                        product,
+                                                                    )
+                                                                }
+                                                                className="rounded p-1.5 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                                                                title="Hapus"
+                                                            >
+                                                                <svg
+                                                                    className="h-4 w-4"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    strokeWidth={
+                                                                        1.7
+                                                                    }
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {isExp && (
+                                                    <tr key={`${product.id}-detail`}>
+                                                        <td
+                                                            colSpan={
+                                                                9 +
+                                                                (showMargin
+                                                                    ? 1
+                                                                    : 0) +
+                                                                (showStock
+                                                                    ? 1
+                                                                    : 0)
+                                                            }
+                                                            className="p-0"
+                                                        >
+                                                            <DetailRow
+                                                                product={product}
+                                                            />
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile cards */}
+                        <div className="divide-y divide-slate-100 lg:hidden">
+                            {list.map((product) => {
+                                const isExp = expanded.has(product.id);
+                                const canExp = hasExpandable(product);
+                                return (
+                                    <div key={product.id} className="p-4">
+                                        <div className="flex items-start gap-3">
+                                            {product.image ? (
+                                                <img
+                                                    src={`/storage/${product.image}`}
+                                                    alt={product.name}
+                                                    className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 text-xs font-semibold text-slate-500">
+                                                    {product.name
+                                                        .split(" ")
+                                                        .slice(0, 2)
+                                                        .map((w) => w[0])
+                                                        .join("")
+                                                        .toUpperCase()}
+                                                </div>
+                                            )}
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <p className="font-semibold text-slate-900">
+                                                        {product.name}
+                                                    </p>
+                                                    <TypeBadge
+                                                        type={product.type}
+                                                    />
+                                                </div>
+                                                <p className="mt-0.5 font-mono text-xs text-slate-500">
+                                                    {product.sku}
+                                                    {product.barcode
+                                                        ? ` · ${product.barcode}`
+                                                        : ""}
+                                                </p>
+                                                <p className="text-xs text-slate-400">
+                                                    {product.category?.name ??
+                                                        "—"}{" "}
+                                                    · {product.unit}
+                                                </p>
+                                                <div className="mt-2 flex items-baseline gap-2">
+                                                    <span className="font-bold text-slate-900">
+                                                        Rp{" "}
+                                                        {Number(
+                                                            product.sell_price ||
+                                                                0,
+                                                        ).toLocaleString(
+                                                            "id-ID",
+                                                        )}
+                                                    </span>
+                                                    {showMargin && (
+                                                        <span className="text-xs text-slate-400 line-through">
+                                                            Rp{" "}
+                                                            {Number(
+                                                                product.cost_price ||
+                                                                    0,
+                                                            ).toLocaleString(
+                                                                "id-ID",
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="mt-2">
+                                                    <IndicatorBadges
+                                                        product={product}
+                                                    />
+                                                </div>
+                                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                    {showStock && (
+                                                        <>
+                                                            <span className="text-sm">
+                                                                Stok:{" "}
+                                                                <b>
+                                                                    {product.stock ??
+                                                                        0}
+                                                                </b>
+                                                            </span>
+                                                            <StockBadge
+                                                                product={
+                                                                    product
+                                                                }
+                                                            />
+                                                        </>
+                                                    )}
+                                                    <StatusBadge
+                                                        isActive={
+                                                            product.is_active
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="mt-3 flex gap-3 text-sm font-medium">
+                                                    {canExp && (
+                                                        <button
+                                                            onClick={() =>
+                                                                toggleExpand(
+                                                                    product.id,
+                                                                )
+                                                            }
+                                                            className="text-slate-600"
+                                                        >
+                                                            {isExp
+                                                                ? "Sembunyikan"
+                                                                : "Detail"}
+                                                        </button>
+                                                    )}
+                                                    {showStock &&
+                                                        product.track_stock && (
+                                                            <button
+                                                                onClick={() =>
+                                                                    setStockModal(
+                                                                        {
+                                                                            product,
+                                                                            type: "in",
+                                                                        },
+                                                                    )
+                                                                }
+                                                                className="text-blue-600"
+                                                            >
+                                                                Stok
+                                                            </button>
                                                         )}
                                                     <Link
                                                         href={route(
                                                             "admin.products.edit",
                                                             product.id,
                                                         )}
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
-                                                        title="Edit"
+                                                        className="text-amber-600"
                                                     >
-                                                        <svg
-                                                            className="h-5 w-5"
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                            strokeWidth={1.7}
-                                                            stroke="currentColor"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-                                                            />
-                                                        </svg>
+                                                        Edit
                                                     </Link>
                                                     <button
                                                         onClick={() =>
                                                             setTarget(product)
                                                         }
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-600"
-                                                        title="Hapus"
+                                                        className="text-red-600"
                                                     >
-                                                        <svg
-                                                            className="h-5 w-5"
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                            strokeWidth={1.7}
-                                                            stroke="currentColor"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                                            />
-                                                        </svg>
+                                                        Hapus
                                                     </button>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Mobile cards */}
-                        <div className="divide-y divide-slate-100 md:hidden">
-                            {list.map((product) => (
-                                <div key={product.id} className="p-4">
-                                    <div className="flex items-start gap-3">
-                                        {product.image ? (
-                                            <img
-                                                src={`/storage/${product.image}`}
-                                                alt={product.name}
-                                                className="h-12 w-12 shrink-0 rounded-xl object-cover border border-slate-200"
-                                            />
-                                        ) : (
-                                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10">
-                                                <svg
-                                                    className="h-6 w-6 text-indigo-400"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    strokeWidth={1.5}
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"
-                                                    />
-                                                </svg>
-                                            </div>
-                                        )}
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <p className="truncate font-medium text-slate-800">
-                                                    {product.name}
-                                                </p>
-                                                <TypeBadge
-                                                    type={product.type}
-                                                />
-                                            </div>
-                                            <p className="mt-0.5 text-xs text-slate-400">
-                                                SKU: {product.sku}
-                                                {product.barcode
-                                                    ? ` · ${product.barcode}`
-                                                    : ""}
-                                            </p>
-                                            <div className="mt-2 flex flex-wrap items-center gap-3">
-                                                <span className="text-sm font-semibold text-slate-800">
-                                                    Rp{" "}
-                                                    {Number(
-                                                        product.sell_price || 0,
-                                                    ).toLocaleString("id-ID")}
-                                                </span>
-                                                {showRateHour &&
-                                                    product.price_per_hour >
-                                                        0 && (
-                                                        <span className="text-xs text-slate-500">
-                                                            /jam: Rp{" "}
-                                                            {Number(
-                                                                product.price_per_hour,
-                                                            ).toLocaleString(
-                                                                "id-ID",
-                                                            )}
-                                                        </span>
-                                                    )}
-                                                {showDuration && (
-                                                    <span className="text-xs text-slate-500">
-                                                        {storeType === "ticket"
-                                                            ? product.valid_duration_minutes
-                                                                ? `${product.valid_duration_minutes} mnt`
-                                                                : null
-                                                            : product.session_duration_minutes ===
-                                                                0
-                                                              ? "Unlimited"
-                                                              : product.session_duration_minutes
-                                                                ? `${product.session_duration_minutes} mnt`
-                                                                : null}
-                                                    </span>
-                                                )}
-                                                {showDeposit &&
-                                                    product.deposit_amount >
-                                                        0 && (
-                                                        <span className="text-xs text-slate-500">
-                                                            Deposit: Rp{" "}
-                                                            {Number(
-                                                                product.deposit_amount,
-                                                            ).toLocaleString(
-                                                                "id-ID",
-                                                            )}
-                                                        </span>
-                                                    )}
-                                                {product.category?.name && (
-                                                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-                                                        {product.category.name}
-                                                    </span>
-                                                )}
-                                                {showStock && (
-                                                    <div className="inline-flex items-center gap-1">
-                                                        <StockBadge
-                                                            product={product}
-                                                        />
-                                                        {product.track_stock && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        if (
-                                                                            product.supplier
-                                                                        ) {
-                                                                            router.visit(
-                                                                                route(
-                                                                                    "admin.purchases.create",
-                                                                                ) +
-                                                                                    "?product_id=" +
-                                                                                    product.id +
-                                                                                    "&supplier_id=" +
-                                                                                    product.supplier_id,
-                                                                            );
-                                                                        } else {
-                                                                            setStockModal(
-                                                                                {
-                                                                                    product,
-                                                                                    type: "in",
-                                                                                },
-                                                                            );
-                                                                        }
-                                                                    }}
-                                                                    className="inline-flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
-                                                                    title={
-                                                                        product.supplier
-                                                                            ? "Beli dari Supplier"
-                                                                            : "Tambah Stok"
-                                                                    }
-                                                                >
-                                                                    <svg
-                                                                        className="h-3 w-3"
-                                                                        fill="none"
-                                                                        viewBox="0 0 24 24"
-                                                                        strokeWidth={
-                                                                            2.5
-                                                                        }
-                                                                        stroke="currentColor"
-                                                                    >
-                                                                        <path d="M12 4.5v15m7.5-7.5h-15" />
-                                                                    </svg>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() =>
-                                                                        setStockModal(
-                                                                            {
-                                                                                product,
-                                                                                type: "out",
-                                                                            },
-                                                                        )
-                                                                    }
-                                                                    className="inline-flex h-5 w-5 items-center justify-center rounded bg-red-100 text-red-600 hover:bg-red-200"
-                                                                    title="Kurangi Stok"
-                                                                >
-                                                                    <svg
-                                                                        className="h-3 w-3"
-                                                                        fill="none"
-                                                                        viewBox="0 0 24 24"
-                                                                        strokeWidth={
-                                                                            2.5
-                                                                        }
-                                                                        stroke="currentColor"
-                                                                    >
-                                                                        <path d="M5 12h14" />
-                                                                    </svg>
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                )}
-                                                <span
-                                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${product.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
-                                                >
-                                                    {product.is_active
-                                                        ? "Aktif"
-                                                        : "Nonaktif"}
-                                                </span>
-                                            </div>
-                                            <div className="mt-3 flex items-center gap-1">
-                                                {["retail", "fnb"].includes(
-                                                    storeType,
-                                                ) && (
-                                                    <Link
-                                                        href={route(
-                                                            "admin.products.variants.index",
-                                                            product.id,
-                                                        )}
-                                                        className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-amber-600 transition hover:bg-amber-50"
-                                                    >
-                                                        <svg
-                                                            className="h-3.5 w-3.5"
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                            strokeWidth={1.7}
-                                                            stroke="currentColor"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"
-                                                            />
-                                                        </svg>
-                                                        Varian
-                                                    </Link>
-                                                )}
-                                                {storeType === "fnb" &&
-                                                    product.type !==
-                                                        "raw_material" && (
-                                                        <Link
-                                                            href={route(
-                                                                "admin.products.recipes.index",
-                                                                product.id,
-                                                            )}
-                                                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-orange-600 transition hover:bg-orange-50"
-                                                        >
-                                                            <svg
-                                                                className="h-3.5 w-3.5"
-                                                                fill="none"
-                                                                viewBox="0 0 24 24"
-                                                                strokeWidth={
-                                                                    1.7
-                                                                }
-                                                                stroke="currentColor"
-                                                            >
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15M14.25 3.104c.251.023.501.05.75.082M19.8 15l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.607L5 14.5m14.8.5l.43 2.146a2.25 2.25 0 01-2.19 2.754H6.01a2.25 2.25 0 01-2.19-2.754l.43-2.146M5 14.5l-.43.107"
-                                                                />
-                                                            </svg>
-                                                            Resep
-                                                        </Link>
-                                                    )}
-                                                <Link
-                                                    href={route(
-                                                        "admin.products.edit",
-                                                        product.id,
-                                                    )}
-                                                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50"
-                                                >
-                                                    <svg
-                                                        className="h-3.5 w-3.5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        strokeWidth={1.7}
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-                                                        />
-                                                    </svg>
-                                                    Edit
-                                                </Link>
-                                                <button
-                                                    onClick={() =>
-                                                        setTarget(product)
-                                                    }
-                                                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
-                                                >
-                                                    <svg
-                                                        className="h-3.5 w-3.5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        strokeWidth={1.7}
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                                        />
-                                                    </svg>
-                                                    Hapus
-                                                </button>
                                             </div>
                                         </div>
+                                        {isExp && (
+                                            <DetailRow product={product} />
+                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </>
                 )}
@@ -1153,11 +1289,13 @@ export default function Index({
 
             {/* Pagination */}
             {(products?.last_page ?? 1) > 1 && (
-                <div className="mt-4 flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs">
-                    <span className="text-slate-500">
-                        {products.from}–{products.to} dari {products.total}
-                    </span>
-                    <div className="flex gap-1">
+                <div className="mt-4 flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 sm:flex-row">
+                    <p className="text-sm text-slate-500">
+                        Halaman {products.current_page} dari{" "}
+                        {products.last_page} · {products.total}{" "}
+                        {pageTitle.toLowerCase()}
+                    </p>
+                    <div className="flex items-center gap-1">
                         {(products.links ?? []).map((link, i) => (
                             <button
                                 key={i}
@@ -1170,11 +1308,11 @@ export default function Index({
                                         });
                                     }
                                 }}
-                                className={`rounded-lg px-3 py-1.5 font-medium transition ${
+                                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                                     link.active
-                                        ? "bg-indigo-100 text-indigo-700"
+                                        ? "bg-blue-600 text-white"
                                         : link.url
-                                          ? "text-slate-500 hover:bg-slate-100"
+                                          ? "border border-slate-300 text-slate-700 hover:bg-slate-50"
                                           : "cursor-default text-slate-300"
                                 }`}
                                 dangerouslySetInnerHTML={{
@@ -1186,13 +1324,30 @@ export default function Index({
                 </div>
             )}
 
+            {/* FAB Create — mobile/tablet only */}
+            <Link
+                href={route("admin.products.create")}
+                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/40 transition hover:shadow-2xl hover:shadow-blue-500/50 lg:hidden"
+                title={`Tambah ${pageTitle}`}
+            >
+                <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                    viewBox="0 0 24 24"
+                >
+                    <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                </svg>
+            </Link>
+
             {/* Confirm Delete Modal */}
             <ConfirmDeleteModal
                 open={!!target}
-                title="Hapus produk?"
+                title="Hapus Produk"
                 description={
                     target
-                        ? `Produk "${target.name}" akan dihapus. Tindakan ini tidak dapat dibatalkan.`
+                        ? `Yakin ingin menghapus "${target.name}"? Tindakan ini tidak dapat dibatalkan.`
                         : "Tindakan ini tidak dapat dibatalkan."
                 }
                 confirmLabel="Hapus"

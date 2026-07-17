@@ -1,6 +1,15 @@
 <?php
 
+use App\Models\Branch;
+use App\Models\Feature;
+use App\Models\Plan;
+use App\Models\Store;
+use App\Models\StoreType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /*
@@ -47,4 +56,49 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Setup store + branch + user dengan permission tertentu, siap dipakai test pembelian.
+ * Default permission: purchase.create saja. Kirim array custom untuk skenario
+ * yang butuh purchase.view/edit/delete juga (mis. lifecycle draft->completed->cancelled).
+ *
+ * @return array{0: Store, 1: Branch, 2: User}
+ */
+function setupPurchaseTestContext(array $permissions = ['purchase.create']): array
+{
+    $storeType = StoreType::create([
+        'code' => 'retail', 'label' => 'Retail', 'is_active' => true, 'sort_order' => 0,
+    ]);
+
+    $featureCodes = ['purchase', 'product'];
+    foreach ($featureCodes as $code) {
+        $f = Feature::create(['code' => $code, 'label' => $code, 'is_active' => true, 'sort_order' => 0]);
+        $storeType->features()->attach($f->id);
+    }
+
+    $plan = Plan::create(['code' => 'basic', 'label' => 'Basic', 'is_active' => true, 'sort_order' => 0, 'price' => 0]);
+    $plan->features()->attach(Feature::pluck('id'));
+
+    $store = Store::create([
+        'user_id' => null, 'code' => 'TESTPUR'.uniqid(), 'name' => 'Test Store Purchase',
+        'store_type_id' => $storeType->id, 'plan_id' => $plan->id,
+    ]);
+
+    $branch = Branch::create([
+        'store_id' => $store->id, 'code' => 'BR001', 'name' => 'Main Branch', 'is_active' => true,
+    ]);
+
+    $user = User::factory()->create();
+    $store->users()->attach($user->id);
+
+    app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
+    $role = Role::create(['name' => 'owner-'.uniqid(), 'guard_id' => 1]);
+    foreach ($permissions as $permName) {
+        $perm = Permission::create(['name' => $permName, 'guard_id' => 1]);
+        $role->givePermissionTo($perm);
+    }
+    $user->assignRole($role);
+
+    return [$store, $branch, $user];
 }

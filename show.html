@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Detail Produk — Indomie Goreng</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+  .tab-btn.active { color: #4f46e5; border-color: #4f46e5; background-color: #eef2ff; }
+  .tab-btn { border-color: transparent; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .dot-pulse { animation: pulse-dot 2s infinite; }
+</style>
+<script>
+  tailwind.config = {
+    theme: { extend: { fontFamily: { sans: ['Inter','sans-serif'], display: ['Space Grotesk','sans-serif'] } } }
+  }
+</script>
+</head>
+<body class="text-slate-800 antialiased">
+
+<!-- Header -->
+<header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button class="p-2 -ml-2 rounded-lg hover:bg-slate-100 transition">
+        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <nav class="hidden sm:flex items-center gap-2 text-sm text-slate-500">
+        <a href="#" class="hover:text-indigo-600">Produk</a>
+        <span>/</span>
+        <span class="text-slate-900 font-medium">Detail</span>
+      </nav>
+    </div>
+    <div class="hidden sm:flex items-center gap-2">
+      <button class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+        Hapus
+      </button>
+      <button class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-violet-600 rounded-lg hover:from-indigo-700 hover:to-violet-700 shadow-sm transition">
+        Edit Produk
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-6">
+
+  <!-- Low Stock Alert -->
+  <div id="lowStockAlert" class="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
+    <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+      <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-semibold text-red-900">Perhatian: Batch mendekati kadaluarsa</p>
+      <p class="text-sm text-red-700 mt-0.5">Batch B-2024-015 (25 pcs) akan kadaluarsa pada 10 Agu 2025. Segera lakukan tindakan.</p>
+    </div>
+    <button onclick="document.getElementById('lowStockAlert').remove()" class="flex-shrink-0 p-1 text-red-400 hover:text-red-600 rounded">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- Product Header Card -->
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6">
+    <div class="flex flex-col sm:flex-row gap-6">
+      <!-- Image placeholder -->
+      <div class="flex-shrink-0 mx-auto sm:mx-0">
+        <div class="w-32 h-32 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
+          <span class="font-display text-5xl font-bold text-white">IG</span>
+        </div>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-wrap items-center gap-2 mb-2">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium border border-emerald-200">
+            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full dot-pulse"></span> Aktif
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200">
+            <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Dipantau
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium border border-indigo-200">
+            <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span> Bisa Dijual
+          </span>
+        </div>
+        <h1 class="font-display text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Indomie Goreng</h1>
+        <p class="text-slate-600 mt-1.5 text-sm sm:text-base">Indomie rasa goreng, kemasan 85g, populer di seluruh Indonesia</p>
+        <div class="flex flex-wrap items-center gap-4 mt-3 text-sm">
+          <span class="text-slate-500">SKU: <span class="font-mono font-medium text-slate-800">S1-001</span></span>
+          <span class="text-slate-300">•</span>
+          <span class="text-slate-500">Barcode: <span class="font-mono font-medium text-slate-800">8991101000011</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stat Cards -->
+  <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-gradient-to-br from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-medium text-indigo-100 uppercase tracking-wider">Stok Tersedia</span>
+        <svg class="w-5 h-5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      </div>
+      <div class="font-display text-3xl font-bold" id="stat-stock">170</div>
+      <div class="text-xs text-indigo-100 mt-1">Reserved: 5 • Tersedia: 165</div>
+    </div>
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Harga Jual</span>
+        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+      </div>
+      <div class="font-display text-2xl font-bold text-slate-900" id="stat-sell">Rp 4.000</div>
+      <div class="text-xs text-slate-500 mt-1">per pcs</div>
+    </div>
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Harga Beli</span>
+        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </div>
+      <div class="font-display text-2xl font-bold text-slate-900" id="stat-cost">Rp 2.800</div>
+      <div class="text-xs text-slate-500 mt-1">rata-rata HPP</div>
+    </div>
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Margin</span>
+        <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+      </div>
+      <div class="font-display text-2xl font-bold text-emerald-600">42.9%</div>
+      <div class="text-xs text-slate-500 mt-1">Rp 1.200 / unit</div>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left / Main -->
+    <div class="lg:col-span-2 space-y-6">
+      <!-- Tabs Card -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="border-b border-slate-200 overflow-x-auto no-scrollbar">
+          <div class="flex gap-1 p-2 min-w-max">
+            <button data-tab="stok" class="tab-btn active px-4 py-2 text-sm font-medium rounded-lg border transition whitespace-nowrap">Stok per Cabang</button>
+            <button data-tab="batch" class="tab-btn px-4 py-2 text-sm font-medium text-slate-600 rounded-lg border hover:bg-slate-50 transition whitespace-nowrap">Batch / Expiry</button>
+            <button data-tab="varian" class="tab-btn px-4 py-2 text-sm font-medium text-slate-600 rounded-lg border hover:bg-slate-50 transition whitespace-nowrap">Varian</button>
+            <button data-tab="margin" class="tab-btn px-4 py-2 text-sm font-medium text-slate-600 rounded-lg border hover:bg-slate-50 transition whitespace-nowrap">Margin per Bucket</button>
+          </div>
+        </div>
+
+        <!-- Stok per Cabang -->
+        <div data-panel="stok" class="tab-panel p-4 sm:p-6">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                  <th class="text-left font-medium px-4 py-3 rounded-l-lg">Cabang</th>
+                  <th class="text-right font-medium px-4 py-3">Stok</th>
+                  <th class="text-right font-medium px-4 py-3">Reserved</th>
+                  <th class="text-right font-medium px-4 py-3 rounded-r-lg">Tersedia</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="hover:bg-slate-50 transition">
+                  <td class="px-4 py-3 font-medium text-slate-900">Toko Utama</td>
+                  <td class="px-4 py-3 text-right font-display font-semibold">120</td>
+                  <td class="px-4 py-3 text-right text-slate-500">3</td>
+                  <td class="px-4 py-3 text-right font-display font-semibold text-emerald-600">117</td>
+                </tr>
+                <tr class="hover:bg-slate-50 transition">
+                  <td class="px-4 py-3 font-medium text-slate-900">Gudang</td>
+                  <td class="px-4 py-3 text-right font-display font-semibold">55</td>
+                  <td class="px-4 py-3 text-right text-slate-500">2</td>
+                  <td class="px-4 py-3 text-right font-display font-semibold text-emerald-600">53</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Batch -->
+        <div data-panel="batch" class="tab-panel hidden p-4 sm:p-6">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                  <th class="text-left font-medium px-4 py-3 rounded-l-lg">No Batch</th>
+                  <th class="text-right font-medium px-4 py-3">Qty</th>
+                  <th class="text-right font-medium px-4 py-3">HPP</th>
+                  <th class="text-left font-medium px-4 py-3">Tgl Beli</th>
+                  <th class="text-left font-medium px-4 py-3">Kadaluarsa</th>
+                  <th class="text-left font-medium px-4 py-3 rounded-r-lg">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100" id="batch-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Varian -->
+        <div data-panel="varian" class="tab-panel hidden p-4 sm:p-6">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                  <th class="text-left font-medium px-4 py-3 rounded-l-lg">Nama</th>
+                  <th class="text-left font-medium px-4 py-3">SKU</th>
+                  <th class="text-right font-medium px-4 py-3">Harga Beli</th>
+                  <th class="text-right font-medium px-4 py-3">Harga Jual</th>
+                  <th class="text-left font-medium px-4 py-3 rounded-r-lg">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100" id="varian-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Margin -->
+        <div data-panel="margin" class="tab-panel hidden p-4 sm:p-6">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                  <th class="text-left font-medium px-4 py-3 rounded-l-lg">Bucket</th>
+                  <th class="text-right font-medium px-4 py-3">Stok</th>
+                  <th class="text-right font-medium px-4 py-3">Harga Jual</th>
+                  <th class="text-right font-medium px-4 py-3">Modal (Avg)</th>
+                  <th class="text-right font-medium px-4 py-3 rounded-r-lg">Margin</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100" id="margin-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Detail Produk -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h2 class="font-display text-lg font-bold text-slate-900 mb-4">Detail Produk</h2>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+          <div class="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
+            <dt class="text-slate-500 sm:mb-1">Tipe</dt>
+            <dd><span class="inline-flex px-2 py-0.5 rounded-md bg-violet-50 text-violet-700 text-xs font-medium border border-violet-200">Barang Jadi</span></dd>
+          </div>
+          <div class="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
+            <dt class="text-slate-500 sm:mb-1">Kategori</dt>
+            <dd class="font-medium text-slate-900">Sembako</dd>
+          </div>
+          <div class="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
+            <dt class="text-slate-500 sm:mb-1">Supplier</dt>
+            <dd class="font-medium text-slate-900">PT Sumber Rejeki</dd>
+          </div>
+          <div class="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
+            <dt class="text-slate-500 sm:mb-1">Barcode</dt>
+            <dd class="font-mono font-medium text-slate-900">8991101000011</dd>
+          </div>
+          <div class="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
+            <dt class="text-slate-500 sm:mb-1">Satuan</dt>
+            <dd class="font-medium text-slate-900">pcs</dd>
+          </div>
+          <div class="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
+            <dt class="text-slate-500 sm:mb-1">Stok Minimum</dt>
+            <dd class="font-display font-semibold text-slate-900">50</dd>
+          </div>
+          <div class="sm:col-span-2">
+            <dt class="text-slate-500 mb-1">Deskripsi</dt>
+            <dd class="text-slate-700 leading-relaxed">Indomie rasa goreng, kemasan 85g, populer di seluruh Indonesia</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+
+    <!-- Right / Sidebar -->
+    <aside class="space-y-6 lg:sticky lg:top-20 lg:self-start">
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h2 class="font-display text-lg font-bold text-slate-900 mb-4">Aksi Cepat</h2>
+        <div class="space-y-2">
+          <button class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-200 transition text-left group">
+            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition">
+              <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold text-slate-900">Kelola Varian</div>
+              <div class="text-xs text-slate-500">3 varian aktif</div>
+            </div>
+            <svg class="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <button class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-200 transition text-left group">
+            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition">
+              <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold text-slate-900">Buat Purchase Order</div>
+              <div class="text-xs text-slate-500">Beli stok dari supplier</div>
+            </div>
+            <svg class="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <button class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-200 transition text-left group">
+            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition">
+              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold text-slate-900">Riwayat Stok</div>
+              <div class="text-xs text-slate-500">Lihat pergerakan stok</div>
+            </div>
+            <svg class="w-4 h-4 text-slate-400 group-hover:text-amber-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <section class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Ringkasan</span>
+        </div>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          Produk performa <span class="text-emerald-400 font-semibold">baik</span> dengan margin sehat 42.9%. Perhatikan batch B-2024-015 yang mendekati kadaluarsa.
+        </p>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<!-- Mobile FAB -->
+<div class="lg:hidden fixed bottom-6 right-6 flex flex-col gap-3 z-40">
+  <button class="w-14 h-14 rounded-full bg-white border border-slate-200 shadow-lg flex items-center justify-center text-red-600 hover:bg-red-50 transition">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/></svg>
+  </button>
+  <button class="w-14 h-14 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg flex items-center justify-center text-white hover:from-indigo-700 hover:to-violet-700 transition">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+  </button>
+</div>
+
+<script>
+  const rp = n => 'Rp ' + n.toLocaleString('id-ID');
+
+  // Batch data
+  const batches = [
+    { no: 'B-2025-001', qty: 100, hpp: 2700, beli: '01 Jul 2025', exp: '01 Jan 2027', status: 'Aktif' },
+    { no: 'B-2025-002', qty: 50, hpp: 2800, beli: '15 Jul 2025', exp: '15 Jul 2026', status: 'Aktif' },
+    { no: 'B-2024-015', qty: 25, hpp: 2600, beli: '10 Nov 2024', exp: '10 Aug 2025', status: 'Hampir Habis' },
+  ];
+  const statusBadge = s => {
+    const map = {
+      'Aktif': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      'Hampir Habis': 'bg-amber-50 text-amber-700 border-amber-200',
+      'Kadaluarsa': 'bg-red-50 text-red-700 border-red-200',
+    };
+    return `<span class="inline-flex px-2 py-0.5 rounded-md text-xs font-medium border ${map[s] || 'bg-slate-50 text-slate-700 border-slate-200'}">${s}</span>`;
+  };
+  document.getElementById('batch-tbody').innerHTML = batches.map(b => `
+    <tr class="hover:bg-slate-50 transition">
+      <td class="px-4 py-3 font-mono font-medium text-slate-900">${b.no}</td>
+      <td class="px-4 py-3 text-right font-display font-semibold">${b.qty}</td>
+      <td class="px-4 py-3 text-right">${rp(b.hpp)}</td>
+      <td class="px-4 py-3 text-slate-600">${b.beli}</td>
+      <td class="px-4 py-3 text-slate-600">${b.exp}</td>
+      <td class="px-4 py-3">${statusBadge(b.status)}</td>
+    </tr>`).join('');
+
+  // Varian
+  const varians = [
+    { nama: 'Original', sku: 'S1-001-ORI', beli: 2800, jual: 4000, status: 'Aktif' },
+    { nama: 'Rendang', sku: 'S1-001-REN', beli: 3200, jual: 4500, status: 'Aktif' },
+    { nama: 'Soto', sku: 'S1-001-SOT', beli: 3000, jual: 4200, status: 'Aktif' },
+  ];
+  document.getElementById('varian-tbody').innerHTML = varians.map(v => `
+    <tr class="hover:bg-slate-50 transition">
+      <td class="px-4 py-3 font-semibold text-slate-900">${v.nama}</td>
+      <td class="px-4 py-3 font-mono text-slate-700">${v.sku}</td>
+      <td class="px-4 py-3 text-right">${rp(v.beli)}</td>
+      <td class="px-4 py-3 text-right font-display font-semibold">${rp(v.jual)}</td>
+      <td class="px-4 py-3">${statusBadge(v.status)}</td>
+    </tr>`).join('');
+
+  // Margin
+  const buckets = [
+    { name: 'Pcs (Produk)', stok: 170, jual: 4000, modal: 2800, margin: 1200, pct: 42.9 },
+    { name: 'Dus (Varian)', stok: 5, jual: 151200, modal: 108000, margin: 43200, pct: 40 },
+  ];
+  document.getElementById('margin-tbody').innerHTML = buckets.map(b => `
+    <tr class="hover:bg-slate-50 transition">
+      <td class="px-4 py-3 font-semibold text-slate-900">${b.name}</td>
+      <td class="px-4 py-3 text-right font-display">${b.stok}</td>
+      <td class="px-4 py-3 text-right">${rp(b.jual)}</td>
+      <td class="px-4 py-3 text-right">${rp(b.modal)}</td>
+      <td class="px-4 py-3 text-right font-display font-semibold text-emerald-600">${rp(b.margin)} <span class="text-xs text-slate-500 font-normal">(${b.pct}%)</span></td>
+    </tr>`).join('');
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.classList.add('text-slate-600');
+      });
+      btn.classList.add('active');
+      btn.classList.remove('text-slate-600');
+      const target = btn.dataset.tab;
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.toggle('hidden', p.dataset.panel !== target);
+      });
+    });
+  });
+</script>
+</body>
+</html>

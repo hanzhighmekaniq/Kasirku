@@ -5,23 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Concerns\HasStoreScope;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
-use App\Models\CafeTable;
-use App\Models\Customer;
-use App\Models\PaymentMethod;
-use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\Sale;
-use App\Models\SaleItem;
-use App\Models\SalePayment;
 use App\Models\Store;
-use App\Models\StorePaymentGateway;
-use App\Models\StoreType;
-use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class SaleController extends Controller
@@ -111,216 +99,6 @@ class SaleController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        $storeId = session('current_store_id');
-        $store = Store::with('storeType')->find($storeId);
-        $storeType = $store?->getRelation('storeType')?->code ?? 'retail';
-
-        return Inertia::render('Admin/Sales/Create', [
-            'products' => Product::forStore($storeId)
-                ->where('is_active', true)
-                ->where('is_sellable', true)
-                ->with('stocks')
-                ->orderBy('name')
-                ->get(),
-            'customers' => Customer::where('store_id', $storeId)
-                ->orderBy('name')
-                ->get(),
-            'paymentMethods' => PaymentMethod::forStore($storeId)
-                ->where('is_active', true)
-                ->get(),
-            'tables' => CafeTable::where('store_id', $storeId)
-                ->orderBy('table_number')
-                ->get(),
-            'storeType' => $storeType,
-        ]);
-    }
-
-    public function store(Request $request)
-    {
-        $storeId = session('current_store_id');
-        $store = Store::with('storeType')->find($storeId);
-        $storeType = $store?->getRelation('storeType')?->code ?? 'retail';
-
-        // Order types valid per store type — ambil dari StoreType model
-        $storeTypeModel = StoreType::where(
-            'code',
-            $storeType,
-        )->first();
-        $validOrderTypes = collect($storeTypeModel?->order_types ?? [])
-            ->pluck('v')
-            ->filter()
-            ->values()
-            ->toArray();
-
-        // Fallback jika StoreType belum ada di DB
-        if (empty($validOrderTypes)) {
-            $validOrderTypes = [
-                'takeaway',
-                'delivery',
-                'dine_in',
-                'walk_in',
-                'booking',
-                'per_hour',
-                'per_day',
-                'per_week',
-                'online',
-                'group',
-                'check_in',
-                'reservation',
-                'short_stay',
-                'entry',
-                'exit',
-                'lost_ticket',
-                'postpaid',
-                'prepaid',
-                'wholesale',
-                'pickup_delivery',
-            ];
-        }
-
-        $validated = $request->validate([
-            'customer_id' => 'nullable|exists:customers,id',
-            'table_id' => 'nullable|integer',
-            'sale_date' => 'required|date',
-            'order_type' => [
-                'required',
-                'string',
-                Rule::in($validOrderTypes),
-            ],
-            'discount_amount' => 'nullable|numeric|min:0',
-            'tax_amount' => 'nullable|numeric|min:0',
-            'shipping_amount' => 'nullable|numeric|min:0',
-            'payment_method_id' => 'nullable|exists:payment_methods,id',
-            'paid_amount' => 'required|numeric|min:0',
-            'notes' => 'nullable|string|max:500',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.price' => 'required|numeric|min:0',
-            'items.*.discount_amount' => 'nullable|numeric|min:0',
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-            // Generate sale number: SL-YYYYMMDD-NNN
-            $date = Carbon::parse($validated['sale_date']);
-            $prefix = 'SL-'.$date->format('Ymd').'-';
-            $lastSale = Sale::where('sale_no', 'like', $prefix.'%')
-                ->orderByDesc('sale_no')
-                ->first();
-            $seq = 1;
-            if ($lastSale) {
-                $seq = (int) substr($lastSale->sale_no, -3) + 1;
-            }
-            $saleNo = $prefix.str_pad($seq, 3, '0', STR_PAD_LEFT);
-
-            // Calculate subtotal from items
-            $subtotal = 0;
-            foreach ($validated['items'] as $item) {
-                $itemDiscount = $item['discount_amount'] ?? 0;
-                $itemSubtotal =
-                    $item['quantity'] * $item['price'] - $itemDiscount;
-                $subtotal += $itemSubtotal;
-            }
-
-            $discount = $validated['discount_amount'] ?? 0;
-            $tax = $validated['tax_amount'] ?? 0;
-            $shipping = $validated['shipping_amount'] ?? 0;
-            $grandTotal = $subtotal - $discount + $tax + $shipping;
-            $paidAmount = $validated['paid_amount'];
-            $changeAmount = max(0, $paidAmount - $grandTotal);
-
-            // Determine statuses
-            $paymentStatus = 'unpaid';
-            if ($paidAmount >= $grandTotal && $grandTotal > 0) {
-                $paymentStatus = 'paid';
-            } elseif ($paidAmount > 0) {
-                $paymentStatus = 'partial';
-            }
-
-            $sale = Sale::create([
-                'store_id' => session('current_store_id') ?? $request->user()?->store_id,
-                'branch_id' => session('current_branch_id') ?? session('branch_id'),
-                'table_id' => $validated['table_id'] ?? null,
-                'customer_id' => $validated['customer_id'] ?? null,
-                'user_id' => $request->user()?->id,
-                'sale_no' => $saleNo,
-                'sale_date' => $validated['sale_date'],
-                'subtotal' => $subtotal,
-                'discount_amount' => $discount,
-                'tax_amount' => $tax,
-                'shipping_amount' => $shipping,
-                'grand_total' => $grandTotal,
-                'paid_amount' => $paidAmount,
-                'change_amount' => $changeAmount,
-                'status' => 'completed',
-                'payment_status' => $paymentStatus,
-                'order_type' => $validated['order_type'],
-                'notes' => $validated['notes'] ?? null,
-            ]);
-
-            // Create sale items and deduct stock
-            foreach ($validated['items'] as $item) {
-                $itemDiscount = $item['discount_amount'] ?? 0;
-                $itemSubtotal =
-                    $item['quantity'] * $item['price'] - $itemDiscount;
-
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'discount_amount' => $itemDiscount,
-                    'subtotal' => $itemSubtotal,
-                ]);
-
-                // Deduct stock
-                $product = Product::find($item['product_id']);
-                if ($product && $product->track_stock) {
-                    $stock = ProductStock::firstOrCreate(
-                        [
-                            'product_id' => $item['product_id'],
-                            'store_id' => session('current_store_id') ??
-                                $request->user()?->store_id,
-                            'branch_id' => session('current_branch_id') ??
-                                session('branch_id'),
-                        ],
-                        ['quantity' => 0, 'reserved_quantity' => 0],
-                    );
-                    $stock->decrement('quantity', $item['quantity']);
-                }
-            }
-
-            // Create payment record if paid
-            if ($paidAmount > 0 && ($validated['payment_method_id'] ?? false)) {
-                SalePayment::create([
-                    'sale_id' => $sale->id,
-                    'payment_method_id' => $validated['payment_method_id'],
-                    'paid_at' => $validated['sale_date'],
-                    'amount' => $paidAmount,
-                ]);
-            }
-
-            DB::commit();
-
-            return redirect()
-                ->route('admin.sales.show', $sale->id)
-                ->with('success', 'Penjualan berhasil disimpan.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return back()
-                ->withInput()
-                ->with(
-                    'error',
-                    'Gagal menyimpan penjualan: '.$e->getMessage(),
-                );
-        }
-    }
-
     public function show(Sale $sale)
     {
         $sale->load([
@@ -336,30 +114,11 @@ class SaleController extends Controller
             },
         ]);
 
-        // Load payment methods & PG config for switch payment feature
-        $paymentMethods = PaymentMethod::forStore($sale->store_id)
-            ->where('is_active', true)
-            ->get();
-        $pgConfigs = StorePaymentGateway::where(
-            'store_id',
-            $sale->store_id,
-        )
-            ->where('is_active', true)
-            ->get()
-            ->map(
-                fn ($c) => [
-                    'provider' => $c->provider,
-                    'enabled_methods' => $c->enabled_methods,
-                ],
-            );
-
         $store = Store::with('storeType')->find($sale->store_id);
         $storeType = $store?->getRelation('storeType')?->code ?? 'retail';
 
         return Inertia::render('Admin/Sales/Show', [
             'sale' => $sale,
-            'paymentMethods' => $paymentMethods,
-            'pgConfigs' => $pgConfigs,
             'storeType' => $storeType,
             'canUpdateServiceStatus' => in_array($sale->pos_mode, ['service', 'laundry']) &&
                 (request()->user()->can('sale.create') ||
@@ -437,14 +196,15 @@ class SaleController extends Controller
     public function destroy(Sale $sale)
     {
         if ($sale->status === 'completed') {
-            // Reverse stock for completed sales
+            // Reverse stock for completed sales — bucket-aware
             foreach ($sale->items as $item) {
                 $product = $item->product;
                 if ($product && $product->track_stock) {
                     $stock = ProductStock::where([
                         'product_id' => $item->product_id,
+                        'variant_id' => $item->variant_id,
+                        'packaging_unit_id' => $item->packaging_unit_id,
                         'store_id' => $sale->store_id,
-                        'branch_id' => $sale->branch_id,
                     ])->first();
                     if ($stock) {
                         $stock->increment('quantity', $item->quantity);
@@ -460,87 +220,7 @@ class SaleController extends Controller
             ->with('success', 'Penjualan berhasil dihapus.');
     }
 
-    public function updateStatus(Request $request, Sale $sale)
-    {
-        $validated = $request->validate([
-            'status' => 'required|in:completed,cancelled',
-        ]);
-
-        $oldStatus = $sale->status;
-        $newStatus = $validated['status'];
-
-        DB::beginTransaction();
-
-        try {
-            if ($oldStatus !== 'completed' && $newStatus === 'completed') {
-                // Mark as completed — deduct stock
-                foreach ($sale->items as $item) {
-                    $product = $item->product;
-                    if ($product && $product->track_stock) {
-                        $stock = ProductStock::firstOrCreate(
-                            [
-                                'product_id' => $item->product_id,
-                                'store_id' => $sale->store_id,
-                                'branch_id' => $sale->branch_id,
-                            ],
-                            ['quantity' => 0, 'reserved_quantity' => 0],
-                        );
-                        $stock->decrement('quantity', $item->quantity);
-                    }
-                }
-            } elseif (
-                $oldStatus === 'completed' &&
-                $newStatus === 'cancelled'
-            ) {
-                // Cancel completed — reverse stock
-                foreach ($sale->items as $item) {
-                    $product = $item->product;
-                    if ($product && $product->track_stock) {
-                        $stock = ProductStock::where([
-                            'product_id' => $item->product_id,
-                            'store_id' => $sale->store_id,
-                            'branch_id' => $sale->branch_id,
-                        ])->first();
-                        if ($stock) {
-                            $stock->increment('quantity', $item->quantity);
-                        }
-                    }
-                }
-            }
-
-            $paymentStatus = $sale->payment_status;
-            if ($newStatus === 'cancelled') {
-                $paymentStatus = 'unpaid';
-            }
-
-            $sale->update([
-                'status' => $newStatus,
-                'payment_status' => $paymentStatus,
-            ]);
-
-            // Free the table only if sale is cancelled (customer left)
-            // For completed: staff manually frees via "Kosongkan" button
-            if ($sale->table_id && $newStatus === 'cancelled') {
-                CafeTable::where('id', $sale->table_id)->update([
-                    'status' => 'available',
-                ]);
-            }
-
-            DB::commit();
-
-            return back()->with(
-                'success',
-                'Status penjualan berhasil diperbarui.',
-            );
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return back()->with(
-                'error',
-                'Gagal memperbarui status: '.$e->getMessage(),
-            );
-        }
-    }
+    // ── Lifecycle endpoints untuk tipe toko non-retail ──────────────
 
     public function updateServiceStatus(Request $request, Sale $sale)
     {
@@ -558,7 +238,6 @@ class SaleController extends Controller
 
         $update = ['service_status' => $validated['service_status']];
 
-        // Catat waktu mulai dan selesai otomatis
         if (
             $validated['service_status'] === 'in_progress' &&
             ! $sale->service_started_at
@@ -690,179 +369,5 @@ class SaleController extends Controller
             'success',
             'Sesi '.($sale->unit_name ?? '').' berhasil diakhiri.',
         );
-    }
-
-    /**
-     * Ganti metode bayar penjualan.     *
-     * Scenarios:
-     * 1. Completed (tunai) → PG: reverse stock, delete payment, set pending
-     * 2. Pending (PG) → Tunai: cancel PG, create payment, complete sale + deduct stock
-     * 3. Pending (PG) → PG lain: cancel old PG, return info for frontend to create new PG
-     */
-    public function switchPayment(Request $request, Sale $sale)
-    {
-        $validated = $request->validate([
-            'payment_method_id' => 'required_if:is_pg,false|nullable|exists:payment_methods,id',
-            'is_pg' => 'nullable|boolean',
-            'pg_provider' => 'required_if:is_pg,true|nullable|string',
-            'pg_method' => 'required_if:is_pg,true|nullable|string',
-        ]);
-
-        $oldStatus = $sale->status;
-        $isPgPayment = $validated['is_pg'] ?? false;
-
-        DB::beginTransaction();
-        try {
-            // ── Step 1: Handle current state ──
-
-            // If current sale has pending PG transactions → cancel them
-            $pendingPg = $sale
-                ->pgTransactions()
-                ->where('status', 'pending')
-                ->get();
-            $oldPgType = $pendingPg->first()?->payment_type;
-            $pendingPg->each(fn ($pg) => $pg->update(['status' => 'cancelled']));
-
-            // If current sale was completed → reverse stock
-            if ($oldStatus === 'completed') {
-                foreach ($sale->items as $item) {
-                    $product = $item->product;
-                    if (! $product) {
-                        continue;
-                    }
-
-                    if ($product->recipes && $product->recipes->isNotEmpty()) {
-                        $product->load('recipes.rawMaterial.stocks');
-                        foreach ($product->recipes as $recipe) {
-                            $needed = $recipe->quantity * $item->quantity;
-                            $stock = ProductStock::where([
-                                'product_id' => $recipe->raw_material_id,
-                                'store_id' => $sale->store_id,
-                                'branch_id' => null,
-                            ])->first();
-                            if ($stock) {
-                                $stock->increment('quantity', $needed);
-                            }
-                        }
-                    } elseif ($product->track_stock) {
-                        $stock = ProductStock::where([
-                            'product_id' => $item->product_id,
-                            'store_id' => $sale->store_id,
-                            'branch_id' => null,
-                        ])->first();
-                        if ($stock) {
-                            $stock->increment('quantity', $item->quantity);
-                        }
-                    }
-                }
-            }
-
-            // Delete old payment records
-            $sale->payments()->delete();
-
-            // ── Step 2: Apply new state ──
-
-            if ($isPgPayment) {
-                // ── New payment is PG → set to pending, frontend will create PG transaction ──
-                $sale->update([
-                    'status' => 'pending',
-                    'payment_status' => 'pending',
-                    'paid_amount' => 0,
-                    'change_amount' => 0,
-                ]);
-
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'need_pg' => true,
-                    'sale_id' => $sale->id,
-                    'message' => 'Penjualan diubah ke pembayaran online. Silakan buat transaksi PG baru.',
-                ]);
-            } else {
-                // ── New payment is non-PG (tunai/card) → complete the sale ──
-                $grandTotal = $sale->grand_total;
-
-                $sale->update([
-                    'status' => 'completed',
-                    'payment_status' => 'paid',
-                    'paid_amount' => $grandTotal,
-                    'change_amount' => 0,
-                ]);
-
-                // Create payment record
-                SalePayment::create([
-                    'sale_id' => $sale->id,
-                    'payment_method_id' => $validated['payment_method_id'],
-                    'paid_at' => now(),
-                    'amount' => $grandTotal,
-                    'reference_no' => null,
-                    'note' => 'Ganti metode bayar dari '.
-                        ($oldPgType
-                            ? strtoupper(
-                                str_replace('_va', ' VA', $oldPgType ?? ''),
-                            )
-                            : 'metode sebelumnya'),
-                ]);
-
-                // Deduct stock
-                foreach ($sale->items as $item) {
-                    $product = $item->product;
-                    if (! $product) {
-                        continue;
-                    }
-
-                    if ($product->recipes && $product->recipes->isNotEmpty()) {
-                        $product->load('recipes.rawMaterial.stocks');
-                        foreach ($product->recipes as $recipe) {
-                            $needed = $recipe->quantity * $item->quantity;
-                            if ($recipe->is_nullable) {
-                                $avail = $recipe->rawMaterial->stocks
-                                    ->where('store_id', $sale->store_id)
-                                    ->sum('quantity');
-                                if ($avail <= 0) {
-                                    continue;
-                                }
-                            }
-                            $stock = ProductStock::firstOrCreate(
-                                [
-                                    'product_id' => $recipe->raw_material_id,
-                                    'store_id' => $sale->store_id,
-                                ],
-                                ['quantity' => 0, 'reserved_quantity' => 0],
-                            );
-                            $stock->decrement('quantity', $needed);
-                        }
-                    } elseif ($product->track_stock) {
-                        $stock = ProductStock::firstOrCreate(
-                            [
-                                'product_id' => $item->product_id,
-                                'store_id' => $sale->store_id,
-                            ],
-                            ['quantity' => 0, 'reserved_quantity' => 0],
-                        );
-                        $stock->decrement('quantity', $item->quantity);
-                    }
-                }
-
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'need_pg' => false,
-                    'message' => 'Metode bayar berhasil diubah.',
-                ]);
-            }
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'Gagal mengganti metode bayar: '.$e->getMessage(),
-                ],
-                500,
-            );
-        }
     }
 }

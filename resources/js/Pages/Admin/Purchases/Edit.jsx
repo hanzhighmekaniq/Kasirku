@@ -27,9 +27,39 @@ export default function Edit({
 
     // Pending item
     const [pendingProduct, setPendingProduct] = useState(null);
+    const [pendingVariantId, setPendingVariantId] = useState("");
+    const [pendingUnitId, setPendingUnitId] = useState("");
     const [pendingQty, setPendingQty] = useState(1);
     const [pendingPrice, setPendingPrice] = useState("");
     const qtyRef = useRef(null);
+
+    const pendingVariant = useMemo(
+        () =>
+            pendingProduct?.variants?.find(
+                (v) => String(v.id) === String(pendingVariantId),
+            ) ?? null,
+        [pendingProduct, pendingVariantId],
+    );
+
+    const pendingUnits = useMemo(() => {
+        if (!pendingProduct) return [];
+        if (pendingProduct.is_variant) {
+            return pendingVariant?.packaging_units ?? [];
+        }
+        return pendingProduct.packaging_units ?? [];
+    }, [pendingProduct, pendingVariant]);
+
+    const pendingUnit = useMemo(
+        () => pendingUnits.find((u) => String(u.id) === String(pendingUnitId)) ?? null,
+        [pendingUnits, pendingUnitId],
+    );
+
+    const pendingBucketStock = useMemo(() => {
+        if (!pendingProduct) return null;
+        if (pendingUnit) return pendingUnit.stock ?? 0;
+        if (pendingProduct.is_variant) return pendingVariant?.stock ?? 0;
+        return pendingProduct.stock ?? 0;
+    }, [pendingProduct, pendingVariant, pendingUnit]);
 
     const { data, setData, patch, processing, errors } = useForm({
         supplier_id: purchase.supplier_id ?? "",
@@ -50,6 +80,10 @@ export default function Edit({
             product_id: item.product_id,
             product_name: item.product?.name ?? "",
             product_sku: item.product?.sku ?? "",
+            variant_id: item.variant_id ?? null,
+            variant_name: item.variant?.name ?? null,
+            packaging_unit_id: item.packaging_unit_id ?? null,
+            unit_name: item.unit_name ?? item.packaging_unit?.name ?? null,
             quantity: item.quantity,
             cost_price: item.cost_price,
         })),
@@ -77,20 +111,49 @@ export default function Edit({
     /* ── Item actions ── */
     const handlePick = (product) => {
         setPendingProduct(product);
+        setPendingVariantId("");
+        setPendingUnitId("");
         setPendingPrice(
             product.cost_price > 0 ? String(product.cost_price) : "",
         );
         setPendingQty(1);
+        if (!product.is_variant) {
+            setTimeout(() => qtyRef.current?.focus(), 80);
+        }
+    };
+
+    const handlePickVariant = (variantId) => {
+        setPendingVariantId(variantId);
+        setPendingUnitId("");
         setTimeout(() => qtyRef.current?.focus(), 80);
     };
 
     const handleAdd = () => {
         if (!pendingProduct || !pendingQty || Number(pendingQty) < 1) return;
+        if (pendingProduct.is_variant && !pendingVariantId) return;
+
         const qty = Number(pendingQty);
         const price = Number(pendingPrice) || 0;
+        const variantId = pendingVariantId ? Number(pendingVariantId) : null;
+        const unitId = pendingUnitId ? Number(pendingUnitId) : null;
+
+        const newItem = {
+            product_id: pendingProduct.id,
+            product_name: pendingProduct.name,
+            product_sku: pendingProduct.sku,
+            variant_id: variantId,
+            variant_name: pendingVariant?.name ?? null,
+            packaging_unit_id: unitId,
+            unit_name: pendingUnit?.name ?? null,
+            quantity: qty,
+            cost_price: price,
+        };
 
         const existIdx = data.items.findIndex(
-            (i) => i.product_id === pendingProduct.id,
+            (i) =>
+                i.product_id === newItem.product_id &&
+                (i.variant_id ?? null) === (newItem.variant_id ?? null) &&
+                (i.packaging_unit_id ?? null) === (newItem.packaging_unit_id ?? null),
         );
         if (existIdx >= 0) {
             const updated = [...data.items];
@@ -100,19 +163,12 @@ export default function Edit({
             };
             setData("items", updated);
         } else {
-            setData("items", [
-                ...data.items,
-                {
-                    product_id: pendingProduct.id,
-                    product_name: pendingProduct.name,
-                    product_sku: pendingProduct.sku,
-                    quantity: qty,
-                    cost_price: price,
-                },
-            ]);
+            setData("items", [...data.items, newItem]);
         }
 
         setPendingProduct(null);
+        setPendingVariantId("");
+        setPendingUnitId("");
         setPendingQty(1);
         setPendingPrice("");
     };
@@ -256,9 +312,6 @@ export default function Edit({
                                     products={products}
                                     storeType={storeType}
                                     onPick={handlePick}
-                                    excludeIds={data.items.map(
-                                        (i) => i.product_id,
-                                    )}
                                 />
 
                                 {pendingProduct && (
@@ -294,10 +347,71 @@ export default function Edit({
                                                 </svg>
                                             </button>
                                         </div>
+
+                                        {pendingProduct.is_variant && (
+                                            <div className="mb-3">
+                                                <label className="mb-1 block text-xs font-semibold text-indigo-700">
+                                                    Variant{" "}
+                                                    <span className="text-red-400">
+                                                        *
+                                                    </span>
+                                                </label>
+                                                <SearchableSelect
+                                                    options={
+                                                        pendingProduct.variants ??
+                                                        []
+                                                    }
+                                                    value={pendingVariantId}
+                                                    onChange={handlePickVariant}
+                                                    placeholder="Pilih Variant"
+                                                    searchPlaceholder="Ketik nama variant…"
+                                                    required
+                                                />
+                                            </div>
+                                        )}
+
+                                        {pendingUnits.length > 0 &&
+                                            (!pendingProduct.is_variant ||
+                                                pendingVariantId) && (
+                                                <div className="mb-3">
+                                                    <label className="mb-1 block text-xs font-semibold text-indigo-700">
+                                                        Satuan
+                                                    </label>
+                                                    <SearchableSelect
+                                                        options={[
+                                                            {
+                                                                id: "",
+                                                                name: "Pcs (satuan dasar)",
+                                                            },
+                                                            ...pendingUnits,
+                                                        ]}
+                                                        value={pendingUnitId}
+                                                        onChange={
+                                                            setPendingUnitId
+                                                        }
+                                                        placeholder="Pcs (satuan dasar)"
+                                                        searchPlaceholder="Ketik nama satuan…"
+                                                    />
+                                                </div>
+                                            )}
+
+                                        {pendingBucketStock !== null && (
+                                            <p className="mb-3 text-xs text-indigo-600">
+                                                Stok saat ini:{" "}
+                                                <span className="font-semibold">
+                                                    {pendingBucketStock}
+                                                </span>{" "}
+                                                {pendingUnit?.name ?? "pcs"}
+                                            </p>
+                                        )}
+
                                         <div className="grid grid-cols-12 items-end gap-3">
                                             <div className="col-span-4 sm:col-span-3">
                                                 <label className="mb-1 block text-xs font-semibold text-indigo-700">
-                                                    Qty
+                                                    Qty{" "}
+                                                    {pendingUnit
+                                                        ? `(${pendingUnit.name})`
+                                                        : ""}
                                                 </label>
                                                 <input
                                                     ref={qtyRef}
@@ -340,7 +454,11 @@ export default function Edit({
                                                 <button
                                                     type="button"
                                                     onClick={handleAdd}
-                                                    className="w-full rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 active:bg-indigo-800"
+                                                    disabled={
+                                                        pendingProduct.is_variant &&
+                                                        !pendingVariantId
+                                                    }
+                                                    className="w-full rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-40"
                                                 >
                                                     + Tambah
                                                 </button>
@@ -406,11 +524,27 @@ export default function Edit({
                                                                 {
                                                                     item.product_name
                                                                 }
+                                                                {item.variant_name && (
+                                                                    <span className="text-slate-500">
+                                                                        {" "}
+                                                                        —{" "}
+                                                                        {
+                                                                            item.variant_name
+                                                                        }
+                                                                    </span>
+                                                                )}
                                                             </p>
                                                             <p className="text-xs text-slate-400">
                                                                 {
                                                                     item.product_sku
                                                                 }
+                                                                {item.unit_name && (
+                                                                    <span className="ml-1.5 rounded-full bg-slate-100 px-1.5 py-0.5 text-slate-500">
+                                                                        {
+                                                                            item.unit_name
+                                                                        }
+                                                                    </span>
+                                                                )}
                                                             </p>
                                                         </td>
                                                         <td className="px-4 py-3">
