@@ -64,12 +64,19 @@ class PurchaseController extends Controller
         if ($request->has('product_id') && $request->has('supplier_id')) {
             $prefillProduct = Product::find($request->query('product_id'));
             if ($prefillProduct) {
+                $variantId = $request->query('variant_id');
+                $variant = $variantId
+                    ? $prefillProduct->variants()->find($variantId)
+                    : null;
+
                 $prefill = [
                     'supplier_id' => (int) $request->query('supplier_id'),
                     'product_id' => $prefillProduct->id,
                     'product_name' => $prefillProduct->name,
-                    'product_sku' => $prefillProduct->sku,
-                    'cost_price' => $prefillProduct->cost_price ?? 0,
+                    'product_sku' => $variant?->sku ?? $prefillProduct->sku,
+                    'cost_price' => $variant?->cost_price ?? $prefillProduct->cost_price ?? 0,
+                    'variant_id' => $variant?->id,
+                    'variant_name' => $variant?->name,
                 ];
             }
         }

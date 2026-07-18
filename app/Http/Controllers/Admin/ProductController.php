@@ -35,7 +35,7 @@ class ProductController extends Controller
                 'category',
                 'supplier',
                 'stocks',
-                'variants',
+                'variants.stocks',
                 'variants.packagingUnits',
                 'variants.priceTiers',
                 'packagingUnits' => fn ($q) => $q->whereNull('variant_id'),

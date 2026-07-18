@@ -67,6 +67,8 @@ export default function Edit({
     const { storeTypeFeatures = [] } = usePage().props;
     const has = (f) => storeTypeFeatures.includes(f);
 
+    const hasVariants = (product.variants?.length ?? 0) > 0;
+
     const availableTypes = RELEVANT_TYPES[storeType] ?? ["finished_goods"];
     const feat = {
         barcode: true, // selalu tampilkan barcode
@@ -420,6 +422,49 @@ export default function Edit({
                         </SectionCard>
 
                         {/* SECTION: Harga */}
+                        {hasVariants ? (
+                            <SectionCard
+                                title="Harga"
+                                subtitle="Harga beli dan jual produk"
+                                icon={DollarSign}
+                                accent="emerald"
+                            >
+                                <div className="flex items-start gap-3 rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3.5 text-sm text-indigo-700">
+                                    <Info
+                                        className="mt-0.5 h-5 w-5 flex-shrink-0"
+                                        strokeWidth={1.8}
+                                    />
+                                    <div>
+                                        <p>
+                                            Produk ini memiliki{" "}
+                                            <strong>
+                                                {product.variants.length} variant
+                                            </strong>
+                                            . Harga, grosir, dan kemasan diatur
+                                            per variant.
+                                        </p>
+                                        <Link
+                                            href={route(
+                                                "admin.products.variants.index",
+                                                product.id,
+                                            )}
+                                            className="mt-2 inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+                                        >
+                                            Kelola Varian
+                                            <svg
+                                                className="h-3.5 w-3.5"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth={2}
+                                            >
+                                                <path d="m9 6 6 6-6 6" />
+                                            </svg>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </SectionCard>
+                        ) : (
                         <SectionCard
                             title="Harga"
                             subtitle="Harga beli dan jual produk"
@@ -462,9 +507,10 @@ export default function Edit({
                                         </div>
                                     )}
                         </SectionCard>
+                        )}
 
-                        {/* SECTION: Multi-Satuan — hanya retail, fnb, rental */}
-                        {feat.multiUnit && (
+                        {/* SECTION: Multi-Satuan — hanya retail, fnb, rental, dan tidak ada variant */}
+                        {feat.multiUnit && !hasVariants && (
                         <SectionCard
                             title="Multi-Satuan"
                             subtitle="Kemasan grosir seperti dus, box, karton"
@@ -627,7 +673,8 @@ export default function Edit({
                         </SectionCard>
                         )}
 
-                        {/* SECTION: Harga Grosir Bertingkat */}
+                        {/* SECTION: Harga Grosir Bertingkat — hanya jika tidak ada variant */}
+                        {!hasVariants && (
                         <SectionCard
                             title="Harga Grosir"
                             subtitle="Harga otomatis turun sesuai quantity"
@@ -705,6 +752,7 @@ export default function Edit({
                                 )}
                             </div>
                         </SectionCard>
+                        )}
 
                         {/* SECTION: Detail spesifik per tipe */}
                         {(data.type === "time_based" ||

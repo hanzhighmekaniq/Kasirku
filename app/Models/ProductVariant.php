@@ -15,6 +15,8 @@ class ProductVariant extends Model
         'product_id', 'name', 'sku', 'barcode', 'price', 'cost_price', 'is_active',
     ];
 
+    protected $appends = ['stock'];
+
     protected function casts(): array
     {
         return [
@@ -37,6 +39,28 @@ class ProductVariant extends Model
     public function packagingUnits(): HasMany
     {
         return $this->hasMany(ProductPackagingUnit::class, 'variant_id');
+    }
+
+    public function stocks(): HasMany
+    {
+        return $this->hasMany(ProductStock::class, 'variant_id');
+    }
+
+    public function getStockAttribute(): int
+    {
+        if ($this->relationLoaded('stocks')) {
+            return $this->stocks
+                ->whereNull('packaging_unit_id')
+                ->sum('quantity') - $this->stocks
+                ->whereNull('packaging_unit_id')
+                ->sum('reserved_quantity');
+        }
+
+        return $this->stocks()
+            ->whereNull('packaging_unit_id')
+            ->sum('quantity') - $this->stocks()
+            ->whereNull('packaging_unit_id')
+            ->sum('reserved_quantity');
     }
 
     /** Ambil harga tier yang berlaku untuk qty tertentu dari variant ini */

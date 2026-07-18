@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
+import { Eye } from "lucide-react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import QuickStockModal from "@/Pages/Admin/Products/QuickStockModal";
 import TreePicker from "@/Components/TreePicker";
@@ -222,7 +223,7 @@ function SummaryCard({ label, value, color = "slate", icon }) {
     );
 }
 
-function DetailRow({ product }) {
+function DetailRow({ product, onStockModal }) {
     const variants = product.variants ?? [];
     const packagingUnits = product.packaging_units ?? [];
     const priceTiers = product.price_tiers ?? [];
@@ -248,6 +249,7 @@ function DetailRow({ product }) {
                       )
                       .join(" · ")
                 : "—";
+            const vStock = v.stock ?? 0;
 
             rows.push(
                 <tr key={v.id}>
@@ -265,10 +267,36 @@ function DetailRow({ product }) {
                         Rp{" "}
                         {Number(v.cost_price || 0).toLocaleString("id-ID")}
                     </td>
+                    <td className="px-3 py-2 text-center font-semibold text-slate-800">
+                        {vStock}
+                    </td>
                     <td className="px-3 py-2 text-center text-xs">
                         {units}
                     </td>
                     <td className="px-3 py-2 text-xs">{tiers}</td>
+                    <td className="px-3 py-2 text-center">
+                        {product.track_stock && (
+                            <button
+                                onClick={() => onStockModal?.({ product, variant: v, type: "in" })}
+                                className="inline-flex h-6 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
+                                title={`Atur Stok ${v.name}`}
+                            >
+                                <svg
+                                    className="h-3 w-3"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
+                                    />
+                                </svg>
+                            </button>
+                        )}
+                    </td>
                 </tr>,
             );
         });
@@ -306,8 +334,12 @@ function DetailRow({ product }) {
                     Rp{" "}
                     {Number(product.cost_price || 0).toLocaleString("id-ID")}
                 </td>
+                <td className="px-3 py-2 text-center font-semibold text-slate-800">
+                    {product.stock ?? 0}
+                </td>
                 <td className="px-3 py-2 text-center text-xs">{units}</td>
                 <td className="px-3 py-2 text-xs">{tiers}</td>
+                <td className="px-3 py-2"></td>
             </tr>,
         );
     }
@@ -327,8 +359,12 @@ function DetailRow({ product }) {
                             <th className="px-3 py-2 text-left">SKU</th>
                             <th className="px-3 py-2 text-right">Harga Jual</th>
                             <th className="px-3 py-2 text-right">Harga Modal</th>
+                            <th className="px-3 py-2 text-center">Stok</th>
                             <th className="px-3 py-2 text-left">Multi-Satuan</th>
                             <th className="px-3 py-2 text-left">Grosir</th>
+                            {hasVariants && (
+                                <th className="px-3 py-2 text-center">Aksi</th>
+                            )}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -345,6 +381,72 @@ function hasExpandable(product) {
         (product.variants?.length ?? 0) > 0 ||
         (product.packaging_units?.length ?? 0) > 0 ||
         (product.price_tiers?.length ?? 0) > 0
+    );
+}
+
+function PriceCell({ product, bold = true }) {
+    const variants = product.variants ?? [];
+    if (variants.length > 0) {
+        const prices = variants.map((v) => Number(v.price || 0));
+        const min = Math.min(...prices);
+        const max = Math.max(...prices);
+        const text =
+            min === max
+                ? `Rp ${min.toLocaleString("id-ID")}`
+                : `Rp ${min.toLocaleString("id-ID")} – Rp ${max.toLocaleString("id-ID")}`;
+        return <span className="text-xs text-slate-600">{text}</span>;
+    }
+
+    return (
+        <span
+            className={
+                bold
+                    ? "font-semibold text-slate-900"
+                    : "text-xs text-slate-600"
+            }
+        >
+            Rp {Number(product.sell_price || 0).toLocaleString("id-ID")}
+        </span>
+    );
+}
+
+function CostPriceCell({ product }) {
+    const variants = product.variants ?? [];
+    if (variants.length > 0) {
+        const costs = variants.map((v) => Number(v.cost_price || 0)).filter((c) => c > 0);
+        if (costs.length === 0) {
+            return <span className="text-xs text-slate-400">&mdash;</span>;
+        }
+        const min = Math.min(...costs);
+        const max = Math.max(...costs);
+        const text =
+            min === max
+                ? `Rp ${min.toLocaleString("id-ID")}`
+                : `Rp ${min.toLocaleString("id-ID")} – Rp ${max.toLocaleString("id-ID")}`;
+        return <span className="text-xs text-slate-500">{text}</span>;
+    }
+
+    return (
+        <span className="text-slate-500">
+            Rp {Number(product.cost_price || 0).toLocaleString("id-ID")}
+        </span>
+    );
+}
+
+function StockWithVariant({ product }) {
+    const variantCount = product.variants?.length ?? 0;
+    return (
+        <div className="flex flex-col items-center gap-1">
+            <span className="font-semibold text-slate-900">
+                {product.stock ?? 0}
+            </span>
+            <StockBadge product={product} />
+            {variantCount > 0 && (
+                <span className="text-[10px] text-slate-400">
+                    {variantCount} variant
+                </span>
+            )}
+        </div>
     );
 }
 
@@ -853,24 +955,16 @@ export default function Index({
                                                         )}
                                                     </td>
                                                     {showMargin && (
-                                                        <td className="px-4 py-3 text-right text-slate-500">
-                                                            Rp{" "}
-                                                            {Number(
-                                                                product.cost_price ||
-                                                                    0,
-                                                            ).toLocaleString(
-                                                                "id-ID",
-                                                            )}
+                                                        <td className="px-4 py-3 text-right">
+                                                            <CostPriceCell
+                                                                product={product}
+                                                            />
                                                         </td>
                                                     )}
-                                                    <td className="px-4 py-3 text-right font-semibold text-slate-900">
-                                                        Rp{" "}
-                                                        {Number(
-                                                            product.sell_price ||
-                                                                0,
-                                                        ).toLocaleString(
-                                                            "id-ID",
-                                                        )}
+                                                    <td className="px-4 py-3 text-right">
+                                                        <PriceCell
+                                                            product={product}
+                                                        />
                                                     </td>
                                                     <td className="px-4 py-3">
                                                         <IndicatorBadges
@@ -879,18 +973,11 @@ export default function Index({
                                                     </td>
                                                     {showStock && (
                                                         <td className="px-4 py-3 text-center">
-                                                            <div className="flex flex-col items-center gap-1">
-                                                                <span className="font-semibold text-slate-900">
-                                                                    {product.stock ??
-                                                                        0}
-                                                                </span>
-                                                                <StockBadge
-                                                                    product={
-                                                                        product
-                                                                    }
-                                                                />
-                                                                {product.track_stock && (
-                                                                    <div className="mt-1 flex items-center gap-1">
+                                                            <StockWithVariant
+                                                                product={product}
+                                                            />
+                                                            {product.track_stock && (
+                                                                <div className="mt-1 flex items-center justify-center gap-1">
                                                                         <button
                                                                             onClick={(
                                                                                 e,
@@ -960,7 +1047,6 @@ export default function Index({
                                                                         </Link>
                                                                     </div>
                                                                 )}
-                                                            </div>
                                                         </td>
                                                     )}
                                                     <td className="px-4 py-3 text-center">
@@ -1054,6 +1140,21 @@ export default function Index({
                                                                 )}
                                                             <Link
                                                                 href={route(
+                                                                    "admin.products.show",
+                                                                    product.id,
+                                                                )}
+                                                                className="rounded p-1.5 text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
+                                                                title="Lihat Detail"
+                                                            >
+                                                                <Eye
+                                                                    className="h-4 w-4"
+                                                                    strokeWidth={
+                                                                        1.7
+                                                                    }
+                                                                />
+                                                            </Link>
+                                                            <Link
+                                                                href={route(
                                                                     "admin.products.edit",
                                                                     product.id,
                                                                 )}
@@ -1118,8 +1219,9 @@ export default function Index({
                                                             }
                                                             className="p-0"
                                                         >
-                                                            <DetailRow
+                                                             <DetailRow
                                                                 product={product}
+                                                                onStockModal={setStockModal}
                                                             />
                                                         </td>
                                                     </tr>
@@ -1157,9 +1259,15 @@ export default function Index({
                                             )}
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-start justify-between gap-2">
-                                                    <p className="font-semibold text-slate-900">
+                                                    <Link
+                                                        href={route(
+                                                            "admin.products.show",
+                                                            product.id,
+                                                        )}
+                                                        className="font-semibold text-slate-900 transition-colors hover:text-blue-600"
+                                                    >
                                                         {product.name}
-                                                    </p>
+                                                    </Link>
                                                     <TypeBadge
                                                         type={product.type}
                                                     />
@@ -1176,24 +1284,12 @@ export default function Index({
                                                     · {product.unit}
                                                 </p>
                                                 <div className="mt-2 flex items-baseline gap-2">
-                                                    <span className="font-bold text-slate-900">
-                                                        Rp{" "}
-                                                        {Number(
-                                                            product.sell_price ||
-                                                                0,
-                                                        ).toLocaleString(
-                                                            "id-ID",
-                                                        )}
-                                                    </span>
+                                                    <PriceCell
+                                                        product={product}
+                                                    />
                                                     {showMargin && (
-                                                        <span className="text-xs text-slate-400 line-through">
-                                                            Rp{" "}
-                                                            {Number(
-                                                                product.cost_price ||
-                                                                    0,
-                                                            ).toLocaleString(
-                                                                "id-ID",
-                                                            )}
+                                                        <span className="text-xs text-slate-400">
+                                                            <CostPriceCell product={product} />
                                                         </span>
                                                     )}
                                                 </div>
@@ -1277,7 +1373,7 @@ export default function Index({
                                             </div>
                                         </div>
                                         {isExp && (
-                                            <DetailRow product={product} />
+                                            <DetailRow product={product} onStockModal={setStockModal} />
                                         )}
                                     </div>
                                 );
@@ -1363,6 +1459,7 @@ export default function Index({
                 <QuickStockModal
                     product={stockModal.product}
                     type={stockModal.type}
+                    variant={stockModal.variant || null}
                     onClose={() => setStockModal(null)}
                     onSuccess={() => setStockModal(null)}
                 />

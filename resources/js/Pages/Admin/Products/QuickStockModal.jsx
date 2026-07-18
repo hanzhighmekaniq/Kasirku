@@ -3,10 +3,16 @@ import { router } from "@inertiajs/react";
 import { X } from "lucide-react";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 
-export default function QuickStockModal({ product, type, onClose, onSuccess }) {
+export default function QuickStockModal({ product, type, variant: initialVariant, onClose, onSuccess }) {
+    const variants = product.variants ?? [];
+    const hasVariants = variants.length > 0;
+
     const [localType, setLocalType] = useState(type || "in");
+    const [selectedVariant, setSelectedVariant] = useState(initialVariant || (hasVariants ? null : null));
     const [qty, setQty] = useState("");
-    const [costPrice, setCostPrice] = useState(product.cost_price || "");
+    const [costPrice, setCostPrice] = useState(
+        initialVariant?.cost_price || product.cost_price || ""
+    );
     const [reason, setReason] = useState(
         (type || "in") === "in" ? "received" : "correction",
     );
@@ -17,6 +23,18 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
     const isIn = localType === "in";
     const qtyNum = Number(qty) || 0;
     const isLargeQty = qtyNum > 100;
+
+    // Active target: variant or product
+    const activeTarget = selectedVariant || product;
+    const activeName = selectedVariant
+        ? `${product.name} — ${selectedVariant.name}`
+        : product.name;
+    const activeSku = selectedVariant?.sku || product.sku;
+    const activeStock = selectedVariant
+        ? (selectedVariant.stock ?? 0)
+        : (product.stock ?? 0);
+    const activeUnit = product.unit;
+    const activeCostPrice = selectedVariant?.cost_price || product.cost_price;
 
     const reasonsIn = [
         { id: "received", name: "Terima Barang" },
@@ -39,7 +57,7 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
     const handleTypeChange = (newType) => {
         setLocalType(newType);
         setReason(newType === "in" ? "received" : "correction");
-        setCostPrice(product.cost_price || "");
+        setCostPrice(activeCostPrice || "");
     };
 
     const submit = () => {
@@ -50,6 +68,7 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
             route("admin.stock-adjustments.quick"),
             {
                 product_id: product.id,
+                ...(selectedVariant ? { variant_id: selectedVariant.id } : {}),
                 type: localType,
                 quantity: Number(qty),
                 reason: reason,
@@ -131,134 +150,176 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                         </button>
                     </div>
 
-                    {/* Produk */}
-                    <div>
-                        <p className="text-xs font-medium text-slate-400">
-                            Produk
-                        </p>
-                        <p className="mt-0.5 text-sm font-medium text-slate-800">
-                            {product.name}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                            SKU: {product.sku} &middot; {product.unit}
-                        </p>
-                    </div>
-
-                    {/* Stok Saat Ini */}
-                    <div>
-                        <p className="text-xs font-medium text-slate-400">
-                            Stok Saat Ini
-                        </p>
-                        <p
-                            className={`mt-0.5 text-xl font-bold ${
-                                product.track_stock &&
-                                product.stock <= (product.stock_minimum || 0)
-                                    ? "text-red-600"
-                                    : "text-slate-800"
-                            }`}
-                        >
-                            {product.track_stock
-                                ? `${product.stock ?? 0} ${product.unit}`
-                                : "Tidak dilacak"}
-                        </p>
-                    </div>
-
-                    {/* Qty */}
-                    <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                            Qty ({product.unit})
-                        </label>
-                        <input
-                            type="number"
-                            value={qty}
-                            onChange={(e) => setQty(e.target.value)}
-                            placeholder="0"
-                            min="0.0001"
-                            step="any"
-                            className={`w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${
-                                isLargeQty
-                                    ? "border-amber-400 bg-amber-50"
-                                    : "border-slate-300"
-                            }`}
-                            autoFocus
-                        />
-                        {isLargeQty && (
-                            <p className="mt-1 text-xs font-medium text-amber-600">
-                                ⚠️ Jumlah besar ({qtyNum.toLocaleString("id-ID")}{" "}
-                                {product.unit}). Pastikan angka sudah benar
-                                sebelum simpan.
-                            </p>
-                        )}
-                        {!isIn && qty && Number(qty) > (product.stock ?? 0) && (
-                            <p className="mt-1 text-xs text-red-600">
-                                ⚠️ Qty melebihi stok saat ini (
-                                {product.stock ?? 0} {product.unit})
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Harga Modal — hanya saat Stok Masuk */}
-                    {isIn && (
+                    {/* Variant Selector — hanya jika product punya variant */}
+                    {hasVariants && !initialVariant && (
                         <div>
                             <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                                Harga Modal / Unit{" "}
-                                <span className="font-normal text-slate-400">
-                                    (opsional)
-                                </span>
+                                Pilih Variant
                             </label>
-                            <div className="relative">
-                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
-                                    Rp
-                                </span>
-                                <input
-                                    type="number"
-                                    value={costPrice}
-                                    onChange={(e) =>
-                                        setCostPrice(e.target.value)
-                                    }
-                                    placeholder={product.cost_price || "0"}
-                                    min="0"
-                                    step="any"
-                                    className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                                />
+                            <div className="space-y-1.5">
+                                {variants.map((v) => (
+                                    <button
+                                        key={v.id}
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedVariant(v);
+                                            setCostPrice(v.cost_price || "");
+                                        }}
+                                        className={`w-full flex items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm transition ${
+                                            selectedVariant?.id === v.id
+                                                ? "border-indigo-300 bg-indigo-50 ring-2 ring-indigo-200"
+                                                : "border-slate-200 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        <div>
+                                            <span className="font-medium text-slate-800">
+                                                {v.name}
+                                            </span>
+                                            <span className="ml-2 text-xs text-slate-400 font-mono">
+                                                {v.sku}
+                                            </span>
+                                        </div>
+                                        <span className="text-xs font-semibold text-slate-600">
+                                            Stok: {v.stock ?? 0}
+                                        </span>
+                                    </button>
+                                ))}
                             </div>
-                            <p className="mt-1 text-xs text-slate-400">
-                                Harga produksi per unit. Kalau diisi, harga
-                                modal produk akan diperbarui.
-                            </p>
                         </div>
                     )}
 
-                    {/* Alasan */}
-                    <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                            Alasan
-                        </label>
-                        <SearchableSelect
-                            options={reasonOptions}
-                            value={reason}
-                            onChange={(id) => setReason(id)}
-                            placeholder="Pilih alasan..."
-                            searchPlaceholder="Ketik alasan…"
-                        />
-                    </div>
+                    {/* Produk / Variant Info */}
+                    {(!hasVariants || selectedVariant || initialVariant) && (
+                        <>
+                            <div>
+                                <p className="text-xs font-medium text-slate-400">
+                                    {selectedVariant ? "Variant" : "Produk"}
+                                </p>
+                                <p className="mt-0.5 text-sm font-medium text-slate-800">
+                                    {activeName}
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                    SKU: {activeSku} &middot; {activeUnit}
+                                </p>
+                            </div>
 
-                    {/* Catatan */}
-                    <div>
-                        <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                            Catatan{" "}
-                            <span className="font-normal text-slate-400">
-                                (opsional)
-                            </span>
-                        </label>
-                        <input
-                            type="text"
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="misal: produksi batch #45"
-                            className="w-full rounded-xl border border-slate-300 py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-                        />
-                    </div>
+                            {/* Stok Saat Ini */}
+                            <div>
+                                <p className="text-xs font-medium text-slate-400">
+                                    Stok Saat Ini
+                                </p>
+                                <p
+                                    className={`mt-0.5 text-xl font-bold ${
+                                        product.track_stock &&
+                                        activeStock <= (product.stock_minimum || 0)
+                                            ? "text-red-600"
+                                            : "text-slate-800"
+                                    }`}
+                                >
+                                    {product.track_stock
+                                        ? `${activeStock} ${activeUnit}`
+                                        : "Tidak dilacak"}
+                                </p>
+                            </div>
+
+                            {/* Qty */}
+                            <div>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                    Qty ({activeUnit})
+                                </label>
+                                <input
+                                    type="number"
+                                    value={qty}
+                                    onChange={(e) => setQty(e.target.value)}
+                                    placeholder="0"
+                                    min="0.0001"
+                                    step="any"
+                                    className={`w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${
+                                        isLargeQty
+                                            ? "border-amber-400 bg-amber-50"
+                                            : "border-slate-300"
+                                    }`}
+                                    autoFocus
+                                />
+                                {isLargeQty && (
+                                    <p className="mt-1 text-xs font-medium text-amber-600">
+                                        ⚠️ Jumlah besar ({qtyNum.toLocaleString("id-ID")}{" "}
+                                        {activeUnit}). Pastikan angka sudah benar
+                                        sebelum simpan.
+                                    </p>
+                                )}
+                                {!isIn && qty && Number(qty) > activeStock && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        ⚠️ Qty melebihi stok saat ini (
+                                        {activeStock} {activeUnit})
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Harga Modal — hanya saat Stok Masuk */}
+                            {isIn && (
+                                <div>
+                                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                        Harga Modal / Unit{" "}
+                                        <span className="font-normal text-slate-400">
+                                            (opsional)
+                                        </span>
+                                    </label>
+                                    <div className="relative">
+                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                            Rp
+                                        </span>
+                                        <input
+                                            type="number"
+                                            value={costPrice}
+                                            onChange={(e) =>
+                                                setCostPrice(e.target.value)
+                                            }
+                                            placeholder={activeCostPrice || "0"}
+                                            min="0"
+                                            step="any"
+                                            className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-xs text-slate-400">
+                                        Harga produksi per unit. Kalau diisi, harga
+                                        modal produk akan diperbarui.
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Alasan */}
+                            <div>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                    Alasan
+                                </label>
+                                <SearchableSelect
+                                    options={reasonOptions}
+                                    value={reason}
+                                    onChange={(id) => setReason(id)}
+                                    placeholder="Pilih alasan..."
+                                    searchPlaceholder="Ketik alasan…"
+                                />
+                            </div>
+
+                            {/* Catatan */}
+                            <div>
+                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                    Catatan{" "}
+                                    <span className="font-normal text-slate-400">
+                                        (opsional)
+                                    </span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    placeholder="misal: produksi batch #45"
+                                    className="w-full rounded-xl border border-slate-300 py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                />
+                            </div>
+                        </>
+                    )}
 
                     {error && (
                         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
@@ -281,7 +342,8 @@ export default function QuickStockModal({ product, type, onClose, onSuccess }) {
                             processing ||
                             !qty ||
                             Number(qty) <= 0 ||
-                            (!isIn && Number(qty) > (product.stock ?? 0))
+                            (hasVariants && !initialVariant && !selectedVariant) ||
+                            (!isIn && Number(qty) > activeStock)
                         }
                         className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-md transition disabled:opacity-60 ${
                             isIn
