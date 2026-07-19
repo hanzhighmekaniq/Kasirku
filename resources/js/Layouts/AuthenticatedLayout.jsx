@@ -40,11 +40,11 @@ function TypeMismatchModal({ data, onClose }) {
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden">
+            <div className="relative w-full max-w-sm overflow-hidden bg-white shadow-xl rounded-2xl">
                 {/* Top banner */}
-                <div className="bg-gradient-to-r from-rose-400 to-pink-500 px-5 py-4 text-white">
+                <div className="px-5 py-4 text-white bg-gradient-to-r from-rose-400 to-pink-500">
                     <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-xl">
+                        <span className="flex items-center justify-center w-10 h-10 text-xl shrink-0 rounded-xl bg-white/20">
                             🚫
                         </span>
                         <div>
@@ -60,7 +60,7 @@ function TypeMismatchModal({ data, onClose }) {
 
                 {/* Body */}
                 <div className="px-5 py-4 space-y-3">
-                    <p className="text-sm text-slate-600 leading-relaxed">
+                    <p className="text-sm leading-relaxed text-slate-600">
                         Maaf, fitur{" "}
                         <span className="font-semibold text-slate-800">
                             {featureLabel ?? "ini"}
@@ -73,7 +73,7 @@ function TypeMismatchModal({ data, onClose }) {
                     </p>
 
                     {supportedTypes.length > 0 && (
-                        <div className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3">
+                        <div className="px-4 py-3 border rounded-lg border-slate-100 bg-slate-50">
                             <p className="text-xs font-semibold text-slate-500 mb-1.5">
                                 Fitur ini tersedia untuk:
                             </p>
@@ -92,10 +92,10 @@ function TypeMismatchModal({ data, onClose }) {
                 </div>
 
                 {/* Footer */}
-                <div className="border-t border-slate-100 bg-slate-50 px-5 py-3">
+                <div className="px-5 py-3 border-t border-slate-100 bg-slate-50">
                     <button
                         onClick={onClose}
-                        className="w-full rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 transition"
+                        className="w-full px-4 py-2 text-sm font-semibold text-white transition rounded-lg bg-slate-800 hover:bg-slate-700"
                     >
                         Mengerti, Tutup
                     </button>
@@ -171,8 +171,8 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
                 onDragStart={(e) => onDragStart && onDragStart(e, item.key)}
                 className="group flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition cursor-grab active:cursor-grabbing text-slate-500 hover:bg-slate-100 hover:text-slate-700 select-none"
             >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-slate-300 group-hover:text-slate-600 transition">
-                    <GripVertical className="h-4 w-4" strokeWidth={2} />
+                <span className="flex items-center justify-center w-5 h-5 transition rounded shrink-0 text-slate-300 group-hover:text-slate-600">
+                    <GripVertical className="w-4 h-4" strokeWidth={2} />
                 </span>
                 <span className="flex-1 truncate text-[13px] font-medium">
                     {item.name}
@@ -218,7 +218,7 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
                 className="group relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left transition cursor-not-allowed"
                 title="🔓 Upgrade Plan untuk mengakses fitur ini"
             >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-slate-300">
+                <span className="flex items-center justify-center w-5 h-5 rounded-md shrink-0 text-slate-300">
                     <NavIcons name={item.icon} className="h-[15px] w-[15px]" />
                 </span>
                 {!collapsed && (
@@ -358,7 +358,7 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
     if (collapsed) {
         return (
             <div className="space-y-0.5 pb-1.5">
-                <div className="my-2 mx-auto w-6 h-px bg-slate-200/60" />
+                <div className="w-6 h-px mx-auto my-2 bg-slate-200/60" />
                 {group.items.map((item) => (
                     <NavItem
                         key={item.key}
@@ -433,12 +433,12 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                                 className={`${showDropAbove ? "border-t-2 border-indigo-500" : ""} ${showDropBelow ? "border-b-2 border-indigo-500" : ""}`}
                             >
                                 {showDivider && (
-                                    <div className="my-2 flex items-center gap-2 px-3">
-                                        <div className="h-px flex-1 bg-slate-200" />
+                                    <div className="flex items-center gap-2 px-3 my-2">
+                                        <div className="flex-1 h-px bg-slate-200" />
                                         <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
                                             🔒 PREMIUM
                                         </span>
-                                        <div className="h-px flex-1 bg-slate-200" />
+                                        <div className="flex-1 h-px bg-slate-200" />
                                     </div>
                                 )}
                                 <NavItem
@@ -544,12 +544,12 @@ function WorkspaceSwitcher({
                         : "w-full gap-2.5 border-slate-200 bg-white px-3 py-2.5 text-left"
                 } ${clickable ? "hover:border-indigo-300 hover:bg-indigo-50/50 cursor-pointer" : "cursor-default"}`}
             >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm">
+                <span className="flex items-center justify-center text-sm rounded-lg h-7 w-7 shrink-0 bg-slate-100">
                     {typeIcon}
                 </span>
                 {!collapsed && (
                     <>
-                        <div className="min-w-0 flex-1">
+                        <div className="flex-1 min-w-0">
                             <p className="truncate text-[13px] font-semibold text-slate-800">
                                 {currentStore.name}
                             </p>
@@ -592,11 +592,11 @@ function WorkspaceSwitcher({
                         left: pos.left,
                         width: pos.width,
                     }}
-                    className="z-50 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+                    className="z-50 overflow-hidden bg-white border shadow-xl rounded-xl border-slate-200"
                 >
                     {hasStoreChoice && (
                         <>
-                            <div className="border-b border-slate-100 px-3 py-2">
+                            <div className="px-3 py-2 border-b border-slate-100">
                                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                                     Toko
                                 </p>
@@ -779,14 +779,14 @@ function SidebarContent({
     }, [reorderMode]);
 
     return (
-        <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-slate-50 to-white border-r border-slate-200">
+        <div className="flex flex-col h-full overflow-hidden border-r bg-gradient-to-b from-slate-50 to-white border-slate-200">
             {/* Brand */}
             <div
                 className={`flex h-[68px] shrink-0 items-center border-b border-slate-100 bg-white/80 backdrop-blur-sm ${collapsed ? "justify-center px-3" : "px-5"}`}
             >
                 <div className="flex items-center gap-3">
-                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 shadow-lg shadow-indigo-200/50">
-                        <ApplicationLogo className="h-5 w-5 fill-current text-white" />
+                    <div className="relative flex items-center justify-center w-10 h-10 shadow-lg shrink-0 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 shadow-indigo-200/50">
+                        <ApplicationLogo className="w-5 h-5 text-white fill-current" />
                         <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400 ring-2 ring-emerald-100" />
                     </div>
                     <div
@@ -818,10 +818,10 @@ function SidebarContent({
 
             {/* Search & Theme Toggle */}
             {!collapsed && (
-                <div className="shrink-0 space-y-3 px-4 pt-3 pb-3">
+                <div className="px-4 pt-3 pb-3 space-y-3 shrink-0">
                     {/* Search Bar */}
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <Search className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-slate-400" />
                         <input
                             type="text"
                             placeholder="Cari menu..."
@@ -834,11 +834,11 @@ function SidebarContent({
                     {/* Theme Toggle */}
                     <div className="flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3.5 py-2.5">
                         <div className="flex items-center gap-2.5">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100">
+                            <div className="flex items-center justify-center rounded-lg h-7 w-7 bg-slate-100">
                                 {darkMode ? (
-                                    <Moon className="h-4 w-4 text-slate-600" />
+                                    <Moon className="w-4 h-4 text-slate-600" />
                                 ) : (
-                                    <Sun className="h-4 w-4 text-amber-600" />
+                                    <Sun className="w-4 h-4 text-amber-600" />
                                 )}
                             </div>
                             <span className="text-sm font-medium text-slate-700">
@@ -894,8 +894,8 @@ function SidebarContent({
                         filteredGroups.length === 0 &&
                         !collapsed && (
                             <div className="py-12 text-center">
-                                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-                                    <Search className="h-6 w-6 text-slate-400" />
+                                <div className="flex items-center justify-center mx-auto mb-3 rounded-full h-14 w-14 bg-slate-100">
+                                    <Search className="w-6 h-6 text-slate-400" />
                                 </div>
                                 <p className="text-sm font-medium text-slate-600">
                                     Menu tidak ditemukan
@@ -918,22 +918,22 @@ function SidebarContent({
                             onClick={() =>
                                 router.visit(route("admin.profile.edit"))
                             }
-                            className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-xs font-bold text-white shadow-sm hover:shadow-md transition-all"
+                            className="flex items-center justify-center text-xs font-bold text-white transition-all rounded-lg shadow-sm h-9 w-9 bg-gradient-to-br from-indigo-600 to-indigo-700 hover:shadow-md"
                         >
                             {user?.name?.charAt(0).toUpperCase()}
                         </button>
                     </div>
                 ) : (
-                    <div className="rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 p-3 shadow-lg">
+                    <div className="p-3 shadow-lg rounded-xl bg-gradient-to-br from-slate-800 to-slate-900">
                         <div className="flex items-center gap-3">
                             <div className="relative">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 text-sm font-bold text-white shadow-md">
+                                <div className="flex items-center justify-center w-10 h-10 text-sm font-bold text-white rounded-lg shadow-md bg-gradient-to-br from-indigo-500 to-indigo-600">
                                     {user?.name?.charAt(0).toUpperCase()}
                                 </div>
                                 <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-900 bg-emerald-400" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="truncate text-xs font-semibold text-white">
+                                <p className="text-xs font-semibold text-white truncate">
                                     {user?.name}
                                 </p>
                                 <p className="truncate text-[10px] text-slate-400">
@@ -942,7 +942,7 @@ function SidebarContent({
                             </div>
                             <button
                                 onClick={() => router.post(route("logout"))}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-700/50 text-slate-300 hover:bg-red-500/20 hover:text-red-400 transition-all"
+                                className="flex items-center justify-center transition-all rounded-lg h-7 w-7 bg-slate-700/50 text-slate-300 hover:bg-red-500/20 hover:text-red-400"
                                 title="Keluar"
                             >
                                 <LogOut className="h-3.5 w-3.5" />
@@ -1057,10 +1057,10 @@ export default function AuthenticatedLayout({ header, children }) {
                     {/* Mobile menu */}
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors lg:hidden"
+                        className="flex items-center justify-center transition-colors rounded-lg h-7 w-7 text-slate-600 hover:bg-slate-100 lg:hidden"
                     >
                         <svg
-                            className="h-4 w-4"
+                            className="w-4 h-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={2}
@@ -1077,10 +1077,10 @@ export default function AuthenticatedLayout({ header, children }) {
                     {/* Desktop collapse */}
                     <button
                         onClick={toggleCollapse}
-                        className="hidden h-7 w-7 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors lg:flex"
+                        className="items-center justify-center hidden transition-colors rounded-lg h-7 w-7 text-slate-500 hover:bg-slate-100 hover:text-slate-700 lg:flex"
                     >
                         <svg
-                            className="h-4 w-4"
+                            className="w-4 h-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={2}
@@ -1094,11 +1094,11 @@ export default function AuthenticatedLayout({ header, children }) {
                         </svg>
                     </button>
 
-                    <div className="h-6 w-px bg-slate-200 hidden sm:block" />
+                    <div className="hidden w-px h-6 bg-slate-200 sm:block" />
 
                     {/* Page title */}
-                    <div className="min-w-0 flex-1">
-                        <h1 className="truncate text-sm font-semibold text-slate-900">
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-sm font-semibold  text-slate-900">
                             {header}
                         </h1>
                     </div>
@@ -1135,13 +1135,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                 {/* Mobile-only user info (toko/cabang sudah ada di sidebar) */}
                                 <div className="lg:hidden px-3 py-2.5">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-sm font-bold text-white shadow-sm">
+                                        <div className="flex items-center justify-center text-sm font-bold text-white rounded-lg shadow-sm h-9 w-9 shrink-0 bg-gradient-to-br from-indigo-600 to-indigo-700">
                                             {user?.name
                                                 ?.charAt(0)
                                                 .toUpperCase()}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="truncate text-xs font-semibold text-slate-800">
+                                            <p className="text-xs font-semibold truncate text-slate-800">
                                                 {user?.name}
                                             </p>
                                             <p className="truncate text-[10px] text-slate-500">
@@ -1203,7 +1203,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 )}
 
                 <main className="flex-1 p-4">
-                    <div className="mx-auto w-full max-w-[1600px]">
+                    <div className="mx-auto w-full max-w-[1920px]">
                         {children}
                     </div>
                 </main>

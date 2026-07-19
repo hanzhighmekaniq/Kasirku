@@ -54,7 +54,7 @@ export default function FnBKasir(props) {
     );
 
     const mainContent = (
-        <div className="flex-1 overflow-y-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="@container flex-1 overflow-y-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {/* Order type selector */}
             <div className="grid grid-cols-3 gap-3 mb-5">
                 {orderTypeCards.map((o) => (
@@ -142,7 +142,7 @@ export default function FnBKasir(props) {
                     <p className="text-base font-medium text-slate-600">{k.search ? "Menu tidak ditemukan" : "Tidak ada menu"}</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 @xs:grid-cols-2 @md:grid-cols-3 @xl:grid-cols-4 @4xl:grid-cols-5">
                     {k.filtered.map((p) => (
                         <ProductCard key={p.id} product={p} onClick={() => k.handleProductClick(p)} />
                     ))}

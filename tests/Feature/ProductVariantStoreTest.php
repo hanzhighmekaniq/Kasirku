@@ -52,7 +52,7 @@ function setupProductVariantTestContext(): array
     return [$store, $branch, $user];
 }
 
-test('menambah variant pertama membersihkan harga, grosir, dan kemasan produk-level', function () {
+test('menambah variant pertama mengaktifkan is_variant tapi tetap pertahankan harga produk-level', function () {
     [$store, $branch, $user] = setupProductVariantTestContext();
     $category = Category::create(['store_id' => $store->id, 'name' => 'Umum']);
 
@@ -68,7 +68,7 @@ test('menambah variant pertama membersihkan harga, grosir, dan kemasan produk-le
         'is_sellable' => true,
     ]);
 
-    // Data produk-level yang seharusnya dibersihkan setelah variant pertama dibuat
+    // Product-level pricing — harus tetap ada setelah variant dibuat (hybrid)
     $product->priceTiers()->create(['min_qty' => 12, 'price' => 20000]);
     $product->packagingUnits()->create(['name' => 'Lusin', 'conversion_qty' => 12, 'sell_price' => 240000]);
 
@@ -88,10 +88,17 @@ test('menambah variant pertama membersihkan harga, grosir, dan kemasan produk-le
 
     $product->refresh();
 
+    // is_variant otomatis jadi true
     expect($product->is_variant)->toBeTrue();
-    expect((float) $product->sell_price)->toBe(0.0);
-    expect($product->priceTiers()->whereNull('variant_id')->count())->toBe(0);
-    expect($product->packagingUnits()->whereNull('variant_id')->count())->toBe(0);
+
+    // Harga produk-level TETAP (hybrid: product masih bisa dijual)
+    expect((float) $product->sell_price)->toBe(25000.0);
+
+    // Product-level tiers dan units TETAP
+    expect($product->priceTiers()->whereNull('variant_id')->count())->toBe(1);
+    expect($product->packagingUnits()->whereNull('variant_id')->count())->toBe(1);
+
+    // Variant baru terbuat
     expect($product->variants)->toHaveCount(1);
 });
 

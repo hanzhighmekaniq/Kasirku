@@ -60,8 +60,8 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                 onClick={onClose}
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
-            <div className="relative w-full max-w-md rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
-                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+            <div className="relative w-full max-w-md bg-white shadow-2xl rounded-t-2xl sm:rounded-2xl">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                     <div>
                         <h3 className="font-semibold text-slate-900">
                             {product.name}
@@ -75,7 +75,7 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                         className="text-slate-400 hover:text-slate-700"
                     >
                         <svg
-                            className="h-5 w-5"
+                            className="w-5 h-5"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={2}
@@ -89,7 +89,7 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                         </svg>
                     </button>
                 </div>
-                <div className="max-h-72 overflow-y-auto px-5 py-4 space-y-5">
+                <div className="px-5 py-4 space-y-5 overflow-y-auto max-h-72">
                     {groups.map((g) => (
                         <div key={g.id}>
                             <p className="mb-2 text-sm font-semibold text-slate-800">
@@ -158,19 +158,34 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                             value={itemNote}
                             onChange={(e) => setItemNote(e.target.value)}
                             placeholder="cth. tanpa es, pedas"
-                            className="block w-full rounded-xl border-slate-300 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full text-sm rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         />
                     </div>
                 </div>
-                <div className="border-t border-slate-100 px-5 py-4">
+                <div className="px-5 py-4 border-t border-slate-100">
+                    ```jsx
                     <button
                         type="button"
                         disabled={!isValid}
                         onClick={() => onConfirm(buildModifiers(), itemNote)}
-                        className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50"
+                        className="
+        w-full
+        rounded-lg sm:rounded-lg md:rounded-xl
+        bg-gradient-to-r from-indigo-500 to-violet-600
+        px-3 sm:px-4 md:px-5
+        py-1.5 sm:py-2 md:py-2.5
+        text-xs sm:text-sm md:text-sm
+        font-semibold text-white
+        shadow-md sm:shadow-lg
+        shadow-indigo-500/30
+        transition
+        hover:from-indigo-600 hover:to-violet-700
+        disabled:opacity-50
+    "
                     >
                         Tambah ke Keranjang
                     </button>
+                    ```
                 </div>
             </div>
         </div>

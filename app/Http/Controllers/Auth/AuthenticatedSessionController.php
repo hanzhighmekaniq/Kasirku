@@ -4,33 +4,37 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Branch;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Permission\PermissionRegistrar;
-use Illuminate\Support\Str;
 
 class AuthenticatedSessionController extends Controller
 {
     public function create(): Response|RedirectResponse
     {
         if (Auth::check()) {
-            /** @var \App\Models\User $user */
+            /** @var User $user */
             $user = Auth::user();
             if ($user->isDeveloper()) {
-                return redirect()->route("developer.dashboard");
+                return redirect()->route('developer.dashboard');
             }
+
             // Jangan auto-pick store — biarkan StoreMiddleware yang handle
             // redirect ke store-select jika multi-store, atau auto-set jika single
-            return redirect()->route("admin.dashboard");
+            return redirect()->route('admin.dashboard');
         }
 
-        return Inertia::render("Auth/Login", [
-            "canResetPassword" => Route::has("password.request"),
-            "status" => session("status"),
+        return Inertia::render('Auth/Login', [
+            'canResetPassword' => Route::has('password.request'),
+            'status' => session('status'),
+            'isLocal' => app()->environment('local'),
         ]);
     }
 
@@ -39,17 +43,17 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         // Generate session token — single-session enforcement
         $sessionToken = Str::random(64);
-        $user->update(["session_token" => $sessionToken]);
-        $request->session()->put("session_token", $sessionToken);
+        $user->update(['session_token' => $sessionToken]);
+        $request->session()->put('session_token', $sessionToken);
 
         // ── Developer → dashboard khusus, tidak perlu store context ──
         if ($user->isDeveloper()) {
-            return redirect()->route("developer.dashboard");
+            return redirect()->route('developer.dashboard');
         }
 
         // ── Set store aktif pertama di session ──
@@ -58,66 +62,68 @@ class AuthenticatedSessionController extends Controller
 
         if ($storeCount === 0) {
             return redirect()
-                ->route("admin.dashboard")
+                ->route('admin.dashboard')
                 ->with(
-                    "error",
-                    "Akun kamu belum terhubung ke toko mana pun. Hubungi developer.",
+                    'error',
+                    'Akun kamu belum terhubung ke toko mana pun. Hubungi developer.',
                 );
         }
 
         $firstStore = $stores->first();
-        $request->session()->put("current_store_id", $firstStore->id);
+        $request->session()->put('current_store_id', $firstStore->id);
 
         // Set Spatie team context ke store pertama
         app(PermissionRegistrar::class)->setPermissionsTeamId($firstStore->id);
 
         // ── Kasir: set store & branch dari employee record langsung ──
-        if ($user->hasRole("kasir")) {
+        if ($user->hasRole('kasir')) {
             $branchId = $user->employee?->branch_id;
             if ($branchId) {
-                $branch = \App\Models\Branch::find($branchId);
+                $branch = Branch::find($branchId);
                 if ($branch) {
                     $request
                         ->session()
-                        ->put("current_store_id", $branch->store_id);
+                        ->put('current_store_id', $branch->store_id);
                     app(PermissionRegistrar::class)->setPermissionsTeamId(
                         $branch->store_id,
                     );
                 }
-                $request->session()->put("branch_id", $branchId);
-                $request->session()->put("current_branch_id", $branchId);
+                $request->session()->put('branch_id', $branchId);
+                $request->session()->put('current_branch_id', $branchId);
             }
+
             return redirect()->intended(
-                route("admin.dashboard", absolute: false),
+                route('admin.dashboard', absolute: false),
             );
         }
 
         // ── Owner/Admin dengan banyak toko → pilih toko dulu ──
         if ($storeCount > 1) {
-            return redirect()->route("admin.store.select");
+            return redirect()->route('admin.store.select');
         }
 
         // ── 1 toko, cek jumlah cabang aktif ──
         if ($storeCount === 1) {
             $branchCount = $firstStore
                 ->branches()
-                ->where("is_active", true)
+                ->where('is_active', true)
                 ->count();
 
             if ($branchCount > 1) {
-                return redirect()->route("admin.branch.select");
+                return redirect()->route('admin.branch.select');
             }
         }
 
         // ── 1 toko, 0-1 cabang → langsung dashboard ──
-        return redirect()->intended(route("admin.dashboard", absolute: false));
+        return redirect()->intended(route('admin.dashboard', absolute: false));
     }
 
     public function destroy(Request $request): RedirectResponse
     {
-        Auth::guard("web")->logout();
+        Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect("/");
+
+        return redirect('/');
     }
 }

@@ -36,6 +36,7 @@ class Product extends Model
         'track_stock',
         'is_active',
         'is_variant',
+        'sell_base',
         // per-type fields
         'capacity',
         'max_guests',
@@ -56,6 +57,7 @@ class Product extends Model
             'track_stock' => 'boolean',
             'is_active' => 'boolean',
             'is_variant' => 'boolean',
+            'sell_base' => 'boolean',
         ];
     }
 

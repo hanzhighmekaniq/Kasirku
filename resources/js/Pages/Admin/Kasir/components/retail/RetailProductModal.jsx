@@ -21,13 +21,38 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
     );
     const hasActiveVariants = activeVariants.length > 0;
 
-    const [selectedVariantId, setSelectedVariantId] = useState(null);
+    // Cek stok habis — hanya berlaku kalau produk melacak stok (track_stock).
+    // Kalau track_stock mati, stok dianggap tidak terbatas jadi tidak pernah
+    // dianggap habis.
+    const isOutOfStock = (stock) => !!product.track_stock && Number(stock ?? 0) <= 0;
+
+    const isDefaultOutOfStock = isOutOfStock(product.stock);
+
+    // Auto-pilih opsi pertama yang masih ada stoknya, sesuai urutan tampil:
+    // Default (kalau sell_base aktif) dulu, baru varian pertama yang masih
+    // tersedia. Tujuannya supaya user tidak wajib klik manual dan tidak ada
+    // state "belum pilih produk" — kalau semua opsi habis, tidak ada yang
+    // terpilih (tombol Add to Cart otomatis disabled).
+    const getInitialSelection = () => {
+        if (product.sell_base && !isDefaultOutOfStock) {
+            return "default";
+        }
+        const firstAvailableVariant = activeVariants.find(
+            (v) => !isOutOfStock(v.stock),
+        );
+        return firstAvailableVariant ? firstAvailableVariant.id : null;
+    };
+
+    const [selectedVariantId, setSelectedVariantId] = useState(getInitialSelection);
     const [expandedVariantId, setExpandedVariantId] = useState(null);
     const [selectedUnitKey, setSelectedUnitKey] = useState("base");
     const [qty, setQty] = useState(1);
     const [note, setNote] = useState("");
 
-    const selectedVariant = hasActiveVariants
+    // null = tidak ada opsi tersedia (semua stok habis), "default" = product
+    // dasar, number = variant ID
+    const isDefaultSelected = selectedVariantId === "default";
+    const selectedVariant = !isDefaultSelected && selectedVariantId !== null
         ? activeVariants.find((v) => v.id === selectedVariantId) ?? null
         : null;
 
@@ -41,8 +66,8 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
             name: product.unit || "Pcs",
             conversion: 1,
         };
-        if (hasActiveVariants) {
-            if (!selectedVariant) return [base];
+        if (hasActiveVariants && selectedVariant) {
+            // Variant dipilih → packaging unit dari variant
             const variantUnits = (selectedVariant.packaging_units ?? []).map((pu) => ({
                 key: `pu-${pu.id}`,
                 isBase: false,
@@ -53,6 +78,7 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
             }));
             return [base, ...variantUnits];
         }
+        // "Default" atau product tanpa variant → packaging unit dari product
         const productUnits = (product.packaging_units ?? [])
             .filter((pu) => !pu.variant_id)
             .map((pu) => ({
@@ -75,25 +101,34 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
         if (selectedUnit && !selectedUnit.isBase) {
             return Number(selectedUnit.raw?.stock ?? 0);
         }
-        if (hasActiveVariants) {
-            return selectedVariant ? Number(selectedVariant.stock ?? 0) : null;
+        if (hasActiveVariants && selectedVariant) {
+            return Number(selectedVariant.stock ?? 0);
         }
+        // "Default" atau product tanpa variant → product-level stock
         return Number(product.stock ?? 0);
     }, [selectedUnit, hasActiveVariants, selectedVariant, product]);
 
+    const handlePickDefault = () => {
+        if (isDefaultOutOfStock) return;
+        setSelectedVariantId("default");
+        setSelectedUnitKey("base");
+    };
+
     const handlePickVariant = (variant) => {
+        if (isOutOfStock(variant.stock)) return;
         setSelectedVariantId(variant.id);
-        setSelectedUnitKey("base"); // reset satuan setiap ganti varian
+        setSelectedUnitKey("base");
     };
 
     // Harga dasar per-unit sebelum dikali qty
     const unitPrice = useMemo(() => {
         if (!selectedUnit || selectedUnit.isBase) {
-            if (hasActiveVariants) {
-                if (!selectedVariant) return 0;
+            if (hasActiveVariants && selectedVariant) {
+                // Variant dipilih → harga variant + tier variant
                 const tier = getTierPrice(product, qty, selectedVariant.id);
                 return tier ?? Number(selectedVariant.price);
             }
+            // "Default" atau product tanpa variant → harga product + tier product
             const tier = getTierPrice(product, qty, null);
             return tier ?? Number(product.sell_price);
         }
@@ -104,12 +139,13 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
     const stockInsufficient =
         product.track_stock && currentStock !== null && qty > currentStock;
     const canConfirm =
-        (!hasActiveVariants || !!selectedVariant) && !stockInsufficient;
+        !stockInsufficient && (selectedVariantId !== null); // "default" atau variant ID
 
     const handleConfirm = () => {
         if (!canConfirm) return;
+        // "default" → kirim null (product-level), variant → kirim variant object
         onConfirm(
-            selectedVariant,
+            selectedVariant, // null jika "default"
             selectedUnit?.isBase ? null : selectedUnit?.raw ?? null,
             qty,
             note,
@@ -118,7 +154,7 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
-            <div onClick={onClose} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+            <div onClick={onClose} className="absolute inset-0 bg-slate-900/60" />
             <div className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
                 {/* Header */}
                 <div className="flex items-start gap-4 border-b border-slate-100 p-5">
@@ -160,21 +196,71 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                 <span className="text-[11px] text-slate-500">Required</span>
                             </div>
                             <div className="space-y-2.5">
+                                {/* Default (product dasar) — hanya tampil saat sell_base aktif */}
+                                {product.sell_base && (
+                                <div
+                                    className={`overflow-hidden rounded-2xl border transition-colors ${
+                                        isDefaultOutOfStock
+                                            ? "border-slate-200 bg-slate-50 opacity-60"
+                                            : isDefaultSelected
+                                              ? "border-indigo-500 bg-gradient-to-b from-indigo-50/60 to-white ring-1 ring-indigo-200"
+                                              : "border-slate-200 bg-white"
+                                    }`}
+                                >
+                                    <div
+                                        className={`flex items-center gap-3 p-3.5 ${isDefaultOutOfStock ? "cursor-not-allowed" : "cursor-pointer"}`}
+                                        onClick={handlePickDefault}
+                                    >
+                                        <span
+                                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition ${
+                                                isDefaultSelected
+                                                    ? "border-indigo-500 bg-indigo-500 text-white"
+                                                    : "border-slate-200 bg-white text-transparent"
+                                            }`}
+                                        >
+                                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12l5 5L20 7" />
+                                            </svg>
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-semibold text-slate-900">
+                                                {product.name} <span className="text-slate-400 font-normal">(Default)</span>
+                                            </p>
+                                            <p className="mt-0.5 text-[11px] text-slate-400">SKU · {product.sku}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            {isDefaultOutOfStock ? (
+                                                <p className="text-xs font-semibold text-red-500">Stok habis</p>
+                                            ) : (
+                                                <>
+                                                    <p className="text-sm font-semibold text-slate-900">{fmt(product.sell_price)}</p>
+                                                    <p className="text-[10px] text-slate-400">Retail</p>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                )}
+
+                                {/* Variant list */}
                                 {activeVariants.map((v) => {
                                     const isActive = selectedVariantId === v.id;
                                     const isExpanded = expandedVariantId === v.id;
+                                    const variantOutOfStock = isOutOfStock(v.stock);
                                     const tiers = (v.price_tiers ?? []).slice().sort((a, b) => a.min_qty - b.min_qty);
                                     return (
                                         <div
                                             key={v.id}
-                                            className={`overflow-hidden rounded-2xl border transition-all ${
-                                                isActive
-                                                    ? "border-indigo-500 bg-gradient-to-b from-indigo-50/60 to-white ring-1 ring-indigo-200"
-                                                    : "border-slate-200 bg-white"
+                                            className={`overflow-hidden rounded-2xl border transition-colors ${
+                                                variantOutOfStock
+                                                    ? "border-slate-200 bg-slate-50 opacity-60"
+                                                    : isActive
+                                                      ? "border-indigo-500 bg-gradient-to-b from-indigo-50/60 to-white ring-1 ring-indigo-200"
+                                                      : "border-slate-200 bg-white"
                                             }`}
                                         >
                                             <div
-                                                className="flex cursor-pointer items-center gap-3 p-3.5"
+                                                className={`flex items-center gap-3 p-3.5 ${variantOutOfStock ? "cursor-not-allowed" : "cursor-pointer"}`}
                                                 onClick={() => handlePickVariant(v)}
                                             >
                                                 <span
@@ -193,8 +279,14 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                                     {v.sku && <p className="mt-0.5 text-[11px] text-slate-400">SKU · {v.sku}</p>}
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-sm font-semibold text-slate-900">{fmt(v.price)}</p>
-                                                    <p className="text-[10px] text-slate-400">Retail</p>
+                                                    {variantOutOfStock ? (
+                                                        <p className="text-xs font-semibold text-red-500">Stok habis</p>
+                                                    ) : (
+                                                        <>
+                                                            <p className="text-sm font-semibold text-slate-900">{fmt(v.price)}</p>
+                                                            <p className="text-[10px] text-slate-400">Retail</p>
+                                                        </>
+                                                    )}
                                                 </div>
                                                 {tiers.length > 0 && (
                                                     <button
@@ -349,7 +441,7 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center gap-3 border-t border-slate-100 bg-white/80 px-5 py-4 backdrop-blur">
+                <div className="flex items-center gap-3 border-t border-slate-100 bg-white px-5 py-4">
                     <div className="flex-1">
                         <div className="text-[11px] uppercase tracking-wide text-slate-500">Subtotal</div>
                         <div className="text-lg font-semibold text-slate-900">{fmt(subtotal)}</div>
@@ -367,10 +459,10 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                         onClick={handleConfirm}
                         className="h-11 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        {stockInsufficient
-                            ? "Stok tidak cukup"
-                            : !canConfirm
-                              ? "Pilih varian dulu"
+                        {selectedVariantId === null
+                            ? "Stok habis"
+                            : stockInsufficient
+                              ? "Stok tidak cukup"
                               : "Add to Cart"}
                     </button>
                 </div>

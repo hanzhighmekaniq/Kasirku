@@ -3,7 +3,7 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import * as ReactDOM from "react-dom";
 import axios from "axios";
-import { ChevronDown, Plus, X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 
@@ -362,13 +362,6 @@ export default function Index({
                     <h2 className="text-lg font-semibold text-slate-800">
                         {pageTitle}
                     </h2>
-                    <Link
-                        href={route("admin.sales.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
-                    >
-                        <Plus className="h-4 w-4" strokeWidth={2} />
-                        Transaksi Baru
-                    </Link>
                 </div>
             }
         >

@@ -17,11 +17,15 @@ export default function ProductCard({ product, onClick }) {
     const activeVariants = (product.variants ?? []).filter((v) => v.is_active);
     const hasActiveVariants = activeVariants.length > 0;
 
-    // Untuk produk dengan variant, total stok dihitung dari SEMUA bucket
-    // variant (bukan bucket base yang sekarang biasanya kosong untuk produk
-    // ber-variant). Produk simple tetap pakai product.stock seperti biasa.
+    // Total stok = product-level (variant_id=NULL) + semua variant.
+    // Kalau produk punya variant tapi sell_base dimatikan, opsi "Default"
+    // tidak dijual sama sekali — jadi stok product-level TIDAK dihitung,
+    // supaya kartu tidak dianggap "In Stock" hanya karena bucket default
+    // masih ada sisa padahal tidak bisa dipilih di modal.
+    const defaultCountsTowardStock = hasActiveVariants ? !!product.sell_base : true;
     const totalStock = hasActiveVariants
-        ? activeVariants.reduce((sum, v) => sum + Number(v.stock ?? 0), 0)
+        ? (defaultCountsTowardStock ? Number(product.stock ?? 0) : 0) +
+          activeVariants.reduce((sum, v) => sum + Number(v.stock ?? 0), 0)
         : Number(product.stock ?? 0);
 
     const isOut = product.track_stock && totalStock <= 0;
@@ -88,7 +92,7 @@ export default function ProductCard({ product, onClick }) {
 
     return (
         <article
-            className={`group relative flex flex-col overflow-hidden rounded-3xl border bg-white transition-all duration-300 ${
+            className={`group relative flex min-w-[150px] flex-col overflow-hidden rounded-3xl border bg-white transition-all duration-300 ${
                 isDisabled
                     ? "border-slate-200 opacity-60"
                     : "border-slate-200 shadow-sm hover:-translate-y-1 hover:shadow-xl hover:border-slate-300"

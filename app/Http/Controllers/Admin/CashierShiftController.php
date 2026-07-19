@@ -147,6 +147,13 @@ class CashierShiftController extends Controller
         $user = $request->user();
 
         if ($this->getActiveShift($storeId, $user->id)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kamu masih punya shift aktif.',
+                ], 422);
+            }
+
             return back()->with('error', 'Kamu masih punya shift aktif.');
         }
 
@@ -174,6 +181,22 @@ class CashierShiftController extends Controller
                 number_format($data['opening_cash'], 0, ',', '.'),
             ['action' => 'open', 'opening_cash' => $data['opening_cash']],
         );
+
+        // AJAX (modal Buka Shift di halaman POS) — balikan JSON supaya kasir
+        // tidak pindah halaman; frontend cukup reload prop activeShift.
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Shift berhasil dibuka.',
+                'shift' => $shift->only([
+                    'id',
+                    'shift_no',
+                    'opening_cash',
+                    'opened_at',
+                    'status',
+                ]),
+            ]);
+        }
 
         return redirect()
             ->route('admin.cashier-shifts.show', $shift)

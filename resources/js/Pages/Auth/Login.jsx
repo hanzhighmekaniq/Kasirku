@@ -3,7 +3,12 @@ import Checkbox from "@/Components/Checkbox";
 import InputError from "@/Components/InputError";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 
-export default function Login({ status, canResetPassword }) {
+const QUICK_LOGIN_ACCOUNTS = [
+    { label: "Owner", email: "owner1@gmail.com", password: "password" },
+    { label: "Developer", email: "dev@gmail.com", password: "password" },
+];
+
+export default function Login({ status, canResetPassword, isLocal }) {
     const { flash } = usePage().props;
     const { data, setData, post, processing, errors, reset } = useForm({
         email: "",
@@ -16,6 +21,10 @@ export default function Login({ status, canResetPassword }) {
         post(route("login"), {
             onFinish: () => reset("password"),
         });
+    };
+
+    const fillQuickLogin = (email, password) => {
+        setData({ ...data, email, password });
     };
 
     return (
@@ -210,6 +219,36 @@ export default function Login({ status, canResetPassword }) {
                                     {processing ? "Memproses..." : "Masuk"}
                                 </button>
                             </form>
+
+                            {isLocal && (
+                                <div className="mt-6 border-t border-dashed border-slate-200 pt-5">
+                                    <p className="mb-2.5 text-center text-xs font-medium uppercase tracking-wide text-slate-400">
+                                        Quick login (dev only)
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {QUICK_LOGIN_ACCOUNTS.map(
+                                            (account) => (
+                                                <button
+                                                    key={account.email}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        fillQuickLogin(
+                                                            account.email,
+                                                            account.password,
+                                                        )
+                                                    }
+                                                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600"
+                                                >
+                                                    {account.label}
+                                                    <span className="mt-0.5 block truncate font-normal text-slate-400">
+                                                        {account.email}
+                                                    </span>
+                                                </button>
+                                            ),
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <p className="mt-6 text-center text-xs text-slate-400 lg:hidden">

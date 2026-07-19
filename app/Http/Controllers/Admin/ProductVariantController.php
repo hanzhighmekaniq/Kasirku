@@ -78,13 +78,6 @@ class ProductVariantController extends Controller
             if (! $product->is_variant) {
                 $product->update(['is_variant' => true]);
             }
-
-            // Hanya clear harga/grosir/kemasan produk saat variant PERTAMA dibuat
-            if ($product->variants()->count() === 1) {
-                $product->update(['sell_price' => 0]);
-                $product->priceTiers()->whereNull('variant_id')->delete();
-                $product->packagingUnits()->whereNull('variant_id')->delete();
-            }
         });
 
         return back()->with('success', 'Varian berhasil ditambahkan.');

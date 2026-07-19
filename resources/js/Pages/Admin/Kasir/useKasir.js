@@ -118,11 +118,66 @@ export default function useKasir({
     // addToCart dipanggil berkali-kali sebelum React sempat re-render.
     const cartIdSeqRef = useRef(0);
 
+    // ── Transaksi ditahan (Hold / Park) — disimpan di localStorage saja ──
+    const HELD_KEY = `pos:held:${storeName || "default"}`;
+    const [heldTransactions, setHeldTransactions] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem(HELD_KEY) || "[]");
+        } catch {
+            return [];
+        }
+    });
+
     /* ── scanner state ── */
     const [showScanner, setShowScanner] = useState(false);
     const [scanning, setScanning] = useState(false);
-    const [discount, setDiscount] = useState(0);
-    const [tax, setTax] = useState(0);
+
+    /* ── Diskon & pajak manual ──────────────────────────────────
+     * Dimodelkan sebagai { type, value } supaya kasir bisa memilih
+     * persentase (%) atau nominal tetap (Rp). Nilai Rupiah `discount`
+     * dan `tax` DITURUNKAN dari sini di bagian totals (lihat di bawah),
+     * jadi diskon persen otomatis ikut berubah saat isi keranjang berubah.
+     */
+    const [discountType, setDiscountType] = useState("fixed"); // 'fixed' | 'percent'
+    const [discountValue, setDiscountValue] = useState(0);
+    const [discountReason, setDiscountReason] = useState("");
+    const [taxType, setTaxType] = useState("fixed"); // 'fixed' | 'percent'
+    const [taxValue, setTaxValue] = useState(0);
+    const [taxName, setTaxName] = useState("");
+
+    // Backward-compat: setDiscount(n)/setTax(n) memperlakukan input sebagai
+    // nominal tetap (fixed) — dipakai halaman fallback Kasir.jsx.
+    const setDiscount = (v) => {
+        setDiscountType("fixed");
+        setDiscountValue(Number(v) || 0);
+    };
+    const setTax = (v) => {
+        setTaxType("fixed");
+        setTaxValue(Number(v) || 0);
+    };
+
+    // API modal Diskon / Pajak Manual
+    const applyDiscount = ({ type, value, reason }) => {
+        setDiscountType(type === "percent" ? "percent" : "fixed");
+        setDiscountValue(Number(value) || 0);
+        setDiscountReason(reason ?? "");
+    };
+    const clearDiscount = () => {
+        setDiscountType("fixed");
+        setDiscountValue(0);
+        setDiscountReason("");
+    };
+    const applyTax = ({ type, value, name }) => {
+        setTaxType(type === "percent" ? "percent" : "fixed");
+        setTaxValue(Number(value) || 0);
+        setTaxName(name ?? "");
+    };
+    const clearTax = () => {
+        setTaxType("fixed");
+        setTaxValue(0);
+        setTaxName("");
+    };
+
     const [orderType, setOrderType] = useState(orderOpts[0].v);
 
     /* ── customer / table / delivery ── */
@@ -140,6 +195,13 @@ export default function useKasir({
     const [deliveryFee, setDeliveryFee] = useState("");
     const [deliveryCustomerName, setDeliveryCustomerName] = useState("");
     const [takeawayCustomerName, setTakeawayCustomerName] = useState("");
+    // Info tambahan pickup/delivery — dikumpulkan via modal, dilipat ke
+    // `notes` saat submit (tanpa mengubah skema backend).
+    const [deliveryPhone, setDeliveryPhone] = useState("");
+    const [deliveryCourier, setDeliveryCourier] = useState("");
+    const [deliveryNote, setDeliveryNote] = useState("");
+    const [takeawayPhone, setTakeawayPhone] = useState("");
+    const [pickupTime, setPickupTime] = useState("");
     const [deliveryInfoOpen, setDeliveryInfoOpen] = useState(true);
     const [quickAddOpen, setQuickAddOpen] = useState(false);
     const [quickAddName, setQuickAddName] = useState("");
@@ -188,6 +250,8 @@ export default function useKasir({
     const [submitting, setSubmitting] = useState(false);
     const [historyList, setHistoryList] = useState(todaySales);
     const [cartPanelOpen, setCartPanelOpen] = useState(false);
+    const [sidebarWidth, setSidebarWidth] = useState(384);
+    const sidebarResizing = useRef(false);
     const [pgModalData, setPgModalData] = useState(null);
     // { productName, available, requested } | null — dipakai StockAlertModal
     const [stockAlert, setStockAlert] = useState(null);
@@ -198,6 +262,32 @@ export default function useKasir({
     const tableDropdownRef = useRef(null);
     const tableInputRef = useRef(null);
     const barcodeRef = useRef(null);
+
+    /* ── sidebar resize ── */
+    useEffect(() => {
+        const onMouseMove = (e) => {
+            if (!sidebarResizing.current) return;
+            const newWidth = window.innerWidth - e.clientX;
+            setSidebarWidth(Math.min(Math.max(newWidth, 280), 600));
+        };
+        const onMouseUp = () => {
+            sidebarResizing.current = false;
+            document.body.style.cursor = "";
+            document.body.style.userSelect = "";
+        };
+        window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("mouseup", onMouseUp);
+        return () => {
+            window.removeEventListener("mousemove", onMouseMove);
+            window.removeEventListener("mouseup", onMouseUp);
+        };
+    }, []);
+
+    const startSidebarResize = () => {
+        sidebarResizing.current = true;
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+    };
 
     /* ── filtering ── */
     const filtered = useMemo(() => {
@@ -609,8 +699,8 @@ export default function useKasir({
 
     const clearCart = () => {
         setCart([]);
-        setDiscount(0);
-        setTax(0);
+        clearDiscount();
+        clearTax();
         setNote("");
         setSelectedCustomer("");
         setSelectedTable("");
@@ -621,7 +711,12 @@ export default function useKasir({
         setDeliveryAddress("");
         setDeliveryFee("");
         setDeliveryCustomerName("");
+        setDeliveryPhone("");
+        setDeliveryCourier("");
+        setDeliveryNote("");
         setTakeawayCustomerName("");
+        setTakeawayPhone("");
+        setPickupTime("");
         setDeliveryInfoOpen(true);
         setQuickAddOpen(false);
         setQuickAddName("");
@@ -817,13 +912,36 @@ export default function useKasir({
     /* ── totals ── */
     const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
     const totalPromoDisc = cart.reduce((s, c) => s + (c.promoDiscount ?? 0), 0);
+
+    /* ── Diskon & pajak manual (Rp) — diturunkan dari type + value ──
+     * Alur perhitungan mengikuti preview modal:
+     *   Subtotal → −Diskon Promo → −Diskon Manual → +Pajak Manual → +Ongkir
+     * Basis diskon manual = subtotal setelah promo.
+     * Basis pajak manual  = subtotal setelah diskon (promo + manual).
+     */
+    const manualDiscountBase = Math.max(
+        0,
+        subtotal - totalPromoDisc - cartPromoDiscount,
+    );
+    const discount =
+        discountType === "percent"
+            ? Math.round(
+                  (manualDiscountBase * (Number(discountValue) || 0)) / 100,
+              )
+            : Math.min(Number(discountValue) || 0, manualDiscountBase);
+    const manualTaxBase = Math.max(0, manualDiscountBase - discount);
+    const tax =
+        taxType === "percent"
+            ? Math.round((manualTaxBase * (Number(taxValue) || 0)) / 100)
+            : Number(taxValue) || 0;
+
     const grandTotal = Math.max(
         0,
         subtotal -
             totalPromoDisc -
             cartPromoDiscount -
-            Number(discount) +
-            Number(tax) +
+            discount +
+            tax +
             Number(deliveryFee || 0),
     );
 
@@ -852,18 +970,158 @@ export default function useKasir({
         if (isSession && !roomNumber.trim()) {
             return "Isi nama unit dulu";
         }
+        // Delivery — penerima + alamat wajib (semua mode)
+        if (orderType === "delivery") {
+            if (!deliveryCustomerName.trim() && !selectedCustomer) {
+                return "Lengkapi info pengiriman";
+            }
+            if (!deliveryAddress.trim()) {
+                return "Lengkapi info pengiriman";
+            }
+        }
+        // Grosir (retail) — pelanggan wajib
+        if (isRetail && orderType === "wholesale" && !selectedCustomer) {
+            return "Pilih pelanggan grosir dulu";
+        }
         return null;
     })();
 
-    /* ── submit ── */
-    const handleConfirmPayment = async (payments, change) => {
-        if (!activeShift) {
-            alert(
-                "Anda harus membuka shift terlebih dahulu sebelum melakukan transaksi.",
-            );
-            setSubmitting(false);
+    /* ── Hold / Park transaksi (localStorage) ────────────────────
+     * Kasir bisa "menahan" transaksi berjalan (mis. pelanggan lupa ambil
+     * barang) lalu melanjutkannya nanti tanpa kehilangan keranjang. Semua
+     * disimpan di localStorage — tidak menyentuh backend.
+     */
+    const persistHeld = (list) => {
+        setHeldTransactions(list);
+        try {
+            localStorage.setItem(HELD_KEY, JSON.stringify(list));
+        } catch {
+            /* storage penuh / tidak tersedia — abaikan */
+        }
+    };
+
+    const holdTransaction = () => {
+        if (cart.length === 0) {
+            return false;
+        }
+        const custName =
+            customers.find((c) => String(c.id) === String(selectedCustomer))
+                ?.name || null;
+        const snapshot = {
+            id: crypto?.randomUUID?.() ?? `held-${Date.now()}`,
+            heldAt: new Date().toISOString(),
+            label:
+                custName || takeawayCustomerName || deliveryCustomerName || null,
+            orderType,
+            itemCount: cart.reduce((s, c) => s + c.qty, 0),
+            total: grandTotal,
+            cart,
+            selectedCustomer,
+            selectedTable,
+            discountType,
+            discountValue,
+            discountReason,
+            taxType,
+            taxValue,
+            taxName,
+            note,
+            deliveryAddress,
+            deliveryFee,
+            deliveryCustomerName,
+            deliveryPhone,
+            deliveryCourier,
+            deliveryNote,
+            takeawayCustomerName,
+            takeawayPhone,
+            pickupTime,
+            // mode-specific (agar mode selain retail juga aman)
+            rentalDuration,
+            rentalUnit,
+            ticketEvent,
+            ticketSlot,
+            roomNumber,
+            guestCount,
+            selectedEmployee,
+        };
+        persistHeld([snapshot, ...heldTransactions].slice(0, 50));
+        clearCart();
+        return true;
+    };
+
+    const resumeHeldTransaction = (held) => {
+        if (!held) {
             return;
         }
+        setCart(held.cart || []);
+        const maxId = (held.cart || []).reduce(
+            (m, c) => Math.max(m, c.cartId || 0),
+            0,
+        );
+        if (maxId > cartIdSeqRef.current) {
+            cartIdSeqRef.current = maxId;
+        }
+        setOrderType(held.orderType || orderOpts[0].v);
+        setSelectedCustomer(held.selectedCustomer || "");
+        setSelectedTable(held.selectedTable || "");
+        setDiscountType(held.discountType || "fixed");
+        setDiscountValue(held.discountValue || 0);
+        setDiscountReason(held.discountReason || "");
+        setTaxType(held.taxType || "fixed");
+        setTaxValue(held.taxValue || 0);
+        setTaxName(held.taxName || "");
+        setNote(held.note || "");
+        setDeliveryAddress(held.deliveryAddress || "");
+        setDeliveryFee(held.deliveryFee || "");
+        setDeliveryCustomerName(held.deliveryCustomerName || "");
+        setDeliveryPhone(held.deliveryPhone || "");
+        setDeliveryCourier(held.deliveryCourier || "");
+        setDeliveryNote(held.deliveryNote || "");
+        setTakeawayCustomerName(held.takeawayCustomerName || "");
+        setTakeawayPhone(held.takeawayPhone || "");
+        setPickupTime(held.pickupTime || "");
+        setRentalDuration(held.rentalDuration ?? 1);
+        setRentalUnit(held.rentalUnit || "per_hour");
+        setTicketEvent(held.ticketEvent || "");
+        setTicketSlot(held.ticketSlot || "");
+        setRoomNumber(held.roomNumber || "");
+        setGuestCount(held.guestCount ?? 1);
+        setSelectedEmployee(held.selectedEmployee || "");
+        persistHeld(heldTransactions.filter((h) => h.id !== held.id));
+    };
+
+    const deleteHeldTransaction = (id) => {
+        persistHeld(heldTransactions.filter((h) => h.id !== id));
+    };
+
+    /* ── compose notes ──────────────────────────────────────────
+     * Info tambahan pickup/delivery (telepon, kurir, waktu ambil, catatan
+     * pengiriman) dilipat ke field `notes` secara non-destruktif — catatan
+     * transaksi yang diketik kasir tetap dipertahankan di akhir.
+     */
+    const buildComposedNotes = () => {
+        const parts = [];
+        if (orderType === "delivery") {
+            if (deliveryPhone.trim()) parts.push(`HP: ${deliveryPhone.trim()}`);
+            if (deliveryCourier.trim())
+                parts.push(`Kurir: ${deliveryCourier.trim()}`);
+            if (deliveryNote.trim()) parts.push(deliveryNote.trim());
+        }
+        if (orderType === "takeaway") {
+            if (takeawayPhone.trim()) parts.push(`HP: ${takeawayPhone.trim()}`);
+            if (pickupTime.trim()) parts.push(`Ambil: ${pickupTime.trim()}`);
+        }
+        if (note.trim()) parts.push(note.trim());
+        const joined = parts.join(" • ");
+        return joined ? joined.slice(0, 500) : null;
+    };
+
+    /* ── submit ── */
+    const handleConfirmPayment = async (payments, change) => {
+        // Catatan: enforcement shift ditangani di layer lain — tombol Bayar
+        // dinonaktifkan oleh KasirLayout saat shift wajib tapi belum dibuka,
+        // dan backend (middleware ensure.shift) mengembalikan 422 untuk kasir
+        // yang wajib shift. User yang tidak wajib shift (owner/admin/developer)
+        // tetap bisa bertransaksi tanpa shift aktif.
         if (orderType === "delivery" && !deliveryAddress.trim()) {
             alert("Alamat pengiriman wajib diisi untuk delivery.");
             setSubmitting(false);
@@ -925,7 +1183,7 @@ export default function useKasir({
                     : orderType === "takeaway"
                       ? takeawayCustomerName.trim() || null
                       : null,
-            notes: note || null,
+            notes: buildComposedNotes(),
             payments: payments.map((p) => ({
                 method_id: p.method_id,
                 amount: Number(p.amount),
@@ -1718,6 +1976,18 @@ export default function useKasir({
         setDiscount,
         tax,
         setTax,
+        discountType,
+        discountValue,
+        discountReason,
+        taxType,
+        taxValue,
+        taxName,
+        applyDiscount,
+        clearDiscount,
+        applyTax,
+        clearTax,
+        manualDiscountBase,
+        manualTaxBase,
         orderType,
         setOrderType,
         selectedCustomer,
@@ -1741,6 +2011,16 @@ export default function useKasir({
         setDeliveryCustomerName,
         takeawayCustomerName,
         setTakeawayCustomerName,
+        deliveryPhone,
+        setDeliveryPhone,
+        deliveryCourier,
+        setDeliveryCourier,
+        deliveryNote,
+        setDeliveryNote,
+        takeawayPhone,
+        setTakeawayPhone,
+        pickupTime,
+        setPickupTime,
         deliveryInfoOpen,
         setDeliveryInfoOpen,
         quickAddOpen,
@@ -1800,6 +2080,9 @@ export default function useKasir({
         setHistoryList,
         cartPanelOpen,
         setCartPanelOpen,
+        sidebarWidth,
+        setSidebarWidth,
+        startSidebarResize,
         pgModalData,
         setPgModalData,
         stockAlert,
@@ -1830,6 +2113,10 @@ export default function useKasir({
         changeQty,
         removeItem,
         clearCart,
+        heldTransactions,
+        holdTransaction,
+        resumeHeldTransaction,
+        deleteHeldTransaction,
         handleProductClick,
         handleBarcodeScan,
         playBeep,

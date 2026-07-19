@@ -1,8 +1,33 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { useState, useEffect } from "react";
-import { Head, Link } from "@inertiajs/react";
-import axios from "axios";
+import { Head, Link, router, usePage } from "@inertiajs/react";
 import * as ReactDOM from "react-dom";
+import {
+    ScanLine,
+    Search,
+    History,
+    Maximize2,
+    Minimize2,
+    X,
+    Trash2,
+    UserRound,
+    Pencil,
+    Truck,
+    PackageCheck,
+    Clock,
+    CreditCard,
+    ShoppingCart,
+    ChevronRight,
+    CircleCheck,
+    LayoutGrid,
+    MessageSquare,
+    Tag,
+    Pause,
+    Layers,
+    GripVertical,
+} from "lucide-react";
+
+import { useStoreModules } from "@/Hooks/useStoreModules";
 import PGPaymentModal from "@/Pages/Admin/PGPaymentModal";
 import BarcodeScanner from "@/Components/BarcodeScanner";
 
@@ -16,11 +41,33 @@ import CartRow from "../components/CartRow";
 import ModeSpecificPanel from "../components/ModeSpecificPanel";
 import StockAlertModal from "../components/StockAlertModal";
 
-export default function KasirLayout({ k, props, mainContent, searchBar, categoryChips, showSearch = true }) {
-    const [showExtraFees, setShowExtraFees] = useState(false);
+import Tooltip from "../components/ui/Tooltip";
+import TipButton from "../components/ui/TipButton";
+import ShiftModal from "../components/modals/ShiftModal";
+import CustomerModal from "../components/modals/CustomerModal";
+import TransactionInfoModal from "../components/modals/TransactionInfoModal";
+import NoteModal from "../components/modals/NoteModal";
+import AdjustmentModal from "../components/modals/AdjustmentModal";
+import HeldTransactionsModal from "../components/modals/HeldTransactionsModal";
+
+export default function KasirLayout({
+    k,
+    props,
+    mainContent,
+    searchBar,
+    categoryChips,
+    showSearch = true,
+}) {
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [showShiftModal, setShowShiftModal] = useState(false);
+    const [showCustomerModal, setShowCustomerModal] = useState(false);
+    const [showInfoModal, setShowInfoModal] = useState(false);
+    const [showNoteModal, setShowNoteModal] = useState(false);
+    const [showAdjustModal, setShowAdjustModal] = useState(false);
+    const [showHeldModal, setShowHeldModal] = useState(false);
+
     const {
-        tables,
+        tables = [],
         paymentMethods,
         pgMethods = [],
         storeName,
@@ -28,6 +75,24 @@ export default function KasirLayout({ k, props, mainContent, searchBar, category
         activeShift,
     } = props;
 
+    /* ── Shift: tampil sesuai permission user ──────────────────────
+     * Sembunyikan seluruh UI shift bila store tidak punya fitur shift
+     * ATAU user tidak punya izin shift apa pun. Kasir yang WAJIB shift
+     * (punya shift.open, bukan manager/developer) diblok checkout sampai
+     * shift dibuka — sesuai middleware EnsureActiveShift di backend.
+     */
+    const { can, hasShift } = useStoreModules();
+    const isDeveloper = usePage().props?.auth?.isDeveloper ?? false;
+    const canOpenShift = can("shift.open");
+    const canViewShift = can("shift.view");
+    const canManageShift = can("shift.manage");
+    const showShiftUI =
+        hasShift && (canOpenShift || canViewShift || canManageShift);
+    const shiftEnforced =
+        hasShift && canOpenShift && !canManageShift && !isDeveloper;
+    const blockedByShift = shiftEnforced && !activeShift;
+
+    // Keyboard shortcuts: Esc keluar fullscreen, F11 toggle, "/" fokus cari.
     useEffect(() => {
         const handler = (e) => {
             if (e.key === "Escape" && isFullscreen) {
@@ -41,7 +106,8 @@ export default function KasirLayout({ k, props, mainContent, searchBar, category
             if (
                 e.key === "/" &&
                 !isFullscreen &&
-                document.activeElement?.tagName !== "INPUT"
+                document.activeElement?.tagName !== "INPUT" &&
+                document.activeElement?.tagName !== "TEXTAREA"
             ) {
                 e.preventDefault();
                 k.barcodeRef?.current?.focus();
@@ -51,464 +117,1054 @@ export default function KasirLayout({ k, props, mainContent, searchBar, category
         return () => window.removeEventListener("keydown", handler);
     }, [isFullscreen]);
 
+    /* ── derived ── */
+    const showTableSelector =
+        (k.isCafe || k.isBooth || k.isHospitality) &&
+        k.orderType === k.tableTriggerOrderType &&
+        tables.length > 0;
+    const tableGate = showTableSelector && !k.selectedTable;
+    const selectedCustomerObj = k.customers.find(
+        (c) => String(c.id) === String(k.selectedCustomer),
+    );
+    const isDelivery = k.orderType === "delivery";
+    const isTakeaway = k.orderType === "takeaway";
+    const isWholesale = k.isRetail && k.orderType === "wholesale";
+    const hasDeliveryInfo = !!(
+        k.deliveryAddress &&
+        (k.deliveryCustomerName || k.selectedCustomer)
+    );
+    const discountBadge =
+        k.discountType === "percent" && Number(k.discountValue) > 0
+            ? `${k.discountValue}%`
+            : null;
+    const taxBadge =
+        [
+            k.taxName,
+            k.taxType === "percent" && Number(k.taxValue) > 0
+                ? `${k.taxValue}%`
+                : null,
+        ]
+            .filter(Boolean)
+            .join(" ") || null;
+    const heldCount = k.heldTransactions?.length ?? 0;
+    const noteActive = !!(k.note && k.note.trim());
+    const adjustActive = k.discount > 0 || k.tax > 0;
+
+    /* ── header (mode badge + quick actions) ── */
     const headerContent = (
         <div className="flex w-full items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
                 <h2 className="text-lg font-semibold text-slate-800">Kasir</h2>
-                <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm">
-                    {k.modeConfig.icon} {k.modeConfig.label}
+                <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 shadow-sm">
+                    <span>{k.modeConfig.icon}</span>
+                    {k.modeConfig.label}
                 </span>
             </div>
-            <div className="hidden items-center gap-2 sm:flex">
-                <button
-                    onClick={() => k.setShowHistory(true)}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-all hover:shadow-md"
-                    title="Riwayat Transaksi"
-                >
-                    <svg className={`h-4 w-4 ${k.historyPrintLoading ? "animate-spin text-indigo-600" : "text-slate-500"}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        {k.historyPrintLoading ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        )}
-                    </svg>
-                    <span className="hidden sm:inline">Riwayat</span>
-                </button>
-                <button
-                    onClick={() => setIsFullscreen(!isFullscreen)}
-                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition-all hover:shadow-md"
-                    title={isFullscreen ? "Keluar Fullscreen (Esc)" : "Fullscreen (F11)"}
-                >
-                    {isFullscreen ? (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
-                        </svg>
-                    ) : (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                        </svg>
-                    )}
-                    <span className="hidden sm:inline">{isFullscreen ? "Keluar" : "Fullscreen"}</span>
-                </button>
-            </div>
-        </div>
-    );
-
-    const mobileQuickActions = (
-        <div className="flex items-center gap-1.5 sm:hidden">
-            <button onClick={() => k.setShowHistory(true)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/70 shadow-sm transition hover:bg-white" title="Riwayat Transaksi">
-                <svg className={`h-4 w-4 ${k.historyPrintLoading ? "animate-spin text-indigo-600" : "text-slate-500"}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    {k.historyPrintLoading ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    )}
-                </svg>
-            </button>
-            <button onClick={() => setIsFullscreen(!isFullscreen)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/70 text-slate-500 shadow-sm transition hover:bg-white" title={isFullscreen ? "Keluar Fullscreen (Esc)" : "Fullscreen (F11)"}>
-                {isFullscreen ? (
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
-                    </svg>
-                ) : (
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                    </svg>
+            <div className="flex items-center gap-1.5">
+                {heldCount > 0 && (
+                    <div className="relative">
+                        <Tooltip label="Transaksi Ditahan">
+                            <button
+                                type="button"
+                                onClick={() => setShowHeldModal(true)}
+                                aria-label="Transaksi Ditahan"
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition hover:bg-slate-200 hover:text-slate-900"
+                            >
+                                <Layers size={17} strokeWidth={2} />
+                            </button>
+                        </Tooltip>
+                        <span className="absolute -right-1 -bottom-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white shadow-sm">
+                            {heldCount}
+                        </span>
+                    </div>
                 )}
-            </button>
-        </div>
-    );
-
-    const defaultSearchBar = (
-        <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-3.5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-                </svg>
-            </div>
-            <div className="flex-1">
-                <div className="text-[10.5px] font-medium uppercase tracking-wider text-slate-400">Barcode scanner</div>
-                <input
-                    ref={k.barcodeRef}
-                    type="text"
-                    value={k.search}
-                    onChange={(e) => k.setSearch(e.target.value)}
-                    placeholder="Cari produk atau scan barcode..."
-                    className="mt-0.5 block w-full border-0 bg-transparent p-0 text-[15px] font-medium text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-0"
+                <TipButton
+                    label="Riwayat Transaksi"
+                    icon={History}
+                    variant="subtle"
+                    onClick={() => k.setShowHistory(true)}
+                />
+                <TipButton
+                    label={isFullscreen ? "Keluar Fullscreen (Esc)" : "Fullscreen (F11)"}
+                    icon={isFullscreen ? Minimize2 : Maximize2}
+                    variant="subtle"
+                    onClick={() => setIsFullscreen(!isFullscreen)}
                 />
             </div>
-            <button
+        </div>
+    );
+
+    /* ── shift banner (permission-gated) ── */
+    const shiftBanner = (() => {
+        if (!showShiftUI) return null;
+        if (activeShift) {
+            return (
+                <div className="flex items-center gap-2.5 border-b border-emerald-100 bg-emerald-50/70 px-4 py-2.5">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-white">
+                        <CircleCheck size={16} strokeWidth={2.2} />
+                    </span>
+                    <div className="min-w-0 flex-1 leading-tight">
+                        <p className="truncate text-[13px] font-semibold text-emerald-800">
+                            Shift {activeShift.shift_no} aktif
+                        </p>
+                        <p className="text-[11px] text-emerald-600">
+                            Kas awal {k.fmt(activeShift.opening_cash)}
+                        </p>
+                    </div>
+                    {canViewShift && (
+                        <Tooltip label="Detail / Tutup Shift">
+                            <Link
+                                href={route(
+                                    "admin.cashier-shifts.show",
+                                    activeShift.id,
+                                )}
+                                className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-[11px] font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+                            >
+                                Detail
+                                <ChevronRight size={13} />
+                            </Link>
+                        </Tooltip>
+                    )}
+                </div>
+            );
+        }
+        if (canOpenShift) {
+            return (
+                <div className="flex items-center gap-2.5 border-b border-amber-100 bg-amber-50/70 px-4 py-2.5">
+                    <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-500" />
+                    <p className="flex-1 text-[13px] font-medium text-amber-800">
+                        Belum ada shift aktif
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => setShowShiftModal(true)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm transition hover:bg-amber-600"
+                    >
+                        <Clock size={13} />
+                        Buka Shift
+                    </button>
+                </div>
+            );
+        }
+        return null;
+    })();
+
+    /* ── search bar (default) ── */
+    const defaultSearchBar = (
+        <div className="flex items-center gap-2.5 border-b border-slate-100 px-3.5 py-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                <Search size={18} />
+            </div>
+            <input
+                ref={k.barcodeRef}
+                type="text"
+                value={k.search}
+                onChange={(e) => k.setSearch(e.target.value)}
+                placeholder="Cari produk atau ketik barcode... ( / )"
+                className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[15px] font-medium text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-0"
+            />
+            <TipButton
+                label="Scan Barcode (Kamera)"
+                icon={ScanLine}
+                variant="solid"
+                size="lg"
                 onClick={() => k.setShowScanner(true)}
-                className="shrink-0 flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-[12.5px] font-medium text-white shadow-sm shadow-indigo-500/20 transition hover:from-indigo-600 hover:to-violet-700"
-                title="Scan Barcode"
-            >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                <span className="hidden sm:inline">Add to cart</span>
-            </button>
+            />
+        </div>
+    );
+
+    /* ── info strip: customer + table + transaction info ── */
+    const infoStrip = (
+        <div className="shrink-0 space-y-2 border-b border-slate-200 bg-white px-3 py-2.5">
+            <div className="flex items-stretch gap-2">
+                {/* Table / room selector (fnb & hospitality) */}
+                {showTableSelector && (
+                    <div className="relative w-[46%] shrink-0">
+                        {k.selectedTable ? (
+                            <div className="flex h-full items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2">
+                                <LayoutGrid
+                                    size={15}
+                                    className="shrink-0 text-slate-500"
+                                />
+                                <span className="truncate text-xs font-semibold text-slate-700">
+                                    {k.tableLabel}{" "}
+                                    {
+                                        tables.find(
+                                            (t) =>
+                                                String(t.id) ===
+                                                String(k.selectedTable),
+                                        )?.table_number
+                                    }
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        k.setSelectedTable("");
+                                        k.setTableSearch("");
+                                    }}
+                                    aria-label="Hapus pilihan meja"
+                                    className="ml-auto shrink-0 rounded-full p-0.5 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                                >
+                                    <X size={13} strokeWidth={2.5} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="relative">
+                                <Search
+                                    size={14}
+                                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                />
+                                <input
+                                    ref={k.tableInputRef}
+                                    type="text"
+                                    placeholder={`Pilih ${k.tableLabel.toLowerCase()}...`}
+                                    value={k.tableSearch}
+                                    onFocus={(e) => {
+                                        const r =
+                                            e.target.getBoundingClientRect();
+                                        k.setTableDropdownPos({
+                                            top: r.bottom + 4,
+                                            left: r.left,
+                                            width: r.width,
+                                        });
+                                        k.setShowTableDropdown(true);
+                                    }}
+                                    onChange={(e) => {
+                                        k.setTableSearch(e.target.value);
+                                        const r =
+                                            e.target.getBoundingClientRect();
+                                        k.setTableDropdownPos({
+                                            top: r.bottom + 4,
+                                            left: r.left,
+                                            width: r.width,
+                                        });
+                                        k.setShowTableDropdown(true);
+                                    }}
+                                    className={`w-full rounded-xl border py-2 pl-8 pr-2 text-xs outline-none focus:ring-2 focus:ring-slate-200 ${tableGate ? "border-amber-300 bg-amber-50" : "border-slate-200"}`}
+                                />
+                            </div>
+                        )}
+                        {k.showTableDropdown &&
+                            !k.selectedTable &&
+                            ReactDOM.createPortal(
+                                <div
+                                    ref={k.tableDropdownRef}
+                                    className="z-[9999] max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-2xl"
+                                    style={{
+                                        position: "fixed",
+                                        top: k.tableDropdownPos.top,
+                                        left: k.tableDropdownPos.left,
+                                        width: k.tableDropdownPos.width,
+                                    }}
+                                >
+                                    {(() => {
+                                        const q = k.tableSearch
+                                            .toLowerCase()
+                                            .trim();
+                                        const filtered = tables.filter(
+                                            (t) =>
+                                                !q ||
+                                                String(t.table_number).includes(
+                                                    q,
+                                                ) ||
+                                                String(t.capacity).includes(q),
+                                        );
+                                        if (filtered.length === 0)
+                                            return (
+                                                <p className="px-3 py-3 text-center text-xs text-slate-400">
+                                                    Tidak ada{" "}
+                                                    {k.tableLabel.toLowerCase()}
+                                                </p>
+                                            );
+                                        return filtered.map((t) => (
+                                            <button
+                                                key={t.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    k.setSelectedTable(t.id);
+                                                    k.setShowTableDropdown(
+                                                        false,
+                                                    );
+                                                    k.setTableSearch("");
+                                                }}
+                                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-slate-50"
+                                            >
+                                                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">
+                                                    {t.table_number}
+                                                </span>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-medium text-slate-700">
+                                                        {k.tableLabel}{" "}
+                                                        {t.table_number}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-400">
+                                                        Kapasitas {t.capacity}
+                                                    </p>
+                                                </div>
+                                            </button>
+                                        ));
+                                    })()}
+                                </div>,
+                                document.body,
+                            )}
+                    </div>
+                )}
+
+                {/* Customer selector */}
+                {selectedCustomerObj ? (
+                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5">
+                        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-800 text-[11px] font-bold uppercase text-white">
+                            {selectedCustomerObj.name?.charAt(0) ?? "?"}
+                        </span>
+                        <div className="min-w-0 flex-1 leading-tight">
+                            <p className="truncate text-[13px] font-semibold text-slate-800">
+                                {selectedCustomerObj.name}
+                            </p>
+                            {selectedCustomerObj.tier && (
+                                <p className="truncate text-[10px] text-slate-400">
+                                    {selectedCustomerObj.tier} ·{" "}
+                                    {k.fmtShort(selectedCustomerObj.points)} pts
+                                </p>
+                            )}
+                        </div>
+                        <TipButton
+                            label="Ganti Pelanggan"
+                            icon={Pencil}
+                            size="sm"
+                            onClick={() => setShowCustomerModal(true)}
+                        />
+                        <TipButton
+                            label="Hapus Pelanggan"
+                            icon={X}
+                            size="sm"
+                            variant="danger"
+                            onClick={() => {
+                                k.setSelectedCustomer("");
+                                k.setCustomerSearch("");
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={() => setShowCustomerModal(true)}
+                        className={`flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-dashed px-3 py-2.5 text-[13px] font-semibold transition ${isWholesale ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-50"}`}
+                    >
+                        <UserRound size={16} className="shrink-0" />
+                        <span className="truncate">
+                            Pilih Pelanggan
+                            {isWholesale && (
+                                <span className="text-rose-500"> *</span>
+                            )}
+                        </span>
+                    </button>
+                )}
+            </div>
+
+            {/* Transaction-info chip: delivery / pickup */}
+            {isDelivery && (
+                <button
+                    type="button"
+                    onClick={() => setShowInfoModal(true)}
+                    className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition ${hasDeliveryInfo ? "border-slate-200 bg-white hover:bg-slate-50" : "border-amber-300 bg-amber-50 hover:bg-amber-100"}`}
+                >
+                    <Truck
+                        size={16}
+                        className={`shrink-0 ${hasDeliveryInfo ? "text-slate-500" : "text-amber-600"}`}
+                    />
+                    <div className="min-w-0 flex-1 leading-tight">
+                        {hasDeliveryInfo ? (
+                            <>
+                                <p className="truncate text-[13px] font-semibold text-slate-800">
+                                    {k.deliveryCustomerName ||
+                                        selectedCustomerObj?.name}
+                                    {k.deliveryPhone
+                                        ? ` · ${k.deliveryPhone}`
+                                        : ""}
+                                </p>
+                                <p className="truncate text-[11px] text-slate-400">
+                                    {k.deliveryAddress}
+                                </p>
+                            </>
+                        ) : (
+                            <span className="text-[13px] font-semibold text-amber-700">
+                                Isi Info Pengiriman
+                                <span className="text-rose-500"> *</span>
+                            </span>
+                        )}
+                    </div>
+                    <Pencil size={14} className="shrink-0 text-slate-400" />
+                </button>
+            )}
+            {isTakeaway && (
+                <button
+                    type="button"
+                    onClick={() => setShowInfoModal(true)}
+                    className="flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition hover:bg-slate-50"
+                >
+                    <PackageCheck size={16} className="shrink-0 text-slate-500" />
+                    <div className="min-w-0 flex-1 leading-tight">
+                        {k.takeawayCustomerName ? (
+                            <>
+                                <p className="truncate text-[13px] font-semibold text-slate-800">
+                                    {k.takeawayCustomerName}
+                                    {k.takeawayPhone
+                                        ? ` · ${k.takeawayPhone}`
+                                        : ""}
+                                </p>
+                                {k.pickupTime && (
+                                    <p className="truncate text-[11px] text-slate-400">
+                                        Ambil {k.pickupTime}
+                                    </p>
+                                )}
+                            </>
+                        ) : (
+                            <span className="text-[13px] font-medium text-slate-500">
+                                Info Pengambilan{" "}
+                                <span className="text-slate-400">(opsional)</span>
+                            </span>
+                        )}
+                    </div>
+                    <Pencil size={14} className="shrink-0 text-slate-400" />
+                </button>
+            )}
         </div>
     );
 
     const posContent = (topPadding) => (
         <>
             <Head title="Kasir" />
-            <div className={`flex gap-3 ${topPadding}`}>
-                {/* LEFT: Main content panel */}
+            <style>{`
+                @media (min-width: 768px) {
+                    .kasir-main-content { margin-right: ${k.sidebarWidth}px !important; }
+                }
+            `}</style>
+            <div
+                className={`kasir-main-content flex ${topPadding} transition-all duration-300`}
+            >
+                {/* LEFT: product panel */}
                 <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
-                    {/* Shift Status Banner */}
-                    {!activeShift ? (
-                        <div className="flex items-center gap-2 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3">
-                            <span className="inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-500" />
-                            <span className="flex-1 text-sm font-medium text-amber-800">Buka shift dulu untuk mulai transaksi</span>
-                            {mobileQuickActions}
-                            <Link href={route("admin.cashier-shifts.create")} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-amber-600">
-                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Buka Shift
-                            </Link>
-                        </div>
-                    ) : (
-                        <div className="flex items-center justify-between border-b border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50/50 px-4 py-3">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 shadow-sm">
-                                    <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-emerald-800">Shift: {activeShift.shift_no}</p>
-                                    <p className="text-xs text-emerald-600">Kas awal: {k.fmt(activeShift.opening_cash)}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                {mobileQuickActions}
-                                <Link href={route("admin.cashier-shifts.show", activeShift.id)} className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100" title="Detail Shift">
-                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                                    </svg>
-                                    <span className="hidden sm:inline">Detail</span>
-                                </Link>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Search bar — customizable per mode */}
+                    {shiftBanner}
                     {showSearch && (searchBar || defaultSearchBar)}
-
-                    {/* Category chips — customizable per mode */}
                     {categoryChips}
-
-                    {/* Main content — mode-specific */}
                     {mainContent}
                 </div>
+            </div>
 
-                {/* RIGHT: Cart sidebar — full height, sticky. Tinggi mengikuti parent
-                    (h-screen saat fullscreen, h-[calc(100vh-73px)] saat normal) lewat md:h-full,
-                    supaya keranjang selalu penuh di kedua mode. */}
-                <aside className={`flex w-[380px] shrink-0 flex-col border-l border-slate-200 bg-white md:sticky md:top-0 md:h-full max-md:fixed max-md:inset-y-0 max-md:right-0 max-md:z-50 max-md:w-full max-md:shadow-2xl max-md:transition-transform max-md:duration-300 ${k.cartPanelOpen ? "max-md:translate-x-0" : "max-md:translate-x-full max-md:hidden"}`}>
-                    {/* Mobile header */}
-                    <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 shadow-sm md:hidden">
-                        <h3 className="text-sm font-bold text-slate-800">Keranjang</h3>
-                        <button type="button" onClick={() => k.setCartPanelOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition" title="Tutup Keranjang">
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+            {/* RIGHT: cart sidebar — fixed full-height, resizable */}
+            <aside
+                className="fixed right-0 z-30 flex flex-col border-l border-slate-200 bg-white shadow-xl max-md:hidden"
+                style={{
+                    top: isFullscreen ? "0" : "65px",
+                    height: isFullscreen ? "100vh" : "calc(100vh - 65px)",
+                    width: `${k.sidebarWidth}px`,
+                }}
+            >
+                {/* Resize handle — sisi kiri sidebar, dengan grip icon supaya jelas bisa digeser */}
+                <div
+                    onMouseDown={k.startSidebarResize}
+                    className="group absolute inset-y-0 -left-2 z-50 flex w-4 cursor-col-resize items-center justify-center"
+                    title="Geser untuk mengubah lebar keranjang"
+                >
+                    <div className="h-full w-1 bg-transparent transition group-hover:bg-indigo-400/50 group-active:bg-indigo-500/60" />
+                    <div className="absolute flex h-14 w-4 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm transition group-hover:border-indigo-300 group-hover:text-indigo-500 group-hover:shadow-md">
+                        <GripVertical size={12} strokeWidth={2.5} />
+                    </div>
+                </div>
+
+                {/* Fullscreen quick actions */}
+                {isFullscreen && (
+                    <div className="flex items-stretch gap-2 border-b border-slate-100 bg-slate-50/80 px-3 py-2">
+                        {heldCount > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowHeldModal(true)}
+                                className="relative flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                            >
+                                <Layers size={16} />
+                                <span className="hidden sm:inline">Ditahan</span>
+                                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">
+                                    {heldCount}
+                                </span>
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => k.setShowHistory(true)}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                        >
+                            <History size={16} />
+                            <span className="hidden sm:inline">Riwayat</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setIsFullscreen(false)}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+                        >
+                            <Minimize2 size={16} />
+                            <span className="hidden sm:inline">Keluar</span>
+                        </button>
+                    </div>
+                )}
+
+                {/* Order type tabs */}
+                <div className="grid shrink-0 grid-cols-3 border-b border-slate-200 bg-white">
+                    {k.orderOpts.map((o) => (
+                        <button
+                            key={o.v}
+                            onClick={() => k.handleOrderTypeChange(o.v)}
+                            className={`py-2.5 text-[13px] font-semibold transition ${k.orderType === o.v ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
+                        >
+                            {o.l}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Info strip */}
+                {infoStrip}
+
+                {/* Mode-specific fields (non-retail) */}
+                <div className="shrink-0 empty:hidden [&>*]:m-3 [&>*]:mb-0">
+                    <ModeSpecificPanel k={k} />
+                </div>
+
+                {/* Cart header */}
+                <div className="flex shrink-0 items-center justify-between border-b border-t border-slate-100 bg-white px-4 py-2.5">
+                    <h3 className="text-sm font-bold text-slate-800">
+                        Keranjang{" "}
+                        <span className="font-normal text-slate-400">
+                            ({k.cart.length})
+                        </span>
+                    </h3>
+                    {k.cart.length > 0 && (
+                        <TipButton
+                            label="Kosongkan Keranjang"
+                            icon={Trash2}
+                            size="sm"
+                            variant="danger"
+                            onClick={k.clearCart}
+                        />
+                    )}
+                </div>
+
+                {/* Cart items — satu-satunya area yang scroll */}
+                <div className="flex-1 space-y-1.5 overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {k.cart.length === 0 ? (
+                        <div className="flex h-full flex-col items-center justify-center py-16 text-center">
+                            <div className="mb-3 rounded-2xl bg-slate-100 p-4">
+                                <ShoppingCart
+                                    size={34}
+                                    className="text-slate-300"
+                                />
+                            </div>
+                            <p className="text-sm font-semibold text-slate-500">
+                                Keranjang kosong
+                            </p>
+                            <p className="mt-0.5 text-xs text-slate-400">
+                                Pilih produk atau scan barcode
+                            </p>
+                        </div>
+                    ) : (
+                        k.cart.map((item) => (
+                            <CartRow
+                                key={item.cartId}
+                                item={item}
+                                onQty={k.changeQty}
+                                onRemove={k.removeItem}
+                                productImage={
+                                    props.products.find(
+                                        (p) => p.id === item.productId,
+                                    )?.image || null
+                                }
+                            />
+                        ))
+                    )}
+                </div>
+
+                {/* Bottom: aksi cepat + totals + pay (pinned) */}
+                <div className="shrink-0 space-y-3 border-t border-slate-200 bg-white px-4 py-3">
+                    {/* Aksi cepat: Catatan + Diskon */}
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowNoteModal(true)}
+                            className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[13px] font-semibold transition ${noteActive ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+                        >
+                            <MessageSquare size={15} />
+                            Catatan
+                            {noteActive && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            )}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setShowAdjustModal(true)}
+                            className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[13px] font-semibold transition ${adjustActive ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+                        >
+                            <Tag size={15} />
+                            Diskon
+                            {adjustActive && (
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            )}
                         </button>
                     </div>
 
-                    {/* Order type tabs */}
-                    <div className="border-b border-slate-200 bg-white">
-                        {isFullscreen && (
-                            <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/80 px-3 py-2">
-                                <button onClick={() => k.setShowHistory(true)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-all hover:shadow-md" title="Riwayat Transaksi">
-                                    <svg className={`h-4 w-4 ${k.historyPrintLoading ? "animate-spin text-indigo-600" : "text-slate-500"}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        {k.historyPrintLoading ? (
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        ) : (
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        )}
-                                    </svg>
-                                    <span>Riwayat</span>
-                                </button>
-                                <button onClick={() => setIsFullscreen(false)} className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-all hover:shadow-md" title="Keluar Fullscreen (Esc)">
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
-                                    </svg>
-                                    <span>Keluar</span>
-                                </button>
-                            </div>
-                        )}
-                        <div className="grid grid-cols-3">
-                            {k.orderOpts.map((o) => (
-                                <button key={o.v} onClick={() => k.handleOrderTypeChange(o.v)} className={`py-3 text-[13px] font-semibold transition-all ${k.orderType === o.v ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}>
-                                    {o.l}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Customer / Table selector — compact */}
-                    <div className="border-b border-slate-200 bg-white px-4 py-3 space-y-2">
-                        {/* Table/Room selector */}
-                        {(k.isCafe || k.isBooth || k.isHospitality) && k.orderType === k.tableTriggerOrderType && tables.length > 0 && (
-                            <div className="relative">
-                                {k.selectedTable ? (
-                                    <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
-                                        <svg className="h-3.5 w-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6z" />
-                                        </svg>
-                                        <span className="text-xs font-medium text-slate-700">{k.tableLabel} {tables.find((t) => String(t.id) === String(k.selectedTable))?.table_number}</span>
-                                        <button onClick={() => { k.setSelectedTable(""); k.setTableSearch(""); }} className="ml-auto shrink-0 rounded-full p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition">
-                                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="relative">
-                                        <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                                        <input ref={k.tableInputRef} type="text" placeholder={`Cari ${k.tableLabel.toLowerCase()}...`} value={k.tableSearch} onFocus={(e) => { const r = e.target.getBoundingClientRect(); k.setTableDropdownPos({ top: r.bottom + 4, left: r.left, width: r.width }); k.setShowTableDropdown(true); }} onChange={(e) => { k.setTableSearch(e.target.value); if (!k.showTableDropdown) { const r = e.target.getBoundingClientRect(); k.setTableDropdownPos({ top: r.bottom + 4, left: r.left, width: r.width }); } k.setShowTableDropdown(true); }} className="w-full rounded-lg border border-slate-300 py-1.5 pl-8 pr-2 text-xs focus:border-slate-500 focus:ring-2 focus:ring-slate-200 outline-none" />
-                                    </div>
-                                )}
-                                {k.orderType === k.tableTriggerOrderType && !k.selectedTable && (
-                                    <p className="mt-1 text-[10px] text-slate-400">Pilih {k.tableLabel.toLowerCase()} untuk melanjutkan</p>
-                                )}
-                                {k.showTableDropdown && !k.selectedTable && ReactDOM.createPortal(
-                                    <div ref={k.tableDropdownRef} className="z-[9999] max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-2xl" style={{ position: "fixed", top: k.tableDropdownPos.top, left: k.tableDropdownPos.left, width: k.tableDropdownPos.width }}>
-                                        {(() => { const q = k.tableSearch.toLowerCase().trim(); const filtered = tables.filter((t) => !q || String(t.table_number).includes(q) || String(t.capacity).includes(q)); if (filtered.length === 0) return <p className="px-3 py-3 text-center text-xs text-slate-400">Tidak ada {k.tableLabel.toLowerCase()}</p>; return filtered.map((t) => (<button key={t.id} onClick={() => { k.setSelectedTable(t.id); k.setShowTableDropdown(false); k.setTableSearch(""); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-slate-50"><span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">{t.table_number}</span><div className="min-w-0 flex-1"><p className="font-medium text-slate-700">{k.tableLabel} {t.table_number}</p><p className="text-[10px] text-slate-400">Kapasitas {t.capacity}</p></div></button>)); })()}
-                                    </div>, document.body
-                                )}
-                            </div>
-                        )}
-
-                        {/* Customer selector */}
-                        <div className="relative">
-                            {k.selectedCustomer ? (
-                                <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
-                                    <svg className="h-3.5 w-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-                                    <span className="text-xs font-medium text-slate-700 truncate">{k.customers.find((c) => String(c.id) === String(k.selectedCustomer))?.name}</span>
-                                    <button onClick={() => { k.setSelectedCustomer(""); k.setCustomerSearch(""); }} className="ml-auto shrink-0 rounded-full p-0.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"><svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-                                </div>
-                            ) : (
-                                <div className="relative">
-                                    <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                                    <input ref={k.customerInputRef} type="text" placeholder="Cari pelanggan..." value={k.customerSearch} onFocus={(e) => { const r = e.target.getBoundingClientRect(); k.setCustomerDropdownPos({ top: r.bottom + 4, left: r.left, width: r.width }); k.setShowCustomerDropdown(true); }} onChange={(e) => { k.setCustomerSearch(e.target.value); if (!k.showCustomerDropdown) { const r = e.target.getBoundingClientRect(); k.setCustomerDropdownPos({ top: r.bottom + 4, left: r.left, width: r.width }); } k.setShowCustomerDropdown(true); }} className="w-full rounded-lg border border-slate-300 py-1.5 pl-8 pr-2 text-xs focus:border-slate-500 focus:ring-2 focus:ring-slate-200 outline-none" />
-                                </div>
-                            )}
-                            {k.selectedCustomer && (() => { const cust = k.customers.find((c) => String(c.id) === String(k.selectedCustomer)); return cust ? (<span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-medium ${k.TIER_COLORS[cust.tier] ?? k.TIER_COLORS.bronze}`}>{cust.tier} · {k.fmtShort(cust.points)} pts</span>) : null; })()}
-                            {k.showCustomerDropdown && !k.selectedCustomer && ReactDOM.createPortal(
-                                <div ref={k.customerDropdownRef} className="z-[9999] max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-2xl" style={{ position: "fixed", top: k.customerDropdownPos.top, left: k.customerDropdownPos.left, width: k.customerDropdownPos.width }}>
-                                    <button onClick={() => { k.setSelectedCustomer(""); k.setShowCustomerDropdown(false); k.setCustomerSearch(""); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-slate-50 transition border-b border-slate-100"><span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">U</span><div><p className="font-medium text-slate-700">Umum</p><p className="text-[10px] text-slate-400">Tanpa pelanggan</p></div></button>
-                                    <div className="border-b border-slate-100 py-1">
-                                        {!k.quickAddOpen ? (<button type="button" onClick={() => k.setQuickAddOpen(true)} className="flex w-full items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 transition font-medium"><svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>Pelanggan Baru</button>) : (
-                                            <div className="px-3 py-2 space-y-2">
-                                                <input type="text" placeholder="Nama pelanggan..." value={k.quickAddName} onChange={(e) => k.setQuickAddName(e.target.value)} className="block w-full rounded-lg border-slate-300 py-1.5 px-2 text-xs shadow-sm focus:border-slate-500 focus:ring-2 focus:ring-slate-200" />
-                                                <input type="text" placeholder="Telepon (opsional)" value={k.quickAddPhone} onChange={(e) => k.setQuickAddPhone(e.target.value)} className="block w-full rounded-lg border-slate-300 py-1.5 px-2 text-xs shadow-sm focus:border-slate-500 focus:ring-2 focus:ring-slate-200" />
-                                                <div className="flex gap-2">
-                                                    <button type="button" disabled={!k.quickAddName.trim() || k.quickAdding} onClick={async () => { k.setQuickAdding(true); try { const { data } = await axios.post(route("admin.customers.store"), { name: k.quickAddName.trim(), phone: k.quickAddPhone.trim() || null, email: null, address: null }, { headers: { "X-Inertia": "false", Accept: "application/json" } }); if (data.customer) { k.setCustomers((prev) => [data.customer, ...prev]); k.setSelectedCustomer(data.customer.id); if (k.orderType === "delivery") k.setDeliveryCustomerName(data.customer.name); if (k.orderType === "takeaway") k.setTakeawayCustomerName(data.customer.name); k.setShowCustomerDropdown(false); } k.setQuickAddOpen(false); k.setQuickAddName(""); k.setQuickAddPhone(""); } catch (err) { alert("Gagal: " + (err.response?.data?.message || err.message)); } finally { k.setQuickAdding(false); } }} className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-600 py-1.5 text-xs font-semibold text-white hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50">{k.quickAdding ? "Menyimpan..." : "Simpan"}</button>
-                                                    <button type="button" onClick={() => { k.setQuickAddOpen(false); k.setQuickAddName(""); k.setQuickAddPhone(""); }} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50">Batal</button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {(() => { const q = k.customerSearch.toLowerCase().trim(); const filtered = k.customers.filter((c) => !q || c.name?.toLowerCase().includes(q) || c.phone?.includes(q) || c.code?.toLowerCase().includes(q)); if (filtered.length === 0) return <p className="px-3 py-3 text-center text-xs text-slate-400">Tidak ditemukan</p>; return filtered.map((c) => (<button key={c.id} onClick={() => { k.setSelectedCustomer(c.id); k.setShowCustomerDropdown(false); k.setCustomerSearch(""); if (k.orderType === "delivery") k.setDeliveryCustomerName(c.name); if (k.orderType === "takeaway") k.setTakeawayCustomerName(c.name); }} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-slate-50 transition"><span className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${k.TIER_COLORS[c.tier] ? "bg-slate-700" : "bg-slate-300"}`}>{c.name?.charAt(0)?.toUpperCase()}</span><div className="min-w-0 flex-1"><p className="font-medium text-slate-700 truncate">{c.name}</p><p className="text-[10px] text-slate-400 truncate">{c.phone ? c.phone : ""}{c.code ? ` · ${c.code}` : ""}</p></div><span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium ${k.TIER_COLORS[c.tier] ?? k.TIER_COLORS.bronze}`}>{c.tier}</span></button>)); })()}
-                                </div>, document.body
-                            )}
+                    {/* Ringkasan total */}
+                    <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[13px] text-slate-500">
+                            <span>Subtotal</span>
+                            <span className="font-medium tabular-nums text-slate-700">
+                                {k.fmt(k.subtotal)}
+                            </span>
                         </div>
 
-                        {/* Takeaway name */}
-                        {k.orderType === "takeaway" && (
-                            <div className="flex items-center gap-2">
-                                <span className="shrink-0 text-xs font-medium text-slate-600">Nama</span>
-                                <input type="text" value={k.takeawayCustomerName} onChange={(e) => k.setTakeawayCustomerName(e.target.value)} placeholder="Nama pemesan..." className="flex-1 rounded-lg border-slate-200 py-1.5 text-xs focus:border-slate-500 focus:ring-2 focus:ring-slate-200" />
+                        {k.totalPromoDisc > 0 && (
+                            <div className="flex items-center justify-between text-[13px] text-emerald-600">
+                                <span>Diskon Promo</span>
+                                <span className="font-semibold tabular-nums">
+                                    −{k.fmt(k.totalPromoDisc)}
+                                </span>
+                            </div>
+                        )}
+                        {k.cartPromoDiscount > 0 && (
+                            <div className="flex items-center justify-between text-[13px] text-emerald-600">
+                                <span>
+                                    {k.cartPromoName || "Diskon Keranjang"}
+                                </span>
+                                <span className="font-semibold tabular-nums">
+                                    −{k.fmt(k.cartPromoDiscount)}
+                                </span>
                             </div>
                         )}
 
-                        {/* Delivery fields */}
-                        {k.orderType === "delivery" && (
-                            <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-2.5">
-                                <div>
-                                    <label className="mb-0.5 block text-[10px] font-medium text-slate-500">Nama Penerima *</label>
-                                    <input type="text" value={k.deliveryCustomerName} onChange={(e) => k.setDeliveryCustomerName(e.target.value)} placeholder="Nama penerima..." className="block w-full rounded-md border-slate-300 py-1 text-xs shadow-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-200" />
-                                </div>
-                                <div>
-                                    <label className="mb-0.5 block text-[10px] font-medium text-slate-500">Alamat *</label>
-                                    <textarea rows={2} value={k.deliveryAddress} onChange={(e) => k.setDeliveryAddress(e.target.value)} placeholder="Alamat lengkap..." className="block w-full rounded-md border-slate-300 text-xs shadow-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-200" />
-                                </div>
-                                <div>
-                                    <label className="mb-0.5 block text-[10px] font-medium text-slate-500">Ongkir</label>
-                                    <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-[10px] text-slate-400">Rp</span>
-                                        <input type="number" min="0" value={k.deliveryFee} onChange={(e) => k.setDeliveryFee(e.target.value)} placeholder="0" className="block w-full rounded-md border-slate-300 py-1 pl-7 text-xs shadow-sm focus:border-slate-500 focus:ring-1 focus:ring-slate-200" />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <ModeSpecificPanel k={k} />
-
-                    {/* Cart items — scrollable middle section */}
-                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                        <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-2.5">
-                            <h3 className="text-sm font-bold text-slate-800">Keranjang <span className="text-slate-400 font-normal">({k.cart.length})</span></h3>
-                            {k.cart.length > 0 && (
-                                <button onClick={k.clearCart} className="text-xs font-medium text-red-500 hover:text-red-700 transition">Kosongkan</button>
-                            )}
-                        </div>
-                        <div className="flex-1 overflow-y-auto space-y-1.5 p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                            {k.cart.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-16 text-center">
-                                    <div className="mb-3 rounded-full bg-slate-100 p-4">
-                                        <svg className="h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-                                        </svg>
-                                    </div>
-                                    <p className="text-sm font-medium text-slate-500">Keranjang kosong</p>
-                                    <p className="mt-0.5 text-xs text-slate-400">Pilih produk untuk memulai</p>
-                                </div>
-                            ) : (
-                                k.cart.map((item) => (
-                                    <CartRow key={item.cartId} item={item} onQty={k.changeQty} onRemove={k.removeItem} productImage={props.products.find((p) => p.id === item.productId)?.image || null} />
-                                ))
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Bottom: Note + Totals + Pay — sticky */}
-                    <div className="shrink-0 border-t border-slate-200 bg-white">
-                        {k.cart.length > 0 && (
-                            <div className="border-b border-slate-100 px-4 py-2">
-                                <input type="text" value={k.note} onChange={(e) => k.setNote(e.target.value)} placeholder="📝 Catatan transaksi..." className="block w-full rounded-lg border-slate-200 bg-slate-50 text-sm shadow-sm focus:border-slate-500 focus:ring-2 focus:ring-slate-200" />
-                            </div>
-                        )}
-
-                        <div className="p-4 space-y-2">
-                            <div className="flex items-center justify-between text-xs text-slate-500">
-                                <span>Subtotal</span>
-                                <span className="font-medium text-slate-800 tabular-nums">{k.fmt(k.subtotal)}</span>
-                            </div>
-                            {k.totalPromoDisc > 0 && (
-                                <div className="flex items-center justify-between text-xs text-emerald-600">
-                                    <span className="inline-flex items-center gap-1">
-                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
-                                        Diskon Promo
-                                    </span>
-                                    <span className="font-semibold">-{k.fmt(k.totalPromoDisc)}</span>
-                                </div>
-                            )}
-                            {k.cartPromoDiscount > 0 && (
-                                <div className="flex items-center justify-between text-xs text-emerald-600">
-                                    <span className="inline-flex items-center gap-1">
-                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /></svg>
-                                        {k.cartPromoName || "Diskon Keranjang"}
-                                    </span>
-                                    <span className="font-semibold">-{k.fmt(k.cartPromoDiscount)}</span>
-                                </div>
-                            )}
-                            {k.orderType === "delivery" && Number(k.deliveryFee) > 0 && (
-                                <div className="flex items-center justify-between text-xs text-slate-500">
-                                    <span>Ongkir</span>
-                                    <span className="font-medium text-slate-700 tabular-nums">{k.fmt(Number(k.deliveryFee))}</span>
-                                </div>
-                            )}
-
-                            {/* Discount & Tax — collapsible */}
-                            <div>
-                                <button type="button" onClick={() => setShowExtraFees(!showExtraFees)} className="flex w-full items-center justify-between rounded px-1 py-0.5 text-xs text-slate-400 transition hover:text-slate-600">
-                                    <span className="flex items-center gap-1">
-                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                                        Diskon &amp; Pajak
-                                        {(Number(k.discount) > 0 || Number(k.tax) > 0) && (
-                                            <span className="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-slate-600">aktif</span>
-                                        )}
-                                    </span>
-                                    <svg className={`h-3 w-3 transition-transform ${showExtraFees ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
-                                </button>
-                                {showExtraFees && (
-                                    <div className="mt-1 space-y-1.5 px-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-12 shrink-0 text-[11px] text-slate-500">Diskon</span>
-                                            <div className="relative flex-1">
-                                                <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-[10px] text-slate-400">Rp</span>
-                                                <input type="number" min="0" value={k.discount} onChange={(e) => k.setDiscount(e.target.value)} className="block w-full rounded-md border-slate-200 py-1 pl-6 text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-12 shrink-0 text-[11px] text-slate-500">Pajak</span>
-                                            <div className="relative flex-1">
-                                                <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-[10px] text-slate-400">Rp</span>
-                                                <input type="number" min="0" value={k.tax} onChange={(e) => k.setTax(e.target.value)} className="block w-full rounded-md border-slate-200 py-1 pl-6 text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Grand Total */}
-                            <div className="flex items-baseline justify-between border-t border-dashed border-slate-200 pt-2.5">
-                                <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">Total</span>
-                                <span className="text-2xl font-semibold tracking-tight tabular-nums text-slate-900">{k.fmt(k.roundedGrandTotal ?? k.grandTotal)}</span>
-                            </div>
-
-                            {/* Pay button */}
+                        {/* Diskon manual — klik untuk ubah */}
+                        {k.discount > 0 && (
                             <button
                                 type="button"
-                                disabled={k.cart.length === 0 || k.submitting || !activeShift || !!k.missingRequiredField || (k.orderType === k.tableTriggerOrderType && (k.isCafe || k.isBooth || k.isHospitality) && !k.selectedTable)}
-                                onClick={() => k.setShowPayment(true)}
-                                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-3.5 text-[14px] font-semibold tracking-tight text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                                onClick={() => setShowAdjustModal(true)}
+                                className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between rounded-lg px-1 py-0.5 text-[13px] text-emerald-600 transition hover:bg-emerald-50"
                             >
-                                {k.submitting ? "Memproses..." : !activeShift ? "Buka Shift dulu" : k.orderType === k.tableTriggerOrderType && (k.isCafe || k.isBooth || k.isHospitality) && !k.selectedTable ? `Pilih ${k.tableLabel.toLowerCase()} dulu` : k.missingRequiredField ? k.missingRequiredField : `Charge ${k.cart.length > 0 ? k.fmt(k.roundedGrandTotal ?? k.grandTotal) : ""}`}
-                                {!k.submitting && activeShift && !k.missingRequiredField && k.cart.length > 0 && (
-                                    <span className="text-white/60 text-[12px] font-normal">⏎</span>
+                                <span>
+                                    Diskon
+                                    {discountBadge ? ` (${discountBadge})` : ""}
+                                </span>
+                                <span className="font-semibold tabular-nums">
+                                    −{k.fmt(k.discount)}
+                                </span>
+                            </button>
+                        )}
+
+                        {/* Pajak manual — klik untuk ubah */}
+                        {k.tax > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowAdjustModal(true)}
+                                className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between rounded-lg px-1 py-0.5 text-[13px] text-slate-500 transition hover:bg-slate-50"
+                            >
+                                <span>{taxBadge || "Pajak"}</span>
+                                <span className="font-medium tabular-nums text-slate-700">
+                                    {k.fmt(k.tax)}
+                                </span>
+                            </button>
+                        )}
+
+                        {/* Ongkir */}
+                        {isDelivery && Number(k.deliveryFee) > 0 && (
+                            <div className="flex items-center justify-between text-[13px] text-slate-500">
+                                <span>Ongkir</span>
+                                <span className="font-medium tabular-nums text-slate-700">
+                                    {k.fmt(Number(k.deliveryFee))}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* TOTAL */}
+                        <div className="mt-1 flex items-baseline justify-between border-t-2 border-slate-100 pt-2.5">
+                            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                                Total
+                            </span>
+                            <span className="text-[26px] font-bold leading-none tracking-tight tabular-nums text-slate-900">
+                                {k.fmt(k.roundedGrandTotal ?? k.grandTotal)}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Aksi bawah: Tahan + Bayar */}
+                    {blockedByShift ? (
+                        <button
+                            type="button"
+                            onClick={() => setShowShiftModal(true)}
+                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 text-[15px] font-bold text-white shadow-sm transition hover:bg-amber-600"
+                        >
+                            <Clock size={18} />
+                            Buka Shift Dulu
+                        </button>
+                    ) : (
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                disabled={k.cart.length === 0}
+                                onClick={() => k.holdTransaction()}
+                                className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-[14px] font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                                title="Tahan transaksi (simpan sementara)"
+                            >
+                                <Pause size={16} />
+                                Tahan
+                            </button>
+                            <button
+                                type="button"
+                                disabled={
+                                    k.cart.length === 0 ||
+                                    k.submitting ||
+                                    !!k.missingRequiredField ||
+                                    tableGate
+                                }
+                                onClick={() => k.setShowPayment(true)}
+                                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-[15px] font-bold tracking-tight text-white shadow-sm shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                {k.submitting ? (
+                                    "Memproses..."
+                                ) : tableGate ? (
+                                    `Pilih ${k.tableLabel} dulu`
+                                ) : k.missingRequiredField ? (
+                                    k.missingRequiredField
+                                ) : (
+                                    <>
+                                        <CreditCard size={18} />
+                                        <span>
+                                            Bayar
+                                            {k.cart.length > 0
+                                                ? ` • ${k.fmt(k.roundedGrandTotal ?? k.grandTotal)}`
+                                                : ""}
+                                        </span>
+                                    </>
                                 )}
                             </button>
                         </div>
-                    </div>
-                </aside>
-            </div>
+                    )}
+                </div>
+            </aside>
 
-            {/* Mobile Cart Backdrop */}
+            {/* Mobile cart sidebar — overlay */}
+            <aside
+                className={`fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-slate-200 bg-white shadow-2xl transition-transform duration-300 md:hidden ${k.cartPanelOpen ? "translate-x-0" : "translate-x-full"}`}
+            >
+                {/* Mobile header */}
+                <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
+                    <h3 className="text-sm font-bold text-slate-800">
+                        Keranjang
+                    </h3>
+                    <TipButton
+                        label="Tutup Keranjang"
+                        icon={X}
+                        onClick={() => k.setCartPanelOpen(false)}
+                    />
+                </div>
+
+                {/* Order type tabs */}
+                <div className="grid shrink-0 grid-cols-3 border-b border-slate-200 bg-white">
+                    {k.orderOpts.map((o) => (
+                        <button
+                            key={o.v}
+                            onClick={() => k.handleOrderTypeChange(o.v)}
+                            className={`py-2.5 text-[13px] font-semibold transition ${k.orderType === o.v ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
+                        >
+                            {o.l}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Info strip */}
+                {infoStrip}
+
+                {/* Mode-specific fields (non-retail) */}
+                <div className="shrink-0 empty:hidden [&>*]:m-3 [&>*]:mb-0">
+                    <ModeSpecificPanel k={k} />
+                </div>
+
+                {/* Cart header */}
+                <div className="flex shrink-0 items-center justify-between border-b border-t border-slate-100 bg-white px-4 py-2.5">
+                    <h3 className="text-sm font-bold text-slate-800">
+                        Keranjang{" "}
+                        <span className="font-normal text-slate-400">
+                            ({k.cart.length})
+                        </span>
+                    </h3>
+                    {k.cart.length > 0 && (
+                        <TipButton
+                            label="Kosongkan Keranjang"
+                            icon={Trash2}
+                            size="sm"
+                            variant="danger"
+                            onClick={k.clearCart}
+                        />
+                    )}
+                </div>
+
+                {/* Cart items */}
+                <div className="flex-1 space-y-1.5 overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {k.cart.length === 0 ? (
+                        <div className="flex h-full flex-col items-center justify-center py-16 text-center">
+                            <div className="mb-3 rounded-2xl bg-slate-100 p-4">
+                                <ShoppingCart size={34} className="text-slate-300" />
+                            </div>
+                            <p className="text-sm font-semibold text-slate-500">Keranjang kosong</p>
+                            <p className="mt-0.5 text-xs text-slate-400">Pilih produk atau scan barcode</p>
+                        </div>
+                    ) : (
+                        k.cart.map((item) => (
+                            <CartRow
+                                key={item.cartId}
+                                item={item}
+                                onQty={k.changeQty}
+                                onRemove={k.removeItem}
+                                productImage={props.products.find((p) => p.id === item.productId)?.image || null}
+                            />
+                        ))
+                    )}
+                </div>
+
+                {/* Bottom: totals + pay */}
+                <div className="shrink-0 space-y-3 border-t border-slate-200 bg-white px-4 py-3">
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowNoteModal(true)}
+                            className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[13px] font-semibold transition ${noteActive ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+                        >
+                            <MessageSquare size={15} />
+                            Catatan
+                            {noteActive && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setShowAdjustModal(true)}
+                            className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[13px] font-semibold transition ${adjustActive ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
+                        >
+                            <Tag size={15} />
+                            Diskon
+                            {adjustActive && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
+                        </button>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[13px] text-slate-500">
+                            <span>Subtotal</span>
+                            <span className="font-medium tabular-nums text-slate-700">{k.fmt(k.subtotal)}</span>
+                        </div>
+                        {k.totalPromoDisc > 0 && (
+                            <div className="flex items-center justify-between text-[13px] text-emerald-600">
+                                <span>Diskon Promo</span>
+                                <span className="font-semibold tabular-nums">−{k.fmt(k.totalPromoDisc)}</span>
+                            </div>
+                        )}
+                        {k.cartPromoDiscount > 0 && (
+                            <div className="flex items-center justify-between text-[13px] text-emerald-600">
+                                <span>{k.cartPromoName || "Diskon Keranjang"}</span>
+                                <span className="font-semibold tabular-nums">−{k.fmt(k.cartPromoDiscount)}</span>
+                            </div>
+                        )}
+                        {k.discount > 0 && (
+                            <button type="button" onClick={() => setShowAdjustModal(true)} className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between rounded-lg px-1 py-0.5 text-[13px] text-emerald-600 transition hover:bg-emerald-50">
+                                <span>Diskon{discountBadge ? ` (${discountBadge})` : ""}</span>
+                                <span className="font-semibold tabular-nums">−{k.fmt(k.discount)}</span>
+                            </button>
+                        )}
+                        {k.tax > 0 && (
+                            <button type="button" onClick={() => setShowAdjustModal(true)} className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between rounded-lg px-1 py-0.5 text-[13px] text-slate-500 transition hover:bg-slate-50">
+                                <span>{taxBadge || "Pajak"}</span>
+                                <span className="font-medium tabular-nums text-slate-700">{k.fmt(k.tax)}</span>
+                            </button>
+                        )}
+                        {isDelivery && Number(k.deliveryFee) > 0 && (
+                            <div className="flex items-center justify-between text-[13px] text-slate-500">
+                                <span>Ongkir</span>
+                                <span className="font-medium tabular-nums text-slate-700">{k.fmt(Number(k.deliveryFee))}</span>
+                            </div>
+                        )}
+                        <div className="mt-1 flex items-baseline justify-between border-t-2 border-slate-100 pt-2.5">
+                            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Total</span>
+                            <span className="text-[26px] font-bold leading-none tracking-tight tabular-nums text-slate-900">
+                                {k.fmt(k.roundedGrandTotal ?? k.grandTotal)}
+                            </span>
+                        </div>
+                    </div>
+
+                    {blockedByShift ? (
+                        <button type="button" onClick={() => setShowShiftModal(true)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 text-[15px] font-bold text-white shadow-sm transition hover:bg-amber-600">
+                            <Clock size={18} />
+                            Buka Shift Dulu
+                        </button>
+                    ) : (
+                        <div className="flex gap-2">
+                            <button type="button" disabled={k.cart.length === 0} onClick={() => k.holdTransaction()} className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-[14px] font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40" title="Tahan transaksi (simpan sementara)">
+                                <Pause size={16} />
+                                Tahan
+                            </button>
+                            <button
+                                type="button"
+                                disabled={k.cart.length === 0 || k.submitting || !!k.missingRequiredField || tableGate}
+                                onClick={() => k.setShowPayment(true)}
+                                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-[15px] font-bold tracking-tight text-white shadow-sm shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                {k.submitting ? "Memproses..." : tableGate ? `Pilih ${k.tableLabel} dulu` : k.missingRequiredField ? k.missingRequiredField : (
+                                    <>
+                                        <CreditCard size={18} />
+                                        <span>Bayar{k.cart.length > 0 ? ` • ${k.fmt(k.roundedGrandTotal ?? k.grandTotal)}` : ""}</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </aside>
+
+            {/* Mobile cart backdrop */}
             {k.cartPanelOpen && (
-                <div className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm md:hidden" onClick={() => k.setCartPanelOpen(false)} />
+                <div
+                    className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm md:hidden"
+                    onClick={() => k.setCartPanelOpen(false)}
+                />
             )}
 
-            {/* Mobile Floating Cart Button */}
-            <button type="button" onClick={() => k.setCartPanelOpen(true)} className={`fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-4 text-sm font-semibold text-white shadow-xl shadow-indigo-500/30 transition-all hover:from-indigo-600 hover:to-violet-700 hover:scale-105 active:scale-95 md:hidden ${k.cartPanelOpen ? "hidden" : ""}`}>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
-                </svg>
+            {/* Mobile floating cart button */}
+            <button
+                type="button"
+                onClick={() => k.setCartPanelOpen(true)}
+                className={`fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-slate-900 px-5 py-4 text-sm font-semibold text-white shadow-xl transition-all hover:scale-105 hover:bg-slate-700 active:scale-95 md:hidden ${k.cartPanelOpen ? "hidden" : ""}`}
+            >
+                <ShoppingCart size={22} />
                 Keranjang
                 {k.cart.length > 0 && (
-                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-extrabold text-indigo-600 shadow-md">{k.cart.length}</span>
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-extrabold text-slate-900 shadow-md">
+                        {k.cart.length}
+                    </span>
                 )}
             </button>
 
-            {/* Modals */}
+            {/* ── POS modals (baru) ── */}
+            {showShiftUI && (
+                <ShiftModal
+                    show={showShiftModal}
+                    onClose={() => setShowShiftModal(false)}
+                />
+            )}
+            <CustomerModal
+                show={showCustomerModal}
+                onClose={() => setShowCustomerModal(false)}
+                k={k}
+            />
+            <TransactionInfoModal
+                show={showInfoModal}
+                onClose={() => setShowInfoModal(false)}
+                k={k}
+            />
+            <NoteModal
+                show={showNoteModal}
+                onClose={() => setShowNoteModal(false)}
+                k={k}
+            />
+            <AdjustmentModal
+                show={showAdjustModal}
+                onClose={() => setShowAdjustModal(false)}
+                k={k}
+            />
+            <HeldTransactionsModal
+                show={showHeldModal}
+                onClose={() => setShowHeldModal(false)}
+                k={k}
+            />
+
+            {/* ── Existing modals ── */}
             {k.modifierTarget && (
-                <ModifierModal product={k.modifierTarget} onConfirm={(mods, note) => { k.addToCart(k.modifierTarget, null, mods, note); k.setModifierTarget(null); }} onClose={() => k.setModifierTarget(null)} />
+                <ModifierModal
+                    product={k.modifierTarget}
+                    onConfirm={(mods, note) => {
+                        k.addToCart(k.modifierTarget, null, mods, note);
+                        k.setModifierTarget(null);
+                    }}
+                    onClose={() => k.setModifierTarget(null)}
+                />
             )}
             {k.variantTarget && (
-                <VariantModal product={k.variantTarget} onConfirm={(variant, qty, note) => { k.addToCart(k.variantTarget, variant, [], note, null, qty); k.setVariantTarget(null); }} onClose={() => k.setVariantTarget(null)} />
+                <VariantModal
+                    product={k.variantTarget}
+                    onConfirm={(variant, qty, note) => {
+                        k.addToCart(
+                            k.variantTarget,
+                            variant,
+                            [],
+                            note,
+                            null,
+                            qty,
+                        );
+                        k.setVariantTarget(null);
+                    }}
+                    onClose={() => k.setVariantTarget(null)}
+                />
             )}
             {k.unitTarget && (
-                <UnitModal product={k.unitTarget} onConfirm={(unit, qty) => { k.addToCart(k.unitTarget, null, [], "", unit, qty); k.setUnitTarget(null); }} onClose={() => k.setUnitTarget(null)} />
+                <UnitModal
+                    product={k.unitTarget}
+                    onConfirm={(unit, qty) => {
+                        k.addToCart(k.unitTarget, null, [], "", unit, qty);
+                        k.setUnitTarget(null);
+                    }}
+                    onClose={() => k.setUnitTarget(null)}
+                />
             )}
             {k.showPayment && (
-                <PaymentModal grandTotal={k.grandTotal} roundedGrandTotal={k.roundedGrandTotal} roundingAdjustment={k.roundingAdjustment} paymentMethods={paymentMethods} pgMethods={pgMethods} onConfirm={k.handleConfirmPayment} onClose={() => k.setShowPayment(false)} submitting={k.submitting} selectedCustomer={k.selectedCustomer} customers={k.customers} onSelectCustomer={k.setSelectedCustomer} />
+                <PaymentModal
+                    grandTotal={k.grandTotal}
+                    roundedGrandTotal={k.roundedGrandTotal}
+                    roundingAdjustment={k.roundingAdjustment}
+                    paymentMethods={paymentMethods}
+                    pgMethods={pgMethods}
+                    onConfirm={k.handleConfirmPayment}
+                    onClose={() => k.setShowPayment(false)}
+                    submitting={k.submitting}
+                    selectedCustomer={k.selectedCustomer}
+                    customers={k.customers}
+                    onSelectCustomer={k.setSelectedCustomer}
+                />
             )}
             {k.showReceipt && k.receiptData && (
-                <ReceiptModal receipt={k.receiptData} storeName={storeName} footer={receiptFooter} onClose={() => k.setShowReceipt(false)} onNewTransaction={() => k.setShowReceipt(false)} />
+                <ReceiptModal
+                    receipt={k.receiptData}
+                    storeName={storeName}
+                    footer={receiptFooter}
+                    onClose={() => k.setShowReceipt(false)}
+                    onNewTransaction={() => k.setShowReceipt(false)}
+                />
             )}
             {k.showHistory && (
-                <HistoryPanel sales={k.historyList} onClose={() => k.setShowHistory(false)} onPrint={k.handlePrintHistory} />
+                <HistoryPanel
+                    sales={k.historyList}
+                    onClose={() => k.setShowHistory(false)}
+                    onPrint={k.handlePrintHistory}
+                />
             )}
             {k.pgModalData && (
-                <PGPaymentModal pgData={{ pg_trx_id: k.pgModalData.pgTrxId, payment_type: k.pgModalData.paymentType, qr_code: k.pgModalData.qrCode, qr_image_url: k.pgModalData.qrImageUrl, va_number: k.pgModalData.vaNumber, va_bank: k.pgModalData.vaBank, payment_url: k.pgModalData.paymentUrl }} amount={k.pgModalData.amount} onSuccess={k.handlePgSuccess} onClose={() => k.setPgModalData(null)} />
+                <PGPaymentModal
+                    pgData={{
+                        pg_trx_id: k.pgModalData.pgTrxId,
+                        payment_type: k.pgModalData.paymentType,
+                        qr_code: k.pgModalData.qrCode,
+                        qr_image_url: k.pgModalData.qrImageUrl,
+                        va_number: k.pgModalData.vaNumber,
+                        va_bank: k.pgModalData.vaBank,
+                        payment_url: k.pgModalData.paymentUrl,
+                    }}
+                    amount={k.pgModalData.amount}
+                    onSuccess={k.handlePgSuccess}
+                    onClose={() => k.setPgModalData(null)}
+                />
             )}
-            <BarcodeScanner isOpen={k.showScanner} onClose={() => k.setShowScanner(false)} onScan={k.handleBarcodeScan} />
-
-            {/* Stok tidak cukup / habis */}
+            <BarcodeScanner
+                isOpen={k.showScanner}
+                onClose={() => k.setShowScanner(false)}
+                onScan={k.handleBarcodeScan}
+            />
             {k.stockAlert && (
                 <StockAlertModal
                     productName={k.stockAlert.productName}
@@ -522,7 +1178,17 @@ export default function KasirLayout({ k, props, mainContent, searchBar, category
     );
 
     if (isFullscreen) {
-        return <div className="fixed inset-0 z-[100] flex flex-col bg-[#f1f3f6]">{posContent("h-screen")}</div>;
+        // z-40 (di bawah lapisan modal z-50). Modal baru (Shift/Customer/
+        // Diskon/Pajak/Info) memakai headlessui Dialog yang di-portal ke
+        // document.body pada z-50 — jadi kalau kontainer fullscreen berada di
+        // z-[100], modal tersembunyi di belakangnya. Menurunkan ke z-40 membuat
+        // semua modal tampil konsisten seperti mode non-fullscreen. Aman karena
+        // AuthenticatedLayout tidak dirender saat fullscreen.
+        return (
+            <div className="fixed inset-0 z-40 flex flex-col overflow-x-hidden bg-[#f1f3f6] p-3">
+                {posContent("h-full")}
+            </div>
+        );
     }
 
     return (
