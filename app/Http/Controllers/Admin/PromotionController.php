@@ -180,7 +180,12 @@ class PromotionController extends Controller
 
     public function show(Promotion $promotion)
     {
-        return redirect()->route('admin.promotions.index');
+        $promotion->load('products:id,name,sku,sell_price', 'freeProduct:id,name,sell_price');
+        $promotion->loadCount('products');
+
+        return Inertia::render('Admin/Promotions/Show', [
+            'promotion' => $promotion,
+        ]);
     }
 
     public function destroy(Promotion $promotion)

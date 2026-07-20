@@ -1,33 +1,38 @@
 /**
- * ── Theme Engine: Theme Provider ──────────────────────────────────
+ * ── Theme Engine: Theme Provider (shadcn/ui, DB-driven) ──────────
  *
  * React Context yang:
- *   1. Resolve tema aktif (template built-in ATAU custom) + mode
- *      (light/dark/system) dari: localStorage → user.theme_preference
- *      (dikirim lewat Inertia shared props) → default (Royal Indigo).
- *   2. Inject seluruh token sebagai CSS variable ke `<html>` (`:root`
- *      untuk light, class `.dark` ditambahkan saat mode gelap aktif).
- *   3. Simpan pilihan baru ke localStorage (instan) + database user
- *      (best-effort, tidak memblokir UI kalau gagal/offline).
- *
- * Dipasang SEKALI di resources/js/app.jsx, membungkus <App/>, supaya
- * seluruh halaman Inertia otomatis dapat tema tanpa provider berulang.
+ *   1. Resolve tema aktif (preset sistem dari DB ATAU custom) + mode
+ *      (light/dark/system) dari localStorage → user.theme_preference (DB)
+ *      → default (preset sistem pertama).
+ *   2. Preset sistem dibaca dari `page.props.systemThemes` (di-share oleh
+ *      HandleInertiaRequests middleware ke SEMUA halaman) — BUKAN dari
+ *      file templates.js statis lagi. Ini supaya nambah/ubah tema sistem
+ *      cukup lewat seeder (ThemePresetSeeder), tanpa sentuh kode JS.
+ *   3. Inject 36 shadcn/ui tokens sebagai CSS variable ke `<html>`.
+ *   4. Generate backward-compat shade scales (--color-primary-50..950) dari
+ *      primary/secondary/accent supaya Tailwind class lama (bg-primary-600
+ *      dkk) tetap jalan.
+ *   5. Simpan pilihan ke localStorage (instan) + database (best-effort).
  */
 
-import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { usePage } from '@inertiajs/react';
-import { BUILTIN_TEMPLATES, TEMPLATES_BY_ID, DEFAULT_TEMPLATE_ID, buildTheme } from './templates';
-import { SCALE_TOKEN_KEYS, SEMANTIC_TOKEN_KEYS, CHART_COLOR_KEYS, SHADE_KEYS } from './tokens';
-import { hexToRgbString } from './generateShades';
+import { buildShadcnTemplate, FALLBACK_THEME } from './templates';
+import {
+    SHADCN_TOKEN_KEYS,
+    TOKEN_TO_CSS_VAR,
+    SHADCN_TO_OLD_ALIAS,
+    SHADE_KEYS,
+} from './tokens';
+import { generateColorScale, hexToRgbString } from './generateShades';
+import ThemeSaveToast from './ThemeSaveToast';
 
 const STORAGE_KEY = 'simkasir-theme-preference';
 
 const ThemeContext = createContext(null);
 
-/** @returns {{primary:string,secondary:string,accent:string}} */
-const DEFAULT_CUSTOM_SEED = { primary: '#4F46E5', secondary: '#64748B', accent: '#8B5CF6' };
-
-/** Baca preference tersimpan di localStorage (sync, dipakai saat initial render biar tidak flash). */
+/** Baca preference dari localStorage. */
 function readLocalPreference() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -40,95 +45,183 @@ function readLocalPreference() {
 function writeLocalPreference(pref) {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(pref));
-    } catch {
-        // localStorage penuh/disabled — abaikan, tema tetap jalan di sesi ini.
-    }
+    } catch { /* abaikan */ }
 }
 
-/** Resolve ThemeDefinition aktif dari preference (built-in atau custom-generated). */
-function resolveThemeDefinition(preference) {
-    if (preference?.templateId === 'custom' && preference.custom) {
-        const { primary, secondary, accent } = preference.custom;
-        return buildTheme({
+/**
+ * Ubah array systemThemes (dari Inertia props, model ThemePreset) jadi
+ * lookup map by slug + bentuk ThemeDefinition yang dipakai renderer.
+ */
+function buildSystemThemesById(systemThemes) {
+    const map = {};
+    for (const t of systemThemes || []) {
+        if (!t?.slug) continue;
+        map[t.slug] = {
+            id: t.slug,
+            label: t.name,
+            description: t.description,
+            recommendedMode: t.is_dark ? 'dark' : 'light',
+            light: t.light_tokens || FALLBACK_THEME.light,
+            dark: t.dark_tokens || FALLBACK_THEME.dark,
+        };
+    }
+    return map;
+}
+
+/** Resolve ThemeDefinition aktif dari preference + lookup preset sistem. */
+function resolveThemeDefinition(preference, systemThemesById) {
+    if (preference?.templateId === 'custom' && preference.customTokens) {
+        return {
             id: 'custom',
             label: 'Custom Theme',
             description: 'Tema kustom buatan sendiri.',
-            primaryHex: primary,
-            accentHex: accent,
-            chartHexes: [primary, accent, '#16A34A', '#F59E0B', '#DC2626', secondary],
-        });
+            recommendedMode: 'light',
+            light: preference.customTokens.light || preference.customTokens,
+            dark: preference.customTokens.dark || preference.customTokens,
+        };
     }
-    return TEMPLATES_BY_ID[preference?.templateId] ?? TEMPLATES_BY_ID[DEFAULT_TEMPLATE_ID];
+    if (preference?.templateId && systemThemesById[preference.templateId]) {
+        return systemThemesById[preference.templateId];
+    }
+    // Fallback: preset sistem pertama yang tersedia, atau tema hardcoded
+    // darurat kalau DB belum di-seed sama sekali.
+    const first = Object.values(systemThemesById)[0];
+    return first || FALLBACK_THEME;
 }
 
-/** Apakah OS/browser user lagi dalam mode gelap (dipakai untuk mode "system"). */
+/** Apakah OS user dalam mode gelap. */
 function systemPrefersDark() {
     if (typeof window === 'undefined' || !window.matchMedia) return false;
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
-/** Terapkan seluruh token satu ThemeModeTokens sebagai CSS variable ke elemen target. */
+/**
+ * Terapkan 36 shadcn/ui tokens sebagai CSS variable.
+ * Juga generate backward-compat shade scales dan old semantic aliases.
+ */
 function applyTokensToElement(el, tokens) {
-    // Scale tokens (primary/secondary/accent) → --color-{name}-{shade}
-    for (const scaleName of SCALE_TOKEN_KEYS) {
-        const scale = tokens[scaleName];
-        if (!scale) continue;
-        for (const shade of SHADE_KEYS) {
-            const hex = scale[shade];
-            if (hex) el.style.setProperty(`--color-${scaleName}-${shade}`, hexToRgbString(hex));
-        }
-    }
-
-    // Semantic tokens → --color-{camelToKebab}
-    for (const key of SEMANTIC_TOKEN_KEYS) {
+    // 1. Set 36 shadcn/ui tokens
+    for (const key of SHADCN_TOKEN_KEYS) {
+        const cssVar = TOKEN_TO_CSS_VAR[key];
         const value = tokens[key];
-        if (!value) continue;
-        const cssVarName = `--color-${camelToKebab(key)}`;
-        // shadow adalah rgba() string, sisanya hex solid — keduanya valid utk custom property langsung.
-        if (value.startsWith('#')) {
-            el.style.setProperty(cssVarName, hexToRgbString(value));
+        if (!cssVar || value === undefined || value === null) continue;
+
+        if (key === 'radius') {
+            // radius bukan warna — set langsung
+            el.style.setProperty(cssVar, value);
         } else {
-            el.style.setProperty(cssVarName, value);
+            // Warna: konversi hex ke "R G B" format
+            el.style.setProperty(cssVar, hexToRgbString(value));
         }
     }
 
-    // Chart colors → --chart-1 .. --chart-6 (dipakai langsung sbg hex di komponen chart JS, bukan lewat Tailwind)
-    if (tokens.chart) {
-        CHART_COLOR_KEYS.forEach((key, i) => {
-            el.style.setProperty(`--chart-${i + 1}`, tokens.chart[key]);
-        });
-    }
-}
+    // 2. Generate backward-compat shade scales dari primary/secondary/accent
+    const primaryHex = tokens.primary || '#4F46E5';
+    const secondaryHex = tokens.secondary || '#64748B';
+    const accentHex = tokens.accent || '#8B5CF6';
 
-function camelToKebab(str) {
-    return str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+    for (const [name, hex] of [['primary', primaryHex], ['secondary', secondaryHex], ['accent', accentHex]]) {
+        const scale = generateColorScale(hex);
+        for (const shade of SHADE_KEYS) {
+            el.style.setProperty(`--color-${name}-${shade}`, hexToRgbString(scale[shade]));
+        }
+    }
+
+    // 3. Set backward-compat old semantic aliases
+    for (const [shadcnKey, oldCssVar] of Object.entries(SHADCN_TO_OLD_ALIAS)) {
+        const value = tokens[shadcnKey];
+        if (value && oldCssVar) {
+            el.style.setProperty(oldCssVar, hexToRgbString(value));
+        }
+    }
+
+    // 4. Extra backward-compat aliases yang tidak ada mapping langsung
+    if (tokens.background) el.style.setProperty('--color-surface-secondary', hexToRgbString(tokens.muted || tokens.secondary || '#F1F5F9'));
+    if (tokens.popover) el.style.setProperty('--color-modal', hexToRgbString(tokens.popover));
+    if (tokens.mutedForeground) el.style.setProperty('--color-text-muted', hexToRgbString(tokens.mutedForeground));
+    if (tokens.foreground) {
+        el.style.setProperty('--color-text-secondary', hexToRgbString(tokens.mutedForeground || tokens.foreground));
+    }
+    if (tokens.card) {
+        el.style.setProperty('--color-table-header', hexToRgbString(tokens.muted || tokens.card));
+        el.style.setProperty('--color-table-row', hexToRgbString(tokens.card));
+        el.style.setProperty('--color-table-hover', hexToRgbString(tokens.muted || '#F1F5F9'));
+    }
+    if (tokens.destructive) el.style.setProperty('--color-danger', hexToRgbString(tokens.destructive));
+    if (tokens.border) el.style.setProperty('--color-divider', hexToRgbString(tokens.border));
+    if (tokens.input) el.style.setProperty('--color-input-background', hexToRgbString(tokens.card || '#FFFFFF'));
+    if (tokens.popoverForeground) el.style.setProperty('--color-tooltip', hexToRgbString(tokens.popoverForeground));
+
+    // 5. Chart colors (hex langsung, bukan RGB)
+    const chartKeys = ['chart1', 'chart2', 'chart3', 'chart4', 'chart5'];
+    chartKeys.forEach((key, i) => {
+        if (tokens[key]) el.style.setProperty(`--chart-${i + 1}`, tokens[key]);
+    });
 }
 
 export function ThemeProvider({ children }) {
     const page = usePage();
+    const userId = page?.props?.auth?.user?.id ?? null;
     const userThemeFromDb = page?.props?.auth?.user?.theme_preference ?? null;
+    const systemThemesRaw = page?.props?.systemThemes ?? [];
+
+    const systemThemesById = useMemo(
+        () => buildSystemThemesById(systemThemesRaw),
+        [systemThemesRaw],
+    );
+
+    const systemThemesList = useMemo(
+        () => Object.values(systemThemesById),
+        [systemThemesById],
+    );
+
+    const defaultTemplateId = systemThemesList[0]?.id ?? FALLBACK_THEME.id;
+
+    const [saveStatus, setSaveStatus] = useState('idle');
+    const toastTimerRef = useRef(null);
+
+    const showToast = useCallback((status) => {
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        setSaveStatus(status);
+        if (status === 'saved' || status === 'error') {
+            toastTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2500);
+        }
+    }, []);
 
     const [preference, setPreference] = useState(() => {
         return (
-            readLocalPreference() ??
-            userThemeFromDb ?? {
-                templateId: DEFAULT_TEMPLATE_ID,
+            userThemeFromDb ??
+            readLocalPreference() ?? {
+                templateId: defaultTemplateId,
                 mode: 'system',
-                custom: null,
+                customTokens: null,
             }
         );
     });
 
-    // Kalau localStorage kosong (device baru) tapi DB punya preference (user login
-    // di device lain sebelumnya), sinkronkan begitu prop Inertia tersedia.
+    const prevUserIdRef = useRef(userId);
+
     useEffect(() => {
-        if (!readLocalPreference() && userThemeFromDb) {
+        const prevUserId = prevUserIdRef.current;
+        prevUserIdRef.current = userId;
+
+        if (userId === null && prevUserId !== null) {
+            try { localStorage.removeItem(STORAGE_KEY); } catch { /* */ }
+            setPreference({ templateId: defaultTemplateId, mode: 'system', customTokens: null });
+            return;
+        }
+
+        if (userThemeFromDb && (prevUserId !== userId || !readLocalPreference())) {
             setPreference(userThemeFromDb);
+            writeLocalPreference(userThemeFromDb);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [userThemeFromDb]);
+    }, [userId, userThemeFromDb]);
 
-    const themeDefinition = useMemo(() => resolveThemeDefinition(preference), [preference]);
+    const themeDefinition = useMemo(
+        () => resolveThemeDefinition(preference, systemThemesById),
+        [preference, systemThemesById],
+    );
 
     const isDark = useMemo(() => {
         if (preference.mode === 'dark') return true;
@@ -136,7 +229,7 @@ export function ThemeProvider({ children }) {
         return systemPrefersDark();
     }, [preference.mode]);
 
-    // Terapkan token + class `dark` ke <html> setiap kali tema/mode berubah.
+    // Terapkan token ke <html> setiap kali tema/mode berubah
     useEffect(() => {
         const root = document.documentElement;
         const tokens = isDark ? themeDefinition.dark : themeDefinition.light;
@@ -144,7 +237,7 @@ export function ThemeProvider({ children }) {
         root.classList.toggle('dark', isDark);
     }, [themeDefinition, isDark]);
 
-    // Kalau mode "system", ikuti perubahan preferensi OS secara live (tanpa reload).
+    // Listen perubahan prefers-color-scheme untuk mode "system"
     useEffect(() => {
         if (preference.mode !== 'system' || !window.matchMedia) return;
         const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -159,90 +252,108 @@ export function ThemeProvider({ children }) {
         return () => mq.removeEventListener('change', handler);
     }, [preference.mode, themeDefinition]);
 
-    /**
-     * Ganti template built-in. Kalau user belum pernah menyentuh mode
-     * secara manual (mode masih "system"), mode ikut disetel ke
-     * `recommendedMode` template — supaya template dark-native (Midnight
-     * Ocean, dst) langsung tampil gelap begitu dipilih. Kalau user sudah
-     * memilih mode manual (light/dark), pilihan itu dihormati dan tidak
-     * ditimpa saat ganti template.
-     */
+    /** Ganti preset sistem (by slug). */
     const setTemplate = useCallback((templateId) => {
         setPreference((prev) => {
-            const def = TEMPLATES_BY_ID[templateId];
+            const def = systemThemesById[templateId];
             const next = {
                 ...prev,
                 templateId,
-                custom: templateId === 'custom' ? prev.custom : null,
+                customTokens: templateId === 'custom' ? prev.customTokens : null,
                 mode: prev.mode === 'system' && def?.recommendedMode ? def.recommendedMode : prev.mode,
             };
-            persist(next);
+            persist(next, showToast);
             return next;
         });
-    }, []);
+    }, [showToast, systemThemesById]);
 
-    /** Ganti mode warna (light/dark/system). */
+    /** Ganti mode (light/dark/system). */
     const setMode = useCallback((mode) => {
         setPreference((prev) => {
             const next = { ...prev, mode };
-            persist(next);
+            persist(next, showToast);
             return next;
         });
-    }, []);
+    }, [showToast]);
 
-    /** Set Custom Theme dari 3 warna dasar (primary/secondary/accent hex). */
-    const setCustomColors = useCallback((custom) => {
+    /** Set custom theme dari full token object (36 keys per mode). */
+    const setCustomTokens = useCallback((customTokens) => {
         setPreference((prev) => {
-            const next = { ...prev, templateId: 'custom', custom: { ...DEFAULT_CUSTOM_SEED, ...custom } };
-            persist(next);
+            const next = { ...prev, templateId: 'custom', customTokens };
+            persist(next, showToast);
             return next;
         });
-    }, []);
+    }, [showToast]);
+
+    /** Backward-compat: set custom dari 3 warna dasar. */
+    const setCustomColors = useCallback((colors) => {
+        // Generate full token set dari 3 warna
+        const light = buildShadcnTemplate({
+            primaryHex: colors.primary || '#4F46E5',
+            accentHex: colors.accent || '#8B5CF6',
+            overrides: { secondary: colors.secondary || '#64748B' },
+        });
+        setCustomTokens({ light, dark: light }); // dark = same for backward compat
+    }, [setCustomTokens]);
 
     const value = useMemo(
         () => ({
             preference,
             theme: themeDefinition,
             isDark,
-            templates: BUILTIN_TEMPLATES,
+            templates: systemThemesList,
             setTemplate,
             setMode,
             setCustomColors,
+            setCustomTokens,
         }),
-        [preference, themeDefinition, isDark, setTemplate, setMode, setCustomColors],
+        [preference, themeDefinition, isDark, systemThemesList, setTemplate, setMode, setCustomColors, setCustomTokens],
     );
 
-    return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+    return (
+        <ThemeContext.Provider value={value}>
+            {children}
+            <ThemeSaveToast status={saveStatus} onDismiss={() => setSaveStatus('idle')} />
+        </ThemeContext.Provider>
+    );
 }
 
-/** Simpan ke localStorage instan + database secara best-effort (tidak memblokir UI). */
-function persist(preference) {
+/** Ambil XSRF-TOKEN dari cookie. */
+function getXsrfTokenFromCookie() {
+    const match = document.cookie.split('; ').find((row) => row.startsWith('XSRF-TOKEN='));
+    return match ? decodeURIComponent(match.split('=')[1]) : null;
+}
+
+/** Simpan ke localStorage + database. */
+function persist(preference, showToast) {
     writeLocalPreference(preference);
+    showToast?.('saving');
     try {
+        const xsrfToken = getXsrfTokenFromCookie();
         fetch(route('admin.theme-preference.update'), {
             method: 'PATCH',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
-                'X-CSRF-TOKEN':
-                    document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                ...(xsrfToken ? { 'X-XSRF-TOKEN': xsrfToken } : {}),
             },
             body: JSON.stringify(preference),
-        }).catch(() => {
-            // Gagal simpan ke DB (offline/network) — localStorage tetap jadi source
-            // of truth untuk sesi ini, tidak apa-apa kalau sync ke DB tertunda.
-        });
+        })
+            .then((res) => {
+                if (res.ok) showToast?.('saved');
+                else showToast?.('error');
+            })
+            .catch(() => showToast?.('error'));
     } catch {
-        // route() helper mungkin belum ready / fetch tidak didukung — abaikan.
+        showToast?.('error');
     }
 }
 
-/** Hook utama: const { theme, isDark, setTemplate, setMode, setCustomColors, templates } = useTheme(); */
+/** Hook utama. */
 export function useTheme() {
     const ctx = useContext(ThemeContext);
-    if (!ctx) {
-        throw new Error('useTheme() harus dipanggil di dalam <ThemeProvider>');
-    }
+    if (!ctx) throw new Error('useTheme() harus dipanggil di dalam <ThemeProvider>');
     return ctx;
 }
 

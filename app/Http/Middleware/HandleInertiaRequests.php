@@ -7,7 +7,9 @@ use App\Models\FeatureDetail;
 use App\Models\Store;
 use App\Models\StoreFeature;
 use App\Models\StoreType;
+use App\Models\ThemePreset;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Middleware;
 use Spatie\Permission\PermissionRegistrar;
@@ -265,6 +267,25 @@ class HandleInertiaRequests extends Middleware
                         ->where('is_active', true)
                         ->get(['id', 'name', 'code'])
                     : collect(),
+                collect(),
+                false,
+            ),
+
+            // Preset tema sistem (built-in) — di-share ke SEMUA halaman
+            // karena ThemeProvider (resources/js/Theme/ThemeProvider.jsx)
+            // butuh resolve tema aktif di halaman manapun setelah login,
+            // bukan cuma di /app/themes. Di-cache 1 jam karena preset
+            // sistem jarang berubah (cuma lewat seeder).
+            'systemThemes' => fn () => rescue(
+                fn () => Cache::remember('system-themes', 3600, function () {
+                    return ThemePreset::system()
+                        ->orderBy('name')
+                        ->get([
+                            'id', 'slug', 'name', 'description',
+                            'primary', 'secondary', 'accent', 'is_dark',
+                            'light_tokens', 'dark_tokens',
+                        ]);
+                }),
                 collect(),
                 false,
             ),

@@ -3,56 +3,65 @@
 @tailwind utilities;
 
 /*
- * ── Theme Engine: CSS Variables ─────────────────────────────────
- * Nilai default di sini = template "Royal Indigo" (light + dark).
- * ThemeProvider (resources/js/Theme/ThemeProvider.jsx) akan menimpa
- * variable ini secara runtime ketika user memilih template lain atau
- * membuat Custom Theme — tanpa perlu rebuild Tailwind.
+ * ── Theme Engine: shadcn/ui Token System ──────────────────────
  *
- * Format nilai "R G B" (tanpa rgb(), tanpa koma) agar kompatibel
- * dengan helper rgb(var(--x) / <alpha-value>) di tailwind.config.js.
+ * 36 token per mode (light + dark) sesuai shadcn/ui convention.
+ * Format "R G B" (space-separated) agar kompatibel dengan
+ * rgb(var(--x) / <alpha-value>) di tailwind.config.js.
+ *
+ * ThemeProvider (resources/js/Theme/ThemeProvider.jsx) akan
+ * menimpa semua variable ini secara runtime saat user memilih
+ * tema — nilai di sini hanya fallback untuk first paint.
+ *
+ * Default = Royal Indigo (light) / Royal Indigo Dark.
  */
+
 :root {
-    /* primary scale */
-    --color-primary-50: 238 242 255;
-    --color-primary-100: 224 231 255;
-    --color-primary-200: 199 210 254;
-    --color-primary-300: 165 180 252;
-    --color-primary-400: 129 140 248;
-    --color-primary-500: 99 102 241;
-    --color-primary-600: 79 70 229;
-    --color-primary-700: 67 56 202;
-    --color-primary-800: 55 48 163;
-    --color-primary-900: 49 46 129;
-    --color-primary-950: 30 27 75;
+    /* ── shadcn/ui core tokens ── */
+    --background: 248 250 252;
+    --foreground: 15 23 42;
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
+    --primary: 79 70 229;
+    --primary-foreground: 255 255 255;
+    --secondary: 241 245 249;
+    --secondary-foreground: 15 23 42;
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+    --accent: 139 92 246;
+    --accent-foreground: 255 255 255;
+    --destructive: 220 38 38;
+    --destructive-foreground: 255 255 255;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 79 70 229;
+    --chart-1: 79 70 229;
+    --chart-2: 6 182 212;
+    --chart-3: 22 163 74;
+    --chart-4: 245 158 11;
+    --chart-5: 139 92 246;
+    --radius: 0.5rem;
+    --success: 22 163 74;
+    --success-foreground: 255 255 255;
+    --warning: 245 158 11;
+    --warning-foreground: 255 255 255;
+    --info: 2 132 199;
+    --info-foreground: 255 255 255;
 
-    /* secondary scale (default: slate) */
-    --color-secondary-50: 248 250 252;
-    --color-secondary-100: 241 245 249;
-    --color-secondary-200: 226 232 240;
-    --color-secondary-300: 203 213 225;
-    --color-secondary-400: 148 163 184;
-    --color-secondary-500: 100 116 139;
-    --color-secondary-600: 71 85 105;
-    --color-secondary-700: 51 65 85;
-    --color-secondary-800: 30 41 59;
-    --color-secondary-900: 15 23 42;
-    --color-secondary-950: 2 6 23;
+    /* ── Sidebar tokens ── */
+    --sidebar: 255 255 255;
+    --sidebar-foreground: 15 23 42;
+    --sidebar-primary: 79 70 229;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 241 245 249;
+    --sidebar-accent-foreground: 15 23 42;
+    --sidebar-border: 226 232 240;
+    --sidebar-ring: 79 70 229;
 
-    /* accent scale (default: violet) */
-    --color-accent-50: 245 243 255;
-    --color-accent-100: 237 233 254;
-    --color-accent-200: 221 214 254;
-    --color-accent-300: 196 181 253;
-    --color-accent-400: 167 139 250;
-    --color-accent-500: 139 92 246;
-    --color-accent-600: 124 58 237;
-    --color-accent-700: 109 40 217;
-    --color-accent-800: 91 33 182;
-    --color-accent-900: 74 29 150;
-    --color-accent-950: 46 16 101;
-
-    /* semantic surfaces & text — non-scale token, dipakai lewat var() langsung */
+    /* ── Backward-compat aliases (mapped from shadcn/ui tokens) ── */
+    /* ThemeProvider akan override ini saat runtime; ini fallback first paint */
     --color-background: 248 250 252;
     --color-surface: 255 255 255;
     --color-surface-secondary: 241 245 249;
@@ -72,21 +81,87 @@
     --color-table-header: 248 250 252;
     --color-table-row: 255 255 255;
     --color-table-hover: 241 245 249;
+
+    /* ── Backward-compat shade scales (Royal Indigo default) ── */
+    --color-primary-50: 238 242 255;
+    --color-primary-100: 224 231 255;
+    --color-primary-200: 199 210 254;
+    --color-primary-300: 165 180 252;
+    --color-primary-400: 129 140 248;
+    --color-primary-500: 99 102 241;
+    --color-primary-600: 79 70 229;
+    --color-primary-700: 67 56 202;
+    --color-primary-800: 55 48 163;
+    --color-primary-900: 49 46 129;
+    --color-primary-950: 30 27 75;
+    --color-secondary-50: 241 245 249;
+    --color-secondary-100: 226 232 240;
+    --color-secondary-200: 203 213 225;
+    --color-secondary-300: 148 163 184;
+    --color-secondary-400: 100 116 139;
+    --color-secondary-500: 71 85 105;
+    --color-secondary-600: 51 65 85;
+    --color-secondary-700: 30 41 59;
+    --color-secondary-800: 15 23 42;
+    --color-secondary-900: 2 6 23;
+    --color-secondary-950: 2 6 23;
+    --color-accent-50: 245 243 255;
+    --color-accent-100: 237 233 254;
+    --color-accent-200: 221 214 254;
+    --color-accent-300: 196 181 253;
+    --color-accent-400: 167 139 250;
+    --color-accent-500: 139 92 246;
+    --color-accent-600: 124 58 237;
+    --color-accent-700: 109 40 217;
+    --color-accent-800: 91 33 182;
+    --color-accent-900: 74 29 150;
+    --color-accent-950: 46 16 101;
 }
 
 .dark {
-    --color-primary-50: 30 27 75;
-    --color-primary-100: 49 46 129;
-    --color-primary-200: 55 48 163;
-    --color-primary-300: 67 56 202;
-    --color-primary-400: 79 70 229;
-    --color-primary-500: 99 102 241;
-    --color-primary-600: 129 140 248;
-    --color-primary-700: 165 180 252;
-    --color-primary-800: 199 210 254;
-    --color-primary-900: 224 231 255;
-    --color-primary-950: 238 242 255;
+    /* ── shadcn/ui core tokens (dark) ── */
+    --background: 15 23 42;
+    --foreground: 248 250 252;
+    --card: 31 41 55;
+    --card-foreground: 248 250 252;
+    --popover: 31 41 55;
+    --popover-foreground: 248 250 252;
+    --primary: 129 140 248;
+    --primary-foreground: 255 255 255;
+    --secondary: 51 65 85;
+    --secondary-foreground: 248 250 252;
+    --muted: 51 65 85;
+    --muted-foreground: 148 163 184;
+    --accent: 167 139 250;
+    --accent-foreground: 255 255 255;
+    --destructive: 220 38 38;
+    --destructive-foreground: 255 255 255;
+    --border: 51 65 85;
+    --input: 51 65 85;
+    --ring: 129 140 248;
+    --chart-1: 129 140 248;
+    --chart-2: 34 211 238;
+    --chart-3: 74 222 128;
+    --chart-4: 251 191 36;
+    --chart-5: 167 139 250;
+    --success: 22 163 74;
+    --success-foreground: 255 255 255;
+    --warning: 245 158 11;
+    --warning-foreground: 255 255 255;
+    --info: 2 132 199;
+    --info-foreground: 255 255 255;
 
+    /* ── Sidebar tokens (dark) ── */
+    --sidebar: 30 41 59;
+    --sidebar-foreground: 248 250 252;
+    --sidebar-primary: 129 140 248;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 51 65 85;
+    --sidebar-accent-foreground: 248 250 252;
+    --sidebar-border: 51 65 85;
+    --sidebar-ring: 129 140 248;
+
+    /* ── Backward-compat aliases (dark) ── */
     --color-background: 15 23 42;
     --color-surface: 30 41 59;
     --color-surface-secondary: 51 65 85;
@@ -106,6 +181,19 @@
     --color-table-header: 30 41 59;
     --color-table-row: 30 41 59;
     --color-table-hover: 51 65 85;
+
+    /* ── Backward-compat shade scales (dark, reversed) ── */
+    --color-primary-50: 30 27 75;
+    --color-primary-100: 49 46 129;
+    --color-primary-200: 55 48 163;
+    --color-primary-300: 67 56 202;
+    --color-primary-400: 79 70 229;
+    --color-primary-500: 99 102 241;
+    --color-primary-600: 129 140 248;
+    --color-primary-700: 165 180 252;
+    --color-primary-800: 199 210 254;
+    --color-primary-900: 224 231 255;
+    --color-primary-950: 238 242 255;
 }
 
 @layer base {

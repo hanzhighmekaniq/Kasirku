@@ -23,6 +23,7 @@ use Database\Seeders\DatabaseSeeder\StockMovementSeeder;
 use Database\Seeders\DatabaseSeeder\StoreSeeder;
 use Database\Seeders\DatabaseSeeder\StoreTypeSeeder;
 use Database\Seeders\DatabaseSeeder\SupplierSeeder;
+use Database\Seeders\DatabaseSeeder\ThemePresetSeeder;
 use Database\Seeders\DatabaseSeeder\UserSeeder;
 use Illuminate\Database\Seeder;
 
@@ -45,6 +46,7 @@ class DatabaseSeeder extends Seeder
             FeatureDetailSeeder::class,
             PlanSeeder::class,
             PermissionSeeder::class,
+            ThemePresetSeeder::class,
 
             // ── Struktur ───────────────────────────────────────────
             StoreSeeder::class,

@@ -245,7 +245,7 @@ export function buildNavGroups(modules) {
         add(items, Queue?.val || Queue?.lock, Queue?.val, {
             key: "queue",
             name: "Antrian",
-            href: "#",
+            href: r("admin.queue.index"),
             icon: "queue",
             current: "admin.queue.*",
             badge: "Service",
@@ -499,7 +499,67 @@ export function buildNavGroups(modules) {
                 name: "Laporan",
                 href: r("admin.reports.index"),
                 icon: "report",
-                current: "admin.reports.*",
+                current: "admin.reports",
+            },
+        );
+        add(
+            items,
+            (Report?.val || Report?.lock) && can("report.purchase"),
+            Report?.val && can("report.purchase"),
+            {
+                key: "report-purchases",
+                name: "Laporan Pembelian",
+                href: r("admin.reports.purchases"),
+                icon: "report",
+                current: "admin.reports.purchases",
+            },
+        );
+        add(
+            items,
+            (Report?.val || Report?.lock) && can("report.stock"),
+            Report?.val && can("report.stock"),
+            {
+                key: "report-stock",
+                name: "Laporan Stok",
+                href: r("admin.reports.stock"),
+                icon: "report",
+                current: "admin.reports.stock",
+            },
+        );
+        add(
+            items,
+            (Report?.val || Report?.lock) && can("report.expense"),
+            Report?.val && can("report.expense"),
+            {
+                key: "report-expenses",
+                name: "Laporan Pengeluaran",
+                href: r("admin.reports.expenses"),
+                icon: "report",
+                current: "admin.reports.expenses",
+            },
+        );
+        add(
+            items,
+            (Report?.val || Report?.lock) && can("report.shift"),
+            Report?.val && can("report.shift"),
+            {
+                key: "report-shifts",
+                name: "Laporan Shift",
+                href: r("admin.reports.shifts"),
+                icon: "report",
+                current: "admin.reports.shifts",
+            },
+        );
+        add(
+            items,
+            (Report?.val || Report?.lock) && can("report.commission"),
+            Report?.val && can("report.commission"),
+            {
+                key: "report-commissions",
+                name: "Laporan Komisi",
+                href: r("admin.reports.commissions"),
+                icon: "report",
+                current: "admin.reports.commissions",
             },
         );
         add(
@@ -612,11 +672,11 @@ export function buildNavGroups(modules) {
         );
         // Tema — personal per-akun, tidak digate oleh permission/plan toko.
         items.push({
-            key: "theme-picker",
-            name: "Tema Aplikasi",
-            href: r("admin.theme.picker"),
+            key: "themes",
+            name: "Tema",
+            href: r("admin.themes.index"),
             icon: "theme",
-            current: "admin.theme.picker",
+            current: "admin.themes",
         });
         if (items.length > 0)
             groups.push({

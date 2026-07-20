@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\StockMovement;
@@ -28,14 +29,19 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $storeId = session('current_store_id');
+        $branchId = session('current_branch_id');
         $store = Store::with('storeType')->find($storeId);
 
         $query = Product::forStore($storeId)
             ->with([
                 'category',
                 'supplier',
-                'stocks',
-                'variants.stocks',
+                'stocks' => fn ($q) => $branchId
+                    ? $q->where('branch_id', $branchId)
+                    : $q,
+                'variants.stocks' => fn ($q) => $branchId
+                    ? $q->where('branch_id', $branchId)
+                    : $q,
                 'variants.packagingUnits',
                 'variants.priceTiers',
                 'packagingUnits' => fn ($q) => $q->whereNull('variant_id'),
@@ -67,13 +73,34 @@ class ProductController extends Controller
             $query->where('is_active', $request->status === '1');
         }
 
+        // Sorting
+        $sort = $request->get('sort', 'name');
+        $direction = $request->get('direction', 'asc');
+        $allowed = ['name', 'sku', 'sell_price', 'created_at', 'is_active'];
+        if ($sort === 'stock') {
+            $branchClause = $branchId ? 'AND product_stocks.branch_id = '.(int) $branchId : '';
+            $query->orderByRaw(
+                "(SELECT COALESCE(SUM(quantity) - SUM(reserved_quantity), 0)
+                    FROM product_stocks
+                    WHERE product_stocks.product_id = products.id
+                        AND product_stocks.variant_id IS NULL
+                        {$branchClause})
+                    ".($direction === 'asc' ? 'ASC' : 'DESC'),
+            );
+        } elseif (in_array($sort, $allowed)) {
+            $query->orderBy($sort, $direction === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
         $paginated = $query->paginate(20)->withQueryString();
 
         // Map stock ke collection yang sudah dipaginate
+        // Hanya hitung base product stock (variant_id IS NULL) agar tidak double-count
         $paginated->getCollection()->transform(function ($product) {
             $product->stock =
-                $product->stocks->sum('quantity') -
-                $product->stocks->sum('reserved_quantity');
+                $product->stocks->whereNull('variant_id')->sum('quantity') -
+                $product->stocks->whereNull('variant_id')->sum('reserved_quantity');
 
             return $product;
         });
@@ -84,9 +111,21 @@ class ProductController extends Controller
             'active' => Product::forStore($storeId)->where('is_active', true)->count(),
             'inactive' => Product::forStore($storeId)->where('is_active', false)->count(),
         ];
+
+        // Low stock — filter branch jika ada
+        $branchFilter = $branchId
+            ? 'AND product_stocks.branch_id = '.(int) $branchId
+            : '';
         $stats['lowStock'] = Product::forStore($storeId)
             ->where('track_stock', true)
-            ->whereRaw('products.id IN (SELECT product_id FROM product_stocks WHERE quantity - reserved_quantity <= products.stock_minimum)')
+            ->whereRaw(
+                "products.id IN (
+                    SELECT product_id FROM product_stocks
+                    WHERE variant_id IS NULL
+                        AND quantity - reserved_quantity <= products.stock_minimum
+                        {$branchFilter}
+                )",
+            )
             ->count();
 
         // Build category hierarchy for filter
@@ -121,7 +160,10 @@ class ProductController extends Controller
             'allCategories' => $allCategories,
             'storeType' => $store?->getRelation('storeType')?->code ?? 'retail',
             'stats' => $stats,
-            'filters' => $request->only(['search', 'type', 'category', 'status']),
+            'filters' => (object) $request->only(['search', 'type', 'category', 'status', 'sort', 'direction']),
+            'currentBranch' => $branchId
+                ? Branch::find($branchId, ['id', 'name'])
+                : null,
         ]);
     }
 

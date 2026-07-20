@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\PurchaseReturnController;
+use App\Http\Controllers\Admin\QueueController;
 use App\Http\Controllers\Admin\ReportAIController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
@@ -41,6 +42,7 @@ use App\Http\Controllers\Admin\StockOpnameController;
 use App\Http\Controllers\Admin\StockTransferController;
 use App\Http\Controllers\Admin\StoreSwitchController;
 use App\Http\Controllers\Admin\SupplierController;
+use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\WasteController;
 use App\Http\Controllers\Developer\BranchController;
@@ -50,6 +52,7 @@ use App\Http\Controllers\Developer\StoreController as DevStoreController;
 use App\Http\Controllers\Developer\UserController as DevUserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ThemePreferenceController;
+use App\Http\Controllers\ThemePresetController;
 use App\Http\Controllers\WebhookController;
 use App\Models\Branch;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -882,6 +885,21 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 ])->name('reports.ask-ai');
             },
         );
+        Route::middleware(['feature:report', 'permission:report.purchase'])->group(function () {
+            Route::get('/reports/purchases', [ReportController::class, 'purchases'])->name('reports.purchases');
+        });
+        Route::middleware(['feature:report', 'permission:report.stock'])->group(function () {
+            Route::get('/reports/stock', [ReportController::class, 'stock'])->name('reports.stock');
+        });
+        Route::middleware(['feature:report', 'permission:report.expense'])->group(function () {
+            Route::get('/reports/expenses', [ReportController::class, 'expenses'])->name('reports.expenses');
+        });
+        Route::middleware(['feature:report', 'permission:report.shift'])->group(function () {
+            Route::get('/reports/shifts', [ReportController::class, 'shifts'])->name('reports.shifts');
+        });
+        Route::middleware(['feature:report', 'permission:report.commission'])->group(function () {
+            Route::get('/reports/commissions', [ReportController::class, 'commissions'])->name('reports.commissions');
+        });
 
         // ─────────────────────────────────────────────────────────────────
         // ACTIVITY LOG — permission: setting.view
@@ -925,12 +943,21 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
             })->name('sidebar-order');
         });
 
-        // Theme Picker — ganti tampilan warna/mode aplikasi. Tersedia untuk
-        // semua user (bukan hanya owner/admin) karena preferensi tema
-        // bersifat personal per-akun, bukan konfigurasi toko.
+        // Theme Picker lama — redirect ke halaman CRUD tema baru.
         Route::get('/theme', function () {
-            return inertia('Admin/Settings/ThemePicker');
+            return redirect()->route('admin.themes.index');
         })->name('theme.picker');
+
+        Route::post('/theme-presets', [ThemePresetController::class, 'store'])
+            ->name('theme-presets.store');
+        Route::delete('/theme-presets/{preset}', [ThemePresetController::class, 'destroy'])
+            ->name('theme-presets.destroy');
+
+        // CRUD tema custom (theme presets) — personal per-akun. Preset
+        // is_system=true (tema built-in) diblok edit/hapus di controller.
+        Route::resource('themes', ThemeController::class)
+            ->parameters(['themes' => 'theme'])
+            ->except(['show']);
         Route::middleware([
             'feature:payment_method',
             'permission:setting.edit',
@@ -1013,6 +1040,20 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 KitchenController::class,
                 'updateStatus',
             ])->name('kitchen.update-status');
+        });
+
+        // ─────────────────────────────────────────────────────────────────
+        // QUEUE / ANTRIAN
+        // ─────────────────────────────────────────────────────────────────
+        Route::middleware(['permission:queue.view'])->group(function () {
+            Route::get('/queue', [QueueController::class, 'index'])->name('queue.index');
+        });
+        Route::middleware(['permission:queue.create'])->group(function () {
+            Route::post('/queue', [QueueController::class, 'store'])->name('queue.store');
+        });
+        Route::middleware(['permission:queue.update'])->group(function () {
+            Route::patch('/queue/{queue}/status', [QueueController::class, 'updateStatus'])->name('queue.update-status');
+            Route::delete('/queue/{queue}', [QueueController::class, 'destroy'])->name('queue.destroy');
         });
 
         // ─────────────────────────────────────────────────────────────────

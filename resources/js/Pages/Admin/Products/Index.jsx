@@ -188,7 +188,7 @@ function IndicatorBadges({ product }) {
     }
 
     if (badges.length === 0) {
-        return <span className="text-xs text-slate-400">&mdash;</span>;
+        return <span className="text-xs text-[rgb(var(--color-text-muted))]">&mdash;</span>;
     }
 
     return <div className="flex flex-wrap gap-1">{badges}</div>;
@@ -196,20 +196,20 @@ function IndicatorBadges({ product }) {
 
 function SummaryCard({ label, value, color = "slate", icon }) {
     const bgColors = {
-        blue: "bg-blue-100 text-blue-600",
+        blue: "bg-primary-100 text-primary-600",
         emerald: "bg-emerald-100 text-emerald-600",
         amber: "bg-amber-100 text-amber-600",
-        slate: "bg-slate-100 text-slate-600",
+        slate: "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))]",
     };
 
     return (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] p-4 shadow-sm">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-xs font-medium text-slate-500 sm:text-sm">
+                    <p className="text-xs font-medium text-[rgb(var(--color-text-muted))] sm:text-sm">
                         {label}
                     </p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
+                    <p className="mt-1 text-2xl font-bold text-[rgb(var(--color-text-primary))] sm:text-3xl">
                         {value}
                     </p>
                 </div>
@@ -231,7 +231,7 @@ function DetailRow({ product, onStockModal }) {
 
     if (hasVariants) {
         return (
-            <div className="border-t border-slate-100 bg-gradient-to-b from-slate-50/80 to-white px-5 py-4">
+            <div className="border-t border-[rgb(var(--color-divider))] bg-gradient-to-b from-[rgb(var(--color-surface-secondary))]/80 to-[rgb(var(--color-card))] px-5 py-4">
                 <div className="mb-3 flex items-center gap-2">
                     <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-primary-100 text-primary-600">
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -239,7 +239,7 @@ function DetailRow({ product, onStockModal }) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                         </svg>
                     </span>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--color-text-secondary))]">
                         {variants.length} Variant
                     </h4>
                 </div>
@@ -258,12 +258,12 @@ function DetailRow({ product, onStockModal }) {
                         return (
                             <div
                                 key={v.id}
-                                className={`group relative rounded-xl border bg-white p-3.5 transition-all hover:shadow-md ${isOut ? "border-red-200 bg-red-50/30" : isLow ? "border-amber-200 bg-amber-50/30" : "border-slate-200"}`}
+                                className={`group relative rounded-xl border bg-[rgb(var(--color-card))] p-3.5 transition-all hover:shadow-md ${isOut ? "border-red-200 bg-red-50/30" : isLow ? "border-amber-200 bg-amber-50/30" : "border-[rgb(var(--color-border))]"}`}
                             >
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-semibold text-slate-800">{v.name}</p>
-                                        <p className="mt-0.5 font-mono text-[11px] text-slate-400">{v.sku}</p>
+                                        <p className="truncate text-sm font-semibold text-[rgb(var(--color-text-primary))]">{v.name}</p>
+                                        <p className="mt-0.5 font-mono text-[11px] text-[rgb(var(--color-text-muted))]">{v.sku}</p>
                                     </div>
                                     {product.track_stock && (
                                         <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${isOut ? "bg-red-100 text-red-600" : isLow ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
@@ -274,31 +274,31 @@ function DetailRow({ product, onStockModal }) {
 
                                 <div className="mb-2.5 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                                     <div>
-                                        <span className="text-slate-400">Jual</span>
-                                        <p className="font-semibold text-slate-700">Rp {Number(v.price || 0).toLocaleString("id-ID")}</p>
+                                        <span className="text-[rgb(var(--color-text-muted))]">Jual</span>
+                                        <p className="font-semibold text-[rgb(var(--color-text-secondary))]">Rp {Number(v.price || 0).toLocaleString("id-ID")}</p>
                                     </div>
                                     <div>
-                                        <span className="text-slate-400">Modal</span>
-                                        <p className="font-medium text-slate-600">Rp {Number(v.cost_price || 0).toLocaleString("id-ID")}</p>
+                                        <span className="text-[rgb(var(--color-text-muted))]">Modal</span>
+                                        <p className="font-medium text-[rgb(var(--color-text-secondary))]">Rp {Number(v.cost_price || 0).toLocaleString("id-ID")}</p>
                                     </div>
                                 </div>
 
                                 {units && (
-                                    <p className="mb-1 truncate text-[11px] text-slate-400" title={units}>
-                                        <span className="font-medium text-slate-500">Satuan:</span> {units}
+                                    <p className="mb-1 truncate text-[11px] text-[rgb(var(--color-text-muted))]" title={units}>
+                                        <span className="font-medium text-[rgb(var(--color-text-secondary))]">Satuan:</span> {units}
                                     </p>
                                 )}
                                 {tiers && (
-                                    <p className="mb-2.5 truncate text-[11px] text-slate-400" title={tiers}>
-                                        <span className="font-medium text-slate-500">Grosir:</span> {tiers}
+                                    <p className="mb-2.5 truncate text-[11px] text-[rgb(var(--color-text-muted))]" title={tiers}>
+                                        <span className="font-medium text-[rgb(var(--color-text-secondary))]">Grosir:</span> {tiers}
                                     </p>
                                 )}
 
-                                <div className="flex items-center gap-1.5 border-t border-slate-100 pt-2.5">
+                                <div className="flex items-center gap-1.5 border-t border-[rgb(var(--color-divider))] pt-2.5">
                                     {product.track_stock && (
                                         <button
                                             onClick={() => onStockModal?.({ product, variant: v, type: "in" })}
-                                            className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                                            className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] text-xs font-medium text-[rgb(var(--color-text-secondary))] transition hover:bg-[rgb(var(--color-surface-secondary))]"
                                             title={`Atur Stok ${v.name}`}
                                         >
                                             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -314,7 +314,7 @@ function DetailRow({ product, onStockModal }) {
                                             "&variant_id=" + v.id +
                                             (product.supplier_id ? "&supplier_id=" + product.supplier_id : "")
                                         }
-                                        className={`inline-flex h-7 items-center justify-center gap-1 rounded-lg border text-xs font-medium transition ${product.supplier_id ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"}`}
+                                        className={`inline-flex h-7 items-center justify-center gap-1 rounded-lg border text-xs font-medium transition ${product.supplier_id ? "border-primary-200 bg-primary-50 text-primary-700 hover:bg-primary-100" : "border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] text-[rgb(var(--color-text-muted))] hover:bg-[rgb(var(--color-surface-secondary))]"}`}
                                         title={product.supplier_id ? `Beli ${v.name} dari Supplier` : "Belum ada supplier — buka Purchase"}
                                     >
                                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -340,30 +340,30 @@ function DetailRow({ product, onStockModal }) {
         : null;
 
     return (
-        <div className="border-t border-slate-100 bg-gradient-to-b from-slate-50/80 to-white px-5 py-4">
+        <div className="border-t border-[rgb(var(--color-divider))] bg-gradient-to-b from-[rgb(var(--color-surface-secondary))]/80 to-[rgb(var(--color-card))] px-5 py-4">
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs sm:grid-cols-4">
                 <div>
-                    <span className="text-slate-400">Harga Jual</span>
-                    <p className="text-sm font-semibold text-slate-800">Rp {Number(product.sell_price || 0).toLocaleString("id-ID")}</p>
+                    <span className="text-[rgb(var(--color-text-muted))]">Harga Jual</span>
+                    <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">Rp {Number(product.sell_price || 0).toLocaleString("id-ID")}</p>
                 </div>
                 <div>
-                    <span className="text-slate-400">Harga Modal</span>
-                    <p className="text-sm font-medium text-slate-600">Rp {Number(product.cost_price || 0).toLocaleString("id-ID")}</p>
+                    <span className="text-[rgb(var(--color-text-muted))]">Harga Modal</span>
+                    <p className="text-sm font-medium text-[rgb(var(--color-text-secondary))]">Rp {Number(product.cost_price || 0).toLocaleString("id-ID")}</p>
                 </div>
                 <div>
-                    <span className="text-slate-400">Stok Saat Ini</span>
-                    <p className="text-sm font-semibold text-slate-800">{product.stock ?? 0}</p>
+                    <span className="text-[rgb(var(--color-text-muted))]">Stok Saat Ini</span>
+                    <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">{product.stock ?? 0}</p>
                 </div>
                 {units && (
                     <div>
-                        <span className="text-slate-400">Multi-Satuan</span>
-                        <p className="truncate text-sm text-slate-600" title={units}>{units}</p>
+                        <span className="text-[rgb(var(--color-text-muted))]">Multi-Satuan</span>
+                        <p className="truncate text-sm text-[rgb(var(--color-text-secondary))]" title={units}>{units}</p>
                     </div>
                 )}
                 {tiers && (
                     <div className="col-span-2">
-                        <span className="text-slate-400">Harga Grosir</span>
-                        <p className="truncate text-sm text-slate-600" title={tiers}>{tiers}</p>
+                        <span className="text-[rgb(var(--color-text-muted))]">Harga Grosir</span>
+                        <p className="truncate text-sm text-[rgb(var(--color-text-secondary))]" title={tiers}>{tiers}</p>
                     </div>
                 )}
             </div>
@@ -389,15 +389,15 @@ function PriceCell({ product, bold = true }) {
             min === max
                 ? `Rp ${min.toLocaleString("id-ID")}`
                 : `Rp ${min.toLocaleString("id-ID")} – Rp ${max.toLocaleString("id-ID")}`;
-        return <span className="text-xs text-slate-600">{text}</span>;
+        return <span className="text-xs text-[rgb(var(--color-text-secondary))]">{text}</span>;
     }
 
     return (
         <span
             className={
                 bold
-                    ? "font-semibold text-slate-900"
-                    : "text-xs text-slate-600"
+                    ? "font-semibold text-[rgb(var(--color-text-primary))]"
+                    : "text-xs text-[rgb(var(--color-text-secondary))]"
             }
         >
             Rp {Number(product.sell_price || 0).toLocaleString("id-ID")}
@@ -410,7 +410,7 @@ function CostPriceCell({ product }) {
     if (variants.length > 0) {
         const costs = variants.map((v) => Number(v.cost_price || 0)).filter((c) => c > 0);
         if (costs.length === 0) {
-            return <span className="text-xs text-slate-400">&mdash;</span>;
+            return <span className="text-xs text-[rgb(var(--color-text-muted))]">&mdash;</span>;
         }
         const min = Math.min(...costs);
         const max = Math.max(...costs);
@@ -418,11 +418,11 @@ function CostPriceCell({ product }) {
             min === max
                 ? `Rp ${min.toLocaleString("id-ID")}`
                 : `Rp ${min.toLocaleString("id-ID")} – Rp ${max.toLocaleString("id-ID")}`;
-        return <span className="text-xs text-slate-500">{text}</span>;
+        return <span className="text-xs text-[rgb(var(--color-text-muted))]">{text}</span>;
     }
 
     return (
-        <span className="text-slate-500">
+        <span className="text-[rgb(var(--color-text-muted))]">
             Rp {Number(product.cost_price || 0).toLocaleString("id-ID")}
         </span>
     );
@@ -432,12 +432,12 @@ function StockWithVariant({ product }) {
     const variantCount = product.variants?.length ?? 0;
     return (
         <div className="flex flex-col items-center gap-1">
-            <span className="font-semibold text-slate-900">
+            <span className="font-semibold text-[rgb(var(--color-text-primary))]">
                 {product.stock ?? 0}
             </span>
             <StockBadge product={product} />
             {variantCount > 0 && (
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-[rgb(var(--color-text-muted))]">
                     {variantCount} variant
                 </span>
             )}
@@ -451,6 +451,7 @@ export default function Index({
     storeType = "retail",
     stats = {},
     filters = {},
+    currentBranch = null,
 }) {
     const { storeTypeFeatures = [] } = usePage().props;
     const has = (f) => storeTypeFeatures.includes(f);
@@ -460,6 +461,8 @@ export default function Index({
         filters?.category ?? "",
     );
     const [filterStatus, setFilterStatus] = useState(filters?.status ?? "");
+    const [sort, setSort] = useState(typeof filters?.sort === "string" ? filters.sort : "name");
+    const [direction, setDirection] = useState(typeof filters?.direction === "string" ? filters.direction : "asc");
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [stockModal, setStockModal] = useState(null);
@@ -505,6 +508,29 @@ export default function Index({
                     key === "status"
                         ? value || undefined
                         : filterStatus || undefined,
+                sort: key === "sort" ? value || undefined : sort || undefined,
+                direction:
+                    key === "direction"
+                        ? value || undefined
+                        : direction || undefined,
+            },
+            { preserveState: true, replace: true },
+        );
+    };
+
+    const toggleSort = (column) => {
+        const newDir = sort === column && direction === "asc" ? "desc" : "asc";
+        setSort(column);
+        setDirection(newDir);
+        router.get(
+            route("admin.products.index"),
+            {
+                search: search || undefined,
+                type: filterType || undefined,
+                category: filterCategory || undefined,
+                status: filterStatus || undefined,
+                sort: column,
+                direction: newDir,
             },
             { preserveState: true, replace: true },
         );
@@ -553,11 +579,20 @@ export default function Index({
             header={
                 <div className="flex w-full items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+                        <h2 className="text-2xl font-bold text-[rgb(var(--color-text-primary))] sm:text-3xl">
                             Manajemen {pageTitle}
                         </h2>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="mt-1 text-sm text-[rgb(var(--color-text-muted))]">
                             Kelola produk, variant, satuan, dan harga grosir
+                            {currentBranch && (
+                                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">
+                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                                    </svg>
+                                    {currentBranch.name}
+                                </span>
+                            )}
                         </p>
                     </div>
                 </div>
@@ -648,15 +683,15 @@ export default function Index({
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] shadow-sm">
                 {/* Toolbar */}
-                <div className="border-b border-slate-200 p-4">
+                <div className="border-b border-[rgb(var(--color-divider))] p-4">
                     <div className="flex flex-col gap-3">
                         {/* Search + Filter Toggle */}
                         <div className="flex gap-2">
                             <div className="relative flex-1">
                                 <svg
-                                    className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                                    className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[rgb(var(--color-text-muted))]"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     stroke="currentColor"
@@ -675,7 +710,7 @@ export default function Index({
                                         }
                                     }}
                                     placeholder="Cari nama, SKU, atau barcode..."
-                                    className="w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                                    className="w-full rounded-lg border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 pl-10 pr-3 text-sm text-[rgb(var(--color-text-primary))] outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
                                 />
                             </div>
                             {/* Filter toggle — mobile only */}
@@ -683,8 +718,8 @@ export default function Index({
                                 onClick={() => setShowFilter(!showFilter)}
                                 className={`inline-flex items-center justify-center rounded-lg border px-3 transition lg:hidden ${
                                     showFilter || hasFilters
-                                        ? "border-blue-300 bg-blue-50 text-blue-600"
-                                        : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                                        ? "border-primary-300 bg-primary-50 text-primary-600"
+                                        : "border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))]"
                                 }`}
                             >
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -744,13 +779,15 @@ export default function Index({
                                             setFilterType("");
                                             setFilterCategory("");
                                             setFilterStatus("");
+                                            setSort("name");
+                                            setDirection("asc");
                                             router.get(
                                                 route("admin.products.index"),
                                                 {},
                                                 { preserveState: true, replace: true },
                                             );
                                         }}
-                                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[rgb(var(--color-border))] px-3 py-2.5 text-sm font-medium text-[rgb(var(--color-text-secondary))] transition hover:bg-[rgb(var(--color-surface-secondary))]"
                                     >
                                         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                                             <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
@@ -761,7 +798,7 @@ export default function Index({
                                 )}
                                 <Link
                                     href={route("admin.products.create")}
-                                    className="hidden lg:inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                                    className="hidden lg:inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
                                 >
                                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                                         <path strokeLinecap="round" d="M12 5v14M5 12h14" />
@@ -771,9 +808,9 @@ export default function Index({
                             </div>
                         </div>
                     </div>
-                    <p className="mt-3 text-sm text-slate-500">
+                    <p className="mt-3 text-sm text-[rgb(var(--color-text-muted))]">
                         Menampilkan{" "}
-                        <span className="font-semibold text-slate-700">
+                        <span className="font-semibold text-[rgb(var(--color-text-secondary))]">
                             {list.length}
                         </span>{" "}
                         dari {products.total} {pageTitle.toLowerCase()}
@@ -783,9 +820,9 @@ export default function Index({
                 {/* Empty state */}
                 {list.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgb(var(--color-surface-secondary))]">
                             <svg
-                                className="h-8 w-8 text-slate-400"
+                                className="h-8 w-8 text-[rgb(var(--color-text-muted))]"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
@@ -798,12 +835,12 @@ export default function Index({
                                 />
                             </svg>
                         </div>
-                        <h3 className="mt-4 text-base font-semibold text-slate-800">
+                        <h3 className="mt-4 text-base font-semibold text-[rgb(var(--color-text-primary))]">
                             {hasFilters
                                 ? `${pageTitle} tidak ditemukan`
                                 : `Belum ada ${pageTitle.toLowerCase()}`}
                         </h3>
-                        <p className="mt-1 max-w-sm text-sm text-slate-500">
+                        <p className="mt-1 max-w-sm text-sm text-[rgb(var(--color-text-muted))]">
                             {hasFilters
                                 ? "Coba kata kunci atau filter lain."
                                 : `Mulai dengan menambahkan ${pageTitle.toLowerCase()} pertama.`}
@@ -811,7 +848,7 @@ export default function Index({
                         {!hasFilters && (
                             <Link
                                 href={route("admin.products.create")}
-                                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
                             >
                                 <svg
                                     className="h-5 w-5"
@@ -834,10 +871,20 @@ export default function Index({
                         {/* Desktop table */}
                         <div className="hidden overflow-x-auto lg:block">
                             <table className="w-full text-sm">
-                                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+                                 <thead className="bg-[rgb(var(--color-table-header))] text-xs uppercase tracking-wide text-[rgb(var(--color-text-secondary))]">
                                     <tr>
-                                        <th className="px-4 py-3 text-left font-semibold">
-                                            Produk
+                                        <th
+                                            className="cursor-pointer select-none px-4 py-3 text-left font-semibold transition hover:text-[rgb(var(--color-text-primary))]"
+                                            onClick={() => toggleSort("name")}
+                                        >
+                                            <span className="inline-flex items-center gap-1">
+                                                Produk
+                                                {sort === "name" && (
+                                                    <svg className={`h-3 w-3 transition ${direction === "desc" ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                                                        <path d="m6 9 6 6 6-6" />
+                                                    </svg>
+                                                )}
+                                            </span>
                                         </th>
                                         <th className="px-4 py-3 text-left font-semibold">
                                             Tipe
@@ -850,15 +897,35 @@ export default function Index({
                                                 Harga Beli
                                             </th>
                                         )}
-                                        <th className="px-4 py-3 text-right font-semibold">
-                                            {sellPriceLabel}
+                                        <th
+                                            className="cursor-pointer select-none px-4 py-3 text-right font-semibold transition hover:text-[rgb(var(--color-text-primary))]"
+                                            onClick={() => toggleSort("sell_price")}
+                                        >
+                                            <span className="inline-flex items-center justify-end gap-1">
+                                                {sellPriceLabel}
+                                                {sort === "sell_price" && (
+                                                    <svg className={`h-3 w-3 transition ${direction === "desc" ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                                                        <path d="m6 9 6 6 6-6" />
+                                                    </svg>
+                                                )}
+                                            </span>
                                         </th>
                                         <th className="px-4 py-3 text-left font-semibold">
                                             Badges
                                         </th>
                                         {showStock && (
-                                            <th className="px-4 py-3 text-center font-semibold">
-                                                Stok
+                                            <th
+                                                className="cursor-pointer select-none px-4 py-3 text-center font-semibold transition hover:text-[rgb(var(--color-text-primary))]"
+                                                onClick={() => toggleSort("stock")}
+                                            >
+                                                <span className="inline-flex items-center justify-center gap-1">
+                                                    Stok
+                                                    {sort === "stock" && (
+                                                        <svg className={`h-3 w-3 transition ${direction === "desc" ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                                                            <path d="m6 9 6 6 6-6" />
+                                                        </svg>
+                                                    )}
+                                                </span>
                                             </th>
                                         )}
                                         <th className="px-4 py-3 text-center font-semibold">
@@ -869,7 +936,7 @@ export default function Index({
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-[rgb(var(--color-divider))]">
                                     {list.map((product) => {
                                         const isExp = expanded.has(product.id);
                                         const canExp = hasExpandable(product);
@@ -877,7 +944,7 @@ export default function Index({
                                             <>
                                                 <tr
                                                     key={product.id}
-                                                    className="transition hover:bg-slate-50"
+                                                    className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                                 >
                                                     <td className="px-4 py-3">
                                                         <div className="flex items-center gap-3">
@@ -887,10 +954,10 @@ export default function Index({
                                                                     alt={
                                                                         product.name
                                                                     }
-                                                                    className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 object-cover"
+                                                                    className="h-10 w-10 shrink-0 rounded-lg border border-[rgb(var(--color-border))] object-cover"
                                                                 />
                                                             ) : (
-                                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 text-xs font-semibold text-slate-500">
+                                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--color-surface-secondary))] text-xs font-semibold text-[rgb(var(--color-text-secondary))]">
                                                                     {product.name
                                                                         .split(
                                                                             " ",
@@ -917,19 +984,19 @@ export default function Index({
                                                                         "admin.products.show",
                                                                         product.id,
                                                                     )}
-                                                                    className="block max-w-[200px] truncate font-semibold text-slate-900 transition-colors hover:text-blue-600"
+                                                                    className="block max-w-[200px] truncate font-semibold text-[rgb(var(--color-text-primary))] transition-colors hover:text-primary-600"
                                                                 >
                                                                     {
                                                                         product.name
                                                                     }
                                                                 </Link>
-                                                                <p className="font-mono text-xs text-slate-500">
+                                                                <p className="font-mono text-xs text-[rgb(var(--color-text-muted))]">
                                                                     {product.sku}
                                                                     {product.barcode
                                                                         ? ` · ${product.barcode}`
                                                                         : ""}
                                                                 </p>
-                                                                <p className="text-xs text-slate-400">
+                                                                <p className="text-xs text-[rgb(var(--color-text-muted))]">
                                                                     Satuan:{" "}
                                                                     {product.unit}
                                                                 </p>
@@ -941,10 +1008,10 @@ export default function Index({
                                                             type={product.type}
                                                         />
                                                     </td>
-                                                    <td className="px-4 py-3 text-slate-600">
+                                                    <td className="px-4 py-3 text-[rgb(var(--color-text-secondary))]">
                                                         {product.category
                                                             ?.name ?? (
-                                                            <span className="text-xs italic text-slate-300">
+                                                            <span className="text-xs italic text-[rgb(var(--color-text-muted))]">
                                                                 &mdash;
                                                             </span>
                                                         )}
@@ -985,7 +1052,7 @@ export default function Index({
                                                                                     },
                                                                                 );
                                                                             }}
-                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
+                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-2 text-xs font-medium text-[rgb(var(--color-text-secondary))] shadow-sm transition hover:bg-[rgb(var(--color-surface-secondary))]"
                                                                             title="Stok Manual"
                                                                         >
                                                                             <svg
@@ -1021,7 +1088,7 @@ export default function Index({
                                                                             ) =>
                                                                                 e.stopPropagation()
                                                                             }
-                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-blue-200 bg-blue-50 px-2 text-xs font-medium text-blue-700 shadow-sm transition hover:bg-blue-100"
+                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-primary-200 bg-primary-50 px-2 text-xs font-medium text-primary-700 shadow-sm transition hover:bg-primary-100"
                                                                             title="Beli dari Supplier"
                                                                         >
                                                                             <svg
@@ -1060,7 +1127,7 @@ export default function Index({
                                                                             product.id,
                                                                         )
                                                                     }
-                                                                    className="rounded p-1.5 text-slate-500 transition hover:bg-slate-100"
+                                                                    className="rounded p-1.5 text-[rgb(var(--color-text-secondary))] transition hover:bg-[rgb(var(--color-surface-secondary))]"
                                                                     title="Detail"
                                                                 >
                                                                     <svg
@@ -1084,7 +1151,7 @@ export default function Index({
                                                                         "admin.products.variants.index",
                                                                         product.id,
                                                                     )}
-                                                                    className="rounded p-1.5 text-slate-500 transition hover:bg-amber-50 hover:text-amber-600"
+                                                                    className="rounded p-1.5 text-[rgb(var(--color-text-secondary))] transition hover:bg-amber-50 hover:text-amber-600"
                                                                     title="Kelola Varian"
                                                                 >
                                                                     <svg
@@ -1113,7 +1180,7 @@ export default function Index({
                                                                             "admin.products.recipes.index",
                                                                             product.id,
                                                                         )}
-                                                                        className="rounded p-1.5 text-slate-500 transition hover:bg-orange-50 hover:text-orange-600"
+                                                                        className="rounded p-1.5 text-[rgb(var(--color-text-secondary))] transition hover:bg-orange-50 hover:text-orange-600"
                                                                         title="Kelola Resep"
                                                                     >
                                                                         <svg
@@ -1138,7 +1205,7 @@ export default function Index({
                                                                     "admin.products.show",
                                                                     product.id,
                                                                 )}
-                                                                className="rounded p-1.5 text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
+                                                                className="rounded p-1.5 text-[rgb(var(--color-text-secondary))] transition hover:bg-primary-50 hover:text-primary-600"
                                                                 title="Lihat Detail"
                                                             >
                                                                 <Eye
@@ -1153,7 +1220,7 @@ export default function Index({
                                                                     "admin.products.edit",
                                                                     product.id,
                                                                 )}
-                                                                className="rounded p-1.5 text-slate-500 transition hover:bg-amber-50 hover:text-amber-600"
+                                                                className="rounded p-1.5 text-[rgb(var(--color-text-secondary))] transition hover:bg-amber-50 hover:text-amber-600"
                                                                 title="Edit"
                                                             >
                                                                 <svg
@@ -1229,7 +1296,7 @@ export default function Index({
                         </div>
 
                         {/* Mobile cards */}
-                        <div className="divide-y divide-slate-100 lg:hidden">
+                        <div className="divide-y divide-[rgb(var(--color-divider))] lg:hidden">
                             {list.map((product) => {
                                 const isExp = expanded.has(product.id);
                                 const canExp = hasExpandable(product);
@@ -1240,10 +1307,10 @@ export default function Index({
                                                 <img
                                                     src={`/storage/${product.image}`}
                                                     alt={product.name}
-                                                    className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 object-cover"
+                                                    className="h-10 w-10 shrink-0 rounded-lg border border-[rgb(var(--color-border))] object-cover"
                                                 />
                                             ) : (
-                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 text-xs font-semibold text-slate-500">
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--color-surface-secondary))] text-xs font-semibold text-[rgb(var(--color-text-secondary))]">
                                                     {product.name
                                                         .split(" ")
                                                         .slice(0, 2)
@@ -1259,7 +1326,7 @@ export default function Index({
                                                             "admin.products.show",
                                                             product.id,
                                                         )}
-                                                        className="font-semibold text-slate-900 transition-colors hover:text-blue-600"
+                                                        className="font-semibold text-[rgb(var(--color-text-primary))] transition-colors hover:text-primary-600"
                                                     >
                                                         {product.name}
                                                     </Link>
@@ -1267,13 +1334,13 @@ export default function Index({
                                                         type={product.type}
                                                     />
                                                 </div>
-                                                <p className="mt-0.5 font-mono text-xs text-slate-500">
+                                                <p className="mt-0.5 font-mono text-xs text-[rgb(var(--color-text-muted))]">
                                                     {product.sku}
                                                     {product.barcode
                                                         ? ` · ${product.barcode}`
                                                         : ""}
                                                 </p>
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-[rgb(var(--color-text-muted))]">
                                                     {product.category?.name ??
                                                         "—"}{" "}
                                                     · {product.unit}
@@ -1283,7 +1350,7 @@ export default function Index({
                                                         product={product}
                                                     />
                                                     {showMargin && (
-                                                        <span className="text-xs text-slate-400">
+                                                        <span className="text-xs text-[rgb(var(--color-text-muted))]">
                                                             <CostPriceCell product={product} />
                                                         </span>
                                                     )}
@@ -1324,7 +1391,7 @@ export default function Index({
                                                                     product.id,
                                                                 )
                                                             }
-                                                            className="text-slate-600"
+                                                            className="text-[rgb(var(--color-text-secondary))]"
                                                         >
                                                             {isExp
                                                                 ? "Sembunyikan"
@@ -1342,7 +1409,7 @@ export default function Index({
                                                                         },
                                                                     )
                                                                 }
-                                                                className="text-blue-600"
+                                                                className="text-primary-600"
                                                             >
                                                                 Stok
                                                             </button>
@@ -1380,8 +1447,8 @@ export default function Index({
 
             {/* Pagination */}
             {(products?.last_page ?? 1) > 1 && (
-                <div className="mt-4 flex flex-col items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 sm:flex-row">
-                    <p className="text-sm text-slate-500">
+                <div className="mt-4 flex flex-col items-center justify-between gap-3 rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-4 py-3 sm:flex-row">
+                    <p className="text-sm text-[rgb(var(--color-text-muted))]">
                         Halaman {products.current_page} dari{" "}
                         {products.last_page} · {products.total}{" "}
                         {pageTitle.toLowerCase()}
@@ -1401,10 +1468,10 @@ export default function Index({
                                 }}
                                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                                     link.active
-                                        ? "bg-blue-600 text-white"
+                                        ? "bg-primary-600 text-white"
                                         : link.url
-                                          ? "border border-slate-300 text-slate-700 hover:bg-slate-50"
-                                          : "cursor-default text-slate-300"
+                                          ? "border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))]"
+                                          : "cursor-default text-[rgb(var(--color-text-muted))]"
                                 }`}
                                 dangerouslySetInnerHTML={{
                                     __html: link.label,
@@ -1418,7 +1485,7 @@ export default function Index({
             {/* FAB Create — mobile/tablet only */}
             <Link
                 href={route("admin.products.create")}
-                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-primary-600 text-white shadow-xl shadow-blue-500/40 transition hover:shadow-2xl hover:shadow-blue-500/50 lg:hidden"
+                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-xl shadow-primary-500/40 transition hover:shadow-2xl hover:shadow-primary-500/50 lg:hidden"
                 title={`Tambah ${pageTitle}`}
             >
                 <svg
@@ -1456,7 +1523,10 @@ export default function Index({
                     type={stockModal.type}
                     variant={stockModal.variant || null}
                     onClose={() => setStockModal(null)}
-                    onSuccess={() => setStockModal(null)}
+                    onSuccess={() => {
+                        setStockModal(null);
+                        router.reload({ only: ["products", "stats"] });
+                    }}
                 />
             )}
         </AuthenticatedLayout>

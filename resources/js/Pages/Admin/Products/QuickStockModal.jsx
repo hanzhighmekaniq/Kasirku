@@ -97,15 +97,15 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                 onClick={() => !processing && onClose?.()}
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
-            <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-modal))] p-6 shadow-2xl">
                 <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-slate-800">
+                    <h3 className="text-base font-semibold text-[rgb(var(--color-text-primary))]">
                         Atur Stok
                     </h3>
                     <button
                         onClick={onClose}
                         disabled={processing}
-                        className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:opacity-60"
+                        className="rounded-lg p-1 text-[rgb(var(--color-text-muted))] transition hover:bg-[rgb(var(--color-surface-secondary))] hover:text-[rgb(var(--color-text-secondary))] disabled:opacity-60"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -125,14 +125,14 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                     </div>
 
                     {/* Toggle: Stok Masuk / Stok Keluar */}
-                    <div className="flex rounded-xl bg-slate-100 p-1">
+                    <div className="flex rounded-xl bg-[rgb(var(--color-surface-secondary))] p-1">
                         <button
                             type="button"
                             onClick={() => handleTypeChange("in")}
                             className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
                                 isIn
-                                    ? "bg-white text-emerald-700 shadow-sm"
-                                    : "text-slate-500 hover:text-slate-700"
+                                    ? "bg-[rgb(var(--color-card))] text-emerald-700 shadow-sm"
+                                    : "text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
                             }`}
                         >
                             ➕ Stok Masuk
@@ -142,8 +142,8 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                             onClick={() => handleTypeChange("out")}
                             className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
                                 !isIn
-                                    ? "bg-white text-red-700 shadow-sm"
-                                    : "text-slate-500 hover:text-slate-700"
+                                    ? "bg-[rgb(var(--color-card))] text-red-700 shadow-sm"
+                                    : "text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
                             }`}
                         >
                             ➖ Stok Keluar
@@ -153,7 +153,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                     {/* Variant Selector — hanya jika product punya variant */}
                     {hasVariants && !initialVariant && (
                         <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                            <label className="mb-1.5 block text-sm font-medium text-[rgb(var(--color-text-secondary))]">
                                 Pilih Variant
                             </label>
                             <div className="space-y-1.5">
@@ -168,18 +168,18 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                         className={`w-full flex items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm transition ${
                                             selectedVariant?.id === v.id
                                                 ? "border-primary-300 bg-primary-50 ring-2 ring-primary-200"
-                                                : "border-slate-200 hover:bg-slate-50"
+                                                : "border-[rgb(var(--color-border))] hover:bg-[rgb(var(--color-surface-secondary))]"
                                         }`}
                                     >
                                         <div>
-                                            <span className="font-medium text-slate-800">
+                                            <span className="font-medium text-[rgb(var(--color-text-primary))]">
                                                 {v.name}
                                             </span>
-                                            <span className="ml-2 text-xs text-slate-400 font-mono">
+                                            <span className="ml-2 text-xs text-[rgb(var(--color-text-muted))] font-mono">
                                                 {v.sku}
                                             </span>
                                         </div>
-                                        <span className="text-xs font-semibold text-slate-600">
+                                        <span className="text-xs font-semibold text-[rgb(var(--color-text-secondary))]">
                                             Stok: {v.stock ?? 0}
                                         </span>
                                     </button>
@@ -192,20 +192,20 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                     {(!hasVariants || selectedVariant || initialVariant) && (
                         <>
                             <div>
-                                <p className="text-xs font-medium text-slate-400">
+                                <p className="text-xs font-medium text-[rgb(var(--color-text-muted))]">
                                     {selectedVariant ? "Variant" : "Produk"}
                                 </p>
-                                <p className="mt-0.5 text-sm font-medium text-slate-800">
+                                <p className="mt-0.5 text-sm font-medium text-[rgb(var(--color-text-primary))]">
                                     {activeName}
                                 </p>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-[rgb(var(--color-text-muted))]">
                                     SKU: {activeSku} &middot; {activeUnit}
                                 </p>
                             </div>
 
                             {/* Stok Saat Ini */}
                             <div>
-                                <p className="text-xs font-medium text-slate-400">
+                                <p className="text-xs font-medium text-[rgb(var(--color-text-muted))]">
                                     Stok Saat Ini
                                 </p>
                                 <p
@@ -213,7 +213,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                         product.track_stock &&
                                         activeStock <= (product.stock_minimum || 0)
                                             ? "text-red-600"
-                                            : "text-slate-800"
+                                            : "text-[rgb(var(--color-text-primary))]"
                                     }`}
                                 >
                                     {product.track_stock
@@ -224,7 +224,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
 
                             {/* Qty */}
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                <label className="mb-1.5 block text-sm font-medium text-[rgb(var(--color-text-secondary))]">
                                     Qty ({activeUnit})
                                 </label>
                                 <input
@@ -234,10 +234,10 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     placeholder="0"
                                     min="0.0001"
                                     step="any"
-                                    className={`w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 ${
+                                    className={`w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-[rgb(var(--color-text-muted))] focus:border-primary-500 focus:ring-2 focus:ring-primary-200 ${
                                         isLargeQty
                                             ? "border-amber-400 bg-amber-50"
-                                            : "border-slate-300"
+                                            : "border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] text-[rgb(var(--color-text-primary))]"
                                     }`}
                                     autoFocus
                                 />
@@ -259,14 +259,14 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                             {/* Harga Modal — hanya saat Stok Masuk */}
                             {isIn && (
                                 <div>
-                                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                    <label className="mb-1.5 block text-sm font-medium text-[rgb(var(--color-text-secondary))]">
                                         Harga Modal / Unit{" "}
-                                        <span className="font-normal text-slate-400">
+                                        <span className="font-normal text-[rgb(var(--color-text-muted))]">
                                             (opsional)
                                         </span>
                                     </label>
                                     <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-[rgb(var(--color-text-muted))]">
                                             Rp
                                         </span>
                                         <input
@@ -278,10 +278,10 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                             placeholder={activeCostPrice || "0"}
                                             min="0"
                                             step="any"
-                                            className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                            className="w-full rounded-xl border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 pl-10 pr-3.5 text-sm text-[rgb(var(--color-text-primary))] shadow-sm transition placeholder:text-[rgb(var(--color-text-muted))] focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                         />
                                     </div>
-                                    <p className="mt-1 text-xs text-slate-400">
+                                    <p className="mt-1 text-xs text-[rgb(var(--color-text-muted))]">
                                         Harga produksi per unit. Kalau diisi, harga
                                         modal produk akan diperbarui.
                                     </p>
@@ -290,7 +290,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
 
                             {/* Alasan */}
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                <label className="mb-1.5 block text-sm font-medium text-[rgb(var(--color-text-secondary))]">
                                     Alasan
                                 </label>
                                 <SearchableSelect
@@ -304,9 +304,9 @@ export default function QuickStockModal({ product, type, variant: initialVariant
 
                             {/* Catatan */}
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                <label className="mb-1.5 block text-sm font-medium text-[rgb(var(--color-text-secondary))]">
                                     Catatan{" "}
-                                    <span className="font-normal text-slate-400">
+                                    <span className="font-normal text-[rgb(var(--color-text-muted))]">
                                         (opsional)
                                     </span>
                                 </label>
@@ -315,7 +315,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     placeholder="misal: produksi batch #45"
-                                    className="w-full rounded-xl border border-slate-300 py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                    className="w-full rounded-xl border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 px-3.5 text-sm text-[rgb(var(--color-text-primary))] shadow-sm transition placeholder:text-[rgb(var(--color-text-muted))] focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 />
                             </div>
                         </>
@@ -332,7 +332,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                     <button
                         onClick={onClose}
                         disabled={processing}
-                        className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                        className="rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-4 py-2.5 text-sm font-medium text-[rgb(var(--color-text-secondary))] transition hover:bg-[rgb(var(--color-surface-secondary))] disabled:opacity-60"
                     >
                         Batal
                     </button>

@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle } from "lucide-react";
 
 export default function ConfirmDeleteModal({
     open,
-    title = "Hapus data?",
+    title = "Hapus tema?",
     description = "Tindakan ini tidak dapat dibatalkan.",
     confirmLabel = "Hapus",
     processing = false,
@@ -43,7 +42,7 @@ export default function ConfirmDeleteModal({
             <div
                 role="dialog"
                 aria-modal="true"
-                className={`relative w-full max-w-md transform rounded-2xl bg-[rgb(var(--color-modal))] p-6 shadow-2xl transition-all duration-200 sm:p-7 ${
+                className={`relative w-full max-w-md transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-200 sm:p-7 ${
                     show
                         ? "translate-y-0 scale-100 opacity-100"
                         : "translate-y-3 scale-95 opacity-0"
@@ -51,16 +50,25 @@ export default function ConfirmDeleteModal({
             >
                 <div className="flex items-start gap-4">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100">
-                        <AlertTriangle
+                        <svg
                             className="h-6 w-6 text-red-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
                             strokeWidth={1.8}
-                        />
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                            />
+                        </svg>
                     </div>
                     <div className="min-w-0">
-                        <h3 className="text-lg font-semibold text-[rgb(var(--color-text-primary))]">
+                        <h3 className="text-lg font-semibold text-slate-900">
                             {title}
                         </h3>
-                        <p className="mt-1 text-sm text-[rgb(var(--color-text-muted))]">
+                        <p className="mt-1 text-sm text-slate-500">
                             {description}
                         </p>
                     </div>
@@ -71,7 +79,7 @@ export default function ConfirmDeleteModal({
                         type="button"
                         onClick={onClose}
                         disabled={processing}
-                        className="inline-flex justify-center rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-4 py-2.5 text-sm font-medium text-[rgb(var(--color-text-secondary))] transition hover:bg-[rgb(var(--color-surface-secondary))] disabled:opacity-60"
+                        className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
                     >
                         Batal
                     </button>

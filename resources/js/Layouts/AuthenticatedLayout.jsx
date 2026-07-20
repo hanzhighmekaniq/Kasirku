@@ -170,9 +170,9 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
             <div
                 draggable
                 onDragStart={(e) => onDragStart && onDragStart(e, item.key)}
-                className="group flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition cursor-grab active:cursor-grabbing text-slate-500 hover:bg-slate-100 hover:text-slate-700 select-none"
+                className="group flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition cursor-grab active:cursor-grabbing text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))] hover:text-[rgb(var(--color-text-primary))] select-none"
             >
-                <span className="flex items-center justify-center w-5 h-5 transition rounded shrink-0 text-slate-300 group-hover:text-slate-600">
+                <span className="flex items-center justify-center w-5 h-5 transition rounded shrink-0 text-[rgb(var(--color-text-muted))] group-hover:text-[rgb(var(--color-text-secondary))]">
                     <GripVertical className="w-4 h-4" strokeWidth={2} />
                 </span>
                 <span className="flex-1 truncate text-[13px] font-medium">
@@ -195,15 +195,15 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
                 className={`group relative flex h-9 w-full items-center justify-center rounded-lg transition-all
                     ${
                         locked
-                            ? "cursor-not-allowed text-slate-300"
+                            ? "cursor-not-allowed text-[rgb(var(--color-text-muted))]"
                             : active
-                              ? "bg-primary-600 text-white shadow-sm shadow-primary-200/50"
-                              : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                              ? "bg-primary-600 text-[rgb(var(--color-primary-foreground))]"
+                              : "text-[rgb(var(--color-text-muted))] hover:bg-[rgb(var(--color-surface-secondary))] hover:text-[rgb(var(--color-text-secondary))]"
                     }`}
             >
                 {/* Active left indicator */}
                 {active && !locked && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-white" />
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-[rgb(var(--color-primary-foreground))]" />
                 )}
                 <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
                     <NavIcons name={item.icon} className="h-[17px] w-[17px]" />
@@ -219,11 +219,11 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
                 className="group relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left transition cursor-not-allowed"
                 title="🔓 Upgrade Plan untuk mengakses fitur ini"
             >
-                <span className="flex items-center justify-center w-5 h-5 rounded-md shrink-0 text-slate-300">
+                <span className="flex items-center justify-center w-5 h-5 rounded-md shrink-0 text-[rgb(var(--color-text-muted))]">
                     <NavIcons name={item.icon} className="h-[15px] w-[15px]" />
                 </span>
                 {!collapsed && (
-                    <span className="flex-1 truncate text-[13px] font-medium text-slate-300 line-through decoration-slate-200">
+                    <span className="flex-1 truncate text-[13px] font-medium text-[rgb(var(--color-text-muted))] line-through decoration-[rgb(var(--color-border))]">
                         {item.name}
                     </span>
                 )}
@@ -242,8 +242,8 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
             <span
                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition ${
                     active
-                        ? "text-white"
-                        : "text-slate-500 group-hover:text-primary-600"
+                        ? "text-[rgb(var(--color-primary-foreground))]"
+                        : "text-[rgb(var(--color-text-secondary))] group-hover:text-primary-600"
                 }`}
             >
                 <NavIcons name={item.icon} className="h-[15px] w-[15px]" />
@@ -271,8 +271,8 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
             className={`group flex items-center gap-2.5 rounded-lg px-1 py-2.5 transition-all
                 ${
                     active
-                        ? "bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-md shadow-primary-200/50"
-                        : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
+                        ? "bg-gradient-to-r from-primary-600 to-primary-700 text-[rgb(var(--color-primary-foreground))]"
+                        : "text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))]/80 hover:text-[rgb(var(--color-text-primary))]"
                 }
                 ${collapsed ? "justify-center px-0" : ""}`}
         >
@@ -359,7 +359,7 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
     if (collapsed) {
         return (
             <div className="space-y-0.5 pb-1.5">
-                <div className="w-6 h-px mx-auto my-2 bg-slate-200/60" />
+                <div className="w-6 h-px mx-auto my-2 bg-[rgb(var(--color-border))]/60" />
                 {group.items.map((item) => (
                     <NavItem
                         key={item.key}
@@ -380,21 +380,21 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                 className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
                     hasActive
                         ? "bg-primary-50 text-primary-700"
-                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                        : "text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))] hover:text-[rgb(var(--color-text-primary))]"
                 }`}
             >
                 <GroupIcons
                     name={group.icon}
-                    className={`h-3.5 w-3.5 ${hasActive ? "text-primary-600" : "text-slate-400"}`}
+                    className={`h-3.5 w-3.5 ${hasActive ? "text-primary-600" : "text-[rgb(var(--color-text-muted))]"}`}
                 />
                 <span className="flex-1 text-left">{group.label}</span>
                 <span
-                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${hasActive ? "bg-primary-100 text-primary-700" : "bg-slate-100 text-slate-500"}`}
+                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${hasActive ? "bg-primary-100 text-primary-700" : "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))]"}`}
                 >
                     {group.items.filter((i) => !i.locked).length}
                 </span>
                 <svg
-                    className={`h-3 w-3 shrink-0 transition-transform ${hasActive ? "text-primary-500" : "text-slate-400"} ${open ? "rotate-180" : ""}`}
+                    className={`h-3 w-3 shrink-0 transition-transform ${hasActive ? "text-primary-500" : "text-[rgb(var(--color-text-muted))]"} ${open ? "rotate-180" : ""}`}
                     viewBox="0 0 20 20"
                     fill="currentColor"
                 >
@@ -406,7 +406,7 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                 </svg>
             </button>
             {open && (
-                <div className="mt-1 space-y-0.5 ml-2 pl-3 border-l-2 border-slate-200">
+                <div className="mt-1 space-y-0.5 ml-2 pl-3 border-l-2 border-[rgb(var(--color-border))]">
                     {group.items.map((item, index) => {
                         // Tambahkan divider sebelum item LOCKED pertama
                         const prevItem = group.items[index - 1];
@@ -435,11 +435,11 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                             >
                                 {showDivider && (
                                     <div className="flex items-center gap-2 px-3 my-2">
-                                        <div className="flex-1 h-px bg-slate-200" />
+                                        <div className="flex-1 h-px bg-[rgb(var(--color-border))]" />
                                         <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
                                             🔒 PREMIUM
                                         </span>
-                                        <div className="flex-1 h-px bg-slate-200" />
+                                        <div className="flex-1 h-px bg-[rgb(var(--color-border))]" />
                                     </div>
                                 )}
                                 <NavItem
@@ -524,7 +524,7 @@ function WorkspaceSwitcher({
     const typeLabel = TYPE_LABEL[currentStore.type] || currentStore.type;
     const typeColor =
         TYPE_COLOR[currentStore.type] ||
-        "bg-slate-50 text-slate-600 ring-1 ring-slate-200";
+        "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))] ring-1 ring-[rgb(var(--color-border))]";
 
     const Trigger = clickable ? "button" : "div";
 
@@ -541,20 +541,20 @@ function WorkspaceSwitcher({
                 }
                 className={`flex items-center rounded-xl border transition ${
                     collapsed
-                        ? "h-9 w-9 justify-center border-slate-200 bg-white"
-                        : "w-full gap-2.5 border-slate-200 bg-white px-3 py-2.5 text-left"
+                        ? "h-9 w-9 justify-center border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))]"
+                        : "w-full gap-2.5 border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-3 py-2.5 text-left"
                 } ${clickable ? "hover:border-primary-300 hover:bg-primary-50/50 cursor-pointer" : "cursor-default"}`}
             >
-                <span className="flex items-center justify-center text-sm rounded-lg h-7 w-7 shrink-0 bg-slate-100">
+                <span className="flex items-center justify-center text-sm rounded-lg h-7 w-7 shrink-0 bg-[rgb(var(--color-surface-secondary))]">
                     {typeIcon}
                 </span>
                 {!collapsed && (
                     <>
                         <div className="flex-1 min-w-0">
-                            <p className="truncate text-[13px] font-semibold text-slate-800">
+                            <p className="truncate text-[13px] font-semibold text-[rgb(var(--color-text-primary))]">
                                 {currentStore.name}
                             </p>
-                            <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                            <div className="flex items-center gap-1 text-[11px] text-[rgb(var(--color-text-secondary))]">
                                 {currentBranch && (
                                     <span className="truncate">
                                         📍 {currentBranch.name}
@@ -569,7 +569,7 @@ function WorkspaceSwitcher({
                         </div>
                         {clickable && (
                             <svg
-                                className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+                                className={`h-3.5 w-3.5 shrink-0 text-[rgb(var(--color-text-muted))] transition-transform ${open ? "rotate-180" : ""}`}
                                 viewBox="0 0 20 20"
                                 fill="currentColor"
                             >
@@ -593,12 +593,12 @@ function WorkspaceSwitcher({
                         left: pos.left,
                         width: pos.width,
                     }}
-                    className="z-50 overflow-hidden bg-white border shadow-xl rounded-xl border-slate-200"
+                    className="z-50 overflow-hidden bg-[rgb(var(--color-card))] border shadow-xl rounded-xl border-[rgb(var(--color-border))]"
                 >
                     {hasStoreChoice && (
                         <>
-                            <div className="px-3 py-2 border-b border-slate-100">
-                                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                            <div className="px-3 py-2 border-b border-[rgb(var(--color-divider))]">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--color-text-muted))]">
                                     Toko
                                 </p>
                             </div>
@@ -606,17 +606,17 @@ function WorkspaceSwitcher({
                                 <button
                                     key={s.id}
                                     onClick={() => switchStore(s.id)}
-                                    className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-slate-50 ${
+                                    className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-[rgb(var(--color-surface-secondary))] ${
                                         s.id === currentStore.id
                                             ? "bg-primary-50 text-primary-700 font-semibold"
-                                            : "text-slate-700"
+                                            : "text-[rgb(var(--color-text-secondary))]"
                                     }`}
                                 >
                                     <span
                                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
                                             s.id === currentStore.id
-                                                ? "bg-primary-500 text-white"
-                                                : "bg-slate-200 text-slate-600"
+                                                ? "bg-primary-500 text-[rgb(var(--color-primary-foreground))]"
+                                                : "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))]"
                                         }`}
                                     >
                                         {s.name.charAt(0).toUpperCase()}
@@ -647,9 +647,9 @@ function WorkspaceSwitcher({
                     {hasBranchChoice && (
                         <>
                             <div
-                                className={`border-b border-slate-100 px-3 py-2 ${hasStoreChoice ? "border-t" : ""}`}
+                                className={`border-b border-[rgb(var(--color-divider))] px-3 py-2 ${hasStoreChoice ? "border-t" : ""}`}
                             >
-                                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--color-text-muted))]">
                                     Cabang
                                 </p>
                             </div>
@@ -657,17 +657,17 @@ function WorkspaceSwitcher({
                                 <button
                                     key={b.id}
                                     onClick={() => switchBranch(b.id)}
-                                    className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-slate-50 ${
+                                    className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-[rgb(var(--color-surface-secondary))] ${
                                         b.id === currentBranch?.id
                                             ? "bg-primary-50 text-primary-700 font-semibold"
-                                            : "text-slate-700"
+                                            : "text-[rgb(var(--color-text-secondary))]"
                                     }`}
                                 >
                                     <span
                                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
                                             b.id === currentBranch?.id
-                                                ? "bg-primary-500 text-white"
-                                                : "bg-slate-200 text-slate-600"
+                                                ? "bg-primary-500 text-[rgb(var(--color-primary-foreground))]"
+                                                : "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))]"
                                         }`}
                                     >
                                         {b.code?.charAt(0) ?? b.name.charAt(0)}
@@ -771,23 +771,23 @@ function SidebarContent({
     }, [reorderMode]);
 
     return (
-        <div className="flex flex-col h-full overflow-hidden border-r bg-gradient-to-b from-slate-50 to-white border-slate-200">
+        <div className="flex flex-col h-full overflow-hidden border-r bg-[rgb(var(--color-sidebar))] border-[rgb(var(--color-border))]">
             {/* Brand */}
             <div
-                className={`flex h-[68px] shrink-0 items-center border-b border-slate-100 bg-white/80 backdrop-blur-sm ${collapsed ? "justify-center px-3" : "px-5"}`}
+                className={`flex h-[68px] shrink-0 items-center border-b border-[rgb(var(--color-divider))] bg-[rgb(var(--color-sidebar))]/80 backdrop-blur-sm ${collapsed ? "justify-center px-3" : "px-5"}`}
             >
                 <div className="flex items-center gap-3">
                     <div className="relative flex items-center justify-center w-10 h-10 shadow-lg shrink-0 rounded-xl bg-gradient-to-br from-primary-600 to-primary-700 shadow-primary-200/50">
                         <ApplicationLogo className="w-5 h-5 text-white fill-current" />
-                        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400 ring-2 ring-emerald-100" />
+                        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[rgb(var(--color-sidebar))] bg-emerald-400 ring-2 ring-emerald-100" />
                     </div>
                     <div
                         className={`leading-tight transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0 overflow-hidden ml-0" : "opacity-100 w-auto"}`}
                     >
-                        <span className="block text-[15px] font-bold tracking-tight text-slate-900 whitespace-nowrap">
+                        <span className="block text-[15px] font-bold tracking-tight text-[rgb(var(--color-sidebar-text))] whitespace-nowrap">
                             KasirKu
                         </span>
-                        <span className="block text-[11px] font-medium text-slate-500 whitespace-nowrap">
+                        <span className="block text-[11px] font-medium text-[rgb(var(--color-text-muted))] whitespace-nowrap">
                             Point of Sale System
                         </span>
                     </div>
@@ -813,34 +813,34 @@ function SidebarContent({
                 <div className="px-4 pt-3 pb-3 space-y-3 shrink-0">
                     {/* Search Bar */}
                     <div className="relative">
-                        <Search className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-slate-400" />
+                        <Search className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-[rgb(var(--color-text-muted))]" />
                         <input
                             type="text"
                             placeholder="Cari menu..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 py-2.5 text-sm text-slate-700 placeholder-slate-400 transition focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                            className="w-full rounded-xl border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] pl-10 pr-3 py-2.5 text-sm text-[rgb(var(--color-text-secondary))] placeholder-[rgb(var(--color-text-muted))] transition focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-100"
                         />
                     </div>
 
                     {/* Theme Toggle */}
-                    <div className="flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3.5 py-2.5">
+                    <div className="flex items-center justify-between rounded-xl bg-[rgb(var(--color-card))] border border-[rgb(var(--color-border))] px-3.5 py-2.5">
                         <div className="flex items-center gap-2.5">
-                            <div className="flex items-center justify-center rounded-lg h-7 w-7 bg-slate-100">
+                            <div className="flex items-center justify-center rounded-lg h-7 w-7 bg-[rgb(var(--color-surface-secondary))]">
                                 {isDark ? (
-                                    <Moon className="w-4 h-4 text-slate-600" />
+                                    <Moon className="w-4 h-4 text-[rgb(var(--color-text-secondary))]" />
                                 ) : (
                                     <Sun className="w-4 h-4 text-amber-600" />
                                 )}
                             </div>
-                            <span className="text-sm font-medium text-slate-700">
+                            <span className="text-sm font-medium text-[rgb(var(--color-text-secondary))]">
                                 Tema
                             </span>
                         </div>
                         <button
                             onClick={toggleTheme}
                             className={`relative h-6 w-11 rounded-full transition-colors ${
-                                isDark ? "bg-primary-600" : "bg-slate-300"
+                                isDark ? "bg-primary-600" : "bg-[rgb(var(--color-surface-secondary))]"
                             }`}
                         >
                             <span
@@ -886,13 +886,13 @@ function SidebarContent({
                         filteredGroups.length === 0 &&
                         !collapsed && (
                             <div className="py-12 text-center">
-                                <div className="flex items-center justify-center mx-auto mb-3 rounded-full h-14 w-14 bg-slate-100">
-                                    <Search className="w-6 h-6 text-slate-400" />
+                                <div className="flex items-center justify-center mx-auto mb-3 rounded-full h-14 w-14 bg-[rgb(var(--color-surface-secondary))]">
+                                    <Search className="w-6 h-6 text-[rgb(var(--color-text-muted))]" />
                                 </div>
-                                <p className="text-sm font-medium text-slate-600">
+                                <p className="text-sm font-medium text-[rgb(var(--color-text-secondary))]">
                                     Menu tidak ditemukan
                                 </p>
-                                <p className="mt-1 text-xs text-slate-400">
+                                <p className="mt-1 text-xs text-[rgb(var(--color-text-muted))]">
                                     Coba kata kunci lain
                                 </p>
                             </div>
@@ -902,7 +902,7 @@ function SidebarContent({
 
             {/* User Profile Card */}
             <div
-                className={`shrink-0 border-t border-slate-200 bg-white transition-all duration-300 ease-in-out ${collapsed ? "p-2" : "p-3"}`}
+                className={`shrink-0 border-t border-[rgb(var(--color-border))] bg-[rgb(var(--color-sidebar))] transition-all duration-300 ease-in-out ${collapsed ? "p-2" : "p-3"}`}
             >
                 {collapsed ? (
                     <div className="flex justify-center">
@@ -916,25 +916,25 @@ function SidebarContent({
                         </button>
                     </div>
                 ) : (
-                    <div className="p-3 shadow-lg rounded-xl bg-gradient-to-br from-slate-800 to-slate-900">
+                    <div className="p-3 shadow-lg rounded-xl bg-[rgb(var(--color-surface-secondary))]">
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <div className="flex items-center justify-center w-10 h-10 text-sm font-bold text-white rounded-lg shadow-md bg-gradient-to-br from-primary-500 to-primary-600">
                                     {user?.name?.charAt(0).toUpperCase()}
                                 </div>
-                                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-900 bg-emerald-400" />
+                                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[rgb(var(--color-surface-secondary))] bg-emerald-400" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-white truncate">
+                                <p className="text-xs font-semibold text-[rgb(var(--color-text-primary))] truncate">
                                     {user?.name}
                                 </p>
-                                <p className="truncate text-[10px] text-slate-400">
+                                <p className="truncate text-[10px] text-[rgb(var(--color-text-muted))]">
                                     {user?.email}
                                 </p>
                             </div>
                             <button
                                 onClick={() => router.post(route("logout"))}
-                                className="flex items-center justify-center transition-all rounded-lg h-7 w-7 bg-slate-700/50 text-slate-300 hover:bg-red-500/20 hover:text-red-400"
+                                className="flex items-center justify-center transition-all rounded-lg h-7 w-7 bg-[rgb(var(--color-border))]/50 text-[rgb(var(--color-text-muted))] hover:bg-red-500/20 hover:text-red-400"
                                 title="Keluar"
                             >
                                 <LogOut className="h-3.5 w-3.5" />
@@ -993,7 +993,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const sidebarW = collapsed ? "w-[70px]" : "w-[280px]";
 
     return (
-        <div className="min-h-screen bg-[#f8f9fb]">
+        <div className="min-h-screen bg-[rgb(var(--color-background))]">
             {/* Type-mismatch modal */}
             <TypeMismatchModal
                 data={typeBlock}
@@ -1045,11 +1045,11 @@ export default function AuthenticatedLayout({ header, children }) {
                 className={`flex min-h-screen flex-col transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-[70px]" : "lg:pl-[280px]"}`}
             >
                 {/* Topbar */}
-                <header className="sticky top-0 z-20 flex h-[56px] items-center gap-2.5 border-b border-slate-200 bg-white/80 backdrop-blur-md px-4 sm:px-6 shadow-sm">
+                <header className="sticky top-0 z-20 flex h-[56px] items-center gap-2.5 border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-navbar))]/80 backdrop-blur-md px-4 sm:px-6 shadow-sm">
                     {/* Mobile menu */}
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="flex items-center justify-center transition-colors rounded-lg h-7 w-7 text-slate-600 hover:bg-slate-100 lg:hidden"
+                        className="flex items-center justify-center transition-colors rounded-lg h-7 w-7 text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))] lg:hidden"
                     >
                         <svg
                             className="w-4 h-4"
@@ -1069,7 +1069,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     {/* Desktop collapse */}
                     <button
                         onClick={toggleCollapse}
-                        className="items-center justify-center hidden transition-colors rounded-lg h-7 w-7 text-slate-500 hover:bg-slate-100 hover:text-slate-700 lg:flex"
+                        className="items-center justify-center hidden transition-colors rounded-lg h-7 w-7 text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))] hover:text-[rgb(var(--color-text-primary))] lg:flex"
                     >
                         <svg
                             className="w-4 h-4"
@@ -1086,11 +1086,11 @@ export default function AuthenticatedLayout({ header, children }) {
                         </svg>
                     </button>
 
-                    <div className="hidden w-px h-6 bg-slate-200 sm:block" />
+                    <div className="hidden w-px h-6 bg-[rgb(var(--color-border))] sm:block" />
 
                     {/* Page title */}
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-sm font-semibold  text-slate-900">
+                        <h1 className="text-sm font-semibold  text-[rgb(var(--color-text-primary))]">
                             {header}
                         </h1>
                     </div>
@@ -1103,7 +1103,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         {/* User menu */}
                         <Dropdown>
                             <Dropdown.Trigger>
-                                <button className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                                <button className="flex items-center gap-2.5 rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-3 py-2 text-sm font-medium text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))] hover:border-primary-300 transition-all shadow-sm">
                                     <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-primary-600 to-primary-700 text-[10px] font-bold text-white shadow-sm">
                                         {user?.name?.charAt(0).toUpperCase()}
                                     </span>
@@ -1111,7 +1111,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         {user?.name}
                                     </span>
                                     <svg
-                                        className="h-3.5 w-3.5 text-slate-400"
+                                        className="h-3.5 w-3.5 text-[rgb(var(--color-text-muted))]"
                                         viewBox="0 0 20 20"
                                         fill="currentColor"
                                     >
@@ -1133,21 +1133,21 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 .toUpperCase()}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-semibold truncate text-slate-800">
+                                            <p className="text-xs font-semibold truncate text-[rgb(var(--color-text-primary))]">
                                                 {user?.name}
                                             </p>
-                                            <p className="truncate text-[10px] text-slate-500">
+                                            <p className="truncate text-[10px] text-[rgb(var(--color-text-secondary))]">
                                                 {user?.email}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="lg:hidden my-1.5 border-t border-slate-100" />
+                                <div className="lg:hidden my-1.5 border-t border-[rgb(var(--color-divider))]" />
                                 <Dropdown.Link
                                     href={route("admin.profile.edit")}
                                 >
                                     <span className="flex items-center gap-2">
-                                        <User className="h-3.5 w-3.5 text-slate-400" />
+                                        <User className="h-3.5 w-3.5 text-[rgb(var(--color-text-muted))]" />
                                         Profil Saya
                                     </span>
                                 </Dropdown.Link>
@@ -1155,11 +1155,11 @@ export default function AuthenticatedLayout({ header, children }) {
                                     href={route("admin.settings.index")}
                                 >
                                     <span className="flex items-center gap-2">
-                                        <Settings className="h-3.5 w-3.5 text-slate-400" />
+                                        <Settings className="h-3.5 w-3.5 text-[rgb(var(--color-text-muted))]" />
                                         Pengaturan
                                     </span>
                                 </Dropdown.Link>
-                                <div className="my-1.5 border-t border-slate-100" />
+                                <div className="my-1.5 border-t border-[rgb(var(--color-divider))]" />
                                 <Dropdown.Link
                                     href={route("logout")}
                                     method="post"

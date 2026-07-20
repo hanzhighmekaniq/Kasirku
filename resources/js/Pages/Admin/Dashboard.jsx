@@ -13,6 +13,7 @@ import {
     Sector,
 } from "recharts";
 import { useState, useCallback } from "react";
+import { useTheme } from "@/Theme/ThemeProvider";
 
 /* ── formatters ─────────────────────────────────────── */
 const fmt = (n) =>
@@ -46,7 +47,7 @@ function TrendBadge({ value, suffix = "%" }) {
                     ? "bg-emerald-100 text-emerald-700"
                     : isDown
                       ? "bg-red-100 text-red-600"
-                      : "bg-slate-100 text-slate-500"
+                      : "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))]"
             }`}
         >
             {isUp && (
@@ -74,7 +75,7 @@ function ReportBtn({ label = "Lihat Laporan", dateRange, branchIds }) {
     return (
         <Link
             href={route("admin.reports.index", params)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-3 py-1.5 text-xs font-medium text-[rgb(var(--color-text-secondary))] shadow-sm transition hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
         >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
@@ -90,7 +91,7 @@ function ReportBtn({ label = "Lihat Laporan", dateRange, branchIds }) {
 /* ── primitives ─────────────────────────────────────── */
 function Card({ children, className = "" }) {
     return (
-        <div className={`overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}>
+        <div className={`overflow-hidden rounded-2xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] shadow-sm ${className}`}>
             {children}
         </div>
     );
@@ -98,10 +99,10 @@ function Card({ children, className = "" }) {
 
 function SectionHeader({ title, subtitle, action }) {
     return (
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[rgb(var(--color-divider))] px-5 py-4">
             <div>
-                <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
-                {subtitle && <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p>}
+                <h3 className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">{title}</h3>
+                {subtitle && <p className="mt-0.5 text-xs text-[rgb(var(--color-text-muted))]">{subtitle}</p>}
             </div>
             {action}
         </div>
@@ -109,17 +110,17 @@ function SectionHeader({ title, subtitle, action }) {
 }
 
 /* ── stat card dengan trend indicator ───────────────── */
-function StatCard({ label, value, sub, icon, accent = "bg-slate-100 text-slate-600", trend }) {
+function StatCard({ label, value, sub, icon, accent = "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))]", trend }) {
     return (
         <Card>
             <div className="p-5">
                 <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[rgb(var(--color-text-muted))]">{label}</p>
                     <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-lg ${accent}`}>{icon}</span>
                 </div>
-                <p className="mt-3 text-2xl font-bold tracking-tight text-slate-900">{value}</p>
+                <p className="mt-3 text-2xl font-bold tracking-tight text-[rgb(var(--color-text-primary))]">{value}</p>
                 <div className="mt-1 flex items-center gap-2">
-                    {sub && <p className="text-xs text-slate-400">{sub}</p>}
+                    {sub && <p className="text-xs text-[rgb(var(--color-text-muted))]">{sub}</p>}
                     <TrendBadge value={trend} />
                 </div>
             </div>
@@ -140,23 +141,23 @@ function HeroRevenueCard({ todaySales, todayCount, aov, salesTrend, countTrend, 
         session: "Sesi Hari Ini",
     };
     return (
-        <div className="rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 via-white to-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 via-[rgb(var(--color-card))] to-[rgb(var(--color-card))] p-6 shadow-sm">
             <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold uppercase tracking-wider text-primary-600">
                         {GREETING[storeType] ?? "Penjualan Hari Ini"}
                     </p>
-                    <p className="mt-2 text-4xl font-bold tracking-tight text-slate-900">
+                    <p className="mt-2 text-4xl font-bold tracking-tight text-[rgb(var(--color-text-primary))]">
                         {fmt(todaySales)}
                     </p>
                     <div className="mt-2 flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-1.5">
-                            <span className="text-sm text-slate-500">{fmtNum(todayCount)} transaksi</span>
+                            <span className="text-sm text-[rgb(var(--color-text-secondary))]">{fmtNum(todayCount)} transaksi</span>
                             <TrendBadge value={countTrend} />
                         </div>
-                        <span className="text-slate-300">·</span>
+                        <span className="text-[rgb(var(--color-text-muted))]">·</span>
                         <div className="flex items-center gap-1.5">
-                            <span className="text-sm text-slate-500">AOV {fmt(aov)}</span>
+                            <span className="text-sm text-[rgb(var(--color-text-secondary))]">AOV {fmt(aov)}</span>
                             <TrendBadge value={aovTrend} />
                         </div>
                     </div>
@@ -171,7 +172,7 @@ function HeroRevenueCard({ todaySales, todayCount, aov, salesTrend, countTrend, 
 function HourlyChart({ data }) {
     if (!data?.length) {
         return (
-            <div className="flex h-32 items-center justify-center px-5 pb-4 text-sm text-slate-400">
+            <div className="flex h-32 items-center justify-center px-5 pb-4 text-sm text-[rgb(var(--color-text-muted))]">
                 Belum ada transaksi hari ini
             </div>
         );
@@ -189,14 +190,14 @@ function HourlyChart({ data }) {
                 return (
                     <div key={h.hour} className="group relative flex flex-1 flex-col items-center" style={{ minWidth: "8px" }}>
                         <div
-                            className={`w-full rounded-t transition-all duration-200 ${h.total > 0 ? "bg-primary-500 group-hover:bg-primary-600" : "bg-slate-100"}`}
+                            className={`w-full rounded-t transition-all duration-200 ${h.total > 0 ? "bg-primary-500 group-hover:bg-primary-600" : "bg-[rgb(var(--color-surface-secondary))]"}`}
                             style={{ height: `${pct}%` }}
                         />
                         {h.total > 0 && (
-                            <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-max -translate-x-1/2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg group-hover:block">
-                                <p className="font-semibold text-slate-800">{h.hour.toString().padStart(2, "0")}:00</p>
+                            <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-max -translate-x-1/2 rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-3 py-2 text-xs shadow-lg group-hover:block">
+                                <p className="font-semibold text-[rgb(var(--color-text-primary))]">{h.hour.toString().padStart(2, "0")}:00</p>
                                 <p className="text-primary-600">{fmt(h.total)}</p>
-                                <p className="text-slate-400">{h.count} transaksi</p>
+                                <p className="text-[rgb(var(--color-text-muted))]">{h.count} transaksi</p>
                             </div>
                         )}
                     </div>
@@ -208,21 +209,21 @@ function HourlyChart({ data }) {
 
 /* ── recent sales ───────────────────────────────────── */
 function RecentSales({ data }) {
-    if (!data?.length) return <p className="px-5 py-8 text-center text-sm text-slate-400">Belum ada transaksi</p>;
+    if (!data?.length) return <p className="px-5 py-8 text-center text-sm text-[rgb(var(--color-text-muted))]">Belum ada transaksi</p>;
     return (
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-[rgb(var(--color-divider))]">
             {data.map((s) => (
                 <div key={s.id} className="flex items-center justify-between px-5 py-3">
                     <div className="min-w-0 flex-1">
                         <p className="font-mono text-xs font-semibold text-primary-600">{s.sale_no}</p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-[rgb(var(--color-text-muted))]">
                             {s.user?.name ?? "—"} ·{" "}
                             {new Date(s.sale_date).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                         </p>
                     </div>
                     <div className="ml-4 text-right">
-                        <p className="text-sm font-semibold text-slate-800">{fmt(s.grand_total)}</p>
-                        <span className={`text-xs ${s.payment_status === "paid" ? "text-emerald-600" : "text-slate-400"}`}>
+                        <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">{fmt(s.grand_total)}</p>
+                        <span className={`text-xs ${s.payment_status === "paid" ? "text-emerald-600" : "text-[rgb(var(--color-text-muted))]"}`}>
                             {s.payment_status === "paid" ? "Lunas" : "Pending"}
                         </span>
                     </div>
@@ -234,17 +235,17 @@ function RecentSales({ data }) {
 
 /* ── top products ───────────────────────────────────── */
 function TopToday({ data }) {
-    if (!data?.length) return <p className="px-5 py-8 text-center text-sm text-slate-400">Belum ada penjualan hari ini</p>;
+    if (!data?.length) return <p className="px-5 py-8 text-center text-sm text-[rgb(var(--color-text-muted))]">Belum ada penjualan hari ini</p>;
     const max = Math.max(...data.map((d) => d.revenue), 1);
     return (
         <div className="space-y-3 px-5 py-4">
             {data.map((p, i) => (
                 <div key={i}>
                     <div className="mb-1 flex items-center justify-between">
-                        <span className="truncate text-sm text-slate-700">{p.name}</span>
-                        <span className="ml-2 text-xs font-semibold text-slate-600">{fmtNum(p.qty)} pcs</span>
+                        <span className="truncate text-sm text-[rgb(var(--color-text-secondary))]">{p.name}</span>
+                        <span className="ml-2 text-xs font-semibold text-[rgb(var(--color-text-secondary))]">{fmtNum(p.qty)} pcs</span>
                     </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgb(var(--color-surface-secondary))]">
                         <div
                             className="h-full rounded-full bg-primary-500"
                             style={{ width: `${Math.max(4, Math.round((p.revenue / max) * 100))}%` }}
@@ -263,19 +264,19 @@ function BranchBreakdown({ data }) {
     return (
         <Card>
             <SectionHeader title="Penjualan per Cabang" subtitle="Hari ini" action={<ReportBtn dateRange={{ start: today(), end: today() }} />} />
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-[rgb(var(--color-divider))]">
                 {data.map((b) => (
                     <div key={b.id} className="flex items-center gap-4 px-5 py-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold text-slate-500">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[rgb(var(--color-surface-secondary))] text-xs font-bold text-[rgb(var(--color-text-secondary))]">
                             {b.code?.charAt(0) ?? b.name.charAt(0)}
                         </div>
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-slate-800">{b.name}</p>
-                            <p className="text-xs text-slate-400">{b.today_count} transaksi hari ini</p>
+                            <p className="truncate text-sm font-medium text-[rgb(var(--color-text-primary))]">{b.name}</p>
+                            <p className="text-xs text-[rgb(var(--color-text-muted))]">{b.today_count} transaksi hari ini</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-sm font-semibold text-slate-800">{fmt(b.today_sales)}</p>
-                            <p className="text-xs text-slate-400">{totalToday > 0 ? Math.round((b.today_sales / totalToday) * 100) : 0}% dari total</p>
+                            <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">{fmt(b.today_sales)}</p>
+                            <p className="text-xs text-[rgb(var(--color-text-muted))]">{totalToday > 0 ? Math.round((b.today_sales / totalToday) * 100) : 0}% dari total</p>
                         </div>
                     </div>
                 ))}
@@ -290,19 +291,19 @@ function StoreOverview({ data, allStoreTypes = [] }) {
     return (
         <Card>
             <SectionHeader title="Overview Semua Toko" subtitle="Penjualan hari ini" action={<ReportBtn dateRange={{ start: today(), end: today() }} />} />
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-[rgb(var(--color-divider))]">
                 {data.map((s) => {
                     const tm = allStoreTypes.find((t) => t.code === s.store_type) ?? {};
                     return (
                         <div key={s.id} className="flex items-center gap-4 px-5 py-3.5">
                             <span className="text-xl shrink-0">{tm.icon ?? "🏬"}</span>
                             <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-slate-800">{s.name}</p>
-                                <p className="text-xs text-slate-400">{tm.label ?? s.store_type} · {s.today_count} transaksi hari ini</p>
+                                <p className="truncate text-sm font-semibold text-[rgb(var(--color-text-primary))]">{s.name}</p>
+                                <p className="text-xs text-[rgb(var(--color-text-muted))]">{tm.label ?? s.store_type} · {s.today_count} transaksi hari ini</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-sm font-bold text-slate-800">{fmt(s.today_sales)}</p>
-                                <p className="text-xs text-slate-400">Bulan: {fmt(s.month_sales)}</p>
+                                <p className="text-sm font-bold text-[rgb(var(--color-text-primary))]">{fmt(s.today_sales)}</p>
+                                <p className="text-xs text-[rgb(var(--color-text-muted))]">Bulan: {fmt(s.month_sales)}</p>
                             </div>
                         </div>
                     );
@@ -313,9 +314,12 @@ function StoreOverview({ data, allStoreTypes = [] }) {
 }
 
 /* ── weekly trend chart ─────────────────────────────── */
-const PRIMARY_COLOR = "#4F46E5";
-
 function WeeklyTrendChart({ data }) {
+    const { theme, isDark } = useTheme();
+    const tokens = isDark ? theme.dark : theme.light;
+    const chartColor = tokens.chart1 || tokens.primary || '#4F46E5';
+    const mutedHex = tokens.mutedForeground || '#94A3B8';
+
     if (!data?.length) return null;
     return (
         <div className="px-2 py-3">
@@ -323,22 +327,22 @@ function WeeklyTrendChart({ data }) {
                 <AreaChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
                     <defs>
                         <linearGradient id="weeklyGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={PRIMARY_COLOR} stopOpacity={0.2} />
-                            <stop offset="100%" stopColor={PRIMARY_COLOR} stopOpacity={0.02} />
+                            <stop offset="0%" stopColor={chartColor} stopOpacity={0.2} />
+                            <stop offset="100%" stopColor={chartColor} stopOpacity={0.02} />
                         </linearGradient>
                     </defs>
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} dy={6} />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: mutedHex }} dy={6} />
                     <YAxis hide />
                     <Tooltip
-                        cursor={{ stroke: PRIMARY_COLOR, strokeWidth: 1, strokeDasharray: "4 4" }}
+                        cursor={{ stroke: chartColor, strokeWidth: 1, strokeDasharray: "4 4" }}
                         content={({ active, payload }) => {
                             if (!active || !payload?.[0]) return null;
                             const d = payload[0].payload;
                             return (
-                                <div className="rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm">
-                                    <p className="text-xs font-medium text-slate-500">{d.fullDate}</p>
+                                <div className="rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))]/95 px-4 py-3 shadow-lg backdrop-blur-sm">
+                                    <p className="text-xs font-medium text-[rgb(var(--color-text-secondary))]">{d.fullDate}</p>
                                     <p className="mt-1 text-base font-bold text-primary-600">{fmt(d.total)}</p>
-                                    <p className="text-xs text-slate-400">{d.count} transaksi</p>
+                                    <p className="text-xs text-[rgb(var(--color-text-muted))]">{d.count} transaksi</p>
                                 </div>
                             );
                         }}
@@ -346,15 +350,15 @@ function WeeklyTrendChart({ data }) {
                     <Area
                         type="monotone"
                         dataKey="total"
-                        stroke={PRIMARY_COLOR}
+                        stroke={chartColor}
                         strokeWidth={2.5}
                         fill="url(#weeklyGrad)"
                         dot={false}
-                        activeDot={{ r: 5, fill: PRIMARY_COLOR, stroke: "#fff", strokeWidth: 2 }}
+                        activeDot={{ r: 5, fill: chartColor, stroke: "#fff", strokeWidth: 2 }}
                     />
                 </AreaChart>
             </ResponsiveContainer>
-            <div className="mt-1 flex items-center justify-between px-1 text-xs text-slate-400">
+            <div className="mt-1 flex items-center justify-between px-1 text-xs text-[rgb(var(--color-text-muted))]">
                 <span>{data[0]?.fullDate}</span>
                 <span>7 Hari Terakhir</span>
                 <span>{data[data.length - 1]?.fullDate}</span>
@@ -364,30 +368,44 @@ function WeeklyTrendChart({ data }) {
 }
 
 /* ── payment donut ──────────────────────────────────── */
-const DONUT_COLORS = [PRIMARY_COLOR, "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316"];
-
 function PaymentDonutChart({ data }) {
+    const { theme, isDark } = useTheme();
+    const tokens = isDark ? theme.dark : theme.light;
+    const donutColors = [
+        tokens.chart1 || tokens.primary || '#4F46E5',
+        tokens.chart2 || tokens.accent || '#8B5CF6',
+        tokens.chart3 || '#16A34A',
+        tokens.chart4 || '#F59E0B',
+        tokens.chart5 || '#06B6D4',
+        tokens.chart1 || '#EC4899',
+    ];
+    const textPrimaryHex = tokens.foreground || '#0F172A';
+    const textMutedHex = tokens.mutedForeground || '#94A3B8';
+
     const [activeIndex, setActiveIndex] = useState(null);
-    if (!data?.length) return <div className="flex h-52 items-center justify-center text-sm text-slate-400">Belum ada data bulan ini</div>;
+    if (!data?.length) return <div className="flex h-52 items-center justify-center text-sm text-[rgb(var(--color-text-muted))]">Belum ada data bulan ini</div>;
 
     const onPieEnter = useCallback((_, idx) => setActiveIndex(idx), []);
     const onPieLeave = useCallback(() => setActiveIndex(null), []);
 
-    const renderActiveShape = useCallback((props) => {
-        const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
-        return (
-            <g>
-                <text x={cx} y={cy - 8} textAnchor="middle" fill="#1e293b" fontSize={14} fontWeight={700}>
-                    {fmt(Number(payload.total))}
-                </text>
-                <text x={cx} y={cy + 12} textAnchor="middle" fill="#94a3b8" fontSize={11}>
-                    {(percent * 100).toFixed(1)}%
-                </text>
-                <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 6} startAngle={startAngle} endAngle={endAngle} fill={fill} />
-                <Sector cx={cx} cy={cy} innerRadius={outerRadius + 8} outerRadius={outerRadius + 12} startAngle={startAngle} endAngle={endAngle} fill={fill} opacity={0.3} />
-            </g>
-        );
-    }, []);
+    const renderActiveShape = useCallback(
+        (props) => {
+            const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent } = props;
+            return (
+                <g>
+                    <text x={cx} y={cy - 8} textAnchor="middle" fill={textPrimaryHex} fontSize={14} fontWeight={700}>
+                        {fmt(Number(payload.total))}
+                    </text>
+                    <text x={cx} y={cy + 12} textAnchor="middle" fill={textMutedHex} fontSize={11}>
+                        {(percent * 100).toFixed(1)}%
+                    </text>
+                    <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 6} startAngle={startAngle} endAngle={endAngle} fill={fill} />
+                    <Sector cx={cx} cy={cy} innerRadius={outerRadius + 8} outerRadius={outerRadius + 12} startAngle={startAngle} endAngle={endAngle} fill={fill} opacity={0.3} />
+                </g>
+            );
+        },
+        [textPrimaryHex, textMutedHex],
+    );
 
     return (
         <div className="flex flex-col items-center px-2 py-3">
@@ -408,7 +426,7 @@ function PaymentDonutChart({ data }) {
                         stroke="none"
                     >
                         {data.map((_, idx) => (
-                            <Cell key={idx} fill={DONUT_COLORS[idx % DONUT_COLORS.length]} />
+                            <Cell key={idx} fill={donutColors[idx % donutColors.length]} />
                         ))}
                     </Pie>
                     <Tooltip
@@ -416,10 +434,10 @@ function PaymentDonutChart({ data }) {
                             if (!active || !payload?.[0]) return null;
                             const d = payload[0].payload;
                             return (
-                                <div className="rounded-xl border border-slate-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm">
-                                    <p className="text-xs font-medium text-slate-500">{d.name}</p>
-                                    <p className="mt-1 text-sm font-bold text-slate-800">{fmt(Number(d.total))}</p>
-                                    <p className="text-xs text-slate-400">{d.count} transaksi</p>
+                                <div className="rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))]/95 px-4 py-3 shadow-lg backdrop-blur-sm">
+                                    <p className="text-xs font-medium text-[rgb(var(--color-text-secondary))]">{d.name}</p>
+                                    <p className="mt-1 text-sm font-bold text-[rgb(var(--color-text-primary))]">{fmt(Number(d.total))}</p>
+                                    <p className="text-xs text-[rgb(var(--color-text-muted))]">{d.count} transaksi</p>
                                 </div>
                             );
                         }}
@@ -428,8 +446,8 @@ function PaymentDonutChart({ data }) {
             </ResponsiveContainer>
             <div className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1">
                 {data.map((d, idx) => (
-                    <div key={idx} className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: DONUT_COLORS[idx % DONUT_COLORS.length] }} />
+                    <div key={idx} className="flex items-center gap-1.5 text-xs text-[rgb(var(--color-text-secondary))]">
+                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: donutColors[idx % donutColors.length] }} />
                         {d.name}
                     </div>
                 ))}
@@ -484,11 +502,11 @@ export default function Dashboard({
         <AuthenticatedLayout
             header={
                 <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-bold text-slate-900">
+                    <h2 className="text-lg font-bold text-[rgb(var(--color-text-primary))]">
                         {isKasir ? "Dashboard Kasir" : "Dashboard"}
                     </h2>
                     {currentStore && (
-                        <span className="hidden max-w-xs truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500 sm:inline">
+                        <span className="hidden max-w-xs truncate rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface-secondary))] px-3 py-1.5 text-xs font-medium text-[rgb(var(--color-text-secondary))] sm:inline">
                             {storeLabel}
                         </span>
                     )}
@@ -501,7 +519,7 @@ export default function Dashboard({
                 {/* Shift banner (kasir) */}
                 {isKasir &&
                     (!activeShift ? (
-                        <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-white px-5 py-4 shadow-sm">
+                        <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-[rgb(var(--color-card))] px-5 py-4 shadow-sm">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500">
                                     <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
@@ -524,7 +542,7 @@ export default function Dashboard({
                             </Link>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white px-5 py-4 shadow-sm">
+                        <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-[rgb(var(--color-card))] px-5 py-4 shadow-sm">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500">
                                     <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
@@ -541,7 +559,7 @@ export default function Dashboard({
                             </div>
                             <Link
                                 href={route("admin.cashier-shifts.show", activeShift.id)}
-                                className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50"
+                                className="rounded-lg border border-emerald-200 bg-[rgb(var(--color-card))] px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50"
                             >
                                 Lihat Shift
                             </Link>
@@ -557,14 +575,14 @@ export default function Dashboard({
                                 className={`inline-flex cursor-pointer select-none items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                                     pendingBranchIds.includes(b.id)
                                         ? "border-primary-400 bg-primary-50 text-primary-700"
-                                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                                        : "border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] text-[rgb(var(--color-text-secondary))] hover:border-primary-300"
                                 }`}
                             >
                                 <input
                                     type="checkbox"
                                     checked={pendingBranchIds.includes(b.id)}
                                     onChange={() => togglePending(b.id)}
-                                    className="h-3.5 w-3.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                                    className="h-3.5 w-3.5 rounded border-[rgb(var(--color-border))] text-primary-600 focus:ring-primary-500"
                                 />
                                 {b.name}
                             </label>
@@ -586,10 +604,10 @@ export default function Dashboard({
 
                 {/* Report shortcut (single branch) */}
                 {!isKasir && branches.length <= 1 && (
-                    <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-gradient-to-r from-primary-50/60 to-white px-5 py-3 shadow-sm">
+                    <div className="flex items-center justify-between rounded-2xl border border-[rgb(var(--color-border))] bg-gradient-to-r from-primary-50/60 to-[rgb(var(--color-card))] px-5 py-3 shadow-sm">
                         <div>
-                            <p className="text-sm font-semibold text-slate-800">Laporan & Analitik</p>
-                            <p className="text-xs text-slate-400">Lihat tren penjualan, laba, dan lainnya</p>
+                            <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">Laporan & Analitik</p>
+                            <p className="text-xs text-[rgb(var(--color-text-muted))]">Lihat tren penjualan, laba, dan lainnya</p>
                         </div>
                         <ReportBtn label="Buka Laporan" />
                     </div>
@@ -718,7 +736,7 @@ export default function Dashboard({
                             action={<ReportBtn dateRange={{ start: today(), end: today() }} />}
                         />
                         <HourlyChart data={hourlySales} />
-                        <div className="flex items-center justify-between border-t border-slate-100 px-5 py-2.5 text-xs text-slate-400">
+                        <div className="flex items-center justify-between border-t border-[rgb(var(--color-divider))] px-5 py-2.5 text-xs text-[rgb(var(--color-text-muted))]">
                             <span>00:00</span>
                             <span>
                                 Hari ini,{" "}
@@ -759,30 +777,30 @@ export default function Dashboard({
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                         <Link
                             href={route("admin.kasir.index")}
-                            className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50/50"
+                            className="flex flex-col items-center gap-2 rounded-2xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] p-5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50/50"
                         >
                             <span className="text-3xl">
                                 {storeType === "fnb" ? "🍽️" : storeType === "service" ? "✂️" : storeType === "rental" ? "🔑" : storeType === "ticket" ? "🎟️" : storeType === "hospitality" ? "🛏️" : storeType === "parking" ? "🅿️" : storeType === "session" ? "🎮" : "🛒"}
                             </span>
-                            <span className="text-sm font-semibold text-slate-700">
+                            <span className="text-sm font-semibold text-[rgb(var(--color-text-secondary))]">
                                 {storeType === "fnb" ? "Buka Kasir" : storeType === "service" ? "Mulai Layanan" : storeType === "rental" ? "Buka Sewa" : storeType === "ticket" ? "Jual Tiket" : storeType === "parking" ? "Parkir Masuk" : storeType === "session" ? "Mulai Sesi" : "Buka Kasir"}
                             </span>
                         </Link>
                         <Link
                             href={route("admin.sales.index")}
-                            className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50/50"
+                            className="flex flex-col items-center gap-2 rounded-2xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] p-5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50/50"
                         >
                             <span className="text-3xl">📋</span>
-                            <span className="text-sm font-semibold text-slate-700">
+                            <span className="text-sm font-semibold text-[rgb(var(--color-text-secondary))]">
                                 {storeType === "rental" ? "Riwayat Sewa" : storeType === "service" ? "Riwayat Layanan" : "Riwayat Transaksi"}
                             </span>
                         </Link>
                         <Link
                             href={route("admin.customers.index")}
-                            className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50/50"
+                            className="flex flex-col items-center gap-2 rounded-2xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] p-5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50/50"
                         >
                             <span className="text-3xl">👥</span>
-                            <span className="text-sm font-semibold text-slate-700">
+                            <span className="text-sm font-semibold text-[rgb(var(--color-text-secondary))]">
                                 {storeType === "service" ? "Data Pelanggan" : "Pelanggan"}
                             </span>
                         </Link>

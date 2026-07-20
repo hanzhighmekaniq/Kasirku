@@ -69,6 +69,11 @@ class User extends Authenticatable
         return $this->hasMany(Sale::class);
     }
 
+    public function themePresets(): HasMany
+    {
+        return $this->hasMany(ThemePreset::class)->orderByDesc('updated_at');
+    }
+
     public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class);
