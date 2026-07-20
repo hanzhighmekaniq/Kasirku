@@ -68,7 +68,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         }}
                         onFocus={() => setDropdownOpen(true)}
                         placeholder="Cari produk (nama / SKU)..."
-                        className={`block w-full rounded-xl py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:ring-2 ${errors.product_id ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'}`}
+                        className={`block w-full rounded-xl py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:ring-2 ${errors.product_id ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'}`}
                     />
                     {selectedProduct && (
                         <button type="button" onClick={() => { setData((d) => ({ ...d, product_id: '', _cost_locked: false })); setDropdownSearch(''); setDropdownOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
@@ -89,7 +89,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                                         type="button"
                                         onClick={() => { setData((d) => ({ ...d, product_id: p.id, _cost_locked: false })); setDropdownSearch(''); setDropdownOpen(false); }}
                                         className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                            Number(data.product_id) === p.id ? 'bg-indigo-50 font-semibold text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
+                                            Number(data.product_id) === p.id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-slate-600 hover:bg-slate-50'
                                         }`}
                                     >
                                         <span className="block truncate">{p.name}</span>
@@ -114,7 +114,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         value={data.batch_no}
                         onChange={(e) => setData('batch_no', e.target.value)}
                         placeholder="cth. BATCH-20260601-001"
-                        className={`mt-1.5 block w-full rounded-xl font-mono text-sm shadow-sm transition focus:ring-2 ${errors.batch_no ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'}`}
+                        className={`mt-1.5 block w-full rounded-xl font-mono text-sm shadow-sm transition focus:ring-2 ${errors.batch_no ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'}`}
                     />
                     <p className="mt-1 text-xs text-slate-400">Harus unik per produk.</p>
                     {errors.batch_no && <p className="mt-1 text-sm text-red-600">{errors.batch_no}</p>}
@@ -126,7 +126,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         id="branch_id"
                         value={data.branch_id}
                         onChange={(e) => setData('branch_id', e.target.value)}
-                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     >
                         <option value="">— Semua Cabang —</option>
                         {branches.map((b) => (
@@ -145,7 +145,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         type="date"
                         value={data.purchase_date}
                         onChange={(e) => setData('purchase_date', e.target.value)}
-                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
                     {errors.purchase_date && <p className="mt-1 text-sm text-red-600">{errors.purchase_date}</p>}
                 </div>
@@ -160,7 +160,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         type="date"
                         value={data.expiry_date}
                         onChange={(e) => setData('expiry_date', e.target.value)}
-                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
                     <p className="mt-1 text-xs text-slate-400">Kosongkan jika produk tidak kadaluarsa.</p>
                     {errors.expiry_date && <p className="mt-1 text-sm text-red-600">{errors.expiry_date}</p>}
@@ -179,7 +179,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         min="0"
                         value={data.quantity}
                         onChange={(e) => setData('quantity', e.target.value)}
-                        className={`mt-1.5 block w-full rounded-xl shadow-sm transition focus:ring-2 ${errors.quantity ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'}`}
+                        className={`mt-1.5 block w-full rounded-xl shadow-sm transition focus:ring-2 ${errors.quantity ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'}`}
                     />
                     {errors.quantity && <p className="mt-1 text-sm text-red-600">{errors.quantity}</p>}
                 </div>
@@ -197,7 +197,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                             step="100"
                             value={data.cost_price}
                             onChange={(e) => setData((d) => ({ ...d, cost_price: e.target.value, _cost_locked: true }))}
-                            className={`block w-full rounded-xl pl-10 shadow-sm transition focus:ring-2 ${errors.cost_price ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'}`}
+                            className={`block w-full rounded-xl pl-10 shadow-sm transition focus:ring-2 ${errors.cost_price ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'}`}
                         />
                     </div>
                     {data.product_id && (
@@ -214,7 +214,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                 <Link href={cancelHref} className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                     Batal
                 </Link>
-                <button type="submit" disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60">
+                <button type="submit" disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60">
                     {processing ? 'Menyimpan...' : submitLabel}
                 </button>
             </div>

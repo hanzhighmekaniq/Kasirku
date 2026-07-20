@@ -13,7 +13,7 @@ const LOG_NAME_LABELS = {
     system: "Sistem",
 };
 const LOG_NAME_COLORS = {
-    shift: "bg-indigo-50 text-indigo-700 ring-indigo-200",
+    shift: "bg-primary-50 text-primary-700 ring-primary-200",
     sale: "bg-emerald-50 text-emerald-700 ring-emerald-200",
     purchase: "bg-blue-50 text-blue-700 ring-blue-200",
     stock: "bg-amber-50 text-amber-700 ring-amber-200",
@@ -79,11 +79,11 @@ function SelectDropdown({ value, options, onChange, placeholder = "Pilih..." }) 
                         type="button"
                         onClick={() => { onChange(""); setOpen(false); }}
                         className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition hover:bg-slate-50 ${
-                            !value ? "bg-indigo-50/50 text-indigo-700 font-medium" : "text-slate-500"
+                            !value ? "bg-primary-50/50 text-primary-700 font-medium" : "text-slate-500"
                         }`}
                     >
                         {placeholder}
-                        {!value && <Check className="ml-auto h-3.5 w-3.5 text-indigo-500" strokeWidth={2.5} />}
+                        {!value && <Check className="ml-auto h-3.5 w-3.5 text-primary-500" strokeWidth={2.5} />}
                     </button>
                     {options.map((opt) => (
                         <button
@@ -91,12 +91,12 @@ function SelectDropdown({ value, options, onChange, placeholder = "Pilih..." }) 
                             type="button"
                             onClick={() => { onChange(opt.value); setOpen(false); }}
                             className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition hover:bg-slate-50 ${
-                                value === opt.value ? "bg-indigo-50/50 text-indigo-700 font-medium" : "text-slate-600"
+                                value === opt.value ? "bg-primary-50/50 text-primary-700 font-medium" : "text-slate-600"
                             }`}
                         >
                             {opt.label}
                             {value === opt.value && (
-                                <Check className="ml-auto h-3.5 w-3.5 text-indigo-500" strokeWidth={2.5} />
+                                <Check className="ml-auto h-3.5 w-3.5 text-primary-500" strokeWidth={2.5} />
                             )}
                         </button>
                     ))}
@@ -177,7 +177,7 @@ export default function Index({
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
                             <Activity className="h-5 w-5" strokeWidth={1.8} />
                         </div>
                         <div>
@@ -206,7 +206,7 @@ export default function Index({
                 {/* ── Filters ── */}
                 <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
                     <div className="flex items-center gap-3 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-3.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                             <Filter className="h-4 w-4" strokeWidth={1.8} />
                         </div>
                         <h3 className="text-sm font-semibold text-slate-700">Filter</h3>
@@ -257,7 +257,7 @@ export default function Index({
                                         onChange={(e) =>
                                             setFormFilters((p) => ({ ...p, date_from: e.target.value }))
                                         }
-                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm transition hover:border-slate-300 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm transition hover:border-slate-300 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                                     />
                                 </div>
                                 <span className="pb-2 text-slate-400">—</span>
@@ -269,7 +269,7 @@ export default function Index({
                                         onChange={(e) =>
                                             setFormFilters((p) => ({ ...p, date_to: e.target.value }))
                                         }
-                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm transition hover:border-slate-300 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm transition hover:border-slate-300 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                                     />
                                 </div>
                             </div>
@@ -277,7 +277,7 @@ export default function Index({
                             <div className="flex items-center gap-2 sm:ml-auto">
                                 <button
                                     onClick={apply}
-                                    className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-indigo-600 hover:to-violet-700"
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:from-primary-600 hover:to-primary-700"
                                 >
                                     <Search className="h-4 w-4" strokeWidth={2} />
                                     Terapkan
@@ -340,7 +340,7 @@ export default function Index({
                                             {/* User */}
                                             <td className="px-5 py-3.5">
                                                 <div className="flex items-center gap-2.5">
-                                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-[10px] font-bold text-indigo-600">
+                                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-[10px] font-bold text-primary-600">
                                                         {(log.user?.name ?? "S").charAt(0).toUpperCase()}
                                                     </span>
                                                     <span className="text-sm font-medium text-slate-700">
@@ -410,7 +410,7 @@ export default function Index({
                                         }
                                         className={`min-w-[36px] rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
                                             link.active
-                                                ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200"
+                                                ? "bg-primary-600 text-white shadow-sm shadow-primary-200"
                                                 : link.url
                                                   ? "text-slate-500 hover:bg-slate-100"
                                                   : "cursor-default text-slate-300"

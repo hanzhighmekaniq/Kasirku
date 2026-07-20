@@ -12,7 +12,7 @@ const inputCls = (hasError = false) =>
     `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         hasError
             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-200"
+            : "border-slate-300 focus:border-primary-500 focus:ring-primary-200"
     }`;
 
 /* ── Product combobox ──────────────────────────────── */
@@ -160,13 +160,13 @@ export function ProductCombobox({
                                 onMouseEnter={() => setIdx(i)}
                                 className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition ${
                                     i === idx
-                                        ? "bg-indigo-50"
+                                        ? "bg-primary-50"
                                         : "hover:bg-slate-50"
                                 }`}
                             >
                                 <div className="min-w-0 flex-1">
                                     <p
-                                        className={`truncate font-medium ${i === idx ? "text-indigo-700" : "text-slate-800"}`}
+                                        className={`truncate font-medium ${i === idx ? "text-primary-700" : "text-slate-800"}`}
                                     >
                                         {p.name}
                                     </p>
@@ -271,6 +271,8 @@ export default function Create({
                       product_sku: prefill.product_sku,
                       quantity: 1,
                       cost_price: prefill.cost_price || 0,
+                      variant_id: prefill.variant_id ?? null,
+                      variant_name: prefill.variant_name ?? null,
                   },
               ]
             : [],
@@ -507,13 +509,13 @@ export default function Create({
 
                                 {/* Step 2: pilih variant/unit (jika ada) lalu isi qty + harga */}
                                 {pendingProduct && (
-                                    <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4">
+                                    <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4">
                                         <div className="mb-3 flex items-center justify-between">
                                             <div>
-                                                <p className="text-sm font-semibold text-indigo-800">
+                                                <p className="text-sm font-semibold text-primary-800">
                                                     {pendingProduct.name}
                                                 </p>
-                                                <p className="text-xs text-indigo-500">
+                                                <p className="text-xs text-primary-500">
                                                     {pendingProduct.sku}
                                                 </p>
                                             </div>
@@ -522,7 +524,7 @@ export default function Create({
                                                 onClick={() =>
                                                     setPendingProduct(null)
                                                 }
-                                                className="text-indigo-400 hover:text-indigo-600"
+                                                className="text-primary-400 hover:text-primary-600"
                                             >
                                                 <svg
                                                     className="h-4 w-4"
@@ -543,7 +545,7 @@ export default function Create({
                                         {/* Dropdown Variant — hanya muncul jika produk is_variant */}
                                         {pendingProduct.is_variant && (
                                             <div className="mb-3">
-                                                <label className="mb-1 block text-xs font-semibold text-indigo-700">
+                                                <label className="mb-1 block text-xs font-semibold text-primary-700">
                                                     Variant{" "}
                                                     <span className="text-red-400">
                                                         *
@@ -568,7 +570,7 @@ export default function Create({
                                             (!pendingProduct.is_variant ||
                                                 pendingVariantId) && (
                                                 <div className="mb-3">
-                                                    <label className="mb-1 block text-xs font-semibold text-indigo-700">
+                                                    <label className="mb-1 block text-xs font-semibold text-primary-700">
                                                         Satuan
                                                     </label>
                                                     <SearchableSelect
@@ -590,7 +592,7 @@ export default function Create({
                                             )}
 
                                         {pendingBucketStock !== null && (
-                                            <p className="mb-3 text-xs text-indigo-600">
+                                            <p className="mb-3 text-xs text-primary-600">
                                                 Stok saat ini:{" "}
                                                 <span className="font-semibold">
                                                     {pendingBucketStock}
@@ -601,7 +603,7 @@ export default function Create({
 
                                         <div className="grid grid-cols-12 items-end gap-3">
                                             <div className="col-span-4 sm:col-span-3">
-                                                <label className="mb-1 block text-xs font-semibold text-indigo-700">
+                                                <label className="mb-1 block text-xs font-semibold text-primary-700">
                                                     Qty{" "}
                                                     {pendingUnit
                                                         ? `(${pendingUnit.name})`
@@ -618,15 +620,15 @@ export default function Create({
                                                     }
                                                     onKeyDown={handleAddKey}
                                                     min="1"
-                                                    className="block w-full rounded-xl border border-indigo-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                    className="block w-full rounded-xl border border-primary-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                 />
                                             </div>
                                             <div className="col-span-5 sm:col-span-5">
-                                                <label className="mb-1 block text-xs font-semibold text-indigo-700">
+                                                <label className="mb-1 block text-xs font-semibold text-primary-700">
                                                     Harga Beli / Satuan
                                                 </label>
                                                 <div className="relative">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-indigo-400">
+                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-primary-400">
                                                         Rp
                                                     </span>
                                                     <input
@@ -640,7 +642,7 @@ export default function Create({
                                                         onKeyDown={handleAddKey}
                                                         min="0"
                                                         placeholder="0"
-                                                        className="block w-full rounded-xl border border-indigo-300 bg-white py-2 pl-8 pr-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                        className="block w-full rounded-xl border border-primary-300 bg-white py-2 pl-8 pr-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                     />
                                                 </div>
                                             </div>
@@ -652,14 +654,14 @@ export default function Create({
                                                         pendingProduct.is_variant &&
                                                         !pendingVariantId
                                                     }
-                                                    className="w-full rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-40"
+                                                    className="w-full rounded-xl bg-primary-600 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 active:bg-primary-800 disabled:opacity-40"
                                                 >
                                                     + Tambah
                                                 </button>
                                             </div>
                                         </div>
                                         {pendingQty > 0 && pendingPrice > 0 && (
-                                            <p className="mt-2 text-right text-xs text-indigo-600 font-medium">
+                                            <p className="mt-2 text-right text-xs text-primary-600 font-medium">
                                                 Subtotal:{" "}
                                                 {fmtRp(
                                                     Number(pendingQty) *
@@ -768,7 +770,7 @@ export default function Create({
                                                                     )
                                                                 }
                                                                 min="1"
-                                                                className="h-8 w-16 rounded-lg border border-slate-300 px-2 text-center text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 block mx-auto"
+                                                                className="h-8 w-16 rounded-lg border border-slate-300 px-2 text-center text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200 block mx-auto"
                                                             />
                                                         </td>
                                                         <td className="px-4 py-3">
@@ -793,7 +795,7 @@ export default function Create({
                                                                         )
                                                                     }
                                                                     min="0"
-                                                                    className="h-8 w-28 rounded-lg border border-slate-300 pl-7 pr-2 text-right text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                                    className="h-8 w-28 rounded-lg border border-slate-300 pl-7 pr-2 text-right text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                                 />
                                                             </div>
                                                         </td>
@@ -1062,7 +1064,7 @@ export default function Create({
                                         <dt className="font-semibold text-slate-700">
                                             Grand Total
                                         </dt>
-                                        <dd className="text-lg font-bold text-indigo-600">
+                                        <dd className="text-lg font-bold text-primary-600">
                                             {fmtRp(grandTotal)}
                                         </dd>
                                     </div>
@@ -1125,7 +1127,7 @@ export default function Create({
                             <button
                                 type="submit"
                                 disabled={processing || data.items.length === 0}
-                                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                                className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                             >
                                 {processing
                                     ? "Menyimpan..."

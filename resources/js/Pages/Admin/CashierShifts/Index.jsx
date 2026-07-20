@@ -98,7 +98,7 @@ export default function Index({
                     {canOpen && (
                         <Link
                             href={route("admin.cashier-shifts.create")}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                         >
                             <Plus className="h-4 w-4" strokeWidth={2} />
                             <span className="hidden sm:inline">Buka Shift</span>
@@ -151,7 +151,7 @@ export default function Index({
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Cari no. shift / kasir..."
-                                        className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                        className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                     />
                                 </form>
                             </div>
@@ -165,9 +165,9 @@ export default function Index({
                                     </button>
                                 </Dropdown.Trigger>
                                 <Dropdown.Content width="48">
-                                    <button onClick={() => applyFilter("")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${!status ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Semua</button>
-                                    <button onClick={() => applyFilter("open")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "open" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Berjalan</button>
-                                    <button onClick={() => applyFilter("closed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "closed" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Tutup</button>
+                                    <button onClick={() => applyFilter("")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${!status ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Semua</button>
+                                    <button onClick={() => applyFilter("open")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "open" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Berjalan</button>
+                                    <button onClick={() => applyFilter("closed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "closed" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Tutup</button>
                                 </Dropdown.Content>
                             </Dropdown>
                         </div>
@@ -260,7 +260,7 @@ export default function Index({
                                                             "admin.cashier-shifts.show",
                                                             shift.id,
                                                         )}
-                                                        className="rounded-lg px-2.5 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+                                                        className="rounded-lg px-2.5 py-1 text-xs font-medium text-primary-600 hover:bg-primary-50"
                                                     >
                                                         Detail
                                                     </Link>
@@ -321,7 +321,7 @@ export default function Index({
                                         preserveScroll
                                         className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                                             link.active
-                                                ? "bg-indigo-600 text-white shadow-sm"
+                                                ? "bg-primary-600 text-white shadow-sm"
                                                 : link.url
                                                   ? "text-slate-600 hover:bg-slate-100"
                                                   : "cursor-not-allowed text-slate-300"

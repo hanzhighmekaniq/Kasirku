@@ -2,6 +2,112 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * ── Theme Engine: CSS Variables ─────────────────────────────────
+ * Nilai default di sini = template "Royal Indigo" (light + dark).
+ * ThemeProvider (resources/js/Theme/ThemeProvider.jsx) akan menimpa
+ * variable ini secara runtime ketika user memilih template lain atau
+ * membuat Custom Theme — tanpa perlu rebuild Tailwind.
+ *
+ * Format nilai "R G B" (tanpa rgb(), tanpa koma) agar kompatibel
+ * dengan helper rgb(var(--x) / <alpha-value>) di tailwind.config.js.
+ */
+:root {
+    /* primary scale */
+    --color-primary-50: 238 242 255;
+    --color-primary-100: 224 231 255;
+    --color-primary-200: 199 210 254;
+    --color-primary-300: 165 180 252;
+    --color-primary-400: 129 140 248;
+    --color-primary-500: 99 102 241;
+    --color-primary-600: 79 70 229;
+    --color-primary-700: 67 56 202;
+    --color-primary-800: 55 48 163;
+    --color-primary-900: 49 46 129;
+    --color-primary-950: 30 27 75;
+
+    /* secondary scale (default: slate) */
+    --color-secondary-50: 248 250 252;
+    --color-secondary-100: 241 245 249;
+    --color-secondary-200: 226 232 240;
+    --color-secondary-300: 203 213 225;
+    --color-secondary-400: 148 163 184;
+    --color-secondary-500: 100 116 139;
+    --color-secondary-600: 71 85 105;
+    --color-secondary-700: 51 65 85;
+    --color-secondary-800: 30 41 59;
+    --color-secondary-900: 15 23 42;
+    --color-secondary-950: 2 6 23;
+
+    /* accent scale (default: violet) */
+    --color-accent-50: 245 243 255;
+    --color-accent-100: 237 233 254;
+    --color-accent-200: 221 214 254;
+    --color-accent-300: 196 181 253;
+    --color-accent-400: 167 139 250;
+    --color-accent-500: 139 92 246;
+    --color-accent-600: 124 58 237;
+    --color-accent-700: 109 40 217;
+    --color-accent-800: 91 33 182;
+    --color-accent-900: 74 29 150;
+    --color-accent-950: 46 16 101;
+
+    /* semantic surfaces & text — non-scale token, dipakai lewat var() langsung */
+    --color-background: 248 250 252;
+    --color-surface: 255 255 255;
+    --color-surface-secondary: 241 245 249;
+    --color-sidebar: 255 255 255;
+    --color-sidebar-text: 15 23 42;
+    --color-navbar: 255 255 255;
+    --color-border: 226 232 240;
+    --color-divider: 226 232 240;
+    --color-text-primary: 15 23 42;
+    --color-text-secondary: 100 116 139;
+    --color-text-muted: 148 163 184;
+    --color-input-background: 255 255 255;
+    --color-input-border: 226 232 240;
+    --color-card: 255 255 255;
+    --color-modal: 255 255 255;
+    --color-tooltip: 15 23 42;
+    --color-table-header: 248 250 252;
+    --color-table-row: 255 255 255;
+    --color-table-hover: 241 245 249;
+}
+
+.dark {
+    --color-primary-50: 30 27 75;
+    --color-primary-100: 49 46 129;
+    --color-primary-200: 55 48 163;
+    --color-primary-300: 67 56 202;
+    --color-primary-400: 79 70 229;
+    --color-primary-500: 99 102 241;
+    --color-primary-600: 129 140 248;
+    --color-primary-700: 165 180 252;
+    --color-primary-800: 199 210 254;
+    --color-primary-900: 224 231 255;
+    --color-primary-950: 238 242 255;
+
+    --color-background: 15 23 42;
+    --color-surface: 30 41 59;
+    --color-surface-secondary: 51 65 85;
+    --color-sidebar: 30 41 59;
+    --color-sidebar-text: 248 250 252;
+    --color-navbar: 30 41 59;
+    --color-border: 51 65 85;
+    --color-divider: 51 65 85;
+    --color-text-primary: 248 250 252;
+    --color-text-secondary: 203 213 225;
+    --color-text-muted: 148 163 184;
+    --color-input-background: 30 41 59;
+    --color-input-border: 51 65 85;
+    --color-card: 31 41 55;
+    --color-modal: 31 41 55;
+    --color-tooltip: 248 250 252;
+    --color-table-header: 30 41 59;
+    --color-table-row: 30 41 59;
+    --color-table-hover: 51 65 85;
+}
+
 @layer base {
     html {
         -webkit-font-smoothing: antialiased;
@@ -9,7 +115,7 @@
     }
 
     body {
-        @apply text-slate-800 bg-[#f8f9fb];
+        @apply text-slate-800 bg-[#f8f9fb] dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200;
     }
 
     /* Scrollbar tipis di sidebar */
@@ -32,7 +138,7 @@
 
     /* Input standar */
     .input {
-        @apply block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition;
+        @apply block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm placeholder:text-slate-400 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 transition;
     }
 
     .input-error {

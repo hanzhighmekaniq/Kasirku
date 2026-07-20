@@ -18,7 +18,7 @@ const METHOD_LABELS = {
 function inputCls(err = false) {
     return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         err ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-            : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'}`;
+            : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'}`;
 }
 
 function ProviderCard({ provider, config, onSave }) {
@@ -76,7 +76,7 @@ function ProviderCard({ provider, config, onSave }) {
                             onClick={() => setData('environment', env)}
                             className={`flex-1 rounded-xl border py-2 text-xs font-semibold capitalize transition ${
                                 data.environment === env
-                                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                    ? 'border-primary-500 bg-primary-50 text-primary-700'
                                     : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                             }`}
                         >
@@ -139,7 +139,7 @@ function ProviderCard({ provider, config, onSave }) {
                                     type="button"
                                     onClick={() => toggleMethod(m)}
                                     className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
-                                        active ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        active ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                                     }`}
                                 >
                                     {meta.icon} {meta.label}
@@ -152,7 +152,7 @@ function ProviderCard({ provider, config, onSave }) {
                 <button
                     type="submit"
                     disabled={processing}
-                    className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                    className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                 >
                     {processing ? 'Menyimpan...' : 'Simpan Konfigurasi'}
                 </button>
@@ -177,12 +177,12 @@ export default function PaymentGatewaySettings({ providers, configs }) {
                 </div>
             )}
 
-            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3">
-                <svg className="mt-0.5 h-5 w-5 shrink-0 text-indigo-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-3">
+                <svg className="mt-0.5 h-5 w-5 shrink-0 text-primary-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                 </svg>
-                <p className="text-xs text-indigo-700">
-                    API keys dienkripsi sebelum disimpan. Webhook URL kamu: <code className="font-mono bg-indigo-100 px-1 rounded">/webhooks/midtrans</code>
+                <p className="text-xs text-primary-700">
+                    API keys dienkripsi sebelum disimpan. Webhook URL kamu: <code className="font-mono bg-primary-100 px-1 rounded">/webhooks/midtrans</code>
                 </p>
             </div>
 

@@ -16,7 +16,7 @@ const PLAN_STYLE = {
     free: { cls: "bg-slate-100 text-slate-600 ring-slate-200" },
     basic: { cls: "bg-blue-50 text-blue-700 ring-blue-100" },
     pro: { cls: "bg-violet-50 text-violet-700 ring-violet-100" },
-    unlimited: { cls: "bg-indigo-50 text-indigo-700 ring-indigo-100" },
+    unlimited: { cls: "bg-primary-50 text-primary-700 ring-primary-100" },
 };
 
 const CAT_META = {
@@ -430,7 +430,7 @@ export default function Show({ user, storeAccess = [], allFeatures = [] }) {
                             className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl font-bold text-white shadow-sm ${
                                 user.is_developer
                                     ? "bg-gradient-to-br from-violet-500 to-purple-600"
-                                    : "bg-gradient-to-br from-indigo-400 to-indigo-600"
+                                    : "bg-gradient-to-br from-primary-400 to-primary-600"
                             }`}
                         >
                             {user.name.charAt(0).toUpperCase()}
@@ -470,7 +470,7 @@ export default function Show({ user, storeAccess = [], allFeatures = [] }) {
                         label: "Toko",
                         value: storeAccess.length,
                         icon: "🏪",
-                        color: "bg-indigo-50 text-indigo-600",
+                        color: "bg-primary-50 text-primary-600",
                     },
                     {
                         label: "Total Fitur",
@@ -539,7 +539,7 @@ export default function Show({ user, storeAccess = [], allFeatures = [] }) {
                             </p>
                             <Link
                                 href={route("developer.users.edit", user.id)}
-                                className="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors"
+                                className="mt-4 rounded-xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-700 transition-colors"
                             >
                                 Edit User
                             </Link>

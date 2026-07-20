@@ -320,7 +320,7 @@ export default function Edit({
                                                 onClick={() =>
                                                     setShowScanner(true)
                                                 }
-                                                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-indigo-700"
+                                                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-primary-700"
                                             >
                                                 <ScanLine className="h-4 w-4" />
                                                 Scan
@@ -427,7 +427,7 @@ export default function Edit({
                                 subtitle="Atur harga jual, modal, grosir bertingkat, dan kemasan"
                             >
                                 {product.is_variant && (
-                                    <div className="mb-4 flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
+                                    <div className="mb-4 flex items-center justify-between rounded-xl border border-primary-100 bg-primary-50/50 p-4">
                                         <div>
                                             <p className="text-sm font-semibold text-slate-900">Jual Produk Dasar</p>
                                             <p className="text-[11px] text-slate-500 mt-0.5">
@@ -438,7 +438,7 @@ export default function Edit({
                                         <button
                                             type="button"
                                             onClick={() => setData("sell_base", !data.sell_base)}
-                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.sell_base ? "bg-indigo-600" : "bg-slate-300"}`}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.sell_base ? "bg-primary-600" : "bg-slate-300"}`}
                                         >
                                             <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${data.sell_base ? "translate-x-5" : "translate-x-0"}`} />
                                         </button>
@@ -551,7 +551,7 @@ export default function Edit({
                                                             ],
                                                         )
                                                     }
-                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary-50 px-3 py-2 text-xs font-semibold text-primary-600 transition hover:bg-primary-100"
                                                 >
                                                     <Plus className="h-4 w-4" />
                                                     Tambah kemasan
@@ -742,8 +742,8 @@ export default function Edit({
                                     <div className="rounded-xl border border-slate-200 bg-white/50 p-4">
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-2">
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50">
-                                                    <BarChart3 className="h-4 w-4 text-indigo-600" />
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-50">
+                                                    <BarChart3 className="h-4 w-4 text-primary-600" />
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-semibold text-slate-900">
@@ -767,7 +767,7 @@ export default function Edit({
                                                             },
                                                         ])
                                                     }
-                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary-50 px-3 py-2 text-xs font-semibold text-primary-600 transition hover:bg-primary-100"
                                                 >
                                                     <Plus className="h-4 w-4" />
                                                     Tambah tier
@@ -782,7 +782,7 @@ export default function Edit({
                                                         className="grid grid-cols-12 gap-2 items-center rounded-xl bg-white p-2.5 border border-slate-200"
                                                     >
                                                         <div className="col-span-2 flex items-center justify-center">
-                                                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 border border-indigo-100">
+                                                            <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700 border border-primary-100">
                                                                 Tier {i + 1}
                                                             </span>
                                                         </div>
@@ -1212,7 +1212,7 @@ export default function Edit({
                         <SectionCard title="Gambar Produk" accent="violet">
                             <div className="space-y-3">
                                 <div
-                                    className="group relative aspect-square w-full overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-gradient-to-br from-indigo-50/30 to-violet-50/30 transition hover:border-indigo-400 hover:bg-indigo-50/40 cursor-pointer"
+                                    className="group relative aspect-square w-full overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-gradient-to-br from-primary-50/30 to-violet-50/30 transition hover:border-primary-400 hover:bg-primary-50/40 cursor-pointer"
                                     onClick={() =>
                                         document
                                             .getElementById("imageInput")
@@ -1227,7 +1227,7 @@ export default function Edit({
                                         />
                                     ) : (
                                         <div className="flex h-full flex-col items-center justify-center p-6">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30 mb-2">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30 mb-2">
                                                 <Image
                                                     className="h-6 w-6 text-white"
                                                     strokeWidth={1.5}
@@ -1324,7 +1324,7 @@ export default function Edit({
                                 type="submit"
                                 form="productForm"
                                 disabled={processing}
-                                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                                className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                             >
                                 {processing
                                     ? "Menyimpan..."
@@ -1354,7 +1354,7 @@ export default function Edit({
                     type="submit"
                     form="productForm"
                     disabled={processing}
-                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-xl shadow-indigo-500/40 transition hover:shadow-2xl hover:shadow-indigo-500/50 disabled:opacity-60"
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-xl shadow-primary-500/40 transition hover:shadow-2xl hover:shadow-primary-500/50 disabled:opacity-60"
                     title="Simpan Perubahan"
                 >
                     {processing ? (
@@ -1419,7 +1419,7 @@ function SectionCard({
     children,
 }) {
     const accents = {
-        indigo: "from-indigo-50/60 to-violet-50/60",
+        indigo: "from-primary-50/60 to-violet-50/60",
         violet: "from-violet-50/60 to-purple-50/60",
         emerald: "from-emerald-50/60 to-teal-50/60",
         amber: "from-amber-50/60 to-orange-50/60",
@@ -1432,7 +1432,7 @@ function SectionCard({
             >
                 <div className="flex items-start gap-3">
                     {step && (
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-violet-50 text-sm font-bold text-indigo-600">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50 to-violet-50 text-sm font-bold text-primary-600">
                             {String(step).padStart(2, "0")}
                         </span>
                     )}
@@ -1464,7 +1464,7 @@ function ToggleSwitch({ checked, onChange, disabled = false }) {
             onClick={() => onChange(!checked)}
             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${
                 checked
-                    ? "bg-gradient-to-r from-indigo-500 to-violet-500"
+                    ? "bg-gradient-to-r from-primary-500 to-primary-500"
                     : "bg-slate-300"
             } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
         >
@@ -1486,7 +1486,7 @@ function SettingToggle({
 }) {
     if (!show) return null;
     return (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-indigo-200 cursor-pointer">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-primary-200 cursor-pointer">
             <div>
                 <p className="text-sm font-semibold text-slate-900">{label}</p>
                 <p className="text-[11px] text-slate-500">{description}</p>
@@ -1543,7 +1543,7 @@ function SummaryRow({ label, value }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border border-slate-200 bg-white py-2.5 px-3.5 text-sm transition outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 ${
+    return `block w-full rounded-xl border border-slate-200 bg-white py-2.5 px-3.5 text-sm transition outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 ${
         hasError ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""
     }`;
 }

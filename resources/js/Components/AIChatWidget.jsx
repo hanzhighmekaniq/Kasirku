@@ -58,7 +58,7 @@ export default function AIChatWidget({ filters }) {
         return (
             <button
                 onClick={() => setOpen(true)}
-                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700 hover:scale-105 active:scale-95"
+                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-lg shadow-primary-200 transition hover:bg-primary-700 hover:scale-105 active:scale-95"
                 title="Tanya AI"
             >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -71,7 +71,7 @@ export default function AIChatWidget({ filters }) {
     return (
         <div className="fixed bottom-6 right-6 z-50 flex w-[380px] flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/60">
             {/* Header */}
-            <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-white">
+            <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-primary-600 to-primary-600 px-4 py-3 text-white">
                 <div className="flex items-center gap-2">
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
@@ -91,7 +91,7 @@ export default function AIChatWidget({ filters }) {
                     <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 leading-relaxed ${
                             m.role === 'user'
-                                ? 'bg-indigo-600 text-white'
+                                ? 'bg-primary-600 text-white'
                                 : 'bg-slate-50 text-slate-700 ring-1 ring-slate-200/60'
                         }`}>
                             {m.period && (
@@ -124,12 +124,12 @@ export default function AIChatWidget({ filters }) {
                         onKeyDown={handleKey}
                         placeholder="Tanya tentang laporan..."
                         rows={1}
-                        className="min-h-[38px] flex-1 resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                        className="min-h-[38px] flex-1 resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                     />
                     <button
                         onClick={send}
                         disabled={loading || !input.trim()}
-                        className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white transition hover:bg-indigo-700 disabled:opacity-40"
+                        className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-primary-600 text-white transition hover:bg-primary-700 disabled:opacity-40"
                     >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />

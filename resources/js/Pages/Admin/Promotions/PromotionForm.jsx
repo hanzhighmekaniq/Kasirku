@@ -65,7 +65,7 @@ export default function PromotionForm({
         `block w-full rounded-xl border bg-white px-3 py-2.5 text-sm shadow-sm transition focus:ring-2 ${
             errors[field]
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'
+                : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'
         }`;
 
     const showTierPrice = data.type === 'tiered' || data.type === 'member_price';
@@ -109,11 +109,11 @@ export default function PromotionForm({
                             onClick={() => setData('scope', s.value)}
                             className={`rounded-xl border-2 px-4 py-3 text-left transition ${
                                 data.scope === s.value
-                                    ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-200'
+                                    ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-200'
                                     : 'border-slate-200 bg-white hover:border-slate-300'
                             }`}
                         >
-                            <p className={`text-sm font-semibold ${data.scope === s.value ? 'text-indigo-700' : 'text-slate-700'}`}>
+                            <p className={`text-sm font-semibold ${data.scope === s.value ? 'text-primary-700' : 'text-slate-700'}`}>
                                 {s.label}
                             </p>
                             <p className="mt-0.5 text-xs text-slate-400">{s.desc}</p>
@@ -341,8 +341,8 @@ export default function PromotionForm({
                     <button
                         type="button"
                         onClick={() => setData('is_active', !data.is_active)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                            data.is_active ? 'bg-indigo-600' : 'bg-slate-200'
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                            data.is_active ? 'bg-primary-600' : 'bg-slate-200'
                         }`}
                     >
                         <span
@@ -399,16 +399,16 @@ export default function PromotionForm({
                                 {selectedProducts.map((p) => (
                                     <span
                                         key={p.id}
-                                        className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700"
+                                        className="inline-flex items-center gap-1.5 rounded-lg border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700"
                                     >
                                         <span className="max-w-[120px] truncate">{p.name}</span>
-                                        <span className="text-indigo-400">
+                                        <span className="text-primary-400">
                                             Rp {Number(p.sell_price).toLocaleString('id-ID')}
                                         </span>
                                         <button
                                             type="button"
                                             onClick={() => removeProduct(p.id)}
-                                            className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-indigo-200 hover:text-indigo-800"
+                                            className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-primary-200 hover:text-primary-800"
                                         >
                                             <X className="h-3 w-3" strokeWidth={2} />
                                         </button>
@@ -422,7 +422,7 @@ export default function PromotionForm({
                         <button
                             type="button"
                             onClick={() => setShowProductPicker(!showProductPicker)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-indigo-400 hover:text-indigo-600"
+                            className="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-primary-400 hover:text-primary-600"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -444,7 +444,7 @@ export default function PromotionForm({
                                         value={productSearch}
                                         onChange={(e) => setProductSearch(e.target.value)}
                                         placeholder="Cari produk..."
-                                        className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                        className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                         autoFocus
                                     />
                                 </div>
@@ -461,7 +461,7 @@ export default function PromotionForm({
                                                 key={p.id}
                                                 type="button"
                                                 onClick={() => addProduct(p.id)}
-                                                className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition hover:bg-indigo-50"
+                                                className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition hover:bg-primary-50"
                                             >
                                                 <div>
                                                     <p className="font-medium text-slate-800">{p.name}</p>
@@ -504,7 +504,7 @@ export default function PromotionForm({
                 <button
                     type="submit"
                     disabled={processing}
-                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60"
+                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-60"
                 >
                     {processing ? 'Menyimpan...' : submitLabel}
                 </button>

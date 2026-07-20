@@ -17,7 +17,7 @@ function inputCls(hasError) {
     return `mt-1 block w-full rounded-xl border shadow-sm text-sm transition focus:ring-2 ${
         hasError
             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-200"
+            : "border-slate-300 focus:border-primary-500 focus:ring-primary-200"
     }`;
 }
 
@@ -253,7 +253,7 @@ export default function EmployeeForm({
                         onChange={(e) =>
                             setData("create_account", e.target.checked)
                         }
-                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 shadow-sm focus:ring-primary-500"
                     />
                     <span>
                         <span className="block text-sm font-medium text-slate-800">
@@ -291,9 +291,9 @@ export default function EmployeeForm({
                                                           e.target.value,
                                                       )
                                                   }
-                                                  className="rounded-full border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                  className="rounded-full border-slate-300 text-primary-600 shadow-sm focus:ring-primary-500"
                                               />
-                                              <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                                              <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
                                                   {r.name}
                                               </span>
                                           </label>
@@ -319,9 +319,9 @@ export default function EmployeeForm({
                                                           e.target.value,
                                                       )
                                                   }
-                                                  className="rounded-full border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                  className="rounded-full border-slate-300 text-primary-600 shadow-sm focus:ring-primary-500"
                                               />
-                                              <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                                              <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
                                                   {l}
                                               </span>
                                           </label>
@@ -392,7 +392,7 @@ export default function EmployeeForm({
                 <button
                     type="submit"
                     disabled={processing}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                 >
                     {processing && (
                         <svg

@@ -33,13 +33,13 @@ export default function SelectStore({ stores }) {
 
             <div className="flex min-h-screen bg-slate-100">
                 {/* Brand panel */}
-                <div className="relative hidden w-1/2 overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 lg:flex lg:flex-col lg:justify-between xl:w-3/5">
-                    <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
+                <div className="relative hidden w-1/2 overflow-hidden bg-gradient-to-br from-slate-900 via-primary-950 to-primary-950 lg:flex lg:flex-col lg:justify-between xl:w-3/5">
+                    <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-primary-500/20 blur-3xl" />
                     <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 translate-x-1/3 translate-y-1/3 rounded-full bg-violet-500/20 blur-3xl" />
 
                     <div className="relative z-10 p-10 xl:p-14">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30">
                                 <ApplicationLogo className="h-7 w-7 fill-current text-white" />
                             </div>
                             <div className="leading-tight">
@@ -68,7 +68,7 @@ export default function SelectStore({ stores }) {
                     <div className="w-full max-w-md">
                         {/* Logo mobile */}
                         <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30">
                                 <ApplicationLogo className="h-6 w-6 fill-current text-white" />
                             </div>
                             <span className="text-lg font-bold tracking-tight text-slate-800">SIM-KASIR</span>
@@ -91,13 +91,13 @@ export default function SelectStore({ stores }) {
                                     disabled={submitting}
                                     className={`group flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
                                         selected === store.id
-                                            ? 'border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-500/10'
-                                            : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/50 hover:shadow-md'
+                                            ? 'border-primary-500 bg-primary-50 shadow-lg shadow-primary-500/10'
+                                            : 'border-slate-200 bg-white hover:border-primary-300 hover:bg-primary-50/50 hover:shadow-md'
                                     } disabled:opacity-60`}
                                 >
                                     {/* Icon */}
                                     <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl transition ${
-                                        selected === store.id ? 'bg-indigo-100' : 'bg-slate-100 group-hover:bg-indigo-50'
+                                        selected === store.id ? 'bg-primary-100' : 'bg-slate-100 group-hover:bg-primary-50'
                                     }`}>
                                         {STORE_TYPE_ICON[store.store_type] ?? '🏬'}
                                     </div>
@@ -105,7 +105,7 @@ export default function SelectStore({ stores }) {
                                     {/* Info */}
                                     <div className="min-w-0 flex-1">
                                         <p className={`text-sm font-semibold transition ${
-                                            selected === store.id ? 'text-indigo-700' : 'text-slate-800'
+                                            selected === store.id ? 'text-primary-700' : 'text-slate-800'
                                         }`}>
                                             {store.name}
                                         </p>
@@ -120,7 +120,7 @@ export default function SelectStore({ stores }) {
 
                                     {/* Arrow */}
                                     <svg className={`h-5 w-5 shrink-0 transition ${
-                                        selected === store.id ? 'text-indigo-500' : 'text-slate-300 group-hover:text-indigo-400'
+                                        selected === store.id ? 'text-primary-500' : 'text-slate-300 group-hover:text-primary-400'
                                     }`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                     </svg>

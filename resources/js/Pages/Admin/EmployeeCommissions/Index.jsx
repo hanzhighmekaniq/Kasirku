@@ -25,7 +25,7 @@ function StatCard({ label, value, color }) {
     const colors = {
         slate: "from-slate-500 to-slate-600",
         amber: "from-amber-500 to-orange-500",
-        blue: "from-blue-500 to-indigo-600",
+        blue: "from-blue-500 to-primary-600",
         emerald: "from-emerald-500 to-teal-500",
     };
     return (
@@ -123,7 +123,7 @@ export default function Index({
                                 status: e.target.value || undefined,
                             })
                         }
-                        className="rounded-xl border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-200"
+                        className="rounded-xl border-slate-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-200"
                     >
                         <option value="">Semua Status</option>
                         <option value="pending">Pending</option>
@@ -139,7 +139,7 @@ export default function Index({
                                 employee_id: e.target.value || undefined,
                             })
                         }
-                        className="rounded-xl border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-200"
+                        className="rounded-xl border-slate-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-200"
                     >
                         <option value="">Semua Karyawan</option>
                         {employees.map((e) => (
@@ -155,7 +155,7 @@ export default function Index({
                         onChange={(e) =>
                             applyFilter({ from: e.target.value || undefined })
                         }
-                        className="rounded-xl border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-200"
+                        className="rounded-xl border-slate-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-200"
                     />
                     <input
                         type="date"
@@ -163,7 +163,7 @@ export default function Index({
                         onChange={(e) =>
                             applyFilter({ to: e.target.value || undefined })
                         }
-                        className="rounded-xl border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-200"
+                        className="rounded-xl border-slate-300 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-200"
                     />
 
                     {(filters.status ||
@@ -243,7 +243,7 @@ export default function Index({
                                                     : `Flat`}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-3 font-semibold text-indigo-700">
+                                        <td className="px-5 py-3 font-semibold text-primary-700">
                                             {fmt(c.commission_amount)}
                                         </td>
                                         <td className="px-5 py-3">
@@ -360,7 +360,7 @@ export default function Index({
                                             {fmtDate(c.commission_date)}
                                         </p>
                                     </div>
-                                    <p className="text-lg font-bold text-indigo-700">
+                                    <p className="text-lg font-bold text-primary-700">
                                         {fmt(c.commission_amount)}
                                     </p>
                                 </div>
@@ -433,7 +433,7 @@ export default function Index({
                                     }
                                     className={`rounded-lg px-3 py-1.5 font-medium transition ${
                                         link.active
-                                            ? "bg-indigo-100 text-indigo-700"
+                                            ? "bg-primary-100 text-primary-700"
                                             : link.url
                                               ? "text-slate-500 hover:bg-slate-100"
                                               : "cursor-default text-slate-300"

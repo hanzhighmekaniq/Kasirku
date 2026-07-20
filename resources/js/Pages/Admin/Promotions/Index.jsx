@@ -153,7 +153,7 @@ export default function Index({ promotions }) {
                     {canManage && (
                         <Link
                             href={route('admin.promotions.create')}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                         >
                             <Plus className="h-4 w-4" strokeWidth={2} />
                             <span className="hidden sm:inline">Tambah Promo</span>
@@ -179,7 +179,7 @@ export default function Index({ promotions }) {
                     <p className="text-xs font-medium text-slate-400">Terjadwal</p>
                     <p className="mt-1 text-xl font-bold text-slate-800">{stats.scheduled}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-indigo-400 bg-white p-4 shadow-sm">
+                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-primary-400 bg-white p-4 shadow-sm">
                     <p className="text-xs font-medium text-slate-400">Jenis Tipe</p>
                     <p className="mt-1 text-xl font-bold text-slate-800">{stats.types}</p>
                 </div>
@@ -199,7 +199,7 @@ export default function Index({ promotions }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nama promo, kode, atau tipe..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -213,9 +213,9 @@ export default function Index({ promotions }) {
                                     </button>
                                 </Dropdown.Trigger>
                                 <Dropdown.Content width="48">
-                                    <button onClick={() => setFilterType('all')} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterType === 'all' ? 'bg-indigo-50 font-medium text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>Semua Tipe</button>
+                                    <button onClick={() => setFilterType('all')} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterType === 'all' ? 'bg-primary-50 font-medium text-primary-600' : 'text-slate-600 hover:bg-slate-50'}`}>Semua Tipe</button>
                                     {Object.entries(TYPE_LABELS).map(([key, label]) => (
-                                        <button key={key} onClick={() => setFilterType(key)} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterType === key ? 'bg-indigo-50 font-medium text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>{label}</button>
+                                        <button key={key} onClick={() => setFilterType(key)} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterType === key ? 'bg-primary-50 font-medium text-primary-600' : 'text-slate-600 hover:bg-slate-50'}`}>{label}</button>
                                     ))}
                                 </Dropdown.Content>
                             </Dropdown>
@@ -230,7 +230,7 @@ export default function Index({ promotions }) {
                                 </Dropdown.Trigger>
                                 <Dropdown.Content width="48">
                                     {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                                        <button key={key} onClick={() => setFilterStatus(key)} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === key ? 'bg-indigo-50 font-medium text-indigo-600' : 'text-slate-600 hover:bg-slate-50'}`}>{label}</button>
+                                        <button key={key} onClick={() => setFilterStatus(key)} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === key ? 'bg-primary-50 font-medium text-primary-600' : 'text-slate-600 hover:bg-slate-50'}`}>{label}</button>
                                     ))}
                                 </Dropdown.Content>
                             </Dropdown>
@@ -293,7 +293,7 @@ export default function Index({ promotions }) {
                                         <tr key={promo.id} className="transition hover:bg-slate-50/50">
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 text-sm">
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-50 to-violet-50 text-sm">
                                                         {SCOPE_META[promo.scope]?.icon ?? '🏷️'}
                                                     </div>
                                                     <div className="min-w-0">
@@ -329,7 +329,7 @@ export default function Index({ promotions }) {
                                                     <div className="flex items-center justify-center gap-1">
                                                         <Link
                                                             href={route('admin.promotions.edit', promo.id)}
-                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-primary-50 hover:text-primary-600"
                                                             title="Edit"
                                                         >
                                                             <Pencil className="h-4 w-4" strokeWidth={1.8} />

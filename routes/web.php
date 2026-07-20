@@ -49,6 +49,7 @@ use App\Http\Controllers\Developer\PlanController;
 use App\Http\Controllers\Developer\StoreController as DevStoreController;
 use App\Http\Controllers\Developer\UserController as DevUserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\WebhookController;
 use App\Models\Branch;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -212,6 +213,12 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name(
             'profile.destroy',
         );
+
+        // ── Theme preference (Theme Engine) ─────────────────────────────────
+        Route::patch(
+            '/theme-preference',
+            [ThemePreferenceController::class, 'update'],
+        )->name('theme-preference.update');
 
         // ── Offline sync ───────────────────────────────────────────────────
         Route::post('/mutations/sync', [
@@ -917,6 +924,13 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 return inertia('Admin/Settings/SidebarOrder');
             })->name('sidebar-order');
         });
+
+        // Theme Picker — ganti tampilan warna/mode aplikasi. Tersedia untuk
+        // semua user (bukan hanya owner/admin) karena preferensi tema
+        // bersifat personal per-akun, bukan konfigurasi toko.
+        Route::get('/theme', function () {
+            return inertia('Admin/Settings/ThemePicker');
+        })->name('theme.picker');
         Route::middleware([
             'feature:payment_method',
             'permission:setting.edit',

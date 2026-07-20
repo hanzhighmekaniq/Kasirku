@@ -95,7 +95,7 @@ export default function SearchableSelect({
         "block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2";
     const cls = error
         ? `${baseCls} border-red-300 focus:border-red-500 focus:ring-red-200`
-        : `${baseCls} border-slate-300 focus:border-indigo-500 focus:ring-indigo-200`;
+        : `${baseCls} border-slate-300 focus:border-primary-500 focus:ring-primary-200`;
 
     return (
         <div ref={containerRef} className="relative">
@@ -168,7 +168,7 @@ export default function SearchableSelect({
                                 }}
                                 onKeyDown={onKeyDown}
                                 placeholder={searchPlaceholder}
-                                className="w-full rounded-xl border border-slate-200 py-2 pl-10 pr-3 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                className="w-full rounded-xl border border-slate-200 py-2 pl-10 pr-3 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                                 autoComplete="off"
                             />
                         </div>
@@ -190,7 +190,7 @@ export default function SearchableSelect({
                                     onMouseEnter={() => setIdx(i)}
                                     className={`flex w-full items-center px-4 py-2.5 text-left text-sm transition ${
                                         String(option.id) === String(value)
-                                            ? "bg-indigo-50 text-indigo-700"
+                                            ? "bg-primary-50 text-primary-700"
                                             : i === idx
                                               ? "bg-slate-50"
                                               : "hover:bg-slate-50"
@@ -201,7 +201,7 @@ export default function SearchableSelect({
                                     </span>
                                     {String(option.id) === String(value) && (
                                         <svg
-                                            className="h-4 w-4 shrink-0 text-indigo-500"
+                                            className="h-4 w-4 shrink-0 text-primary-500"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             strokeWidth={2.5}

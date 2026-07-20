@@ -39,10 +39,10 @@ const PLAN_COLOR = {
         dot: "bg-violet-500",
     },
     unlimited: {
-        ring: "ring-indigo-200",
-        bg: "bg-indigo-50",
-        text: "text-indigo-700",
-        dot: "bg-indigo-500",
+        ring: "ring-primary-200",
+        bg: "bg-primary-50",
+        text: "text-primary-700",
+        dot: "bg-primary-500",
     },
 };
 
@@ -110,7 +110,7 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
             ref={isDragOverlay ? undefined : setNodeRef}
             style={isDragOverlay ? undefined : style}
             className={`group flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3.5 last:border-0 transition-colors ${
-                isDragging ? "bg-indigo-50/30" : "hover:bg-slate-50/60"
+                isDragging ? "bg-primary-50/30" : "hover:bg-slate-50/60"
             } ${isDragOverlay ? "rounded-2xl shadow-xl ring-1 ring-black/10" : ""}`}
         >
             {/* Drag handle */}
@@ -352,7 +352,7 @@ export default function Index({ plans: initialPlans }) {
                         )}
                         <Link
                             href={route("developer.plans.create")}
-                            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+                            className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -425,7 +425,7 @@ export default function Index({ plans: initialPlans }) {
                         </p>
                         <Link
                             href={route("developer.plans.create")}
-                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700"
                         >
                             Buat Paket
                         </Link>

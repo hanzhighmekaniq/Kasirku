@@ -44,6 +44,7 @@ class DashboardController extends Controller
             ->get(['id', 'code', 'name']);
 
         $today = Carbon::today();
+        $yesterday = Carbon::yesterday();
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfDay();
 
@@ -76,6 +77,28 @@ class DashboardController extends Controller
         $monthCount = Sale::where($saleScope)
             ->whereBetween('sale_date', [$monthStart, $monthEnd])
             ->count();
+
+        // ── Yesterday stats (for trend comparison) ─────────────
+        $yesterdaySales = Sale::where($saleScope)
+            ->whereDate('sale_date', $yesterday)
+            ->sum('grand_total');
+        $yesterdayCount = Sale::where($saleScope)
+            ->whereDate('sale_date', $yesterday)
+            ->count();
+
+        // ── Trend helpers ─────────────────────────────────────
+        $calcTrend = function ($current, $previous) {
+            if ($previous <= 0) {
+                return $current > 0 ? 100.0 : 0.0;
+            }
+
+            return round((($current - $previous) / $previous) * 100, 1);
+        };
+        $todaySalesTrend = $calcTrend($todaySales, $yesterdaySales);
+        $todayCountTrend = $calcTrend($todayCount, $yesterdayCount);
+        $aovToday = $todayCount > 0 ? $todaySales / $todayCount : 0;
+        $aovYesterday = $yesterdayCount > 0 ? $yesterdaySales / $yesterdayCount : 0;
+        $aovTrend = $calcTrend($aovToday, $aovYesterday);
 
         // ── Hourly trend today ────────────────────────────────
         $hourlySales = Sale::where($saleScope)
@@ -275,6 +298,17 @@ class DashboardController extends Controller
         $todayProfit = $todaySales - $todayPurchases - $todayExpenses;
         $monthProfit = $monthSales - $monthPurchases - $monthExpenses;
 
+        // Yesterday profit (for trend)
+        $yesterdayPurchases = Purchase::where('store_id', $storeId)
+            ->where('status', 'completed')
+            ->whereDate('purchase_date', $yesterday)
+            ->sum('grand_total');
+        $yesterdayExpenses = Expense::where('store_id', $storeId)
+            ->whereDate('expense_date', $yesterday)
+            ->sum('amount');
+        $yesterdayProfit = $yesterdaySales - $yesterdayPurchases - $yesterdayExpenses;
+        $todayProfitTrend = $calcTrend($todayProfit, $yesterdayProfit);
+
         // Inventory value (stok × average_cost per bucket, bukan product.cost_price)
         $inventoryValue =
             ProductStock::where('product_stocks.store_id', $storeId)
@@ -353,6 +387,10 @@ class DashboardController extends Controller
             'stats' => [
                 'today_sales' => (float) $todaySales,
                 'today_count' => $todayCount,
+                'today_sales_trend' => $todaySalesTrend,
+                'today_count_trend' => $todayCountTrend,
+                'aov_today' => (float) $aovToday,
+                'aov_trend' => $aovTrend,
                 'month_sales' => (float) $monthSales,
                 'month_count' => $monthCount,
                 'today_purchases' => (float) $todayPurchases,
@@ -360,6 +398,7 @@ class DashboardController extends Controller
                 'month_purchases' => (float) $monthPurchases,
                 'month_expenses' => (float) $monthExpenses,
                 'today_profit' => (float) $todayProfit,
+                'today_profit_trend' => $todayProfitTrend,
                 'month_profit' => (float) $monthProfit,
                 'inventory_value' => (float) $inventoryValue,
                 'low_stock' => $lowStockProducts,

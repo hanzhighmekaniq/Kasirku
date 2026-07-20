@@ -7,7 +7,7 @@ const inp = (err) =>
     `mt-1.5 block w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition focus:ring-2 ${
         err
             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-200"
+            : "border-slate-300 focus:border-primary-500 focus:ring-primary-200"
     }`;
 
 const genderOptions = [
@@ -217,7 +217,7 @@ export default function CustomerForm({
                 <button
                     type="submit"
                     disabled={processing}
-                    className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+                    className="rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
                 >
                     {processing ? "Menyimpan..." : submitLabel}
                 </button>

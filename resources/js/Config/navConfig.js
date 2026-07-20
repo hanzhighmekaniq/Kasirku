@@ -610,6 +610,14 @@ export function buildNavGroups(modules) {
                 current: "admin.sidebar-order",
             },
         );
+        // Tema — personal per-akun, tidak digate oleh permission/plan toko.
+        items.push({
+            key: "theme-picker",
+            name: "Tema Aplikasi",
+            href: r("admin.theme.picker"),
+            icon: "theme",
+            current: "admin.theme.picker",
+        });
         if (items.length > 0)
             groups.push({
                 key: "system",

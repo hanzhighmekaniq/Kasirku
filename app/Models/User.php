@@ -3,33 +3,36 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
-        "name",
-        "email",
-        "is_developer",
-        "password",
-        "session_token",
+        'name',
+        'email',
+        'is_developer',
+        'password',
+        'session_token',
+        'theme_preference',
     ];
 
-    protected $hidden = ["password", "remember_token"];
+    protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
         return [
-            "email_verified_at" => "datetime",
-            "password" => "hashed",
-            "is_developer" => "boolean",
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'is_developer' => 'boolean',
+            'theme_preference' => 'array',
         ];
     }
 
@@ -37,16 +40,16 @@ class User extends Authenticatable
 
     public function stores(): BelongsToMany
     {
-        return $this->belongsToMany(Store::class, "user_store")
-            ->with("storeType")
+        return $this->belongsToMany(Store::class, 'user_store')
+            ->with('storeType')
             ->withTimestamps()
             ->select(
-                "stores.id",
-                "stores.name",
-                "stores.code",
-                "stores.store_type_id",
-                "stores.logo",
-                "stores.is_active",
+                'stores.id',
+                'stores.name',
+                'stores.code',
+                'stores.store_type_id',
+                'stores.logo',
+                'stores.is_active',
             );
     }
 
@@ -86,7 +89,7 @@ class User extends Authenticatable
     /** Shortcut: cek apakah user bisa akses operasional (semua kecuali developer) */
     public function canAccessOperational(): bool
     {
-        return !$this->isDeveloper();
+        return ! $this->isDeveloper();
     }
 
     /**
@@ -97,7 +100,7 @@ class User extends Authenticatable
     public function canSwitchBranch(): bool
     {
         // setting.view dimiliki owner, admin, supervisor — tidak dimiliki kasir/gudang/kitchen
-        return $this->can("setting.view");
+        return $this->can('setting.view');
     }
 
     public function hasRoleInStore(string $role, int $storeId): bool
@@ -108,29 +111,31 @@ class User extends Authenticatable
     public function assignRoleInStore(string $role, int $storeId): void
     {
         app(
-            \Spatie\Permission\PermissionRegistrar::class,
+            PermissionRegistrar::class,
         )->setPermissionsTeamId($storeId);
         $this->assignRole($role);
         app(
-            \Spatie\Permission\PermissionRegistrar::class,
+            PermissionRegistrar::class,
         )->setPermissionsTeamId(null);
     }
 
     public function currentStore(): ?Store
     {
-        $storeId = session("current_store_id");
+        $storeId = session('current_store_id');
         if ($storeId) {
             return $this->stores()->find($storeId);
         }
+
         return $this->stores()->first();
     }
 
     public function currentBranch(): ?Branch
     {
-        $branchId = session("current_branch_id");
+        $branchId = session('current_branch_id');
         if ($branchId) {
             return Branch::find($branchId);
         }
+
         return $this->employee?->branch;
     }
 }

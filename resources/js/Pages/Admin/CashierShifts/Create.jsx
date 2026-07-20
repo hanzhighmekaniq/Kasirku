@@ -74,7 +74,7 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
                         {suggestedShiftNo && (
                             <p className="mt-0.5 text-xs text-slate-500">
                                 Nomor shift:{" "}
-                                <span className="font-mono font-semibold text-indigo-600">
+                                <span className="font-mono font-semibold text-primary-600">
                                     {suggestedShiftNo}
                                 </span>
                             </p>
@@ -105,7 +105,7 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
                                     onChange={(e) =>
                                         setData("opening_cash", e.target.value)
                                     }
-                                    className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                     placeholder="0"
                                 />
                             </div>
@@ -136,7 +136,7 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
                                 onChange={(e) =>
                                     setData("opening_note", e.target.value)
                                 }
-                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 placeholder="Opsional..."
                             />
                             {errors.opening_note && (
@@ -158,7 +158,7 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
                         <button
                             type="submit"
                             disabled={processing}
-                            className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700 disabled:opacity-60"
+                            className="rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-primary-700 disabled:opacity-60"
                         >
                             {processing ? "Membuka..." : "Buka Shift"}
                         </button>

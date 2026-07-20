@@ -8,7 +8,7 @@ const GROUP_META = {
     sale: { label: "Penjualan / POS", icon: "🛒", cls: "bg-emerald-50 text-emerald-700" },
     product: { label: "Produk", icon: "📦", cls: "bg-amber-50 text-amber-700" },
     stock: { label: "Stok", icon: "📋", cls: "bg-teal-50 text-teal-700" },
-    purchase: { label: "Pembelian", icon: "🚚", cls: "bg-indigo-50 text-indigo-700" },
+    purchase: { label: "Pembelian", icon: "🚚", cls: "bg-primary-50 text-primary-700" },
     supplier: { label: "Supplier", icon: "🏭", cls: "bg-slate-100 text-slate-700" },
     customer: { label: "Pelanggan", icon: "👤", cls: "bg-violet-50 text-violet-700" },
     membership: { label: "Membership", icon: "💳", cls: "bg-rose-50 text-rose-700" },
@@ -57,7 +57,7 @@ function PermGroup({ group, permissions, selectedIds, onToggle, onToggleAll }) {
                         checked={allSelected}
                         ref={(el) => el && (el.indeterminate = !allSelected && someSelected)}
                         onChange={() => onToggleAll(group, groupPerms.map((p) => p.id))}
-                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                     />
                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${meta.cls}`}>
                         {meta.icon} {meta.label}
@@ -73,7 +73,7 @@ function PermGroup({ group, permissions, selectedIds, onToggle, onToggleAll }) {
                         key={p.id}
                         className={`flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs transition select-none ${
                             selectedIds.includes(p.id)
-                                ? "bg-indigo-50 text-indigo-700"
+                                ? "bg-primary-50 text-primary-700"
                                 : "text-slate-500 hover:bg-slate-50"
                         }`}
                     >
@@ -81,7 +81,7 @@ function PermGroup({ group, permissions, selectedIds, onToggle, onToggleAll }) {
                             type="checkbox"
                             checked={selectedIds.includes(p.id)}
                             onChange={() => onToggle(p.id)}
-                            className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            className="h-3.5 w-3.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                         />
                         {p.name.split(".").slice(1).join(".")}
                     </label>
@@ -177,7 +177,7 @@ function RoleCard({ role, allPermissions, onSave, saving }) {
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                             >
                                 {saving ? (
                                     <>
@@ -293,7 +293,7 @@ export default function Index({ stores, selectedStore, roles, allPermissions }) 
                         <select
                             value={selectedStore?.id ?? ""}
                             onChange={(e) => handleStoreChange(e.target.value)}
-                            className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:max-w-md"
+                            className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 sm:max-w-md"
                         >
                             <option value="">— Pilih Toko —</option>
                             {stores.map((s) => (
@@ -321,7 +321,7 @@ export default function Index({ stores, selectedStore, roles, allPermissions }) 
                                 </p>
                                 <button
                                     onClick={() => setShowResetModal(true)}
-                                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                                 >
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -347,8 +347,8 @@ export default function Index({ stores, selectedStore, roles, allPermissions }) 
 
                 {!selectedStore && (
                     <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100">
-                            <svg className="h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-100">
+                            <svg className="h-8 w-8 text-primary-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                             </svg>
                         </div>

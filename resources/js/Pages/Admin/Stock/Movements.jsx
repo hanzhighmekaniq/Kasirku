@@ -13,7 +13,7 @@ const MOVEMENT_TYPES = {
     return_in:           { label: 'Retur Masuk',            color: 'bg-purple-100 text-purple-700',   icon: 'arrow-down',  desc: 'Retur pembelian dibatalkan, stok dikembalikan' },
     return_out:          { label: 'Retur ke Supplier',      color: 'bg-pink-100 text-pink-700',       icon: 'arrow-up',    desc: 'Stok dikembalikan ke supplier karena retur' },
     waste:               { label: 'Waste / Rusak',          color: 'bg-gray-100 text-gray-600',       icon: 'arrow-up',    desc: 'Stok hilang/rusak/tumpah, dicatat sebagai waste' },
-    opname_adjustment:   { label: 'Opname Stok',            color: 'bg-indigo-100 text-indigo-700',   icon: 'arrow-down',  desc: 'Koreksi stok dari hasil penghitungan fisik' },
+    opname_adjustment:   { label: 'Opname Stok',            color: 'bg-primary-100 text-primary-700',   icon: 'arrow-down',  desc: 'Koreksi stok dari hasil penghitungan fisik' },
 };
 
 export default function Movements({ movements, products }) {
@@ -103,14 +103,14 @@ export default function Movements({ movements, products }) {
             )}
 
             {/* Info Box */}
-            <div className="mb-5 rounded-2xl border border-indigo-100 bg-indigo-50/50 px-5 py-4">
+            <div className="mb-5 rounded-2xl border border-primary-100 bg-primary-50/50 px-5 py-4">
                 <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-indigo-800">Apa itu Pergerakan Stok (Stock Movement)?</p>
-                        <p className="mt-1 text-xs leading-relaxed text-indigo-600/80">
+                        <p className="text-sm font-medium text-primary-800">Apa itu Pergerakan Stok (Stock Movement)?</p>
+                        <p className="mt-1 text-xs leading-relaxed text-primary-600/80">
                             Setiap kali stok suatu produk berubah — entah masuk karena pembelian, keluar karena penjualan, dipindah antar cabang, atau dikoreksi karena penyesuaian/opname — sistem akan mencatat satu baris "pergerakan" di sini.
                             Ini adalah <span className="font-semibold">audit trail</span> (jejak audit) yang memungkinkan Anda melihat riwayat lengkap dari mana stok berasal dan ke mana stok pergi, lengkap dengan tanggal, jumlah, dan referensi dokumennya.
                         </p>
@@ -123,7 +123,7 @@ export default function Movements({ movements, products }) {
                 <div className="mb-3 flex items-center justify-between">
                     <p className="text-sm font-medium text-slate-700">Filter</p>
                     {hasActiveFilter && (
-                        <button onClick={() => { setFilters({ product_id: '', movement_type: '', from_date: '', to_date: '' }); router.get(route('admin.stock.movements'), {}, { preserveState: true, replace: true }); }} className="text-xs font-medium text-indigo-600 transition hover:text-indigo-800">
+                        <button onClick={() => { setFilters({ product_id: '', movement_type: '', from_date: '', to_date: '' }); router.get(route('admin.stock.movements'), {}, { preserveState: true, replace: true }); }} className="text-xs font-medium text-primary-600 transition hover:text-primary-800">
                             Reset Semua
                         </button>
                     )}
@@ -136,14 +136,14 @@ export default function Movements({ movements, products }) {
                             onClick={() => { setDropdownOpen(!dropdownOpen); setDropdownSearch(''); }}
                             className={`inline-flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium shadow-sm transition ${
                                 selectedProduct
-                                    ? 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                                    ? 'border-primary-300 bg-primary-50 text-primary-700 hover:bg-primary-100'
                                     : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                             }`}
                         >
                             <svg className="h-4 w-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
                             <span className="truncate max-w-[180px]">{selectedProduct ? selectedProduct.name : 'Semua Produk'}</span>
                             {selectedProduct ? (
-                                <button type="button" onClick={(e) => { e.stopPropagation(); handleFilter('product_id', ''); }} className="ml-auto rounded-full p-0.5 text-indigo-400 hover:bg-indigo-100 hover:text-indigo-600">
+                                <button type="button" onClick={(e) => { e.stopPropagation(); handleFilter('product_id', ''); }} className="ml-auto rounded-full p-0.5 text-primary-400 hover:bg-primary-100 hover:text-primary-600">
                                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
                             ) : (
@@ -161,7 +161,7 @@ export default function Movements({ movements, products }) {
                                             value={dropdownSearch}
                                             onChange={(e) => setDropdownSearch(e.target.value)}
                                             placeholder="Cari nama atau SKU..."
-                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:bg-white focus:ring-2 focus:ring-primary-100"
                                         />
                                     </div>
                                 </div>
@@ -170,7 +170,7 @@ export default function Movements({ movements, products }) {
                                         type="button"
                                         onClick={() => { handleFilter('product_id', ''); setDropdownOpen(false); setDropdownSearch(''); }}
                                         className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                            !filters.product_id ? 'bg-indigo-50 font-semibold text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
+                                            !filters.product_id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-slate-600 hover:bg-slate-50'
                                         }`}
                                     >
                                         Semua Produk
@@ -184,7 +184,7 @@ export default function Movements({ movements, products }) {
                                                 type="button"
                                                 onClick={() => { handleFilter('product_id', p.id); setDropdownOpen(false); setDropdownSearch(''); }}
                                                 className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                    filters.product_id == p.id ? 'bg-indigo-50 font-semibold text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
+                                                    filters.product_id == p.id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-slate-600 hover:bg-slate-50'
                                                 }`}
                                             >
                                                 <span className="block truncate">{p.name}</span>
@@ -196,12 +196,12 @@ export default function Movements({ movements, products }) {
                             </div>
                         )}
                     </div>
-                    <select value={filters.movement_type} onChange={(e) => handleFilter('movement_type', e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                    <select value={filters.movement_type} onChange={(e) => handleFilter('movement_type', e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200">
                         <option value="">Semua Tipe</option>
                         {Object.entries(MOVEMENT_TYPES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                     </select>
-                    <input type="date" value={filters.from_date} onChange={(e) => handleFilter('from_date', e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
-                    <input type="date" value={filters.to_date} onChange={(e) => handleFilter('to_date', e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                    <input type="date" value={filters.from_date} onChange={(e) => handleFilter('from_date', e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+                    <input type="date" value={filters.to_date} onChange={(e) => handleFilter('to_date', e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
                 </div>
             </div>
 
@@ -317,7 +317,7 @@ export default function Movements({ movements, products }) {
                         <div className="flex gap-1">
                             {movements.links.map((link, i) => (
                                 link.url ? (
-                                    <Link key={i} href={link.url} className={`inline-flex h-8 min-w-[32px] items-center justify-center rounded-lg px-2 text-xs font-medium transition ${link.active ? 'bg-indigo-500 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'}`} dangerouslySetInnerHTML={{ __html: link.label }} />
+                                    <Link key={i} href={link.url} className={`inline-flex h-8 min-w-[32px] items-center justify-center rounded-lg px-2 text-xs font-medium transition ${link.active ? 'bg-primary-500 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'}`} dangerouslySetInnerHTML={{ __html: link.label }} />
                                 ) : (
                                     <span key={i} className="inline-flex h-8 min-w-[32px] items-center justify-center rounded-lg px-2 text-xs text-slate-300" dangerouslySetInnerHTML={{ __html: link.label }} />
                                 )

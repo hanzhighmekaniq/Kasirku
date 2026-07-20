@@ -82,7 +82,7 @@ export default function Index({ memberships }) {
                     </h2>
                     <button
                         onClick={openCreate}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <svg
                             className="h-4 w-4"
@@ -143,7 +143,7 @@ export default function Index({ memberships }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari nama, kode..."
-                            className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                         />
                     </div>
                     <p className="pt-4 text-xs text-slate-500">
@@ -189,7 +189,7 @@ export default function Index({ memberships }) {
                         {!search && (
                             <button
                                 onClick={openCreate}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                             >
                                 <svg
                                     className="h-4 w-4"
@@ -399,7 +399,7 @@ function MembershipModal({ open, editing, onClose }) {
                             value={data.code}
                             onChange={(e) => setData("code", e.target.value)}
                             maxLength={50}
-                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             placeholder="Contoh: GOLD01"
                         />
                         {errors.code && (
@@ -419,7 +419,7 @@ function MembershipModal({ open, editing, onClose }) {
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
                             maxLength={255}
-                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             placeholder="Contoh: Gold Member"
                         />
                         {errors.name && (
@@ -441,7 +441,7 @@ function MembershipModal({ open, editing, onClose }) {
                             }
                             maxLength={500}
                             rows={2}
-                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             placeholder="Deskripsi singkat membership..."
                         />
                         {errors.description && (
@@ -492,7 +492,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 onChange={(e) =>
                                     setData("duration_value", e.target.value)
                                 }
-                                className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 placeholder="1"
                             />
                             {errors.duration_value && (
@@ -548,7 +548,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 onChange={(e) =>
                                     setData("discount_percent", e.target.value)
                                 }
-                                className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 placeholder="0"
                             />
                             {errors.discount_percent && (
@@ -575,7 +575,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 onChange={(e) =>
                                     setData("point_multiplier", e.target.value)
                                 }
-                                className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 placeholder="1"
                             />
                             {errors.point_multiplier && (
@@ -603,7 +603,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 setData("benefits", e.target.value)
                             }
                             rows={3}
-                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             placeholder="Gratis ongkir&#10;Diskon 10%&#10;Priority support"
                         />
                         {errors.benefits && (
@@ -638,7 +638,7 @@ function MembershipModal({ open, editing, onClose }) {
                             onChange={(e) =>
                                 setData("is_active", e.target.checked)
                             }
-                            className="h-4 w-4 rounded border-slate-300 text-indigo-600 transition focus:ring-2 focus:ring-indigo-200"
+                            className="h-4 w-4 rounded border-slate-300 text-primary-600 transition focus:ring-2 focus:ring-primary-200"
                         />
                         <span className="text-sm text-slate-700">Aktif</span>
                     </label>
@@ -656,7 +656,7 @@ function MembershipModal({ open, editing, onClose }) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                         >
                             {processing && (
                                 <svg
@@ -706,7 +706,7 @@ function StatusBadge({ active }) {
 function MemberBadge({ count }) {
     if (!count && count !== 0) return null;
     return (
-        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-600">
+        <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-600">
             {count} member
         </span>
     );
@@ -717,7 +717,7 @@ function RowActions({ item, onEdit, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <button
                 onClick={() => onEdit(item)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
                 title="Edit"
             >
                 <svg
@@ -882,7 +882,7 @@ function MembershipList({ items, onEdit, onDelete }) {
                             <div className="ml-3 flex shrink-0 items-center gap-1">
                                 <button
                                     onClick={() => onEdit(m)}
-                                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50"
+                                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
                                 >
                                     <svg
                                         className="h-3.5 w-3.5"

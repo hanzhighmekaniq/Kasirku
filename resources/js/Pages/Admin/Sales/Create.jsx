@@ -223,7 +223,7 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                         </div>
                                     </div>
                                     <div className="col-span-3 sm:col-span-2">
-                                        <button type="button" onClick={addItem} disabled={!selectedProduct} className="w-full rounded-xl bg-indigo-50 px-3 py-2.5 text-sm font-medium text-indigo-600 transition hover:bg-indigo-100 disabled:opacity-50">
+                                        <button type="button" onClick={addItem} disabled={!selectedProduct} className="w-full rounded-xl bg-primary-50 px-3 py-2.5 text-sm font-medium text-primary-600 transition hover:bg-primary-100 disabled:opacity-50">
                                             + Tambah
                                         </button>
                                     </div>
@@ -245,9 +245,9 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                                     <p className="text-xs text-slate-400">{item.product_sku} {item.stock !== undefined && `• Stok: ${item.stock}`}</p>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <input type="number" value={item.quantity} onChange={(e) => updateItemField(idx, 'quantity', e.target.value)} min="1" className="h-8 w-16 rounded-lg border border-slate-300 px-2 text-center text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                                                    <input type="number" value={item.quantity} onChange={(e) => updateItemField(idx, 'quantity', e.target.value)} min="1" className="h-8 w-16 rounded-lg border border-slate-300 px-2 text-center text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
                                                     <span className="text-xs text-slate-400">×</span>
-                                                    <input type="number" value={item.price} onChange={(e) => updateItemField(idx, 'price', e.target.value)} min="0" className="h-8 w-24 rounded-lg border border-slate-300 px-2 text-right text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                                                    <input type="number" value={item.price} onChange={(e) => updateItemField(idx, 'price', e.target.value)} min="0" className="h-8 w-24 rounded-lg border border-slate-300 px-2 text-right text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
                                                     <span className="w-24 text-right text-xs font-medium text-slate-700">Rp {((item.quantity * item.price) - (item.discount_amount || 0)).toLocaleString('id-ID')}</span>
                                                 </div>
                                                 <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500">
@@ -326,7 +326,7 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                 <div className="my-2 border-t border-slate-100" />
                                 <div className="flex justify-between">
                                     <dt className="font-semibold text-slate-700">Grand Total</dt>
-                                    <dd className="text-lg font-bold text-indigo-600">Rp {grandTotal.toLocaleString('id-ID')}</dd>
+                                    <dd className="text-lg font-bold text-primary-600">Rp {grandTotal.toLocaleString('id-ID')}</dd>
                                 </div>
                                 <div className="my-2 border-t border-slate-100" />
                                 <div className="flex justify-between">
@@ -343,7 +343,7 @@ export default function Create({ products, customers, paymentMethods, tables, st
                         </SectionCard>
 
                         <div className="flex flex-col gap-2">
-                            <button type="submit" disabled={processing || data.items.length === 0} className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60">
+                            <button type="submit" disabled={processing || data.items.length === 0} className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60">
                                 {processing ? 'Menyimpan...' : 'Simpan Penjualan'}
                             </button>
                             <Link href={route('admin.sales.index')} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50">
@@ -383,5 +383,5 @@ function Field({ label, required, error, children }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
+    return `block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
 }

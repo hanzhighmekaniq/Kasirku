@@ -174,7 +174,7 @@ export default function Print({ sale, storeName }) {
                         <button
                             type="button"
                             onClick={() => window.print()}
-                            className="flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                            className="flex-1 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                         >
                             Cetak Ulang
                         </button>

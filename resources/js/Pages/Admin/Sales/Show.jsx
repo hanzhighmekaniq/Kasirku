@@ -609,7 +609,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                         <button
                                             onClick={handleCheckOut}
                                             disabled={processing}
-                                            className="rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-bold text-white shadow hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50"
+                                            className="rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-bold text-white shadow hover:from-primary-600 hover:to-primary-700 disabled:opacity-50"
                                         >
                                             {processing ? '...' : '🏨 Check-out Sekarang'}
                                         </button>
@@ -619,9 +619,9 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                 {/* Grid info */}
                                 <div className="grid grid-cols-2 gap-3 text-xs">
                                     {sale.extra_data?.room_number && (
-                                        <div className="rounded-xl bg-indigo-50 px-3 py-2.5">
-                                            <p className="text-indigo-400 mb-0.5">No. Kamar / Unit</p>
-                                            <p className="font-bold text-indigo-700 text-sm">🔑 {sale.extra_data.room_number}</p>
+                                        <div className="rounded-xl bg-primary-50 px-3 py-2.5">
+                                            <p className="text-primary-400 mb-0.5">No. Kamar / Unit</p>
+                                            <p className="font-bold text-primary-700 text-sm">🔑 {sale.extra_data.room_number}</p>
                                         </div>
                                     )}
                                     {sale.extra_data?.guest_count && (
@@ -678,10 +678,10 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                 {/* Plat Nomor — menonjol */}
                                 {sale.plate_number && (
                                     <div className={`rounded-2xl border-2 p-4 text-center ${
-                                        sale.exit_at ? 'border-slate-200 bg-slate-50' : 'border-indigo-200 bg-indigo-50'
+                                        sale.exit_at ? 'border-slate-200 bg-slate-50' : 'border-primary-200 bg-primary-50'
                                     }`}>
                                         <p className="text-xs font-medium text-slate-400 mb-1">Plat Nomor</p>
-                                        <p className="font-mono text-3xl font-bold tracking-widest text-indigo-700">
+                                        <p className="font-mono text-3xl font-bold tracking-widest text-primary-700">
                                             {sale.plate_number}
                                         </p>
                                         <p className="mt-1 text-sm text-slate-500">
@@ -738,7 +738,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     <button
                                         onClick={handleParkingExit}
                                         disabled={processing}
-                                        className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50"
+                                        className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-3 text-sm font-bold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-50"
                                     >
                                         {processing ? 'Memproses...' : '🚗 Catat Kendaraan Keluar'}
                                     </button>
@@ -768,7 +768,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     {sale.unit_name && (
                                         <>
                                             <p className="text-xs font-medium text-slate-400 mb-1">Unit / Room</p>
-                                            <p className="font-mono text-2xl font-bold text-indigo-700">{sale.unit_name}</p>
+                                            <p className="font-mono text-2xl font-bold text-primary-700">{sale.unit_name}</p>
                                         </>
                                     )}
                                     <span className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
@@ -956,7 +956,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     <dt className="font-semibold text-slate-700">
                                         Grand Total
                                     </dt>
-                                    <dd className="text-lg font-bold text-indigo-600">
+                                    <dd className="text-lg font-bold text-primary-600">
                                         {fmtRp(sale.grand_total)}
                                     </dd>
                                 </div>
@@ -980,9 +980,9 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                     {pgTransactions &&
                         pgTransactions.length > 0 &&
                         pgTransactions.some((t) => t.status === "pending") && (
-                            <div className="overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-sm">
-                                <div className="border-b border-indigo-100 bg-indigo-50/60 px-6 py-4">
-                                    <h3 className="text-base font-semibold text-indigo-900">
+                            <div className="overflow-hidden rounded-2xl border border-primary-200 bg-white shadow-sm">
+                                <div className="border-b border-primary-100 bg-primary-50/60 px-6 py-4">
+                                    <h3 className="text-base font-semibold text-primary-900">
                                         Pembayaran Online
                                     </h3>
                                 </div>
@@ -1052,7 +1052,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                                                 Virtual Account
                                                             </p>
                                                             {display.vaBank && (
-                                                                <p className="text-sm font-bold text-indigo-600 mb-1">
+                                                                <p className="text-sm font-bold text-primary-600 mb-1">
                                                                     {
                                                                         display.vaBank
                                                                     }
@@ -1098,7 +1098,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                                             }
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
+                                                            className="flex items-center justify-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-4 py-2.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-100"
                                                         >
                                                             <svg
                                                                 className="h-4 w-4"
@@ -1135,7 +1135,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                                             checkingPgId ===
                                                             trx.id
                                                         }
-                                                        className="w-full rounded-xl border border-indigo-200 bg-white px-4 py-2 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-50 disabled:opacity-50"
+                                                        className="w-full rounded-xl border border-primary-200 bg-white px-4 py-2 text-xs font-semibold text-primary-600 transition hover:bg-primary-50 disabled:opacity-50"
                                                     >
                                                         {checkingPgId === trx.id
                                                             ? "Mengecek..."
@@ -1351,7 +1351,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                         className={`rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition ${
                                             switchMethod === String(m.id) &&
                                             !switchPgType
-                                                ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                                                ? "border-primary-500 bg-primary-50 text-primary-700"
                                                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                                         } disabled:opacity-50`}
                                     >
@@ -1378,7 +1378,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                             }}
                                             className={`rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition ${
                                                 switchPgType === pg.method
-                                                    ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                                                    ? "border-primary-500 bg-primary-50 text-primary-700"
                                                     : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                                             } disabled:opacity-50`}
                                         >
@@ -1507,7 +1507,7 @@ function OrderTypeBadge({ type }) {
         check_in: { label: "Check-in", cls: "bg-teal-100 text-teal-700" },
         reservation: {
             label: "Reservasi",
-            cls: "bg-indigo-100 text-indigo-700",
+            cls: "bg-primary-100 text-primary-700",
         },
         short_stay: { label: "Short Stay", cls: "bg-sky-100 text-sky-700" },
         // Parking
@@ -1515,7 +1515,7 @@ function OrderTypeBadge({ type }) {
         exit: { label: "Keluar", cls: "bg-slate-200 text-slate-600" },
         lost_ticket: { label: "Tiket Hilang", cls: "bg-red-100 text-red-600" },
         // Session
-        postpaid: { label: "Postpaid", cls: "bg-indigo-100 text-indigo-700" },
+        postpaid: { label: "Postpaid", cls: "bg-primary-100 text-primary-700" },
         prepaid: { label: "Prepaid", cls: "bg-violet-100 text-violet-700" },
     };
     const config = map[type] ?? {

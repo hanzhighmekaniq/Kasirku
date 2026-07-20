@@ -5,7 +5,7 @@ const inp = (err) =>
     `mt-1.5 block w-full rounded-xl border text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
         err
             ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-            : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+            : "border-slate-200 focus:border-primary-400 focus:ring-primary-100"
     }`;
 
 /* ── Main Form ──────────────────────────────────────────── */
@@ -41,15 +41,15 @@ export default function CategoryForm({
 
             {/* Kategori Induk — Tree Picker */}
             {parentCategories.length > 0 && (
-                <div className="rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4">
+                <div className="rounded-2xl border border-primary-200 bg-primary-50/40 p-4">
                     <div className="mb-3">
-                        <p className="text-sm font-semibold text-indigo-800">
+                        <p className="text-sm font-semibold text-primary-800">
                             📁 Kategori Induk
-                            <span className="ml-1.5 text-xs font-normal text-indigo-400">
+                            <span className="ml-1.5 text-xs font-normal text-primary-400">
                                 (opsional)
                             </span>
                         </p>
-                        <p className="mt-0.5 text-xs text-indigo-500">
+                        <p className="mt-0.5 text-xs text-primary-500">
                             Kosongkan untuk kategori utama. Pilih untuk membuat
                             sub-kategori di bawah kategori lain.
                         </p>
@@ -92,7 +92,7 @@ export default function CategoryForm({
                 <button
                     type="submit"
                     disabled={processing}
-                    className="rounded-xl bg-indigo-600 px-6 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+                    className="rounded-xl bg-primary-600 px-6 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
                 >
                     {processing ? "Menyimpan..." : submitLabel}
                 </button>

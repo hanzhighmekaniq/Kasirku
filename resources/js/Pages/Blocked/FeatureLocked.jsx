@@ -61,9 +61,9 @@ export default function FeatureLocked({ feature, featureLabel, storePlan, storeT
                             </p>
 
                             {/* Feature perks hint */}
-                            <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+                            <div className="rounded-lg border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-700">
                                 <p className="font-semibold mb-1">✨ Dengan upgrade plan, Anda bisa:</p>
-                                <ul className="list-disc list-inside space-y-0.5 text-indigo-600 text-xs">
+                                <ul className="list-disc list-inside space-y-0.5 text-primary-600 text-xs">
                                     <li>Mengakses fitur <strong>{featureLabel ?? feature}</strong></li>
                                     <li>Menikmati lebih banyak fitur premium lainnya</li>
                                     <li>Meningkatkan limit pengguna dan cabang</li>
@@ -102,7 +102,7 @@ export default function FeatureLocked({ feature, featureLabel, storePlan, storeT
                         Butuh bantuan?{" "}
                         <a
                             href="mailto:support@simkasir.id"
-                            className="text-indigo-500 hover:underline"
+                            className="text-primary-500 hover:underline"
                         >
                             Hubungi tim support kami
                         </a>

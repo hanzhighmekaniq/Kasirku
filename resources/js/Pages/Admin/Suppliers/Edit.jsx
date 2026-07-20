@@ -92,7 +92,7 @@ export default function Edit({ supplier }) {
                         </SectionCard>
 
                         <div className="flex flex-col gap-2">
-                            <button type="submit" disabled={processing || !data.name.trim()} className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60">
+                            <button type="submit" disabled={processing || !data.name.trim()} className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60">
                                 {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                             </button>
                             <Link href={route('admin.suppliers.index')} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50">
@@ -140,5 +140,5 @@ function InfoRow({ label, value }) {
 }
 
 function inputCls(hasError, extra = '') {
-    return `block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''} ${extra}`;
+    return `block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''} ${extra}`;
 }

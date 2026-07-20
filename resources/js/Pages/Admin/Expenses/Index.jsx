@@ -95,7 +95,7 @@ export default function Index({ expenses }) {
                         </Link>
                         <Link
                             href={route("admin.expenses.create")}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                         >
                             <Plus className="h-4 w-4" strokeWidth={2} />
                             <span className="hidden sm:inline">
@@ -144,7 +144,7 @@ export default function Index({ expenses }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari pengeluaran..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                     </div>
@@ -198,8 +198,8 @@ export default function Index({ expenses }) {
                                         <tr key={exp.id} className="transition hover:bg-slate-50/50">
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 text-sm">
-                                                        <svg className="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-50 to-violet-50 text-sm">
+                                                        <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.012-1.244h3.859m-18.75 0V6a2.25 2.25 0 012.25-2.25h15a2.25 2.25 0 012.25 2.25v7.5m-18.75 0H21" />
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v5.25m0 0l2.25-2.25M12 13.5L9.75 11.25" />
                                                         </svg>
@@ -220,7 +220,7 @@ export default function Index({ expenses }) {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Link
                                                         href={route("admin.expenses.show", exp.id)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-primary-50 hover:text-primary-600"
                                                         title="Lihat Detail"
                                                     >
                                                         <Eye className="h-4 w-4" strokeWidth={1.8} />

@@ -168,7 +168,7 @@ export default function Index({ types, allFeatures, mapping }) {
                     <button
                         onClick={handleSave}
                         disabled={processing || !hasChanges}
-                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {processing ? (
                             <>
@@ -308,7 +308,7 @@ export default function Index({ types, allFeatures, mapping }) {
                                                 ? info.label
                                                 : undefined
                                         }
-                                        className={`group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left text-sm font-medium transition ${isActive ? "bg-indigo-600 text-white shadow-sm" : "text-slate-700 hover:bg-slate-50"} ${sidebarOpen ? "" : "justify-center"}`}
+                                        className={`group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left text-sm font-medium transition ${isActive ? "bg-primary-600 text-white shadow-sm" : "text-slate-700 hover:bg-slate-50"} ${sidebarOpen ? "" : "justify-center"}`}
                                     >
                                         <span
                                             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base transition ${isActive ? "bg-white/20" : `${c.bg} ${c.text}`}`}
@@ -360,7 +360,7 @@ export default function Index({ types, allFeatures, mapping }) {
                                         {tm.label}
                                     </h3>
                                     <p className="text-xs text-slate-500">
-                                        <span className="font-semibold text-indigo-600">
+                                        <span className="font-semibold text-primary-600">
                                             {selectedCount}
                                         </span>
                                         {" dari "}
@@ -383,7 +383,7 @@ export default function Index({ types, allFeatures, mapping }) {
                         {/* Progress bar */}
                         <div className="h-1 bg-slate-100">
                             <div
-                                className="h-1 bg-indigo-500 transition-all duration-300"
+                                className="h-1 bg-primary-500 transition-all duration-300"
                                 style={{
                                     width:
                                         totalCount > 0
@@ -465,7 +465,7 @@ export default function Index({ types, allFeatures, mapping }) {
                                                                 },
                                                             );
                                                         }}
-                                                        className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition"
+                                                        className="text-[11px] font-medium text-primary-600 hover:text-primary-800 transition"
                                                     >
                                                         {allCatChecked
                                                             ? "Hapus kategori"
@@ -488,14 +488,14 @@ export default function Index({ types, allFeatures, mapping }) {
                                                                 key={f.code}
                                                                 className={`group flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition select-none ${
                                                                     checked
-                                                                        ? "border-indigo-300 bg-indigo-50 text-indigo-800 shadow-sm"
+                                                                        ? "border-primary-300 bg-primary-50 text-primary-800 shadow-sm"
                                                                         : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                                                                 }`}
                                                             >
                                                                 <div
                                                                     className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition ${
                                                                         checked
-                                                                            ? "border-indigo-500 bg-indigo-500"
+                                                                            ? "border-primary-500 bg-primary-500"
                                                                             : "border-slate-300 bg-white group-hover:border-slate-400"
                                                                     }`}
                                                                 >
@@ -555,7 +555,7 @@ export default function Index({ types, allFeatures, mapping }) {
                         <div className="border-t border-slate-100 bg-slate-50/60 px-4 py-4 sm:px-6">
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-center gap-2">
-                                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-indigo-100 text-xs text-indigo-600">
+                                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary-100 text-xs text-primary-600">
                                         <svg
                                             className="h-3.5 w-3.5"
                                             fill="none"
@@ -580,7 +580,7 @@ export default function Index({ types, allFeatures, mapping }) {
                                 <button
                                     onClick={handleSave}
                                     disabled={processing || !hasChanges}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
                                 >
                                     {processing ? (
                                         <>

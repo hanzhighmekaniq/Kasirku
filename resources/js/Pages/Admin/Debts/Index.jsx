@@ -64,7 +64,7 @@ export default function Index({ customers }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari pelanggan..."
-                            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100"
+                            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-primary-400 focus:ring-1 focus:ring-primary-100"
                         />
                     </div>
                 </div>
@@ -153,7 +153,7 @@ export default function Index({ customers }) {
                                     max={payModal.debt_balance}
                                     placeholder="0"
                                     autoFocus
-                                    className="block w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="block w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 />
                             </div>
                         </div>

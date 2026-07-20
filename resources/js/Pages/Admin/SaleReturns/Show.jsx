@@ -146,7 +146,7 @@ export default function Show({ saleReturn }) {
                                             "admin.sales.show",
                                             saleReturn.sale.id,
                                         )}
-                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+                                        className="text-sm font-medium text-primary-600 hover:text-primary-800"
                                     >
                                         {saleReturn.sale.sale_no}
                                     </Link>
@@ -184,7 +184,7 @@ export default function Show({ saleReturn }) {
                                 <p className="text-xs text-slate-400">
                                     Total Retur
                                 </p>
-                                <p className="text-sm font-bold text-indigo-600">
+                                <p className="text-sm font-bold text-primary-600">
                                     {fmtRp(saleReturn.total_amount)}
                                 </p>
                             </div>
@@ -288,7 +288,7 @@ export default function Show({ saleReturn }) {
                                 <span className="text-sm font-semibold text-slate-800">
                                     Total Retur
                                 </span>
-                                <span className="text-base font-bold text-indigo-600">
+                                <span className="text-base font-bold text-primary-600">
                                     {fmtRp(saleReturn.total_amount)}
                                 </span>
                             </div>

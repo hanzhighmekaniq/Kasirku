@@ -96,10 +96,10 @@ function NavItem({ item }) {
         <Link
             href={item.href}
             className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all
-                ${active ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
+                ${active ? "bg-primary-50 text-primary-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
         >
             <span
-                className={`flex h-[22px] w-[22px] items-center justify-center ${active ? "text-indigo-600" : "text-slate-400"}`}
+                className={`flex h-[22px] w-[22px] items-center justify-center ${active ? "text-primary-600" : "text-slate-400"}`}
             >
                 <svg
                     className="h-[15px] w-[15px]"
@@ -125,14 +125,14 @@ export default function DeveloperLayout({ header, children }) {
         <div className="flex h-full flex-col bg-white border-r border-slate-200">
             {/* Brand */}
             <div className="flex h-[57px] shrink-0 items-center gap-2.5 border-b border-slate-100 px-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 shadow-sm">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-600 shadow-sm">
                     <ApplicationLogo className="h-4 w-4 fill-current text-white" />
                 </div>
                 <div className="leading-none">
                     <span className="block text-[13px] font-bold tracking-tight text-slate-800">
                         SIM-KASIR
                     </span>
-                    <span className="block text-[10px] text-indigo-500 font-medium">
+                    <span className="block text-[10px] text-primary-500 font-medium">
                         Developer Panel
                     </span>
                 </div>
@@ -211,7 +211,7 @@ export default function DeveloperLayout({ header, children }) {
                     <Dropdown>
                         <Dropdown.Trigger>
                             <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm hover:bg-slate-50">
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
                                     {user?.name?.charAt(0).toUpperCase()}
                                 </span>
                                 <span className="hidden max-w-[8rem] truncate text-xs font-medium text-slate-700 sm:block">

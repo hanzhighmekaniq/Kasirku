@@ -89,7 +89,7 @@ export default function Show({ branch, store, employees = [] }) {
                 {/* Info Card */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-2xl font-bold text-indigo-600 shadow-sm">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-2xl font-bold text-primary-600 shadow-sm">
                             {branch.code?.charAt(0) || "?"}
                         </div>
                         <div className="min-w-0">

@@ -200,7 +200,7 @@ export default function Create({ products, branches }) {
                                                             value={prodSearch}
                                                             onChange={(e) => setProdSearch(e.target.value)}
                                                             placeholder="Cari nama atau SKU..."
-                                                            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                         />
                                                     </div>
                                                 </div>
@@ -272,7 +272,7 @@ export default function Create({ products, branches }) {
                                                             value={item.quantity}
                                                             onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
                                                             min="1"
-                                                            className="h-9 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                            className="h-9 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                         />
                                                     </div>
                                                     <div>
@@ -282,7 +282,7 @@ export default function Create({ products, branches }) {
                                                             value={item.notes}
                                                             onChange={(e) => updateItem(idx, 'notes', e.target.value)}
                                                             placeholder="Opsional..."
-                                                            className="h-9 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                            className="h-9 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                         />
                                                     </div>
                                                 </div>
@@ -314,7 +314,7 @@ export default function Create({ products, branches }) {
                             <button
                                 type="submit"
                                 disabled={processing || data.items.length === 0}
-                                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                                className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                             >
                                 {processing ? 'Menyimpan...' : 'Simpan Transfer'}
                             </button>
@@ -357,5 +357,5 @@ function Field({ label, required, error, children }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
+    return `block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
 }

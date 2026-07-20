@@ -18,7 +18,7 @@ const PROVIDER_CONFIG = {
     },
     xendit: {
         label: "Xendit",
-        gradient: "from-purple-500 to-indigo-600",
+        gradient: "from-purple-500 to-primary-600",
         desc: "QRIS, VA Bank, E-Wallet, Kartu Kredit",
         fields: [
             { key: "server_key", label: "API Key", type: "password", placeholder: "Xendit API key (xnd_...)" },
@@ -93,7 +93,7 @@ export default function Create({ availableProviders = {} }) {
     };
 
     const inputCls =
-        "block w-full rounded-xl border bg-white px-3 py-2.5 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
+        "block w-full rounded-xl border bg-white px-3 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200";
 
     return (
         <AuthenticatedLayout
@@ -140,7 +140,7 @@ export default function Create({ availableProviders = {} }) {
                                     role="switch"
                                     aria-checked={data.is_active}
                                     onClick={() => setData("is_active", !data.is_active)}
-                                    className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                    className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
                                         data.is_active ? "bg-green-500" : "bg-slate-300"
                                     }`}
                                 >
@@ -165,8 +165,8 @@ export default function Create({ availableProviders = {} }) {
                                     role="switch"
                                     aria-checked={data.environment === "production"}
                                     onClick={() => setData("environment", data.environment === "production" ? "sandbox" : "production")}
-                                    className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                                        data.environment === "production" ? "bg-indigo-500" : "bg-amber-400"
+                                    className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                                        data.environment === "production" ? "bg-primary-500" : "bg-amber-400"
                                     }`}
                                 >
                                     <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition duration-200 ${
@@ -211,13 +211,13 @@ export default function Create({ availableProviders = {} }) {
                                             onClick={() => toggleMethod(m.key)}
                                             className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
                                                 enabled
-                                                    ? "border-indigo-300 bg-indigo-50 text-indigo-700"
+                                                    ? "border-primary-300 bg-primary-50 text-primary-700"
                                                     : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50"
                                             }`}
                                         >
                                             <span>{m.icon}</span>
                                             {m.label}
-                                            {enabled && <Check className="ml-auto h-3.5 w-3.5 text-indigo-500" strokeWidth={2.5} />}
+                                            {enabled && <Check className="ml-auto h-3.5 w-3.5 text-primary-500" strokeWidth={2.5} />}
                                         </button>
                                     );
                                 })}
@@ -235,7 +235,7 @@ export default function Create({ availableProviders = {} }) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                             >
                                 {processing ? "Menyimpan..." : "Simpan Gateway"}
                             </button>

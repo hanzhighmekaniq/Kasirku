@@ -64,7 +64,7 @@ export default function CurrencyInput({
                 className={`block w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-3.5 text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
                     error
                         ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                        : "border-slate-200 focus:border-indigo-400 focus:ring-indigo-100"
+                        : "border-slate-200 focus:border-primary-400 focus:ring-primary-100"
                 } ${disabled ? "cursor-not-allowed bg-slate-100 text-slate-400" : ""}`}
             />
         </div>

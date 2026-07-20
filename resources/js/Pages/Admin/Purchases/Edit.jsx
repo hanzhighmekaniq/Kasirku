@@ -13,7 +13,7 @@ const inputCls = (hasError = false) =>
     `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         hasError
             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-200"
+            : "border-slate-300 focus:border-primary-500 focus:ring-primary-200"
     }`;
 
 export default function Edit({
@@ -315,13 +315,13 @@ export default function Edit({
                                 />
 
                                 {pendingProduct && (
-                                    <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4">
+                                    <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4">
                                         <div className="mb-3 flex items-center justify-between">
                                             <div>
-                                                <p className="text-sm font-semibold text-indigo-800">
+                                                <p className="text-sm font-semibold text-primary-800">
                                                     {pendingProduct.name}
                                                 </p>
-                                                <p className="text-xs text-indigo-500">
+                                                <p className="text-xs text-primary-500">
                                                     {pendingProduct.sku}
                                                 </p>
                                             </div>
@@ -330,7 +330,7 @@ export default function Edit({
                                                 onClick={() =>
                                                     setPendingProduct(null)
                                                 }
-                                                className="text-indigo-400 hover:text-indigo-600"
+                                                className="text-primary-400 hover:text-primary-600"
                                             >
                                                 <svg
                                                     className="h-4 w-4"
@@ -350,7 +350,7 @@ export default function Edit({
 
                                         {pendingProduct.is_variant && (
                                             <div className="mb-3">
-                                                <label className="mb-1 block text-xs font-semibold text-indigo-700">
+                                                <label className="mb-1 block text-xs font-semibold text-primary-700">
                                                     Variant{" "}
                                                     <span className="text-red-400">
                                                         *
@@ -374,7 +374,7 @@ export default function Edit({
                                             (!pendingProduct.is_variant ||
                                                 pendingVariantId) && (
                                                 <div className="mb-3">
-                                                    <label className="mb-1 block text-xs font-semibold text-indigo-700">
+                                                    <label className="mb-1 block text-xs font-semibold text-primary-700">
                                                         Satuan
                                                     </label>
                                                     <SearchableSelect
@@ -396,7 +396,7 @@ export default function Edit({
                                             )}
 
                                         {pendingBucketStock !== null && (
-                                            <p className="mb-3 text-xs text-indigo-600">
+                                            <p className="mb-3 text-xs text-primary-600">
                                                 Stok saat ini:{" "}
                                                 <span className="font-semibold">
                                                     {pendingBucketStock}
@@ -407,7 +407,7 @@ export default function Edit({
 
                                         <div className="grid grid-cols-12 items-end gap-3">
                                             <div className="col-span-4 sm:col-span-3">
-                                                <label className="mb-1 block text-xs font-semibold text-indigo-700">
+                                                <label className="mb-1 block text-xs font-semibold text-primary-700">
                                                     Qty{" "}
                                                     {pendingUnit
                                                         ? `(${pendingUnit.name})`
@@ -424,15 +424,15 @@ export default function Edit({
                                                     }
                                                     onKeyDown={handleAddKey}
                                                     min="1"
-                                                    className="block w-full rounded-xl border border-indigo-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                    className="block w-full rounded-xl border border-primary-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                 />
                                             </div>
                                             <div className="col-span-5 sm:col-span-5">
-                                                <label className="mb-1 block text-xs font-semibold text-indigo-700">
+                                                <label className="mb-1 block text-xs font-semibold text-primary-700">
                                                     Harga Beli / Satuan
                                                 </label>
                                                 <div className="relative">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-indigo-400">
+                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-primary-400">
                                                         Rp
                                                     </span>
                                                     <input
@@ -446,7 +446,7 @@ export default function Edit({
                                                         onKeyDown={handleAddKey}
                                                         min="0"
                                                         placeholder="0"
-                                                        className="block w-full rounded-xl border border-indigo-300 bg-white py-2 pl-8 pr-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                        className="block w-full rounded-xl border border-primary-300 bg-white py-2 pl-8 pr-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                     />
                                                 </div>
                                             </div>
@@ -458,7 +458,7 @@ export default function Edit({
                                                         pendingProduct.is_variant &&
                                                         !pendingVariantId
                                                     }
-                                                    className="w-full rounded-xl bg-indigo-600 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-40"
+                                                    className="w-full rounded-xl bg-primary-600 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 active:bg-primary-800 disabled:opacity-40"
                                                 >
                                                     + Tambah
                                                 </button>
@@ -562,7 +562,7 @@ export default function Edit({
                                                                     )
                                                                 }
                                                                 min="1"
-                                                                className="mx-auto block h-8 w-16 rounded-lg border border-slate-300 px-2 text-center text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                                className="mx-auto block h-8 w-16 rounded-lg border border-slate-300 px-2 text-center text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                             />
                                                         </td>
                                                         <td className="px-4 py-3">
@@ -587,7 +587,7 @@ export default function Edit({
                                                                         )
                                                                     }
                                                                     min="0"
-                                                                    className="h-8 w-28 rounded-lg border border-slate-300 pl-7 pr-2 text-right text-xs focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                                    className="h-8 w-28 rounded-lg border border-slate-300 pl-7 pr-2 text-right text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                                 />
                                                             </div>
                                                         </td>
@@ -811,7 +811,7 @@ export default function Edit({
                                         <dt className="font-semibold text-slate-700">
                                             Grand Total
                                         </dt>
-                                        <dd className="text-lg font-bold text-indigo-600">
+                                        <dd className="text-lg font-bold text-primary-600">
                                             {fmtRp(grandTotal)}
                                         </dd>
                                     </div>
@@ -872,7 +872,7 @@ export default function Edit({
                             <button
                                 type="submit"
                                 disabled={processing || data.items.length === 0}
-                                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                                className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                             >
                                 {processing
                                     ? "Menyimpan..."

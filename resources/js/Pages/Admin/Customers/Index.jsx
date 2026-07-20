@@ -52,7 +52,7 @@ export default function Index({ customers, storeType = "retail" }) {
                     </h2>
                     <Link
                         href={route("admin.customers.create")}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-primary-700"
                     >
                         <svg
                             className="h-4 w-4"
@@ -101,7 +101,7 @@ export default function Index({ customers, storeType = "retail" }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari nama, telepon, email..."
-                            className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                         />
                     </div>
                     <div className="pt-4 flex items-center ">
@@ -149,7 +149,7 @@ export default function Index({ customers, storeType = "retail" }) {
                         {!search && (
                             <Link
                                 href={route("admin.customers.create")}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                             >
                                 <svg
                                     className="h-4 w-4"
@@ -195,7 +195,7 @@ export default function Index({ customers, storeType = "retail" }) {
 
 function CustomerBadge({ name }) {
     return (
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 text-sm font-bold text-indigo-600">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10 text-sm font-bold text-primary-600">
             {name.charAt(0).toUpperCase()}
         </span>
     );
@@ -206,7 +206,7 @@ function RowActions({ customer, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <Link
                 href={route("admin.customers.edit", customer.id)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
                 title="Edit"
             >
                 <svg
@@ -375,7 +375,7 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                             "admin.customers.edit",
                                             c.id,
                                         )}
-                                        className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50"
+                                        className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
                                     >
                                         <svg
                                             className="h-3.5 w-3.5"

@@ -54,7 +54,7 @@ export default function Index({ adjustments, stats }) {
                     </div>
                     <Link
                         href={route('admin.stock-adjustments.create')}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <Plus className="h-4 w-4" strokeWidth={2} />
                         <span className="hidden sm:inline">Buat Penyesuaian</span>
@@ -101,7 +101,7 @@ export default function Index({ adjustments, stats }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari no. penyesuaian / alasan..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                         <Select
@@ -162,7 +162,7 @@ export default function Index({ adjustments, stats }) {
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <Link
                                                     href={route('admin.stock-adjustments.show', a.id)}
-                                                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+                                                    className="text-sm font-semibold text-primary-600 hover:text-primary-800"
                                                 >
                                                     {a.adjustment_no}
                                                 </Link>
@@ -177,7 +177,7 @@ export default function Index({ adjustments, stats }) {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Link
                                                         href={route('admin.stock-adjustments.show', a.id)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-primary-50 hover:text-primary-600"
                                                         title="Lihat Detail"
                                                     >
                                                         <Eye className="h-4 w-4" strokeWidth={1.8} />
@@ -224,7 +224,7 @@ export default function Index({ adjustments, stats }) {
                                     <div className="min-w-0 flex-1">
                                         <Link
                                             href={route('admin.stock-adjustments.show', a.id)}
-                                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+                                            className="text-sm font-semibold text-primary-600 hover:text-primary-800"
                                         >
                                             {a.adjustment_no}
                                         </Link>

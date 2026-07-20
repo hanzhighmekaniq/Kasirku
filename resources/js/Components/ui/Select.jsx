@@ -170,13 +170,13 @@ export default function Select({
     const btnCls = `relative w-full cursor-pointer rounded-xl border bg-slate-50 py-2.5 pl-3.5 pr-10 text-left text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
         error
             ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-            : "border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
-    } ${disabled ? "cursor-not-allowed bg-slate-100 text-slate-400" : "hover:border-indigo-300"}`;
+            : "border-slate-300 focus:border-primary-400 focus:ring-primary-100"
+    } ${disabled ? "cursor-not-allowed bg-slate-100 text-slate-400" : "hover:border-primary-300"}`;
 
     const optCls = (active, sel) =>
         `relative cursor-pointer select-none px-3.5 py-2.5 text-sm transition-colors ${
             sel
-                ? "bg-indigo-50 font-semibold text-indigo-700"
+                ? "bg-primary-50 font-semibold text-primary-700"
                 : active
                   ? "bg-slate-100 text-slate-800"
                   : "text-slate-700"
@@ -217,7 +217,7 @@ export default function Select({
                               }}
                               onKeyDown={handleKey}
                               placeholder="Ketik untuk mencari..."
-                              className="block w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                              className="block w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100"
                           />
                           {query && (
                               <button
@@ -257,7 +257,7 @@ export default function Select({
                                       onMouseEnter={() => setHlIdx(i)}
                                       className={`flex w-full items-center text-left text-sm transition-colors ${
                                           isSelected
-                                              ? "bg-indigo-50 font-semibold"
+                                              ? "bg-primary-50 font-semibold"
                                               : isHighlighted
                                                 ? "bg-slate-100"
                                                 : "hover:bg-slate-50"
@@ -267,14 +267,14 @@ export default function Select({
                                           <span
                                               className={`block truncate ${
                                                   isSelected
-                                                      ? "text-indigo-700"
+                                                      ? "text-primary-700"
                                                       : "text-slate-800"
                                               }`}
                                           >
                                               {getLabel(opt)}
                                           </span>
                                           {isSelected && (
-                                              <Check className="ml-auto h-4 w-4 shrink-0 text-indigo-500" />
+                                              <Check className="ml-auto h-4 w-4 shrink-0 text-primary-500" />
                                           )}
                                       </div>
                                   </button>
@@ -309,7 +309,7 @@ export default function Select({
                         type="button"
                         onClick={searchOpen ? closePicker : openPicker}
                         disabled={disabled}
-                        className={`${btnCls} ${searchOpen ? "border-indigo-400 ring-2 ring-indigo-100" : ""}`}
+                        className={`${btnCls} ${searchOpen ? "border-primary-400 ring-2 ring-primary-100" : ""}`}
                     >
                         {selected ? (
                             <span className="block truncate text-slate-700">
@@ -380,7 +380,7 @@ export default function Select({
                                                                 {getLabel(opt)}
                                                             </span>
                                                             {sel && (
-                                                                <Check className="ml-auto h-4 w-4 shrink-0 text-indigo-500" />
+                                                                <Check className="ml-auto h-4 w-4 shrink-0 text-primary-500" />
                                                             )}
                                                         </div>
                                                     </li>

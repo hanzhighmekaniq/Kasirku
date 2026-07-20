@@ -26,7 +26,7 @@ export default function PaymentMethodForm({ data, setData, errors, processing, o
                         className={`mt-1.5 block w-full rounded-xl font-mono shadow-sm transition focus:ring-2 ${
                             errors.code
                                 ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                                : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'
+                                : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'
                         }`}
                     />
                     <p className="mt-1.5 text-xs text-slate-400">Huruf kapital, tanpa spasi. Digunakan sebagai ID unik.</p>
@@ -47,7 +47,7 @@ export default function PaymentMethodForm({ data, setData, errors, processing, o
                         className={`mt-1.5 block w-full rounded-xl shadow-sm transition focus:ring-2 ${
                             errors.name
                                 ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                                : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'
+                                : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'
                         }`}
                     />
                     {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
@@ -70,19 +70,19 @@ export default function PaymentMethodForm({ data, setData, errors, processing, o
                                 onClick={() => setData('type', t)}
                                 className={`relative flex flex-col items-start rounded-xl border-2 p-3 text-left transition-all ${
                                     selected
-                                        ? 'border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100'
-                                        : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50'
+                                        ? 'border-primary-500 bg-primary-50 shadow-md shadow-primary-100'
+                                        : 'border-slate-200 bg-white hover:border-primary-300 hover:bg-slate-50'
                                 }`}
                             >
                                 {selected && (
-                                    <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500 text-white">
+                                    <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-white">
                                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                         </svg>
                                     </span>
                                 )}
                                 <span className="text-xl mb-1">{meta.icon}</span>
-                                <span className={`text-sm font-semibold ${selected ? 'text-indigo-700' : 'text-slate-700'}`}>{meta.label}</span>
+                                <span className={`text-sm font-semibold ${selected ? 'text-primary-700' : 'text-slate-700'}`}>{meta.label}</span>
                                 <span className="mt-0.5 text-xs text-slate-400 leading-snug">{meta.desc}</span>
                             </button>
                         );
@@ -100,7 +100,7 @@ export default function PaymentMethodForm({ data, setData, errors, processing, o
                     value={data.provider}
                     onChange={(e) => setData('provider', e.target.value)}
                     placeholder="cth. GoPay, OVO, BCA, Mandiri (opsional)"
-                    className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                    className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                 />
                 <p className="mt-1.5 text-xs text-slate-400">Nama bank atau platform pembayaran (jika relevan).</p>
             </div>
@@ -112,8 +112,8 @@ export default function PaymentMethodForm({ data, setData, errors, processing, o
                     role="switch"
                     aria-checked={data.is_active}
                     onClick={() => setData('is_active', !data.is_active)}
-                    className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                        data.is_active ? 'bg-indigo-500' : 'bg-slate-300'
+                    className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+                        data.is_active ? 'bg-primary-500' : 'bg-slate-300'
                     }`}
                 >
                     <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition duration-200 ${data.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -141,7 +141,7 @@ export default function PaymentMethodForm({ data, setData, errors, processing, o
                 <button
                     type="submit"
                     disabled={processing}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                 >
                     {processing ? 'Menyimpan...' : submitLabel}
                 </button>

@@ -59,7 +59,7 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                     </h2>
                     <Link
                         href={route("admin.purchases.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <Plus className="h-4 w-4" strokeWidth={2} />
                         <span className="hidden sm:inline">
@@ -113,7 +113,7 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder={searchPlaceholder}
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                         <Dropdown>
@@ -126,10 +126,10 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="48">
-                                <button onClick={() => setFilterStatus("all")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "all" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Semua Status</button>
-                                <button onClick={() => setFilterStatus("draft")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "draft" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Draft</button>
-                                <button onClick={() => setFilterStatus("completed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "completed" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Selesai</button>
-                                <button onClick={() => setFilterStatus("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "cancelled" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Dibatalkan</button>
+                                <button onClick={() => setFilterStatus("all")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "all" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Semua Status</button>
+                                <button onClick={() => setFilterStatus("draft")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "draft" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Draft</button>
+                                <button onClick={() => setFilterStatus("completed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "completed" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Selesai</button>
+                                <button onClick={() => setFilterStatus("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "cancelled" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Dibatalkan</button>
                             </Dropdown.Content>
                         </Dropdown>
                     </div>
@@ -252,7 +252,7 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                                                         "admin.purchases.show",
                                                         p.id,
                                                     )}
-                                                    className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+                                                    className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50"
                                                 >
                                                     Detail
                                                 </Link>

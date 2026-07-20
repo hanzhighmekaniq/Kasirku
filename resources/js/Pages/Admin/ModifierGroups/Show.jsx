@@ -3,7 +3,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 
-const inputCls = 'block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200';
+const inputCls = 'block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200';
 
 const SELECTION_LABEL = {
     single: { label: 'Pilih 1', bg: 'bg-blue-100', text: 'text-blue-700' },
@@ -63,7 +63,7 @@ function ModifierForm({ group, modifier, onClose, onSaved }) {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button type="button" onClick={() => setData('is_active', !data.is_active)} className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${data.is_active ? 'bg-indigo-600' : 'bg-slate-200'}`}>
+                        <button type="button" onClick={() => setData('is_active', !data.is_active)} className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${data.is_active ? 'bg-primary-600' : 'bg-slate-200'}`}>
                             <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${data.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
                         </button>
                         <span className="text-sm font-medium text-slate-700">Aktif</span>
@@ -73,7 +73,7 @@ function ModifierForm({ group, modifier, onClose, onSaved }) {
                         <button type="button" onClick={onClose} disabled={processing} className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">
                             Batal
                         </button>
-                        <button type="submit" disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60">
+                        <button type="submit" disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60">
                             {processing ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Tambah Modifier'}
                         </button>
                     </div>
@@ -131,7 +131,7 @@ function AttachProductModal({ group, products, onClose }) {
                         <button type="button" onClick={onClose} disabled={processing} className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">
                             Batal
                         </button>
-                        <button type="submit" disabled={processing || !data.product_id} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60">
+                        <button type="submit" disabled={processing || !data.product_id} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60">
                             {processing ? 'Menambahkan...' : 'Tambahkan'}
                         </button>
                     </div>
@@ -228,7 +228,7 @@ export default function Show({ group, allProducts }) {
                             </div>
                             <button
                                 onClick={() => { setEditModifier(null); setShowModForm(true); }}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-3 py-1.5 text-xs font-semibold text-white shadow-md shadow-indigo-500/20 transition hover:from-indigo-600 hover:to-violet-700"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-3 py-1.5 text-xs font-semibold text-white shadow-md shadow-primary-500/20 transition hover:from-primary-600 hover:to-primary-700"
                             >
                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -266,7 +266,7 @@ export default function Show({ group, allProducts }) {
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <button onClick={() => { setEditModifier(mod); setShowModForm(true); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600" title="Edit">
+                                            <button onClick={() => { setEditModifier(mod); setShowModForm(true); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600" title="Edit">
                                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
                                                 </svg>
@@ -294,7 +294,7 @@ export default function Show({ group, allProducts }) {
                             </div>
                             <button
                                 onClick={() => setShowAttach(true)}
-                                className="inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 transition hover:bg-indigo-100"
+                                className="inline-flex items-center gap-1 rounded-xl bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 transition hover:bg-primary-100"
                             >
                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

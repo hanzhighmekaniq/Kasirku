@@ -59,7 +59,7 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
             ref={isDragOverlay ? undefined : setNodeRef}
             style={isDragOverlay ? undefined : style}
             className={`group transition-colors ${
-                isDragging ? "bg-indigo-50/30" : "hover:bg-slate-50/60"
+                isDragging ? "bg-primary-50/30" : "hover:bg-slate-50/60"
             } ${isDragOverlay ? "bg-white shadow-xl ring-1 ring-black/10 rounded-lg" : ""}`}
         >
             <td className="px-4 py-3 w-10">
@@ -188,7 +188,7 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             {/* Group Header */}
             <div className="flex items-center gap-3 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-3.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                     <GroupIcons name={group.icon} className="h-4 w-4" />
                 </div>
                 <div>
@@ -306,7 +306,7 @@ export default function Index() {
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
                             <LayoutList className="h-5 w-5" strokeWidth={1.8} />
                         </div>
                         <div>
@@ -323,7 +323,7 @@ export default function Index() {
 
             <div className="space-y-5">
                 {/* Info */}
-                <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+                <div className="rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-700">
                     Drag & drop baris untuk mengatur urutan, atau gunakan tombol ↑ ↓. Urutan akan otomatis tersimpan dan diterapkan di sidebar.
                 </div>
 

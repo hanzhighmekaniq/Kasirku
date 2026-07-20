@@ -66,9 +66,9 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
                     Pembelian Asal <span className="text-red-500">*</span>
                 </label>
-                <div className="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/40 px-4 py-3">
+                <div className="flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50/40 px-4 py-3">
                     <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-indigo-700">{selected.purchase_no}</p>
+                        <p className="text-sm font-semibold text-primary-700">{selected.purchase_no}</p>
                         <p className="text-xs text-slate-500">{selected.supplier?.name} &bull; {selected.items_count} item &bull; {formatDate(selected.purchase_date)}</p>
                     </div>
                     <button
@@ -103,7 +103,7 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
                     onFocus={() => setOpen(true)}
                     onKeyDown={onKey}
                     placeholder="Ketik nomor pembelian atau nama supplier…"
-                    className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                    className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     autoComplete="off"
                 />
             </div>
@@ -122,11 +122,11 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
                             onClick={() => pick(p)}
                             onMouseEnter={() => setIdx(i)}
                             className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition ${
-                                i === idx ? 'bg-indigo-50' : 'hover:bg-slate-50'
+                                i === idx ? 'bg-primary-50' : 'hover:bg-slate-50'
                             }`}
                         >
                             <div className="min-w-0 flex-1">
-                                <p className={`truncate font-medium ${i === idx ? 'text-indigo-700' : 'text-slate-800'}`}>
+                                <p className={`truncate font-medium ${i === idx ? 'text-primary-700' : 'text-slate-800'}`}>
                                     {p.purchase_no}
                                 </p>
                                 <p className="text-xs text-slate-400">
@@ -252,7 +252,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
         `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
             errors[field]
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'
+                : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'
         }`;
 
     return (
@@ -334,7 +334,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                             </div>
                         ) : loadingItems ? (
                             <div className="flex items-center justify-center py-10">
-                                <svg className="h-6 w-6 animate-spin text-indigo-500" fill="none" viewBox="0 0 24 24">
+                                <svg className="h-6 w-6 animate-spin text-primary-500" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                 </svg>
@@ -350,7 +350,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                     <div
                                         key={idx}
                                         className={`rounded-xl border p-4 transition ${
-                                            item.selected ? 'border-indigo-300 bg-indigo-50/30' : 'border-slate-200 hover:border-slate-300'
+                                            item.selected ? 'border-primary-300 bg-primary-50/30' : 'border-slate-200 hover:border-slate-300'
                                         }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -359,7 +359,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                     type="checkbox"
                                                     checked={item.selected}
                                                     onChange={() => toggleItem(idx)}
-                                                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                    className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                                 />
                                             </div>
                                             <div className="min-w-0 flex-1">
@@ -393,7 +393,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                                 value={item.return_qty || ''}
                                                                 onChange={(e) => updateQty(idx, parseInt(e.target.value) || 0)}
                                                                 disabled={item.returnable_qty <= 0}
-                                                                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:bg-slate-100 disabled:text-slate-400"
+                                                                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 disabled:bg-slate-100 disabled:text-slate-400"
                                                             />
                                                             <p className="mt-1 text-xs text-slate-400">Maks: {item.returnable_qty}</p>
                                                         </div>
@@ -406,7 +406,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                                 value={item.reason || ''}
                                                                 onChange={(e) => updateReason(idx, e.target.value)}
                                                                 placeholder="Rusak, tidak sesuai, dll."
-                                                                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                                             />
                                                         </div>
                                                     </div>
@@ -439,7 +439,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                 <div className="border-t border-slate-100 pt-2 mt-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-semibold text-slate-700">Total Retur</span>
-                                        <span className="text-lg font-bold text-indigo-600">{formatRupiah(subtotal)}</span>
+                                        <span className="text-lg font-bold text-primary-600">{formatRupiah(subtotal)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -458,7 +458,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                     <button
                         type="submit"
                         disabled={processing || selectedItems.length === 0}
-                        className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60"
+                        className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-60"
                     >
                         {processing ? 'Menyimpan...' : 'Simpan Retur'}
                     </button>

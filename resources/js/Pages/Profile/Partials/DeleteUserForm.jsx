@@ -7,7 +7,7 @@ function inputCls(hasError = false) {
     return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         hasError
             ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-            : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'
+            : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'
     }`;
 }
 

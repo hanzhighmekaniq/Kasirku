@@ -154,7 +154,7 @@ export default function Index({ bookings, filters, customers, employees }) {
                     <h2 className="text-lg font-semibold text-slate-800">Booking / Reservasi</h2>
                     <button
                         onClick={openCreate}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -175,7 +175,7 @@ export default function Index({ bookings, filters, customers, employees }) {
                             onClick={() => handleStatusFilter('')}
                             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                                 !statusFilter
-                                    ? 'bg-indigo-100 text-indigo-700'
+                                    ? 'bg-primary-100 text-primary-700'
                                     : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                             }`}
                         >
@@ -187,7 +187,7 @@ export default function Index({ bookings, filters, customers, employees }) {
                                 onClick={() => handleStatusFilter(key)}
                                 className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                                     statusFilter === key
-                                        ? 'bg-indigo-100 text-indigo-700'
+                                        ? 'bg-primary-100 text-primary-700'
                                         : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                                 }`}
                             >
@@ -207,7 +207,7 @@ export default function Index({ bookings, filters, customers, employees }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari..."
-                                className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                         <p className="text-sm text-slate-500 whitespace-nowrap">
@@ -232,7 +232,7 @@ export default function Index({ bookings, filters, customers, employees }) {
                         {!search && !statusFilter && (
                             <button
                                 onClick={openCreate}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                             >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -311,7 +311,7 @@ function BookingTable({ items, onEdit, onDelete }) {
                     <tbody className="divide-y divide-slate-100">
                         {items.map((b) => (
                             <tr key={b.id} className="transition hover:bg-slate-50/70">
-                                <td className="px-6 py-4 font-mono text-xs font-semibold text-indigo-600">
+                                <td className="px-6 py-4 font-mono text-xs font-semibold text-primary-600">
                                     {b.booking_no}
                                 </td>
                                 <td className="px-6 py-4">
@@ -340,7 +340,7 @@ function BookingTable({ items, onEdit, onDelete }) {
                                     <div className="flex items-center justify-end gap-1">
                                         <button
                                             onClick={() => onEdit(b)}
-                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
                                             title="Edit"
                                         >
                                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor">
@@ -370,7 +370,7 @@ function BookingTable({ items, onEdit, onDelete }) {
                     <div key={b.id} className="flex flex-col gap-2 p-4">
                         <div className="flex items-start justify-between">
                             <div className="min-w-0">
-                                <p className="font-mono text-xs font-semibold text-indigo-600">{b.booking_no}</p>
+                                <p className="font-mono text-xs font-semibold text-primary-600">{b.booking_no}</p>
                                 <p className="font-medium text-slate-800">{b.customer_name}</p>
                                 {b.customer_phone && (
                                     <p className="text-xs text-slate-400">{b.customer_phone}</p>
@@ -389,7 +389,7 @@ function BookingTable({ items, onEdit, onDelete }) {
                             <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => onEdit(b)}
-                                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50"
+                                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
                                 >
                                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
@@ -447,7 +447,7 @@ function BookingModal({ form, setForm, editing, processing, customers, employees
                                 onChange={set('customer_name')}
                                 required
                                 maxLength={200}
-                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
 
@@ -461,7 +461,7 @@ function BookingModal({ form, setForm, editing, processing, customers, employees
                                 value={form.customer_phone}
                                 onChange={set('customer_phone')}
                                 maxLength={30}
-                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
 
@@ -473,7 +473,7 @@ function BookingModal({ form, setForm, editing, processing, customers, employees
                             <select
                                 value={form.customer_id}
                                 onChange={set('customer_id')}
-                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             >
                                 <option value="">— Pilih Pelanggan —</option>
                                 {customers.map((c) => (
@@ -490,7 +490,7 @@ function BookingModal({ form, setForm, editing, processing, customers, employees
                             <select
                                 value={form.employee_id}
                                 onChange={set('employee_id')}
-                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             >
                                 <option value="">— Pilih Karyawan —</option>
                                 {employees.map((e) => (
@@ -510,7 +510,7 @@ function BookingModal({ form, setForm, editing, processing, customers, employees
                                     value={form.booking_start_at}
                                     onChange={set('booking_start_at')}
                                     required
-                                    className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 />
                             </div>
                             <div>
@@ -521,7 +521,7 @@ function BookingModal({ form, setForm, editing, processing, customers, employees
                                     type="datetime-local"
                                     value={form.booking_end_at}
                                     onChange={set('booking_end_at')}
-                                    className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 />
                             </div>
                         </div>
@@ -537,7 +537,7 @@ function BookingModal({ form, setForm, editing, processing, customers, employees
                                     min="1"
                                     value={form.guest_count}
                                     onChange={set('guest_count')}
-                                    className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 />
                             </div>
                             <div>
@@ -548,7 +548,7 @@ function BookingModal({ form, setForm, editing, processing, customers, employees
                                     value={form.status}
                                     onChange={set('status')}
                                     required
-                                    className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 >
                                     {editing ? (
                                         <>
@@ -580,7 +580,7 @@ function BookingModal({ form, setForm, editing, processing, customers, employees
                                 onChange={set('notes')}
                                 rows={3}
                                 maxLength={500}
-                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                     </div>
@@ -597,7 +597,7 @@ function BookingModal({ form, setForm, editing, processing, customers, employees
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50"
+                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-50"
                         >
                             {processing ? (
                                 <>
@@ -698,7 +698,7 @@ function Pagination({ links }) {
                             onClick={() => link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true })}
                             className={`inline-flex h-8 min-w-[2rem] items-center justify-center rounded-lg px-2 text-xs font-medium transition ${
                                 link.active
-                                    ? 'bg-indigo-100 text-indigo-700'
+                                    ? 'bg-primary-100 text-primary-700'
                                     : link.url
                                     ? 'text-slate-600 hover:bg-slate-100'
                                     : 'cursor-not-allowed text-slate-300'

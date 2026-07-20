@@ -85,7 +85,7 @@ export default function PGPaymentModal({ pgData, amount, onSuccess, onClose }) {
                     {/* Amount */}
                     <div className="text-center">
                         <p className="text-xs text-slate-500">Total Pembayaran</p>
-                        <p className="text-2xl font-bold text-indigo-700">{fmt(amount)}</p>
+                        <p className="text-2xl font-bold text-primary-700">{fmt(amount)}</p>
                     </div>
 
                     {/* Status indicator */}
@@ -161,7 +161,7 @@ export default function PGPaymentModal({ pgData, amount, onSuccess, onClose }) {
                             href={pgData.payment_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:from-indigo-600 hover:to-violet-700"
+                            className="block w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:from-primary-600 hover:to-primary-700"
                         >
                             {pgData.qr_code ? 'Buka di Aplikasi Pembayaran →' : 'Buka Halaman Pembayaran →'}
                         </a>

@@ -6,7 +6,7 @@ function inputCls(hasError = false) {
     return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         hasError
             ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-            : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-200'
+            : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'
     }`;
 }
 
@@ -88,7 +88,7 @@ export default function UpdateProfileInformation({
                     <button
                         type="submit"
                         disabled={processing}
-                        className="rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                        className="rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                     >
                         {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                     </button>

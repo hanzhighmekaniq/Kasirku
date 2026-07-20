@@ -40,7 +40,7 @@ export default function Index({ groups }) {
                     <h2 className="text-lg font-semibold text-slate-800">Grup Modifier</h2>
                     <Link
                         href={route('admin.modifier-groups.create')}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -74,7 +74,7 @@ export default function Index({ groups }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari grup modifier..."
-                            className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                         />
                     </div>
                     <p className="text-sm text-slate-500">
@@ -99,7 +99,7 @@ export default function Index({ groups }) {
                         {!search && (
                             <Link
                                 href={route('admin.modifier-groups.create')}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                             >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -131,7 +131,7 @@ export default function Index({ groups }) {
                                         return (
                                             <tr key={group.id} className="transition hover:bg-slate-50/70">
                                                 <td className="px-5 py-4">
-                                                    <Link href={route('admin.modifier-groups.show', group.id)} className="font-medium text-indigo-600 hover:text-indigo-800 hover:underline">
+                                                    <Link href={route('admin.modifier-groups.show', group.id)} className="font-medium text-primary-600 hover:text-primary-800 hover:underline">
                                                         {group.name}
                                                     </Link>
                                                 </td>
@@ -165,7 +165,7 @@ export default function Index({ groups }) {
                                                 </td>
                                                 <td className="px-5 py-4">
                                                     <div className="flex items-center justify-end gap-1">
-                                                        <Link href={route('admin.modifier-groups.edit', group.id)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600" title="Edit">
+                                                        <Link href={route('admin.modifier-groups.edit', group.id)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600" title="Edit">
                                                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
                                                             </svg>
@@ -192,7 +192,7 @@ export default function Index({ groups }) {
                                     <div key={group.id} className="p-4">
                                         <div className="flex items-start justify-between">
                                             <div className="min-w-0 flex-1">
-                                                <Link href={route('admin.modifier-groups.show', group.id)} className="font-medium text-indigo-600 hover:text-indigo-800 hover:underline">
+                                                <Link href={route('admin.modifier-groups.show', group.id)} className="font-medium text-primary-600 hover:text-primary-800 hover:underline">
                                                     {group.name}
                                                 </Link>
                                                 {group.description && <p className="mt-0.5 text-xs text-slate-500 truncate">{group.description}</p>}
@@ -207,7 +207,7 @@ export default function Index({ groups }) {
                                             </div>
                                         </div>
                                         <div className="mt-3 flex items-center gap-1">
-                                            <Link href={route('admin.modifier-groups.show', group.id)} className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50">
+                                            <Link href={route('admin.modifier-groups.show', group.id)} className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50">
                                                 Kelola
                                             </Link>
                                             <Link href={route('admin.modifier-groups.edit', group.id)} className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50">

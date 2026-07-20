@@ -286,7 +286,7 @@ export default function Index({ users, stores }) {
                     </div>
                     <Link
                         href={route("developer.users.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
                     >
                         <svg
                             className="h-4 w-4"
@@ -356,7 +356,7 @@ export default function Index({ users, stores }) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari nama atau email..."
-                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm shadow-sm transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                     />
                     {search && (
                         <button
@@ -386,7 +386,7 @@ export default function Index({ users, stores }) {
                         <select
                             value={filterStore}
                             onChange={(e) => setFilterStore(e.target.value)}
-                            className="appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-3.5 pr-9 text-sm text-slate-700 shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer"
+                            className="appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-3.5 pr-9 text-sm text-slate-700 shadow-sm transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 cursor-pointer"
                         >
                             <option value="">Semua Toko</option>
                             {stores.map((s) => (

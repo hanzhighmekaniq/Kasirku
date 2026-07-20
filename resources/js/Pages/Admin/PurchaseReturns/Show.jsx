@@ -103,7 +103,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                                 <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Pembelian Asal</p>
                                 <Link
                                     href={route('admin.purchases.show', purchaseReturn.purchase_id)}
-                                    className="mt-1 text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+                                    className="mt-1 text-sm font-semibold text-primary-600 hover:text-primary-800"
                                 >
                                     {purchaseReturn.purchase?.purchase_no || '-'}
                                 </Link>
@@ -207,7 +207,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                         <div className="mt-4 border-t border-slate-100 pt-4">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-semibold text-slate-700">Total Retur</span>
-                                <span className="text-lg font-bold text-indigo-600">{formatRupiah(purchaseReturn.total_amount)}</span>
+                                <span className="text-lg font-bold text-primary-600">{formatRupiah(purchaseReturn.total_amount)}</span>
                             </div>
                         </div>
                     </div>

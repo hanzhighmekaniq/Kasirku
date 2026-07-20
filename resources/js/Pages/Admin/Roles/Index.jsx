@@ -19,7 +19,7 @@ const COLOR_MAP = {
     green:  'bg-emerald-50 text-emerald-700 ring-emerald-200',
     orange: 'bg-orange-50 text-orange-700 ring-orange-200',
     red:    'bg-red-50 text-red-700 ring-red-200',
-    custom: 'bg-indigo-50 text-indigo-700 ring-indigo-200',
+    custom: 'bg-primary-50 text-primary-700 ring-primary-200',
 };
 
 const PERMISSION_GROUPS = {
@@ -81,7 +81,7 @@ function PermModal({ role, onClose, onSave }) {
                     <div>
                         <h3 className="text-base font-bold text-slate-900">
                             {isSystem ? 'Lihat Permission —' : 'Atur Permission —'}
-                            <span className="ml-1.5 text-indigo-600">{role?.name}</span>
+                            <span className="ml-1.5 text-primary-600">{role?.name}</span>
                         </h3>
                         {isSystem && (
                             <p className="mt-0.5 text-xs text-slate-400">Role sistem — permission tidak bisa diubah. Duplikat untuk membuat versi custom.</p>
@@ -102,7 +102,7 @@ function PermModal({ role, onClose, onSave }) {
                                 <div className="mb-2.5 flex items-center gap-2">
                                     {!isSystem ? (
                                         <button type="button" onClick={() => toggleGroup(perms)}
-                                            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${allOn ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                                            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${allOn ? 'bg-primary-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
                                             {group}
                                         </button>
                                     ) : (
@@ -120,9 +120,9 @@ function PermModal({ role, onClose, onSave }) {
                                                 onClick={() => !isSystem && toggle(p)}
                                                 className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
                                                     on
-                                                        ? 'bg-indigo-500 text-white shadow-sm'
+                                                        ? 'bg-primary-500 text-white shadow-sm'
                                                         : 'border border-slate-200 bg-white text-slate-400'
-                                                } ${!isSystem && !on ? 'hover:border-indigo-300 hover:text-indigo-500' : ''} ${isSystem ? 'cursor-default' : ''}`}>
+                                                } ${!isSystem && !on ? 'hover:border-primary-300 hover:text-primary-500' : ''} ${isSystem ? 'cursor-default' : ''}`}>
                                                 {PERM_LABEL[key] ?? key}
                                             </button>
                                         );
@@ -165,7 +165,7 @@ function RoleFormModal({ title, form, onClose, onSubmit }) {
                             value={form.data.name}
                             onChange={e => form.setData('name', e.target.value)}
                             placeholder="cth: kasirdapur, operator-shift2, resepsionis"
-                            className="block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                            className="block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                         />
                         {form.errors.name && <p className="mt-1.5 text-xs text-red-500">{form.errors.name}</p>}
                     </div>
@@ -175,7 +175,7 @@ function RoleFormModal({ title, form, onClose, onSubmit }) {
                             value={form.data.description}
                             onChange={e => form.setData('description', e.target.value)}
                             placeholder="Deskripsi singkat fungsi role ini"
-                            className="block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                            className="block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                         />
                     </div>
                     <p className="text-xs text-slate-400">Permission bisa diatur setelah role dibuat lewat tombol "Atur Permission".</p>
@@ -298,7 +298,7 @@ export default function Index({ roles, permissions }) {
                                             </button>
                                             <button onClick={() => handleDuplicate(role)}
                                                 title="Duplikat sebagai role custom"
-                                                className="flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100">
+                                                className="flex items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-2.5 py-1.5 text-xs font-semibold text-primary-600 transition hover:bg-primary-100">
                                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>
                                                 Duplikat
                                             </button>
@@ -337,14 +337,14 @@ export default function Index({ roles, permissions }) {
                     ) : (
                         <div className="grid gap-3 sm:grid-cols-2">
                             {customRoles.map(role => (
-                                <div key={role.id} className="group rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm ring-1 ring-indigo-50 transition hover:shadow-md">
+                                <div key={role.id} className="group rounded-2xl border border-primary-100 bg-white p-5 shadow-sm ring-1 ring-primary-50 transition hover:shadow-md">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex items-center gap-3">
-                                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-lg">✏️</span>
+                                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-lg">✏️</span>
                                             <div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-bold text-indigo-700 ring-1 ring-indigo-200">{role.name}</span>
-                                                    <span className="rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-500">Custom</span>
+                                                    <span className="rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-bold text-primary-700 ring-1 ring-primary-200">{role.name}</span>
+                                                    <span className="rounded-full bg-primary-50 px-1.5 py-0.5 text-[10px] font-semibold text-primary-500">Custom</span>
                                                 </div>
                                                 <p className="mt-1 text-xs text-slate-400">{role.description || 'Tidak ada deskripsi'}</p>
                                             </div>

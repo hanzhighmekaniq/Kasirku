@@ -160,7 +160,7 @@ function IndicatorBadges({ product }) {
         badges.push(
             <span
                 key="variant"
-                className="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
+                className="inline-flex items-center gap-1 rounded-md border border-primary-200 bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700"
             >
                 Variant {variantCount}
             </span>,
@@ -229,148 +229,143 @@ function DetailRow({ product, onStockModal }) {
     const priceTiers = product.price_tiers ?? [];
     const hasVariants = variants.length > 0;
 
-    const rows = [];
-
     if (hasVariants) {
-        variants.forEach((v) => {
-            const units = v.packaging_units?.length
-                ? v.packaging_units
-                      .map(
-                          (u) =>
-                              `${u.name} (${u.conversion_qty} ${product.unit}): Rp ${Number(u.sell_price || 0).toLocaleString("id-ID")}`,
-                      )
-                      .join(", ")
-                : "—";
-            const tiers = v.price_tiers?.length
-                ? v.price_tiers
-                      .map(
-                          (t) =>
-                              `${t.min_qty}+ Rp ${Number(t.price).toLocaleString("id-ID")}`,
-                      )
-                      .join(" · ")
-                : "—";
-            const vStock = v.stock ?? 0;
+        return (
+            <div className="border-t border-slate-100 bg-gradient-to-b from-slate-50/80 to-white px-5 py-4">
+                <div className="mb-3 flex items-center gap-2">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-primary-100 text-primary-600">
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+                        </svg>
+                    </span>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        {variants.length} Variant
+                    </h4>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {variants.map((v) => {
+                        const vStock = v.stock ?? 0;
+                        const isLow = product.track_stock && product.stock_minimum > 0 && vStock <= product.stock_minimum;
+                        const isOut = product.track_stock && vStock <= 0;
+                        const units = v.packaging_units?.length
+                            ? v.packaging_units.map((u) => `${u.name} (${u.conversion_qty} ${product.unit || "pcs"})`).join(", ")
+                            : null;
+                        const tiers = v.price_tiers?.length
+                            ? v.price_tiers.map((t) => `${t.min_qty}+ → Rp ${Number(t.price).toLocaleString("id-ID")}`).join(" · ")
+                            : null;
 
-            rows.push(
-                <tr key={v.id}>
-                    <td className="px-3 py-2 font-medium text-slate-800">
-                        {v.name}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-xs text-slate-600">
-                        {v.sku}
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                        Rp{" "}
-                        {Number(v.price || 0).toLocaleString("id-ID")}
-                    </td>
-                    <td className="px-3 py-2 text-right text-slate-500">
-                        Rp{" "}
-                        {Number(v.cost_price || 0).toLocaleString("id-ID")}
-                    </td>
-                    <td className="px-3 py-2 text-center font-semibold text-slate-800">
-                        {vStock}
-                    </td>
-                    <td className="px-3 py-2 text-center text-xs">
-                        {units}
-                    </td>
-                    <td className="px-3 py-2 text-xs">{tiers}</td>
-                    <td className="px-3 py-2 text-center">
-                        {product.track_stock && (
-                            <button
-                                onClick={() => onStockModal?.({ product, variant: v, type: "in" })}
-                                className="inline-flex h-6 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-xs font-medium text-slate-600 shadow-sm transition hover:bg-slate-50"
-                                title={`Atur Stok ${v.name}`}
+                        return (
+                            <div
+                                key={v.id}
+                                className={`group relative rounded-xl border bg-white p-3.5 transition-all hover:shadow-md ${isOut ? "border-red-200 bg-red-50/30" : isLow ? "border-amber-200 bg-amber-50/30" : "border-slate-200"}`}
                             >
-                                <svg
-                                    className="h-3 w-3"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
-                                    />
-                                </svg>
-                            </button>
-                        )}
-                    </td>
-                </tr>,
-            );
-        });
-    } else {
-        const units = packagingUnits.length
-            ? packagingUnits
-                  .map(
-                      (u) =>
-                          `${u.name} (${u.conversion_qty} ${product.unit}): Rp ${Number(u.sell_price || 0).toLocaleString("id-ID")}`,
-                  )
-                  .join(", ")
-            : "—";
-        const tiers = priceTiers.length
-            ? priceTiers
-                  .map(
-                      (t) =>
-                          `${t.min_qty}+ Rp ${Number(t.price).toLocaleString("id-ID")}`,
-                  )
-                  .join(" · ")
-            : "—";
+                                <div className="mb-2 flex items-start justify-between gap-2">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-sm font-semibold text-slate-800">{v.name}</p>
+                                        <p className="mt-0.5 font-mono text-[11px] text-slate-400">{v.sku}</p>
+                                    </div>
+                                    {product.track_stock && (
+                                        <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${isOut ? "bg-red-100 text-red-600" : isLow ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
+                                            {isOut ? "Habis" : isLow ? "Menipis" : vStock}
+                                        </span>
+                                    )}
+                                </div>
 
-        rows.push(
-            <tr key={product.id}>
-                <td className="px-3 py-2 font-medium text-slate-800">
-                    {product.name}
-                </td>
-                <td className="px-3 py-2 font-mono text-xs text-slate-600">
-                    {product.sku}
-                </td>
-                <td className="px-3 py-2 text-right">
-                    Rp{" "}
-                    {Number(product.sell_price || 0).toLocaleString("id-ID")}
-                </td>
-                <td className="px-3 py-2 text-right text-slate-500">
-                    Rp{" "}
-                    {Number(product.cost_price || 0).toLocaleString("id-ID")}
-                </td>
-                <td className="px-3 py-2 text-center font-semibold text-slate-800">
-                    {product.stock ?? 0}
-                </td>
-                <td className="px-3 py-2 text-center text-xs">{units}</td>
-                <td className="px-3 py-2 text-xs">{tiers}</td>
-                <td className="px-3 py-2"></td>
-            </tr>,
+                                <div className="mb-2.5 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                                    <div>
+                                        <span className="text-slate-400">Jual</span>
+                                        <p className="font-semibold text-slate-700">Rp {Number(v.price || 0).toLocaleString("id-ID")}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-400">Modal</span>
+                                        <p className="font-medium text-slate-600">Rp {Number(v.cost_price || 0).toLocaleString("id-ID")}</p>
+                                    </div>
+                                </div>
+
+                                {units && (
+                                    <p className="mb-1 truncate text-[11px] text-slate-400" title={units}>
+                                        <span className="font-medium text-slate-500">Satuan:</span> {units}
+                                    </p>
+                                )}
+                                {tiers && (
+                                    <p className="mb-2.5 truncate text-[11px] text-slate-400" title={tiers}>
+                                        <span className="font-medium text-slate-500">Grosir:</span> {tiers}
+                                    </p>
+                                )}
+
+                                <div className="flex items-center gap-1.5 border-t border-slate-100 pt-2.5">
+                                    {product.track_stock && (
+                                        <button
+                                            onClick={() => onStockModal?.({ product, variant: v, type: "in" })}
+                                            className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                                            title={`Atur Stok ${v.name}`}
+                                        >
+                                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                                            </svg>
+                                            Stok
+                                        </button>
+                                    )}
+                                    <Link
+                                        href={
+                                            route("admin.purchases.create") +
+                                            "?product_id=" + product.id +
+                                            "&variant_id=" + v.id +
+                                            (product.supplier_id ? "&supplier_id=" + product.supplier_id : "")
+                                        }
+                                        className={`inline-flex h-7 items-center justify-center gap-1 rounded-lg border text-xs font-medium transition ${product.supplier_id ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"}`}
+                                        title={product.supplier_id ? `Beli ${v.name} dari Supplier` : "Belum ada supplier — buka Purchase"}
+                                    >
+                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 003 3h4.5a3 3 0 003-3H18a1.5 1.5 0 001.5-1.5V6.75A1.5 1.5 0 0018 5.25H6.54m1.34 9l-1.06-4m0 0L5.25 3m1.63 7.25h11.24" />
+                                        </svg>
+                                        Beli
+                                    </Link>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
         );
     }
 
+    // Non-variant: flat info strip
+    const units = packagingUnits.length
+        ? packagingUnits.map((u) => `${u.name} (${u.conversion_qty} ${product.unit || "pcs"})`).join(", ")
+        : null;
+    const tiers = priceTiers.length
+        ? priceTiers.map((t) => `${t.min_qty}+ → Rp ${Number(t.price).toLocaleString("id-ID")}`).join(" · ")
+        : null;
+
     return (
-        <div className="border-t border-slate-200 bg-slate-50 p-4">
-            <h4 className="mb-2 text-xs font-semibold uppercase text-slate-500">
-                Detail {hasVariants ? "Variant" : "Produk"}
-            </h4>
-            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-                <table className="w-full text-sm">
-                    <thead className="bg-slate-100 text-xs uppercase text-slate-600">
-                        <tr>
-                            <th className="px-3 py-2 text-left">
-                                {hasVariants ? "Variant" : "Produk"}
-                            </th>
-                            <th className="px-3 py-2 text-left">SKU</th>
-                            <th className="px-3 py-2 text-right">Harga Jual</th>
-                            <th className="px-3 py-2 text-right">Harga Modal</th>
-                            <th className="px-3 py-2 text-center">Stok</th>
-                            <th className="px-3 py-2 text-left">Multi-Satuan</th>
-                            <th className="px-3 py-2 text-left">Grosir</th>
-                            {hasVariants && (
-                                <th className="px-3 py-2 text-center">Aksi</th>
-                            )}
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {rows}
-                    </tbody>
-                </table>
+        <div className="border-t border-slate-100 bg-gradient-to-b from-slate-50/80 to-white px-5 py-4">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs sm:grid-cols-4">
+                <div>
+                    <span className="text-slate-400">Harga Jual</span>
+                    <p className="text-sm font-semibold text-slate-800">Rp {Number(product.sell_price || 0).toLocaleString("id-ID")}</p>
+                </div>
+                <div>
+                    <span className="text-slate-400">Harga Modal</span>
+                    <p className="text-sm font-medium text-slate-600">Rp {Number(product.cost_price || 0).toLocaleString("id-ID")}</p>
+                </div>
+                <div>
+                    <span className="text-slate-400">Stok Saat Ini</span>
+                    <p className="text-sm font-semibold text-slate-800">{product.stock ?? 0}</p>
+                </div>
+                {units && (
+                    <div>
+                        <span className="text-slate-400">Multi-Satuan</span>
+                        <p className="truncate text-sm text-slate-600" title={units}>{units}</p>
+                    </div>
+                )}
+                {tiers && (
+                    <div className="col-span-2">
+                        <span className="text-slate-400">Harga Grosir</span>
+                        <p className="truncate text-sm text-slate-600" title={tiers}>{tiers}</p>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -1423,7 +1418,7 @@ export default function Index({
             {/* FAB Create — mobile/tablet only */}
             <Link
                 href={route("admin.products.create")}
-                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/40 transition hover:shadow-2xl hover:shadow-blue-500/50 lg:hidden"
+                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-primary-600 text-white shadow-xl shadow-blue-500/40 transition hover:shadow-2xl hover:shadow-blue-500/50 lg:hidden"
                 title={`Tambah ${pageTitle}`}
             >
                 <svg

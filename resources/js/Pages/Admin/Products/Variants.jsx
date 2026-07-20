@@ -4,7 +4,7 @@ import { useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 
 const inputCls =
-    "block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
+    "block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200";
 
 function VariantForm({ product, variant, onClose, onSaved }) {
     const isEdit = !!variant;
@@ -192,7 +192,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                             onClick={() =>
                                 setData("is_active", !data.is_active)
                             }
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.is_active ? "bg-indigo-600" : "bg-slate-200"}`}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.is_active ? "bg-primary-600" : "bg-slate-200"}`}
                         >
                             <span
                                 className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${data.is_active ? "translate-x-5" : "translate-x-0"}`}
@@ -224,7 +224,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                             { min_qty: "", price: "" },
                                         ])
                                     }
-                                    className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100"
+                                    className="inline-flex items-center gap-1 rounded-lg bg-primary-50 px-2.5 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-100"
                                 >
                                     <svg
                                         className="h-3.5 w-3.5"
@@ -250,7 +250,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                         key={i}
                                         className="grid grid-cols-12 gap-2 items-center"
                                     >
-                                        <span className="col-span-2 inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 border border-indigo-100 justify-self-start">
+                                        <span className="col-span-2 inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700 border border-primary-100 justify-self-start">
                                             Tier {i + 1}
                                         </span>
                                         <div className="col-span-4 relative">
@@ -355,7 +355,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                         },
                                     ])
                                 }
-                                className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100"
+                                className="inline-flex items-center gap-1 rounded-lg bg-primary-50 px-2.5 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-100"
                             >
                                 <svg
                                     className="h-3.5 w-3.5"
@@ -531,7 +531,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                         >
                             {processing
                                 ? "Menyimpan..."
@@ -612,7 +612,7 @@ export default function Variants({ product }) {
                             setEditVariant(null);
                             setShowForm(true);
                         }}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <svg
                             className="h-4 w-4"
@@ -652,9 +652,9 @@ export default function Variants({ product }) {
                             className="h-14 w-14 shrink-0 rounded-xl object-cover border border-slate-200"
                         />
                     ) : (
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10">
                             <svg
-                                className="h-7 w-7 text-indigo-400"
+                                className="h-7 w-7 text-primary-400"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
@@ -691,7 +691,7 @@ export default function Variants({ product }) {
                     </div>
                     <div className="hidden sm:block text-right">
                         <p className="text-sm text-slate-500">Total Varian</p>
-                        <p className="text-2xl font-bold text-indigo-600">
+                        <p className="text-2xl font-bold text-primary-600">
                             {variants.length}
                         </p>
                     </div>
@@ -729,7 +729,7 @@ export default function Variants({ product }) {
                                 setEditVariant(null);
                                 setShowForm(true);
                             }}
-                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -804,7 +804,7 @@ export default function Variants({ product }) {
                                             </td>
                                             <td className="px-5 py-4 text-center">
                                                 {v.price_tiers?.length > 0 ? (
-                                                    <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                                                    <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">
                                                         {v.price_tiers.length}{" "}
                                                         tier
                                                     </span>
@@ -846,7 +846,7 @@ export default function Variants({ product }) {
                                                             setEditVariant(v);
                                                             setShowForm(true);
                                                         }}
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
                                                         title="Edit"
                                                     >
                                                         <svg
@@ -934,7 +934,7 @@ export default function Variants({ product }) {
                                                 <div className="mt-2 flex flex-wrap gap-1.5">
                                                     {v.price_tiers?.length >
                                                         0 && (
-                                                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700">
+                                                        <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-medium text-primary-700">
                                                             {
                                                                 v.price_tiers
                                                                     .length
@@ -962,7 +962,7 @@ export default function Variants({ product }) {
                                                 setEditVariant(v);
                                                 setShowForm(true);
                                             }}
-                                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50"
+                                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
                                         >
                                             <svg
                                                 className="h-3.5 w-3.5"

@@ -51,12 +51,12 @@ export default function PermissionDenied({ permission, error }) {
                             </p>
 
                             {/* Tips */}
-                            <div className="rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
+                            <div className="rounded-lg border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-700">
                                 <p className="font-semibold mb-1">💡 Cara memperbaiki:</p>
-                                <ul className="list-disc list-inside space-y-0.5 text-indigo-600 text-xs">
+                                <ul className="list-disc list-inside space-y-0.5 text-primary-600 text-xs">
                                     <li>Minta owner toko untuk membuka <strong>Developer → Roles</strong></li>
                                     <li>Pilih toko yang sesuai, lalu edit role Anda</li>
-                                    <li>Centang permission <code className="bg-indigo-100 px-1 rounded">{permission}</code></li>
+                                    <li>Centang permission <code className="bg-primary-100 px-1 rounded">{permission}</code></li>
                                     <li>Atau minta owner assign role yang lebih tinggi</li>
                                 </ul>
                             </div>

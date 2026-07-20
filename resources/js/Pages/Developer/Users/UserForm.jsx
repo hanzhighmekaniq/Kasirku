@@ -22,7 +22,7 @@ const STORE_ROLES = [
 ];
 
 const inp = (err) =>
-    `block w-full rounded-xl border px-3 py-2.5 text-sm shadow-sm transition focus:outline-none focus:ring-2 ${err ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:border-indigo-400 focus:ring-indigo-100'}`;
+    `block w-full rounded-xl border px-3 py-2.5 text-sm shadow-sm transition focus:outline-none focus:ring-2 ${err ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:border-primary-400 focus:ring-primary-100'}`;
 
 export default function UserForm({
     title, data, setData, errors, processing, onSubmit,
@@ -126,7 +126,7 @@ export default function UserForm({
                         <div className="mb-4 flex items-center justify-between">
                             <div>
                                 <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Assign ke Toko</h3>
-                                {selectedCount > 0 && <p className="text-xs text-indigo-600 mt-0.5">{selectedCount} toko dipilih</p>}
+                                {selectedCount > 0 && <p className="text-xs text-primary-600 mt-0.5">{selectedCount} toko dipilih</p>}
                             </div>
                         </div>
 
@@ -137,7 +137,7 @@ export default function UserForm({
                             </svg>
                             <input value={storeSearch} onChange={e => setStoreSearch(e.target.value)}
                                 placeholder="Cari toko..."
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100" />
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100" />
                         </div>
 
                         {/* Store list */}
@@ -149,14 +149,14 @@ export default function UserForm({
                                 const tm = STORE_TYPE_INFO[s.store_type] ?? { icon: '🏬', label: s.store_type };
                                 const currentRole = getStoreRole(s.id);
                                 return (
-                                    <div key={s.id} className={`flex items-center gap-3 px-4 py-3 transition ${currentRole ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}>
+                                    <div key={s.id} className={`flex items-center gap-3 px-4 py-3 transition ${currentRole ? 'bg-primary-50' : 'hover:bg-slate-50'}`}>
                                         <span className="text-lg">{tm.icon}</span>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-slate-800 truncate">{s.name}</p>
                                             <p className="text-xs text-slate-400">{s.code} · {tm.label}</p>
                                         </div>
                                         <select value={currentRole} onChange={e => setStoreRole(s.id, e.target.value)}
-                                            className={`rounded-lg border px-2 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-200 ${currentRole ? 'border-indigo-300 bg-white text-indigo-700' : 'border-slate-200 bg-white text-slate-500'}`}>
+                                            className={`rounded-lg border px-2 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary-200 ${currentRole ? 'border-primary-300 bg-white text-primary-700' : 'border-slate-200 bg-white text-slate-500'}`}>
                                             <option value="">— Tidak assign —</option>
                                             {STORE_ROLES.map(r => (
                                                 <option key={r.value} value={r.value}>{r.label}</option>
@@ -183,7 +183,7 @@ export default function UserForm({
                             Batal
                         </Link>
                         <button type="submit" disabled={processing}
-                            className="rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:opacity-90 disabled:opacity-60">
+                            className="rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:opacity-90 disabled:opacity-60">
                             {processing ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Buat User'}
                         </button>
                     </div>

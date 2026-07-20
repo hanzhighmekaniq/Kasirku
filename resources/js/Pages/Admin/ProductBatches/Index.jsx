@@ -121,7 +121,7 @@ export default function Index({ batches, products, filters }) {
                     <h2 className="text-lg font-semibold text-slate-800">Batch / Expiry Produk</h2>
                     <Link
                         href={route('admin.product-batches.create')}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <Plus className="h-4 w-4" strokeWidth={2} />
                         <span className="hidden sm:inline">Tambah Batch</span>
@@ -170,14 +170,14 @@ export default function Index({ batches, products, filters }) {
                                 onClick={() => { setProdDropdownOpen(!prodDropdownOpen); setProdSearch(''); }}
                                 className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium shadow-sm transition ${
                                     selectedProduct
-                                        ? 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                                        ? 'border-primary-300 bg-primary-50 text-primary-700 hover:bg-primary-100'
                                         : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                                 }`}
                             >
                                 <Boxes className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={1.8} />
                                 <span className="max-w-[200px] truncate">{selectedProduct ? selectedProduct.name : 'Semua Produk'}</span>
                                 {selectedProduct ? (
-                                    <button type="button" onClick={(e) => { e.stopPropagation(); setProductId(''); applyFilter('', status); setProdDropdownOpen(false); }} className="ml-1 rounded-full p-0.5 text-indigo-400 hover:bg-indigo-100 hover:text-indigo-600">
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); setProductId(''); applyFilter('', status); setProdDropdownOpen(false); }} className="ml-1 rounded-full p-0.5 text-primary-400 hover:bg-primary-100 hover:text-primary-600">
                                         <X className="h-3.5 w-3.5" strokeWidth={2} />
                                     </button>
                                 ) : (
@@ -195,7 +195,7 @@ export default function Index({ batches, products, filters }) {
                                                 value={prodSearch}
                                                 onChange={(e) => setProdSearch(e.target.value)}
                                                 placeholder="Cari nama atau SKU..."
-                                                className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                             />
                                         </div>
                                     </div>
@@ -204,7 +204,7 @@ export default function Index({ batches, products, filters }) {
                                             type="button"
                                             onClick={() => { setProductId(''); applyFilter('', status); setProdDropdownOpen(false); setProdSearch(''); }}
                                             className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                !productId ? 'bg-indigo-50 font-semibold text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
+                                                !productId ? 'bg-primary-50 font-semibold text-primary-700' : 'text-slate-600 hover:bg-slate-50'
                                             }`}
                                         >
                                             Semua Produk
@@ -218,7 +218,7 @@ export default function Index({ batches, products, filters }) {
                                                     type="button"
                                                     onClick={() => { setProductId(p.id); applyFilter(p.id, status); setProdDropdownOpen(false); setProdSearch(''); }}
                                                     className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                        Number(productId) === p.id ? 'bg-indigo-50 font-semibold text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
+                                                        Number(productId) === p.id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-slate-600 hover:bg-slate-50'
                                                     }`}
                                                 >
                                                     <span className="block truncate">{p.name}</span>
@@ -248,7 +248,7 @@ export default function Index({ batches, products, filters }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari batch, produk, SKU..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                     </div>
@@ -304,7 +304,7 @@ export default function Index({ batches, products, filters }) {
                                                 <p className="text-sm font-semibold text-slate-800">{b.product?.name ?? '—'}</p>
                                                 <p className="text-xs text-slate-400">{b.product?.sku}</p>
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-4 font-mono text-xs font-semibold text-indigo-600">{b.batch_no}</td>
+                                            <td className="whitespace-nowrap px-5 py-4 font-mono text-xs font-semibold text-primary-600">{b.batch_no}</td>
                                             <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-500">{b.branch?.name ?? '—'}</td>
                                             <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-800">{b.quantity}</td>
                                             <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{fmt(b.cost_price)}</td>
@@ -324,7 +324,7 @@ export default function Index({ batches, products, filters }) {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Link
                                                         href={route('admin.product-batches.edit', b.id)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-primary-50 hover:text-primary-600"
                                                         title="Edit"
                                                     >
                                                         <Pencil className="h-4 w-4" strokeWidth={1.8} />
@@ -366,7 +366,7 @@ export default function Index({ batches, products, filters }) {
                                 <div className="flex items-start justify-between">
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-semibold text-slate-800">{b.product?.name ?? '—'}</p>
-                                        <p className="font-mono text-xs text-indigo-600">{b.batch_no}</p>
+                                        <p className="font-mono text-xs text-primary-600">{b.batch_no}</p>
                                         {b.branch?.name && (
                                             <p className="mt-0.5 text-xs text-slate-400">{b.branch.name}</p>
                                         )}

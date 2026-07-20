@@ -52,7 +52,7 @@ export default function Index({ suppliers, stats }) {
                     </div>
                     <Link
                         href={route("admin.suppliers.create")}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <svg
                             className="h-4 w-4"
@@ -149,7 +149,7 @@ export default function Index({ suppliers, stats }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nama, kode, telepon, email..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                     </div>
@@ -235,13 +235,13 @@ export default function Index({ suppliers, stats }) {
                                                 )}
                                                 className="flex items-center gap-3"
                                             >
-                                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white shadow-sm">
+                                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-xs font-bold text-white shadow-sm">
                                                     {s.name
                                                         .charAt(0)
                                                         .toUpperCase()}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="font-semibold text-slate-800 hover:text-indigo-600 transition">
+                                                    <p className="font-semibold text-slate-800 hover:text-primary-600 transition">
                                                         {s.name}
                                                     </p>
                                                     <p className="text-xs text-slate-400">
@@ -261,7 +261,7 @@ export default function Index({ suppliers, stats }) {
                                             {s.phone ? (
                                                 <a
                                                     href={`tel:${s.phone}`}
-                                                    className="hover:text-indigo-600 transition"
+                                                    className="hover:text-primary-600 transition"
                                                 >
                                                     {s.phone}
                                                 </a>
@@ -298,7 +298,7 @@ export default function Index({ suppliers, stats }) {
                                                         "admin.suppliers.edit",
                                                         s.id,
                                                     )}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-primary-50 hover:text-primary-600"
                                                     title="Edit"
                                                 >
                                                     <svg

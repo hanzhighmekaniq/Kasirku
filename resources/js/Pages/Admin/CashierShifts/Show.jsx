@@ -255,7 +255,7 @@ export default function Show({
                             <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
                                 <Link
                                     href={route("admin.kasir.index")}
-                                    className="inline-flex shrink-0 items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
+                                    className="inline-flex shrink-0 items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-100"
                                 >
                                     <svg
                                         className="h-4 w-4"
@@ -294,7 +294,7 @@ export default function Show({
                         </div>
                         <button
                             onClick={openCloseModal}
-                            className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-700"
+                            className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-primary-700"
                         >
                             Tutup Shift
                         </button>
@@ -530,7 +530,7 @@ export default function Show({
                                         <p className="text-sm font-semibold text-slate-800">
                                             Komisi Karyawan
                                         </p>
-                                        <span className="text-sm font-semibold text-indigo-700">
+                                        <span className="text-sm font-semibold text-primary-700">
                                             {fmt(typeSummary.total_commission)}
                                         </span>
                                     </div>
@@ -563,7 +563,7 @@ export default function Show({
                                                                 c.transaction_count
                                                             }
                                                         </td>
-                                                        <td className="px-5 py-2.5 text-right font-semibold text-indigo-700">
+                                                        <td className="px-5 py-2.5 text-right font-semibold text-primary-700">
                                                             {fmt(
                                                                 c.total_commission,
                                                             )}
@@ -651,7 +651,7 @@ export default function Show({
                                             <p className="text-sm text-slate-500">
                                                 Booking Dibayar
                                             </p>
-                                            <p className="text-sm font-semibold text-indigo-700">
+                                            <p className="text-sm font-semibold text-primary-700">
                                                 {typeSummary.booking_count}
                                             </p>
                                         </div>
@@ -688,7 +688,7 @@ export default function Show({
                             <SumRow
                                 label="Ekspektasi Kas"
                                 value={fmt(summary?.expected_cash)}
-                                cls="text-indigo-700"
+                                cls="text-primary-700"
                             />
                             {!isOpen && (
                                 <>
@@ -733,11 +733,11 @@ export default function Show({
                             </p>
                         </div>
                         <div className="max-h-[65vh] space-y-5 overflow-y-auto p-6">
-                            <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3">
-                                <p className="text-xs font-medium text-indigo-500">
+                            <div className="rounded-xl border border-primary-100 bg-primary-50 px-4 py-3">
+                                <p className="text-xs font-medium text-primary-500">
                                     Ekspektasi Kas di Laci
                                 </p>
-                                <p className="text-xl font-bold text-indigo-700">
+                                <p className="text-xl font-bold text-primary-700">
                                     {fmt(summary?.expected_cash)}
                                 </p>
                             </div>
@@ -771,7 +771,7 @@ export default function Show({
                                                 actual_cash: e.target.value,
                                             }))
                                         }
-                                        className="block w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-indigo-500 focus:ring-indigo-200"
+                                        className="block w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-primary-500 focus:ring-primary-200"
                                         placeholder="0"
                                     />
                                 </div>
@@ -854,7 +854,7 @@ export default function Show({
                                                                 }),
                                                             )
                                                         }
-                                                        className="block w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-indigo-500 focus:ring-indigo-200"
+                                                        className="block w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-primary-500 focus:ring-primary-200"
                                                         placeholder="0"
                                                     />
                                                 </div>
@@ -877,7 +877,7 @@ export default function Show({
                                             closing_note: e.target.value,
                                         }))
                                     }
-                                    className="block w-full rounded-xl border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-200"
+                                    className="block w-full rounded-xl border-slate-300 text-sm focus:border-primary-500 focus:ring-primary-200"
                                     placeholder="Opsional..."
                                 />
                             </div>
@@ -892,7 +892,7 @@ export default function Show({
                             <button
                                 onClick={handleClose}
                                 disabled={closing || !closeData.actual_cash}
-                                className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700 disabled:opacity-60"
+                                className="rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-primary-700 disabled:opacity-60"
                             >
                                 {closing ? "Menutup..." : "Tutup Shift"}
                             </button>
@@ -953,7 +953,7 @@ export default function Show({
                                                     [key]: e.target.value,
                                                 }))
                                             }
-                                            className="block w-full rounded-xl border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-200"
+                                            className="block w-full rounded-xl border-slate-300 text-sm focus:border-primary-500 focus:ring-primary-200"
                                         />
                                     ) : (
                                         <input
@@ -966,7 +966,7 @@ export default function Show({
                                                     [key]: e.target.value,
                                                 }))
                                             }
-                                            className="block w-full rounded-xl border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-200"
+                                            className="block w-full rounded-xl border-slate-300 text-sm focus:border-primary-500 focus:ring-primary-200"
                                         />
                                     )}
                                 </div>
@@ -982,7 +982,7 @@ export default function Show({
                             <button
                                 onClick={handleEdit}
                                 disabled={editing}
-                                className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+                                className="rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
                             >
                                 {editing ? "Menyimpan..." : "Simpan"}
                             </button>

@@ -142,7 +142,7 @@ export default function Index({
                                     onClick={() => toggleBranch(b.id)}
                                     className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                                         pendingBranchIds.includes(b.id)
-                                            ? "border-indigo-400 bg-indigo-50 text-indigo-700"
+                                            ? "border-primary-400 bg-primary-50 text-primary-700"
                                             : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
                                     }`}
                                 >
@@ -150,7 +150,7 @@ export default function Index({
                                         type="checkbox"
                                         checked={pendingBranchIds.includes(b.id)}
                                         onChange={() => toggleBranch(b.id)}
-                                        className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                        className="h-3.5 w-3.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                     />
                                     {b.name}
                                 </button>
@@ -175,7 +175,7 @@ export default function Index({
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 />
                             </div>
                             <span className="pb-2 text-slate-400">—</span>
@@ -187,7 +187,7 @@ export default function Index({
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 />
                             </div>
                         </div>
@@ -199,7 +199,7 @@ export default function Index({
                                     key={p.label}
                                     type="button"
                                     onClick={() => applyPreset(p)}
-                                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-indigo-400 hover:text-indigo-700"
+                                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-primary-400 hover:text-primary-700"
                                 >
                                     {p.label}
                                 </button>
@@ -209,7 +209,7 @@ export default function Index({
                         {/* Tombol Tampilkan */}
                         <button
                             onClick={applyFilters}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 sm:ml-auto"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 sm:ml-auto"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -318,7 +318,7 @@ export default function Index({
                                                 .trim()}
                                         </span>
                                         <div
-                                            className="w-full rounded-t-md bg-gradient-to-t from-indigo-500 to-indigo-400 transition-all hover:from-indigo-600 hover:to-indigo-500"
+                                            className="w-full rounded-t-md bg-gradient-to-t from-primary-500 to-primary-400 transition-all hover:from-primary-600 hover:to-primary-500"
                                             style={{
                                                 height: `${(d.total / maxDaily) * 100}%`,
                                                 minHeight:
@@ -508,21 +508,21 @@ function SummaryCard({
 }) {
     const gradientMap = {
         emerald: "from-emerald-50 to-emerald-100/40",
-        indigo: "from-indigo-50 to-indigo-100/40",
+        indigo: "from-primary-50 to-primary-100/40",
         amber: "from-amber-50 to-amber-100/40",
         red: "from-red-50 to-red-100/40",
         violet: "from-violet-50 to-violet-100/40",
     };
     const textMap = {
         emerald: "text-emerald-600",
-        indigo: "text-indigo-600",
+        indigo: "text-primary-600",
         amber: "text-amber-600",
         red: "text-red-600",
         violet: "text-violet-600",
     };
     const accentMap = {
         emerald: "border-emerald-400",
-        indigo: "border-indigo-400",
+        indigo: "border-primary-400",
         amber: "border-amber-400",
         red: "border-red-400",
         violet: "border-violet-400",

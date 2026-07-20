@@ -428,7 +428,7 @@ export default function Index({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari no. struk, pelanggan, atau kasir..."
-                        className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
                 </div>
                 <Dropdown>
@@ -457,7 +457,7 @@ export default function Index({
                             onClick={() => setFilterStatus("all")}
                             className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                 filterStatus === "all"
-                                    ? "bg-indigo-50 font-medium text-indigo-600"
+                                    ? "bg-primary-50 font-medium text-primary-600"
                                     : "text-slate-600 hover:bg-slate-50"
                             }`}
                         >
@@ -467,7 +467,7 @@ export default function Index({
                             onClick={() => setFilterStatus("completed")}
                             className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                 filterStatus === "completed"
-                                    ? "bg-indigo-50 font-medium text-indigo-600"
+                                    ? "bg-primary-50 font-medium text-primary-600"
                                     : "text-slate-600 hover:bg-slate-50"
                             }`}
                         >
@@ -477,7 +477,7 @@ export default function Index({
                             onClick={() => setFilterStatus("draft")}
                             className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                 filterStatus === "draft"
-                                    ? "bg-indigo-50 font-medium text-indigo-600"
+                                    ? "bg-primary-50 font-medium text-primary-600"
                                     : "text-slate-600 hover:bg-slate-50"
                             }`}
                         >
@@ -487,7 +487,7 @@ export default function Index({
                             onClick={() => setFilterStatus("cancelled")}
                             className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                 filterStatus === "cancelled"
-                                    ? "bg-indigo-50 font-medium text-indigo-600"
+                                    ? "bg-primary-50 font-medium text-primary-600"
                                     : "text-slate-600 hover:bg-slate-50"
                             }`}
                         >
@@ -519,7 +519,7 @@ export default function Index({
                             onClick={() => setFilterOrderType("all")}
                             className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                 filterOrderType === "all"
-                                    ? "bg-indigo-50 font-medium text-indigo-600"
+                                    ? "bg-primary-50 font-medium text-primary-600"
                                     : "text-slate-600 hover:bg-slate-50"
                             }`}
                         >
@@ -531,7 +531,7 @@ export default function Index({
                                 onClick={() => setFilterOrderType(opt.v)}
                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                     filterOrderType === opt.v
-                                        ? "bg-indigo-50 font-medium text-indigo-600"
+                                        ? "bg-primary-50 font-medium text-primary-600"
                                         : "text-slate-600 hover:bg-slate-50"
                                 }`}
                             >
@@ -578,7 +578,7 @@ export default function Index({
                                     }
                                     className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                         !filterBranch
-                                            ? "bg-indigo-50 font-medium text-indigo-600"
+                                            ? "bg-primary-50 font-medium text-primary-600"
                                             : "text-slate-600 hover:bg-slate-50"
                                     }`}
                                 >
@@ -593,7 +593,7 @@ export default function Index({
                                         className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                             String(filterBranch) ===
                                             String(b.id)
-                                                ? "bg-indigo-50 font-medium text-indigo-600"
+                                                ? "bg-primary-50 font-medium text-primary-600"
                                                 : "text-slate-600 hover:bg-slate-50"
                                         }`}
                                     >
@@ -616,7 +616,7 @@ export default function Index({
                         onChange={(e) =>
                             handleDateChange("date_from", e.target.value)
                         }
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
                 </div>
                 <div className="flex-1">
@@ -629,7 +629,7 @@ export default function Index({
                         onChange={(e) =>
                             handleDateChange("date_to", e.target.value)
                         }
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
                 </div>
 
@@ -666,7 +666,7 @@ export default function Index({
                                 }
                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                     filterPayment === "all"
-                                        ? "bg-indigo-50 font-medium text-indigo-600"
+                                        ? "bg-primary-50 font-medium text-primary-600"
                                         : "text-slate-600 hover:bg-slate-50"
                                 }`}
                             >
@@ -678,7 +678,7 @@ export default function Index({
                                 }
                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                     filterPayment === "paid"
-                                        ? "bg-indigo-50 font-medium text-indigo-600"
+                                        ? "bg-primary-50 font-medium text-primary-600"
                                         : "text-slate-600 hover:bg-slate-50"
                                 }`}
                             >
@@ -690,7 +690,7 @@ export default function Index({
                                 }
                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                     filterPayment === "partial"
-                                        ? "bg-indigo-50 font-medium text-indigo-600"
+                                        ? "bg-primary-50 font-medium text-primary-600"
                                         : "text-slate-600 hover:bg-slate-50"
                                 }`}
                             >
@@ -702,7 +702,7 @@ export default function Index({
                                 }
                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                     filterPayment === "unpaid"
-                                        ? "bg-indigo-50 font-medium text-indigo-600"
+                                        ? "bg-primary-50 font-medium text-primary-600"
                                         : "text-slate-600 hover:bg-slate-50"
                                 }`}
                             >
@@ -944,7 +944,7 @@ export default function Index({
                                                 onClick={() =>
                                                     handlePrint(s.id)
                                                 }
-                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50 hover:text-indigo-800"
+                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50 hover:text-primary-800"
                                                 title="Cetak Struk"
                                             >
                                                 <svg
@@ -1106,7 +1106,7 @@ export default function Index({
                                 )}
                                 <button
                                     onClick={() => handlePrint(s.id)}
-                                    className="rounded-xl border border-indigo-200 px-3 py-2 text-xs font-medium text-indigo-600 transition hover:bg-indigo-50"
+                                    className="rounded-xl border border-primary-200 px-3 py-2 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
                                 >
                                     Cetak
                                 </button>
@@ -1150,7 +1150,7 @@ export default function Index({
                     <div className="rounded-2xl bg-white px-6 py-5 shadow-2xl">
                         <div className="flex items-center gap-3">
                             <svg
-                                className="h-5 w-5 animate-spin text-indigo-500"
+                                className="h-5 w-5 animate-spin text-primary-500"
                                 viewBox="0 0 24 24"
                                 fill="none"
                             >
@@ -1184,7 +1184,7 @@ function SummaryCard({ label, value, color = "slate" }) {
         slate: "border-l-slate-400",
         emerald: "border-l-emerald-400",
         amber: "border-l-amber-400",
-        indigo: "border-l-indigo-400",
+        indigo: "border-l-primary-400",
     };
     return (
         <div
@@ -1258,7 +1258,7 @@ function OrderTypeBadge({ type, storeType }) {
         check_in: { label: "Check-in", cls: "bg-teal-100 text-teal-700" },
         reservation: {
             label: "Reservasi",
-            cls: "bg-indigo-100 text-indigo-700",
+            cls: "bg-primary-100 text-primary-700",
         },
         short_stay: { label: "Short Stay", cls: "bg-sky-100 text-sky-700" },
         // Parking
@@ -1266,7 +1266,7 @@ function OrderTypeBadge({ type, storeType }) {
         exit: { label: "Keluar", cls: "bg-slate-200 text-slate-600" },
         lost_ticket: { label: "Tiket Hilang", cls: "bg-red-100 text-red-600" },
         // Session
-        postpaid: { label: "Postpaid", cls: "bg-indigo-100 text-indigo-700" },
+        postpaid: { label: "Postpaid", cls: "bg-primary-100 text-primary-700" },
         prepaid: { label: "Prepaid", cls: "bg-violet-100 text-violet-700" },
     };
     const config = map[type] ?? {
@@ -1510,7 +1510,7 @@ function PrintReceiptModal({ sale, storeName, onClose }) {
                         <button
                             type="button"
                             onClick={() => window.print()}
-                            className="flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                            className="flex-1 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                         >
                             Cetak Ulang
                         </button>

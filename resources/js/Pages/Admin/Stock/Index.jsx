@@ -114,7 +114,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                     <p className="text-xs font-medium text-slate-400">{STAT_PRODUCT}</p>
                     <p className="mt-1 text-xl font-bold text-slate-800">{stats.total_products}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-indigo-400 bg-white p-4 shadow-sm">
+                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-primary-400 bg-white p-4 shadow-sm">
                     <p className="text-xs font-medium text-slate-400">Total Item</p>
                     <p className="mt-1 text-xl font-bold text-slate-800">{stats.total_items?.toLocaleString('id-ID')}</p>
                 </div>
@@ -134,9 +134,9 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
 
             {/* Sub-navigation */}
             <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Link href={route('admin.stock-adjustments.index')} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-200 hover:shadow-md">
+                <Link href={route('admin.stock-adjustments.index')} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-primary-200 hover:shadow-md">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition group-hover:bg-indigo-100">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition group-hover:bg-primary-100">
                             <RotateCcw className="h-5 w-5" strokeWidth={1.8} />
                         </div>
                         <div>
@@ -170,14 +170,14 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                 onClick={() => { setDropdownOpen(!dropdownOpen); setDropdownSearch(''); }}
                                 className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium shadow-sm transition ${
                                     selectedProduct
-                                        ? 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                                        ? 'border-primary-300 bg-primary-50 text-primary-700 hover:bg-primary-100'
                                         : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
                                 }`}
                             >
                                 <Boxes className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={1.8} />
                                 <span className="max-w-[200px] truncate">{selectedProduct ? selectedProduct.name : `Semua ${ITEM_LABEL}`}</span>
                                 {selectedProduct ? (
-                                    <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedProductId(''); }} className="ml-1 rounded-full p-0.5 text-indigo-400 hover:bg-indigo-100 hover:text-indigo-600">
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedProductId(''); }} className="ml-1 rounded-full p-0.5 text-primary-400 hover:bg-primary-100 hover:text-primary-600">
                                         <X className="h-3.5 w-3.5" strokeWidth={2} />
                                     </button>
                                 ) : (
@@ -195,7 +195,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                                 value={dropdownSearch}
                                                 onChange={(e) => setDropdownSearch(e.target.value)}
                                                 placeholder="Cari nama atau SKU..."
-                                                className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                                className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                             />
                                         </div>
                                     </div>
@@ -204,7 +204,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                             type="button"
                                             onClick={() => { setSelectedProductId(''); setDropdownOpen(false); setDropdownSearch(''); }}
                                             className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                !selectedProductId ? 'bg-indigo-50 font-semibold text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
+                                                !selectedProductId ? 'bg-primary-50 font-semibold text-primary-700' : 'text-slate-600 hover:bg-slate-50'
                                             }`}
                                         >
                                             Semua {ITEM_LABEL}
@@ -218,7 +218,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                                     type="button"
                                                     onClick={() => { setSelectedProductId(p.id); setDropdownOpen(false); setDropdownSearch(''); }}
                                                     className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                        selectedProductId === p.id ? 'bg-indigo-50 font-semibold text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
+                                                        selectedProductId === p.id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-slate-600 hover:bg-slate-50'
                                                     }`}
                                                 >
                                                     <span className="block truncate">{p.name}</span>
@@ -239,7 +239,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari produk (nama / SKU)..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                     </div>

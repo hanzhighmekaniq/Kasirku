@@ -57,7 +57,7 @@ export default function Index({ categories }) {
                     <h2 className="text-lg font-semibold text-slate-800">Kategori Pengeluaran</h2>
                     <button
                         onClick={openCreate}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <Plus className="h-4 w-4" strokeWidth={2} />
                         <span className="hidden sm:inline">Tambah Kategori</span>
@@ -80,7 +80,7 @@ export default function Index({ categories }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari kategori..."
-                            className="block w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                         />
                     </div>
                     <p className="text-sm text-slate-500">
@@ -102,7 +102,7 @@ export default function Index({ categories }) {
                         {!search && (
                             <button
                                 onClick={openCreate}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                             >
                                 <Plus className="h-4 w-4" strokeWidth={2} />
                                 Tambah Kategori
@@ -130,7 +130,7 @@ export default function Index({ categories }) {
                                             <td className="px-6 py-4 text-xs text-slate-400">{cat.code}</td>
                                             <td className="max-w-[250px] truncate px-6 py-4 text-slate-500">{cat.description || '—'}</td>
                                             <td className="px-6 py-4 text-center">
-                                                <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+                                                <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700">
                                                     {cat.expenses_count ?? 0}
                                                 </span>
                                             </td>
@@ -139,7 +139,7 @@ export default function Index({ categories }) {
                                                     <button
                                                         onClick={() => openEdit(cat)}
                                                         className="inline-flex h-9 w-9
- items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+ items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
                                                         title="Edit"
                                                     >
                                                         <Pencil className="h-4 w-4" strokeWidth={1.7} />
@@ -174,7 +174,7 @@ export default function Index({ categories }) {
                                         <div className="flex shrink-0 items-center gap-1">
                                             <button
                                                 onClick={() => openEdit(cat)}
-                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
                                             >
                                                 <Pencil className="h-4 w-4" strokeWidth={1.7} />
                                             </button>
@@ -187,7 +187,7 @@ export default function Index({ categories }) {
                                         </div>
                                     </div>
                                     <div className="mt-2 flex items-center gap-2">
-                                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+                                        <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700">
                                             {cat.expenses_count ?? 0} transaksi
                                         </span>
                                     </div>

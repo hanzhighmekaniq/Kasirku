@@ -6,7 +6,7 @@ const iCls = (err) =>
     `block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 ${
         err
             ? "border-red-300 bg-red-50/30 focus:ring-red-200"
-            : "border-slate-200 bg-white focus:ring-indigo-200 focus:border-indigo-400 hover:border-slate-300"
+            : "border-slate-200 bg-white focus:ring-primary-200 focus:border-primary-400 hover:border-slate-300"
     }`;
 
 const CAT_META = {
@@ -198,7 +198,7 @@ export default function Form({ plan, allFeatures = [] }) {
                             {/* Status & sort */}
                             <div className="col-span-2 flex items-center gap-6 pt-1">
                                 <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 transition hover:bg-slate-50">
-                                    <div className={`relative h-5 w-9 rounded-full transition-colors ${data.is_active ? "bg-indigo-500" : "bg-slate-300"}`}>
+                                    <div className={`relative h-5 w-9 rounded-full transition-colors ${data.is_active ? "bg-primary-500" : "bg-slate-300"}`}>
                                         <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${data.is_active ? "translate-x-4" : "translate-x-0.5"}`} />
                                     </div>
                                     <input type="checkbox" checked={data.is_active} onChange={e => setData("is_active", e.target.checked)} className="sr-only" />
@@ -208,7 +208,7 @@ export default function Form({ plan, allFeatures = [] }) {
                                     <Label>Urutan</Label>
                                     <input type="number" min="0" value={data.sort_order}
                                         onChange={e => setData("sort_order", Number(e.target.value))}
-                                        className="w-20 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400"
+                                        className="w-20 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400"
                                     />
                                     <p className="mt-1 text-[11px] text-slate-400">Bisa diubah via drag di Index</p>
                                 </div>
@@ -222,7 +222,7 @@ export default function Form({ plan, allFeatures = [] }) {
                             <div>
                                 <h3 className="text-sm font-bold text-slate-800">Fitur yang Disertakan</h3>
                                 <p className="mt-0.5 text-xs text-slate-400">
-                                    <span className="font-semibold text-indigo-600">{selectedCount}</span>
+                                    <span className="font-semibold text-primary-600">{selectedCount}</span>
                                     {" dari "}
                                     <span className="font-semibold">{allIds.length}</span>
                                     {" fitur dipilih"}
@@ -231,7 +231,7 @@ export default function Form({ plan, allFeatures = [] }) {
                             <button type="button" onClick={toggleAll}
                                 className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
                                     allSelected
-                                        ? "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                                        ? "bg-primary-100 text-primary-700 hover:bg-primary-200"
                                         : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                                 }`}>
                                 {allSelected ? "✓ Semua Dipilih" : "Pilih Semua"}
@@ -240,7 +240,7 @@ export default function Form({ plan, allFeatures = [] }) {
 
                         {/* Progress bar */}
                         <div className="h-1 bg-slate-100">
-                            <div className="h-1 bg-indigo-500 transition-all duration-300"
+                            <div className="h-1 bg-primary-500 transition-all duration-300"
                                 style={{ width: allIds.length > 0 ? `${(selectedCount / allIds.length) * 100}%` : "0%" }} />
                         </div>
 
@@ -270,7 +270,7 @@ export default function Form({ plan, allFeatures = [] }) {
                                                         setData("feature_ids", newIds);
                                                     }
                                                 }}
-                                                className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800 transition">
+                                                className="text-[11px] font-medium text-primary-600 hover:text-primary-800 transition">
                                                 {catAllSelected ? "Hapus semua" : "Pilih semua"}
                                             </button>
                                         </div>
@@ -281,11 +281,11 @@ export default function Form({ plan, allFeatures = [] }) {
                                                     <label key={f.id}
                                                         className={`group flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition select-none ${
                                                             checked
-                                                                ? "border-indigo-300 bg-indigo-50"
+                                                                ? "border-primary-300 bg-primary-50"
                                                                 : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                                                         }`}>
                                                         <div className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition ${
-                                                            checked ? "border-indigo-500 bg-indigo-500" : "border-slate-300 group-hover:border-slate-400"
+                                                            checked ? "border-primary-500 bg-primary-500" : "border-slate-300 group-hover:border-slate-400"
                                                         }`}>
                                                             {checked && (
                                                                 <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
@@ -295,7 +295,7 @@ export default function Form({ plan, allFeatures = [] }) {
                                                         </div>
                                                         <input type="checkbox" checked={checked} onChange={() => toggleFeature(f.id)} className="sr-only" />
                                                         <div className="min-w-0">
-                                                            <p className={`text-xs font-semibold leading-tight ${checked ? "text-indigo-800" : "text-slate-700"}`}>{f.label}</p>
+                                                            <p className={`text-xs font-semibold leading-tight ${checked ? "text-primary-800" : "text-slate-700"}`}>{f.label}</p>
                                                             <p className="mt-0.5 font-mono text-[10px] text-slate-400">{f.code}</p>
                                                         </div>
                                                     </label>
@@ -323,7 +323,7 @@ export default function Form({ plan, allFeatures = [] }) {
                                 Batal
                             </Link>
                             <button type="submit" disabled={processing}
-                                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 transition-colors">
+                                className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:opacity-60 transition-colors">
                                 {processing ? (
                                     <>
                                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

@@ -37,7 +37,7 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                     </Link>
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-sm">
+                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-sm font-bold text-white shadow-sm">
                                 {supplier.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
@@ -86,8 +86,8 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                             </div>
                             <div className="p-6">
                                 <dl className="space-y-3 text-sm">
-                                    <InfoRow label="Telepon" value={supplier.phone ? <a href={`tel:${supplier.phone}`} className="text-indigo-600 hover:text-indigo-800 transition">{supplier.phone}</a> : <span className="text-slate-300">-</span>} />
-                                    <InfoRow label="Email" value={supplier.email ? <a href={`mailto:${supplier.email}`} className="text-indigo-600 hover:text-indigo-800 transition truncate block max-w-[200px] text-right">{supplier.email}</a> : <span className="text-slate-300">-</span>} />
+                                    <InfoRow label="Telepon" value={supplier.phone ? <a href={`tel:${supplier.phone}`} className="text-primary-600 hover:text-primary-800 transition">{supplier.phone}</a> : <span className="text-slate-300">-</span>} />
+                                    <InfoRow label="Email" value={supplier.email ? <a href={`mailto:${supplier.email}`} className="text-primary-600 hover:text-primary-800 transition truncate block max-w-[200px] text-right">{supplier.email}</a> : <span className="text-slate-300">-</span>} />
                                     <InfoRow label="Kontak Person" value={supplier.contact_person || <span className="text-slate-300">-</span>} />
                                 </dl>
                             </div>
@@ -105,10 +105,10 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                     {/* Tabs: Purchases / Products */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <div className="flex border-b border-slate-100">
-                            <button onClick={() => setActiveTab('purchases')} className={`flex-1 px-6 py-3.5 text-sm font-medium transition ${activeTab === 'purchases' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                            <button onClick={() => setActiveTab('purchases')} className={`flex-1 px-6 py-3.5 text-sm font-medium transition ${activeTab === 'purchases' ? 'border-b-2 border-primary-500 text-primary-600' : 'text-slate-500 hover:text-slate-700'}`}>
                                 Riwayat Pembelian
                             </button>
-                            <button onClick={() => setActiveTab('products')} className={`flex-1 px-6 py-3.5 text-sm font-medium transition ${activeTab === 'products' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}>
+                            <button onClick={() => setActiveTab('products')} className={`flex-1 px-6 py-3.5 text-sm font-medium transition ${activeTab === 'products' ? 'border-b-2 border-primary-500 text-primary-600' : 'text-slate-500 hover:text-slate-700'}`}>
                                 Produk ({products.length})
                             </button>
                         </div>
@@ -131,7 +131,7 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                                             recentPurchases.map((p) => (
                                                 <tr key={p.id} className="transition hover:bg-slate-50/50">
                                                     <td className="px-6 py-3.5">
-                                                        <Link href={route('admin.purchases.show', p.id)} className="font-semibold text-indigo-600 hover:text-indigo-800">{p.purchase_no}</Link>
+                                                        <Link href={route('admin.purchases.show', p.id)} className="font-semibold text-primary-600 hover:text-primary-800">{p.purchase_no}</Link>
                                                     </td>
                                                     <td className="px-6 py-3.5 text-slate-600">{fmtDate(p.purchase_date)}</td>
                                                     <td className="px-6 py-3.5 text-right font-medium text-slate-800">{fmtCurrency(p.grand_total)}</td>

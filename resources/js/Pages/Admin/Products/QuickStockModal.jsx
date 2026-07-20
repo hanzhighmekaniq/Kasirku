@@ -167,7 +167,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                         }}
                                         className={`w-full flex items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm transition ${
                                             selectedVariant?.id === v.id
-                                                ? "border-indigo-300 bg-indigo-50 ring-2 ring-indigo-200"
+                                                ? "border-primary-300 bg-primary-50 ring-2 ring-primary-200"
                                                 : "border-slate-200 hover:bg-slate-50"
                                         }`}
                                     >
@@ -234,7 +234,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     placeholder="0"
                                     min="0.0001"
                                     step="any"
-                                    className={`w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 ${
+                                    className={`w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 ${
                                         isLargeQty
                                             ? "border-amber-400 bg-amber-50"
                                             : "border-slate-300"
@@ -278,7 +278,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                             placeholder={activeCostPrice || "0"}
                                             min="0"
                                             step="any"
-                                            className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                            className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                         />
                                     </div>
                                     <p className="mt-1 text-xs text-slate-400">
@@ -315,7 +315,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     placeholder="misal: produksi batch #45"
-                                    className="w-full rounded-xl border border-slate-300 py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                    className="w-full rounded-xl border border-slate-300 py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                 />
                             </div>
                         </>

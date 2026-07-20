@@ -7,7 +7,7 @@ const inp = (err) =>
     `block w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${
         err
             ? "border-red-300 bg-red-50/30 focus:ring-red-200"
-            : "border-slate-200 bg-white hover:border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
+            : "border-slate-200 bg-white hover:border-slate-300 focus:border-primary-400 focus:ring-primary-100"
     }`;
 
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
@@ -18,7 +18,7 @@ function Section({ title, subtitle, icon: Icon, children }) {
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="flex items-center gap-3 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-3.5">
                 {Icon && (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                         <Icon className="h-4 w-4" strokeWidth={1.8} />
                     </div>
                 )}
@@ -87,7 +87,7 @@ function FeatureToggle({ feature, onToggle }) {
                     onClick={() => handleToggle()}
                     disabled={loading}
                     className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 ${
-                        feature.is_enabled ? "bg-indigo-500" : "bg-slate-300"
+                        feature.is_enabled ? "bg-primary-500" : "bg-slate-300"
                     } ${loading ? "opacity-50" : ""}`}
                 >
                     <span
@@ -108,7 +108,7 @@ function FeatureToggle({ feature, onToggle }) {
                         value={subSettings.cash_rounding_nearest ?? 100}
                         onChange={(e) => handleSubSettingChange("cash_rounding_nearest", Number(e.target.value))}
                         disabled={loading}
-                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-100"
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100"
                     >
                         <option value={50}>Rp50</option>
                         <option value={100}>Rp100</option>
@@ -173,7 +173,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
         <AuthenticatedLayout
             header={
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
                         <Store className="h-5 w-5" strokeWidth={1.8} />
                     </div>
                     <div>
@@ -210,7 +210,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
                             activeTab === tab.id
-                                ? "bg-white text-indigo-600 shadow-sm"
+                                ? "bg-white text-primary-600 shadow-sm"
                                 : "text-slate-500 hover:text-slate-700"
                         }`}
                     >
@@ -247,7 +247,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex gap-2">
-                                            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-indigo-600 hover:ring-indigo-300">
+                                            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-primary-600 hover:ring-primary-300">
                                                 <Upload className="h-3.5 w-3.5" strokeWidth={2} />
                                                 {logoPreview ? "Ganti" : "Upload Logo"}
                                                 <input
@@ -392,7 +392,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                                     type="button"
                                                     onClick={() => setData("tax_inclusive", !data.tax_inclusive)}
                                                     className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 ${
-                                                        data.tax_inclusive ? "bg-indigo-500" : "bg-slate-300"
+                                                        data.tax_inclusive ? "bg-primary-500" : "bg-slate-300"
                                                     }`}
                                                 >
                                                     <span
@@ -415,7 +415,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:from-indigo-600 hover:to-violet-700 hover:shadow-indigo-500/40 disabled:opacity-60"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:from-primary-600 hover:to-primary-700 hover:shadow-primary-500/40 disabled:opacity-60"
                                 >
                                     {processing ? (
                                         "Menyimpan..."

@@ -144,7 +144,7 @@ function RoleDropdown({ currentRole, roles, onChange }) {
                                     }}
                                     className={`flex w-full items-center gap-2 px-3 py-2 text-xs font-medium transition hover:bg-slate-50 ${
                                         r.name === currentRole
-                                            ? "bg-indigo-50/50 text-indigo-700"
+                                            ? "bg-primary-50/50 text-primary-700"
                                             : "text-slate-600"
                                     }`}
                                 >
@@ -154,7 +154,7 @@ function RoleDropdown({ currentRole, roles, onChange }) {
                                     {r.name}
                                     {r.name === currentRole && (
                                         <Check
-                                            className="ml-auto h-3 w-3 text-indigo-500"
+                                            className="ml-auto h-3 w-3 text-primary-500"
                                             strokeWidth={2.5}
                                         />
                                     )}
@@ -171,7 +171,7 @@ const inp = (err) =>
     `block w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${
         err
             ? "border-red-300 bg-red-50/30 focus:ring-red-200"
-            : "border-slate-200 bg-white hover:border-slate-300 focus:border-indigo-400 focus:ring-indigo-100"
+            : "border-slate-200 bg-white hover:border-slate-300 focus:border-primary-400 focus:ring-primary-100"
     }`;
 
 const labelClass =
@@ -228,7 +228,7 @@ export default function Index({
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
                             <Users className="h-5 w-5" strokeWidth={1.8} />
                         </div>
                         <div>
@@ -248,7 +248,7 @@ export default function Index({
                                 ? `Batas ${planInfo?.max_users} user paket ${planInfo?.label} tercapai`
                                 : ""
                         }
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-indigo-600 hover:to-violet-700 hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:from-primary-600 hover:to-primary-700 hover:shadow-primary-500/40 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <UserPlus className="h-4 w-4" strokeWidth={2} />
                         <span className="hidden sm:inline">
@@ -346,7 +346,7 @@ export default function Index({
                             <button
                                 onClick={() => setShowInvite(true)}
                                 disabled={!canInvite}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-indigo-600 hover:to-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:from-primary-600 hover:to-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <UserPlus className="h-4 w-4" strokeWidth={2} />
                                 Undang Pengguna
@@ -389,7 +389,7 @@ export default function Index({
                                                                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ring-1 ${
                                                                     isOwner
                                                                         ? "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700 ring-amber-100"
-                                                                        : "bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-600 ring-indigo-100"
+                                                                        : "bg-gradient-to-br from-primary-100 to-primary-200 text-primary-600 ring-primary-100"
                                                                 }`}
                                                             >
                                                                 {isOwner
@@ -518,7 +518,7 @@ export default function Index({
                                                         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
                                                             isOwner
                                                                 ? "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700"
-                                                                : "bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-600"
+                                                                : "bg-gradient-to-br from-primary-100 to-primary-200 text-primary-600"
                                                         }`}
                                                     >
                                                         {isOwner
@@ -611,7 +611,7 @@ export default function Index({
                     <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl">
                         {/* Modal Header */}
                         <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
                                 <UserPlus
                                     className="h-5 w-5"
                                     strokeWidth={1.8}
@@ -786,7 +786,7 @@ export default function Index({
                                 <button
                                     type="submit"
                                     disabled={inviteForm.processing}
-                                    className="rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-60"
+                                    className="rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
                                 >
                                     {inviteForm.processing
                                         ? "Mengundang..."

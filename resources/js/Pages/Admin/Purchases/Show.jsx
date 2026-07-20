@@ -108,7 +108,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                     <>
                         <Link
                             href={route("admin.purchases.edit", purchase.id)}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-300 bg-white px-3.5 py-2 text-sm font-semibold text-indigo-600 transition hover:bg-indigo-50"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-primary-300 bg-white px-3.5 py-2 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -302,7 +302,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                                     <dt className="font-semibold text-slate-700">
                                         Grand Total
                                     </dt>
-                                    <dd className="text-lg font-bold text-indigo-600">
+                                    <dd className="text-lg font-bold text-primary-600">
                                         {fmtRp(purchase.grand_total)}
                                     </dd>
                                 </div>

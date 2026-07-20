@@ -46,7 +46,7 @@ export default function Index({ branches }) {
                     </h2>
                     <Link
                         href={route("admin.branches.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <svg
                             className="h-4 w-4"
@@ -109,7 +109,7 @@ export default function Index({ branches }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari kode, nama, telepon..."
-                            className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full rounded-xl border-slate-300 pl-9 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                         />
                     </div>
                     <p className="text-sm text-slate-500">
@@ -151,7 +151,7 @@ export default function Index({ branches }) {
                         {!search && (
                             <Link
                                 href={route("admin.branches.create")}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                             >
                                 <svg
                                     className="h-4 w-4"
@@ -193,7 +193,7 @@ export default function Index({ branches }) {
 
 function StatCard({ label, value, tone = "indigo" }) {
     const tones = {
-        indigo: "bg-indigo-50 text-indigo-700 border-indigo-100",
+        indigo: "bg-primary-50 text-primary-700 border-primary-100",
         emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
         slate: "bg-slate-50 text-slate-700 border-slate-200",
     };
@@ -212,7 +212,7 @@ function StatCard({ label, value, tone = "indigo" }) {
 
 function BranchBadge({ name }) {
     return (
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 text-sm font-bold text-indigo-600">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10 text-sm font-bold text-primary-600">
             {name.charAt(0).toUpperCase()}
         </span>
     );
@@ -233,7 +233,7 @@ function RowActions({ branch, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <Link
                 href={route("admin.branches.edit", branch.id)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
                 title="Edit"
             >
                 <svg

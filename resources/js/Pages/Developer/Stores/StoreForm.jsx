@@ -6,7 +6,7 @@ const iCls = (err) =>
     `block w-full rounded-xl border px-3 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
         err
             ? "border-red-300 focus:ring-red-200"
-            : "border-slate-300 focus:ring-indigo-200 focus:border-indigo-500"
+            : "border-slate-300 focus:ring-primary-200 focus:border-primary-500"
     }`;
 
 export default function StoreForm({
@@ -166,13 +166,13 @@ export default function StoreForm({
                                     }
                                     className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 text-center transition ${
                                         data.store_type_id === t.id
-                                            ? "border-indigo-500 bg-indigo-50"
+                                            ? "border-primary-500 bg-primary-50"
                                             : "border-slate-200 bg-white hover:border-slate-300"
                                     }`}
                                 >
                                     <span className="text-2xl">{t.icon}</span>
                                     <span
-                                        className={`text-xs font-semibold ${data.store_type_id === t.id ? "text-indigo-700" : "text-slate-700"}`}
+                                        className={`text-xs font-semibold ${data.store_type_id === t.id ? "text-primary-700" : "text-slate-700"}`}
                                     >
                                         {t.label}
                                     </span>
@@ -211,10 +211,10 @@ export default function StoreForm({
                                         badge: "bg-blue-500",
                                     },
                                     pro: {
-                                        border: "border-indigo-200 hover:border-indigo-300",
+                                        border: "border-primary-200 hover:border-primary-300",
                                         selectedBorder:
-                                            "border-indigo-600 bg-indigo-50",
-                                        badge: "bg-indigo-500",
+                                            "border-primary-600 bg-primary-50",
+                                        badge: "bg-primary-500",
                                     },
                                 };
                                 const c = colorMap[plan.key] ?? colorMap.free;
@@ -284,7 +284,7 @@ export default function StoreForm({
                                                 e.target.value || null,
                                             )
                                         }
-                                        className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                        className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                                     />
                                     <p className="mt-1 text-[10px] text-slate-400">
                                         Kosong = tidak ada batas
@@ -307,7 +307,7 @@ export default function StoreForm({
                                             )
                                         }
                                         placeholder="Ikut plan"
-                                        className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                        className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                                     />
                                     <p className="mt-1 text-[10px] text-slate-400">
                                         Kosong = ikut plan
@@ -330,7 +330,7 @@ export default function StoreForm({
                                             )
                                         }
                                         placeholder="Ikut plan"
-                                        className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                                        className="block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                                     />
                                     <p className="mt-1 text-[10px] text-slate-400">
                                         Kosong = ikut plan
@@ -487,7 +487,7 @@ export default function StoreForm({
                                                 setOwnerSearch(e.target.value)
                                             }
                                             placeholder="Cari nama, email, atau toko..."
-                                            className="block w-full rounded-lg border-slate-300 py-1.5 pl-9 pr-2 text-xs shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                            className="block w-full rounded-lg border-slate-300 py-1.5 pl-9 pr-2 text-xs shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                                         />
                                     </div>
 
@@ -593,7 +593,7 @@ export default function StoreForm({
                         <button
                             type="submit"
                             disabled={processing}
-                            className="rounded-xl bg-indigo-600 px-6 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+                            className="rounded-xl bg-primary-600 px-6 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
                         >
                             {processing
                                 ? "Menyimpan..."

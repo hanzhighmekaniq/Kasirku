@@ -140,7 +140,7 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                                 <p className="text-sm text-center">{error}</p>
                                 <button
                                     onClick={startScanning}
-                                    className="mt-3 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg"
+                                    className="mt-3 px-4 py-2 bg-primary-600 text-white text-sm rounded-lg"
                                 >
                                     Coba Lagi
                                 </button>

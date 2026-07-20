@@ -24,7 +24,7 @@ export default function BranchForm({
                             setData("code", e.target.value.toUpperCase())
                         }
                         placeholder="BR001"
-                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
                     {errors.code && (
                         <p className="mt-1 text-xs text-red-600">
@@ -41,7 +41,7 @@ export default function BranchForm({
                         value={data.name}
                         onChange={(e) => setData("name", e.target.value)}
                         placeholder="Cabang Utama"
-                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                     />
                     {errors.name && (
                         <p className="mt-1 text-xs text-red-600">
@@ -60,7 +60,7 @@ export default function BranchForm({
                     value={data.phone}
                     onChange={(e) => setData("phone", e.target.value)}
                     placeholder="08xxx"
-                    className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                    className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                 />
             </div>
 
@@ -72,7 +72,7 @@ export default function BranchForm({
                     value={data.address}
                     rows={3}
                     onChange={(e) => setData("address", e.target.value)}
-                    className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                    className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                 />
             </div>
 
@@ -102,7 +102,7 @@ export default function BranchForm({
                 <button
                     type="submit"
                     disabled={processing}
-                    className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+                    className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60 transition-colors"
                 >
                     {processing ? "Menyimpan..." : submitLabel}
                 </button>

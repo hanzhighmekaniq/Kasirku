@@ -38,7 +38,7 @@ function inputCls(err) {
     return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         err
             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-slate-300 focus:border-indigo-500 focus:ring-indigo-200"
+            : "border-slate-300 focus:border-primary-500 focus:ring-primary-200"
     }`;
 }
 
@@ -80,7 +80,7 @@ function IngredientRow({ recipe, onDelete, deleting }) {
                     )}
                 </div>
                 <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm">
-                    <span className="font-semibold text-indigo-700">
+                    <span className="font-semibold text-primary-700">
                         {fmtNum(recipe.quantity)} {recipe.unit}
                     </span>
                     <span className="text-slate-400">
@@ -223,7 +223,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                 {
                                     label: "Harga Jual",
                                     value: fmt(product.sell_price),
-                                    color: "text-indigo-700",
+                                    color: "text-primary-700",
                                 },
                                 {
                                     label: "Margin",
@@ -298,12 +298,12 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                     </div>
 
                     {/* Info box */}
-                    <div className="flex items-start gap-3 rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3">
+                    <div className="flex items-start gap-3 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-3">
                         <Info
-                            className="mt-0.5 h-5 w-5 shrink-0 text-indigo-400"
+                            className="mt-0.5 h-5 w-5 shrink-0 text-primary-400"
                             strokeWidth={1.8}
                         />
-                        <p className="text-xs text-indigo-700">
+                        <p className="text-xs text-primary-700">
                             <strong>Snapshot otomatis.</strong> Saat produk
                             terjual, resep saat itu di-snapshot ke data
                             transaksi. Perubahan resep di masa depan tidak akan
@@ -435,7 +435,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                     onChange={(e) =>
                                         setData("is_nullable", e.target.checked)
                                     }
-                                    className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                    className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                 />
                                 <div>
                                     <p className="text-sm font-medium text-slate-700">
@@ -471,7 +471,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                     !data.raw_material_id ||
                                     !data.quantity
                                 }
-                                className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50"
+                                className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-50"
                             >
                                 {processing
                                     ? "Menyimpan..."
@@ -487,7 +487,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                         </p>
                         <Link
                             href={route("admin.products.create")}
-                            className="flex items-center gap-2 text-xs text-indigo-600 hover:text-indigo-700 transition"
+                            className="flex items-center gap-2 text-xs text-primary-600 hover:text-primary-700 transition"
                         >
                             <Plus className="h-4 w-4" strokeWidth={2} />
                             Buat produk baru dengan tipe "Bahan Baku"

@@ -40,7 +40,7 @@ export default function Edit({ cafeTable, branches }) {
                     <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
                         <h3 className="text-base font-semibold text-slate-900">Detail Meja</h3>
                         <p className="mt-0.5 text-sm text-slate-500">
-                            Edit meja <span className="font-medium text-indigo-600">{cafeTable.table_number}</span>
+                            Edit meja <span className="font-medium text-primary-600">{cafeTable.table_number}</span>
                         </p>
                     </div>
                     <div className="p-6">

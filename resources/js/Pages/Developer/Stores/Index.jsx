@@ -23,7 +23,7 @@ const STORE_TYPE = {
     },
     laundry: { label: "Laundry", icon: "👕", cls: "bg-cyan-50 text-cyan-700" },
     parking: { label: "Parkir", icon: "🅿️", cls: "bg-gray-50 text-gray-700" },
-    session: { label: "Sesi", icon: "🖥️", cls: "bg-indigo-50 text-indigo-700" },
+    session: { label: "Sesi", icon: "🖥️", cls: "bg-primary-50 text-primary-700" },
 };
 
 const PLAN_BADGE = {
@@ -123,7 +123,7 @@ export default function Index({ stores, storeTypes }) {
                     </div>
                     <Link
                         href={route("developer.stores.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
                     >
                         <svg
                             className="h-4 w-4"
@@ -185,7 +185,7 @@ export default function Index({ stores, storeTypes }) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari toko, kode, atau owner..."
-                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm shadow-sm transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                     />
                     {search && (
                         <button
@@ -214,7 +214,7 @@ export default function Index({ stores, storeTypes }) {
                     <select
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
-                        className="appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-3.5 pr-9 text-sm text-slate-700 shadow-sm transition focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer"
+                        className="appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-3.5 pr-9 text-sm text-slate-700 shadow-sm transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 cursor-pointer"
                     >
                         {typeOptions.map((t) => (
                             <option key={t.key} value={t.key}>
@@ -275,7 +275,7 @@ export default function Index({ stores, storeTypes }) {
                         {stores.length === 0 ? (
                             <Link
                                 href={route("developer.stores.create")}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-primary-700"
                             >
                                 <svg
                                     className="h-4 w-4"
@@ -359,7 +359,7 @@ export default function Index({ stores, storeTypes }) {
                                                 {/* Toko */}
                                                 <td className="px-5 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-lg">
+                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-lg">
                                                             {tm.icon}
                                                         </span>
                                                         <div className="min-w-0">
@@ -368,7 +368,7 @@ export default function Index({ stores, storeTypes }) {
                                                                     "developer.stores.show",
                                                                     s.id,
                                                                 )}
-                                                                className="text-sm font-semibold text-slate-800 transition hover:text-indigo-600 truncate block"
+                                                                className="text-sm font-semibold text-slate-800 transition hover:text-primary-600 truncate block"
                                                             >
                                                                 {s.name}
                                                             </Link>
@@ -409,7 +409,7 @@ export default function Index({ stores, storeTypes }) {
                                                                 ),
                                                             )}
                                                             {extraCount > 0 && (
-                                                                <span className="inline-block rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">
+                                                                <span className="inline-block rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold text-primary-600">
                                                                     +
                                                                     {extraCount}{" "}
                                                                     lainnya

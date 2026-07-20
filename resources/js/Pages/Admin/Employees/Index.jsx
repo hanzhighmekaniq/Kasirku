@@ -109,7 +109,7 @@ export default function Index({ employees, storeType = "retail" }) {
                     </h2>
                     <Link
                         href={route("admin.employees.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <Plus className="h-4 w-4" strokeWidth={2} />
                         <span className="hidden sm:inline">{addLabel}</span>
@@ -132,7 +132,7 @@ export default function Index({ employees, storeType = "retail" }) {
             )}
 
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-indigo-400 bg-white p-4 shadow-sm">
+                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-primary-400 bg-white p-4 shadow-sm">
                     <p className="text-xs font-medium text-slate-400">
                         Total {pageLabel}
                     </p>
@@ -180,7 +180,7 @@ export default function Index({ employees, storeType = "retail" }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nama, kode, cabang..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export default function Index({ employees, storeType = "retail" }) {
                                         onClick={() => setStatusFilter("")}
                                         className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                             !statusFilter
-                                                ? "bg-indigo-50 font-medium text-indigo-600"
+                                                ? "bg-primary-50 font-medium text-primary-600"
                                                 : "text-slate-600 hover:bg-slate-50"
                                         }`}
                                     >
@@ -224,7 +224,7 @@ export default function Index({ employees, storeType = "retail" }) {
                                         }
                                         className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                             statusFilter === "active"
-                                                ? "bg-indigo-50 font-medium text-indigo-600"
+                                                ? "bg-primary-50 font-medium text-primary-600"
                                                 : "text-slate-600 hover:bg-slate-50"
                                         }`}
                                     >
@@ -236,7 +236,7 @@ export default function Index({ employees, storeType = "retail" }) {
                                         }
                                         className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                             statusFilter === "inactive"
-                                                ? "bg-indigo-50 font-medium text-indigo-600"
+                                                ? "bg-primary-50 font-medium text-primary-600"
                                                 : "text-slate-600 hover:bg-slate-50"
                                         }`}
                                     >
@@ -248,7 +248,7 @@ export default function Index({ employees, storeType = "retail" }) {
                                         }
                                         className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                             statusFilter === "terminated"
-                                                ? "bg-indigo-50 font-medium text-indigo-600"
+                                                ? "bg-primary-50 font-medium text-primary-600"
                                                 : "text-slate-600 hover:bg-slate-50"
                                         }`}
                                     >
@@ -303,7 +303,7 @@ export default function Index({ employees, storeType = "retail" }) {
                         {!search && (
                             <Link
                                 href={route("admin.employees.create")}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                             >
                                 <Plus className="h-4 w-4" strokeWidth={2} />
                                 Tambah Karyawan
@@ -337,7 +337,7 @@ export default function Index({ employees, storeType = "retail" }) {
 
 function EmployeeBadge({ name }) {
     return (
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/10 to-violet-500/10 text-sm font-bold text-indigo-600">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10 text-sm font-bold text-primary-600">
             {name.charAt(0).toUpperCase()}
         </span>
     );
@@ -376,7 +376,7 @@ function RowActions({ employee, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <Link
                 href={route("admin.employees.edit", employee.id)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
                 title="Edit"
             >
                 <svg
@@ -485,7 +485,7 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                                                 {emp.commission_value}%
                                             </span>
                                         ) : (
-                                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                                            <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
                                                 Rp{" "}
                                                 {Number(
                                                     emp.commission_value,

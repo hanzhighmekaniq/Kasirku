@@ -79,7 +79,7 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                     <h2 className="text-lg font-semibold text-slate-800">{pageTitle}</h2>
                     <Link
                         href={route('admin.purchase-returns.create')}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <Plus className="h-4 w-4" strokeWidth={2} />
                         <span className="hidden sm:inline">Buat Retur</span>
@@ -104,7 +104,7 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                     <p className="text-xs font-medium text-slate-400">Selesai</p>
                     <p className="mt-1 text-xl font-bold text-slate-800">{stats.completed}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-indigo-400 bg-white p-4 shadow-sm">
+                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-primary-400 bg-white p-4 shadow-sm">
                     <p className="text-xs font-medium text-slate-400">Total Nilai</p>
                     <p className="mt-1 text-xl font-bold text-slate-800">{formatRupiah(stats.totalValue)}</p>
                 </div>
@@ -124,7 +124,7 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nomor retur, supplier, atau pembelian..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                             />
                         </div>
                         <Dropdown>
@@ -137,9 +137,9 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="48">
-                                <button onClick={() => setStatusFilter("all")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "all" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Semua Status</button>
-                                <button onClick={() => setStatusFilter("completed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "completed" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Selesai</button>
-                                <button onClick={() => setStatusFilter("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "cancelled" ? "bg-indigo-50 font-medium text-indigo-600" : "text-slate-600 hover:bg-slate-50"}`}>Dibatalkan</button>
+                                <button onClick={() => setStatusFilter("all")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "all" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Semua Status</button>
+                                <button onClick={() => setStatusFilter("completed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "completed" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Selesai</button>
+                                <button onClick={() => setStatusFilter("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "cancelled" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Dibatalkan</button>
                             </Dropdown.Content>
                         </Dropdown>
                     </div>
@@ -191,7 +191,7 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                                         <td className="whitespace-nowrap px-5 py-4">
                                             <Link
                                                 href={route('admin.purchase-returns.show', retur.id)}
-                                                className="text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+                                                className="text-sm font-semibold text-primary-600 hover:text-primary-800"
                                             >
                                                 {retur.return_no}
                                             </Link>
@@ -262,7 +262,7 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                                 <div>
                                     <Link
                                         href={route('admin.purchase-returns.show', retur.id)}
-                                        className="text-sm font-semibold text-indigo-600"
+                                        className="text-sm font-semibold text-primary-600"
                                     >
                                         {retur.return_no}
                                     </Link>

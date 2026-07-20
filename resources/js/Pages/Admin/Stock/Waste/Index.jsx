@@ -52,7 +52,7 @@ export default function Index({ wastes, stats }) {
                         </Link>
                         <h2 className="text-lg font-semibold text-slate-800">Catat Waste</h2>
                     </div>
-                    <Link href={route('admin.wastes.create')} className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700">
+                    <Link href={route('admin.wastes.create')} className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                         Catat Waste
                     </Link>
@@ -77,9 +77,9 @@ export default function Index({ wastes, stats }) {
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div className="relative flex-1">
                     <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                    <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari no. waste..." className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" />
+                    <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari no. waste..." className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
                 </div>
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200">
                     <option value="">Semua Status</option>
                     <option value="draft">Draft</option>
                     <option value="approved">Disetujui</option>
@@ -111,7 +111,7 @@ export default function Index({ wastes, stats }) {
                                     return (
                                         <tr key={w.id} className="transition hover:bg-slate-50/50">
                                             <td className="px-6 py-3.5">
-                                                <Link href={route('admin.wastes.show', w.id)} className="font-semibold text-indigo-600 hover:text-indigo-800">{w.waste_no}</Link>
+                                                <Link href={route('admin.wastes.show', w.id)} className="font-semibold text-primary-600 hover:text-primary-800">{w.waste_no}</Link>
                                             </td>
                                             <td className="px-6 py-3.5 text-slate-600">{fmtDate(w.waste_date)}</td>
                                             <td className="px-6 py-3.5 text-slate-600">{w.user?.name ?? '-'}</td>

@@ -6,7 +6,7 @@ import UpdateProfileInformationForm from './Partials/UpdateProfileInformationFor
 
 const ROLE_LABELS = {
     developer: { label: 'Developer', cls: 'bg-violet-100 text-violet-700' },
-    admin:     { label: 'Admin',     cls: 'bg-indigo-100 text-indigo-700' },
+    admin:     { label: 'Admin',     cls: 'bg-primary-100 text-primary-700' },
     kasir:     { label: 'Kasir',     cls: 'bg-slate-100 text-slate-600' },
 };
 
@@ -31,7 +31,7 @@ export default function Edit({ mustVerifyEmail, status }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-lg shadow-indigo-500/25">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 text-sm font-bold text-white shadow-lg shadow-primary-500/25">
                         {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -45,7 +45,7 @@ export default function Edit({ mustVerifyEmail, status }) {
 
             <div className="mx-auto max-w-4xl space-y-6 py-8">
                 {/* User identity card */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-indigo-500 to-violet-600 p-6 text-white shadow-lg shadow-indigo-500/20">
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white shadow-lg shadow-primary-500/20">
                     <div className="flex items-center gap-4">
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-2xl font-bold backdrop-blur-sm">
                             {user.name.charAt(0).toUpperCase()}

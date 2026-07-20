@@ -10,6 +10,7 @@ import {
     applyCustomOrderToItems,
 } from "@/Hooks/useSidebarOrder";
 import { NavIcons, GroupIcons } from "@/Components/NavIcons";
+import { useTheme } from "@/Theme/ThemeProvider";
 import {
     GripVertical,
     Search,
@@ -81,7 +82,7 @@ function TypeMismatchModal({ data, onClose }) {
                                 {supportedTypes.map((t) => (
                                     <span
                                         key={t.code}
-                                        className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700"
+                                        className="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-700"
                                     >
                                         {t.label}
                                     </span>
@@ -143,7 +144,7 @@ const TYPE_ICON = {
 
 /* ─── Badge ─────────────────────────────────────────────────── */
 const BADGE_BG = {
-    indigo: "bg-indigo-50 text-indigo-500",
+    indigo: "bg-primary-50 text-primary-500",
     orange: "bg-orange-50 text-orange-500",
     violet: "bg-violet-50 text-violet-500",
     cyan: "bg-cyan-50 text-cyan-500",
@@ -196,7 +197,7 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
                         locked
                             ? "cursor-not-allowed text-slate-300"
                             : active
-                              ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200/50"
+                              ? "bg-primary-600 text-white shadow-sm shadow-primary-200/50"
                               : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                     }`}
             >
@@ -242,7 +243,7 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition ${
                     active
                         ? "text-white"
-                        : "text-slate-500 group-hover:text-indigo-600"
+                        : "text-slate-500 group-hover:text-primary-600"
                 }`}
             >
                 <NavIcons name={item.icon} className="h-[15px] w-[15px]" />
@@ -270,7 +271,7 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
             className={`group flex items-center gap-2.5 rounded-lg px-1 py-2.5 transition-all
                 ${
                     active
-                        ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-200/50"
+                        ? "bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-md shadow-primary-200/50"
                         : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-900"
                 }
                 ${collapsed ? "justify-center px-0" : ""}`}
@@ -378,22 +379,22 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                 onClick={toggle}
                 className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
                     hasActive
-                        ? "bg-indigo-50 text-indigo-700"
+                        ? "bg-primary-50 text-primary-700"
                         : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
                 }`}
             >
                 <GroupIcons
                     name={group.icon}
-                    className={`h-3.5 w-3.5 ${hasActive ? "text-indigo-600" : "text-slate-400"}`}
+                    className={`h-3.5 w-3.5 ${hasActive ? "text-primary-600" : "text-slate-400"}`}
                 />
                 <span className="flex-1 text-left">{group.label}</span>
                 <span
-                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${hasActive ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-500"}`}
+                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${hasActive ? "bg-primary-100 text-primary-700" : "bg-slate-100 text-slate-500"}`}
                 >
                     {group.items.filter((i) => !i.locked).length}
                 </span>
                 <svg
-                    className={`h-3 w-3 shrink-0 transition-transform ${hasActive ? "text-indigo-500" : "text-slate-400"} ${open ? "rotate-180" : ""}`}
+                    className={`h-3 w-3 shrink-0 transition-transform ${hasActive ? "text-primary-500" : "text-slate-400"} ${open ? "rotate-180" : ""}`}
                     viewBox="0 0 20 20"
                     fill="currentColor"
                 >
@@ -430,7 +431,7 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                                     reorderMode ? handleDragLeave : undefined
                                 }
                                 onDrop={reorderMode ? handleDrop : undefined}
-                                className={`${showDropAbove ? "border-t-2 border-indigo-500" : ""} ${showDropBelow ? "border-b-2 border-indigo-500" : ""}`}
+                                className={`${showDropAbove ? "border-t-2 border-primary-500" : ""} ${showDropBelow ? "border-b-2 border-primary-500" : ""}`}
                             >
                                 {showDivider && (
                                     <div className="flex items-center gap-2 px-3 my-2">
@@ -542,7 +543,7 @@ function WorkspaceSwitcher({
                     collapsed
                         ? "h-9 w-9 justify-center border-slate-200 bg-white"
                         : "w-full gap-2.5 border-slate-200 bg-white px-3 py-2.5 text-left"
-                } ${clickable ? "hover:border-indigo-300 hover:bg-indigo-50/50 cursor-pointer" : "cursor-default"}`}
+                } ${clickable ? "hover:border-primary-300 hover:bg-primary-50/50 cursor-pointer" : "cursor-default"}`}
             >
                 <span className="flex items-center justify-center text-sm rounded-lg h-7 w-7 shrink-0 bg-slate-100">
                     {typeIcon}
@@ -607,14 +608,14 @@ function WorkspaceSwitcher({
                                     onClick={() => switchStore(s.id)}
                                     className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-slate-50 ${
                                         s.id === currentStore.id
-                                            ? "bg-indigo-50 text-indigo-700 font-semibold"
+                                            ? "bg-primary-50 text-primary-700 font-semibold"
                                             : "text-slate-700"
                                     }`}
                                 >
                                     <span
                                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
                                             s.id === currentStore.id
-                                                ? "bg-indigo-500 text-white"
+                                                ? "bg-primary-500 text-white"
                                                 : "bg-slate-200 text-slate-600"
                                         }`}
                                     >
@@ -625,7 +626,7 @@ function WorkspaceSwitcher({
                                     </span>
                                     {s.id === currentStore.id && (
                                         <svg
-                                            className="ml-auto h-3.5 w-3.5 shrink-0 text-indigo-500"
+                                            className="ml-auto h-3.5 w-3.5 shrink-0 text-primary-500"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             strokeWidth={2.5}
@@ -658,14 +659,14 @@ function WorkspaceSwitcher({
                                     onClick={() => switchBranch(b.id)}
                                     className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-slate-50 ${
                                         b.id === currentBranch?.id
-                                            ? "bg-indigo-50 text-indigo-700 font-semibold"
+                                            ? "bg-primary-50 text-primary-700 font-semibold"
                                             : "text-slate-700"
                                     }`}
                                 >
                                     <span
                                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
                                             b.id === currentBranch?.id
-                                                ? "bg-indigo-500 text-white"
+                                                ? "bg-primary-500 text-white"
                                                 : "bg-slate-200 text-slate-600"
                                         }`}
                                     >
@@ -676,7 +677,7 @@ function WorkspaceSwitcher({
                                     </span>
                                     {b.id === currentBranch?.id && (
                                         <svg
-                                            className="ml-auto h-3.5 w-3.5 shrink-0 text-indigo-500"
+                                            className="ml-auto h-3.5 w-3.5 shrink-0 text-primary-500"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             strokeWidth={2.5}
@@ -715,13 +716,7 @@ function SidebarContent({
     const { customOrder, saveGroupOrder } = useSidebarOrder();
     const [reorderMode, setReorderMode] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [darkMode, setDarkMode] = useState(() => {
-        try {
-            return localStorage.getItem("theme") === "dark";
-        } catch {
-            return false;
-        }
-    });
+    const { isDark, preference, setMode } = useTheme();
     const navRef = useRef(null);
 
     // Apply custom ordering — unlocked items ikut urutan user, locked tetap di bawah
@@ -751,14 +746,11 @@ function SidebarContent({
               .filter((group) => group.items.length > 0)
         : orderedGroups;
 
+    // Toggle sederhana light<->dark (mode "system" diubah ke pilihan manual
+    // begitu user menekan switch ini). Pengaturan lebih lengkap — pilih
+    // template & mode "system" — ada di halaman Theme Picker.
     const toggleTheme = () => {
-        const next = !darkMode;
-        setDarkMode(next);
-        try {
-            localStorage.setItem("theme", next ? "dark" : "light");
-            // Implementasi dark mode bisa ditambahkan di root
-            document.documentElement.classList.toggle("dark", next);
-        } catch {}
+        setMode(isDark ? "light" : "dark");
     };
 
     useEffect(() => {
@@ -785,7 +777,7 @@ function SidebarContent({
                 className={`flex h-[68px] shrink-0 items-center border-b border-slate-100 bg-white/80 backdrop-blur-sm ${collapsed ? "justify-center px-3" : "px-5"}`}
             >
                 <div className="flex items-center gap-3">
-                    <div className="relative flex items-center justify-center w-10 h-10 shadow-lg shrink-0 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 shadow-indigo-200/50">
+                    <div className="relative flex items-center justify-center w-10 h-10 shadow-lg shrink-0 rounded-xl bg-gradient-to-br from-primary-600 to-primary-700 shadow-primary-200/50">
                         <ApplicationLogo className="w-5 h-5 text-white fill-current" />
                         <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400 ring-2 ring-emerald-100" />
                     </div>
@@ -827,7 +819,7 @@ function SidebarContent({
                             placeholder="Cari menu..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 py-2.5 text-sm text-slate-700 placeholder-slate-400 transition focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 py-2.5 text-sm text-slate-700 placeholder-slate-400 transition focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-100"
                         />
                     </div>
 
@@ -835,7 +827,7 @@ function SidebarContent({
                     <div className="flex items-center justify-between rounded-xl bg-white border border-slate-200 px-3.5 py-2.5">
                         <div className="flex items-center gap-2.5">
                             <div className="flex items-center justify-center rounded-lg h-7 w-7 bg-slate-100">
-                                {darkMode ? (
+                                {isDark ? (
                                     <Moon className="w-4 h-4 text-slate-600" />
                                 ) : (
                                     <Sun className="w-4 h-4 text-amber-600" />
@@ -848,12 +840,12 @@ function SidebarContent({
                         <button
                             onClick={toggleTheme}
                             className={`relative h-6 w-11 rounded-full transition-colors ${
-                                darkMode ? "bg-indigo-600" : "bg-slate-300"
+                                isDark ? "bg-primary-600" : "bg-slate-300"
                             }`}
                         >
                             <span
                                 className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-                                    darkMode ? "translate-x-5" : "translate-x-0"
+                                    isDark ? "translate-x-5" : "translate-x-0"
                                 }`}
                             />
                         </button>
@@ -874,8 +866,8 @@ function SidebarContent({
             >
                 <div className="space-y-1">
                     {reorderMode && !collapsed && (
-                        <div className="mb-3 rounded-xl bg-gradient-to-r from-indigo-50 to-indigo-100 border border-indigo-200 px-3 py-2.5 text-center">
-                            <p className="text-xs font-semibold text-indigo-700">
+                        <div className="mb-3 rounded-xl bg-gradient-to-r from-primary-50 to-primary-100 border border-primary-200 px-3 py-2.5 text-center">
+                            <p className="text-xs font-semibold text-primary-700">
                                 🎯 Drag & drop untuk mengatur urutan menu
                             </p>
                         </div>
@@ -918,7 +910,7 @@ function SidebarContent({
                             onClick={() =>
                                 router.visit(route("admin.profile.edit"))
                             }
-                            className="flex items-center justify-center text-xs font-bold text-white transition-all rounded-lg shadow-sm h-9 w-9 bg-gradient-to-br from-indigo-600 to-indigo-700 hover:shadow-md"
+                            className="flex items-center justify-center text-xs font-bold text-white transition-all rounded-lg shadow-sm h-9 w-9 bg-gradient-to-br from-primary-600 to-primary-700 hover:shadow-md"
                         >
                             {user?.name?.charAt(0).toUpperCase()}
                         </button>
@@ -927,7 +919,7 @@ function SidebarContent({
                     <div className="p-3 shadow-lg rounded-xl bg-gradient-to-br from-slate-800 to-slate-900">
                         <div className="flex items-center gap-3">
                             <div className="relative">
-                                <div className="flex items-center justify-center w-10 h-10 text-sm font-bold text-white rounded-lg shadow-md bg-gradient-to-br from-indigo-500 to-indigo-600">
+                                <div className="flex items-center justify-center w-10 h-10 text-sm font-bold text-white rounded-lg shadow-md bg-gradient-to-br from-primary-500 to-primary-600">
                                     {user?.name?.charAt(0).toUpperCase()}
                                 </div>
                                 <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-900 bg-emerald-400" />
@@ -1112,7 +1104,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         <Dropdown>
                             <Dropdown.Trigger>
                                 <button className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-[10px] font-bold text-white shadow-sm">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-primary-600 to-primary-700 text-[10px] font-bold text-white shadow-sm">
                                         {user?.name?.charAt(0).toUpperCase()}
                                     </span>
                                     <span className="hidden max-w-[8rem] truncate sm:block text-xs font-semibold">
@@ -1135,7 +1127,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 {/* Mobile-only user info (toko/cabang sudah ada di sidebar) */}
                                 <div className="lg:hidden px-3 py-2.5">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="flex items-center justify-center text-sm font-bold text-white rounded-lg shadow-sm h-9 w-9 shrink-0 bg-gradient-to-br from-indigo-600 to-indigo-700">
+                                        <div className="flex items-center justify-center text-sm font-bold text-white rounded-lg shadow-sm h-9 w-9 shrink-0 bg-gradient-to-br from-primary-600 to-primary-700">
                                             {user?.name
                                                 ?.charAt(0)
                                                 .toUpperCase()}

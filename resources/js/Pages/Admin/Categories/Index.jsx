@@ -38,7 +38,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                     </h2>
                     <Link
                         href={route("admin.categories.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                     >
                         <svg
                             className="h-4 w-4"
@@ -78,7 +78,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari kategori..."
-                            className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-10 text-sm shadow-sm transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-10 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
                         />
                         <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
                             <svg
@@ -97,7 +97,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                         </span>
                         <button
                             type="submit"
-                            className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-indigo-500"
+                            className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-primary-500"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -155,7 +155,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                         {!search && (
                             <Link
                                 href={route("admin.categories.create")}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                             >
                                 <svg
                                     className="h-4 w-4"
@@ -207,7 +207,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                                         preserveScroll
                                         className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                                             link.active
-                                                ? "bg-indigo-600 text-white shadow-sm"
+                                                ? "bg-primary-600 text-white shadow-sm"
                                                 : link.url
                                                   ? "text-slate-600 hover:bg-slate-100"
                                                   : "cursor-not-allowed text-slate-300"
@@ -243,7 +243,7 @@ function CategoryBadge({ cat }) {
     // Roots and parents with children get folder icon
     if (cat.depth === 0 || !cat.parent_id) {
         return (
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-lg">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/15 to-primary-500/15 text-lg">
                 📁
             </span>
         );
@@ -260,7 +260,7 @@ function RowActions({ cat, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <Link
                 href={route("admin.categories.edit", cat.id)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-indigo-50 hover:text-indigo-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
                 title="Edit"
             >
                 <svg
@@ -399,14 +399,14 @@ function CategoryTree({ categories, onDelete }) {
                     <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-2">
                         <button
                             onClick={expandAll}
-                            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                            className="text-xs text-primary-600 hover:text-primary-800 font-medium"
                         >
                             Expand Semua
                         </button>
                         <span className="text-slate-300">|</span>
                         <button
                             onClick={collapseAll}
-                            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                            className="text-xs text-primary-600 hover:text-primary-800 font-medium"
                         >
                             Collapse Semua
                         </button>
@@ -507,7 +507,7 @@ function CategoryTree({ categories, onDelete }) {
                                         {cat.name}
                                     </p>
                                     {cat.has_children && (
-                                        <span className="shrink-0 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-600">
+                                        <span className="shrink-0 rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-600">
                                             +
                                             {cat.total_products -
                                                 (cat.products_count || 0)}
@@ -520,7 +520,7 @@ function CategoryTree({ categories, onDelete }) {
                                 <span
                                     className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                         cat._depth === 0
-                                            ? "bg-indigo-100 text-indigo-700"
+                                            ? "bg-primary-100 text-primary-700"
                                             : "bg-slate-100 text-slate-600"
                                     }`}
                                 >
@@ -597,7 +597,7 @@ function CategoryRow({ cat, depth = 0, isExpanded, onToggle, onDelete }) {
                         {cat.name}
                     </span>
                     {cat.has_children && !isExpanded && (
-                        <span className="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-600">
+                        <span className="rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-600">
                             {cat.children?.length ?? 0}
                         </span>
                     )}
@@ -619,7 +619,7 @@ function CategoryRow({ cat, depth = 0, isExpanded, onToggle, onDelete }) {
                 <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         depth === 0
-                            ? "bg-indigo-100 text-indigo-700"
+                            ? "bg-primary-100 text-primary-700"
                             : "bg-slate-100 text-slate-600"
                     }`}
                 >

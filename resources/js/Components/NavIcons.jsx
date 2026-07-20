@@ -21,6 +21,7 @@ import {
     List,
     ListChecks,
     Package,
+    Palette,
     ShoppingBag,
     ShoppingCart,
     SlidersHorizontal,
@@ -70,6 +71,7 @@ const ICONS = {
     users: Users,
     shield: CheckCircle,
     log: FileText,
+    theme: Palette,
 };
 
 const GROUP_ICONS = {
