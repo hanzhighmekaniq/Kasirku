@@ -19,7 +19,7 @@ export default function SelectBranch({ branches, storeName }) {
         <>
             <Head title="Pilih Cabang" />
 
-            <div className="flex min-h-screen bg-slate-100">
+            <div className="flex min-h-screen bg-muted">
                 {/* Brand panel */}
                 <div className="relative hidden w-1/2 overflow-hidden bg-gradient-to-br from-slate-900 via-primary-950 to-primary-950 lg:flex lg:flex-col lg:justify-between xl:w-3/5">
                     <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-primary-500/20 blur-3xl" />
@@ -27,12 +27,12 @@ export default function SelectBranch({ branches, storeName }) {
 
                     <div className="relative z-10 p-10 xl:p-14">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary/20">
                                 <ApplicationLogo className="h-7 w-7 fill-current text-white" />
                             </div>
                             <div className="leading-tight">
                                 <span className="block text-lg font-bold tracking-tight text-white">SIM-KASIR</span>
-                                <span className="block text-xs font-medium text-slate-400">Point of Sale System</span>
+                                <span className="block text-xs font-medium text-muted-foreground">Point of Sale System</span>
                             </div>
                         </div>
                     </div>
@@ -41,12 +41,12 @@ export default function SelectBranch({ branches, storeName }) {
                         <h1 className="max-w-md text-4xl font-bold leading-tight text-white xl:text-5xl">
                             Pilih cabang untuk mulai bekerja.
                         </h1>
-                        <p className="mt-4 max-w-md text-base text-slate-300">
+                        <p className="mt-4 max-w-md text-base text-muted-foreground/50">
                             Setiap cabang memiliki data penjualan, stok, dan meja yang terpisah.
                         </p>
                     </div>
 
-                    <div className="relative z-10 p-10 text-sm text-slate-400 xl:px-14">
+                    <div className="relative z-10 p-10 text-sm text-muted-foreground xl:px-14">
                         &copy; {new Date().getFullYear()} SIM-KASIR. All rights reserved.
                     </div>
                 </div>
@@ -56,17 +56,17 @@ export default function SelectBranch({ branches, storeName }) {
                     <div className="w-full max-w-md">
                         {/* Logo (mobile only) */}
                         <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary/20">
                                 <ApplicationLogo className="h-6 w-6 fill-current text-white" />
                             </div>
-                            <span className="text-lg font-bold tracking-tight text-slate-800">SIM-KASIR</span>
+                            <span className="text-lg font-bold tracking-tight text-foreground">SIM-KASIR</span>
                         </div>
 
-                        <h2 className="text-2xl font-bold text-slate-800">Pilih Cabang</h2>
-                        <p className="mt-1 text-sm text-slate-500">{storeName}</p>
+                        <h2 className="text-2xl font-bold text-foreground">Pilih Cabang</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">{storeName}</p>
 
                         {errors.branch_id && (
-                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                            <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
                                 {errors.branch_id}
                             </div>
                         )}
@@ -80,7 +80,7 @@ export default function SelectBranch({ branches, storeName }) {
                                     className={`group flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
                                         selectedBranch === branch.id
                                             ? 'border-primary-500 bg-primary-50 shadow-lg shadow-primary-500/10'
-                                            : 'border-slate-200 bg-white hover:border-primary-300 hover:bg-primary-50/50 hover:shadow-md'
+                                            : 'border-border bg-card hover:border-primary-300 hover:bg-primary-50/50 hover:shadow-md'
                                     } disabled:opacity-60`}
                                 >
                                     {/* Icon */}
@@ -97,21 +97,21 @@ export default function SelectBranch({ branches, storeName }) {
                                     {/* Info */}
                                     <div className="min-w-0 flex-1">
                                         <p className={`text-sm font-semibold transition ${
-                                            selectedBranch === branch.id ? 'text-primary-700' : 'text-slate-800'
+                                            selectedBranch === branch.id ? 'text-primary-700' : 'text-foreground'
                                         }`}>
                                             {branch.name}
                                         </p>
                                         {branch.code && (
-                                            <p className="mt-0.5 text-xs text-slate-400">Kode: {branch.code}</p>
+                                            <p className="mt-0.5 text-xs text-muted-foreground">Kode: {branch.code}</p>
                                         )}
                                         {branch.address && (
-                                            <p className="mt-0.5 text-xs text-slate-400 truncate">{branch.address}</p>
+                                            <p className="mt-0.5 text-xs text-muted-foreground truncate">{branch.address}</p>
                                         )}
                                     </div>
 
                                     {/* Arrow */}
                                     <svg className={`h-5 w-5 shrink-0 transition ${
-                                        selectedBranch === branch.id ? 'text-primary-500' : 'text-slate-300 group-hover:text-primary-400'
+                                        selectedBranch === branch.id ? 'text-primary-500' : 'text-muted-foreground/50 group-hover:text-primary-400'
                                     }`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                     </svg>
@@ -123,7 +123,7 @@ export default function SelectBranch({ branches, storeName }) {
                         <div className="mt-8 text-center">
                             <button
                                 onClick={() => router.visit(route('admin.dashboard'))}
-                                className="text-sm text-slate-400 hover:text-slate-600 transition"
+                                className="text-sm text-muted-foreground hover:text-muted-foreground transition"
                             >
                                 ← Kembali ke Dashboard
                             </button>

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ThemePreset;
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,18 +17,17 @@ class ThemePreferenceTest extends TestCase
         $user = User::factory()->create(['is_developer' => true]);
         ThemePreset::factory()->create(['user_id' => null, 'is_system' => true, 'slug' => 'violet']);
 
-        $response = $this
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
             ->actingAs($user)
             ->patch('/app/theme-preference', [
                 'templateId' => 'violet',
                 'mode' => 'dark',
-                'custom' => null,
             ]);
 
         $response->assertOk()->assertJson(['success' => true]);
 
         $this->assertEquals(
-            ['templateId' => 'violet', 'mode' => 'dark', 'custom' => null],
+            ['templateId' => 'violet', 'mode' => 'dark'],
             $user->refresh()->theme_preference,
         );
     }
@@ -36,17 +36,27 @@ class ThemePreferenceTest extends TestCase
     {
         $user = User::factory()->create(['is_developer' => true]);
 
+        $lightTokens = [
+            'primary' => '#FF5733', 'primaryForeground' => '#FFFFFF',
+            'background' => '#F8FAFC', 'foreground' => '#0F172A',
+            'card' => '#FFFFFF', 'cardForeground' => '#0F172A',
+        ];
+        $darkTokens = [
+            'primary' => '#FF5733', 'primaryForeground' => '#FFFFFF',
+            'background' => '#0F172A', 'foreground' => '#F8FAFC',
+            'card' => '#1F2937', 'cardForeground' => '#F8FAFC',
+        ];
+
         $payload = [
             'templateId' => 'custom',
             'mode' => 'light',
-            'custom' => [
-                'primary' => '#FF5733',
-                'secondary' => '#64748B',
-                'accent' => '#FFA07A',
+            'customTokens' => [
+                'light' => $lightTokens,
+                'dark' => $darkTokens,
             ],
         ];
 
-        $response = $this
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
             ->actingAs($user)
             ->patch('/app/theme-preference', $payload);
 
@@ -58,12 +68,11 @@ class ThemePreferenceTest extends TestCase
     {
         $user = User::factory()->create(['is_developer' => true]);
 
-        $response = $this
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
             ->actingAs($user)
             ->patch('/app/theme-preference', [
                 'templateId' => 'not-a-real-template',
                 'mode' => 'light',
-                'custom' => null,
             ]);
 
         $response->assertSessionHasErrors('templateId');
@@ -74,11 +83,11 @@ class ThemePreferenceTest extends TestCase
     {
         ThemePreset::factory()->create(['user_id' => null, 'is_system' => true, 'slug' => 'violet']);
 
-        $response = $this->patch('/app/theme-preference', [
-            'templateId' => 'violet',
-            'mode' => 'light',
-            'custom' => null,
-        ]);
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
+            ->patch('/app/theme-preference', [
+                'templateId' => 'violet',
+                'mode' => 'light',
+            ]);
 
         $response->assertRedirect('/login');
     }

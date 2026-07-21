@@ -28,7 +28,7 @@ export default function Edit({ customer, storeType = "retail" }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route("admin.customers.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <svg
@@ -45,7 +45,7 @@ export default function Edit({ customer, storeType = "retail" }) {
                             />
                         </svg>
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Edit Pelanggan
                     </h2>
                 </div>

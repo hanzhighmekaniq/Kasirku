@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import Button from "@/Components/ui/Button";
 
 /* ── Order type options per store type — konsisten dengan Sales/Index.jsx ── */
 const ORDER_TYPE_OPTIONS = {
@@ -142,17 +143,17 @@ export default function Create({ products, customers, paymentMethods, tables, st
         <AuthenticatedLayout
             header={
                 <div className="flex items-center gap-3">
-                    <Link href={route('admin.sales.index')} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Kembali">
+                    <Link href={route('admin.sales.index')} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label="Kembali">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">Transaksi Penjualan</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Transaksi Penjualan</h2>
                 </div>
             }
         >
             <Head title="Transaksi Penjualan" />
 
             {flash?.error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{flash.error}</div>
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
             )}
 
             <form onSubmit={submit}>
@@ -197,7 +198,7 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                 {/* Add item row */}
                                 <div className="grid grid-cols-12 gap-3 items-end">
                                     <div className="col-span-12 sm:col-span-5">
-                                        <label className="mb-1 block text-sm font-medium text-slate-700">Produk</label>
+                                        <label className="mb-1 block text-sm font-medium text-foreground">Produk</label>
                                         <select value={selectedProduct} onChange={(e) => {
                                             setSelectedProduct(e.target.value);
                                             const p = products.find((x) => x.id === Number(e.target.value));
@@ -212,13 +213,13 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                         </select>
                                     </div>
                                     <div className="col-span-4 sm:col-span-2">
-                                        <label className="mb-1 block text-sm font-medium text-slate-700">Qty</label>
+                                        <label className="mb-1 block text-sm font-medium text-foreground">Qty</label>
                                         <input type="number" value={selectedQty} onChange={(e) => setSelectedQty(e.target.value)} min="1" className={inputCls(false)} />
                                     </div>
                                     <div className="col-span-5 sm:col-span-3">
-                                        <label className="mb-1 block text-sm font-medium text-slate-700">Harga Jual</label>
+                                        <label className="mb-1 block text-sm font-medium text-foreground">Harga Jual</label>
                                         <div className="relative">
-                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">Rp</span>
                                             <input type="number" value={selectedPrice} onChange={(e) => setSelectedPrice(e.target.value)} min="0" className={`${inputCls(false)} pl-9`} />
                                         </div>
                                     </div>
@@ -229,28 +230,28 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                     </div>
                                 </div>
 
-                                {errors.items && <p className="text-xs text-red-500">{typeof errors.items === 'string' ? errors.items : 'Minimal 1 item harus ditambahkan'}</p>}
+                                {errors.items && <p className="text-xs text-destructive">{typeof errors.items === 'string' ? errors.items : 'Minimal 1 item harus ditambahkan'}</p>}
 
                                 {/* Items list */}
                                 {data.items.length === 0 ? (
-                                    <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-8 text-center text-sm text-slate-400">
+                                    <div className="rounded-xl border-2 border-dashed border-border bg-muted/50 py-8 text-center text-sm text-muted-foreground">
                                         Belum ada item. Pilih produk di atas untuk menambahkan.
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
                                         {data.items.map((item, idx) => (
-                                            <div key={idx} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3">
+                                            <div key={idx} className="flex items-center gap-3 rounded-xl border border-border bg-muted/50 px-4 py-3">
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="truncate text-sm font-medium text-slate-800">{item.product_name}</p>
-                                                    <p className="text-xs text-slate-400">{item.product_sku} {item.stock !== undefined && `• Stok: ${item.stock}`}</p>
+                                                    <p className="truncate text-sm font-medium text-foreground">{item.product_name}</p>
+                                                    <p className="text-xs text-muted-foreground">{item.product_sku} {item.stock !== undefined && `• Stok: ${item.stock}`}</p>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <input type="number" value={item.quantity} onChange={(e) => updateItemField(idx, 'quantity', e.target.value)} min="1" className="h-8 w-16 rounded-lg border border-slate-300 px-2 text-center text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
-                                                    <span className="text-xs text-slate-400">×</span>
-                                                    <input type="number" value={item.price} onChange={(e) => updateItemField(idx, 'price', e.target.value)} min="0" className="h-8 w-24 rounded-lg border border-slate-300 px-2 text-right text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
-                                                    <span className="w-24 text-right text-xs font-medium text-slate-700">Rp {((item.quantity * item.price) - (item.discount_amount || 0)).toLocaleString('id-ID')}</span>
+                                                    <input type="number" value={item.quantity} onChange={(e) => updateItemField(idx, 'quantity', e.target.value)} min="1" className="h-8 w-16 rounded-lg border border-border px-2 text-center text-xs focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                    <span className="text-xs text-muted-foreground">×</span>
+                                                    <input type="number" value={item.price} onChange={(e) => updateItemField(idx, 'price', e.target.value)} min="0" className="h-8 w-24 rounded-lg border border-border px-2 text-right text-xs focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                    <span className="w-24 text-right text-xs font-medium text-foreground">Rp {((item.quantity * item.price) - (item.discount_amount || 0)).toLocaleString('id-ID')}</span>
                                                 </div>
-                                                <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500">
+                                                <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
                                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                                 </button>
                                             </div>
@@ -265,19 +266,19 @@ export default function Create({ products, customers, paymentMethods, tables, st
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 <Field label="Diskon" error={errors.discount_amount}>
                                     <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">Rp</span>
                                         <input type="number" value={data.discount_amount} onChange={(e) => setData('discount_amount', e.target.value)} min="0" placeholder="0" className={`${inputCls(!!errors.discount_amount)} pl-9`} />
                                     </div>
                                 </Field>
                                 <Field label="Pajak" error={errors.tax_amount}>
                                     <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">Rp</span>
                                         <input type="number" value={data.tax_amount} onChange={(e) => setData('tax_amount', e.target.value)} min="0" placeholder="0" className={`${inputCls(!!errors.tax_amount)} pl-9`} />
                                     </div>
                                 </Field>
                                 <Field label="Ongkir" error={errors.shipping_amount}>
                                     <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">Rp</span>
                                         <input type="number" value={data.shipping_amount} onChange={(e) => setData('shipping_amount', e.target.value)} min="0" placeholder="0" className={`${inputCls(!!errors.shipping_amount)} pl-9`} />
                                     </div>
                                 </Field>
@@ -295,7 +296,7 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                 </Field>
                                 <Field label="Jumlah Dibayar" required error={errors.paid_amount}>
                                     <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">Rp</span>
                                         <input type="number" value={data.paid_amount} onChange={(e) => setData('paid_amount', e.target.value)} min="0" placeholder="0" className={`${inputCls(!!errors.paid_amount)} pl-9`} />
                                     </div>
                                 </Field>
@@ -312,30 +313,30 @@ export default function Create({ products, customers, paymentMethods, tables, st
                     <div className="space-y-5">
                         <SectionCard title="Ringkasan">
                             <dl className="space-y-2 text-sm">
-                                <div className="flex justify-between"><dt className="text-slate-500">Item</dt><dd className="font-medium text-slate-700">{data.items.length} produk</dd></div>
-                                <div className="flex justify-between"><dt className="text-slate-500">Subtotal</dt><dd className="font-medium text-slate-700">Rp {subtotal.toLocaleString('id-ID')}</dd></div>
+                                <div className="flex justify-between"><dt className="text-muted-foreground">Item</dt><dd className="font-medium text-foreground">{data.items.length} produk</dd></div>
+                                <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-medium text-foreground">Rp {subtotal.toLocaleString('id-ID')}</dd></div>
                                 {Number(data.discount_amount || 0) > 0 && (
-                                    <div className="flex justify-between"><dt className="text-slate-500">Diskon</dt><dd className="font-medium text-red-500">- Rp {Number(data.discount_amount).toLocaleString('id-ID')}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">Diskon</dt><dd className="font-medium text-destructive">- Rp {Number(data.discount_amount).toLocaleString('id-ID')}</dd></div>
                                 )}
                                 {Number(data.tax_amount || 0) > 0 && (
-                                    <div className="flex justify-between"><dt className="text-slate-500">Pajak</dt><dd className="font-medium text-slate-700">+ Rp {Number(data.tax_amount).toLocaleString('id-ID')}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">Pajak</dt><dd className="font-medium text-foreground">+ Rp {Number(data.tax_amount).toLocaleString('id-ID')}</dd></div>
                                 )}
                                 {Number(data.shipping_amount || 0) > 0 && (
-                                    <div className="flex justify-between"><dt className="text-slate-500">Ongkir</dt><dd className="font-medium text-slate-700">+ Rp {Number(data.shipping_amount).toLocaleString('id-ID')}</dd></div>
+                                    <div className="flex justify-between"><dt className="text-muted-foreground">Ongkir</dt><dd className="font-medium text-foreground">+ Rp {Number(data.shipping_amount).toLocaleString('id-ID')}</dd></div>
                                 )}
-                                <div className="my-2 border-t border-slate-100" />
+                                <div className="my-2 border-t border-border" />
                                 <div className="flex justify-between">
-                                    <dt className="font-semibold text-slate-700">Grand Total</dt>
+                                    <dt className="font-semibold text-foreground">Grand Total</dt>
                                     <dd className="text-lg font-bold text-primary-600">Rp {grandTotal.toLocaleString('id-ID')}</dd>
                                 </div>
-                                <div className="my-2 border-t border-slate-100" />
+                                <div className="my-2 border-t border-border" />
                                 <div className="flex justify-between">
-                                    <dt className="text-slate-500">Dibayar</dt>
-                                    <dd className="font-medium text-slate-700">Rp {Number(data.paid_amount || 0).toLocaleString('id-ID')}</dd>
+                                    <dt className="text-muted-foreground">Dibayar</dt>
+                                    <dd className="font-medium text-foreground">Rp {Number(data.paid_amount || 0).toLocaleString('id-ID')}</dd>
                                 </div>
                                 {changeAmount > 0 && (
                                     <div className="flex justify-between">
-                                        <dt className="font-medium text-slate-600">Kembalian</dt>
+                                        <dt className="font-medium text-muted-foreground">Kembalian</dt>
                                         <dd className="font-semibold text-emerald-600">Rp {changeAmount.toLocaleString('id-ID')}</dd>
                                     </div>
                                 )}
@@ -343,10 +344,10 @@ export default function Create({ products, customers, paymentMethods, tables, st
                         </SectionCard>
 
                         <div className="flex flex-col gap-2">
-                            <button type="submit" disabled={processing || data.items.length === 0} className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60">
-                                {processing ? 'Menyimpan...' : 'Simpan Penjualan'}
-                            </button>
-                            <Link href={route('admin.sales.index')} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                            <Button type="submit" loading={processing} className="w-full">
+                                Simpan Penjualan
+                            </Button>
+                            <Link href={route('admin.sales.index')} className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-center text-sm font-medium text-foreground transition hover:bg-muted">
                                 Batal
                             </Link>
                         </div>
@@ -360,10 +361,10 @@ export default function Create({ products, customers, paymentMethods, tables, st
 /* ── Reusable components ── */
 function SectionCard({ title, subtitle, children }) {
     return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
-                <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-                {subtitle && <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="border-b border-border bg-muted/50 px-6 py-5">
+                <h3 className="text-base font-semibold text-foreground">{title}</h3>
+                {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
             </div>
             <div className="p-6">{children}</div>
         </div>
@@ -373,15 +374,15 @@ function SectionCard({ title, subtitle, children }) {
 function Field({ label, required, error, children }) {
     return (
         <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-                {label} {required && <span className="text-red-500">*</span>}
+            <label className="mb-1 block text-sm font-medium text-foreground">
+                {label} {required && <span className="text-destructive">*</span>}
             </label>
             {children}
-            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+            {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
     );
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
+    return `block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
 }

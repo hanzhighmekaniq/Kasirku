@@ -9,6 +9,7 @@ import {
     Trash2,
     Utensils,
 } from "lucide-react";
+import Button from "@/Components/ui/Button";
 
 const fmt = (n) =>
     new Intl.NumberFormat("id-ID", {
@@ -38,7 +39,7 @@ function inputCls(err) {
     return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         err
             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-slate-300 focus:border-primary-500 focus:ring-primary-200"
+            : "border-border focus:border-ring focus:ring-ring/20"
     }`;
 }
 
@@ -50,7 +51,7 @@ function IngredientRow({ recipe, onDelete, deleting }) {
 
     return (
         <div
-            className={`flex items-center gap-3 rounded-xl border p-3.5 transition ${isLowStock ? "border-red-200 bg-red-50/50" : "border-slate-200 bg-white"}`}
+            className={`flex items-center gap-3 rounded-xl border p-3.5 transition ${isLowStock ? "border-destructive/20 bg-destructive/10/50" : "border-border bg-card"}`}
         >
             {/* Avatar */}
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400/20 to-orange-400/20">
@@ -62,19 +63,19 @@ function IngredientRow({ recipe, onDelete, deleting }) {
 
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium text-slate-800">
+                    <p className="font-medium text-foreground">
                         {recipe.raw_material?.name ?? "—"}
                     </p>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-muted-foreground">
                         {recipe.raw_material?.sku}
                     </span>
                     {recipe.is_nullable && (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                             Opsional
                         </span>
                     )}
                     {isLowStock && (
-                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-destructive">
                             Stok Habis
                         </span>
                     )}
@@ -83,7 +84,7 @@ function IngredientRow({ recipe, onDelete, deleting }) {
                     <span className="font-semibold text-primary-700">
                         {fmtNum(recipe.quantity)} {recipe.unit}
                     </span>
-                    <span className="text-slate-400">
+                    <span className="text-muted-foreground">
                         HPP:{" "}
                         {fmt(
                             Number(recipe.quantity) *
@@ -91,7 +92,7 @@ function IngredientRow({ recipe, onDelete, deleting }) {
                         )}
                     </span>
                     {recipe.notes && (
-                        <span className="italic text-slate-400">
+                        <span className="italic text-muted-foreground">
                             "{recipe.notes}"
                         </span>
                     )}
@@ -102,7 +103,7 @@ function IngredientRow({ recipe, onDelete, deleting }) {
                 type="button"
                 disabled={deleting === recipe.id}
                 onClick={() => onDelete(recipe)}
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                 title="Hapus bahan"
             >
                 <Trash2 className="h-4 w-4" strokeWidth={1.7} />
@@ -179,16 +180,16 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route("admin.products.show", product.id)}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted"
                         aria-label="Kembali"
                     >
                         <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
                     <div className="min-w-0">
-                        <h2 className="text-lg font-semibold text-slate-800 truncate">
+                        <h2 className="text-lg font-semibold text-foreground truncate">
                             Resep — {product.name}
                         </h2>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                             SKU: {product.sku}
                         </p>
                     </div>
@@ -199,7 +200,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
 
             {/* Flash */}
             {flash?.success && (
-                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     <CheckCircle
                         className="h-5 w-5 shrink-0"
                         strokeWidth={1.8}
@@ -218,7 +219,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                 {
                                     label: "HPP Resep",
                                     value: fmt(totalHPP),
-                                    color: "text-slate-800",
+                                    color: "text-foreground",
                                 },
                                 {
                                     label: "Harga Jual",
@@ -233,14 +234,14 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                             ? "text-emerald-600"
                                             : Number(margin) >= 10
                                               ? "text-amber-600"
-                                              : "text-red-600",
+                                              : "text-destructive",
                                 },
                             ].map((s) => (
                                 <div
                                     key={s.label}
-                                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm text-center"
+                                    className="rounded-2xl border border-border bg-card p-4 shadow-sm text-center"
                                 >
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-muted-foreground">
                                         {s.label}
                                     </p>
                                     <p
@@ -254,12 +255,12 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                     )}
 
                     {/* List */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-sm font-semibold text-slate-900">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-sm font-semibold text-foreground">
                                 Daftar Bahan Baku
                             </h3>
-                            <p className="mt-0.5 text-xs text-slate-500">
+                            <p className="mt-0.5 text-xs text-muted-foreground">
                                 {recipes.length === 0
                                     ? "Belum ada bahan. Tambahkan bahan di panel kanan."
                                     : `${recipes.length} bahan — setiap kali "${product.name}" terjual, stok bahan ini yang berkurang.`}
@@ -274,10 +275,10 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                         strokeWidth={1.5}
                                     />
                                 </div>
-                                <p className="mt-3 text-sm font-medium text-slate-600">
+                                <p className="mt-3 text-sm font-medium text-muted-foreground">
                                     Resep kosong
                                 </p>
-                                <p className="mt-1 max-w-xs text-xs text-slate-400">
+                                <p className="mt-1 max-w-xs text-xs text-muted-foreground">
                                     Tambahkan bahan baku. Saat produk ini dijual
                                     di kasir, stok bahan akan berkurang
                                     otomatis.
@@ -314,21 +315,21 @@ export default function Recipes({ product, recipes, rawMaterials }) {
 
                 {/* ── Kanan: Form tambah bahan ── */}
                 <div>
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-sm font-semibold text-slate-900">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-sm font-semibold text-foreground">
                                 Tambah Bahan
                             </h3>
-                            <p className="mt-0.5 text-xs text-slate-500">
+                            <p className="mt-0.5 text-xs text-muted-foreground">
                                 Pilih bahan baku dan isi takarannya per 1 porsi.
                             </p>
                         </div>
                         <form onSubmit={submit} className="space-y-4 p-5">
                             {/* Bahan baku */}
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                <label className="mb-1.5 block text-sm font-medium text-foreground">
                                     Bahan Baku{" "}
-                                    <span className="text-red-500">*</span>
+                                    <span className="text-destructive">*</span>
                                 </label>
                                 <select
                                     value={data.raw_material_id}
@@ -355,7 +356,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                     </p>
                                 )}
                                 {errors.raw_material_id && (
-                                    <p className="mt-1 text-xs text-red-500">
+                                    <p className="mt-1 text-xs text-destructive">
                                         {errors.raw_material_id}
                                     </p>
                                 )}
@@ -364,9 +365,9 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                             {/* Jumlah + satuan */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                    <label className="mb-1.5 block text-sm font-medium text-foreground">
                                         Jumlah{" "}
-                                        <span className="text-red-500">*</span>
+                                        <span className="text-destructive">*</span>
                                     </label>
                                     <input
                                         type="number"
@@ -380,15 +381,15 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                         className={inputCls(!!errors.quantity)}
                                     />
                                     {errors.quantity && (
-                                        <p className="mt-1 text-xs text-red-500">
+                                        <p className="mt-1 text-xs text-destructive">
                                             {errors.quantity}
                                         </p>
                                     )}
                                 </div>
                                 <div>
-                                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                    <label className="mb-1.5 block text-sm font-medium text-foreground">
                                         Satuan{" "}
-                                        <span className="text-red-500">*</span>
+                                        <span className="text-destructive">*</span>
                                     </label>
                                     <select
                                         value={data.unit}
@@ -428,20 +429,20 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                             )}
 
                             {/* Opsional toggle */}
-                            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 hover:bg-slate-50 transition">
+                            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border p-3 hover:bg-muted transition">
                                 <input
                                     type="checkbox"
                                     checked={data.is_nullable}
                                     onChange={(e) =>
                                         setData("is_nullable", e.target.checked)
                                     }
-                                    className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                                    className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
                                 />
                                 <div>
-                                    <p className="text-sm font-medium text-slate-700">
+                                    <p className="text-sm font-medium text-foreground">
                                         Bahan Opsional
                                     </p>
-                                    <p className="text-xs text-slate-400">
+                                    <p className="text-xs text-muted-foreground">
                                         Bahan ini boleh tidak ada, transaksi
                                         tetap jalan
                                     </p>
@@ -450,7 +451,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
 
                             {/* Catatan */}
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                <label className="mb-1.5 block text-sm font-medium text-foreground">
                                     Catatan
                                 </label>
                                 <input
@@ -464,25 +465,19 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                 />
                             </div>
 
-                            <button
+                            <Button
                                 type="submit"
-                                disabled={
-                                    processing ||
-                                    !data.raw_material_id ||
-                                    !data.quantity
-                                }
-                                className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-50"
+                                loading={processing}
+                                className="w-full"
                             >
-                                {processing
-                                    ? "Menyimpan..."
-                                    : "Tambah ke Resep"}
-                            </button>
+                                Tambah ke Resep
+                            </Button>
                         </form>
                     </div>
 
                     {/* Link ke halaman bahan baku */}
-                    <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <p className="text-xs font-medium text-slate-600 mb-2">
+                    <div className="mt-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">
                             Belum ada bahan baku?
                         </p>
                         <Link

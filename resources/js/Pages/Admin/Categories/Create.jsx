@@ -21,7 +21,7 @@ export default function Create({ parentCategories = [] }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route("admin.categories.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <svg
@@ -38,7 +38,7 @@ export default function Create({ parentCategories = [] }) {
                             />
                         </svg>
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Tambah Kategori
                     </h2>
                 </div>
@@ -47,12 +47,12 @@ export default function Create({ parentCategories = [] }) {
             <Head title="Tambah Kategori" />
 
             <div className="mx-auto max-w-4xl">
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
-                        <h3 className="text-base font-semibold text-slate-900">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="border-b border-border bg-muted/50 px-6 py-5">
+                        <h3 className="text-base font-semibold text-foreground">
                             Informasi Kategori
                         </h3>
-                        <p className="mt-0.5 text-sm text-slate-500">
+                        <p className="mt-0.5 text-sm text-muted-foreground">
                             Buat kategori baru untuk mengelompokkan produk kamu.
                         </p>
                     </div>

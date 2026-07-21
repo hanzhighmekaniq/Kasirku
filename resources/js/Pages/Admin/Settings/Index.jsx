@@ -1,31 +1,32 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, useForm, usePage, router } from "@inertiajs/react";
 import { useState } from "react";
-import { Upload, X, Store, Receipt, Image, Puzzle } from "lucide-react";
+import { Upload, X, Store, Receipt, Image, Puzzle, Plus } from "lucide-react";
+import Button from "@/Components/ui/Button";
 
 const inp = (err) =>
     `block w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${
         err
-            ? "border-red-300 bg-red-50/30 focus:ring-red-200"
-            : "border-slate-200 bg-white hover:border-slate-300 focus:border-primary-400 focus:ring-primary-100"
+            ? "border-red-300 bg-destructive/10/30 focus:ring-red-200"
+            : "border-border bg-card hover:border-border focus:border-ring focus:ring-ring/20"
     }`;
 
-const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
-const errorClass = "mt-1 text-xs text-red-500";
+const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
+const errorClass = "mt-1 text-xs text-destructive";
 
 function Section({ title, subtitle, icon: Icon, children }) {
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <div className="flex items-center gap-3 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-3.5">
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 border-b border-border bg-gradient-to-r from-slate-50/80 to-white px-5 py-3.5">
                 {Icon && (
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                         <Icon className="h-4 w-4" strokeWidth={1.8} />
                     </div>
                 )}
                 <div>
-                    <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
+                    <h3 className="text-sm font-semibold text-foreground">{title}</h3>
                     {subtitle && (
-                        <p className="text-xs text-slate-400">{subtitle}</p>
+                        <p className="text-xs text-muted-foreground">{subtitle}</p>
                     )}
                 </div>
             </div>
@@ -70,14 +71,14 @@ function FeatureToggle({ feature, onToggle }) {
     };
 
     return (
-        <div className="rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3 transition hover:bg-slate-50">
+        <div className="rounded-xl border border-border bg-muted/50 px-4 py-3 transition hover:bg-muted">
             <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-foreground">
                         {feature.label}
                     </p>
                     {feature.description && (
-                        <p className="mt-0.5 text-xs text-slate-400 truncate">
+                        <p className="mt-0.5 text-xs text-muted-foreground truncate">
                             {feature.description}
                         </p>
                     )}
@@ -91,7 +92,7 @@ function FeatureToggle({ feature, onToggle }) {
                     } ${loading ? "opacity-50" : ""}`}
                 >
                     <span
-                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-card shadow transition-transform duration-200 ${
                             feature.is_enabled
                                 ? "translate-x-5.5"
                                 : "translate-x-0.5"
@@ -102,13 +103,13 @@ function FeatureToggle({ feature, onToggle }) {
 
             {/* Sub-settings for cash_rounding */}
             {feature.code === "cash_rounding" && feature.is_enabled && (
-                <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-3">
-                    <label className="text-xs text-slate-500">Bulatkan ke:</label>
+                <div className="mt-3 flex items-center gap-3 border-t border-border pt-3">
+                    <label className="text-xs text-muted-foreground">Bulatkan ke:</label>
                     <select
                         value={subSettings.cash_rounding_nearest ?? 100}
                         onChange={(e) => handleSubSettingChange("cash_rounding_nearest", Number(e.target.value))}
                         disabled={loading}
-                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100"
+                        className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring/20"
                     >
                         <option value={50}>Rp50</option>
                         <option value={100}>Rp100</option>
@@ -177,10 +178,10 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                         <Store className="h-5 w-5" strokeWidth={1.8} />
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-slate-800">
+                        <h2 className="text-lg font-bold text-foreground">
                             Pengaturan Toko
                         </h2>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                             {store?.name} • {currentType?.label ?? data.store_type}
                         </p>
                     </div>
@@ -191,18 +192,18 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
 
             {/* Flash messages */}
             {flash?.success && (
-                <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                <div className="mb-5 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success">
                     {flash.success}
                 </div>
             )}
             {flash?.error && (
-                <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                <div className="mb-5 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
                     {flash.error}
                 </div>
             )}
 
             {/* Tabs */}
-            <div className="mb-5 flex gap-1 rounded-xl bg-slate-100 p-1">
+            <div className="mb-5 flex gap-1 rounded-xl bg-muted p-1">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
@@ -210,8 +211,8 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
                             activeTab === tab.id
-                                ? "bg-white text-primary-600 shadow-sm"
-                                : "text-slate-500 hover:text-slate-700"
+                                ? "bg-card text-primary-600 shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
                         }`}
                     >
                         <tab.icon className="h-4 w-4" strokeWidth={1.8} />
@@ -234,7 +235,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                             >
                                 {/* Logo Upload */}
                                 <div className="mb-5 flex items-start gap-4">
-                                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-3xl">
+                                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted text-3xl">
                                         {logoPreview ? (
                                             <img
                                                 src={logoPreview}
@@ -247,7 +248,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex gap-2">
-                                            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-primary-600 hover:ring-primary-300">
+                                            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-card px-3.5 py-2 text-xs font-semibold text-muted-foreground shadow-sm ring-1 ring-slate-200 transition hover:bg-muted hover:text-primary-600 hover:ring-primary-300">
                                                 <Upload className="h-3.5 w-3.5" strokeWidth={2} />
                                                 {logoPreview ? "Ganti" : "Upload Logo"}
                                                 <input
@@ -261,14 +262,14 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                                 <button
                                                     type="button"
                                                     onClick={removeLogo}
-                                                    className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold text-red-600 ring-1 ring-red-200 transition hover:bg-red-50"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold text-destructive ring-1 ring-red-200 transition hover:bg-destructive/10"
                                                 >
                                                     <X className="h-3.5 w-3.5" strokeWidth={2} />
                                                     Hapus
                                                 </button>
                                             )}
                                         </div>
-                                        <p className="text-xs text-slate-400">
+                                        <p className="text-xs text-muted-foreground">
                                             Rasio 1:1, maks 2MB. PNG/JPG
                                         </p>
                                     </div>
@@ -374,12 +375,12 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                                     className={inp(errors.default_tax_rate)}
                                                     placeholder="0"
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                                                     %
                                                 </span>
                                             </div>
                                             {Number(data.default_tax_rate) === 0 && (
-                                                <p className="mt-1 text-xs text-slate-400">
+                                                <p className="mt-1 text-xs text-muted-foreground">
                                                     Tidak ada pajak
                                                 </p>
                                             )}
@@ -396,12 +397,12 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                                     }`}
                                                 >
                                                     <span
-                                                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                                                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-card shadow transition-transform duration-200 ${
                                                             data.tax_inclusive ? "translate-x-5.5" : "translate-x-0.5"
                                                         }`}
                                                     />
                                                 </button>
-                                                <span className="text-sm font-medium text-slate-700">
+                                                <span className="text-sm font-medium text-foreground">
                                                     Harga sudah termasuk pajak
                                                 </span>
                                             </label>
@@ -412,17 +413,12 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
 
                             {/* Tombol Simpan */}
                             <div className="flex justify-end">
-                                <button
+                                <Button
                                     type="submit"
-                                    disabled={processing}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition-all hover:from-primary-600 hover:to-primary-700 hover:shadow-primary-500/40 disabled:opacity-60"
+                                    loading={processing}
                                 >
-                                    {processing ? (
-                                        "Menyimpan..."
-                                    ) : (
-                                        <>Simpan Pengaturan</>
-                                    )}
-                                </button>
+                                    Simpan Pengaturan
+                                </Button>
                             </div>
                         </div>
 
@@ -434,8 +430,8 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                     subtitle="Live preview sesuai pengaturan"
                                     icon={Image}
                                 >
-                                    <div className="mx-auto max-w-[260px] overflow-hidden rounded-xl border border-slate-100 bg-white shadow-inner">
-                                        <div className="px-4 py-5 text-center font-mono text-[10.5px] leading-relaxed text-slate-600">
+                                    <div className="mx-auto max-w-[260px] overflow-hidden rounded-xl border border-border bg-card shadow-inner">
+                                        <div className="px-4 py-5 text-center font-mono text-[10.5px] leading-relaxed text-muted-foreground">
                                             {/* Logo */}
                                             <div className="mb-2 flex justify-center">
                                                 {logoPreview ? (
@@ -452,68 +448,68 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                             </div>
 
                                             {/* Nama Toko */}
-                                            <p className="text-sm font-extrabold text-slate-800">
+                                            <p className="text-sm font-extrabold text-foreground">
                                                 {data.name || "Nama Toko"}
                                             </p>
 
                                             {/* Alamat */}
                                             {data.address && (
-                                                <p className="mt-1 leading-relaxed text-slate-500">
+                                                <p className="mt-1 leading-relaxed text-muted-foreground">
                                                     {data.address}
                                                 </p>
                                             )}
 
                                             {/* Telp */}
                                             {data.phone && (
-                                                <p className="text-slate-400">
+                                                <p className="text-muted-foreground">
                                                     {data.phone}
                                                 </p>
                                             )}
 
                                             {/* Header */}
                                             {data.receipt_header && (
-                                                <p className="mt-2 text-slate-500">
+                                                <p className="mt-2 text-muted-foreground">
                                                     {data.receipt_header}
                                                 </p>
                                             )}
 
                                             {/* Separator */}
-                                            <div className="my-3 border-t border-dashed border-slate-200" />
+                                            <div className="my-3 border-t border-dashed border-border" />
 
                                             {/* Items */}
                                             <div className="space-y-1.5 text-left">
                                                 <div className="flex items-start justify-between gap-2">
                                                     <span className="flex-1 truncate">Americano</span>
-                                                    <span className="shrink-0 text-slate-400">
+                                                    <span className="shrink-0 text-muted-foreground">
                                                         1 x 25.000
                                                     </span>
                                                 </div>
                                                 <div className="flex items-start justify-between gap-2">
                                                     <span className="flex-1 truncate">Cappuccino</span>
-                                                    <span className="shrink-0 text-slate-400">
+                                                    <span className="shrink-0 text-muted-foreground">
                                                         2 x 30.000
                                                     </span>
                                                 </div>
                                                 <div className="flex items-start justify-between gap-2">
                                                     <span className="flex-1 truncate">Croissant</span>
-                                                    <span className="shrink-0 text-slate-400">
+                                                    <span className="shrink-0 text-muted-foreground">
                                                         1 x 25.000
                                                     </span>
                                                 </div>
                                             </div>
 
                                             {/* Separator */}
-                                            <div className="my-3 border-t border-dashed border-slate-200" />
+                                            <div className="my-3 border-t border-dashed border-border" />
 
                                             {/* Subtotal */}
-                                            <div className="flex justify-between text-slate-500">
+                                            <div className="flex justify-between text-muted-foreground">
                                                 <span>Subtotal</span>
                                                 <span>Rp 85.000</span>
                                             </div>
 
                                             {/* Tax line */}
                                             {Number(data.default_tax_rate) > 0 && (
-                                                <div className="flex justify-between text-slate-500">
+                                                <div className="flex justify-between text-muted-foreground">
                                                     <span>
                                                         PPN {data.default_tax_rate}%
                                                         {data.tax_inclusive ? "*" : ""}
@@ -525,17 +521,17 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                             )}
 
                                             {/* Separator */}
-                                            <div className="my-3 border-t border-dashed border-slate-200" />
+                                            <div className="my-3 border-t border-dashed border-border" />
 
                                             {/* Total */}
-                                            <div className="flex justify-between text-[13px] font-extrabold text-slate-800">
+                                            <div className="flex justify-between text-[13px] font-extrabold text-foreground">
                                                 <span>Total</span>
                                                 <span>Rp 85.000</span>
                                             </div>
 
                                             {/* Tax note */}
                                             {Number(data.default_tax_rate) > 0 && data.tax_inclusive && (
-                                                <p className="mt-1 text-slate-400">
+                                                <p className="mt-1 text-muted-foreground">
                                                     * Harga sudah termasuk PPN
                                                 </p>
                                             )}
@@ -543,15 +539,15 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                             {/* Footer */}
                                             {data.receipt_footer && (
                                                 <>
-                                                    <div className="my-3 border-t border-dashed border-slate-200" />
-                                                    <p className="italic text-slate-400">
+                                                    <div className="my-3 border-t border-dashed border-border" />
+                                                    <p className="italic text-muted-foreground">
                                                         {data.receipt_footer}
                                                     </p>
                                                 </>
                                             )}
 
                                             {/* Tanggal */}
-                                            <p className="mt-3 text-slate-400">
+                                            <p className="mt-3 text-muted-foreground">
                                                 {new Date().toLocaleDateString("id-ID", {
                                                     day: "2-digit",
                                                     month: "long",
@@ -589,12 +585,12 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                 ))}
                             </div>
                         ) : (
-                            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center">
+                            <div className="rounded-xl border border-dashed border-border bg-muted px-6 py-8 text-center">
                                 <Puzzle
-                                    className="mx-auto mb-2 h-8 w-8 text-slate-300"
+                                    className="mx-auto mb-2 h-8 w-8 text-muted-foreground/50"
                                     strokeWidth={1.5}
                                 />
-                                <p className="text-sm text-slate-400">
+                                <p className="text-sm text-muted-foreground">
                                     Tidak ada fitur yang tersedia untuk tipe toko dan paket Anda.
                                 </p>
                             </div>

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
+import Button from '@/Components/ui/Button';
 
 const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n ?? 0);
 
@@ -65,16 +66,16 @@ export default function PGPaymentModal({ pgData, amount, onSuccess, onClose }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div onClick={onClose} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-            <div className="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl">
+            <div onClick={onClose} className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <div className="relative w-full max-w-sm rounded-2xl bg-card shadow-2xl">
 
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                <div className="flex items-center justify-between border-b border-border px-5 py-4">
                     <div>
-                        <h3 className="font-semibold text-slate-900">{meta.icon} {meta.label}</h3>
-                        <p className="text-xs text-slate-500">{meta.hint}</p>
+                        <h3 className="font-semibold text-foreground">{meta.icon} {meta.label}</h3>
+                        <p className="text-xs text-muted-foreground">{meta.hint}</p>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+                    <button onClick={onClose} className="text-muted-foreground hover:text-muted-foreground">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -84,15 +85,15 @@ export default function PGPaymentModal({ pgData, amount, onSuccess, onClose }) {
                 <div className="px-5 py-5 space-y-4">
                     {/* Amount */}
                     <div className="text-center">
-                        <p className="text-xs text-slate-500">Total Pembayaran</p>
+                        <p className="text-xs text-muted-foreground">Total Pembayaran</p>
                         <p className="text-2xl font-bold text-primary-700">{fmt(amount)}</p>
                     </div>
 
                     {/* Status indicator */}
                     <div className={`flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-semibold ${
-                        status === 'paid'    ? 'bg-emerald-50 text-emerald-700' :
-                        status === 'expired' ? 'bg-red-50 text-red-600'         :
-                        status === 'failed'  ? 'bg-red-50 text-red-600'         :
+                        status === 'paid'    ? 'bg-success/10 text-success' :
+                        status === 'expired' ? 'bg-destructive/10 text-destructive'         :
+                        status === 'failed'  ? 'bg-destructive/10 text-destructive'         :
                                               'bg-amber-50 text-amber-700'
                     }`}>
                         {status === 'paid' && <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
@@ -112,7 +113,7 @@ export default function PGPaymentModal({ pgData, amount, onSuccess, onClose }) {
                     {/* QR Code — render as actual scannable image */}
                     {(pgData.qr_code || pgData.qr_image_url) && status === 'pending' && (
                         <div className="flex flex-col items-center">
-                            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                            <div className="rounded-2xl border border-border bg-card p-4">
                                 {pgData.qr_image_url ? (
                                     /* Use Midtrans QR image URL (actual scannable QR) */
                                     <img src={pgData.qr_image_url} alt="QR Code" className="h-52 w-52" />
@@ -132,23 +133,23 @@ export default function PGPaymentModal({ pgData, amount, onSuccess, onClose }) {
                                     />
                                 )}
                                 {/* Hidden fallback — shown only if all QR image methods fail */}
-                                <div className="hidden h-52 w-52 items-center justify-center rounded-xl bg-slate-50 p-2">
-                                    <p className="break-all text-center text-[10px] text-slate-500 font-mono leading-tight">{pgData.qr_code}</p>
+                                <div className="hidden h-52 w-52 items-center justify-center rounded-xl bg-muted p-2">
+                                    <p className="break-all text-center text-[10px] text-muted-foreground font-mono leading-tight">{pgData.qr_code}</p>
                                 </div>
                             </div>
-                            <p className="mt-2 text-xs text-slate-400">Scan dengan kamera HP atau aplikasi pembayaran</p>
+                            <p className="mt-2 text-xs text-muted-foreground">Scan dengan kamera HP atau aplikasi pembayaran</p>
                         </div>
                     )}
 
                     {/* VA Number */}
                     {pgData.va_number && (
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
-                            <p className="mb-1 text-xs text-slate-500">{pgData.va_bank?.toUpperCase()} Virtual Account</p>
-                            <p className="text-xl font-bold tracking-widest text-slate-900 font-mono">{pgData.va_number}</p>
+                        <div className="rounded-xl border border-border bg-muted p-4 text-center">
+                            <p className="mb-1 text-xs text-muted-foreground">{pgData.va_bank?.toUpperCase()} Virtual Account</p>
+                            <p className="text-xl font-bold tracking-widest text-foreground font-mono">{pgData.va_number}</p>
                             <button
                                 type="button"
                                 onClick={copyVA}
-                                className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100"
+                                className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted"
                             >
                                 {copied ? '✓ Disalin' : 'Salin Nomor VA'}
                             </button>
@@ -157,19 +158,20 @@ export default function PGPaymentModal({ pgData, amount, onSuccess, onClose }) {
 
                     {/* Payment URL — show when there's a redirect URL (e.g. e-wallet) */}
                     {pgData.payment_url && status === 'pending' && (
-                        <a
+                        <Button
+                            as="a"
                             href={pgData.payment_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:from-primary-600 hover:to-primary-700"
+                            className="w-full text-center"
                         >
                             {pgData.qr_code ? 'Buka di Aplikasi Pembayaran →' : 'Buka Halaman Pembayaran →'}
-                        </a>
+                        </Button>
                     )}
 
                     {/* Expired/failed actions */}
                     {['expired', 'failed'].includes(status) && (
-                        <button onClick={onClose} className="w-full rounded-xl border border-slate-300 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                        <button onClick={onClose} className="w-full rounded-xl border border-border py-2.5 text-sm font-medium text-foreground transition hover:bg-muted">
                             Tutup & Coba Lagi
                         </button>
                     )}

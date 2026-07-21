@@ -28,7 +28,7 @@ function DragHandle({ listeners, attributes }) {
         <button
             {...listeners}
             {...attributes}
-            className="flex h-7 w-7 cursor-grab items-center justify-center rounded-lg text-slate-300 hover:bg-slate-100 hover:text-slate-500 active:cursor-grabbing transition-colors"
+            className="flex h-7 w-7 cursor-grab items-center justify-center rounded-lg text-muted-foreground/50 hover:bg-muted hover:text-muted-foreground active:cursor-grabbing transition-colors"
             title="Drag untuk mengubah urutan"
             tabIndex={-1}
         >
@@ -59,27 +59,27 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
             ref={isDragOverlay ? undefined : setNodeRef}
             style={isDragOverlay ? undefined : style}
             className={`group transition-colors ${
-                isDragging ? "bg-primary-50/30" : "hover:bg-slate-50/60"
-            } ${isDragOverlay ? "bg-white shadow-xl ring-1 ring-black/10 rounded-lg" : ""}`}
+                isDragging ? "bg-primary-50/30" : "hover:bg-muted/50"
+            } ${isDragOverlay ? "bg-card shadow-xl ring-1 ring-black/10 rounded-lg" : ""}`}
         >
             <td className="px-4 py-3 w-10">
                 <DragHandle listeners={listeners} attributes={attributes} />
             </td>
             <td className="px-4 py-3">
                 <div className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                         <NavIcons name={item.icon} className="h-3.5 w-3.5" />
                     </span>
-                    <span className="font-medium text-slate-700">{item.name}</span>
+                    <span className="font-medium text-foreground">{item.name}</span>
                 </div>
             </td>
             <td className="px-4 py-3 hidden sm:table-cell">
-                <span className="inline-flex items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-500 w-6 h-6">
+                <span className="inline-flex items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground w-6 h-6">
                     {idx + 1}
                 </span>
             </td>
             <td className="px-4 py-3 hidden sm:table-cell">
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-600 ring-1 ring-emerald-200">
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 ring-1 ring-emerald-200">
                     <Check className="h-2.5 w-2.5" strokeWidth={3} />
                     Aktif
                 </span>
@@ -89,7 +89,7 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
                     <button
                         onClick={onMoveUp}
                         disabled={idx === 0}
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
                         title="Naikkan"
                     >
                         <ArrowUp className="h-3.5 w-3.5" strokeWidth={2} />
@@ -97,7 +97,7 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
                     <button
                         onClick={onMoveDown}
                         disabled={idx >= totalUnlocked - 1}
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
                         title="Turunkan"
                     >
                         <ArrowDown className="h-3.5 w-3.5" strokeWidth={2} />
@@ -111,20 +111,20 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
 /* ─── Locked Row (non-sortable) ──────────────────────── */
 function LockedFeatureRow({ item }) {
     return (
-        <tr className="bg-slate-50/30 opacity-50">
+        <tr className="bg-muted/30 opacity-50">
             <td className="px-4 py-3 w-10">
-                <Lock className="h-3.5 w-3.5 text-slate-300 mx-auto" strokeWidth={1.8} />
+                <Lock className="h-3.5 w-3.5 text-muted-foreground/50 mx-auto" strokeWidth={1.8} />
             </td>
             <td className="px-4 py-3">
                 <div className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-200 text-slate-400">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-200 text-muted-foreground">
                         <NavIcons name={item.icon} className="h-3.5 w-3.5" />
                     </span>
-                    <span className="font-medium text-slate-400 line-through">{item.name}</span>
+                    <span className="font-medium text-muted-foreground line-through">{item.name}</span>
                 </div>
             </td>
             <td className="px-4 py-3 hidden sm:table-cell">
-                <span className="inline-flex items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-400 w-6 h-6">—</span>
+                <span className="inline-flex items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground w-6 h-6">—</span>
             </td>
             <td className="px-4 py-3 hidden sm:table-cell">
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-600 ring-1 ring-amber-200">
@@ -185,15 +185,15 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
     if (items.length === 0) return null;
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             {/* Group Header */}
-            <div className="flex items-center gap-3 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-3.5">
+            <div className="flex items-center gap-3 border-b border-border bg-gradient-to-r from-slate-50/80 to-white px-5 py-3.5">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                     <GroupIcons name={group.icon} className="h-4 w-4" />
                 </div>
                 <div>
-                    <h3 className="text-sm font-semibold text-slate-800">{group.label}</h3>
-                    <p className="text-xs text-slate-400">
+                    <h3 className="text-sm font-semibold text-foreground">{group.label}</h3>
+                    <p className="text-xs text-muted-foreground">
                         {unlockedItems.length} fitur
                         {lockedItems.length > 0 ? ` • ${lockedItems.length} terkunci` : ""}
                     </p>
@@ -210,7 +210,7 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 <th className="w-10 px-4 py-3"></th>
                                 <th className="px-4 py-3">Fitur</th>
                                 <th className="px-4 py-3 hidden sm:table-cell">Urutan</th>
@@ -222,7 +222,7 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
                             items={unlockedItems.map((i) => i.itemKey)}
                             strategy={verticalListSortingStrategy}
                         >
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-border">
                                 {unlockedItems.map((item, idx) => (
                                     <SortableFeatureRow
                                         key={item.itemKey}
@@ -240,7 +240,7 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
                                         <td colSpan={5} className="px-4 py-2">
                                             <div className="flex items-center gap-2">
                                                 <div className="h-px flex-1 bg-slate-200" />
-                                                <span className="flex items-center gap-1 text-[10px] font-medium text-slate-400">
+                                                <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
                                                     <Lock className="h-3 w-3" strokeWidth={1.8} />
                                                     Fitur Terkunci (Upgrade Plan)
                                                 </span>
@@ -310,8 +310,8 @@ export default function Index() {
                             <LayoutList className="h-5 w-5" strokeWidth={1.8} />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-slate-800">Urutan Fitur</h2>
-                            <p className="text-xs text-slate-400">
+                            <h2 className="text-lg font-bold text-foreground">Urutan Fitur</h2>
+                            <p className="text-xs text-muted-foreground">
                                 Atur urutan tampilan menu di sidebar
                             </p>
                         </div>

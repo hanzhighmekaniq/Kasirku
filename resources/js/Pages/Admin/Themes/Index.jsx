@@ -1,300 +1,620 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { generateColorScale } from "@/Theme/generateShades";
 import { useTheme } from "@/Theme/ThemeProvider";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import {
     Check,
     Eye,
-    Laptop,
-    LayoutDashboard,
-    Monitor,
     Moon,
     Palette,
     Pencil,
     Plus,
-    Receipt,
     Sun,
     Trash2,
+    X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import PreviewDashboard from "./PreviewDashboard";
-import PreviewPOS from "./PreviewPOS";
-import PreviewInvoice from "./PreviewInvoice";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
+import ThemePreview from "./ThemePreview";
 
-const PREVIEW_TABS = [
-    { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { key: "pos", label: "POS", icon: Monitor },
-    { key: "invoice", label: "Invoice", icon: Receipt },
-];
+const SWATCH_KEYS = ["primary", "background", "card", "accent", "muted"];
 
-const MODE_OPTIONS = [
-    { key: "light", label: "Terang", icon: Sun },
-    { key: "dark", label: "Gelap", icon: Moon },
-    { key: "system", label: "Sistem", icon: Laptop },
-];
-
-/* ── Kartu Template Sistem (dari database via seeder) ── */
-function SystemCard({ tpl, active, onSelect }) {
-    // Setiap kartu render sesuai identitas mode aslinya (recommendedMode),
-    // BUKAN mode aktif user — supaya semua template tampil konsisten
-    // dalam satu galeri gabungan, apapun mode yang user pilih saat ini.
-    const isDarkTemplate = tpl.recommendedMode === "dark";
-    const tokens = isDarkTemplate ? tpl.dark : tpl.light;
-
+/* ── Tooltip swatch (shows hex on hover) ── */
+function Swatch({ label, hex }) {
     return (
-        <button
-            type="button"
-            onClick={onSelect}
-            className={`group relative flex flex-col gap-2.5 rounded-xl border-2 p-3 text-left transition-all duration-200 ${
-                active
-                    ? "border-primary-500 bg-primary-50/60 shadow-md shadow-primary-500/10 ring-1 ring-primary-500/20"
-                    : "border-slate-200 bg-white hover:border-primary-300 hover:shadow-sm"
-            }`}
-        >
-            {active && (
-                <span className="absolute right-2.5 top-2.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-white shadow-sm">
-                    <Check size={12} strokeWidth={3} />
-                </span>
-            )}
-
+        <div className="group/swatch relative">
             <div
-                className="flex h-14 w-full items-end justify-between overflow-hidden rounded-lg p-2"
-                style={{
-                    background: isDarkTemplate
-                        ? tokens.background
-                        : `linear-gradient(135deg, ${tokens.primary}, ${tokens.accent})`,
-                }}
-            >
-                {isDarkTemplate && (
-                    <>
-                        <span
-                            className="h-2 w-8 rounded-full"
-                            style={{ background: tokens.primary }}
-                        />
-                        <span
-                            className="flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[7px] font-bold"
-                            style={{
-                                background: tokens.primary,
-                                color: tokens.primaryForeground || "#fff",
-                            }}
-                        >
-                            <Moon size={7} /> Dark
-                        </span>
-                    </>
-                )}
+                className="h-5 w-5 rounded-md border border-white/10 transition-transform hover:scale-110"
+                style={{ background: hex }}
+            />
+            <div className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-foreground px-2 py-1 text-[10px] font-medium text-background opacity-0 shadow-lg transition-opacity group-hover/swatch:opacity-100">
+                {label}
+                <span className="ml-1.5 text-background/60">{hex}</span>
             </div>
-
-            <div>
-                <p
-                    className={`text-xs font-bold ${active ? "text-primary-700" : "text-slate-800"}`}
-                >
-                    {tpl.label}
-                </p>
-                <p className="mt-0.5 text-[10px] leading-tight text-slate-400 line-clamp-2">
-                    {tpl.description}
-                </p>
-            </div>
-
-            <div className="flex gap-1">
-                {[tokens.primary, tokens.accent, tokens.success || '#16A34A', tokens.warning || '#F59E0B'].map((color, i) => (
-                    <span
-                        key={i}
-                        className="h-3 w-3 rounded-full border border-black/5"
-                        style={{ background: color }}
-                    />
-                ))}
-            </div>
-        </button>
-    );
-}
-
-/* ── Kartu Tema Custom User ── */
-function UserCard({ theme, active, onSelect, onEdit, onDelete }) {
-    const scales = useMemo(
-        () => ({
-            primary: generateColorScale(theme.primary),
-            accent: generateColorScale(theme.accent),
-        }),
-        [theme.primary, theme.accent],
-    );
-
-    return (
-        <div
-            className={`group relative flex flex-col gap-2.5 rounded-xl border-2 p-3 transition-all duration-200 ${
-                active
-                    ? "border-primary-500 bg-primary-50/60 shadow-md shadow-primary-500/10 ring-1 ring-primary-500/20"
-                    : "border-slate-200 bg-white hover:border-primary-300 hover:shadow-sm"
-            }`}
-        >
-            {active && (
-                <span className="absolute right-2.5 top-2.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-white shadow-sm">
-                    <Check size={12} strokeWidth={3} />
-                </span>
-            )}
-
-            <button
-                type="button"
-                onClick={onSelect}
-                className="flex flex-col gap-2.5"
-            >
-                <div
-                    className="flex h-14 w-full items-end justify-between overflow-hidden rounded-lg p-2"
-                    style={{
-                        background: theme.is_dark
-                            ? "#0f1512"
-                            : `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`,
-                    }}
-                >
-                    {theme.is_dark && (
-                        <>
-                            <span
-                                className="h-2 w-8 rounded-full"
-                                style={{ background: theme.primary }}
-                            />
-                            <span className="flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[7px] font-bold text-white/90"
-                                style={{ background: theme.primary }}
-                            >
-                                <Moon size={7} /> Dark
-                            </span>
-                        </>
-                    )}
-                </div>
-
-                <div>
-                    <p
-                        className={`text-xs font-bold ${active ? "text-primary-700" : "text-slate-800"}`}
-                    >
-                        {theme.name}
-                    </p>
-                    {theme.description && (
-                        <p className="mt-0.5 text-[10px] leading-tight text-slate-400 line-clamp-2">
-                            {theme.description}
-                        </p>
-                    )}
-                    <p className="mt-0.5 font-mono text-[9px] text-slate-300">
-                        {theme.primary} · {theme.accent}
-                    </p>
-                </div>
-
-                <div className="flex gap-1">
-                    {["600", "500", "400"].map((s) => (
-                        <span
-                            key={s}
-                            className="h-3 w-3 rounded-full border border-black/5"
-                            style={{ background: scales.primary[s] }}
-                        />
-                    ))}
-                    <span
-                        className="h-3 w-3 rounded-full border border-black/5"
-                        style={{ background: scales.accent["500"] }}
-                    />
-                </div>
-            </button>
-
-            {/* CRUD buttons — hanya untuk custom user theme */}
-            {!theme.is_system && (
-                <div className="flex gap-1.5 border-t border-slate-100 pt-2">
-                    <Link
-                        href={route("admin.themes.edit", theme.id)}
-                        className="flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[10px] font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                    >
-                        <Pencil size={10} />
-                        Edit
-                    </Link>
-                    <button
-                        type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(theme);
-                        }}
-                        className="flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[10px] font-semibold text-red-400 transition hover:bg-red-50 hover:text-red-600"
-                    >
-                        <Trash2 size={10} />
-                        Hapus
-                    </button>
-                </div>
-            )}
         </div>
     );
 }
 
-/* ── Halaman Utama ── */
-export default function Index({ userThemes = [], filters = {} }) {
+/* ── Mini preview renderer (compact dashboard mock) ── */
+function MiniPreview({ tokens, small = true }) {
+    const t = tokens;
+    const h = small ? 160 : 300;
+
+    return (
+        <div
+            className="overflow-hidden rounded-lg border"
+            style={{
+                background: t.background || "#fff",
+                borderColor: t.border || "#e2e8f0",
+            }}
+        >
+            <div style={{ display: "flex", height: h }}>
+                {/* Sidebar */}
+                <div
+                    style={{
+                        width: small ? 54 : 80,
+                        background: t.sidebar || t.card || "#fff",
+                        borderRight: `1px solid ${t.border || "#e2e8f0"}`,
+                        padding: small ? 8 : 12,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: small ? 6 : 8,
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: small ? 10 : 14,
+                                height: small ? 10 : 14,
+                                borderRadius: 4,
+                                background: t.primary || "#4F46E5",
+                            }}
+                        />
+                        {!small && (
+                            <div
+                                style={{
+                                    height: 6,
+                                    flex: 1,
+                                    borderRadius: 2,
+                                    background:
+                                        t.sidebarForeground ||
+                                        t.foreground ||
+                                        "#0f172a",
+                                    opacity: 0.8,
+                                }}
+                            />
+                        )}
+                    </div>
+                    <div
+                        style={{
+                            height: small ? 5 : 7,
+                            borderRadius: 3,
+                            background: t.primary || "#4F46E5",
+                            opacity: 0.15,
+                        }}
+                    />
+                    <div
+                        style={{
+                            height: 4,
+                            borderRadius: 3,
+                            background:
+                                t.sidebarForeground ||
+                                t.foreground ||
+                                "#0f172a",
+                            opacity: 0.15,
+                            width: "80%",
+                        }}
+                    />
+                    <div
+                        style={{
+                            height: 4,
+                            borderRadius: 3,
+                            background:
+                                t.sidebarForeground ||
+                                t.foreground ||
+                                "#0f172a",
+                            opacity: 0.15,
+                            width: "65%",
+                        }}
+                    />
+                    <div
+                        style={{
+                            marginTop: "auto",
+                            height: 4,
+                            borderRadius: 3,
+                            background:
+                                t.sidebarForeground ||
+                                t.foreground ||
+                                "#0f172a",
+                            opacity: 0.1,
+                            width: "60%",
+                        }}
+                    />
+                </div>
+
+                {/* Main */}
+                <div
+                    style={{
+                        flex: 1,
+                        padding: small ? 8 : 12,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: small ? 6 : 10,
+                        minWidth: 0,
+                    }}
+                >
+                    {/* Topbar */}
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                        }}
+                    >
+                        <div
+                            style={{
+                                height: small ? 5 : 7,
+                                width: small ? 60 : 90,
+                                borderRadius: 2,
+                                background: t.foreground || "#0f172a",
+                                opacity: 0.85,
+                            }}
+                        />
+                        <div
+                            style={{
+                                marginLeft: "auto",
+                                height: small ? 14 : 20,
+                                width: small ? 40 : 60,
+                                borderRadius: 4,
+                                background: t.input || t.card || "#f1f5f9",
+                                border: `1px solid ${t.border || "#e2e8f0"}`,
+                            }}
+                        />
+                        <div
+                            style={{
+                                height: small ? 14 : 20,
+                                padding: `0 ${small ? 6 : 8}px`,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                borderRadius: 4,
+                                background: t.primary || "#4F46E5",
+                                color: t.primaryForeground || "#fff",
+                                fontSize: small ? 7 : 9,
+                                fontWeight: 600,
+                            }}
+                        >
+                            Action
+                        </div>
+                    </div>
+
+                    {/* Cards row */}
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: small ? 5 : 8,
+                        }}
+                    >
+                        {[
+                            { l: "Revenue", v: "Rp 24.8k" },
+                            { l: "Users", v: "1,204" },
+                        ].map(({ l, v }) => (
+                            <div
+                                key={l}
+                                style={{
+                                    background: t.card || "#fff",
+                                    color: t.cardForeground || "#0f172a",
+                                    border: `1px solid ${t.border || "#e2e8f0"}`,
+                                    borderRadius: 6,
+                                    padding: small ? "5px 6px" : "8px 10px",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        fontSize: small ? 6 : 8,
+                                        color:
+                                            t.mutedForeground || "#64748b",
+                                        fontWeight: 500,
+                                    }}
+                                >
+                                    {l}
+                                </div>
+                                <div
+                                    style={{
+                                        fontSize: small ? 9 : 12,
+                                        fontWeight: 600,
+                                        marginTop: 1,
+                                    }}
+                                >
+                                    {v}
+                                </div>
+                                <div
+                                    style={{
+                                        display: "inline-block",
+                                        marginTop: small ? 3 : 5,
+                                        padding: "1px 4px",
+                                        borderRadius: 3,
+                                        background:
+                                            t.accent ||
+                                            (t.primary || "#4F46E5") + "1a",
+                                        color:
+                                            t.accentForeground ||
+                                            t.primary ||
+                                            "#4F46E5",
+                                        fontSize: small ? 6 : 8,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    +12%
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* List */}
+                    <div
+                        style={{
+                            background: t.card || "#fff",
+                            border: `1px solid ${t.border || "#e2e8f0"}`,
+                            borderRadius: 6,
+                            padding: small ? 5 : 8,
+                            flex: 1,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: small ? 4 : 6,
+                        }}
+                    >
+                        {[0, 1, 2].map((i) => (
+                            <div
+                                key={i}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: small ? 4 : 6,
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: small ? 10 : 14,
+                                        height: small ? 10 : 14,
+                                        borderRadius: 9999,
+                                        background: t.primary || "#4F46E5",
+                                        opacity: 0.9 - i * 0.2,
+                                    }}
+                                />
+                                <div
+                                    style={{
+                                        flex: 1,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 2,
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            height: small ? 3 : 5,
+                                            width: `${55 + i * 10}%`,
+                                            background:
+                                                t.foreground || "#0f172a",
+                                            opacity: 0.8,
+                                            borderRadius: 2,
+                                        }}
+                                    />
+                                    <div
+                                        style={{
+                                            height: small ? 2.5 : 4,
+                                            width: `${35 + i * 5}%`,
+                                            background:
+                                                t.mutedForeground || "#64748b",
+                                            opacity: 0.5,
+                                            borderRadius: 2,
+                                        }}
+                                    />
+                                </div>
+                                <div
+                                    style={{
+                                        padding: "1px 4px",
+                                        borderRadius: 3,
+                                        background:
+                                            t.accent ||
+                                            (t.primary || "#4F46E5") + "1a",
+                                        color:
+                                            t.accentForeground ||
+                                            t.primary ||
+                                            "#4F46E5",
+                                        fontSize: small ? 6 : 8,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    Live
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/* ── Theme Card ── */
+function ThemeCard({
+    theme: t,
+    active,
+    isDark,
+    onActivate,
+    onEdit,
+    onDelete,
+    onPreview,
+}) {
+    const tokens = isDark ? t.dark : t.light;
+
+    return (
+        <div
+            className={`group/card relative flex flex-col rounded-xl border bg-card transition-all duration-200 ${
+                active
+                    ? "border-primary/50 shadow-md shadow-primary/5"
+                    : "border-border hover:border-border"
+            }`}
+        >
+            {/* Card header */}
+            <div className="flex items-start justify-between p-4 pb-0">
+                <div className="flex items-center gap-3">
+                    <div
+                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"
+                        style={{
+                            background: isDark
+                                ? "linear-gradient(180deg, var(--card), var(--background))"
+                                : "linear-gradient(180deg, #FAFAFA, #EEE)",
+                        }}
+                    >
+                        {isDark ? (
+                            <Moon size={15} className="text-foreground" />
+                        ) : (
+                            <Sun size={15} className="text-foreground" />
+                        )}
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold tracking-tight text-foreground">
+                                {t.name}
+                            </span>
+                            {active && (
+                                <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-sm shadow-primary/30" />
+                                    Active
+                                </span>
+                            )}
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                            <span className="inline-flex items-center rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium">
+                                {isDark ? "Dark" : "Light"}
+                            </span>
+                            <span className="text-muted-foreground/60">
+                                36 tokens
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mini preview */}
+            <div className="px-4 pt-3">
+                <MiniPreview tokens={tokens} small />
+            </div>
+
+            {/* Swatches */}
+            <div className="flex items-center justify-between px-4 pt-3">
+                <div className="flex items-center gap-1.5">
+                    {SWATCH_KEYS.map((k) => (
+                        <Swatch
+                            key={k}
+                            label={k.charAt(0).toUpperCase() + k.slice(1)}
+                            hex={tokens?.[k] || "#ccc"}
+                        />
+                    ))}
+                </div>
+                <span className="text-[10px] text-muted-foreground/60">
+                    {isDark
+                        ? "Neutral \u00b7 Low glare"
+                        : "Bright \u00b7 High contrast"}
+                </span>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-4 flex items-center gap-2 border-t border-border px-4 py-3">
+                <button
+                    type="button"
+                    onClick={onPreview}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] font-medium text-foreground transition hover:bg-muted"
+                >
+                    <Eye size={12} /> Preview
+                </button>
+                {onEdit && (
+                    <Link
+                        href={onEdit}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-[11px] font-medium text-foreground transition hover:bg-muted"
+                    >
+                        <Pencil size={12} /> Edit Theme
+                    </Link>
+                )}
+                <div className="ml-auto">
+                    {!active ? (
+                        <button
+                            type="button"
+                            onClick={onActivate}
+                            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                        >
+                            <Check size={12} /> Aktifkan
+                        </button>
+                    ) : (
+                        onDelete && (
+                            <button
+                                type="button"
+                                onClick={onDelete}
+                                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-medium text-destructive transition hover:bg-destructive/10"
+                            >
+                                <Trash2 size={12} /> Hapus
+                            </button>
+                        )
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/* ── Dashed "Create new theme" card ── */
+function CreateCard() {
+    return (
+        <Link
+            href={route("admin.themes.create")}
+            className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-transparent p-6 text-center transition-all hover:border-border hover:bg-muted/30"
+            style={{ minHeight: 340 }}
+        >
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted">
+                <Plus size={16} className="text-muted-foreground" />
+            </div>
+            <div className="text-sm font-semibold text-foreground">
+                Create new theme
+            </div>
+            <div className="mt-1.5 max-w-[260px] text-xs text-muted-foreground">
+                Build a custom color system for your application. Start from
+                scratch or duplicate an existing theme.
+            </div>
+        </Link>
+    );
+}
+
+/* ── Preview Modal ── */
+function PreviewModal({ theme: t, isDark, onClose }) {
+    useEffect(() => {
+        const onKey = (e) => e.key === "Escape" && onClose();
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [onClose]);
+
+    if (!t) return null;
+
+    const tokens = isDark ? t.dark : t.light;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={onClose}
+            />
+            <div className="relative w-full max-w-[880px] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+                <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+                    <div>
+                        <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                            Theme Preview
+                        </div>
+                        <div className="mt-0.5 text-sm font-semibold text-foreground">
+                            {t.name} &middot; {isDark ? "Dark" : "Light"}
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    >
+                        <X size={16} />
+                    </button>
+                </div>
+                <div className="p-5">
+                    <ThemePreview tokens={tokens} isDark={isDark} />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/* ── Page ── */
+export default function Index({ userThemes = [] }) {
     const { flash } = usePage().props;
     const {
         preference,
-        theme,
+        theme: activeTheme,
         isDark,
         setTemplate,
-        setMode,
-        setCustomColors,
+        setCustomTokens,
         templates: systemTemplates,
     } = useTheme();
 
-    const [activePreviewTab, setActivePreviewTab] = useState("dashboard");
-    const [previewTheme, setPreviewTheme] = useState(null);
-    const [target, setTarget] = useState(null);
+    const [previewTarget, setPreviewTarget] = useState(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
-    // Semua preset sistem ditampilkan dalam satu galeri — setiap kartu
-    // sudah punya identitas light/dark sendiri dari database (bukan
-    // dipisah per-mode lagi, karena tiap template dari seeder cuma punya
-    // 1 mode "utama" + 1 mode auto-generated).
-    const activeGallery = systemTemplates;
+    // Merge system + user themes into one flat list
+    const allThemes = useMemo(() => {
+        const system = (systemTemplates || []).map((tpl) => ({
+            ...tpl,
+            _type: "system",
+            _rawId: tpl.id, // slug for setTemplate
+        }));
+        const user = (userThemes || []).map((u) => ({
+            id: u.id,
+            name: u.name,
+            description: u.description,
+            light: u.light_tokens || {},
+            dark: u.dark_tokens || {},
+            _type: "user",
+            _rawId: u.id, // numeric ID for setCustomTokens
+            _primary: (u.light_tokens || {}).primary,
+            _accent: (u.light_tokens || {}).accent,
+        }));
+        return [...system, ...user];
+    }, [systemTemplates, userThemes]);
 
-    // Preview tokens: pakai tema yang di-hover (sesuai recommendedMode
-    // template itu sendiri), atau tema aktif (sesuai mode yang user pilih).
-    const previewTokens = useMemo(() => {
-        if (previewTheme) {
-            return previewTheme.recommendedMode === "dark"
-                ? previewTheme.dark
-                : previewTheme.light;
+    // Count stats
+    const lightCount = allThemes.filter(
+        (t) => t.light && t.light.background,
+    ).length;
+    const darkCount = allThemes.filter(
+        (t) => t.dark && t.dark.background,
+    ).length;
+
+    // Active check
+    const isActive = useCallback(
+        (t) => {
+            if (t._type === "system") {
+                return (
+                    preference.templateId === t._rawId &&
+                    preference.templateId !== "custom"
+                );
+            }
+            // User theme: match primary+accent in customTokens
+            return (
+                preference.templateId === "custom" &&
+                preference.customTokens?.light?.primary === t._primary &&
+                preference.customTokens?.light?.accent === t._accent
+            );
+        },
+        [preference],
+    );
+
+    const handleActivate = (t) => {
+        if (t._type === "system") {
+            setTemplate(t._rawId);
+        } else {
+            setCustomTokens({ light: t.light, dark: t.dark });
         }
-        return isDark ? theme.dark : theme.light;
-    }, [previewTheme, theme, isDark]);
-
-    const previewComponent = useMemo(() => {
-        switch (activePreviewTab) {
-            case "pos":
-                return <PreviewPOS tokens={previewTokens} />;
-            case "invoice":
-                return <PreviewInvoice tokens={previewTokens} />;
-            default:
-                return <PreviewDashboard tokens={previewTokens} />;
-        }
-    }, [activePreviewTab, previewTokens]);
-
-    const handleSelectSystem = (tpl) => {
-        setPreviewTheme(null);
-        setTemplate(tpl.id);
     };
-
-    const handleSelectUser = (preset) => {
-        setPreviewTheme(null);
-        setCustomColors({
-            primary: preset.primary,
-            secondary: preset.secondary,
-            accent: preset.accent,
-        });
-    };
-
-    const isActiveSystem = (tpl) =>
-        preference.templateId === tpl.id && preference.templateId !== "custom";
-
-    const isActiveUser = (preset) =>
-        preference.templateId === "custom" &&
-        preference.custom?.primary === preset.primary &&
-        preference.custom?.accent === preset.accent;
 
     const confirmDelete = () => {
-        if (!target) return;
+        if (!deleteTarget) return;
         setDeleting(true);
-        router.delete(route("admin.themes.destroy", target.id), {
+        router.delete(route("admin.themes.destroy", deleteTarget._rawId), {
             preserveScroll: true,
             onFinish: () => {
                 setDeleting(false);
-                setTarget(null);
+                setDeleteTarget(null);
             },
         });
     };
@@ -304,29 +624,35 @@ export default function Index({ userThemes = [], filters = {} }) {
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
-                            <Palette className="h-5 w-5" strokeWidth={1.8} />
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+                            <Palette
+                                size={18}
+                                className="text-primary"
+                                strokeWidth={1.8}
+                            />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-slate-800">
-                                Tema
+                            <h2 className="text-lg font-bold text-foreground">
+                                Themes
                             </h2>
-                            <p className="text-xs text-slate-500">
-                                Pilih tema dan kustomisasi tampilan aplikasi
+                            <p className="text-xs text-muted-foreground">
+                                Manage your application's visual themes and
+                                color systems.
                             </p>
                         </div>
                     </div>
-                    <Link
-                        href={route("admin.themes.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:from-primary-600 hover:to-primary-700"
-                    >
-                        <Plus size={16} />
-                        <span className="hidden sm:inline">Buat Tema</span>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href={route("admin.themes.create")}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                        >
+                            <Plus size={14} /> Add Theme
+                        </Link>
+                    </div>
                 </div>
             }
         >
-            <Head title="Tema" />
+            <Head title="Themes" />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -334,177 +660,72 @@ export default function Index({ userThemes = [], filters = {} }) {
                 </div>
             )}
 
-            <div className="flex flex-col gap-5 lg:flex-row">
-                {/* ── KIRI: Daftar tema ── */}
-                <div className="w-full space-y-4 lg:w-[48%] lg:shrink-0">
-                    {/* Mode selector */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                        <div className="grid grid-cols-3 gap-1.5">
-                            {MODE_OPTIONS.map(
-                                ({ key, label, icon: Icon }) => (
-                                    <button
-                                        key={key}
-                                        type="button"
-                                        onClick={() => setMode(key)}
-                                        className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition ${
-                                            preference.mode === key
-                                                ? "bg-primary-600 text-white shadow-sm"
-                                                : "text-slate-500 hover:bg-slate-100"
-                                        }`}
-                                    >
-                                        <Icon size={14} />
-                                        {label}
-                                    </button>
-                                ),
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Template Sistem */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div className="mb-3 flex items-center gap-2">
-                            <Palette size={14} className="text-slate-400" />
-                            <h3 className="text-sm font-semibold text-slate-800">
-                                Template Sistem
-                            </h3>
-                            <span className="ml-auto text-[10px] text-slate-400">
-                                {activeGallery.length} template
-                            </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2.5">
-                            {activeGallery.map((tpl) => (
-                                <SystemCard
-                                    key={tpl.id}
-                                    tpl={tpl}
-                                    active={isActiveSystem(tpl)}
-                                    onSelect={() =>
-                                        handleSelectSystem(tpl)
-                                    }
-                                    onMouseEnter={() =>
-                                        setPreviewTheme(tpl)
-                                    }
-                                    onMouseLeave={() =>
-                                        setPreviewTheme(null)
-                                    }
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Tema Saya */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div className="mb-3 flex items-center gap-2">
-                            <Pencil size={14} className="text-slate-400" />
-                            <h3 className="text-sm font-semibold text-slate-800">
-                                Tema Saya
-                            </h3>
-                            <span className="ml-auto text-[10px] text-slate-400">
-                                {userThemes.length} tema
-                            </span>
-                        </div>
-                        {userThemes.length > 0 ? (
-                            <div className="grid grid-cols-2 gap-2.5">
-                                {userThemes.map((preset) => (
-                                    <UserCard
-                                        key={preset.id}
-                                        theme={preset}
-                                        active={isActiveUser(preset)}
-                                        onSelect={() =>
-                                            handleSelectUser(preset)
-                                        }
-                                        onEdit={() =>
-                                            router.get(
-                                                route(
-                                                    "admin.themes.edit",
-                                                    preset.id,
-                                                ),
-                                            )
-                                        }
-                                        onDelete={setTarget}
-                                    />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-slate-200 py-6 text-center">
-                                <Palette
-                                    size={24}
-                                    className="text-slate-300"
-                                />
-                                <p className="text-xs text-slate-500">
-                                    Belum ada tema custom
-                                </p>
-                                <Link
-                                    href={route("admin.themes.create")}
-                                    className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-primary-700"
-                                >
-                                    <Plus size={12} />
-                                    Buat tema
-                                </Link>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* ── KANAN: Preview ── */}
-                <div className="w-full lg:w-[52%] lg:sticky lg:top-16 lg:self-start">
-                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <div className="mb-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Eye
-                                    size={14}
-                                    className="text-slate-400"
-                                />
-                                <h3 className="text-sm font-semibold text-slate-800">
-                                    Preview
-                                </h3>
-                            </div>
-                            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-semibold text-slate-500">
-                                {isDark ? "Gelap" : "Terang"} ·{" "}
-                                {theme.label}
-                            </span>
-                        </div>
-
-                        {/* Preview tabs */}
-                        <div className="mb-3 flex gap-1 rounded-lg bg-slate-100 p-1">
-                            {PREVIEW_TABS.map(
-                                ({ key, label, icon: Icon }) => (
-                                    <button
-                                        key={key}
-                                        type="button"
-                                        onClick={() =>
-                                            setActivePreviewTab(key)
-                                        }
-                                        className={`flex flex-1 items-center justify-center gap-1 rounded-md py-2 text-[11px] font-semibold transition ${
-                                            activePreviewTab === key
-                                                ? "bg-white text-slate-800 shadow-sm"
-                                                : "text-slate-400 hover:text-slate-600"
-                                        }`}
-                                    >
-                                        <Icon size={13} />
-                                        {label}
-                                    </button>
-                                ),
-                            )}
-                        </div>
-
-                        <div className="h-[400px] overflow-hidden rounded-lg lg:h-[500px]">
-                            {previewComponent}
-                        </div>
-                    </div>
-                </div>
+            {/* Info bar */}
+            <div className="mb-6 flex items-center gap-4 border-y border-border py-3 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">
+                    {allThemes.length} Themes
+                </span>
+                <span className="text-muted-foreground/40">&middot;</span>
+                <span className="inline-flex items-center gap-1.5">
+                    <span
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ background: "#F59E0B" }}
+                    />
+                    {lightCount} Light
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                    <span
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ background: "#7C8794" }}
+                    />
+                    {darkCount} Dark
+                </span>
             </div>
 
+            {/* Grid */}
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                {allThemes.map((t) => (
+                    <ThemeCard
+                        key={`${t._type}-${t._rawId}`}
+                        theme={t}
+                        active={isActive(t)}
+                        isDark={isDark}
+                        onActivate={() => handleActivate(t)}
+                        onEdit={
+                            t._type === "user"
+                                ? route("admin.themes.edit", t._rawId)
+                                : null
+                        }
+                        onDelete={
+                            t._type === "user"
+                                ? () => setDeleteTarget(t)
+                                : null
+                        }
+                        onPreview={() => setPreviewTarget(t)}
+                    />
+                ))}
+                <CreateCard />
+            </div>
+
+            {/* Preview modal */}
+            <PreviewModal
+                theme={previewTarget}
+                isDark={isDark}
+                onClose={() => setPreviewTarget(null)}
+            />
+
+            {/* Delete confirmation */}
             <ConfirmDeleteModal
-                open={!!target}
+                open={!!deleteTarget}
                 title="Hapus tema?"
                 description={
-                    target
-                        ? `Tema "${target.name}" akan dihapus permanen.`
+                    deleteTarget
+                        ? `Tema "${deleteTarget.name}" akan dihapus permanen.`
                         : ""
                 }
                 processing={deleting}
                 onConfirm={confirmDelete}
-                onClose={() => !deleting && setTarget(null)}
+                onClose={() => !deleting && setDeleteTarget(null)}
             />
         </AuthenticatedLayout>
     );

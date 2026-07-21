@@ -92,10 +92,10 @@ export default function SearchableSelect({
     };
 
     const baseCls =
-        "block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2";
+        "block w-full rounded-xl border bg-background text-sm shadow-sm transition focus:ring-2";
     const cls = error
-        ? `${baseCls} border-red-300 focus:border-red-500 focus:ring-red-200`
-        : `${baseCls} border-slate-300 focus:border-primary-500 focus:ring-primary-200`;
+        ? `${baseCls} border-destructive focus:border-destructive focus:ring-destructive/20`
+        : `${baseCls} border-input focus:border-ring focus:ring-ring/20`;
 
     return (
         <div ref={containerRef} className="relative">
@@ -112,18 +112,18 @@ export default function SearchableSelect({
                 }}
                 className={`${cls} flex items-center justify-between px-3.5 py-2.5 text-left ${
                     disabled
-                        ? "cursor-not-allowed bg-slate-50 text-slate-400"
+                        ? "cursor-not-allowed bg-muted text-muted-foreground"
                         : ""
-                } text-slate-700`}
+                } text-foreground`}
             >
                 <span className="truncate">
                     {selected?.name ?? placeholder}
                     {required && !value && (
-                        <span className="ml-1 text-red-400">*</span>
+                        <span className="ml-1 text-destructive">*</span>
                     )}
                 </span>
                 <svg
-                    className={`ml-2 h-4 w-4 shrink-0 text-slate-400 transition ${
+                    className={`ml-2 h-4 w-4 shrink-0 text-muted-foreground transition ${
                         open ? "rotate-180" : ""
                     }`}
                     fill="none"
@@ -141,12 +141,12 @@ export default function SearchableSelect({
 
             {/* Dropdown */}
             {open && !disabled && (
-                <div className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
                     {/* Search input */}
-                    <div className="border-b border-slate-100 p-2">
+                    <div className="border-b border-border p-2">
                         <div className="relative">
                             <svg
-                                className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-slate-400"
+                                className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.8}
@@ -168,7 +168,7 @@ export default function SearchableSelect({
                                 }}
                                 onKeyDown={onKeyDown}
                                 placeholder={searchPlaceholder}
-                                className="w-full rounded-xl border border-slate-200 py-2 pl-10 pr-3 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                className="w-full rounded-xl border border-input bg-background py-2 pl-10 pr-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                                 autoComplete="off"
                             />
                         </div>
@@ -177,7 +177,7 @@ export default function SearchableSelect({
                     {/* Options list */}
                     <div className="max-h-56 overflow-y-auto">
                         {filtered.length === 0 ? (
-                            <div className="px-4 py-6 text-center text-sm text-slate-400">
+                            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
                                 Tidak ditemukan
                             </div>
                         ) : (
@@ -192,8 +192,8 @@ export default function SearchableSelect({
                                         String(option.id) === String(value)
                                             ? "bg-primary-50 text-primary-700"
                                             : i === idx
-                                              ? "bg-slate-50"
-                                              : "hover:bg-slate-50"
+                                              ? "bg-accent text-accent-foreground"
+                                              : "hover:bg-accent hover:text-accent-foreground"
                                     }`}
                                 >
                                     <span className="flex-1 truncate">

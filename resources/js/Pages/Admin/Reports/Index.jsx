@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, usePage } from "@inertiajs/react";
 import { useState, useMemo } from "react";
+import Button from "@/Components/ui/Button";
 
 const fmt = (n) =>
     new Intl.NumberFormat("id-ID", {
@@ -118,7 +119,7 @@ export default function Index({
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between gap-3 w-full">
-                    <h2 className="text-lg font-bold text-slate-900">
+                    <h2 className="text-lg font-bold text-foreground">
                         Laporan
                     </h2>
                 </div>
@@ -128,11 +129,11 @@ export default function Index({
 
             <div className="space-y-5">
                 {/* ── Filters ──────────────────────────────── */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                     {/* Branch filter — paling atas */}
                     {branches.length > 1 && (
                         <div className="mb-3 flex flex-wrap items-center gap-1.5">
-                            <span className="mr-1 text-xs font-medium text-slate-400">
+                            <span className="mr-1 text-xs font-medium text-muted-foreground">
                                 Cabang:
                             </span>
                             {branches.map((b) => (
@@ -143,14 +144,14 @@ export default function Index({
                                     className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                                         pendingBranchIds.includes(b.id)
                                             ? "border-primary-400 bg-primary-50 text-primary-700"
-                                            : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                                            : "border-border bg-card text-muted-foreground hover:border-border"
                                     }`}
                                 >
                                     <input
                                         type="checkbox"
                                         checked={pendingBranchIds.includes(b.id)}
                                         onChange={() => toggleBranch(b.id)}
-                                        className="h-3.5 w-3.5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                                        className="h-3.5 w-3.5 rounded border-border text-primary-600 focus:ring-primary-500"
                                     />
                                     {b.name}
                                 </button>
@@ -160,7 +161,7 @@ export default function Index({
 
                     {/* Divider setelah cabang */}
                     {branches.length > 1 && (
-                        <div className="mb-3 border-t border-slate-100" />
+                        <div className="mb-3 border-t border-border" />
                     )}
 
                     {/* Date range + Presets + Tombol Tampilkan */}
@@ -168,26 +169,26 @@ export default function Index({
                         {/* Date inputs */}
                         <div className="flex items-end gap-2">
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     Dari
                                 </label>
                                 <input
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                    className="w-full rounded-xl border border-border px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
-                            <span className="pb-2 text-slate-400">—</span>
+                            <span className="pb-2 text-muted-foreground">—</span>
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-slate-500">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                     Sampai
                                 </label>
                                 <input
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                    className="w-full rounded-xl border border-border px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
                         </div>
@@ -199,7 +200,7 @@ export default function Index({
                                     key={p.label}
                                     type="button"
                                     onClick={() => applyPreset(p)}
-                                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-primary-400 hover:text-primary-700"
+                                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-primary-400 hover:text-primary-700"
                                 >
                                     {p.label}
                                 </button>
@@ -207,9 +208,10 @@ export default function Index({
                         </div>
 
                         {/* Tombol Tampilkan */}
-                        <button
+                        <Button
+                            size="sm"
                             onClick={applyFilters}
-                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 sm:ml-auto"
+                            className="sm:ml-auto"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -226,7 +228,7 @@ export default function Index({
                             </svg>
                             <span className="sm:hidden">Cari</span>
                             <span className="hidden sm:inline">Tampilkan</span>
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -296,12 +298,12 @@ export default function Index({
                 </div>
 
                 {/* ── Daily Chart ─────────────────────────── */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-5 shadow-sm">
-                    <h3 className="mb-4 px-1 text-sm font-semibold text-slate-700">
+                <div className="rounded-2xl border border-border bg-card p-3 sm:p-5 shadow-sm">
+                    <h3 className="mb-4 px-1 text-sm font-semibold text-foreground">
                         Tren Penjualan Harian
                     </h3>
                     {dailyBreakdown.length === 0 ? (
-                        <p className="py-8 text-center text-sm text-slate-400">
+                        <p className="py-8 text-center text-sm text-muted-foreground">
                             Belum ada data penjualan di rentang ini.
                         </p>
                     ) : (
@@ -312,7 +314,7 @@ export default function Index({
                                         key={i}
                                         className="flex flex-1 flex-col items-center justify-end gap-1"
                                     >
-                                        <span className="hidden sm:block text-[10px] font-medium text-slate-500">
+                                        <span className="hidden sm:block text-[10px] font-medium text-muted-foreground">
                                             {fmt(d.total)
                                                 .replace("Rp", "")
                                                 .trim()}
@@ -326,7 +328,7 @@ export default function Index({
                                             }}
                                             title={`${fmtDate(d.date)}: ${fmt(d.total)} (${d.count} transaksi)`}
                                         />
-                                        <span className="mt-1 text-[9px] sm:text-[10px] text-slate-400 whitespace-nowrap">
+                                        <span className="mt-1 text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap">
                                             {new Date(
                                                 d.date,
                                             ).toLocaleDateString("id-ID", {
@@ -344,16 +346,16 @@ export default function Index({
                 {/* ── Bottom grid ─────────────────────────── */}
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     {/* Top Products */}
-                    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3.5">
-                            <h3 className="text-sm font-semibold text-slate-700">
+                    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                        <div className="border-b border-border bg-muted/50 px-5 py-3.5">
+                            <h3 className="text-sm font-semibold text-foreground">
                                 Produk Terlaris
                             </h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                         <th className="px-5 py-2.5">Produk</th>
                                         <th className="px-5 py-2.5 text-right">
                                             Qty
@@ -363,12 +365,12 @@ export default function Index({
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-border">
                                     {topProducts.length === 0 ? (
                                         <tr>
                                             <td
                                                 colSpan={3}
-                                                className="px-5 py-8 text-center text-sm text-slate-400"
+                                                className="px-5 py-8 text-center text-sm text-muted-foreground"
                                             >
                                                 Belum ada data.
                                             </td>
@@ -377,22 +379,22 @@ export default function Index({
                                         topProducts.map((p, i) => (
                                             <tr
                                                 key={i}
-                                                className="transition hover:bg-slate-50/50"
+                                                className="transition hover:bg-muted/50"
                                             >
                                                 <td className="px-4 sm:px-5 py-3">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">
+                                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
                                                             {i + 1}
                                                         </span>
-                                                        <span className="truncate max-w-[140px] sm:max-w-[200px] font-medium text-slate-800">
+                                                        <span className="truncate max-w-[140px] sm:max-w-[200px] font-medium text-foreground">
                                                             {p.name}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-3 sm:px-5 py-3 text-right text-slate-600">
+                                                <td className="px-3 sm:px-5 py-3 text-right text-muted-foreground">
                                                     {p.qty}
                                                 </td>
-                                                <td className="px-4 sm:px-5 py-3 text-right text-xs sm:text-sm font-medium text-slate-800">
+                                                <td className="px-4 sm:px-5 py-3 text-right text-xs sm:text-sm font-medium text-foreground">
                                                     {fmt(p.revenue)}
                                                 </td>
                                             </tr>
@@ -406,15 +408,15 @@ export default function Index({
                     {/* Payment & Category side by side */}
                     <div className="space-y-5">
                         {/* Payment Breakdown */}
-                        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3.5">
-                                <h3 className="text-sm font-semibold text-slate-700">
+                        <div className="rounded-2xl border border-border bg-card shadow-sm">
+                            <div className="border-b border-border bg-muted/50 px-5 py-3.5">
+                                <h3 className="text-sm font-semibold text-foreground">
                                     Metode Pembayaran
                                 </h3>
                             </div>
                             <div className="p-4">
                                 {paymentBreakdown.length === 0 ? (
-                                    <p className="py-4 text-center text-sm text-slate-400">
+                                    <p className="py-4 text-center text-sm text-muted-foreground">
                                         Belum ada data.
                                     </p>
                                 ) : (
@@ -435,10 +437,10 @@ export default function Index({
                                             return (
                                                 <div key={i}>
                                                     <div className="flex items-center justify-between mb-1">
-                                                        <span className="text-xs font-medium text-slate-600">{p.name}</span>
-                                                        <span className="text-xs font-semibold text-slate-700">{fmt(p.total)}</span>
+                                                        <span className="text-xs font-medium text-muted-foreground">{p.name}</span>
+                                                        <span className="text-xs font-semibold text-foreground">{fmt(p.total)}</span>
                                                     </div>
-                                                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                                                         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
                                                     </div>
                                                 </div>
@@ -450,15 +452,15 @@ export default function Index({
                         </div>
 
                         {/* Category Breakdown */}
-                        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3.5">
-                                <h3 className="text-sm font-semibold text-slate-700">
+                        <div className="rounded-2xl border border-border bg-card shadow-sm">
+                            <div className="border-b border-border bg-muted/50 px-5 py-3.5">
+                                <h3 className="text-sm font-semibold text-foreground">
                                     Per Kategori
                                 </h3>
                             </div>
                             <div className="p-4">
                                 {categoryBreakdown.length === 0 ? (
-                                    <p className="py-4 text-center text-sm text-slate-400">
+                                    <p className="py-4 text-center text-sm text-muted-foreground">
                                         Belum ada data.
                                     </p>
                                 ) : (
@@ -479,10 +481,10 @@ export default function Index({
                                             return (
                                                 <div key={i}>
                                                     <div className="flex items-center justify-between mb-1">
-                                                        <span className="text-xs font-medium text-slate-600">{c.name}</span>
-                                                        <span className="text-xs font-semibold text-slate-700">{fmt(c.revenue)}</span>
+                                                        <span className="text-xs font-medium text-muted-foreground">{c.name}</span>
+                                                        <span className="text-xs font-semibold text-foreground">{fmt(c.revenue)}</span>
                                                     </div>
-                                                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                                                         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: CHART_COLORS[(i + 2) % CHART_COLORS.length] }} />
                                                     </div>
                                                 </div>
@@ -517,7 +519,7 @@ function SummaryCard({
         emerald: "text-emerald-600",
         indigo: "text-primary-600",
         amber: "text-amber-600",
-        red: "text-red-600",
+        red: "text-destructive",
         violet: "text-violet-600",
     };
     const accentMap = {
@@ -528,14 +530,14 @@ function SummaryCard({
         violet: "border-violet-400",
     };
 
-    const cardBg = highlight ? `bg-gradient-to-br ${gradientMap[color]}` : "bg-white";
-    const cardBorder = highlight ? accentMap[color] : "border-slate-200";
+    const cardBg = highlight ? `bg-gradient-to-br ${gradientMap[color]}` : "bg-card";
+    const cardBorder = highlight ? accentMap[color] : "border-border";
 
     return (
         <div
             className={`rounded-2xl border-l-4 border ${cardBg} ${cardBorder} p-4 shadow-sm transition-all hover:shadow-md`}
         >
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-100">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-card shadow-sm ring-1 ring-slate-100">
                 <svg
                     className={`h-5 w-5 ${textMap[color]}`}
                     fill="none"
@@ -546,9 +548,9 @@ function SummaryCard({
                     {icon}
                 </svg>
             </div>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
             <p
-                className={`mt-0.5 text-lg font-bold ${highlight ? textMap[color] : "text-slate-800"}`}
+                className={`mt-0.5 text-lg font-bold ${highlight ? textMap[color] : "text-foreground"}`}
             >
                 {value}
             </p>

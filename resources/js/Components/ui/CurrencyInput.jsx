@@ -50,7 +50,7 @@ export default function CurrencyInput({
 
     return (
         <div className={`relative ${className}`}>
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-sm font-medium text-slate-400">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-sm font-medium text-muted-foreground">
                 Rp
             </span>
             <input
@@ -61,11 +61,11 @@ export default function CurrencyInput({
                 placeholder={placeholder}
                 disabled={disabled}
                 required={required}
-                className={`block w-full rounded-xl border bg-slate-50 py-2.5 pl-10 pr-3.5 text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
+                className={`block w-full rounded-xl border bg-muted/40 py-2.5 pl-10 pr-3.5 text-sm text-foreground shadow-sm transition focus:outline-none focus:ring-2 ${
                     error
-                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                        : "border-slate-200 focus:border-primary-400 focus:ring-primary-100"
-                } ${disabled ? "cursor-not-allowed bg-slate-100 text-slate-400" : ""}`}
+                        ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+                        : "border-input focus:border-ring focus:ring-ring/20"
+                } ${disabled ? "cursor-not-allowed bg-muted text-muted-foreground" : ""}`}
             />
         </div>
     );

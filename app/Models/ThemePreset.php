@@ -16,11 +16,20 @@ class ThemePreset extends Model
         'name',
         'slug',
         'description',
+        'is_system',
+        'tokens',
+    ];
+
+    /**
+     * Accessor turunan yang wajib ikut ter-serialize ke frontend (Inertia)
+     * supaya kartu preview (Theme Index/Create/Edit) tetap bisa akses
+     * primary/secondary/accent/light_tokens/dark_tokens tanpa frontend
+     * harus tahu bahwa semuanya derived dari kolom `tokens`.
+     */
+    protected $appends = [
         'primary',
         'secondary',
         'accent',
-        'is_dark',
-        'is_system',
         'light_tokens',
         'dark_tokens',
     ];
@@ -28,10 +37,8 @@ class ThemePreset extends Model
     protected function casts(): array
     {
         return [
-            'is_dark' => 'boolean',
             'is_system' => 'boolean',
-            'light_tokens' => 'array',
-            'dark_tokens' => 'array',
+            'tokens' => 'array',
         ];
     }
 
@@ -54,5 +61,35 @@ class ThemePreset extends Model
     public function scopeForUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId)->where('is_system', false);
+    }
+
+    /** Token 36-key untuk mode terang. */
+    public function getLightTokensAttribute(): array
+    {
+        return $this->tokens['light'] ?? [];
+    }
+
+    /** Token 36-key untuk mode gelap. */
+    public function getDarkTokensAttribute(): array
+    {
+        return $this->tokens['dark'] ?? [];
+    }
+
+    /** Warna primary mode terang — dipakai preview kartu di Theme Index. */
+    public function getPrimaryAttribute(): ?string
+    {
+        return $this->tokens['light']['primary'] ?? $this->tokens['dark']['primary'] ?? null;
+    }
+
+    /** Warna secondary mode terang — dipakai preview kartu di Theme Index. */
+    public function getSecondaryAttribute(): ?string
+    {
+        return $this->tokens['light']['secondary'] ?? $this->tokens['dark']['secondary'] ?? null;
+    }
+
+    /** Warna accent mode terang — dipakai preview kartu di Theme Index. */
+    public function getAccentAttribute(): ?string
+    {
+        return $this->tokens['light']['accent'] ?? $this->tokens['dark']['accent'] ?? null;
     }
 }

@@ -1,5 +1,6 @@
 import { Head } from "@inertiajs/react";
 import { useEffect } from "react";
+import Button from "@/Components/ui/Button";
 
 const fmt = (n) =>
     new Intl.NumberFormat("id-ID", {
@@ -23,41 +24,41 @@ export default function Print({ sale, storeName }) {
 
     const receiptContent = (
         <>
-            <p className="text-center text-sm font-bold text-slate-900">
+            <p className="text-center text-sm font-bold text-foreground">
                 {storeName}
             </p>
-            <p className="mt-0.5 text-center text-slate-500">{sale.sale_no}</p>
-            <p className="text-center text-slate-400">{date}</p>
+            <p className="mt-0.5 text-center text-muted-foreground">{sale.sale_no}</p>
+            <p className="text-center text-muted-foreground">{date}</p>
             {sale.table && (
-                <p className="text-center font-medium text-slate-600">
+                <p className="text-center font-medium text-muted-foreground">
                     Meja {sale.table.table_number}
                 </p>
             )}
             {sale.customer && (
-                <p className="text-center text-slate-500">
+                <p className="text-center text-muted-foreground">
                     Pelanggan: {sale.customer.name}
                 </p>
             )}
-            <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-border" />
 
             {sale.items.map((item, i) => (
                 <div key={i} className="mb-1">
                     <div className="flex justify-between">
-                        <span className="text-slate-700">
+                        <span className="text-foreground">
                             {item.product?.name ?? "Produk"}
                             {item.variant_id && item.variant_name
                                 ? ` (${item.variant_name})`
                                 : ""}
                         </span>
-                        <span className="text-slate-800">
+                        <span className="text-foreground">
                             {fmt(item.subtotal)}
                         </span>
                     </div>
-                    <span className="text-slate-400">
+                    <span className="text-muted-foreground">
                         {item.quantity} × {fmt(item.price)}
                     </span>
                     {item.modifiers?.map((m, j) => (
-                        <div key={j} className="pl-2 text-slate-400">
+                        <div key={j} className="pl-2 text-muted-foreground">
                             {m.name}{" "}
                             {(m.price_addition ?? 0) > 0 &&
                                 `+${fmtShort(m.price_addition)}`}
@@ -71,14 +72,14 @@ export default function Print({ sale, storeName }) {
                 </div>
             ))}
 
-            <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-border" />
 
             <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>{fmt(sale.subtotal)}</span>
             </div>
             {(sale.discount_amount ?? 0) > 0 && (
-                <div className="flex justify-between text-red-600">
+                <div className="flex justify-between text-destructive">
                     <span>Diskon</span>
                     <span>-{fmt(sale.discount_amount)}</span>
                 </div>
@@ -90,13 +91,13 @@ export default function Print({ sale, storeName }) {
                 </div>
             )}
 
-            <div className="mt-1 flex justify-between text-sm font-bold text-slate-900">
+            <div className="mt-1 flex justify-between text-sm font-bold text-foreground">
                 <span>Total</span>
                 <span>{fmt(sale.grand_total)}</span>
             </div>
 
             {sale.payments?.map((p, i) => (
-                <div key={i} className="flex justify-between text-slate-600">
+                <div key={i} className="flex justify-between text-muted-foreground">
                     <span>{p.paymentMethod?.name ?? "Pembayaran"}</span>
                     <span>{fmt(p.amount)}</span>
                 </div>
@@ -110,18 +111,18 @@ export default function Print({ sale, storeName }) {
 
             {sale.notes && (
                 <>
-                    <div className="my-3 border-t border-dashed border-slate-300" />
-                    <p className="whitespace-pre-wrap text-center text-slate-500">
+                    <div className="my-3 border-t border-dashed border-border" />
+                    <p className="whitespace-pre-wrap text-center text-muted-foreground">
                         {sale.notes}
                     </p>
                 </>
             )}
 
-            <div className="my-3 border-t border-dashed border-slate-300" />
-            <p className="text-center text-slate-400">
+            <div className="my-3 border-t border-dashed border-border" />
+            <p className="text-center text-muted-foreground">
                 Terima kasih atas kunjungan Anda
             </p>
-            <p className="text-center text-[9px] text-slate-300">
+            <p className="text-center text-[9px] text-muted-foreground/50">
                 Dicetak: {new Date().toLocaleString("id-ID")}
             </p>
         </>
@@ -163,32 +164,32 @@ export default function Print({ sale, storeName }) {
             <div className="screen-only fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div
                     onClick={() => window.close()}
-                    className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                 />
-                <div className="relative w-full max-w-xs rounded-2xl bg-white shadow-2xl">
+                <div className="relative w-full max-w-xs rounded-2xl bg-card shadow-2xl">
                     <div className="px-6 py-5 font-mono text-xs max-h-[70vh] overflow-y-auto">
                         {receiptContent}
                     </div>
 
-                    <div className="flex gap-2 border-t border-slate-100 px-5 py-4">
-                        <button
-                            type="button"
+                    <div className="flex gap-2 border-t border-border px-5 py-4">
+                        <Button
+                            variant="primary"
+                            className="flex-1"
                             onClick={() => window.print()}
-                            className="flex-1 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                         >
                             Cetak Ulang
-                        </button>
+                        </Button>
                         <button
                             type="button"
                             onClick={() => window.print()}
-                            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                            className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted"
                         >
                             🖨️ Print
                         </button>
                         <button
                             type="button"
                             onClick={() => window.close()}
-                            className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-50"
+                            className="rounded-xl border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted"
                         >
                             Tutup
                         </button>

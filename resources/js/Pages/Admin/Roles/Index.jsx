@@ -16,7 +16,7 @@ const COLOR_MAP = {
     amber:  'bg-amber-50 text-amber-700 ring-amber-200',
     blue:   'bg-blue-50 text-blue-700 ring-blue-200',
     violet: 'bg-violet-50 text-violet-700 ring-violet-200',
-    green:  'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    green:  'bg-success/10 text-success ring-emerald-200',
     orange: 'bg-orange-50 text-orange-700 ring-orange-200',
     red:    'bg-red-50 text-red-700 ring-red-200',
     custom: 'bg-primary-50 text-primary-700 ring-primary-200',
@@ -75,19 +75,19 @@ function PermModal({ role, onClose, onSave }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4">
-            <div className="flex w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 max-h-[90vh]">
+            <div className="flex w-full max-w-2xl flex-col rounded-2xl bg-card shadow-2xl ring-1 ring-black/5 max-h-[90vh]">
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <div>
-                        <h3 className="text-base font-bold text-slate-900">
+                        <h3 className="text-base font-bold text-foreground">
                             {isSystem ? 'Lihat Permission —' : 'Atur Permission —'}
                             <span className="ml-1.5 text-primary-600">{role?.name}</span>
                         </h3>
                         {isSystem && (
-                            <p className="mt-0.5 text-xs text-slate-400">Role sistem — permission tidak bisa diubah. Duplikat untuk membuat versi custom.</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">Role sistem — permission tidak bisa diubah. Duplikat untuk membuat versi custom.</p>
                         )}
                     </div>
-                    <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100">
+                    <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
@@ -102,13 +102,13 @@ function PermModal({ role, onClose, onSave }) {
                                 <div className="mb-2.5 flex items-center gap-2">
                                     {!isSystem ? (
                                         <button type="button" onClick={() => toggleGroup(perms)}
-                                            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${allOn ? 'bg-primary-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                                            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${allOn ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
                                             {group}
                                         </button>
                                     ) : (
-                                        <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">{group}</span>
+                                        <span className="rounded-lg bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground">{group}</span>
                                     )}
-                                    <span className="text-[11px] text-slate-400">{activeCount}/{perms.length} aktif</span>
+                                    <span className="text-[11px] text-muted-foreground">{activeCount}/{perms.length} aktif</span>
                                 </div>
                                 <div className="flex flex-wrap gap-1.5">
                                     {perms.map(p => {
@@ -120,8 +120,8 @@ function PermModal({ role, onClose, onSave }) {
                                                 onClick={() => !isSystem && toggle(p)}
                                                 className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
                                                     on
-                                                        ? 'bg-primary-500 text-white shadow-sm'
-                                                        : 'border border-slate-200 bg-white text-slate-400'
+                                                        ? 'bg-primary text-primary-foreground shadow-sm'
+                                                        : 'border border-border bg-card text-muted-foreground'
                                                 } ${!isSystem && !on ? 'hover:border-primary-300 hover:text-primary-500' : ''} ${isSystem ? 'cursor-default' : ''}`}>
                                                 {PERM_LABEL[key] ?? key}
                                             </button>
@@ -134,13 +134,13 @@ function PermModal({ role, onClose, onSave }) {
                 </div>
 
                 {/* Footer */}
-                <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
-                    <button onClick={onClose} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                <div className="flex justify-end gap-2 border-t border-border px-6 py-4">
+                    <button onClick={onClose} className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted">
                         {isSystem ? 'Tutup' : 'Batal'}
                     </button>
                     {!isSystem && (
                         <button onClick={() => onSave([...selected])}
-                            className="rounded-xl bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                            className="rounded-xl bg-foreground px-5 py-2 text-sm font-semibold text-white hover:bg-foreground/90">
                             Simpan Permission
                         </button>
                     )}
@@ -154,38 +154,38 @@ function PermModal({ role, onClose, onSave }) {
 function RoleFormModal({ title, form, onClose, onSubmit }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4">
-            <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-black/5">
-                <div className="border-b border-slate-100 px-6 py-4">
-                    <h3 className="text-base font-bold text-slate-900">{title}</h3>
+            <div className="w-full max-w-md rounded-2xl bg-card shadow-2xl ring-1 ring-black/5">
+                <div className="border-b border-border px-6 py-4">
+                    <h3 className="text-base font-bold text-foreground">{title}</h3>
                 </div>
                 <form onSubmit={onSubmit} className="p-6 space-y-4">
                     <div>
-                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-slate-400">Nama Role *</label>
+                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground">Nama Role *</label>
                         <input
                             value={form.data.name}
                             onChange={e => form.setData('name', e.target.value)}
                             placeholder="cth: kasirdapur, operator-shift2, resepsionis"
-                            className="block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+                            className="block w-full rounded-xl border border-border px-4 py-2.5 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                         />
-                        {form.errors.name && <p className="mt-1.5 text-xs text-red-500">{form.errors.name}</p>}
+                        {form.errors.name && <p className="mt-1.5 text-xs text-destructive">{form.errors.name}</p>}
                     </div>
                     <div>
-                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-slate-400">Deskripsi</label>
+                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground">Deskripsi</label>
                         <input
                             value={form.data.description}
                             onChange={e => form.setData('description', e.target.value)}
                             placeholder="Deskripsi singkat fungsi role ini"
-                            className="block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+                            className="block w-full rounded-xl border border-border px-4 py-2.5 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                         />
                     </div>
-                    <p className="text-xs text-slate-400">Permission bisa diatur setelah role dibuat lewat tombol "Atur Permission".</p>
+                    <p className="text-xs text-muted-foreground">Permission bisa diatur setelah role dibuat lewat tombol "Atur Permission".</p>
                     <div className="flex justify-end gap-2 pt-2">
                         <button type="button" onClick={onClose}
-                            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                            className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted">
                             Batal
                         </button>
                         <button type="submit" disabled={form.processing}
-                            className="rounded-xl bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50">
+                            className="rounded-xl bg-foreground px-5 py-2 text-sm font-semibold text-white hover:bg-foreground/90 disabled:opacity-50">
                             {form.processing ? 'Menyimpan...' : 'Simpan'}
                         </button>
                     </div>
@@ -247,13 +247,13 @@ export default function Index({ roles, permissions }) {
     return (
         <AuthenticatedLayout header={
             <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-slate-800">Role & Permission</span>
+                <span className="text-sm font-semibold text-foreground">Role & Permission</span>
             </div>
         }>
             <Head title="Role & Permission" />
 
             {flash?.success && (
-                <div className="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-4 flex items-center gap-2 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                     {flash.success}
                 </div>
@@ -265,8 +265,8 @@ export default function Index({ roles, permissions }) {
                 <section>
                     <div className="mb-4 flex items-center justify-between">
                         <div>
-                            <h2 className="text-sm font-bold text-slate-900">Role Sistem</h2>
-                            <p className="text-xs text-slate-400 mt-0.5">Dibuat otomatis, tidak bisa dihapus. Duplikat untuk membuat versi custom yang bisa dimodifikasi.</p>
+                            <h2 className="text-sm font-bold text-foreground">Role Sistem</h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">Dibuat otomatis, tidak bisa dihapus. Duplikat untuk membuat versi custom yang bisa dimodifikasi.</p>
                         </div>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -274,26 +274,26 @@ export default function Index({ roles, permissions }) {
                             const meta  = SYSTEM_ROLE_META[role.name] ?? { icon: '🔒', color: 'custom' };
                             const clr   = COLOR_MAP[meta.color] ?? COLOR_MAP.custom;
                             return (
-                                <div key={role.id} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+                                <div key={role.id} className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex items-center gap-3">
                                             <span className="text-2xl">{meta.icon}</span>
                                             <div>
                                                 <div className="flex items-center gap-1.5">
                                                     <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ${clr}`}>{role.name}</span>
-                                                    <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">Sistem</span>
+                                                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">Sistem</span>
                                                 </div>
-                                                <p className="mt-1 text-xs text-slate-400">{role.description ?? meta.desc}</p>
+                                                <p className="mt-1 text-xs text-muted-foreground">{role.description ?? meta.desc}</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Permission count */}
                                     <div className="mt-3 flex items-center justify-between">
-                                        <span className="text-xs text-slate-400">{role.permissions?.length ?? 0} permission aktif</span>
+                                        <span className="text-xs text-muted-foreground">{role.permissions?.length ?? 0} permission aktif</span>
                                         <div className="flex items-center gap-1.5">
                                             <button onClick={() => setPermModal(role)}
-                                                className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
+                                                className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted">
                                                 Lihat Permission
                                             </button>
                                             <button onClick={() => handleDuplicate(role)}
@@ -314,22 +314,22 @@ export default function Index({ roles, permissions }) {
                 <section>
                     <div className="mb-4 flex items-center justify-between">
                         <div>
-                            <h2 className="text-sm font-bold text-slate-900">Role Custom</h2>
-                            <p className="text-xs text-slate-400 mt-0.5">Buat role dengan nama dan permission sesuai kebutuhan bisnis kamu.</p>
+                            <h2 className="text-sm font-bold text-foreground">Role Custom</h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">Buat role dengan nama dan permission sesuai kebutuhan bisnis kamu.</p>
                         </div>
                         <button onClick={() => setCreateModal(true)}
-                            className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
+                            className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-white hover:bg-foreground/90 transition-colors">
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                             Buat Role Baru
                         </button>
                     </div>
 
                     {customRoles.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-                            <p className="text-sm font-medium text-slate-500">Belum ada role custom</p>
-                            <p className="mt-1 text-xs text-slate-400">Buat dari nol atau duplikat role sistem di atas sebagai template</p>
+                        <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+                            <p className="text-sm font-medium text-muted-foreground">Belum ada role custom</p>
+                            <p className="mt-1 text-xs text-muted-foreground">Buat dari nol atau duplikat role sistem di atas sebagai template</p>
                             <button onClick={() => setCreateModal(true)}
-                                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-white hover:bg-foreground/90">
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                                 Buat Role Baru
                             </button>
@@ -337,7 +337,7 @@ export default function Index({ roles, permissions }) {
                     ) : (
                         <div className="grid gap-3 sm:grid-cols-2">
                             {customRoles.map(role => (
-                                <div key={role.id} className="group rounded-2xl border border-primary-100 bg-white p-5 shadow-sm ring-1 ring-primary-50 transition hover:shadow-md">
+                                <div key={role.id} className="group rounded-2xl border border-primary-100 bg-card p-5 shadow-sm ring-1 ring-primary-50 transition hover:shadow-md">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex items-center gap-3">
                                             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-lg">✏️</span>
@@ -346,24 +346,24 @@ export default function Index({ roles, permissions }) {
                                                     <span className="rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-bold text-primary-700 ring-1 ring-primary-200">{role.name}</span>
                                                     <span className="rounded-full bg-primary-50 px-1.5 py-0.5 text-[10px] font-semibold text-primary-500">Custom</span>
                                                 </div>
-                                                <p className="mt-1 text-xs text-slate-400">{role.description || 'Tidak ada deskripsi'}</p>
+                                                <p className="mt-1 text-xs text-muted-foreground">{role.description || 'Tidak ada deskripsi'}</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="mt-3 flex items-center justify-between">
-                                        <span className="text-xs text-slate-400">{role.permissions?.length ?? 0} permission · {role.users_count ?? 0} user</span>
+                                        <span className="text-xs text-muted-foreground">{role.permissions?.length ?? 0} permission · {role.users_count ?? 0} user</span>
                                         <div className="flex items-center gap-1.5">
                                             <button onClick={() => setPermModal(role)}
-                                                className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                                                className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">
                                                 Atur Permission
                                             </button>
                                             <button onClick={() => openEdit(role)}
-                                                className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                                                className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">
                                                 Edit
                                             </button>
                                             <button onClick={() => handleDelete(role)}
-                                                className="rounded-lg border border-red-100 px-2.5 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors">
+                                                className="rounded-lg border border-destructive/20 px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors">
                                                 Hapus
                                             </button>
                                         </div>
@@ -373,10 +373,10 @@ export default function Index({ roles, permissions }) {
                                     {role.permissions?.length > 0 && (
                                         <div className="mt-3 flex flex-wrap gap-1">
                                             {role.permissions.slice(0, 8).map(p => (
-                                                <span key={p} className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">{p}</span>
+                                                <span key={p} className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{p}</span>
                                             ))}
                                             {role.permissions.length > 8 && (
-                                                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-400">+{role.permissions.length - 8} lagi</span>
+                                                <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">+{role.permissions.length - 8} lagi</span>
                                             )}
                                         </div>
                                     )}

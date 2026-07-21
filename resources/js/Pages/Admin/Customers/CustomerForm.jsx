@@ -1,5 +1,6 @@
 import { Link, router } from "@inertiajs/react";
 import { useState } from "react";
+import Button from "@/Components/ui/Button";
 import Field from "@/Components/ui/Field";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 
@@ -7,7 +8,7 @@ const inp = (err) =>
     `mt-1.5 block w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition focus:ring-2 ${
         err
             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-slate-300 focus:border-primary-500 focus:ring-primary-200"
+            : "border-border focus:border-ring focus:ring-ring/20"
     }`;
 
 const genderOptions = [
@@ -108,7 +109,7 @@ export default function CustomerForm({
             {showDeposit && (
                 <Field label="Saldo Deposit" error={errors.deposit_balance}>
                     <div className="relative">
-                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
                             Rp
                         </span>
                         <input
@@ -120,19 +121,19 @@ export default function CustomerForm({
                             className={`${inp(errors.deposit_balance)} pl-9`}
                         />
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-muted-foreground">
                         Saldo deposit pelanggan (untuk pembayaran prepaid)
                     </p>
                 </Field>
             )}
 
             {/* Hutang Section */}
-            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
-                <h4 className="text-sm font-semibold text-slate-700">Hutang / Kasbon</h4>
+            <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-3">
+                <h4 className="text-sm font-semibold text-foreground">Hutang / Kasbon</h4>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field label="Limit Kredit" error={errors.credit_limit}>
                         <div className="relative">
-                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
                                 Rp
                             </span>
                             <input
@@ -144,20 +145,20 @@ export default function CustomerForm({
                                 className={`${inp(errors.credit_limit)} pl-9`}
                             />
                         </div>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-muted-foreground">
                             Batas maksimal hutang (0 = tanpa limit)
                         </p>
                     </Field>
                     <Field label="Saldo Hutang Saat Ini">
                         <div className="relative">
-                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
                                 Rp
                             </span>
                             <input
                                 type="text"
                                 value={Number(data.debt_balance ?? 0).toLocaleString("id-ID")}
                                 disabled
-                                className={`${inp()} pl-9 bg-slate-100 text-slate-500`}
+                                className={`${inp()} pl-9 bg-muted text-muted-foreground`}
                             />
                         </div>
                     </Field>
@@ -165,13 +166,13 @@ export default function CustomerForm({
 
                 {/* Pay Debt */}
                 {customer && (data.debt_balance ?? 0) > 0 && (
-                    <div className="flex items-end gap-3 border-t border-slate-200 pt-3">
+                    <div className="flex items-end gap-3 border-t border-border pt-3">
                         <div className="flex-1">
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 Bayar Hutang
                             </label>
                             <div className="relative">
-                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
                                     Rp
                                 </span>
                                 <input
@@ -207,20 +208,16 @@ export default function CustomerForm({
                 />
             </Field>
 
-            <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+            <div className="flex justify-end gap-3 border-t border-border pt-4">
                 <Link
                     href={cancelHref}
-                    className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                    className="rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted"
                 >
                     Batal
                 </Link>
-                <button
-                    type="submit"
-                    disabled={processing}
-                    className="rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
-                >
-                    {processing ? "Menyimpan..." : submitLabel}
-                </button>
+                <Button type="submit" loading={processing}>
+                    {submitLabel}
+                </Button>
             </div>
         </form>
     );

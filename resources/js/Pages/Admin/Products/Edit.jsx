@@ -4,6 +4,7 @@ import { useState } from "react";
 import BarcodeScanner from "@/Components/BarcodeScanner";
 import TreePicker from "@/Components/TreePicker";
 import Select from "@/Components/ui/Select";
+import Button from "@/Components/ui/Button";
 import CurrencyInput from "@/Components/ui/CurrencyInput";
 import {
     BarChart3,
@@ -188,39 +189,39 @@ export default function Edit({
                     <div className="flex items-center gap-3">
                         <Link
                             href={route("admin.products.index")}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                             aria-label="Kembali"
                         >
                             <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
                         </Link>
                         <div className="leading-tight">
-                            <div className="text-sm font-semibold text-slate-900">
+                            <div className="text-sm font-semibold text-foreground">
                                 Edit Produk
                             </div>
-                            <div className="text-[11px] text-slate-500">
+                            <div className="text-[11px] text-muted-foreground">
                                 {product.name}{" "}
-                                <span className="text-slate-400 ml-1">
+                                <span className="text-muted-foreground ml-1">
                                     SKU: {product.sku}
                                 </span>
                             </div>
                         </div>
                     </div>
-                    <nav className="hidden md:flex items-center text-xs text-slate-500 gap-2">
+                    <nav className="hidden md:flex items-center text-xs text-muted-foreground gap-2">
                         <Link
                             href={route("admin.products.index")}
-                            className="hover:text-slate-800"
+                            className="hover:text-foreground"
                         >
                             Produk
                         </Link>
                         <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                        <span className="text-slate-900 font-medium">
+                        <span className="text-foreground font-medium">
                             Edit Produk
                         </span>
                     </nav>
                     <div className="flex items-center gap-2">
                         <Link
                             href={route("admin.products.index")}
-                            className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                            className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
                         >
                             <X className="h-4 w-4" />
                             <span className="hidden sm:inline">Batal</span>
@@ -320,7 +321,7 @@ export default function Edit({
                                                 onClick={() =>
                                                     setShowScanner(true)
                                                 }
-                                                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-primary-700"
+                                                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-primary/90"
                                             >
                                                 <ScanLine className="h-4 w-4" />
                                                 Scan
@@ -413,7 +414,7 @@ export default function Edit({
                                         placeholder="Tulis deskripsi singkat produk (opsional)…"
                                         className={`${inputCls(!!errors.description)} resize-y`}
                                     />
-                                    <div className="flex justify-end mt-1 text-[11px] text-slate-400">
+                                    <div className="flex justify-end mt-1 text-[11px] text-muted-foreground">
                                         {(data.description || "").length}/2000
                                     </div>
                                 </Field>
@@ -429,8 +430,8 @@ export default function Edit({
                                 {product.is_variant && (
                                     <div className="mb-4 flex items-center justify-between rounded-xl border border-primary-100 bg-primary-50/50 p-4">
                                         <div>
-                                            <p className="text-sm font-semibold text-slate-900">Jual Produk Dasar</p>
-                                            <p className="text-[11px] text-slate-500 mt-0.5">
+                                            <p className="text-sm font-semibold text-foreground">Jual Produk Dasar</p>
+                                            <p className="text-[11px] text-muted-foreground mt-0.5">
                                                 Aktifkan jika produk dasar juga dijual di kasir bersama variant.
                                                 Nonaktifkan jika hanya variant yang dijual (cth: Kaos Size X, XL, XXL).
                                             </p>
@@ -440,7 +441,7 @@ export default function Edit({
                                             onClick={() => setData("sell_base", !data.sell_base)}
                                             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.sell_base ? "bg-primary-600" : "bg-slate-300"}`}
                                         >
-                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${data.sell_base ? "translate-x-5" : "translate-x-0"}`} />
+                                            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ${data.sell_base ? "translate-x-5" : "translate-x-0"}`} />
                                         </button>
                                     </div>
                                 )}
@@ -480,10 +481,10 @@ export default function Edit({
                                             <Field label="Margin">
                                                 <div className="flex gap-2">
                                                     <div
-                                                        className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50"}`}
+                                                        className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-rose-200 bg-rose-50" : "border-success/20 bg-success/10"}`}
                                                     >
                                                         <div
-                                                            className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-rose-600" : "text-emerald-700"}`}
+                                                            className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-rose-600" : "text-success"}`}
                                                         >
                                                             Rupiah
                                                         </div>
@@ -497,10 +498,10 @@ export default function Edit({
                                                         </div>
                                                     </div>
                                                     <div
-                                                        className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50"}`}
+                                                        className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-rose-200 bg-rose-50" : "border-success/20 bg-success/10"}`}
                                                     >
                                                         <div
-                                                            className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-rose-600" : "text-emerald-700"}`}
+                                                            className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-rose-600" : "text-success"}`}
                                                         >
                                                             Persen
                                                         </div>
@@ -525,10 +526,10 @@ export default function Edit({
                                                         <Package className="h-4 w-4 text-amber-700" />
                                                     </div>
                                                     <div>
-                                                        <div className="text-sm font-semibold text-slate-900">
+                                                        <div className="text-sm font-semibold text-foreground">
                                                             Multi Satuan (Kemasan)
                                                         </div>
-                                                        <div className="text-[11px] text-slate-500">
+                                                        <div className="text-[11px] text-muted-foreground">
                                                             cth. Dus berisi 12{" "}
                                                             {data.unit}
                                                         </div>
@@ -562,7 +563,7 @@ export default function Edit({
                                                     (pu, i) => (
                                                         <div
                                                             key={i}
-                                                            className="grid grid-cols-12 gap-2 items-center rounded-xl bg-white p-2.5 border border-amber-100"
+                                                            className="grid grid-cols-12 gap-2 items-center rounded-xl bg-card p-2.5 border border-amber-100"
                                                         >
                                                             <div className="col-span-12 sm:col-span-3">
                                                                 <input
@@ -587,7 +588,7 @@ export default function Edit({
                                                                         );
                                                                     }}
                                                                     placeholder="Nama (Dus, Box…)"
-                                                                    className="block w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+                                                                    className="block w-full rounded-lg border border-border px-3 py-2 text-xs"
                                                                 />
                                                             </div>
                                                             <div className="col-span-6 sm:col-span-2">
@@ -615,9 +616,9 @@ export default function Edit({
                                                                         }}
                                                                         min="1"
                                                                         placeholder="12"
-                                                                        className="block w-full rounded-lg border border-slate-200 px-3 py-2 pr-8 text-xs"
+                                                                        className="block w-full rounded-lg border border-border px-3 py-2 pr-8 text-xs"
                                                                     />
-                                                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                                         {
                                                                             data.unit
                                                                         }
@@ -626,7 +627,7 @@ export default function Edit({
                                                             </div>
                                                             <div className="col-span-6 sm:col-span-3">
                                                                 <div className="relative">
-                                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                                         Rp
                                                                     </span>
                                                                     <input
@@ -652,7 +653,7 @@ export default function Edit({
                                                                         }}
                                                                         min="0"
                                                                         placeholder="Harga"
-                                                                        className="block w-full rounded-lg border border-slate-200 py-2 pl-7 pr-3 text-xs"
+                                                                        className="block w-full rounded-lg border border-border py-2 pl-7 pr-3 text-xs"
                                                                     />
                                                                 </div>
                                                             </div>
@@ -679,7 +680,7 @@ export default function Edit({
                                                                         );
                                                                     }}
                                                                     placeholder="Barcode (opsional)"
-                                                                    className="block w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+                                                                    className="block w-full rounded-lg border border-border px-3 py-2 text-xs"
                                                                 />
                                                             </div>
                                                             <div className="col-span-2 sm:col-span-1 flex items-center justify-end">
@@ -707,9 +708,9 @@ export default function Edit({
                                                                 0 &&
                                                                 pu.sell_price >
                                                                     0 && (
-                                                                    <div className="col-span-12 text-[11px] text-slate-500 pl-1">
+                                                                    <div className="col-span-12 text-[11px] text-muted-foreground pl-1">
                                                                         ≈{" "}
-                                                                        <span className="font-semibold text-emerald-700">
+                                                                        <span className="font-semibold text-success">
                                                                             Rp{" "}
                                                                             {Math.round(
                                                                                 pu.sell_price /
@@ -729,7 +730,7 @@ export default function Edit({
                                                 )}
                                                 {data.packaging_units.length ===
                                                     0 && (
-                                                    <p className="text-xs text-slate-500 italic text-center py-4">
+                                                    <p className="text-xs text-muted-foreground italic text-center py-4">
                                                         Belum ada kemasan
                                                         tambahan.
                                                     </p>
@@ -739,17 +740,17 @@ export default function Edit({
                                     )}
 
                                     {/* GROSIR TIERS */}
-                                    <div className="rounded-xl border border-slate-200 bg-white/50 p-4">
+                                    <div className="rounded-xl border border-border bg-card/50 p-4">
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-2">
                                                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-50">
                                                     <BarChart3 className="h-4 w-4 text-primary-600" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-semibold text-slate-900">
+                                                    <div className="text-sm font-semibold text-foreground">
                                                         Harga Grosir Bertingkat
                                                     </div>
-                                                    <div className="text-[11px] text-slate-500">
+                                                    <div className="text-[11px] text-muted-foreground">
                                                         Maks 5 tier · beli lebih
                                                         banyak, harga lebih murah
                                                     </div>
@@ -779,7 +780,7 @@ export default function Edit({
                                                 (tier, i) => (
                                                     <div
                                                         key={i}
-                                                        className="grid grid-cols-12 gap-2 items-center rounded-xl bg-white p-2.5 border border-slate-200"
+                                                        className="grid grid-cols-12 gap-2 items-center rounded-xl bg-card p-2.5 border border-border"
                                                     >
                                                         <div className="col-span-2 flex items-center justify-center">
                                                             <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700 border border-primary-100">
@@ -787,7 +788,7 @@ export default function Edit({
                                                             </span>
                                                         </div>
                                                         <div className="col-span-5 sm:col-span-4">
-                                                            <label className="text-[10px] font-semibold text-slate-500">
+                                                            <label className="text-[10px] font-semibold text-muted-foreground">
                                                                 Min. Qty
                                                             </label>
                                                             <div className="relative">
@@ -818,19 +819,19 @@ export default function Edit({
                                                                         );
                                                                     }}
                                                                     placeholder="0"
-                                                                    className="block w-full rounded-lg border border-slate-200 px-3 py-2 pr-10 text-xs"
+                                                                    className="block w-full rounded-lg border border-border px-3 py-2 pr-10 text-xs"
                                                                 />
-                                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                                     {data.unit}
                                                                 </span>
                                                             </div>
                                                         </div>
                                                         <div className="col-span-4 sm:col-span-5">
-                                                            <label className="text-[10px] font-semibold text-slate-500">
+                                                            <label className="text-[10px] font-semibold text-muted-foreground">
                                                                 Harga per Unit
                                                             </label>
                                                             <div className="relative">
-                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                                     Rp
                                                                 </span>
                                                                 <input
@@ -855,7 +856,7 @@ export default function Edit({
                                                                         );
                                                                     }}
                                                                     placeholder="0"
-                                                                    className="block w-full rounded-lg border border-slate-200 py-2 pl-7 pr-3 text-xs"
+                                                                    className="block w-full rounded-lg border border-border py-2 pl-7 pr-3 text-xs"
                                                                 />
                                                             </div>
                                                         </div>
@@ -884,7 +885,7 @@ export default function Edit({
                                                 ),
                                             )}
                                             {data.price_tiers.length === 0 && (
-                                                <p className="text-xs text-slate-500 italic text-center py-4">
+                                                <p className="text-xs text-muted-foreground italic text-center py-4">
                                                     Belum ada tier grosir.
                                                 </p>
                                             )}
@@ -921,11 +922,11 @@ export default function Edit({
                                             disabled={isNoStock}
                                             className={`${inputCls(!!errors.stock_minimum)} pr-16`}
                                         />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
                                             {data.unit}
                                         </span>
                                     </div>
-                                    <p className="text-[11px] text-slate-500 mt-1">
+                                    <p className="text-[11px] text-muted-foreground mt-1">
                                         Kasir akan diingatkan ketika stok
                                         mencapai angka ini.
                                     </p>
@@ -949,7 +950,7 @@ export default function Edit({
                                                 placeholder="0"
                                                 className={`${inputCls(!!errors.preparation_time)} pr-16`}
                                             />
-                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
                                                 menit
                                             </span>
                                         </div>
@@ -1014,7 +1015,7 @@ export default function Edit({
                                                 error={errors.price_per_hour}
                                             >
                                                 <div className="relative">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
                                                         Rp
                                                     </span>
                                                     <input
@@ -1056,7 +1057,7 @@ export default function Edit({
                                                         placeholder="0"
                                                         className={`${inputCls(!!errors.min_duration_minutes)} pr-16`}
                                                     />
-                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
                                                         menit
                                                     </span>
                                                 </div>
@@ -1088,7 +1089,7 @@ export default function Edit({
                                                         placeholder="60"
                                                         className={`${inputCls(!!errors.session_duration_minutes)} pr-16`}
                                                     />
-                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
                                                         menit
                                                     </span>
                                                 </div>
@@ -1115,7 +1116,7 @@ export default function Edit({
                                                     placeholder="0"
                                                     className={`${inputCls(!!errors.capacity)} pr-16`}
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
                                                     orang
                                                 </span>
                                             </div>
@@ -1144,7 +1145,7 @@ export default function Edit({
                                                     placeholder="0"
                                                     className={`${inputCls(!!errors.valid_duration_minutes)} pr-16`}
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
                                                     menit
                                                 </span>
                                             </div>
@@ -1169,7 +1170,7 @@ export default function Edit({
                                                     placeholder="0"
                                                     className={`${inputCls(!!errors.max_guests)} pr-16`}
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
                                                     orang
                                                 </span>
                                             </div>
@@ -1182,7 +1183,7 @@ export default function Edit({
                                             error={errors.deposit_amount}
                                         >
                                             <div className="relative">
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
                                                     Rp
                                                 </span>
                                                 <input
@@ -1212,7 +1213,7 @@ export default function Edit({
                         <SectionCard title="Gambar Produk" accent="violet">
                             <div className="space-y-3">
                                 <div
-                                    className="group relative aspect-square w-full overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-gradient-to-br from-primary-50/30 to-violet-50/30 transition hover:border-primary-400 hover:bg-primary-50/40 cursor-pointer"
+                                    className="group relative aspect-square w-full overflow-hidden rounded-xl border-2 border-dashed border-border bg-gradient-to-br from-primary-50/30 to-violet-50/30 transition hover:border-primary-400 hover:bg-primary-50/40 cursor-pointer"
                                     onClick={() =>
                                         document
                                             .getElementById("imageInput")
@@ -1227,16 +1228,16 @@ export default function Edit({
                                         />
                                     ) : (
                                         <div className="flex h-full flex-col items-center justify-center p-6">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30 mb-2">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary/20 mb-2">
                                                 <Image
                                                     className="h-6 w-6 text-white"
                                                     strokeWidth={1.5}
                                                 />
                                             </div>
-                                            <p className="text-sm font-semibold text-slate-800">
+                                            <p className="text-sm font-semibold text-foreground">
                                                 Drag & drop gambar
                                             </p>
-                                            <p className="text-[11px] text-slate-500 mt-0.5">
+                                            <p className="text-[11px] text-muted-foreground mt-0.5">
                                                 atau klik untuk pilih file ·
                                                 PNG, JPG (maks 2MB)
                                             </p>
@@ -1254,13 +1255,13 @@ export default function Edit({
                                     <button
                                         type="button"
                                         onClick={handleRemoveImage}
-                                        className="w-full text-center text-xs font-medium text-red-500 transition hover:text-red-700"
+                                        className="w-full text-center text-xs font-medium text-destructive transition hover:text-destructive"
                                     >
                                         Hapus Gambar
                                     </button>
                                 )}
                                 {errors.image && (
-                                    <p className="text-xs text-red-500">
+                                    <p className="text-xs text-destructive">
                                         {errors.image}
                                     </p>
                                 )}
@@ -1294,7 +1295,7 @@ export default function Edit({
                                     />
                                 )}
                             </dl>
-                            <div className="mt-3 flex flex-wrap gap-1.5 border-t border-dashed border-slate-200 pt-3">
+                            <div className="mt-3 flex flex-wrap gap-1.5 border-t border-dashed border-border pt-3">
                                 {feat.trackStock && !isNoStock && (
                                     <SummaryChip
                                         active={data.track_stock}
@@ -1320,19 +1321,17 @@ export default function Edit({
 
                         {/* Actions — desktop only */}
                         <div className="hidden lg:flex flex-col gap-2.5">
-                            <button
+                            <Button
                                 type="submit"
                                 form="productForm"
-                                disabled={processing}
-                                className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
+                                loading={processing}
+                                className="w-full"
                             >
-                                {processing
-                                    ? "Menyimpan..."
-                                    : "Simpan Perubahan"}
-                            </button>
+                                Simpan Perubahan
+                            </Button>
                             <Link
                                 href={route("admin.products.index")}
-                                className="w-full rounded-xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-800"
+                                className="w-full rounded-xl border border-border bg-card px-5 py-3 text-center text-sm font-medium text-muted-foreground shadow-sm transition hover:bg-muted hover:text-foreground"
                             >
                                 Batal
                             </Link>
@@ -1345,7 +1344,7 @@ export default function Edit({
             <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 lg:hidden">
                 <Link
                     href={route("admin.products.index")}
-                    className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-slate-500 shadow-lg ring-1 ring-slate-200 transition hover:bg-red-50 hover:text-red-500 hover:ring-red-200"
+                    className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-slate-200 transition hover:bg-destructive/10 hover:text-destructive hover:ring-red-200"
                     title="Batal"
                 >
                     <X className="h-5 w-5" strokeWidth={2} />
@@ -1426,9 +1425,9 @@ function SectionCard({
     };
 
     return (
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <section className="rounded-2xl border border-border bg-card shadow-sm">
             <div
-                className={`flex items-start justify-between gap-3 border-b border-slate-100 bg-gradient-to-r ${accents[accent] ?? accents.indigo} px-5 py-4 sm:px-6 rounded-t-2xl`}
+                className={`flex items-start justify-between gap-3 border-b border-border bg-gradient-to-r ${accents[accent] ?? accents.indigo} px-5 py-4 sm:px-6 rounded-t-2xl`}
             >
                 <div className="flex items-start gap-3">
                     {step && (
@@ -1437,11 +1436,11 @@ function SectionCard({
                         </span>
                     )}
                     <div className="min-w-0">
-                        <h3 className="text-base font-semibold text-slate-900 tracking-tight">
+                        <h3 className="text-base font-semibold text-foreground tracking-tight">
                             {title}
                         </h3>
                         {subtitle && (
-                            <p className="mt-0.5 text-xs text-slate-500">
+                            <p className="mt-0.5 text-xs text-muted-foreground">
                                 {subtitle}
                             </p>
                         )}
@@ -1469,7 +1468,7 @@ function ToggleSwitch({ checked, onChange, disabled = false }) {
             } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
         >
             <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ${
+                className={`inline-block h-5 w-5 transform rounded-full bg-card shadow transition duration-200 ${
                     checked ? "translate-x-5" : "translate-x-0.5"
                 }`}
             />
@@ -1486,10 +1485,10 @@ function SettingToggle({
 }) {
     if (!show) return null;
     return (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-primary-200 cursor-pointer">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5 transition hover:border-primary-200 cursor-pointer">
             <div>
-                <p className="text-sm font-semibold text-slate-900">{label}</p>
-                <p className="text-[11px] text-slate-500">{description}</p>
+                <p className="text-sm font-semibold text-foreground">{label}</p>
+                <p className="text-[11px] text-muted-foreground">{description}</p>
             </div>
             <ToggleSwitch checked={checked} onChange={onChange} />
         </div>
@@ -1502,12 +1501,12 @@ function SummaryChip({ label, active, show = true }) {
         <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                 active
-                    ? "border border-emerald-100 bg-emerald-50 text-emerald-700"
-                    : "border border-slate-200 bg-slate-100 text-slate-500"
+                    ? "border border-emerald-100 bg-success/10 text-success"
+                    : "border border-border bg-muted text-muted-foreground"
             }`}
         >
             <span
-                className={`h-1.5 w-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-slate-400"}`}
+                className={`h-1.5 w-1.5 rounded-full ${active ? "bg-success/100" : "bg-slate-400"}`}
             />
             {label}
         </span>
@@ -1517,16 +1516,16 @@ function SummaryChip({ label, active, show = true }) {
 function Field({ label, required, error, hint, children }) {
     return (
         <div>
-            <label className="mb-1.5 block text-[0.8rem] font-semibold tracking-wide text-slate-600">
+            <label className="mb-1.5 block text-[0.8rem] font-semibold tracking-wide text-muted-foreground">
                 {label} {required && <span className="text-rose-500">*</span>}
                 {hint && (
-                    <span className="ml-1 text-[11px] font-normal text-slate-400">
+                    <span className="ml-1 text-[11px] font-normal text-muted-foreground">
                         ({hint})
                     </span>
                 )}
             </label>
             {children}
-            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+            {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
     );
 }
@@ -1534,8 +1533,8 @@ function Field({ label, required, error, hint, children }) {
 function SummaryRow({ label, value }) {
     return (
         <div className="flex items-start justify-between gap-3">
-            <dt className="text-xs text-slate-500">{label}</dt>
-            <dd className="text-xs font-semibold text-slate-900 text-right max-w-[65%] truncate">
+            <dt className="text-xs text-muted-foreground">{label}</dt>
+            <dd className="text-xs font-semibold text-foreground text-right max-w-[65%] truncate">
                 {value}
             </dd>
         </div>
@@ -1543,7 +1542,7 @@ function SummaryRow({ label, value }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border border-slate-200 bg-white py-2.5 px-3.5 text-sm transition outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 ${
+    return `block w-full rounded-xl border border-border bg-card py-2.5 px-3.5 text-sm transition outline-none focus:border-ring focus:ring-4 focus:ring-primary-500/10 ${
         hasError ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""
     }`;
 }

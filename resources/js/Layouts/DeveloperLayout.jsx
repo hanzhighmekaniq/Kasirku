@@ -96,10 +96,10 @@ function NavItem({ item }) {
         <Link
             href={item.href}
             className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all
-                ${active ? "bg-primary-50 text-primary-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
+                ${active ? "bg-primary-50 text-primary-700" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}
         >
             <span
-                className={`flex h-[22px] w-[22px] items-center justify-center ${active ? "text-primary-600" : "text-slate-400"}`}
+                className={`flex h-[22px] w-[22px] items-center justify-center ${active ? "text-primary-600" : "text-muted-foreground"}`}
             >
                 <svg
                     className="h-[15px] w-[15px]"
@@ -122,14 +122,14 @@ export default function DeveloperLayout({ header, children }) {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     const Sidebar = () => (
-        <div className="flex h-full flex-col bg-white border-r border-slate-200">
+        <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
             {/* Brand */}
-            <div className="flex h-[57px] shrink-0 items-center gap-2.5 border-b border-slate-100 px-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-600 shadow-sm">
-                    <ApplicationLogo className="h-4 w-4 fill-current text-white" />
+            <div className="flex h-[57px] shrink-0 items-center gap-2.5 border-b border-sidebar-border px-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary shadow-sm">
+                    <ApplicationLogo className="h-4 w-4 fill-current text-sidebar-primary-foreground" />
                 </div>
                 <div className="leading-none">
-                    <span className="block text-[13px] font-bold tracking-tight text-slate-800">
+                    <span className="block text-[13px] font-bold tracking-tight text-sidebar-foreground">
                         SIM-KASIR
                     </span>
                     <span className="block text-[10px] text-primary-500 font-medium">
@@ -140,7 +140,7 @@ export default function DeveloperLayout({ header, children }) {
 
             {/* Nav */}
             <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-3">
-                <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                     Menu
                 </p>
                 {navItems.map((item) => (
@@ -149,8 +149,8 @@ export default function DeveloperLayout({ header, children }) {
             </nav>
 
             {/* Footer */}
-            <div className="shrink-0 border-t border-slate-100 px-4 py-2.5">
-                <span className="text-[10px] text-slate-400">
+            <div className="shrink-0 border-t border-sidebar-border px-4 py-2.5">
+                <span className="text-[10px] text-muted-foreground">
                     © {new Date().getFullYear()} SIM-KASIR Dev
                 </span>
             </div>
@@ -158,7 +158,7 @@ export default function DeveloperLayout({ header, children }) {
     );
 
     return (
-        <div className="min-h-screen bg-[#f8f9fb]">
+        <div className="min-h-screen bg-background text-foreground">
             {/* Desktop sidebar */}
             <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] overflow-hidden lg:block">
                 <Sidebar />
@@ -182,11 +182,11 @@ export default function DeveloperLayout({ header, children }) {
             {/* Main */}
             <div className="flex min-h-screen flex-col lg:pl-[220px]">
                 {/* Topbar */}
-                <header className="sticky top-0 z-20 flex h-[57px] items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-5">
+                <header className="sticky top-0 z-20 flex h-[57px] items-center justify-between border-b border-border bg-card px-4 sm:px-5">
                     <div className="flex min-w-0 items-center gap-3">
                         <button
                             onClick={() => setMobileOpen(true)}
-                            className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 lg:hidden"
+                            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground lg:hidden"
                         >
                             <svg
                                 className="h-5 w-5"
@@ -202,23 +202,23 @@ export default function DeveloperLayout({ header, children }) {
                                 />
                             </svg>
                         </button>
-                        <div className="h-5 w-px bg-slate-200" />
-                        <div className="min-w-0 truncate text-sm text-slate-700">
+                        <div className="h-5 w-px bg-border" />
+                        <div className="min-w-0 truncate text-sm text-foreground">
                             {header}
                         </div>
                     </div>
 
                     <Dropdown>
                         <Dropdown.Trigger>
-                            <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm hover:bg-slate-50">
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-[10px] font-bold text-white">
+                            <button className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-1.5 text-sm hover:bg-accent">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                                     {user?.name?.charAt(0).toUpperCase()}
                                 </span>
-                                <span className="hidden max-w-[8rem] truncate text-xs font-medium text-slate-700 sm:block">
+                                <span className="hidden max-w-[8rem] truncate text-xs font-medium text-foreground sm:block">
                                     {user?.name}
                                 </span>
                                 <svg
-                                    className="h-3.5 w-3.5 text-slate-400"
+                                    className="h-3.5 w-3.5 text-muted-foreground"
                                     viewBox="0 0 20 20"
                                     fill="currentColor"
                                 >
@@ -236,7 +236,7 @@ export default function DeveloperLayout({ header, children }) {
                             >
                                 Pengaturan Akun
                             </Dropdown.Link>
-                            <div className="my-1 border-t border-slate-100" />
+                            <div className="my-1 border-t border-border" />
                             <Dropdown.Link
                                 href={route("logout")}
                                 method="post"
@@ -250,12 +250,12 @@ export default function DeveloperLayout({ header, children }) {
 
                 {/* Flash */}
                 {flash?.success && (
-                    <div className="mx-5 mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">
+                    <div className="mx-5 mt-4 rounded-lg border border-success/20 bg-success/10 px-4 py-2.5 text-sm text-success">
                         ✅ {flash.success}
                     </div>
                 )}
                 {flash?.error && (
-                    <div className="mx-5 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+                    <div className="mx-5 mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive">
                         ❌ {flash.error}
                     </div>
                 )}

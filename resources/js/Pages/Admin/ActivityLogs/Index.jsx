@@ -2,6 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router } from "@inertiajs/react";
 import { useState, useRef, useEffect } from "react";
 import { Activity, Calendar, ChevronDown, Check, Filter, RotateCcw, Search } from "lucide-react";
+import Button from "@/Components/ui/Button";
 
 const LOG_NAME_LABELS = {
     shift: "Shift Kasir",
@@ -60,43 +61,43 @@ function SelectDropdown({ value, options, onChange, placeholder = "Pilih..." }) 
                 ref={btnRef}
                 type="button"
                 onClick={toggle}
-                className="inline-flex w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 transition hover:border-slate-300 hover:shadow-sm"
+                className="inline-flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition hover:border-ring hover:shadow-sm"
             >
-                <span className={selected ? "text-slate-700" : "text-slate-400"}>
+                <span className={selected ? "text-foreground" : "text-muted-foreground"}>
                     {selected?.label ?? placeholder}
                 </span>
                 <ChevronDown
-                    className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+                    className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
                     strokeWidth={2}
                 />
             </button>
             {open && (
                 <div
-                    className="fixed z-[100] max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5"
+                    className="fixed z-[100] max-h-56 overflow-y-auto rounded-xl border border-border bg-popover shadow-xl ring-1 ring-black/5"
                     style={{ top: pos.top, left: pos.left, minWidth: pos.width }}
                 >
                     <button
                         type="button"
                         onClick={() => { onChange(""); setOpen(false); }}
-                        className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition hover:bg-slate-50 ${
-                            !value ? "bg-primary-50/50 text-primary-700 font-medium" : "text-slate-500"
+                        className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition hover:bg-muted ${
+                            !value ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"
                         }`}
                     >
                         {placeholder}
-                        {!value && <Check className="ml-auto h-3.5 w-3.5 text-primary-500" strokeWidth={2.5} />}
+                        {!value && <Check className="ml-auto h-3.5 w-3.5 text-primary" strokeWidth={2.5} />}
                     </button>
                     {options.map((opt) => (
                         <button
                             key={opt.value}
                             type="button"
                             onClick={() => { onChange(opt.value); setOpen(false); }}
-                            className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition hover:bg-slate-50 ${
-                                value === opt.value ? "bg-primary-50/50 text-primary-700 font-medium" : "text-slate-600"
+                            className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition hover:bg-muted ${
+                                value === opt.value ? "bg-primary/10 text-primary font-medium" : "text-foreground"
                             }`}
                         >
                             {opt.label}
                             {value === opt.value && (
-                                <Check className="ml-auto h-3.5 w-3.5 text-primary-500" strokeWidth={2.5} />
+                                <Check className="ml-auto h-3.5 w-3.5 text-primary" strokeWidth={2.5} />
                             )}
                         </button>
                     ))}
@@ -106,7 +107,7 @@ function SelectDropdown({ value, options, onChange, placeholder = "Pilih..." }) 
     );
 }
 
-const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
+const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
 
 /* ─── Page ──────────────────────────────────────────── */
 export default function Index({
@@ -177,19 +178,19 @@ export default function Index({
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
                             <Activity className="h-5 w-5" strokeWidth={1.8} />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-slate-800">Log Aktivitas</h2>
+                            <h2 className="text-lg font-bold text-foreground">Log Aktivitas</h2>
                             <div className="flex items-center gap-2">
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground">
                                     {logs.total} entri
                                 </p>
                                 {currentBranch && (
                                     <>
-                                        <span className="text-slate-300">•</span>
-                                        <p className="text-xs text-slate-400">
+                                        <span className="text-muted-foreground">•</span>
+                                        <p className="text-xs text-muted-foreground">
                                             {currentBranch.name}
                                         </p>
                                     </>
@@ -204,12 +205,12 @@ export default function Index({
 
             <div className="space-y-5">
                 {/* ── Filters ── */}
-                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="flex items-center gap-3 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white px-5 py-3.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+                <div className="rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="flex items-center gap-3 border-b border-border bg-muted/50 px-5 py-3.5">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                             <Filter className="h-4 w-4" strokeWidth={1.8} />
                         </div>
-                        <h3 className="text-sm font-semibold text-slate-700">Filter</h3>
+                        <h3 className="text-sm font-semibold text-foreground">Filter</h3>
                     </div>
 
                     <div className="p-5">
@@ -257,10 +258,10 @@ export default function Index({
                                         onChange={(e) =>
                                             setFormFilters((p) => ({ ...p, date_from: e.target.value }))
                                         }
-                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm transition hover:border-slate-300 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                        className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition hover:border-ring focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                                     />
                                 </div>
-                                <span className="pb-2 text-slate-400">—</span>
+                                <span className="pb-2 text-muted-foreground">—</span>
                                 <div>
                                     <label className={labelClass}>Sampai</label>
                                     <input
@@ -269,27 +270,24 @@ export default function Index({
                                         onChange={(e) =>
                                             setFormFilters((p) => ({ ...p, date_to: e.target.value }))
                                         }
-                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm transition hover:border-slate-300 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
+                                        className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition hover:border-ring focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                                     />
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-2 sm:ml-auto">
-                                <button
-                                    onClick={apply}
-                                    className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:from-primary-600 hover:to-primary-700"
-                                >
-                                    <Search className="h-4 w-4" strokeWidth={2} />
+                                <Button onClick={apply} icon={Search} size="lg">
                                     Terapkan
-                                </button>
+                                </Button>
                                 {hasFilters && (
-                                    <button
+                                    <Button
+                                        variant="outline"
+                                        size="lg"
                                         onClick={clear}
-                                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                                        icon={RotateCcw}
                                     >
-                                        <RotateCcw className="h-4 w-4" strokeWidth={1.8} />
                                         Reset
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                         </div>
@@ -297,11 +295,11 @@ export default function Index({
                 </div>
 
                 {/* ── Log Table ── */}
-                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="rounded-2xl border border-border bg-card shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead>
-                                <tr className="border-b border-slate-100 bg-slate-50/60 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                <tr className="border-b border-border bg-muted/50 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                     <th className="px-5 py-3.5 whitespace-nowrap">Waktu</th>
                                     <th className="px-5 py-3.5">User</th>
                                     <th className="px-5 py-3.5">Toko / Cabang</th>
@@ -309,18 +307,18 @@ export default function Index({
                                     <th className="px-5 py-3.5">Deskripsi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-border">
                                 {logs.data.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="px-5 py-16 text-center">
                                             <div className="flex flex-col items-center">
-                                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
-                                                    <Activity className="h-7 w-7 text-slate-400" strokeWidth={1.4} />
+                                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                                                    <Activity className="h-7 w-7 text-muted-foreground" strokeWidth={1.4} />
                                                 </div>
-                                                <h3 className="mt-3 text-sm font-semibold text-slate-700">
+                                                <h3 className="mt-3 text-sm font-semibold text-foreground">
                                                     Belum ada log aktivitas
                                                 </h3>
-                                                <p className="mt-1 text-xs text-slate-400">
+                                                <p className="mt-1 text-xs text-muted-foreground">
                                                     Aktivitas akan tercatat di sini secara otomatis
                                                 </p>
                                             </div>
@@ -330,20 +328,20 @@ export default function Index({
                                     logs.data.map((log) => (
                                         <tr
                                             key={log.id}
-                                            className="transition hover:bg-slate-50/60"
+                                            className="transition hover:bg-muted/50"
                                         >
                                             {/* Waktu */}
-                                            <td className="px-5 py-3.5 text-xs text-slate-500 whitespace-nowrap">
+                                            <td className="px-5 py-3.5 text-xs text-muted-foreground whitespace-nowrap">
                                                 {fmtDate(log.created_at)}
                                             </td>
 
                                             {/* User */}
                                             <td className="px-5 py-3.5">
                                                 <div className="flex items-center gap-2.5">
-                                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-[10px] font-bold text-primary-600">
+                                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[10px] font-bold text-primary">
                                                         {(log.user?.name ?? "S").charAt(0).toUpperCase()}
                                                     </span>
-                                                    <span className="text-sm font-medium text-slate-700">
+                                                    <span className="text-sm font-medium text-foreground">
                                                         {log.user?.name ?? "System"}
                                                     </span>
                                                 </div>
@@ -353,17 +351,17 @@ export default function Index({
                                             <td className="px-5 py-3.5 text-xs">
                                                 {log.store ? (
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-medium text-slate-600 truncate max-w-[120px]">
+                                                        <span className="font-medium text-foreground truncate max-w-[120px]">
                                                             {log.store.name}
                                                         </span>
                                                         {log.branch && (
-                                                            <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+                                                            <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                                                                 {log.branch.name}
                                                             </span>
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    <span className="text-slate-400">-</span>
+                                                    <span className="text-muted-foreground">-</span>
                                                 )}
                                             </td>
 
@@ -377,7 +375,7 @@ export default function Index({
                                             </td>
 
                                             {/* Deskripsi */}
-                                            <td className="px-5 py-3.5 text-sm text-slate-600 max-w-md">
+                                            <td className="px-5 py-3.5 text-sm text-muted-foreground max-w-md">
                                                 {log.description}
                                             </td>
                                         </tr>
@@ -390,8 +388,8 @@ export default function Index({
 
                 {/* ── Pagination ── */}
                 {logs.last_page > 1 && (
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-slate-200 bg-white px-5 py-3.5 shadow-sm">
-                        <p className="text-xs text-slate-500">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-border bg-card px-5 py-3.5 shadow-sm">
+                        <p className="text-xs text-muted-foreground">
                             Menampilkan {logs.from}-{logs.to} dari {logs.total} log
                         </p>
                         <div className="flex items-center gap-1">
@@ -410,10 +408,10 @@ export default function Index({
                                         }
                                         className={`min-w-[36px] rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
                                             link.active
-                                                ? "bg-primary-600 text-white shadow-sm shadow-primary-200"
+                                                ? "bg-primary text-primary-foreground shadow-sm"
                                                 : link.url
-                                                  ? "text-slate-500 hover:bg-slate-100"
-                                                  : "cursor-default text-slate-300"
+                                                  ? "text-muted-foreground hover:bg-muted"
+                                                  : "cursor-default text-muted-foreground/50"
                                         }`}
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,

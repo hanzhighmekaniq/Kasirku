@@ -4,9 +4,16 @@ namespace Tests\Feature;
 
 use App\Models\ThemePreset;
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * Quick custom preset (3 warna dasar) — endpoint legacy di
+ * ThemePresetController. Sejak restructure, primary/secondary/accent tidak
+ * lagi kolom terpisah, jadi verifikasi warna dicek dari kolom `tokens`
+ * (light) bukan assertDatabaseHas kolom primary langsung.
+ */
 class ThemePresetTest extends TestCase
 {
     use RefreshDatabase;
@@ -15,7 +22,7 @@ class ThemePresetTest extends TestCase
     {
         $user = User::factory()->create(['is_developer' => true]);
 
-        $response = $this
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
             ->actingAs($user)
             ->post('/app/theme-presets', [
                 'name' => 'Tema Toko A',
@@ -28,8 +35,10 @@ class ThemePresetTest extends TestCase
         $this->assertDatabaseHas('theme_presets', [
             'user_id' => $user->id,
             'name' => 'Tema Toko A',
-            'primary' => '#FF5733',
         ]);
+
+        $preset = ThemePreset::where('name', 'Tema Toko A')->first();
+        $this->assertEquals('#FF5733', $preset->tokens['light']['primary']);
     }
 
     public function test_user_can_delete_own_preset(): void
@@ -37,7 +46,7 @@ class ThemePresetTest extends TestCase
         $user = User::factory()->create(['is_developer' => true]);
         $preset = ThemePreset::factory()->create(['user_id' => $user->id]);
 
-        $response = $this
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
             ->actingAs($user)
             ->delete("/app/theme-presets/{$preset->id}");
 
@@ -51,7 +60,7 @@ class ThemePresetTest extends TestCase
         $other = User::factory()->create(['is_developer' => true]);
         $preset = ThemePreset::factory()->create(['user_id' => $other->id]);
 
-        $response = $this
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
             ->actingAs($user)
             ->delete("/app/theme-presets/{$preset->id}");
 
@@ -63,7 +72,7 @@ class ThemePresetTest extends TestCase
     {
         $user = User::factory()->create(['is_developer' => true]);
 
-        $response = $this
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
             ->actingAs($user)
             ->post('/app/theme-presets', [
                 'name' => '',
@@ -83,7 +92,7 @@ class ThemePresetTest extends TestCase
             'is_system' => true,
         ]);
 
-        $response = $this
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
             ->actingAs($user)
             ->delete("/app/theme-presets/{$preset->id}");
 
@@ -95,7 +104,7 @@ class ThemePresetTest extends TestCase
     {
         $user = User::factory()->create(['is_developer' => true]);
 
-        $response = $this
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
             ->actingAs($user)
             ->post('/app/theme-presets', [
                 'name' => 'Tema Toko B',

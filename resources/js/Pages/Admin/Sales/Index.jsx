@@ -5,7 +5,8 @@ import * as ReactDOM from "react-dom";
 import axios from "axios";
 import { ChevronDown, X } from "lucide-react";
 import Dropdown from "@/Components/Dropdown";
-import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
+import Button from "@/Components/ui/Button";
 
 /* ── Order type options per store type ───────────────── */
 const ORDER_TYPE_OPTIONS = {
@@ -85,9 +86,9 @@ function ExtraStatusBadge({ sale, storeType }) {
     if (storeType === "rental" && sale.rental_status) {
         const map = {
             active: "bg-blue-100 text-blue-700",
-            returned: "bg-emerald-100 text-emerald-700",
-            overdue: "bg-red-100 text-red-700",
-            cancelled: "bg-slate-100 text-slate-500",
+            returned: "bg-emerald-100 text-success",
+            overdue: "bg-red-100 text-destructive",
+            cancelled: "bg-muted text-muted-foreground",
         };
         const label = {
             active: "🔑 Disewa",
@@ -97,7 +98,7 @@ function ExtraStatusBadge({ sale, storeType }) {
         };
         return (
             <span
-                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.rental_status] ?? "bg-slate-100 text-slate-600"}`}
+                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.rental_status] ?? "bg-muted text-muted-foreground"}`}
             >
                 {label[sale.rental_status] ?? sale.rental_status}
             </span>
@@ -107,7 +108,7 @@ function ExtraStatusBadge({ sale, storeType }) {
         const map = {
             waiting: "bg-amber-100 text-amber-700",
             in_progress: "bg-blue-100 text-blue-700",
-            done: "bg-emerald-100 text-emerald-700",
+            done: "bg-emerald-100 text-success",
         };
         const label = {
             waiting: "⏳ Antri",
@@ -116,7 +117,7 @@ function ExtraStatusBadge({ sale, storeType }) {
         };
         return (
             <span
-                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.service_status] ?? "bg-slate-100 text-slate-600"}`}
+                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.service_status] ?? "bg-muted text-muted-foreground"}`}
             >
                 {label[sale.service_status] ?? sale.service_status}
             </span>
@@ -125,12 +126,12 @@ function ExtraStatusBadge({ sale, storeType }) {
     if (storeType === "session" && sale.session_status) {
         const map = {
             running: "bg-blue-100 text-blue-700",
-            ended: "bg-emerald-100 text-emerald-700",
+            ended: "bg-emerald-100 text-success",
         };
         const label = { running: "▶ Aktif", ended: "⏹ Selesai" };
         return (
             <span
-                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.session_status] ?? "bg-slate-100 text-slate-600"}`}
+                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.session_status] ?? "bg-muted text-muted-foreground"}`}
             >
                 {label[sale.session_status] ?? sale.session_status}
             </span>
@@ -139,12 +140,12 @@ function ExtraStatusBadge({ sale, storeType }) {
     if (storeType === "hospitality" && sale.rental_status) {
         const map = {
             active: "bg-blue-100 text-blue-700",
-            returned: "bg-emerald-100 text-emerald-700",
+            returned: "bg-emerald-100 text-success",
         };
         const label = { active: "🛏 Check-in", returned: "✅ Check-out" };
         return (
             <span
-                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.rental_status] ?? "bg-slate-100 text-slate-600"}`}
+                className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[sale.rental_status] ?? "bg-muted text-muted-foreground"}`}
             >
                 {label[sale.rental_status] ?? sale.rental_status}
             </span>
@@ -153,7 +154,7 @@ function ExtraStatusBadge({ sale, storeType }) {
     if (storeType === "parking" && (sale.exit_at || sale.entry_at)) {
         const map = {
             active: "bg-blue-100 text-blue-700",
-            exited: "bg-emerald-100 text-emerald-700",
+            exited: "bg-emerald-100 text-success",
         };
         const label = {
             active: "🟢 Di Parkir",
@@ -359,7 +360,7 @@ export default function Index({
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-lg font-semibold text-slate-800">
+                    <h2 className="text-lg font-semibold text-foreground">
                         {pageTitle}
                     </h2>
                 </div>
@@ -368,12 +369,12 @@ export default function Index({
             <Head title="Penjualan" />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     {flash.success}
                 </div>
             )}
             {flash?.error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                     {flash.error}
                 </div>
             )}
@@ -403,12 +404,12 @@ export default function Index({
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
-                <div className="border-b border-slate-100 p-4">
+                <div className="border-b border-border p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div className="relative flex-1">
-                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
                         <svg
                             className="h-4 w-4"
                             fill="none"
@@ -428,17 +429,17 @@ export default function Index({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari no. struk, pelanggan, atau kasir..."
-                        className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                        className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                     />
                 </div>
                 <Dropdown>
                     <Dropdown.Trigger>
-                        <button className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                        <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
                             <span
                                 className={
                                     filterStatus !== "all"
-                                        ? "text-slate-700"
-                                        : "text-slate-400"
+                                        ? "text-foreground"
+                                        : "text-muted-foreground"
                                 }
                             >
                                 {filterStatus === "completed"
@@ -449,7 +450,7 @@ export default function Index({
                                         ? "Dibatalkan"
                                         : "Semua Status"}
                             </span>
-                            <ChevronDown className="h-3.5 w-3.5 text-slate-400" strokeWidth={2} />
+                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
                         </button>
                     </Dropdown.Trigger>
                     <Dropdown.Content width="48">
@@ -458,7 +459,7 @@ export default function Index({
                             className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                 filterStatus === "all"
                                     ? "bg-primary-50 font-medium text-primary-600"
-                                    : "text-slate-600 hover:bg-slate-50"
+                                    : "text-muted-foreground hover:bg-muted"
                             }`}
                         >
                             Semua Status
@@ -468,7 +469,7 @@ export default function Index({
                             className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                 filterStatus === "completed"
                                     ? "bg-primary-50 font-medium text-primary-600"
-                                    : "text-slate-600 hover:bg-slate-50"
+                                    : "text-muted-foreground hover:bg-muted"
                             }`}
                         >
                             Selesai
@@ -478,7 +479,7 @@ export default function Index({
                             className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                 filterStatus === "draft"
                                     ? "bg-primary-50 font-medium text-primary-600"
-                                    : "text-slate-600 hover:bg-slate-50"
+                                    : "text-muted-foreground hover:bg-muted"
                             }`}
                         >
                             Draft
@@ -488,7 +489,7 @@ export default function Index({
                             className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                 filterStatus === "cancelled"
                                     ? "bg-primary-50 font-medium text-primary-600"
-                                    : "text-slate-600 hover:bg-slate-50"
+                                    : "text-muted-foreground hover:bg-muted"
                             }`}
                         >
                             Dibatalkan
@@ -497,12 +498,12 @@ export default function Index({
                 </Dropdown>
                 <Dropdown>
                     <Dropdown.Trigger>
-                        <button className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                        <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
                             <span
                                 className={
                                     filterOrderType !== "all"
-                                        ? "text-slate-700"
-                                        : "text-slate-400"
+                                        ? "text-foreground"
+                                        : "text-muted-foreground"
                                 }
                             >
                                 {filterOrderType !== "all"
@@ -511,7 +512,7 @@ export default function Index({
                                       )?.l ?? filterOrderType)
                                     : "Semua Tipe"}
                             </span>
-                            <ChevronDown className="h-3.5 w-3.5 text-slate-400" strokeWidth={2} />
+                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
                         </button>
                     </Dropdown.Trigger>
                     <Dropdown.Content width="56">
@@ -520,7 +521,7 @@ export default function Index({
                             className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                 filterOrderType === "all"
                                     ? "bg-primary-50 font-medium text-primary-600"
-                                    : "text-slate-600 hover:bg-slate-50"
+                                    : "text-muted-foreground hover:bg-muted"
                             }`}
                         >
                             Semua Tipe
@@ -532,7 +533,7 @@ export default function Index({
                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                     filterOrderType === opt.v
                                         ? "bg-primary-50 font-medium text-primary-600"
-                                        : "text-slate-600 hover:bg-slate-50"
+                                        : "text-muted-foreground hover:bg-muted"
                                 }`}
                             >
                                 {opt.l}
@@ -547,17 +548,17 @@ export default function Index({
                 {/* Branch filter */}
                 {branches.length > 0 && (
                     <div className="flex-1">
-                        <label className="mb-1 block text-xs font-medium text-slate-500">
+                        <label className="mb-1 block text-xs font-medium text-muted-foreground">
                             Cabang
                         </label>
                         <Dropdown>
                             <Dropdown.Trigger>
-                                <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                                <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
                                     <span
                                         className={
                                             filterBranch
-                                                ? "text-slate-700"
-                                                : "text-slate-400"
+                                                ? "text-foreground"
+                                                : "text-muted-foreground"
                                         }
                                     >
                                         {filterBranch
@@ -568,7 +569,7 @@ export default function Index({
                                               )?.name ?? "Semua Cabang")
                                             : "Semua Cabang"}
                                     </span>
-                                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={2} />
+                                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="56">
@@ -579,7 +580,7 @@ export default function Index({
                                     className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                         !filterBranch
                                             ? "bg-primary-50 font-medium text-primary-600"
-                                            : "text-slate-600 hover:bg-slate-50"
+                                            : "text-muted-foreground hover:bg-muted"
                                     }`}
                                 >
                                     Semua Cabang
@@ -594,7 +595,7 @@ export default function Index({
                                             String(filterBranch) ===
                                             String(b.id)
                                                 ? "bg-primary-50 font-medium text-primary-600"
-                                                : "text-slate-600 hover:bg-slate-50"
+                                                : "text-muted-foreground hover:bg-muted"
                                         }`}
                                     >
                                         {b.name}
@@ -607,7 +608,7 @@ export default function Index({
 
                 {/* Date range */}
                 <div className="flex-1">
-                    <label className="mb-1 block text-xs font-medium text-slate-500">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
                         Dari Tanggal
                     </label>
                     <input
@@ -616,11 +617,11 @@ export default function Index({
                         onChange={(e) =>
                             handleDateChange("date_from", e.target.value)
                         }
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                     />
                 </div>
                 <div className="flex-1">
-                    <label className="mb-1 block text-xs font-medium text-slate-500">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
                         Sampai Tanggal
                     </label>
                     <input
@@ -629,23 +630,23 @@ export default function Index({
                         onChange={(e) =>
                             handleDateChange("date_to", e.target.value)
                         }
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                     />
                 </div>
 
                 {/* Payment status filter */}
                 <div className="flex-1">
-                    <label className="mb-1 block text-xs font-medium text-slate-500">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
                         Status Bayar
                     </label>
                     <Dropdown>
                         <Dropdown.Trigger>
-                            <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
+                            <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
                                 <span
                                     className={
                                         filterPayment !== "all"
-                                            ? "text-slate-700"
-                                            : "text-slate-400"
+                                            ? "text-foreground"
+                                            : "text-muted-foreground"
                                     }
                                 >
                                     {filterPayment === "paid"
@@ -656,7 +657,7 @@ export default function Index({
                                             ? "Belum Bayar"
                                             : "Semua"}
                                 </span>
-                                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={2} />
+                                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
                             </button>
                         </Dropdown.Trigger>
                         <Dropdown.Content width="48">
@@ -667,7 +668,7 @@ export default function Index({
                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                     filterPayment === "all"
                                         ? "bg-primary-50 font-medium text-primary-600"
-                                        : "text-slate-600 hover:bg-slate-50"
+                                        : "text-muted-foreground hover:bg-muted"
                                 }`}
                             >
                                 Semua
@@ -679,7 +680,7 @@ export default function Index({
                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                     filterPayment === "paid"
                                         ? "bg-primary-50 font-medium text-primary-600"
-                                        : "text-slate-600 hover:bg-slate-50"
+                                        : "text-muted-foreground hover:bg-muted"
                                 }`}
                             >
                                 Lunas
@@ -691,7 +692,7 @@ export default function Index({
                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                     filterPayment === "partial"
                                         ? "bg-primary-50 font-medium text-primary-600"
-                                        : "text-slate-600 hover:bg-slate-50"
+                                        : "text-muted-foreground hover:bg-muted"
                                 }`}
                             >
                                 Sebagian
@@ -703,7 +704,7 @@ export default function Index({
                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${
                                     filterPayment === "unpaid"
                                         ? "bg-primary-50 font-medium text-primary-600"
-                                        : "text-slate-600 hover:bg-slate-50"
+                                        : "text-muted-foreground hover:bg-muted"
                                 }`}
                             >
                                 Belum Bayar
@@ -716,7 +717,7 @@ export default function Index({
                 {hasActiveServerFilters && (
                     <button
                         onClick={clearAllServerFilters}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted"
                     >
                         <X className="h-4 w-4" strokeWidth={1.8} />
                         Reset
@@ -724,13 +725,13 @@ export default function Index({
                 )}
                     </div>
                 <div className="pt-4 flex items-center justify-between">
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                         Menampilkan{" "}
-                        <span className="font-semibold text-slate-700">
+                        <span className="font-semibold text-foreground">
                             {filtered.length}
                         </span>{" "}
                         dari{" "}
-                        <span className="font-semibold text-slate-700">
+                        <span className="font-semibold text-foreground">
                             {sales.length}
                         </span>{" "}
                         {pageTitle.toLowerCase()}
@@ -742,34 +743,34 @@ export default function Index({
             <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full text-left text-sm">
                     <thead>
-                        <tr className="border-b border-slate-100 bg-slate-50/60">
-                            <th className="px-5 py-3.5 font-medium text-slate-500">
+                        <tr className="border-b border-border bg-muted/50">
+                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
                                 No. Struk
                             </th>
-                            <th className="px-5 py-3.5 font-medium text-slate-500">
+                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
                                 Cabang
                             </th>
-                            <th className="px-5 py-3.5 font-medium text-slate-500">
+                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
                                 Kasir
                             </th>
-                            <th className="px-5 py-3.5 font-medium text-slate-500">
+                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
                                 Pelanggan
                             </th>
-                            <th className="px-5 py-3.5 font-medium text-slate-500">
+                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
                                 Tipe
                             </th>
                             {extraCol && (
-                                <th className="px-5 py-3.5 font-medium text-slate-500">
+                                <th className="px-5 py-3.5 font-medium text-muted-foreground">
                                     {extraCol.header}
                                 </th>
                             )}
-                            <th className="px-5 py-3.5 text-right font-medium text-slate-500">
+                            <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                                 Total
                             </th>
-                            <th className="px-5 py-3.5 text-right font-medium text-slate-500">
+                            <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                                 Dibayar
                             </th>
-                            <th className="px-5 py-3.5 font-medium text-slate-500">
+                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
                                 Status
                             </th>
                             {[
@@ -779,19 +780,19 @@ export default function Index({
                                 "hospitality",
                                 "parking",
                             ].includes(storeType) && (
-                                <th className="px-5 py-3.5 font-medium text-slate-500">
+                                <th className="px-5 py-3.5 font-medium text-muted-foreground">
                                     Status Ops
                                 </th>
                             )}
-                            <th className="px-5 py-3.5 font-medium text-slate-500">
+                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
                                 Bayar
                             </th>
-                            <th className="px-5 py-3.5 text-right font-medium text-slate-500">
+                            <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
                                 Aksi
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-border">
                         {filtered.length === 0 ? (
                             <tr>
                                 <td
@@ -808,10 +809,10 @@ export default function Index({
                                             ? 1
                                             : 0)
                                     }
-                                    className="px-5 py-16 text-center text-slate-400"
+                                    className="px-5 py-16 text-center text-muted-foreground"
                                 >
                                     <svg
-                                        className="mx-auto mb-2 h-10 w-10 text-slate-300"
+                                        className="mx-auto mb-2 h-10 w-10 text-muted-foreground/50"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         strokeWidth={1.5}
@@ -830,18 +831,18 @@ export default function Index({
                             filtered.map((s) => (
                                 <tr
                                     key={s.id}
-                                    className="transition hover:bg-slate-50/50"
+                                    className="transition hover:bg-muted/50"
                                 >
-                                    <td className="px-5 py-3.5 font-medium text-slate-800">
+                                    <td className="px-5 py-3.5 font-medium text-foreground">
                                         {s.sale_no}
                                     </td>
-                                    <td className="px-5 py-3.5 text-slate-600">
+                                    <td className="px-5 py-3.5 text-muted-foreground">
                                         {s.branch?.name ?? "-"}
                                     </td>
-                                    <td className="px-5 py-3.5 text-slate-600">
+                                    <td className="px-5 py-3.5 text-muted-foreground">
                                         {s.user?.name ?? "-"}
                                     </td>
-                                    <td className="px-5 py-3.5 text-slate-600">
+                                    <td className="px-5 py-3.5 text-muted-foreground">
                                         {s.customer?.name ?? "Umum"}
                                     </td>
                                     <td className="px-5 py-3.5">
@@ -851,14 +852,14 @@ export default function Index({
                                         />
                                     </td>
                                     {extraCol && (
-                                        <td className="px-5 py-3.5 text-slate-600 text-sm">
+                                        <td className="px-5 py-3.5 text-muted-foreground text-sm">
                                             {extraCol.render(s)}
                                         </td>
                                     )}
-                                    <td className="px-5 py-3.5 text-right font-medium text-slate-800">
+                                    <td className="px-5 py-3.5 text-right font-medium text-foreground">
                                         {fmtRp(s.grand_total)}
                                     </td>
-                                    <td className="px-5 py-3.5 text-right text-slate-600">
+                                    <td className="px-5 py-3.5 text-right text-muted-foreground">
                                         {fmtRp(s.paid_amount)}
                                     </td>
                                     <td className="px-5 py-3.5">
@@ -890,7 +891,7 @@ export default function Index({
                                                     "admin.sales.show",
                                                     s.id,
                                                 )}
-                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-800"
+                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
                                             >
                                                 <svg
                                                     className="h-3.5 w-3.5"
@@ -967,7 +968,7 @@ export default function Index({
                                                     onClick={() =>
                                                         setDeleteTarget(s)
                                                     }
-                                                    className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-500 transition hover:bg-red-50 hover:text-red-700"
+                                                    className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/10 hover:text-destructive"
                                                 >
                                                     <svg
                                                         className="h-3.5 w-3.5"
@@ -996,21 +997,21 @@ export default function Index({
             {/* Cards (mobile) */}
             <div className="space-y-3 lg:hidden">
                 {filtered.length === 0 ? (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-400 shadow-sm">
+                    <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground shadow-sm">
                         Belum ada data penjualan
                     </div>
                 ) : (
                     filtered.map((s) => (
                         <div
                             key={s.id}
-                            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                            className="rounded-2xl border border-border bg-card p-4 shadow-sm"
                         >
                             <div className="mb-2 flex items-start justify-between">
                                 <div>
-                                    <p className="text-sm font-semibold text-slate-800">
+                                    <p className="text-sm font-semibold text-foreground">
                                         {s.sale_no}
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-muted-foreground">
                                         {s.branch?.name ?? "-"} &middot;{" "}
                                         {s.user?.name ?? "-"}
                                     </p>
@@ -1019,26 +1020,26 @@ export default function Index({
                             </div>
                             <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
                                 <div>
-                                    <span className="text-slate-400">
+                                    <span className="text-muted-foreground">
                                         Tanggal
                                     </span>
-                                    <p className="font-medium text-slate-700">
+                                    <p className="font-medium text-foreground">
                                         {new Date(
                                             s.sale_date,
                                         ).toLocaleDateString("id-ID")}
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400">
+                                    <span className="text-muted-foreground">
                                         Total
                                     </span>
-                                    <p className="font-medium text-slate-700">
+                                    <p className="font-medium text-foreground">
                                         {fmtRp(s.grand_total)}
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400">Tipe</span>
-                                    <p className="font-medium text-slate-700">
+                                    <span className="text-muted-foreground">Tipe</span>
+                                    <p className="font-medium text-foreground">
                                         <OrderTypeBadge
                                             type={s.order_type}
                                             storeType={storeType}
@@ -1046,10 +1047,10 @@ export default function Index({
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400">
+                                    <span className="text-muted-foreground">
                                         Bayar
                                     </span>
-                                    <p className="font-medium text-slate-700">
+                                    <p className="font-medium text-foreground">
                                         <PaymentBadge
                                             status={s.payment_status}
                                         />
@@ -1057,10 +1058,10 @@ export default function Index({
                                 </div>
                                 {extraCol && (
                                     <div>
-                                        <span className="text-slate-400">
+                                        <span className="text-muted-foreground">
                                             {extraCol.header}
                                         </span>
-                                        <p className="font-medium text-slate-700">
+                                        <p className="font-medium text-foreground">
                                             {extraCol.render(s)}
                                         </p>
                                     </div>
@@ -1073,10 +1074,10 @@ export default function Index({
                                     "parking",
                                 ].includes(storeType) && (
                                     <div>
-                                        <span className="text-slate-400">
+                                        <span className="text-muted-foreground">
                                             Status Ops
                                         </span>
-                                        <p className="font-medium text-slate-700">
+                                        <p className="font-medium text-foreground">
                                             <ExtraStatusBadge
                                                 sale={s}
                                                 storeType={storeType}
@@ -1088,7 +1089,7 @@ export default function Index({
                             <div className="flex gap-2">
                                 <Link
                                     href={route("admin.sales.show", s.id)}
-                                    className="flex-1 rounded-xl border border-slate-200 py-2 text-center text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                                    className="flex-1 rounded-xl border border-border py-2 text-center text-xs font-medium text-muted-foreground transition hover:bg-muted"
                                 >
                                     Detail
                                 </Link>
@@ -1113,7 +1114,7 @@ export default function Index({
                                 {s.status === "draft" && (
                                     <button
                                         onClick={() => setDeleteTarget(s)}
-                                        className="rounded-xl border border-red-200 px-3 py-2 text-xs font-medium text-red-500 transition hover:bg-red-50"
+                                        className="rounded-xl border border-destructive/20 px-3 py-2 text-xs font-medium text-destructive transition hover:bg-destructive/10"
                                     >
                                         Hapus
                                     </button>
@@ -1147,7 +1148,7 @@ export default function Index({
             {/* Loading overlay for print */}
             {printLoading && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 backdrop-blur-sm">
-                    <div className="rounded-2xl bg-white px-6 py-5 shadow-2xl">
+                    <div className="rounded-2xl bg-card px-6 py-5 shadow-2xl">
                         <div className="flex items-center gap-3">
                             <svg
                                 className="h-5 w-5 animate-spin text-primary-500"
@@ -1168,7 +1169,7 @@ export default function Index({
                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                                 />
                             </svg>
-                            <span className="text-sm font-medium text-slate-600">
+                            <span className="text-sm font-medium text-muted-foreground">
                                 Memuat struk...
                             </span>
                         </div>
@@ -1181,26 +1182,26 @@ export default function Index({
 
 function SummaryCard({ label, value, color = "slate" }) {
     const borders = {
-        slate: "border-l-slate-400",
+        slate: "border-l-muted-foreground/30",
         emerald: "border-l-emerald-400",
         amber: "border-l-amber-400",
         indigo: "border-l-primary-400",
     };
     return (
         <div
-            className={`rounded-2xl border border-slate-200 border-l-4 bg-white p-4 shadow-sm ${borders[color] ?? ""}`}
+            className={`rounded-2xl border border-border border-l-4 bg-card p-4 shadow-sm ${borders[color] ?? ""}`}
         >
-            <p className="text-xs font-medium text-slate-400">{label}</p>
-            <p className="mt-1 text-xl font-bold text-slate-800">{value}</p>
+            <p className="text-xs font-medium text-muted-foreground">{label}</p>
+            <p className="mt-1 text-xl font-bold text-foreground">{value}</p>
         </div>
     );
 }
 
 function StatusBadge({ status }) {
     const map = {
-        draft: "bg-slate-100 text-slate-600",
-        completed: "bg-emerald-100 text-emerald-700",
-        cancelled: "bg-red-100 text-red-600",
+        draft: "bg-muted text-muted-foreground",
+        completed: "bg-emerald-100 text-success",
+        cancelled: "bg-red-100 text-destructive",
     };
     const label = {
         draft: "Draft",
@@ -1209,7 +1210,7 @@ function StatusBadge({ status }) {
     };
     return (
         <span
-            className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status] ?? "bg-slate-100 text-slate-600"}`}
+            className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status] ?? "bg-muted text-muted-foreground"}`}
         >
             {label[status] ?? status}
         </span>
@@ -1220,12 +1221,12 @@ function PaymentBadge({ status }) {
     const map = {
         unpaid: "bg-rose-100 text-rose-600",
         partial: "bg-amber-100 text-amber-700",
-        paid: "bg-emerald-100 text-emerald-700",
+        paid: "bg-emerald-100 text-success",
     };
     const label = { unpaid: "Belum Bayar", partial: "Sebagian", paid: "Lunas" };
     return (
         <span
-            className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status] ?? "bg-slate-100 text-slate-600"}`}
+            className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status] ?? "bg-muted text-muted-foreground"}`}
         >
             {label[status] ?? status}
         </span>
@@ -1241,7 +1242,7 @@ function OrderTypeBadge({ type, storeType }) {
         // Retail
         wholesale: { label: "Grosir", cls: "bg-cyan-100 text-cyan-700" },
         // Service
-        walk_in: { label: "Walk-in", cls: "bg-emerald-100 text-emerald-700" },
+        walk_in: { label: "Walk-in", cls: "bg-emerald-100 text-success" },
         booking: { label: "Booking", cls: "bg-violet-100 text-violet-700" },
         pickup_delivery: {
             label: "Jemput & Antar",
@@ -1262,16 +1263,16 @@ function OrderTypeBadge({ type, storeType }) {
         },
         short_stay: { label: "Short Stay", cls: "bg-sky-100 text-sky-700" },
         // Parking
-        entry: { label: "Masuk", cls: "bg-slate-100 text-slate-700" },
-        exit: { label: "Keluar", cls: "bg-slate-200 text-slate-600" },
-        lost_ticket: { label: "Tiket Hilang", cls: "bg-red-100 text-red-600" },
+        entry: { label: "Masuk", cls: "bg-muted text-foreground" },
+        exit: { label: "Keluar", cls: "bg-slate-200 text-muted-foreground" },
+        lost_ticket: { label: "Tiket Hilang", cls: "bg-red-100 text-destructive" },
         // Session
         postpaid: { label: "Postpaid", cls: "bg-primary-100 text-primary-700" },
         prepaid: { label: "Prepaid", cls: "bg-violet-100 text-violet-700" },
     };
     const config = map[type] ?? {
         label: type ?? "-",
-        cls: "bg-slate-100 text-slate-600",
+        cls: "bg-muted text-muted-foreground",
     };
     return (
         <span
@@ -1299,18 +1300,18 @@ function PrintReceiptModal({ sale, storeName, onClose }) {
     // Ekstrak konten struk biar bisa dipakai di screen + print tanpa duplikasi JSX
     const receiptContent = (
         <>
-            <p className="text-center text-sm font-bold text-slate-900">
+            <p className="text-center text-sm font-bold text-foreground">
                 {storeName}
             </p>
-            <p className="mt-0.5 text-center text-slate-500">{sale.sale_no}</p>
-            <p className="text-center text-slate-400">{date}</p>
+            <p className="mt-0.5 text-center text-muted-foreground">{sale.sale_no}</p>
+            <p className="text-center text-muted-foreground">{date}</p>
             {sale.table && (
-                <p className="text-center font-medium text-slate-600">
+                <p className="text-center font-medium text-muted-foreground">
                     Meja {sale.table.table_number}
                 </p>
             )}
             {sale.customer && !sale.delivery_address && (
-                <p className="text-center text-slate-500">
+                <p className="text-center text-muted-foreground">
                     Pelanggan: {sale.customer.name}
                 </p>
             )}
@@ -1324,11 +1325,11 @@ function PrintReceiptModal({ sale, storeName, onClose }) {
                         return (
                             <>
                                 {name && (
-                                    <p className="text-center font-medium text-slate-700">
+                                    <p className="text-center font-medium text-foreground">
                                         {name}
                                     </p>
                                 )}
-                                <p className="text-center text-slate-500">
+                                <p className="text-center text-muted-foreground">
                                     {cleanAddr}
                                 </p>
                             </>
@@ -1337,7 +1338,7 @@ function PrintReceiptModal({ sale, storeName, onClose }) {
                 </>
             )}
             {sale.order_type && (
-                <p className="text-center text-[10px] uppercase tracking-wider text-slate-400">
+                <p className="text-center text-[10px] uppercase tracking-wider text-muted-foreground">
                     {(() => {
                         const labels = {
                             dine_in: "Dine-in",
@@ -1366,23 +1367,23 @@ function PrintReceiptModal({ sale, storeName, onClose }) {
                 </p>
             )}
 
-            <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-border" />
 
             {sale.items.map((item, i) => (
                 <div key={i} className="mb-1">
                     <div className="flex justify-between">
-                        <span className="text-slate-700">
+                        <span className="text-foreground">
                             {item.product?.name ?? "Produk"}
                         </span>
-                        <span className="text-slate-800">
+                        <span className="text-foreground">
                             {f(item.subtotal)}
                         </span>
                     </div>
-                    <span className="text-slate-400">
+                    <span className="text-muted-foreground">
                         {item.quantity} × {f(item.price)}
                     </span>
                     {item.modifiers?.map((m, j) => (
-                        <div key={j} className="pl-2 text-slate-400">
+                        <div key={j} className="pl-2 text-muted-foreground">
                             {m.name}{" "}
                             {(m.price_addition ?? 0) > 0 &&
                                 `+${(m.price_addition ?? 0).toLocaleString("id-ID")}`}
@@ -1396,14 +1397,14 @@ function PrintReceiptModal({ sale, storeName, onClose }) {
                 </div>
             ))}
 
-            <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-border" />
 
             <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>{f(sale.subtotal)}</span>
             </div>
             {(sale.discount_amount ?? 0) > 0 && (
-                <div className="flex justify-between text-red-600">
+                <div className="flex justify-between text-destructive">
                     <span>Diskon</span>
                     <span>-{f(sale.discount_amount)}</span>
                 </div>
@@ -1421,13 +1422,13 @@ function PrintReceiptModal({ sale, storeName, onClose }) {
                 </div>
             )}
 
-            <div className="mt-1 flex justify-between text-sm font-bold text-slate-900">
+            <div className="mt-1 flex justify-between text-sm font-bold text-foreground">
                 <span>Total</span>
                 <span>{f(sale.grand_total)}</span>
             </div>
 
             {sale.payments?.map((p, i) => (
-                <div key={i} className="flex justify-between text-slate-600">
+                <div key={i} className="flex justify-between text-muted-foreground">
                     <span>{p.paymentMethod?.name ?? "Pembayaran"}</span>
                     <span>{f(p.amount)}</span>
                 </div>
@@ -1441,18 +1442,18 @@ function PrintReceiptModal({ sale, storeName, onClose }) {
 
             {sale.notes && (
                 <>
-                    <div className="my-3 border-t border-dashed border-slate-300" />
-                    <p className="whitespace-pre-wrap text-center text-slate-500">
+                    <div className="my-3 border-t border-dashed border-border" />
+                    <p className="whitespace-pre-wrap text-center text-muted-foreground">
                         {sale.notes}
                     </p>
                 </>
             )}
 
-            <div className="my-3 border-t border-dashed border-slate-300" />
-            <p className="text-center text-slate-400">
+            <div className="my-3 border-t border-dashed border-border" />
+            <p className="text-center text-muted-foreground">
                 Terima kasih atas kunjungan Anda
             </p>
-            <p className="text-center text-[9px] text-slate-300">
+            <p className="text-center text-[9px] text-muted-foreground/50">
                 Dicetak: {new Date().toLocaleString("id-ID")}
             </p>
         </>
@@ -1499,32 +1500,32 @@ function PrintReceiptModal({ sale, storeName, onClose }) {
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div
                     onClick={onClose}
-                    className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                 />
-                <div className="relative w-full max-w-xs rounded-2xl bg-white shadow-2xl">
+                <div className="relative w-full max-w-xs rounded-2xl bg-card shadow-2xl">
                     <div className="px-6 py-5 font-mono text-xs max-h-[70vh] overflow-y-auto">
                         {receiptContent}
                     </div>
 
-                    <div className="flex gap-2 border-t border-slate-100 px-5 py-4">
-                        <button
-                            type="button"
+                    <div className="flex gap-2 border-t border-border px-5 py-4">
+                        <Button
+                            variant="primary"
+                            className="flex-1"
                             onClick={() => window.print()}
-                            className="flex-1 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
                         >
                             Cetak Ulang
-                        </button>
+                        </Button>
                         <button
                             type="button"
                             onClick={() => window.print()}
-                            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                            className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted"
                         >
                             🖨️ Print
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-50"
+                            className="rounded-xl border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted"
                         >
                             Tutup
                         </button>

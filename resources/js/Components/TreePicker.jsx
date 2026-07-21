@@ -220,12 +220,12 @@ export default function TreePicker({
               <div
                   ref={panelRef}
                   style={panelStyle}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+                  className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
               >
                   {/* Search bar */}
-                  <div className="border-b border-slate-100 p-2.5">
+                  <div className="border-b border-border p-2.5">
                       <div className="relative">
-                          <Search className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-slate-400" />
+                          <Search className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground" />
                           <input
                               ref={searchRef}
                               type="text"
@@ -236,7 +236,7 @@ export default function TreePicker({
                               }}
                               onKeyDown={handleKey}
                               placeholder="Ketik nama kategori..."
-                              className="block w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100"
+                              className="block w-full rounded-xl border-border bg-muted py-2.5 pl-9 pr-3 text-sm focus:border-ring focus:bg-card focus:outline-none focus:ring-2 focus:ring-ring/20"
                           />
                           {search && (
                               <button
@@ -246,7 +246,7 @@ export default function TreePicker({
                                       setHlIdx(-1);
                                       searchRef.current?.focus();
                                   }}
-                                  className="absolute inset-y-0 right-2 flex items-center px-1 text-slate-400 hover:text-slate-600"
+                                  className="absolute inset-y-0 right-2 flex items-center px-1 text-muted-foreground hover:text-muted-foreground"
                               >
                                   <X className="h-4 w-4" />
                               </button>
@@ -263,18 +263,18 @@ export default function TreePicker({
                                   e.preventDefault();
                                   clear();
                               }}
-                              className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${!value ? "bg-primary-50" : "hover:bg-slate-50"}`}
+                              className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${!value ? "bg-primary-50" : "hover:bg-muted"}`}
                           >
-                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-base">
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-base">
                                   🏠
                               </span>
                               <div className="min-w-0 flex-1">
                                   <p
-                                      className={`text-sm font-semibold ${!value ? "text-primary-700" : "text-slate-700"}`}
+                                      className={`text-sm font-semibold ${!value ? "text-primary-700" : "text-foreground"}`}
                                   >
                                       {rootLabel}
                                   </p>
-                                  <p className="text-xs text-slate-400">
+                                  <p className="text-xs text-muted-foreground">
                                       Tanpa induk (root level)
                                   </p>
                               </div>
@@ -296,15 +296,15 @@ export default function TreePicker({
                           </button>
                       )}
                       {showRoot && !search && (
-                          <div className="mx-3 border-t border-slate-100" />
+                          <div className="mx-3 border-t border-border" />
                       )}
 
                       {filtered.length === 0 ? (
                           <div className="px-4 py-10 text-center">
-                              <p className="text-sm text-slate-400">
+                              <p className="text-sm text-muted-foreground">
                                   Tidak ditemukan
                               </p>
-                              <p className="mt-1 text-xs text-slate-300">
+                              <p className="mt-1 text-xs text-muted-foreground/50">
                                   Coba kata kunci lain
                               </p>
                           </div>
@@ -332,8 +332,8 @@ export default function TreePicker({
                                           isSelected
                                               ? `${depthBg(depth)} font-medium`
                                               : isHighlighted
-                                                ? "bg-slate-100"
-                                                : "hover:bg-slate-50"
+                                                ? "bg-muted"
+                                                : "hover:bg-muted"
                                       }`}
                                       style={{
                                           paddingLeft: `${12 + depth * 20}px`,
@@ -353,12 +353,12 @@ export default function TreePicker({
                                       </span>
                                       <div className="min-w-0 flex-1 py-2">
                                           <p
-                                              className={`truncate text-sm font-medium ${isSelected ? "text-slate-700" : "text-slate-700"}`}
+                                              className={`truncate text-sm font-medium ${isSelected ? "text-foreground" : "text-foreground"}`}
                                           >
                                               {cat.name}
                                           </p>
                                           {depth > 0 && (
-                                              <p className="truncate text-[11px] text-slate-400">
+                                              <p className="truncate text-[11px] text-muted-foreground">
                                                   {cat.display_path}
                                               </p>
                                           )}
@@ -385,7 +385,7 @@ export default function TreePicker({
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between border-t border-slate-100 px-4 py-1.5 text-[11px] text-slate-400">
+                  <div className="flex items-center justify-between border-t border-border px-4 py-1.5 text-[11px] text-muted-foreground">
                       <span>{categories.length} kategori tersedia</span>
                       <span>↑↓ navigasi · Enter pilih · Esc tutup</span>
                   </div>
@@ -401,10 +401,10 @@ export default function TreePicker({
                 ref={triggerRef}
                 type="button"
                 onClick={open ? closePicker : openPicker}
-                className={`flex w-full items-center gap-2.5 rounded-xl border bg-slate-50 text-left shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary-200 ${sizeClasses[size]} ${
+                className={`flex w-full items-center gap-2.5 rounded-xl border bg-muted text-left shadow-sm transition focus:outline-none focus:ring-2 focus:ring-ring/20 ${sizeClasses[size]} ${
                                     open
-                                        ? "border-slate-300 ring-2 ring-primary-100"
-                                        : "border-slate-300 hover:border-slate-400"
+                                        ? "border-border ring-2 ring-primary-100"
+                                        : "border-border hover:border-slate-400"
                                 } ${triggerClassName}`}
             >
                 {selectedCat ? (
@@ -415,7 +415,7 @@ export default function TreePicker({
                             {depthIcon(selectedCat.depth ?? 0)}
                         </span>
                         <span
-                            className={`min-w-0 flex-1 truncate text-sm font-medium text-slate-700`}
+                            className={`min-w-0 flex-1 truncate text-sm font-medium text-foreground`}
                                                     >
                                                         {selectedCat.name}
                                                     </span>
@@ -425,7 +425,7 @@ export default function TreePicker({
                                 e.stopPropagation();
                                 onClear();
                             }}
-                            className="ml-1 shrink-0 rounded-lg p-0.5 text-slate-400 hover:bg-red-50 hover:text-red-500"
+                            className="ml-1 shrink-0 rounded-lg p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                             title="Hapus pilihan"
                         >
                             <X className="h-3.5 w-3.5" />
@@ -433,7 +433,7 @@ export default function TreePicker({
                     </>
                 ) : (
                     <>
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                             <svg
                                 className="h-2.5 w-2.5"
                                 fill="none"
@@ -448,8 +448,8 @@ export default function TreePicker({
                                 />
                             </svg>
                         </span>
-                        <span className="text-slate-700">{placeholder}</span>
-                        <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 text-slate-400" />
+                        <span className="text-foreground">{placeholder}</span>
+                        <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
                     </>
                 )}
             </button>
@@ -474,13 +474,13 @@ export default function TreePicker({
                             d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                     </svg>
-                    <span className="text-slate-600">{bannerLabel}</span>
+                    <span className="text-muted-foreground">{bannerLabel}</span>
                     <span
                         className={`font-semibold ${depthColor(selectedCat.depth ?? 0)}`}
                     >
                         {selectedCat.display_path}
                     </span>
-                    <span className="ml-auto shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                    <span className="ml-auto shrink-0 rounded-full bg-card/70 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                         Level {(selectedCat.depth ?? 0) + 1}
                     </span>
                 </div>

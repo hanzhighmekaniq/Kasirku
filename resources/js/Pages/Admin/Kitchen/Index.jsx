@@ -2,6 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { RefreshCw } from "lucide-react";
 
 const STATUS_CONFIG = {
     pending: {
@@ -57,7 +58,7 @@ function OrderCard({ order, canUpdate, onStatusChange, updating }) {
             <div className="mb-3 flex items-start justify-between gap-2">
                 <div>
                     <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-bold text-slate-800">
+                        <span className="font-mono text-sm font-bold text-foreground">
                             {order.table
                                 ? `Meja ${order.table.table_number}`
                                 : order.order_type === "takeaway"
@@ -65,12 +66,12 @@ function OrderCard({ order, canUpdate, onStatusChange, updating }) {
                                   : "Delivery"}
                         </span>
                         {isUrgent && (
-                            <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                            <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold text-destructive-foreground">
                                 LAMA!
                             </span>
                         )}
                     </div>
-                    <p className="font-mono text-[10px] text-slate-500">
+                    <p className="font-mono text-[10px] text-muted-foreground">
                         {order.sale_no}
                     </p>
                 </div>
@@ -87,15 +88,15 @@ function OrderCard({ order, canUpdate, onStatusChange, updating }) {
             <div className="mb-4 space-y-1.5">
                 {(order.items ?? []).map((item, i) => (
                     <div key={i} className="flex items-start gap-2">
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[10px] font-bold text-slate-700 shadow-sm">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-card text-[10px] font-bold text-foreground shadow-sm">
                             {item.quantity}
                         </span>
                         <div className="min-w-0">
-                            <p className="text-sm font-medium leading-tight text-slate-800">
+                            <p className="text-sm font-medium leading-tight text-foreground">
                                 {item.product?.name ?? "Produk"}
                             </p>
                             {item.notes && (
-                                <p className="text-[10px] italic text-slate-500">
+                                <p className="text-[10px] italic text-muted-foreground">
                                     {item.notes}
                                 </p>
                             )}
@@ -106,7 +107,7 @@ function OrderCard({ order, canUpdate, onStatusChange, updating }) {
 
             {/* Notes */}
             {order.notes && (
-                <div className="mb-3 rounded-lg bg-white/80 px-3 py-2 text-xs italic text-slate-600">
+                <div className="mb-3 rounded-lg bg-card/80 px-3 py-2 text-xs italic text-muted-foreground">
                     📝 {order.notes}
                 </div>
             )}
@@ -169,7 +170,7 @@ export default function Index({ orders, stats, canUpdate }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-base font-semibold text-slate-800">
+                    <h2 className="text-base font-semibold text-foreground">
                         🍳 Kitchen Display
                     </h2>
                     <div className="flex items-center gap-3">
@@ -193,21 +194,9 @@ export default function Index({ orders, stats, canUpdate }) {
                                 router.reload({ only: ["orders", "stats"] });
                                 setCountdown(15);
                             }}
-                            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
                         >
-                            <svg
-                                className="h-3.5 w-3.5 text-slate-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-                                />
-                            </svg>
+                            <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
                             Refresh {countdown}s
                         </button>
                     </div>
@@ -219,10 +208,10 @@ export default function Index({ orders, stats, canUpdate }) {
             {orders.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-24 text-center">
                     <div className="mb-4 text-6xl">🍽️</div>
-                    <h3 className="text-lg font-semibold text-slate-700">
+                    <h3 className="text-lg font-semibold text-foreground">
                         Tidak ada order aktif
                     </h3>
-                    <p className="mt-1 text-sm text-slate-400">
+                    <p className="mt-1 text-sm text-muted-foreground">
                         Order baru akan muncul di sini secara otomatis
                     </p>
                 </div>
@@ -247,7 +236,7 @@ export default function Index({ orders, stats, canUpdate }) {
                                 {/* Cards */}
                                 <div className="space-y-3">
                                     {col.length === 0 ? (
-                                        <div className="rounded-2xl border-2 border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-400">
+                                        <div className="rounded-2xl border-2 border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
                                             Tidak ada order
                                         </div>
                                     ) : (

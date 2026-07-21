@@ -29,11 +29,11 @@ export default function Tooltip({ label, side = "top", children, className = "" 
             {children}
             <span
                 role="tooltip"
-                className={`pointer-events-none absolute z-[10050] hidden whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold leading-none text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover/tt:opacity-100 group-focus-within/tt:opacity-100 sm:block ${pos}`}
+                className={`pointer-events-none absolute z-[10050] hidden whitespace-nowrap rounded-lg border border-border bg-popover px-2.5 py-1.5 text-[11px] font-semibold leading-none text-popover-foreground opacity-0 shadow-lg transition-opacity duration-150 group-hover/tt:opacity-100 group-focus-within/tt:opacity-100 sm:block ${pos}`}
             >
                 {label}
                 <span
-                    className={`absolute h-2 w-2 rotate-45 bg-slate-900 ${arrow}`}
+                    className={`absolute h-2 w-2 rotate-45 border-border bg-popover ${arrow}`}
                 />
             </span>
         </span>

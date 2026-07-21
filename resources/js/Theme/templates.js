@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ── Theme Engine: Template Helper + Fallback ─────────────────────
  *
  * Preset tema sistem SEKARANG dibaca dari database (tabel theme_presets,
@@ -68,12 +68,6 @@ export function buildShadcnTemplate({ primaryHex, accentHex, overrides = {} }) {
         infoForeground: '#FFFFFF',
         sidebar: '#FFFFFF',
         sidebarForeground: '#0F172A',
-        sidebarPrimary: primaryHex,
-        sidebarPrimaryForeground: '#FFFFFF',
-        sidebarAccent: '#F1F5F9',
-        sidebarAccentForeground: '#0F172A',
-        sidebarBorder: '#E2E8F0',
-        sidebarRing: primaryHex,
         ...overrides,
     };
 
@@ -103,11 +97,6 @@ const FALLBACK_DARK = {
     ring: '#818CF8',
     sidebar: '#1E293B',
     sidebarForeground: '#F8FAFC',
-    sidebarAccent: '#334155',
-    sidebarAccentForeground: '#F8FAFC',
-    sidebarBorder: '#334155',
-    sidebarPrimary: '#818CF8',
-    sidebarRing: '#818CF8',
 };
 
 /**
@@ -119,7 +108,6 @@ export const FALLBACK_THEME = {
     id: 'fallback',
     label: 'Default',
     description: 'Tema default sementara — jalankan seeder untuk tema lengkap.',
-    recommendedMode: 'light',
     light: FALLBACK_LIGHT,
     dark: FALLBACK_DARK,
 };

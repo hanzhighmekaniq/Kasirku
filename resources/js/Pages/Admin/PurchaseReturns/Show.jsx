@@ -1,11 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import ConfirmDeleteModal from './ConfirmDeleteModal';
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 const STATUS_CONFIG = {
-    completed: { label: 'Selesai',    color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
-    cancelled: { label: 'Dibatalkan', color: 'bg-slate-100 text-slate-500', dot: 'bg-slate-400' },
+    completed: { label: 'Selesai',    color: 'bg-emerald-100 text-success', dot: 'bg-success/100' },
+    cancelled: { label: 'Dibatalkan', color: 'bg-muted text-muted-foreground', dot: 'bg-slate-400' },
 };
 
 function formatRupiah(amount) {
@@ -57,7 +57,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route('admin.purchase-returns.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
@@ -65,7 +65,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                         </svg>
                     </Link>
                     <div className="flex items-center gap-3">
-                        <h2 className="text-lg font-semibold text-slate-800">Detail {pageTitle}</h2>
+                        <h2 className="text-lg font-semibold text-foreground">Detail {pageTitle}</h2>
                         <StatusBadge status={purchaseReturn.status} />
                     </div>
                 </div>
@@ -75,12 +75,12 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
 
             <div className="mx-auto max-w-3xl space-y-6">
                 {/* Header Card */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="border-b border-border bg-muted/50 px-6 py-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-base font-semibold text-slate-900">{purchaseReturn.return_no}</h3>
-                                <p className="mt-0.5 text-sm text-slate-500">
+                                <h3 className="text-base font-semibold text-foreground">{purchaseReturn.return_no}</h3>
+                                <p className="mt-0.5 text-sm text-muted-foreground">
                                     Dibuat oleh {purchaseReturn.user?.name || 'System'} • {formatDateTime(purchaseReturn.created_at)}
                                 </p>
                             </div>
@@ -89,7 +89,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                                     <button
                                         onClick={() => setShowCancelModal(true)}
                                         disabled={processing}
-                                        className="inline-flex items-center rounded-xl bg-slate-500 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-slate-600 disabled:opacity-60"
+                                        className="inline-flex items-center rounded-xl bg-muted0 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-slate-600 disabled:opacity-60"
                                     >
                                         Batalkan Retur
                                     </button>
@@ -100,7 +100,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                     <div className="p-6">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             <div>
-                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Pembelian Asal</p>
+                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pembelian Asal</p>
                                 <Link
                                     href={route('admin.purchases.show', purchaseReturn.purchase_id)}
                                     className="mt-1 text-sm font-semibold text-primary-600 hover:text-primary-800"
@@ -109,18 +109,18 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                                 </Link>
                             </div>
                             <div>
-                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Supplier</p>
-                                <p className="mt-1 text-sm font-medium text-slate-800">{purchaseReturn.supplier?.name || '-'}</p>
+                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Supplier</p>
+                                <p className="mt-1 text-sm font-medium text-foreground">{purchaseReturn.supplier?.name || '-'}</p>
                             </div>
                             <div>
-                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Tanggal Retur</p>
-                                <p className="mt-1 text-sm font-medium text-slate-800">{formatDate(purchaseReturn.return_date)}</p>
+                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tanggal Retur</p>
+                                <p className="mt-1 text-sm font-medium text-foreground">{formatDate(purchaseReturn.return_date)}</p>
                             </div>
                         </div>
                         {purchaseReturn.notes && (
-                            <div className="mt-4 rounded-xl bg-slate-50 p-4">
-                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Catatan</p>
-                                <p className="mt-1 text-sm text-slate-700">{purchaseReturn.notes}</p>
+                            <div className="mt-4 rounded-xl bg-muted p-4">
+                                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Catatan</p>
+                                <p className="mt-1 text-sm text-foreground">{purchaseReturn.notes}</p>
                             </div>
                         )}
 
@@ -139,12 +139,12 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                             </div>
                         )}
                         {purchaseReturn.status === 'cancelled' && (
-                            <div className="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
+                            <div className="mt-4 rounded-xl bg-muted border border-border p-4">
                                 <div className="flex items-start gap-2">
-                                    <svg className="h-5 w-5 text-slate-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg>
+                                    <svg className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg>
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-700">Retur Dibatalkan</p>
-                                        <p className="mt-1 text-sm text-slate-600">
+                                        <p className="text-sm font-semibold text-foreground">Retur Dibatalkan</p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
                                             Retur ini dibatalkan. Stok dan pembayaran telah dikembalikan ke kondisi semula.
                                         </p>
                                     </div>
@@ -155,33 +155,33 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                 </div>
 
                 {/* Items */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
-                        <h3 className="text-base font-semibold text-slate-900">Item yang Diretur</h3>
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="border-b border-border bg-muted/50 px-6 py-5">
+                        <h3 className="text-base font-semibold text-foreground">Item yang Diretur</h3>
                     </div>
                     <div className="p-6">
                         {/* Desktop */}
                         <div className="hidden sm:block">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-slate-100">
-                                        <th className="pb-3 text-left text-xs font-semibold text-slate-500">Produk</th>
-                                        <th className="pb-3 text-center text-xs font-semibold text-slate-500">Qty</th>
-                                        <th className="pb-3 text-right text-xs font-semibold text-slate-500">Harga Satuan</th>
-                                        <th className="pb-3 text-right text-xs font-semibold text-slate-500">Subtotal</th>
+                                    <tr className="border-b border-border">
+                                        <th className="pb-3 text-left text-xs font-semibold text-muted-foreground">Produk</th>
+                                        <th className="pb-3 text-center text-xs font-semibold text-muted-foreground">Qty</th>
+                                        <th className="pb-3 text-right text-xs font-semibold text-muted-foreground">Harga Satuan</th>
+                                        <th className="pb-3 text-right text-xs font-semibold text-muted-foreground">Subtotal</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-50">
+                                <tbody className="divide-y divide-border">
                                     {purchaseReturn.items.map((item) => (
                                         <tr key={item.id}>
                                             <td className="py-3">
-                                                <p className="font-medium text-slate-800">{item.product?.name || '-'}</p>
-                                                <p className="text-xs text-slate-400">{item.product?.sku}</p>
+                                                <p className="font-medium text-foreground">{item.product?.name || '-'}</p>
+                                                <p className="text-xs text-muted-foreground">{item.product?.sku}</p>
                                                 {item.reason && <p className="mt-0.5 text-xs text-amber-600 italic">Alasan: {item.reason}</p>}
                                             </td>
-                                            <td className="py-3 text-center font-medium text-slate-700">{item.quantity}</td>
-                                            <td className="py-3 text-right text-slate-600">{formatRupiah(item.cost_price)}</td>
-                                            <td className="py-3 text-right font-medium text-slate-800">{formatRupiah(item.subtotal)}</td>
+                                            <td className="py-3 text-center font-medium text-foreground">{item.quantity}</td>
+                                            <td className="py-3 text-right text-muted-foreground">{formatRupiah(item.cost_price)}</td>
+                                            <td className="py-3 text-right font-medium text-foreground">{formatRupiah(item.subtotal)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -191,22 +191,22 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                         {/* Mobile */}
                         <div className="space-y-3 sm:hidden">
                             {purchaseReturn.items.map((item) => (
-                                <div key={item.id} className="rounded-xl border border-slate-200 p-3">
-                                    <p className="text-sm font-medium text-slate-800">{item.product?.name || '-'}</p>
-                                    <p className="text-xs text-slate-400">{item.product?.sku}</p>
+                                <div key={item.id} className="rounded-xl border border-border p-3">
+                                    <p className="text-sm font-medium text-foreground">{item.product?.name || '-'}</p>
+                                    <p className="text-xs text-muted-foreground">{item.product?.sku}</p>
                                     {item.reason && <p className="mt-1 text-xs text-amber-600 italic">Alasan: {item.reason}</p>}
                                     <div className="mt-2 flex items-center justify-between text-sm">
-                                        <span className="text-slate-500">×{item.quantity} @ {formatRupiah(item.cost_price)}</span>
-                                        <span className="font-semibold text-slate-800">{formatRupiah(item.subtotal)}</span>
+                                        <span className="text-muted-foreground">×{item.quantity} @ {formatRupiah(item.cost_price)}</span>
+                                        <span className="font-semibold text-foreground">{formatRupiah(item.subtotal)}</span>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
                         {/* Total */}
-                        <div className="mt-4 border-t border-slate-100 pt-4">
+                        <div className="mt-4 border-t border-border pt-4">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-semibold text-slate-700">Total Retur</span>
+                                <span className="text-sm font-semibold text-foreground">Total Retur</span>
                                 <span className="text-lg font-bold text-primary-600">{formatRupiah(purchaseReturn.total_amount)}</span>
                             </div>
                         </div>

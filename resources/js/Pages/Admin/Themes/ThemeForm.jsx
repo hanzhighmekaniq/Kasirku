@@ -1,22 +1,63 @@
 import { Link } from "@inertiajs/react";
-import { useState } from "react";
-import {
-    TOKEN_PAIRS,
-    SINGLE_TOKENS,
-    TOKEN_LABELS,
-} from "@/Theme/tokens";
-import { generateColorScale } from "@/Theme/generateShades";
+import { Copy, Info, RotateCcw, Sun, Moon, Clipboard } from "lucide-react";
+import { useState, useMemo } from "react";
+import { TOKEN_LABELS } from "@/Theme/tokens";
+import Button from "@/Components/ui/Button";
 
-const TABS = [
-    { key: "colors", label: "Warna Dasar" },
-    { key: "surface", label: "Surface" },
-    { key: "sidebar", label: "Sidebar" },
-    { key: "chart", label: "Chart & Status" },
+/* ── Token groups — same structure as theme-create.html ── */
+const TOKEN_GROUPS = [
+    { title: "Primary", keys: ["primary", "primaryForeground"] },
+    { title: "Background & Foreground", keys: ["background", "foreground"] },
+    { title: "Secondary", keys: ["secondary", "secondaryForeground"] },
+    { title: "Accent", keys: ["accent", "accentForeground"] },
+    { title: "Card", keys: ["card", "cardForeground"] },
+    { title: "Popover", keys: ["popover", "popoverForeground"] },
+    { title: "Muted", keys: ["muted", "mutedForeground"] },
+    { title: "Destructive", keys: ["destructive", "destructiveForeground"] },
+    { title: "Border, Input & Ring", keys: ["border", "input", "ring"] },
+    { title: "Chart", keys: ["chart1", "chart2", "chart3", "chart4", "chart5"] },
+    { title: "Sidebar", keys: ["sidebar", "sidebarForeground"] },
+    { title: "Status", keys: ["success", "warning", "info"] },
 ];
 
+const TOTAL_TOKENS = TOKEN_GROUPS.reduce((n, g) => n + g.keys.length, 0);
+
+function describeToken(key) {
+    if (key === "primary") return "Main brand color for actions";
+    if (key === "primaryForeground") return "Text on primary surfaces";
+    if (key === "background") return "App background";
+    if (key === "foreground") return "Default text color";
+    if (key === "secondary") return "Secondary surface / action";
+    if (key === "secondaryForeground") return "Text on secondary";
+    if (key === "accent") return "Subtle highlight background";
+    if (key === "accentForeground") return "Text on accent";
+    if (key === "card") return "Card surface";
+    if (key === "cardForeground") return "Text inside cards";
+    if (key === "popover") return "Popover / menu surface";
+    if (key === "popoverForeground") return "Text inside popovers";
+    if (key === "muted") return "Muted surface";
+    if (key === "mutedForeground") return "Muted / secondary text";
+    if (key === "destructive") return "Errors, destructive actions";
+    if (key === "destructiveForeground") return "Text on destructive";
+    if (key === "border") return "Divider and outlines";
+    if (key === "input") return "Input background";
+    if (key === "ring") return "Focus ring color";
+    if (key.startsWith("chart")) return `Data series ${key.slice(-1)}`;
+    if (key === "sidebar") return "Sidebar background";
+    if (key === "sidebarForeground") return "Sidebar text";
+    if (key === "success") return "Success state";
+    if (key === "warning") return "Warning state";
+    if (key === "info") return "Info state";
+    return "";
+}
+
+function camelToKebab(s) {
+    return s.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
+}
+
 /**
- * Form CRUD tema dengan36 shadcn/ui tokens.
- * Diorganize dalam tab supaya tidak overwhelming.
+ * ThemeForm — grouped color rows with Light/Dark mode switch.
+ * Matches theme-create.html visual pattern adapted to our semantic token system.
  */
 export default function ThemeForm({
     data,
@@ -26,365 +67,296 @@ export default function ThemeForm({
     onSubmit,
     submitLabel = "Simpan Tema",
     cancelHref,
+    previewMode,
+    setPreviewMode,
+    defaultLight,
+    defaultDark,
 }) {
-    const [activeTab, setActiveTab] = useState("colors");
-
-    // Helper untuk update token di dalam light_tokens/dark_tokens
-    const updateToken = (key, value, mode) => {
-        const field = mode === "light" ? "light_tokens" : "dark_tokens";
+    const updateToken = (key, value) => {
+        const field = previewMode === "light" ? "light_tokens" : "dark_tokens";
         const current = data[field] || {};
         setData(field, { ...current, [key]: value });
     };
 
-    const lightTokens = data.light_tokens || {};
-    const darkTokens = data.dark_tokens || {};
+    const activeTokens =
+        previewMode === "dark"
+            ? data.dark_tokens || {}
+            : data.light_tokens || {};
+
+    const copyFromOther = () => {
+        const otherField =
+            previewMode === "light" ? "dark_tokens" : "light_tokens";
+        const other = data[otherField] || {};
+        const field = previewMode === "light" ? "light_tokens" : "dark_tokens";
+        setData(field, { ...other });
+    };
+
+    const resetMode = () => {
+        const defaults =
+            previewMode === "light" ? defaultLight : defaultDark;
+        const field = previewMode === "light" ? "light_tokens" : "dark_tokens";
+        setData(field, { ...defaults });
+    };
+
+    // CSS variables output
+    const cssOutput = useMemo(() => {
+        const buildBlock = (mode) => {
+            const tokens =
+                mode === "light"
+                    ? data.light_tokens || {}
+                    : data.dark_tokens || {};
+            const selector = mode === "light" ? ":root" : ".dark";
+            const body = Object.entries(tokens)
+                .map(
+                    ([k, v]) =>
+                        `  --${camelToKebab(k)}: ${v};`,
+                )
+                .join("\n");
+            return `${selector} {\n${body}\n}`;
+        };
+        return buildBlock("light") + "\n\n" + buildBlock("dark");
+    }, [data.light_tokens, data.dark_tokens]);
+
+    const copyCSS = () => {
+        navigator.clipboard.writeText(cssOutput);
+    };
 
     return (
         <form onSubmit={onSubmit} className="space-y-5">
-            {/* Nama & Deskripsi */}
-            <div>
-                <label className="block text-sm font-medium text-slate-700">
-                    Nama Tema <span className="text-red-500">*</span>
-                </label>
-                <input
-                    type="text"
-                    value={data.name}
-                    autoFocus
-                    onChange={(e) => setData("name", e.target.value)}
-                    maxLength={80}
-                    className="mt-1.5 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    placeholder="Contoh: Tema Toko Saya"
-                />
-                {errors.name && (
-                    <p className="mt-1.5 text-sm text-red-600">{errors.name}</p>
-                )}
-            </div>
-
-            <div>
-                <label className="block text-sm font-medium text-slate-700">
-                    Deskripsi <span className="text-slate-400">(opsional)</span>
-                </label>
-                <input
-                    type="text"
-                    value={data.description || ""}
-                    onChange={(e) => setData("description", e.target.value)}
-                    maxLength={255}
-                    className="mt-1.5 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-                    placeholder="Deskripsi singkat tema ini"
-                />
-                {errors.description && (
-                    <p className="mt-1.5 text-sm text-red-600">{errors.description}</p>
-                )}
-            </div>
-
-            {/* Tab selector */}
-            <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
-                {TABS.map((tab) => (
-                    <button
-                        key={tab.key}
-                        type="button"
-                        onClick={() => setActiveTab(tab.key)}
-                        className={`flex-1 rounded-lg py-2 text-xs font-semibold transition ${
-                            activeTab === tab.key
-                                ? "bg-white text-slate-800 shadow-sm"
-                                : "text-slate-500 hover:text-slate-700"
-                        }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Tab: Warna Dasar */}
-            {activeTab === "colors" && (
-                <div className="space-y-4">
-                    <ColorPairRow
-                        label="Primary"
-                        bgKey="primary"
-                        fgKey="primaryForeground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <ColorPairRow
-                        label="Secondary"
-                        bgKey="secondary"
-                        fgKey="secondaryForeground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <ColorPairRow
-                        label="Accent"
-                        bgKey="accent"
-                        fgKey="accentForeground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <ColorPairRow
-                        label="Destructive"
-                        bgKey="destructive"
-                        fgKey="destructiveForeground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                        <SingleColorField
-                            label="Ring (Focus)"
-                            tokenKey="ring"
-                            light={lightTokens}
-                            dark={darkTokens}
-                            onUpdate={updateToken}
-                        />
-                        <SingleColorField
-                            label="Border"
-                            tokenKey="border"
-                            light={lightTokens}
-                            dark={darkTokens}
-                            onUpdate={updateToken}
-                        />
+            {/* ── Meta: Name & Description ── */}
+            <div className="rounded-xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center gap-2">
+                    <Info size={15} className="text-muted-foreground" />
+                    <div className="text-sm font-semibold text-foreground">
+                        Theme details
                     </div>
                 </div>
-            )}
-
-            {/* Tab: Surface */}
-            {activeTab === "surface" && (
-                <div className="space-y-4">
-                    <ColorPairRow
-                        label="Background"
-                        bgKey="background"
-                        fgKey="foreground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <ColorPairRow
-                        label="Card"
-                        bgKey="card"
-                        fgKey="cardForeground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <ColorPairRow
-                        label="Popover"
-                        bgKey="popover"
-                        fgKey="popoverForeground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <ColorPairRow
-                        label="Muted"
-                        bgKey="muted"
-                        fgKey="mutedForeground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <SingleColorField
-                        label="Input"
-                        tokenKey="input"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                </div>
-            )}
-
-            {/* Tab: Sidebar */}
-            {activeTab === "sidebar" && (
-                <div className="space-y-4">
-                    <ColorPairRow
-                        label="Sidebar"
-                        bgKey="sidebar"
-                        fgKey="sidebarForeground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <ColorPairRow
-                        label="Sidebar Primary"
-                        bgKey="sidebarPrimary"
-                        fgKey="sidebarPrimaryForeground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <ColorPairRow
-                        label="Sidebar Accent"
-                        bgKey="sidebarAccent"
-                        fgKey="sidebarAccentForeground"
-                        light={lightTokens}
-                        dark={darkTokens}
-                        onUpdate={updateToken}
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                        <SingleColorField
-                            label="Sidebar Border"
-                            tokenKey="sidebarBorder"
-                            light={lightTokens}
-                            dark={darkTokens}
-                            onUpdate={updateToken}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label className="block text-xs font-medium text-muted-foreground">
+                            Theme name
+                        </label>
+                        <input
+                            type="text"
+                            value={data.name}
+                            autoFocus
+                            onChange={(e) => setData("name", e.target.value)}
+                            maxLength={80}
+                            className="mt-1.5 block w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                            placeholder="e.g. Ocean Blue"
                         />
-                        <SingleColorField
-                            label="Sidebar Ring"
-                            tokenKey="sidebarRing"
-                            light={lightTokens}
-                            dark={darkTokens}
-                            onUpdate={updateToken}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Tab: Chart & Status */}
-            {activeTab === "chart" && (
-                <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <SingleColorField
-                                key={i}
-                                label={`Chart ${i}`}
-                                tokenKey={`chart${i}`}
-                                light={lightTokens}
-                                dark={darkTokens}
-                                onUpdate={updateToken}
-                            />
-                        ))}
-                    </div>
-                    <div className="border-t border-slate-100 pt-4">
-                        <p className="mb-3 text-xs font-semibold text-slate-500">
-                            Status Colors
-                        </p>
-                        <div className="grid grid-cols-2 gap-3">
-                            <SingleColorField
-                                label="Success"
-                                tokenKey="success"
-                                light={lightTokens}
-                                dark={darkTokens}
-                                onUpdate={updateToken}
-                            />
-                            <SingleColorField
-                                label="Warning"
-                                tokenKey="warning"
-                                light={lightTokens}
-                                dark={darkTokens}
-                                onUpdate={updateToken}
-                            />
-                            <SingleColorField
-                                label="Info"
-                                tokenKey="info"
-                                light={lightTokens}
-                                dark={darkTokens}
-                                onUpdate={updateToken}
-                            />
+                        <div className="mt-1.5 text-[11px] text-muted-foreground">
+                            Display name shown in the theme list.
                         </div>
+                        {errors.name && (
+                            <p className="mt-1 text-sm text-red-500">
+                                {errors.name}
+                            </p>
+                        )}
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-muted-foreground">
+                            Description{" "}
+                            <span className="font-normal text-muted-foreground/60">
+                                (optional)
+                            </span>
+                        </label>
+                        <input
+                            type="text"
+                            value={data.description || ""}
+                            onChange={(e) =>
+                                setData("description", e.target.value)
+                            }
+                            maxLength={255}
+                            className="mt-1.5 block w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                            placeholder="A short description of this theme's intent."
+                        />
+                        {errors.description && (
+                            <p className="mt-1 text-sm text-red-500">
+                                {errors.description}
+                            </p>
+                        )}
                     </div>
                 </div>
-            )}
+            </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
-                <button
-                    type="submit"
-                    disabled={processing}
-                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
-                >
-                    {processing ? "Menyimpan..." : submitLabel}
-                </button>
-                {cancelHref && (
-                    <Link
-                        href={cancelHref}
-                        className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            {/* ── Color tokens card ── */}
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+                {/* Card header with mode switch */}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">
+                            Color tokens
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                            &middot; {TOTAL_TOKENS} tokens
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {/* Mode switch */}
+                        <div className="inline-flex rounded-lg border border-border bg-muted p-0.5">
+                            <button
+                                type="button"
+                                onClick={() => setPreviewMode("light")}
+                                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                                    previewMode === "light"
+                                        ? "bg-card text-foreground shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                                <Sun size={13} /> Light mode
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPreviewMode("dark")}
+                                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                                    previewMode === "dark"
+                                        ? "bg-card text-foreground shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                                <Moon size={13} /> Dark mode
+                            </button>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={copyFromOther}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                        >
+                            <Copy size={13} /> Copy from other mode
+                        </button>
+                    </div>
+                </div>
+
+                {/* Color groups */}
+                <div className="px-4 py-3">
+                    {TOKEN_GROUPS.map((group) => (
+                        <div key={group.title}>
+                            <div className="border-t border-border pt-3.5 pb-2 first:border-t-0 first:pt-1">
+                                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    {group.title}
+                                </span>
+                            </div>
+                            {group.keys.map((key) => (
+                                <ColorRow
+                                    key={key}
+                                    tokenKey={key}
+                                    value={activeTokens[key] || "#000000"}
+                                    onChange={updateToken}
+                                />
+                            ))}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between border-t border-border px-5 py-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                        <Info size={13} />
+                        Both Light & Dark variants are saved together when you
+                        create the theme.
+                    </div>
+                    <button
+                        type="button"
+                        onClick={resetMode}
+                        className="inline-flex items-center gap-1.5 transition hover:text-foreground"
                     >
+                        <RotateCcw size={13} /> Reset this mode
+                    </button>
+                </div>
+            </div>
+
+            {/* ── CSS Variables ── */}
+            <div className="rounded-xl border border-border bg-card p-5">
+                <div className="flex items-center justify-between">
+                    <div className="text-sm font-semibold text-foreground">
+                        CSS variables
+                    </div>
+                    <button
+                        type="button"
+                        onClick={copyCSS}
+                        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition hover:text-foreground"
+                    >
+                        <Clipboard size={13} /> Copy
+                    </button>
+                </div>
+                <pre className="mt-3 max-h-[220px] overflow-auto rounded-lg bg-muted/70 p-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                    {cssOutput}
+                </pre>
+            </div>
+
+            {/* ── Actions ── */}
+            <div className="flex items-center gap-3 border-t border-border pt-5">
+                <Button type="submit" loading={processing}>
+                    {processing ? "Menyimpan..." : submitLabel}
+                </Button>
+                {cancelHref && (
+                    <Button as={Link} href={cancelHref} variant="outline">
                         Batal
-                    </Link>
+                    </Button>
                 )}
             </div>
         </form>
     );
 }
 
-/* ── Color pair row (bg + fg, light + dark) ── */
-function ColorPairRow({ label, bgKey, fgKey, light, dark, onUpdate }) {
+/* ── Single color row: label + desc, swatch picker, hex input ── */
+function ColorRow({ tokenKey, value, onChange }) {
+    const [hexDraft, setHexDraft] = useState(null);
+
+    const displayHex = hexDraft !== null ? hexDraft : value.toUpperCase();
+    const label = TOKEN_LABELS[tokenKey] || tokenKey;
+    const desc = describeToken(tokenKey);
+
+    const handleColorInput = (e) => {
+        const v = e.target.value.toUpperCase();
+        setHexDraft(null);
+        onChange(tokenKey, v);
+    };
+
+    const handleHexInput = (e) => {
+        const raw = e.target.value;
+        setHexDraft(raw);
+        if (/^#([0-9a-fA-F]{6})$/.test(raw)) {
+            onChange(tokenKey, raw.toUpperCase());
+        }
+    };
+
+    const handleHexBlur = () => {
+        setHexDraft(null);
+    };
+
     return (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="mb-2 text-xs font-semibold text-slate-600">{label}</p>
-            <div className="grid grid-cols-2 gap-3">
-                <div>
-                    <p className="mb-1 text-[10px] text-slate-400">Light</p>
-                    <div className="flex gap-2">
-                        <MiniColorPicker
-                            value={light[bgKey] || "#000000"}
-                            onChange={(v) => onUpdate(bgKey, v, "light")}
-                            label="BG"
-                        />
-                        <MiniColorPicker
-                            value={light[fgKey] || "#FFFFFF"}
-                            onChange={(v) => onUpdate(fgKey, v, "light")}
-                            label="FG"
-                        />
-                    </div>
+        <div className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition hover:bg-muted/50">
+            <div className="min-w-0 flex-1">
+                <div className="text-[13px] font-medium text-foreground">
+                    {label}
                 </div>
-                <div>
-                    <p className="mb-1 text-[10px] text-slate-400">Dark</p>
-                    <div className="flex gap-2">
-                        <MiniColorPicker
-                            value={dark[bgKey] || "#000000"}
-                            onChange={(v) => onUpdate(bgKey, v, "dark")}
-                            label="BG"
-                        />
-                        <MiniColorPicker
-                            value={dark[fgKey] || "#FFFFFF"}
-                            onChange={(v) => onUpdate(fgKey, v, "dark")}
-                            label="FG"
-                        />
-                    </div>
+                <div className="text-[11px] text-muted-foreground/70">
+                    {desc}{" "}
+                    <span className="font-mono text-muted-foreground/50">
+                        {camelToKebab(tokenKey)}
+                    </span>
                 </div>
             </div>
-        </div>
-    );
-}
-
-/* ── Single color field (light + dark) ── */
-function SingleColorField({ label, tokenKey, light, dark, onUpdate }) {
-    return (
-        <div className="rounded-lg border border-slate-200 bg-white p-2.5">
-            <p className="mb-1.5 text-[10px] font-semibold text-slate-500">{label}</p>
-            <div className="flex gap-2">
-                <MiniColorPicker
-                    value={light[tokenKey] || "#000000"}
-                    onChange={(v) => onUpdate(tokenKey, v, "light")}
-                    label="L"
+            <label
+                className="relative h-7 w-9 shrink-0 cursor-pointer overflow-hidden rounded-md border border-border"
+                style={{ background: value }}
+            >
+                <input
+                    type="color"
+                    value={value}
+                    onInput={handleColorInput}
+                    className="absolute -inset-1 cursor-pointer opacity-0"
                 />
-                <MiniColorPicker
-                    value={dark[tokenKey] || "#000000"}
-                    onChange={(v) => onUpdate(tokenKey, v, "dark")}
-                    label="D"
-                />
-            </div>
-        </div>
-    );
-}
-
-/* ── Mini color picker ── */
-function MiniColorPicker({ value, onChange, label }) {
-    return (
-        <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1">
-            <input
-                type="color"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="h-5 w-5 shrink-0 cursor-pointer rounded border border-slate-200"
-            />
+            </label>
             <input
                 type="text"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="w-16 border-0 bg-transparent p-0 font-mono text-[10px] text-slate-600 focus:outline-none focus:ring-0"
+                value={displayHex}
+                onChange={handleHexInput}
+                onBlur={handleHexBlur}
+                maxLength={7}
+                className="w-[100px] shrink-0 rounded-md border border-border bg-muted/50 px-2 py-1.5 font-mono text-[11.5px] uppercase text-foreground transition focus:border-ring focus:outline-none"
             />
         </div>
     );

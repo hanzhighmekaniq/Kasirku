@@ -1,11 +1,13 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
-import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import { Plus } from "lucide-react";
+import Button from "@/Components/ui/Button";
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 const TIER_STYLES = {
     bronze: "bg-amber-100 text-amber-700",
-    silver: "bg-slate-200 text-slate-600",
+    silver: "bg-muted text-muted-foreground",
     gold: "bg-yellow-100 text-yellow-700",
 };
 
@@ -47,41 +49,25 @@ export default function Index({ customers, storeType = "retail" }) {
         <AuthenticatedLayout
             header={
                 <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-slate-800">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Pelanggan
                     </h2>
-                    <Link
-                        href={route("admin.customers.create")}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-primary-700"
-                    >
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                            />
-                        </svg>
+                    <Button as={Link} href={route("admin.customers.create")} icon={Plus}>
                         <span className="hidden sm:inline">
                             Tambah Pelanggan
                         </span>
                         <span className="sm:hidden">Tambah</span>
-                    </Link>
+                    </Button>
                 </div>
             }
         >
             <Head title="Pelanggan" />
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
-                <div className="border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="relative w-full sm:max-w-xs">
-                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
                             <svg
                                 className="h-4 w-4"
                                 fill="none"
@@ -101,17 +87,17 @@ export default function Index({ customers, storeType = "retail" }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari nama, telepon, email..."
-                            className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                            className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                         />
                     </div>
                     <div className="pt-4 flex items-center ">
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                             Menampilkan{" "}
-                            <span className="font-semibold text-slate-700">
+                            <span className="font-semibold text-foreground">
                                 {filtered.length}
                             </span>{" "}
                             dari{" "}
-                            <span className="font-semibold text-slate-700">
+                            <span className="font-semibold text-foreground">
                                 {customers.length}
                             </span>{" "}
                             pelanggan
@@ -121,9 +107,9 @@ export default function Index({ customers, storeType = "retail" }) {
 
                 {filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                             <svg
-                                className="h-8 w-8 text-slate-400"
+                                className="h-8 w-8 text-muted-foreground"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
@@ -136,36 +122,20 @@ export default function Index({ customers, storeType = "retail" }) {
                                 />
                             </svg>
                         </div>
-                        <h3 className="mt-4 text-base font-semibold text-slate-800">
+                        <h3 className="mt-4 text-base font-semibold text-foreground">
                             {search
                                 ? "Pelanggan tidak ditemukan"
                                 : "Belum ada pelanggan"}
                         </h3>
-                        <p className="mt-1 max-w-sm text-sm text-slate-500">
+                        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                             {search
                                 ? "Coba kata kunci lain."
                                 : "Mulai dengan menambahkan pelanggan pertama untuk program loyalitas."}
                         </p>
                         {!search && (
-                            <Link
-                                href={route("admin.customers.create")}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
-                            >
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M12 4.5v15m7.5-7.5h-15"
-                                    />
-                                </svg>
+                            <Button as={Link} href={route("admin.customers.create")} icon={Plus} className="mt-5">
                                 Tambah Pelanggan
-                            </Link>
+                            </Button>
                         )}
                     </div>
                 ) : (
@@ -206,7 +176,7 @@ function RowActions({ customer, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <Link
                 href={route("admin.customers.edit", customer.id)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
                 title="Edit"
             >
                 <svg
@@ -225,7 +195,7 @@ function RowActions({ customer, onDelete }) {
             </Link>
             <button
                 onClick={() => onDelete(customer)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                 title="Hapus"
             >
                 <svg
@@ -253,7 +223,7 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
             <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             <th className="px-4 py-3.5">Nama</th>
                             <th className="px-4 py-3.5">Telepon</th>
                             <th className="px-4 py-3.5">Email</th>
@@ -271,36 +241,36 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                             <th className="px-4 py-3.5 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-border">
                         {items.map((c) => (
                             <tr
                                 key={c.id}
-                                className="transition hover:bg-slate-50/70"
+                                className="transition hover:bg-muted/70"
                             >
                                 <td className="px-4 py-4">
                                     <div className="flex items-center gap-3">
                                         <CustomerBadge name={c.name} />
                                         <div className="min-w-0">
-                                            <p className="font-medium text-slate-800">
+                                            <p className="font-medium text-foreground">
                                                 {c.name}
                                             </p>
                                             {c.code && (
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-muted-foreground">
                                                     {c.code}
                                                 </p>
                                             )}
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-4 py-4 text-slate-600">
+                                <td className="px-4 py-4 text-muted-foreground">
                                     {c.phone || "—"}
                                 </td>
-                                <td className="px-4 py-4 text-slate-600">
+                                <td className="px-4 py-4 text-muted-foreground">
                                     {c.email || "—"}
                                 </td>
                                 {showLoyalty && (
                                     <td className="px-4 py-4 text-center">
-                                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+                                        <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                                             {c.points || 0}
                                         </span>
                                     </td>
@@ -316,11 +286,11 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                 )}
                                 <td className="px-4 py-4 text-right">
                                     {(c.debt_balance ?? 0) > 0 ? (
-                                        <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-600">
+                                        <span className="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-semibold text-destructive">
                                             Rp{Number(c.debt_balance).toLocaleString("id-ID")}
                                         </span>
                                     ) : (
-                                        <span className="text-xs text-slate-400">—</span>
+                                        <span className="text-xs text-muted-foreground">—</span>
                                     )}
                                 </td>
                                 <td className="px-4 py-4">
@@ -336,13 +306,13 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
             </div>
 
             {/* Mobile cards */}
-            <div className="divide-y divide-slate-100 md:hidden">
+            <div className="divide-y divide-border md:hidden">
                 {items.map((c) => (
                     <div key={c.id} className="flex items-start gap-3 p-4">
                         <CustomerBadge name={c.name} />
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                                <p className="truncate font-medium text-slate-800">
+                                <p className="truncate font-medium text-foreground">
                                     {c.name}
                                 </p>
                                 {showLoyalty && (
@@ -354,18 +324,18 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                 )}
                             </div>
                             {c.phone && (
-                                <p className="mt-0.5 text-sm text-slate-500">
+                                <p className="mt-0.5 text-sm text-muted-foreground">
                                     {c.phone}
                                 </p>
                             )}
                             {c.email && (
-                                <p className="mt-0.5 text-sm text-slate-500">
+                                <p className="mt-0.5 text-sm text-muted-foreground">
                                     {c.email}
                                 </p>
                             )}
                             <div className="mt-2 flex items-center gap-3">
                                 {showLoyalty && (
-                                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                                    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                                         {c.points || 0} poin
                                     </span>
                                 )}
@@ -394,7 +364,7 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                     </Link>
                                     <button
                                         onClick={() => onDelete(c)}
-                                        className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                                        className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-destructive transition hover:bg-destructive/10"
                                     >
                                         <svg
                                             className="h-3.5 w-3.5"

@@ -167,28 +167,28 @@ export default function Select({
     };
 
     /* ── Shared styles ── */
-    const btnCls = `relative w-full cursor-pointer rounded-xl border bg-slate-50 py-2.5 pl-3.5 pr-10 text-left text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
+    const btnCls = `relative w-full cursor-pointer rounded-xl border bg-muted/40 py-2.5 pl-3.5 pr-10 text-left text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
         error
-            ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-            : "border-slate-300 focus:border-primary-400 focus:ring-primary-100"
-    } ${disabled ? "cursor-not-allowed bg-slate-100 text-slate-400" : "hover:border-primary-300"}`;
+            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+            : "border-input focus:border-ring focus:ring-ring/20"
+    } ${disabled ? "cursor-not-allowed bg-muted text-muted-foreground" : "hover:border-primary-300"}`;
 
     const optCls = (active, sel) =>
         `relative cursor-pointer select-none px-3.5 py-2.5 text-sm transition-colors ${
             sel
                 ? "bg-primary-50 font-semibold text-primary-700"
                 : active
-                  ? "bg-slate-100 text-slate-800"
-                  : "text-slate-700"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-popover-foreground"
         }`;
 
     const Empty = () => (
         <div className="px-4 py-10 text-center">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
                 {query ? "Tidak ditemukan" : "Tidak ada pilihan"}
             </p>
             {query && (
-                <p className="mt-1 text-xs text-slate-300">
+                <p className="mt-1 text-xs text-muted-foreground/70">
                     Coba kata kunci lain
                 </p>
             )}
@@ -201,12 +201,12 @@ export default function Select({
               <div
                   ref={panelRef}
                   style={panelStyle}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+                  className="overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl"
               >
                   {/* Search bar */}
-                  <div className="border-b border-slate-100 p-2.5">
+                  <div className="border-b border-border p-2.5">
                       <div className="relative">
-                          <Search className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-slate-400" />
+                          <Search className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground" />
                           <input
                               ref={searchRef}
                               type="text"
@@ -217,7 +217,7 @@ export default function Select({
                               }}
                               onKeyDown={handleKey}
                               placeholder="Ketik untuk mencari..."
-                              className="block w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100"
+                              className="block w-full rounded-xl border-input bg-muted/40 py-2.5 pl-9 pr-3 text-sm text-foreground focus:border-ring focus:bg-popover focus:outline-none focus:ring-2 focus:ring-ring/20"
                           />
                           {query && (
                               <button
@@ -227,7 +227,7 @@ export default function Select({
                                       setHlIdx(-1);
                                       searchRef.current?.focus();
                                   }}
-                                  className="absolute inset-y-0 right-2 flex items-center px-1 text-slate-400 hover:text-slate-600"
+                                  className="absolute inset-y-0 right-2 flex items-center px-1 text-muted-foreground hover:text-foreground"
                               >
                                   <X className="h-4 w-4" />
                               </button>
@@ -259,8 +259,8 @@ export default function Select({
                                           isSelected
                                               ? "bg-primary-50 font-semibold"
                                               : isHighlighted
-                                                ? "bg-slate-100"
-                                                : "hover:bg-slate-50"
+                                                ? "bg-accent text-accent-foreground"
+                                                : "hover:bg-accent hover:text-accent-foreground"
                                       }`}
                                   >
                                       <div className="flex w-full items-center gap-2.5 px-3.5 py-2.5">
@@ -268,7 +268,7 @@ export default function Select({
                                               className={`block truncate ${
                                                   isSelected
                                                       ? "text-primary-700"
-                                                      : "text-slate-800"
+                                                      : "text-popover-foreground"
                                               }`}
                                           >
                                               {getLabel(opt)}
@@ -284,7 +284,7 @@ export default function Select({
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between border-t border-slate-100 px-4 py-1.5 text-[11px] text-slate-400">
+                  <div className="flex items-center justify-between border-t border-border px-4 py-1.5 text-[11px] text-muted-foreground">
                       <span>{options.length} pilihan</span>
                       <span>↑↓ navigasi · Enter pilih · Esc tutup</span>
                   </div>
@@ -296,7 +296,7 @@ export default function Select({
     return (
         <div className={className}>
             {label && (
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {label}
                 </label>
             )}
@@ -312,16 +312,16 @@ export default function Select({
                         className={`${btnCls} ${searchOpen ? "border-primary-400 ring-2 ring-primary-100" : ""}`}
                     >
                         {selected ? (
-                            <span className="block truncate text-slate-700">
+                            <span className="block truncate text-foreground">
                                 {getLabel(selected)}
                             </span>
                         ) : (
-                            <span className="block truncate text-slate-700">
+                            <span className="block truncate text-muted-foreground">
                                 {placeholder}
                             </span>
                         )}
                         <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                            <ChevronsUpDown className="h-4 w-4 text-slate-400" />
+                            <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
                         </span>
                     </button>
                     {searchPanel}
@@ -332,16 +332,16 @@ export default function Select({
                     <div className="relative">
                         <ListboxButton className={btnCls}>
                             {selected ? (
-                                <span className="block truncate text-slate-700">
+                                <span className="block truncate text-foreground">
                                     {getLabel(selected)}
                                 </span>
                             ) : (
-                                <span className="block truncate text-slate-700">
+                                <span className="block truncate text-muted-foreground">
                                     {placeholder}
                                 </span>
                             )}
                             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                <ChevronsUpDown className="h-4 w-4 text-slate-400" />
+                                <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
                             </span>
                         </ListboxButton>
 
@@ -353,7 +353,7 @@ export default function Select({
                         >
                             <ListboxOptions
                                 anchor="bottom start"
-                                className="z-[9999] mt-1 w-[var(--button-width)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl focus:outline-none"
+                                className="z-[9999] mt-1 w-[var(--button-width)] overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl focus:outline-none"
                             >
                                 <div className="max-h-60 overflow-y-auto overscroll-contain py-1">
                                     {options.length === 0 ? (
@@ -395,7 +395,7 @@ export default function Select({
                 </Listbox>
             )}
 
-            {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
+            {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
         </div>
     );
 }

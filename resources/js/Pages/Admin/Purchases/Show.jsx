@@ -64,7 +64,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route("admin.purchases.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <svg
@@ -82,10 +82,10 @@ export default function Show({ purchase, storeType = "retail" }) {
                         </svg>
                     </Link>
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-800">
+                        <h2 className="text-lg font-semibold text-foreground">
                             {purchase.purchase_no}
                         </h2>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                             Detail {pageTitle}
                         </p>
                     </div>
@@ -95,7 +95,7 @@ export default function Show({ purchase, storeType = "retail" }) {
             <Head title={`${pageTitle} ${purchase.purchase_no}`} />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     {flash.success}
                 </div>
             )}
@@ -108,7 +108,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                     <>
                         <Link
                             href={route("admin.purchases.edit", purchase.id)}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-primary-300 bg-white px-3.5 py-2 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-primary-300 bg-card px-3.5 py-2 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -146,7 +146,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                         </button>
                         <button
                             onClick={() => setConfirmingStatus("cancelled")}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-white px-3.5 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-card px-3.5 py-2 text-sm font-semibold text-destructive transition hover:bg-destructive/10"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -171,9 +171,9 @@ export default function Show({ purchase, storeType = "retail" }) {
                 {/* Main */}
                 <div className="space-y-5 lg:col-span-2">
                     {/* Info */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-900">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-base font-semibold text-foreground">
                                 Informasi {pageTitle}
                             </h3>
                         </div>
@@ -200,9 +200,9 @@ export default function Show({ purchase, storeType = "retail" }) {
                     </div>
 
                     {/* Items */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-900">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-base font-semibold text-foreground">
                                 Item {pageTitle}
                             </h3>
                         </div>
@@ -210,48 +210,48 @@ export default function Show({ purchase, storeType = "retail" }) {
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
                                     <thead>
-                                        <tr className="border-b border-slate-100">
-                                            <th className="px-6 py-3 font-medium text-slate-500">
+                                        <tr className="border-b border-border">
+                                            <th className="px-6 py-3 font-medium text-muted-foreground">
                                                 #
                                             </th>
-                                            <th className="px-6 py-3 font-medium text-slate-500">
+                                            <th className="px-6 py-3 font-medium text-muted-foreground">
                                                 {productLabel}
                                             </th>
-                                            <th className="px-6 py-3 text-right font-medium text-slate-500">
+                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">
                                                 Qty
                                             </th>
-                                            <th className="px-6 py-3 text-right font-medium text-slate-500">
+                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">
                                                 Harga
                                             </th>
-                                            <th className="px-6 py-3 text-right font-medium text-slate-500">
+                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">
                                                 Subtotal
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-border">
                                         {items.map((item, idx) => (
                                             <tr
                                                 key={item.id}
-                                                className="transition hover:bg-slate-50/50"
+                                                className="transition hover:bg-muted/50"
                                             >
-                                                <td className="px-6 py-3.5 text-slate-400">
+                                                <td className="px-6 py-3.5 text-muted-foreground">
                                                     {idx + 1}
                                                 </td>
                                                 <td className="px-6 py-3.5">
-                                                    <p className="font-medium text-slate-800">
+                                                    <p className="font-medium text-foreground">
                                                         {item.product?.name}
                                                     </p>
-                                                    <p className="text-xs text-slate-400">
+                                                    <p className="text-xs text-muted-foreground">
                                                         {item.product?.sku}
                                                     </p>
                                                 </td>
-                                                <td className="px-6 py-3.5 text-right text-slate-600">
+                                                <td className="px-6 py-3.5 text-right text-muted-foreground">
                                                     {item.quantity}
                                                 </td>
-                                                <td className="px-6 py-3.5 text-right text-slate-600">
+                                                <td className="px-6 py-3.5 text-right text-muted-foreground">
                                                     {fmtRp(item.cost_price)}
                                                 </td>
-                                                <td className="px-6 py-3.5 text-right font-medium text-slate-800">
+                                                <td className="px-6 py-3.5 text-right font-medium text-foreground">
                                                     {fmtRp(item.subtotal)}
                                                 </td>
                                             </tr>
@@ -266,9 +266,9 @@ export default function Show({ purchase, storeType = "retail" }) {
                 {/* Sidebar */}
                 <div className="space-y-5">
                     {/* Financial */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-900">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-base font-semibold text-foreground">
                                 Rincian Biaya
                             </h3>
                         </div>
@@ -282,7 +282,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                                     <Row
                                         label="Diskon"
                                         value={`- ${fmtRp(purchase.discount_amount)}`}
-                                        valueCls="text-red-500"
+                                        valueCls="text-destructive"
                                     />
                                 )}
                                 {Number(purchase.tax_amount) > 0 && (
@@ -297,22 +297,22 @@ export default function Show({ purchase, storeType = "retail" }) {
                                         value={`+ ${fmtRp(purchase.shipping_amount)}`}
                                     />
                                 )}
-                                <div className="my-2 border-t border-slate-100" />
+                                <div className="my-2 border-t border-border" />
                                 <div className="flex items-center justify-between">
-                                    <dt className="font-semibold text-slate-700">
+                                    <dt className="font-semibold text-foreground">
                                         Grand Total
                                     </dt>
                                     <dd className="text-lg font-bold text-primary-600">
                                         {fmtRp(purchase.grand_total)}
                                     </dd>
                                 </div>
-                                <div className="my-2 border-t border-slate-100" />
+                                <div className="my-2 border-t border-border" />
                                 <Row
                                     label="Dibayar"
                                     value={fmtRp(purchase.paid_amount)}
                                 />
                                 <div className="flex items-center justify-between text-sm">
-                                    <dt className="font-medium text-slate-600">
+                                    <dt className="font-medium text-muted-foreground">
                                         Sisa Bayar
                                     </dt>
                                     <dd
@@ -330,20 +330,20 @@ export default function Show({ purchase, storeType = "retail" }) {
 
                     {/* Payments */}
                     {payments && payments.length > 0 && (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                                <h3 className="text-base font-semibold text-slate-900">
+                        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                            <div className="border-b border-border bg-muted/50 px-6 py-4">
+                                <h3 className="text-base font-semibold text-foreground">
                                     Riwayat Pembayaran
                                 </h3>
                             </div>
-                            <div className="divide-y divide-slate-100 p-4">
+                            <div className="divide-y divide-border p-4">
                                 {payments.map((pay) => (
                                     <div
                                         key={pay.id}
                                         className="py-3 first:pt-0 last:pb-0"
                                     >
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs text-slate-500">
+                                            <span className="text-xs text-muted-foreground">
                                                 {fmtShort(pay.paid_at)}{" "}
                                                 {fmtTime(pay.paid_at)}
                                             </span>
@@ -351,7 +351,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                                                 {fmtRp(pay.amount)}
                                             </span>
                                         </div>
-                                        <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
+                                        <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                                             <span>
                                                 {pay.paymentMethod?.name ?? "-"}
                                             </span>
@@ -362,7 +362,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                                             )}
                                         </div>
                                         {pay.note && (
-                                            <p className="mt-1 text-xs text-slate-400 italic">
+                                            <p className="mt-1 text-xs text-muted-foreground italic">
                                                 {pay.note}
                                             </p>
                                         )}
@@ -373,9 +373,9 @@ export default function Show({ purchase, storeType = "retail" }) {
                     )}
 
                     {/* Status history */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-900">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-base font-semibold text-foreground">
                                 Status
                             </h3>
                         </div>
@@ -420,17 +420,17 @@ export default function Show({ purchase, storeType = "retail" }) {
                     className="fixed inset-0 z-50 flex items-center justify-center p-4"
                     onMouseDown={() => !processing && setConfirmingStatus(null)}
                 >
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
                     <div
-                        className="relative w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+                        className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-lg font-semibold text-slate-900">
+                        <h3 className="text-lg font-semibold text-foreground">
                             {confirmingStatus === "completed"
                                 ? "Selesaikan Pembelian?"
                                 : "Batalkan Pembelian?"}
                         </h3>
-                        <p className="mt-2 text-sm text-slate-500">
+                        <p className="mt-2 text-sm text-muted-foreground">
                             {confirmingStatus === "completed"
                                 ? "Stok produk akan ditambahkan sesuai qty item. Tindakan ini tidak dapat dibatalkan."
                                 : "Pembelian akan dibatalkan. Jika sudah selesai, stok produk akan dikurangi kembali."}
@@ -439,7 +439,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                             <button
                                 onClick={() => setConfirmingStatus(null)}
                                 disabled={processing}
-                                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                                className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60"
                             >
                                 Batal
                             </button>
@@ -466,9 +466,9 @@ export default function Show({ purchase, storeType = "retail" }) {
 function InfoRow({ label, value, isRaw }) {
     return (
         <div className="flex items-center justify-between gap-3">
-            <dt className="text-slate-500">{label}</dt>
+            <dt className="text-muted-foreground">{label}</dt>
             <dd
-                className={`text-right ${isRaw ? "" : "font-medium text-slate-800"}`}
+                className={`text-right ${isRaw ? "" : "font-medium text-foreground"}`}
             >
                 {value}
             </dd>
@@ -479,8 +479,8 @@ function InfoRow({ label, value, isRaw }) {
 function Row({ label, value, valueCls = "" }) {
     return (
         <div className="flex items-center justify-between">
-            <dt className="text-slate-500">{label}</dt>
-            <dd className={`font-medium text-slate-700 ${valueCls}`}>
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className={`font-medium text-foreground ${valueCls}`}>
                 {value}
             </dd>
         </div>
@@ -489,9 +489,9 @@ function Row({ label, value, valueCls = "" }) {
 
 function StatusBadge({ status }) {
     const map = {
-        draft: "bg-slate-100 text-slate-600",
-        completed: "bg-emerald-100 text-emerald-700",
-        cancelled: "bg-red-100 text-red-600",
+        draft: "bg-muted text-muted-foreground",
+        completed: "bg-emerald-100 text-success",
+        cancelled: "bg-red-100 text-destructive",
     };
     const label = {
         draft: "Draft",
@@ -500,7 +500,7 @@ function StatusBadge({ status }) {
     };
     return (
         <span
-            className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status] ?? "bg-slate-100 text-slate-600"}`}
+            className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status] ?? "bg-muted text-muted-foreground"}`}
         >
             {label[status] ?? status}
         </span>
@@ -511,12 +511,12 @@ function PaymentBadge({ status }) {
     const map = {
         unpaid: "bg-rose-100 text-rose-600",
         partial: "bg-amber-100 text-amber-700",
-        paid: "bg-emerald-100 text-emerald-700",
+        paid: "bg-emerald-100 text-success",
     };
     const label = { unpaid: "Belum Bayar", partial: "Sebagian", paid: "Lunas" };
     return (
         <span
-            className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status] ?? "bg-slate-100 text-slate-600"}`}
+            className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status] ?? "bg-muted text-muted-foreground"}`}
         >
             {label[status] ?? status}
         </span>

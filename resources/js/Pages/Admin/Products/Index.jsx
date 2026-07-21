@@ -1,8 +1,9 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import { Eye } from "lucide-react";
-import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import Button from "@/Components/ui/Button";
+import { Eye, Plus } from "lucide-react";
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import QuickStockModal from "@/Pages/Admin/Products/QuickStockModal";
 import TreePicker from "@/Components/TreePicker";
 import Select from "@/Components/ui/Select";
@@ -89,8 +90,8 @@ const FILTER_TYPES = {
 function TypeBadge({ type }) {
     const t = TYPE_LABEL[type] ?? {
         label: type,
-        bg: "bg-slate-100",
-        text: "text-slate-600",
+        bg: "bg-muted",
+        text: "text-muted-foreground",
     };
     return (
         <span
@@ -104,7 +105,7 @@ function TypeBadge({ type }) {
 function StockBadge({ product }) {
     if (!product.track_stock) {
         return (
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                 Tanpa Stok
             </span>
         );
@@ -113,7 +114,7 @@ function StockBadge({ product }) {
     const min = product.stock_minimum ?? 0;
     if (stock <= 0) {
         return (
-            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-destructive">
                 Habis
             </span>
         );
@@ -126,7 +127,7 @@ function StockBadge({ product }) {
         );
     }
     return (
-        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-success">
             Cukup
         </span>
     );
@@ -134,12 +135,12 @@ function StockBadge({ product }) {
 
 function StatusBadge({ isActive }) {
     return isActive ? (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-success">
+            <span className="h-1.5 w-1.5 rounded-full bg-success/100"></span>
             Aktif
         </span>
     ) : (
-        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
             Nonaktif
         </span>
@@ -258,7 +259,7 @@ function DetailRow({ product, onStockModal }) {
                         return (
                             <div
                                 key={v.id}
-                                className={`group relative rounded-xl border bg-[rgb(var(--color-card))] p-3.5 transition-all hover:shadow-md ${isOut ? "border-red-200 bg-red-50/30" : isLow ? "border-amber-200 bg-amber-50/30" : "border-[rgb(var(--color-border))]"}`}
+                                className={`group relative rounded-xl border bg-[rgb(var(--color-card))] p-3.5 transition-all hover:shadow-md ${isOut ? "border-destructive/20 bg-destructive/10/30" : isLow ? "border-amber-200 bg-amber-50/30" : "border-[rgb(var(--color-border))]"}`}
                             >
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1">
@@ -266,7 +267,7 @@ function DetailRow({ product, onStockModal }) {
                                         <p className="mt-0.5 font-mono text-[11px] text-[rgb(var(--color-text-muted))]">{v.sku}</p>
                                     </div>
                                     {product.track_stock && (
-                                        <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${isOut ? "bg-red-100 text-red-600" : isLow ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
+                                        <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${isOut ? "bg-red-100 text-destructive" : isLow ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-success"}`}>
                                             {isOut ? "Habis" : isLow ? "Menipis" : vStock}
                                         </span>
                                     )}
@@ -710,7 +711,7 @@ export default function Index({
                                         }
                                     }}
                                     placeholder="Cari nama, SKU, atau barcode..."
-                                    className="w-full rounded-lg border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 pl-10 pr-3 text-sm text-[rgb(var(--color-text-primary))] outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
+                                    className="w-full rounded-lg border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 pl-10 pr-3 text-sm text-[rgb(var(--color-text-primary))] outline-none focus:border-ring focus:ring-2 focus:ring-primary-500"
                                 />
                             </div>
                             {/* Filter toggle — mobile only */}
@@ -798,7 +799,7 @@ export default function Index({
                                 )}
                                 <Link
                                     href={route("admin.products.create")}
-                                    className="hidden lg:inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
+                                    className="hidden lg:inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
                                 >
                                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                                         <path strokeLinecap="round" d="M12 5v14M5 12h14" />
@@ -848,7 +849,7 @@ export default function Index({
                         {!hasFilters && (
                             <Link
                                 href={route("admin.products.create")}
-                                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
+                                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
                             >
                                 <svg
                                     className="h-5 w-5"
@@ -1245,7 +1246,7 @@ export default function Index({
                                                                         product,
                                                                     )
                                                                 }
-                                                                className="rounded p-1.5 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                                                                className="rounded p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                                                                 title="Hapus"
                                                             >
                                                                 <svg
@@ -1427,7 +1428,7 @@ export default function Index({
                                                         onClick={() =>
                                                             setTarget(product)
                                                         }
-                                                        className="text-red-600"
+                                                        className="text-destructive"
                                                     >
                                                         Hapus
                                                     </button>
@@ -1468,7 +1469,7 @@ export default function Index({
                                 }}
                                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                                     link.active
-                                        ? "bg-primary-600 text-white"
+                                        ? "bg-primary text-primary-foreground"
                                         : link.url
                                           ? "border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))]"
                                           : "cursor-default text-[rgb(var(--color-text-muted))]"
@@ -1483,21 +1484,13 @@ export default function Index({
             )}
 
             {/* FAB Create — mobile/tablet only */}
-            <Link
+            <Button
+                as={Link}
                 href={route("admin.products.create")}
-                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-xl shadow-primary-500/40 transition hover:shadow-2xl hover:shadow-primary-500/50 lg:hidden"
+                icon={Plus}
+                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl lg:hidden"
                 title={`Tambah ${pageTitle}`}
-            >
-                <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                    viewBox="0 0 24 24"
-                >
-                    <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                </svg>
-            </Link>
+            />
 
             {/* Confirm Delete Modal */}
             <ConfirmDeleteModal

@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
-import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import QuickStockModal from "./QuickStockModal";
 import { ChevronLeft } from "lucide-react";
 
@@ -53,8 +53,8 @@ const TYPE_META = {
 const EXPIRY_META = {
     active: {
         label: "Aktif",
-        cls: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-        dot: "bg-emerald-500",
+        cls: "bg-success/10 text-success border border-success/20",
+        dot: "bg-success/100",
     },
     expiring_soon: {
         label: "Hampir Habis",
@@ -63,8 +63,8 @@ const EXPIRY_META = {
     },
     expired: {
         label: "Kadaluarsa",
-        cls: "bg-red-50 text-red-600 border border-red-200",
-        dot: "bg-red-500",
+        cls: "bg-destructive/10 text-destructive border border-destructive/20",
+        dot: "bg-destructive/100",
     },
 };
 
@@ -83,7 +83,7 @@ function getBatchStatus(batch) {
 function StockTable({ stocks }) {
     if (!stocks?.length) {
         return (
-            <p className="px-6 py-8 text-center text-sm text-slate-400">
+            <p className="px-6 py-8 text-center text-sm text-muted-foreground">
                 Belum ada data stok.
             </p>
         );
@@ -92,7 +92,7 @@ function StockTable({ stocks }) {
         <div className="overflow-x-auto">
             <table className="w-full text-sm">
                 <thead>
-                    <tr className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                    <tr className="bg-muted text-muted-foreground text-xs uppercase tracking-wider">
                         <th className="text-left font-medium px-6 py-3 rounded-l-lg">
                             Cabang
                         </th>
@@ -107,26 +107,26 @@ function StockTable({ stocks }) {
                         </th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                     {stocks.map((s) => {
                         const avail = s.quantity - s.reserved_quantity;
                         return (
                             <tr
                                 key={s.id}
-                                className="hover:bg-slate-50 transition"
+                                className="hover:bg-muted transition"
                             >
-                                <td className="px-6 py-3 font-medium text-slate-700">
+                                <td className="px-6 py-3 font-medium text-foreground">
                                     {s.branch?.name ?? "Semua Cabang"}
                                 </td>
-                                <td className="px-6 py-3 text-right font-semibold text-slate-600">
+                                <td className="px-6 py-3 text-right font-semibold text-muted-foreground">
                                     {s.quantity}
                                 </td>
-                                <td className="px-6 py-3 text-right text-slate-400">
+                                <td className="px-6 py-3 text-right text-muted-foreground">
                                     {s.reserved_quantity}
                                 </td>
                                 <td className="px-6 py-3 text-right">
                                     <span
-                                        className={`font-semibold ${avail <= 0 ? "text-red-600" : "text-emerald-600"}`}
+                                        className={`font-semibold ${avail <= 0 ? "text-destructive" : "text-emerald-600"}`}
                                     >
                                         {avail}
                                     </span>
@@ -144,7 +144,7 @@ function StockTable({ stocks }) {
 function BatchTable({ batches }) {
     if (!batches?.length) {
         return (
-            <p className="px-6 py-8 text-center text-sm text-slate-400">
+            <p className="px-6 py-8 text-center text-sm text-muted-foreground">
                 Belum ada batch untuk produk ini.
             </p>
         );
@@ -153,7 +153,7 @@ function BatchTable({ batches }) {
         <div className="overflow-x-auto">
             <table className="w-full text-sm">
                 <thead>
-                    <tr className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                    <tr className="bg-muted text-muted-foreground text-xs uppercase tracking-wider">
                         <th className="text-left font-medium px-6 py-3 rounded-l-lg">
                             No. Batch
                         </th>
@@ -174,28 +174,28 @@ function BatchTable({ batches }) {
                         </th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                     {batches.map((b) => {
                         const status = getBatchStatus(b);
                         const meta = status ? EXPIRY_META[status] : null;
                         return (
                             <tr
                                 key={b.id}
-                                className={`transition hover:bg-slate-50 ${status === "expired" ? "bg-red-50/30" : ""}`}
+                                className={`transition hover:bg-muted ${status === "expired" ? "bg-destructive/10/30" : ""}`}
                             >
                                 <td className="px-6 py-3 font-mono text-xs font-semibold text-primary-600">
                                     {b.batch_no}
                                 </td>
-                                <td className="px-6 py-3 text-right font-semibold text-slate-800">
+                                <td className="px-6 py-3 text-right font-semibold text-foreground">
                                     {b.quantity}
                                 </td>
-                                <td className="px-6 py-3 text-right text-slate-500">
+                                <td className="px-6 py-3 text-right text-muted-foreground">
                                     {fmt(b.cost_price)}
                                 </td>
-                                <td className="px-6 py-3 text-slate-500">
+                                <td className="px-6 py-3 text-muted-foreground">
                                     {fmtDate(b.purchase_date)}
                                 </td>
-                                <td className="px-6 py-3 text-slate-500">
+                                <td className="px-6 py-3 text-muted-foreground">
                                     {fmtDate(b.expiry_date)}
                                 </td>
                                 <td className="px-6 py-3">
@@ -209,7 +209,7 @@ function BatchTable({ batches }) {
                                             {meta.label}
                                         </span>
                                     ) : (
-                                        <span className="text-xs text-slate-400">
+                                        <span className="text-xs text-muted-foreground">
                                             —
                                         </span>
                                     )}
@@ -227,7 +227,7 @@ function BatchTable({ batches }) {
 function BucketMarginTable({ bucketMargins }) {
     if (!bucketMargins?.length) {
         return (
-            <p className="px-6 py-8 text-center text-sm text-slate-400">
+            <p className="px-6 py-8 text-center text-sm text-muted-foreground">
                 Belum ada data stok untuk menghitung margin per bucket.
             </p>
         );
@@ -236,7 +236,7 @@ function BucketMarginTable({ bucketMargins }) {
         <div className="overflow-x-auto">
             <table className="w-full text-sm">
                 <thead>
-                    <tr className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                    <tr className="bg-muted text-muted-foreground text-xs uppercase tracking-wider">
                         <th className="text-left font-medium px-6 py-3 rounded-l-lg">
                             Bucket
                         </th>
@@ -254,28 +254,28 @@ function BucketMarginTable({ bucketMargins }) {
                         </th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                     {bucketMargins.map((b, i) => (
-                        <tr key={i} className="transition hover:bg-slate-50">
-                            <td className="px-6 py-3 font-medium text-slate-700">
+                        <tr key={i} className="transition hover:bg-muted">
+                            <td className="px-6 py-3 font-medium text-foreground">
                                 {b.label}
                             </td>
-                            <td className="px-6 py-3 text-right text-slate-600">
+                            <td className="px-6 py-3 text-right text-muted-foreground">
                                 {b.quantity}
                             </td>
-                            <td className="px-6 py-3 text-right text-slate-800">
+                            <td className="px-6 py-3 text-right text-foreground">
                                 {fmt(b.sell_price)}
                             </td>
-                            <td className="px-6 py-3 text-right text-slate-500">
+                            <td className="px-6 py-3 text-right text-muted-foreground">
                                 {fmt(b.average_cost)}
                             </td>
                             <td className="px-6 py-3 text-right">
                                 <span
-                                    className={`font-semibold ${b.margin_rp < 0 ? "text-red-600" : "text-emerald-600"}`}
+                                    className={`font-semibold ${b.margin_rp < 0 ? "text-destructive" : "text-emerald-600"}`}
                                 >
                                     {fmt(b.margin_rp)}
                                 </span>
-                                <span className="ml-1 text-xs text-slate-400">
+                                <span className="ml-1 text-xs text-muted-foreground">
                                     ({b.margin_percent}%)
                                 </span>
                             </td>
@@ -292,12 +292,12 @@ function VariantsTable({ variants, productId }) {
     if (!variants?.length) {
         return (
             <div className="flex flex-col items-center px-6 py-8 text-center">
-                <p className="text-sm text-slate-400 mb-3">
+                <p className="text-sm text-muted-foreground mb-3">
                     Produk ini belum memiliki varian.
                 </p>
                 <Link
                     href={route("admin.products.variants.index", productId)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
                 >
                     <svg
                         className="h-3.5 w-3.5"
@@ -323,26 +323,26 @@ function VariantsTable({ variants, productId }) {
                 {variants.map((v) => (
                     <div
                         key={v.id}
-                        className="rounded-xl border border-slate-200 bg-slate-50/50 p-3"
+                        className="rounded-xl border border-border bg-muted/50 p-3"
                     >
                         <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-semibold text-slate-800">
+                            <span className="text-sm font-semibold text-foreground">
                                 {v.name}
                             </span>
                             <span
-                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${v.is_active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${v.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}
                             >
                                 <span
-                                    className={`h-1.5 w-1.5 rounded-full ${v.is_active ? "bg-emerald-500" : "bg-slate-400"}`}
+                                    className={`h-1.5 w-1.5 rounded-full ${v.is_active ? "bg-success/100" : "bg-slate-400"}`}
                                 />
                                 {v.is_active ? "Aktif" : "Nonaktif"}
                             </span>
                         </div>
-                        <p className="text-xs text-slate-500 font-mono">
+                        <p className="text-xs text-muted-foreground font-mono">
                             {v.sku}
                         </p>
                         <div className="mt-2 flex items-center justify-between text-sm">
-                            <span className="font-semibold text-slate-800">
+                            <span className="font-semibold text-foreground">
                                 {fmt(v.price)}
                             </span>
                             <div className="flex gap-1">
@@ -403,7 +403,7 @@ export default function Show({
 
     const typeMeta = TYPE_META[product.type] ?? {
         label: product.type,
-        cls: "bg-slate-100 text-slate-600",
+        cls: "bg-muted text-muted-foreground",
     };
     const isLowStock =
         product.track_stock && totalStock <= product.stock_minimum;
@@ -446,7 +446,7 @@ export default function Show({
                     <div className="flex items-center gap-3">
                         <Link
                             href={route("admin.products.index")}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                             aria-label="Kembali"
                         >
                             <ChevronLeft
@@ -455,23 +455,23 @@ export default function Show({
                             />
                         </Link>
                         <div className="leading-tight">
-                            <div className="text-sm font-semibold text-slate-900">
+                            <div className="text-sm font-semibold text-foreground">
                                 Retail POS
                             </div>
-                            <div className="text-[11px] text-slate-500">
+                            <div className="text-[11px] text-muted-foreground">
                                 Detail Produk
                             </div>
                         </div>
                     </div>
-                    <nav className="hidden md:flex items-center text-xs text-slate-500 gap-2">
+                    <nav className="hidden md:flex items-center text-xs text-muted-foreground gap-2">
                         <Link
                             href={route("admin.products.index")}
-                            className="hover:text-slate-800"
+                            className="hover:text-foreground"
                         >
                             Produk
                         </Link>
                         <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                        <span className="text-slate-900 font-medium">
+                        <span className="text-foreground font-medium">
                             Detail
                         </span>
                     </nav>
@@ -497,7 +497,7 @@ export default function Show({
                                             });
                                         }
                                     }}
-                                    className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-100"
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-100"
                                 >
                                     <svg
                                         className="h-4 w-4"
@@ -516,7 +516,7 @@ export default function Show({
                                     onClick={() =>
                                         setStockModal({ product, type: "out" })
                                     }
-                                    className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition hover:bg-red-100"
                                 >
                                     <svg
                                         className="h-4 w-4"
@@ -538,7 +538,7 @@ export default function Show({
                         </Link>
                         <button
                             onClick={() => setDeleteOpen(true)}
-                            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition"
+                            className="px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition"
                         >
                             Hapus
                         </button>
@@ -550,10 +550,10 @@ export default function Show({
 
             {/* ── Low Stock Alert ── */}
             {isLowStock && !alertDismissed && (
-                <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
+                <div className="mb-6 bg-destructive/10 border border-destructive/20 rounded-2xl p-4 flex items-start gap-3">
                     <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                         <svg
-                            className="w-5 h-5 text-red-600"
+                            className="w-5 h-5 text-destructive"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={1.8}
@@ -570,7 +570,7 @@ export default function Show({
                         <p className="text-sm font-semibold text-red-900">
                             Perhatian: Stok menipis
                         </p>
-                        <p className="text-sm text-red-700 mt-0.5">
+                        <p className="text-sm text-destructive mt-0.5">
                             Stok produk ini <strong>{totalStock}</strong>{" "}
                             tersisa, minimum {product.stock_minimum}.
                             Pertimbangkan untuk melakukan pembelian.
@@ -578,7 +578,7 @@ export default function Show({
                     </div>
                     <button
                         onClick={() => setAlertDismissed(true)}
-                        className="flex-shrink-0 p-1 text-red-400 hover:text-red-600 rounded"
+                        className="flex-shrink-0 p-1 text-red-400 hover:text-destructive rounded"
                     >
                         <svg
                             className="w-5 h-5"
@@ -634,7 +634,7 @@ export default function Show({
             )}
 
             {/* ── Product Header Card ── */}
-            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6">
+            <section className="bg-card rounded-2xl border border-border shadow-sm p-6 mb-6">
                 <div className="flex flex-col sm:flex-row gap-6">
                     <div className="flex-shrink-0 mx-auto sm:mx-0">
                         {product.image ? (
@@ -659,10 +659,10 @@ export default function Show({
                     <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-2">
                             <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${product.is_active ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-500"}`}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${product.is_active ? "bg-success/10 text-success border border-success/20" : "bg-muted text-muted-foreground"}`}
                             >
                                 <span
-                                    className={`w-1.5 h-1.5 rounded-full ${product.is_active ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`}
+                                    className={`w-1.5 h-1.5 rounded-full ${product.is_active ? "bg-success/100 animate-pulse" : "bg-slate-400"}`}
                                 />
                                 {product.is_active ? "Aktif" : "Nonaktif"}
                             </span>
@@ -679,27 +679,27 @@ export default function Show({
                                 </span>
                             )}
                         </div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
                             {product.name}
                         </h1>
                         {product.description && (
-                            <p className="text-slate-600 mt-1.5 text-sm sm:text-base">
+                            <p className="text-muted-foreground mt-1.5 text-sm sm:text-base">
                                 {product.description}
                             </p>
                         )}
                         <div className="flex flex-wrap items-center gap-4 mt-3 text-sm">
-                            <span className="text-slate-500">
+                            <span className="text-muted-foreground">
                                 SKU:{" "}
-                                <span className="font-mono font-medium text-slate-800">
+                                <span className="font-mono font-medium text-foreground">
                                     {product.sku}
                                 </span>
                             </span>
                             {product.barcode && (
                                 <>
-                                    <span className="text-slate-300">•</span>
-                                    <span className="text-slate-500">
+                                    <span className="text-muted-foreground/50">•</span>
+                                    <span className="text-muted-foreground">
                                         Barcode:{" "}
-                                        <span className="font-mono font-medium text-slate-800">
+                                        <span className="font-mono font-medium text-foreground">
                                             {product.barcode}
                                         </span>
                                     </span>
@@ -737,9 +737,9 @@ export default function Show({
                         {totalStock - reserved}
                     </div>
                 </div>
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Harga Jual
                         </span>
                         <svg
@@ -756,20 +756,20 @@ export default function Show({
                             />
                         </svg>
                     </div>
-                    <div className="text-2xl font-bold text-slate-900">
+                    <div className="text-2xl font-bold text-foreground">
                         {fmt(product.sell_price)}
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                         per {product.unit}
                     </div>
                 </div>
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Harga Beli
                         </span>
                         <svg
-                            className="w-5 h-5 text-slate-400"
+                            className="w-5 h-5 text-muted-foreground"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={1.8}
@@ -782,16 +782,16 @@ export default function Show({
                             />
                         </svg>
                     </div>
-                    <div className="text-2xl font-bold text-slate-900">
+                    <div className="text-2xl font-bold text-foreground">
                         {fmt(product.cost_price)}
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                         rata-rata HPP
                     </div>
                 </div>
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Margin
                         </span>
                         <svg
@@ -811,7 +811,7 @@ export default function Show({
                     <div className="text-2xl font-bold text-emerald-600">
                         {margin}%
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                         {fmt(profitRp)} / unit
                     </div>
                 </div>
@@ -822,8 +822,8 @@ export default function Show({
                 {/* Left / Main */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Tabs Card */}
-                    <section className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="border-b border-slate-200 overflow-x-auto">
+                    <section className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+                        <div className="border-b border-border overflow-x-auto">
                             <div className="flex gap-1 p-2 min-w-max">
                                 {tabs.map((t) => (
                                     <button
@@ -832,13 +832,13 @@ export default function Show({
                                         className={`px-4 py-2 text-sm font-medium rounded-lg border transition whitespace-nowrap ${
                                             activeTab === t.id
                                                 ? "text-primary-600 border-primary-300 bg-primary-50"
-                                                : "text-slate-600 border-transparent hover:bg-slate-50"
+                                                : "text-muted-foreground border-transparent hover:bg-muted"
                                         }`}
                                     >
                                         {t.label}
                                         {t.count !== undefined && (
                                             <span
-                                                className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold ${activeTab === t.id ? "bg-primary-100 text-primary-700" : "bg-slate-100 text-slate-500"}`}
+                                                className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold ${activeTab === t.id ? "bg-primary-100 text-primary-700" : "bg-muted text-muted-foreground"}`}
                                             >
                                                 {t.count}
                                             </span>
@@ -865,13 +865,13 @@ export default function Show({
                     </section>
 
                     {/* Detail Produk */}
-                    <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                        <h2 className="text-lg font-bold text-slate-900 mb-4">
+                    <section className="bg-card rounded-2xl border border-border shadow-sm p-6">
+                        <h2 className="text-lg font-bold text-foreground mb-4">
                             Detail Produk
                         </h2>
                         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
-                            <div className="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
-                                <dt className="text-slate-500 sm:mb-1">
+                            <div className="flex justify-between sm:block border-b sm:border-0 border-border pb-2 sm:pb-0">
+                                <dt className="text-muted-foreground sm:mb-1">
                                     Tipe
                                 </dt>
                                 <dd>
@@ -882,66 +882,66 @@ export default function Show({
                                     </span>
                                 </dd>
                             </div>
-                            <div className="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
-                                <dt className="text-slate-500 sm:mb-1">
+                            <div className="flex justify-between sm:block border-b sm:border-0 border-border pb-2 sm:pb-0">
+                                <dt className="text-muted-foreground sm:mb-1">
                                     Kategori
                                 </dt>
-                                <dd className="font-medium text-slate-900">
+                                <dd className="font-medium text-foreground">
                                     {product.category?.name ?? "—"}
                                 </dd>
                             </div>
-                            <div className="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
-                                <dt className="text-slate-500 sm:mb-1">
+                            <div className="flex justify-between sm:block border-b sm:border-0 border-border pb-2 sm:pb-0">
+                                <dt className="text-muted-foreground sm:mb-1">
                                     Supplier
                                 </dt>
-                                <dd className="font-medium text-slate-900">
+                                <dd className="font-medium text-foreground">
                                     {product.supplier?.name ?? "—"}
                                 </dd>
                             </div>
-                            <div className="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
-                                <dt className="text-slate-500 sm:mb-1">
+                            <div className="flex justify-between sm:block border-b sm:border-0 border-border pb-2 sm:pb-0">
+                                <dt className="text-muted-foreground sm:mb-1">
                                     Barcode
                                 </dt>
-                                <dd className="font-mono font-medium text-slate-900">
+                                <dd className="font-mono font-medium text-foreground">
                                     {product.barcode ?? "—"}
                                 </dd>
                             </div>
-                            <div className="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
-                                <dt className="text-slate-500 sm:mb-1">
+                            <div className="flex justify-between sm:block border-b sm:border-0 border-border pb-2 sm:pb-0">
+                                <dt className="text-muted-foreground sm:mb-1">
                                     Satuan
                                 </dt>
-                                <dd className="font-medium text-slate-900">
+                                <dd className="font-medium text-foreground">
                                     {product.unit}
                                 </dd>
                             </div>
-                            <div className="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
-                                <dt className="text-slate-500 sm:mb-1">
+                            <div className="flex justify-between sm:block border-b sm:border-0 border-border pb-2 sm:pb-0">
+                                <dt className="text-muted-foreground sm:mb-1">
                                     Stok Minimum
                                 </dt>
-                                <dd className="font-semibold text-slate-900">
+                                <dd className="font-semibold text-foreground">
                                     {product.stock_minimum}
                                 </dd>
                             </div>
                             {product.preparation_time && (
-                                <div className="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
-                                    <dt className="text-slate-500 sm:mb-1">
+                                <div className="flex justify-between sm:block border-b sm:border-0 border-border pb-2 sm:pb-0">
+                                    <dt className="text-muted-foreground sm:mb-1">
                                         Waktu Saji
                                     </dt>
-                                    <dd className="font-medium text-slate-900">
+                                    <dd className="font-medium text-foreground">
                                         {product.preparation_time} menit
                                     </dd>
                                 </div>
                             )}
-                            <div className="flex justify-between sm:block border-b sm:border-0 border-slate-100 pb-2 sm:pb-0">
-                                <dt className="text-slate-500 sm:mb-1">
+                            <div className="flex justify-between sm:block border-b sm:border-0 border-border pb-2 sm:pb-0">
+                                <dt className="text-muted-foreground sm:mb-1">
                                     Pantau Stok
                                 </dt>
                                 <dd>
                                     <span
-                                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${product.track_stock ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
+                                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${product.track_stock ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}
                                     >
                                         <span
-                                            className={`h-1.5 w-1.5 rounded-full ${product.track_stock ? "bg-emerald-500" : "bg-slate-400"}`}
+                                            className={`h-1.5 w-1.5 rounded-full ${product.track_stock ? "bg-success/100" : "bg-slate-400"}`}
                                         />
                                         {product.track_stock ? "Ya" : "Tidak"}
                                     </span>
@@ -949,10 +949,10 @@ export default function Show({
                             </div>
                             {product.description && (
                                 <div className="sm:col-span-2">
-                                    <dt className="text-slate-500 mb-1">
+                                    <dt className="text-muted-foreground mb-1">
                                         Deskripsi
                                     </dt>
-                                    <dd className="text-slate-700 leading-relaxed">
+                                    <dd className="text-foreground leading-relaxed">
                                         {product.description}
                                     </dd>
                                 </div>
@@ -964,8 +964,8 @@ export default function Show({
                 {/* Right / Sidebar */}
                 <aside className="space-y-6 lg:sticky lg:top-20 lg:self-start">
                     {/* Aksi Cepat */}
-                    <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                        <h2 className="text-lg font-bold text-slate-900 mb-4">
+                    <section className="bg-card rounded-2xl border border-border shadow-sm p-6">
+                        <h2 className="text-lg font-bold text-foreground mb-4">
                             Aksi Cepat
                         </h2>
                         <div className="space-y-2">
@@ -974,7 +974,7 @@ export default function Show({
                                     "admin.products.variants.index",
                                     product.id,
                                 )}
-                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-200 transition text-left group"
+                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted border border-border transition text-left group"
                             >
                                 <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center group-hover:bg-primary-100 transition">
                                     <svg
@@ -992,18 +992,18 @@ export default function Show({
                                     </svg>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-semibold text-slate-900">
+                                    <div className="text-sm font-semibold text-foreground">
                                         Kelola Varian
                                     </div>
                                     {product.variants?.length > 0 && (
-                                        <div className="text-xs text-slate-500">
+                                        <div className="text-xs text-muted-foreground">
                                             {product.variants.length} varian
                                             aktif
                                         </div>
                                     )}
                                 </div>
                                 <svg
-                                    className="w-4 h-4 text-slate-400 group-hover:text-primary-600 transition"
+                                    className="w-4 h-4 text-muted-foreground group-hover:text-primary-600 transition"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -1026,9 +1026,9 @@ export default function Show({
                                         "&supplier_id=" +
                                         product.supplier_id
                                     }
-                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-200 transition text-left group"
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted border border-border transition text-left group"
                                 >
-                                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition">
+                                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-emerald-100 transition">
                                         <svg
                                             className="w-5 h-5 text-emerald-600"
                                             fill="none"
@@ -1044,15 +1044,15 @@ export default function Show({
                                         </svg>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-semibold text-slate-900">
+                                        <div className="text-sm font-semibold text-foreground">
                                             Buat Purchase Order
                                         </div>
-                                        <div className="text-xs text-slate-500">
+                                        <div className="text-xs text-muted-foreground">
                                             Beli stok dari supplier
                                         </div>
                                     </div>
                                     <svg
-                                        className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition"
+                                        className="w-4 h-4 text-muted-foreground group-hover:text-emerald-600 transition"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -1073,7 +1073,7 @@ export default function Show({
                                         route("admin.product-batches.index") +
                                         `?product_id=${product.id}`
                                     }
-                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 border border-slate-200 transition text-left group"
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted border border-border transition text-left group"
                                 >
                                     <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition">
                                         <svg
@@ -1091,15 +1091,15 @@ export default function Show({
                                         </svg>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-semibold text-slate-900">
+                                        <div className="text-sm font-semibold text-foreground">
                                             Riwayat Stok
                                         </div>
-                                        <div className="text-xs text-slate-500">
+                                        <div className="text-xs text-muted-foreground">
                                             Lihat pergerakan stok
                                         </div>
                                     </div>
                                     <svg
-                                        className="w-4 h-4 text-slate-400 group-hover:text-amber-600 transition"
+                                        className="w-4 h-4 text-muted-foreground group-hover:text-amber-600 transition"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -1126,11 +1126,11 @@ export default function Show({
                             >
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                 Ringkasan
                             </span>
                         </div>
-                        <p className="text-sm text-slate-300 leading-relaxed">
+                        <p className="text-sm text-muted-foreground/50 leading-relaxed">
                             Produk performa{" "}
                             <span
                                 className={`font-semibold ${margin >= 30 ? "text-emerald-400" : margin >= 15 ? "text-amber-400" : "text-red-400"}`}
@@ -1167,13 +1167,13 @@ export default function Show({
 
                 {/* Riwayat Stok */}
                 {product.track_stock && stockMovements.length > 0 && (
-                    <section className="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-6 py-4">
+                    <section className="lg:col-span-3 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+                        <div className="flex items-center justify-between border-b border-border bg-muted/50 px-6 py-4">
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900">
+                                <h3 className="text-sm font-semibold text-foreground">
                                     Riwayat Stok
                                 </h3>
-                                <p className="mt-0.5 text-xs text-slate-500">
+                                <p className="mt-0.5 text-xs text-muted-foreground">
                                     10 mutasi terakhir
                                 </p>
                             </div>
@@ -1181,7 +1181,7 @@ export default function Show({
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                         <th className="px-5 py-3">
                                             Tanggal
                                         </th>
@@ -1200,7 +1200,7 @@ export default function Show({
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-border">
                                     {stockMovements.map((m, i) => {
                                         const isIn =
                                             m.movement_type?.includes("_in") ||
@@ -1209,14 +1209,14 @@ export default function Show({
                                         return (
                                             <tr
                                                 key={i}
-                                                className="transition hover:bg-slate-50/50"
+                                                className="transition hover:bg-muted/50"
                                             >
-                                                <td className="px-5 py-3 text-slate-600 whitespace-nowrap">
+                                                <td className="px-5 py-3 text-muted-foreground whitespace-nowrap">
                                                     {fmtDate(m.moved_at)}
                                                 </td>
                                                 <td className="px-5 py-3">
                                                     <span
-                                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${isIn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
+                                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${isIn ? "bg-emerald-100 text-success" : "bg-red-100 text-destructive"}`}
                                                     >
                                                         {isIn ? "+" : "-"}
                                                         {movementLabel(
@@ -1224,18 +1224,18 @@ export default function Show({
                                                         )}
                                                     </span>
                                                 </td>
-                                                <td className="px-5 py-3 text-right font-medium text-slate-800">
+                                                <td className="px-5 py-3 text-right font-medium text-foreground">
                                                     {m.quantity} {product.unit}
                                                 </td>
-                                                <td className="px-5 py-3 text-right text-slate-500 hidden sm:table-cell">
+                                                <td className="px-5 py-3 text-right text-muted-foreground hidden sm:table-cell">
                                                     {m.unit_cost > 0
                                                         ? fmt(m.unit_cost)
                                                         : "-"}
                                                 </td>
-                                                <td className="px-5 py-3 text-xs text-slate-400 hidden sm:table-cell">
+                                                <td className="px-5 py-3 text-xs text-muted-foreground hidden sm:table-cell">
                                                     {m.reference_no ?? "-"}
                                                 </td>
-                                                <td className="px-5 py-3 text-xs text-slate-400 hidden md:table-cell max-w-[200px] truncate">
+                                                <td className="px-5 py-3 text-xs text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
                                                     {m.notes ?? "-"}
                                                 </td>
                                             </tr>
@@ -1280,7 +1280,7 @@ export default function Show({
                 )}
                 <button
                     onClick={() => setDeleteOpen(true)}
-                    className="w-14 h-14 rounded-full bg-white border border-slate-200 shadow-lg flex items-center justify-center text-red-600 hover:bg-red-50 transition"
+                    className="w-14 h-14 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-destructive hover:bg-destructive/10 transition"
                 >
                     <svg
                         className="w-5 h-5"

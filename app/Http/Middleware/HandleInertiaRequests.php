@@ -280,11 +280,7 @@ class HandleInertiaRequests extends Middleware
                 fn () => Cache::remember('system-themes', 3600, function () {
                     return ThemePreset::system()
                         ->orderBy('name')
-                        ->get([
-                            'id', 'slug', 'name', 'description',
-                            'primary', 'secondary', 'accent', 'is_dark',
-                            'light_tokens', 'dark_tokens',
-                        ]);
+                        ->get(['id', 'slug', 'name', 'description', 'tokens']);
                 }),
                 collect(),
                 false,

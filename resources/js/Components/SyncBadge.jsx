@@ -88,7 +88,7 @@ export default function SyncBadge() {
                 onClick={openModal}
                 className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 shadow-lg transition-all hover:shadow-xl active:scale-95 ${
                     failedCount > 0
-                        ? "bg-red-500 text-white"
+                        ? "bg-destructive/100 text-white"
                         : isOnline
                           ? "bg-amber-500 text-white"
                           : "bg-slate-600 text-white"
@@ -99,7 +99,7 @@ export default function SyncBadge() {
                 </span>
                 <span className="text-xs font-semibold">{total} transaksi</span>
                 {failedCount > 0 && (
-                    <span className="rounded-full bg-white/30 px-1.5 py-0.5 text-[10px] font-bold">
+                    <span className="rounded-full bg-card/30 px-1.5 py-0.5 text-[10px] font-bold">
                         {failedCount} gagal
                     </span>
                 )}
@@ -110,16 +110,16 @@ export default function SyncBadge() {
                 <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">
                     <div
                         onClick={() => setShowModal(false)}
-                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                     />
-                    <div className="relative w-full max-w-sm rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
-                        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-                            <h3 className="font-semibold text-slate-900">
+                    <div className="relative w-full max-w-sm rounded-t-2xl bg-card shadow-2xl sm:rounded-2xl">
+                        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                            <h3 className="font-semibold text-foreground">
                                 Antrian Sinkronisasi
                             </h3>
                             <button
                                 onClick={() => setShowModal(false)}
-                                className="text-slate-400 hover:text-slate-700"
+                                className="text-muted-foreground hover:text-foreground"
                             >
                                 <svg
                                     className="h-5 w-5"
@@ -148,11 +148,11 @@ export default function SyncBadge() {
                                         Menunggu
                                     </p>
                                 </div>
-                                <div className="rounded-xl bg-red-50 px-4 py-3 text-center">
-                                    <p className="text-2xl font-bold text-red-700">
+                                <div className="rounded-xl bg-destructive/10 px-4 py-3 text-center">
+                                    <p className="text-2xl font-bold text-destructive">
                                         {failedCount}
                                     </p>
-                                    <p className="text-xs text-red-600">
+                                    <p className="text-xs text-destructive">
                                         Gagal
                                     </p>
                                 </div>
@@ -161,22 +161,22 @@ export default function SyncBadge() {
                             {/* Failed list */}
                             {failedList.length > 0 && (
                                 <div>
-                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                         Transaksi Gagal
                                     </p>
                                     <div className="max-h-48 space-y-2 overflow-y-auto">
                                         {failedList.map((m) => (
                                             <div
                                                 key={m.id}
-                                                className="rounded-xl border border-red-100 bg-red-50/50 px-3 py-2.5"
+                                                className="rounded-xl border border-destructive/20 bg-destructive/10/50 px-3 py-2.5"
                                             >
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-xs font-semibold text-slate-700">
+                                                    <span className="text-xs font-semibold text-foreground">
                                                         {m.type === "sale"
                                                             ? "Penjualan"
                                                             : m.type}
                                                     </span>
-                                                    <span className="text-[10px] text-slate-400">
+                                                    <span className="text-[10px] text-muted-foreground">
                                                         {new Date(
                                                             m.created_at,
                                                         ).toLocaleString(
@@ -185,12 +185,12 @@ export default function SyncBadge() {
                                                     </span>
                                                 </div>
                                                 {m.error && (
-                                                    <p className="mt-0.5 text-xs text-red-600">
+                                                    <p className="mt-0.5 text-xs text-destructive">
                                                         {m.error}
                                                     </p>
                                                 )}
                                                 {m.meta?.items && (
-                                                    <p className="mt-0.5 text-[10px] text-slate-500">
+                                                    <p className="mt-0.5 text-[10px] text-muted-foreground">
                                                         {m.meta.items
                                                             .map(
                                                                 (i) =>
@@ -200,7 +200,7 @@ export default function SyncBadge() {
                                                     </p>
                                                 )}
                                                 {m.meta?.grandTotal && (
-                                                    <p className="text-[10px] font-medium text-slate-600">
+                                                    <p className="text-[10px] font-medium text-muted-foreground">
                                                         Rp{" "}
                                                         {Number(
                                                             m.meta.grandTotal,
@@ -225,7 +225,7 @@ export default function SyncBadge() {
                         </div>
 
                         {/* Actions */}
-                        <div className="border-t border-slate-100 px-5 py-4">
+                        <div className="border-t border-border px-5 py-4">
                             {failedCount > 0 && (
                                 <button
                                     type="button"
@@ -239,7 +239,7 @@ export default function SyncBadge() {
                                 </button>
                             )}
                             {pendingCount > 0 && failedCount === 0 && (
-                                <p className="text-center text-xs text-slate-400">
+                                <p className="text-center text-xs text-muted-foreground">
                                     {isOnline
                                         ? "Sinkronisasi otomatis sedang berjalan..."
                                         : "Sambungkan ke internet untuk sinkronisasi otomatis."}

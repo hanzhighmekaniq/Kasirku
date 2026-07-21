@@ -3,7 +3,9 @@ import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CurrencyInput from "@/Components/ui/CurrencyInput";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
-import ConfirmDeleteModal from "@/Pages/Admin/Products/ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
+import Button from "@/Components/ui/Button";
+import { Plus, Search, Pencil, Trash2, X } from "lucide-react";
 
 const DURATION_LABELS = {
     day: "Hari",
@@ -77,31 +79,15 @@ export default function Index({ memberships }) {
         <AuthenticatedLayout
             header={
                 <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-slate-800">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Membership
                     </h2>
-                    <button
-                        onClick={openCreate}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
-                    >
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                            />
-                        </svg>
+                    <Button onClick={openCreate} icon={Plus}>
                         <span className="hidden sm:inline">
                             Tambah Membership
                         </span>
                         <span className="sm:hidden">Tambah</span>
-                    </button>
+                    </Button>
                 </div>
             }
         >
@@ -109,50 +95,38 @@ export default function Index({ memberships }) {
 
             {/* Flash */}
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     {flash.success}
                 </div>
             )}
             {flash?.error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                     {flash.error}
                 </div>
             )}
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
-                <div className=" border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className=" border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="relative w-full sm:max-w-xs">
-                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.8}
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                />
-                            </svg>
+                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+                            <Search className="h-4 w-4" strokeWidth={1.8} />
                         </span>
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari nama, kode..."
-                            className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                            className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                         />
                     </div>
-                    <p className="pt-4 text-xs text-slate-500">
+                    <p className="pt-4 text-xs text-muted-foreground">
                         Menampilkan{" "}
-                        <span className="font-semibold text-slate-700">
+                        <span className="font-semibold text-foreground">
                             {filtered.length}
                         </span>{" "}
                         dari{" "}
-                        <span className="font-semibold text-slate-700">
+                        <span className="font-semibold text-foreground">
                             {memberships.length}
                         </span>{" "}
                         membership
@@ -161,9 +135,9 @@ export default function Index({ memberships }) {
 
                 {filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                             <svg
-                                className="h-8 w-8 text-slate-400"
+                                className="h-8 w-8 text-muted-foreground"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
@@ -176,36 +150,20 @@ export default function Index({ memberships }) {
                                 />
                             </svg>
                         </div>
-                        <h3 className="mt-4 text-base font-semibold text-slate-800">
+                        <h3 className="mt-4 text-base font-semibold text-foreground">
                             {search
                                 ? "Membership tidak ditemukan"
                                 : "Belum ada membership"}
                         </h3>
-                        <p className="mt-1 max-w-sm text-sm text-slate-500">
+                        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                             {search
                                 ? "Coba kata kunci lain."
                                 : "Mulai dengan menambahkan membership pertama untuk program loyalitas pelanggan."}
                         </p>
                         {!search && (
-                            <button
-                                onClick={openCreate}
-                                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
-                            >
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M12 4.5v15m7.5-7.5h-15"
-                                    />
-                                </svg>
+                            <Button onClick={openCreate} icon={Plus} className="mt-5">
                                 Tambah Membership
-                            </button>
+                            </Button>
                         )}
                     </div>
                 ) : (
@@ -347,7 +305,7 @@ function MembershipModal({ open, editing, onClose }) {
             {/* Backdrop */}
             <div
                 onClick={() => !processing && onClose()}
-                className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-200 ${
+                className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${
                     show ? "opacity-100" : "opacity-0"
                 }`}
             />
@@ -356,42 +314,30 @@ function MembershipModal({ open, editing, onClose }) {
             <div
                 role="dialog"
                 aria-modal="true"
-                className={`relative z-10 w-full max-w-lg transform rounded-2xl bg-white shadow-2xl transition-all duration-200 ${
+                className={`relative z-10 w-full max-w-lg transform rounded-2xl bg-card shadow-2xl transition-all duration-200 ${
                     show
                         ? "translate-y-0 scale-100 opacity-100"
                         : "translate-y-3 scale-95 opacity-0"
                 }`}
             >
-                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
-                    <h3 className="text-base font-semibold text-slate-800">
+                <div className="flex items-center justify-between border-b border-border px-4 py-4">
+                    <h3 className="text-base font-semibold text-foreground">
                         {editing ? "Edit Membership" : "Tambah Membership"}
                     </h3>
                     <button
                         onClick={onClose}
                         disabled={processing}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:opacity-60"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-muted-foreground disabled:opacity-60"
                     >
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.8}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
+                        <X className="h-5 w-5" strokeWidth={1.8} />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4 p-6">
                     {/* Code */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">
-                            Kode <span className="text-red-500">*</span>
+                        <label className="block text-sm font-medium text-foreground">
+                            Kode <span className="text-destructive">*</span>
                         </label>
                         <input
                             ref={firstInput}
@@ -399,11 +345,11 @@ function MembershipModal({ open, editing, onClose }) {
                             value={data.code}
                             onChange={(e) => setData("code", e.target.value)}
                             maxLength={50}
-                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                            className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             placeholder="Contoh: GOLD01"
                         />
                         {errors.code && (
-                            <p className="mt-1 text-xs text-red-500">
+                            <p className="mt-1 text-xs text-destructive">
                                 {errors.code}
                             </p>
                         )}
@@ -411,19 +357,19 @@ function MembershipModal({ open, editing, onClose }) {
 
                     {/* Name */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">
-                            Nama <span className="text-red-500">*</span>
+                        <label className="block text-sm font-medium text-foreground">
+                            Nama <span className="text-destructive">*</span>
                         </label>
                         <input
                             type="text"
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
                             maxLength={255}
-                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                            className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             placeholder="Contoh: Gold Member"
                         />
                         {errors.name && (
-                            <p className="mt-1 text-xs text-red-500">
+                            <p className="mt-1 text-xs text-destructive">
                                 {errors.name}
                             </p>
                         )}
@@ -431,7 +377,7 @@ function MembershipModal({ open, editing, onClose }) {
 
                     {/* Description */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">
+                        <label className="block text-sm font-medium text-foreground">
                             Deskripsi
                         </label>
                         <textarea
@@ -441,11 +387,11 @@ function MembershipModal({ open, editing, onClose }) {
                             }
                             maxLength={500}
                             rows={2}
-                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                            className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             placeholder="Deskripsi singkat membership..."
                         />
                         {errors.description && (
-                            <p className="mt-1 text-xs text-red-500">
+                            <p className="mt-1 text-xs text-destructive">
                                 {errors.description}
                             </p>
                         )}
@@ -455,12 +401,12 @@ function MembershipModal({ open, editing, onClose }) {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label
-                                className="block text-sm font-medium text-slate-700"
+                                className="block text-sm font-medium text-foreground"
                                 title="Satuan waktu keanggotaan (hari/bulan/tahun/kunjungan)"
                             >
                                 Tipe Durasi{" "}
-                                <span className="text-red-500">*</span>
-                                <span className="ml-1 cursor-help text-slate-400">
+                                <span className="text-destructive">*</span>
+                                <span className="ml-1 cursor-help text-muted-foreground">
                                     ⓘ
                                 </span>
                             </label>
@@ -476,14 +422,14 @@ function MembershipModal({ open, editing, onClose }) {
                                 placeholder="Pilih..."
                             />
                             {errors.duration_type && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-destructive">
                                     {errors.duration_type}
                                 </p>
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700">
-                                Nilai <span className="text-red-500">*</span>
+                            <label className="block text-sm font-medium text-foreground">
+                                Nilai <span className="text-destructive">*</span>
                             </label>
                             <input
                                 type="number"
@@ -492,11 +438,11 @@ function MembershipModal({ open, editing, onClose }) {
                                 onChange={(e) =>
                                     setData("duration_value", e.target.value)
                                 }
-                                className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 placeholder="1"
                             />
                             {errors.duration_value && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-destructive">
                                     {errors.duration_value}
                                 </p>
                             )}
@@ -506,11 +452,11 @@ function MembershipModal({ open, editing, onClose }) {
                     {/* Price */}
                     <div>
                         <label
-                            className="block text-sm font-medium text-slate-700"
+                            className="block text-sm font-medium text-foreground"
                             title="Harga untuk bergabung ke membership ini. Isi 0 jika gratis."
                         >
-                            Harga <span className="text-red-500">*</span>
-                            <span className="ml-1 cursor-help text-slate-400">
+                            Harga <span className="text-destructive">*</span>
+                            <span className="ml-1 cursor-help text-muted-foreground">
                                 ⓘ
                             </span>
                         </label>
@@ -521,7 +467,7 @@ function MembershipModal({ open, editing, onClose }) {
                             error={!!errors.price}
                         />
                         {errors.price && (
-                            <p className="mt-1 text-xs text-red-500">
+                            <p className="mt-1 text-xs text-destructive">
                                 {errors.price}
                             </p>
                         )}
@@ -531,11 +477,11 @@ function MembershipModal({ open, editing, onClose }) {
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label
-                                className="block text-sm font-medium text-slate-700"
+                                className="block text-sm font-medium text-foreground"
                                 title="Persentase diskon otomatis saat transaksi. Kosongkan jika tidak ada."
                             >
                                 Diskon (%)
-                                <span className="ml-1 cursor-help text-slate-400">
+                                <span className="ml-1 cursor-help text-muted-foreground">
                                     ⓘ
                                 </span>
                             </label>
@@ -548,22 +494,22 @@ function MembershipModal({ open, editing, onClose }) {
                                 onChange={(e) =>
                                     setData("discount_percent", e.target.value)
                                 }
-                                className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 placeholder="0"
                             />
                             {errors.discount_percent && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-destructive">
                                     {errors.discount_percent}
                                 </p>
                             )}
                         </div>
                         <div>
                             <label
-                                className="block text-sm font-medium text-slate-700"
+                                className="block text-sm font-medium text-foreground"
                                 title="Berapa kali lipat poin didapat. 1 = normal, 2 = 2x lipat."
                             >
                                 Multiplier Poin
-                                <span className="ml-1 cursor-help text-slate-400">
+                                <span className="ml-1 cursor-help text-muted-foreground">
                                     ⓘ
                                 </span>
                             </label>
@@ -575,11 +521,11 @@ function MembershipModal({ open, editing, onClose }) {
                                 onChange={(e) =>
                                     setData("point_multiplier", e.target.value)
                                 }
-                                className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 placeholder="1"
                             />
                             {errors.point_multiplier && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-destructive">
                                     {errors.point_multiplier}
                                 </p>
                             )}
@@ -589,11 +535,11 @@ function MembershipModal({ open, editing, onClose }) {
                     {/* Benefits */}
                     <div>
                         <label
-                            className="block text-sm font-medium text-slate-700"
+                            className="block text-sm font-medium text-foreground"
                             title="Benefit yang didapat member. Tulis satu per baris. Contoh: Gratis ongkir, Diskon 10%"
                         >
                             Benefit{" "}
-                            <span className="font-normal text-slate-400">
+                            <span className="font-normal text-muted-foreground">
                                 (tulis satu per baris)
                             </span>
                         </label>
@@ -603,24 +549,24 @@ function MembershipModal({ open, editing, onClose }) {
                                 setData("benefits", e.target.value)
                             }
                             rows={3}
-                            className="mt-1 block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                            className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             placeholder="Gratis ongkir&#10;Diskon 10%&#10;Priority support"
                         />
                         {errors.benefits && (
-                            <p className="mt-1 text-xs text-red-500">
+                            <p className="mt-1 text-xs text-destructive">
                                 {errors.benefits}
                             </p>
                         )}
                         {previewBenefits.length > 0 && (
                             <div className="mt-2 space-y-1">
-                                <p className="text-xs font-medium text-slate-500">
+                                <p className="text-xs font-medium text-muted-foreground">
                                     Preview:
                                 </p>
-                                <ul className="list-inside list-disc space-y-0.5 rounded-lg bg-slate-50 px-3 py-2">
+                                <ul className="list-inside list-disc space-y-0.5 rounded-lg bg-muted px-3 py-2">
                                     {previewBenefits.map((b, i) => (
                                         <li
                                             key={i}
-                                            className="text-xs text-slate-600"
+                                            className="text-xs text-muted-foreground"
                                         >
                                             {b}
                                         </li>
@@ -638,49 +584,24 @@ function MembershipModal({ open, editing, onClose }) {
                             onChange={(e) =>
                                 setData("is_active", e.target.checked)
                             }
-                            className="h-4 w-4 rounded border-slate-300 text-primary-600 transition focus:ring-2 focus:ring-primary-200"
+                            className="h-4 w-4 rounded border-border text-primary transition focus:ring-2 focus:ring-ring/20"
                         />
-                        <span className="text-sm text-slate-700">Aktif</span>
+                        <span className="text-sm text-foreground">Aktif</span>
                     </label>
 
                     {/* Buttons */}
-                    <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
-                        <button
+                    <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+                        <Button
                             type="button"
+                            variant="outline"
                             onClick={onClose}
                             disabled={processing}
-                            className="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
                         >
                             Batal
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
-                        >
-                            {processing && (
-                                <svg
-                                    className="h-4 w-4 animate-spin"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                >
-                                    <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                    />
-                                    <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                                    />
-                                </svg>
-                            )}
+                        </Button>
+                        <Button type="submit" loading={processing}>
                             {editing ? "Simpan" : "Buat"}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -693,11 +614,11 @@ function MembershipModal({ open, editing, onClose }) {
 /* ------------------------------------------------------------------ */
 function StatusBadge({ active }) {
     return active ? (
-        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
+        <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
             Aktif
         </span>
     ) : (
-        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500">
+        <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
             Nonaktif
         </span>
     );
@@ -706,7 +627,7 @@ function StatusBadge({ active }) {
 function MemberBadge({ count }) {
     if (!count && count !== 0) return null;
     return (
-        <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-600">
+        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
             {count} member
         </span>
     );
@@ -717,41 +638,17 @@ function RowActions({ item, onEdit, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <button
                 onClick={() => onEdit(item)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                 title="Edit"
             >
-                <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.7}
-                    stroke="currentColor"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-                    />
-                </svg>
+                <Pencil className="h-4 w-4" strokeWidth={1.7} />
             </button>
             <button
                 onClick={() => onDelete(item)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                 title="Hapus"
             >
-                <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.7}
-                    stroke="currentColor"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                    />
-                </svg>
+                <Trash2 className="h-4 w-4" strokeWidth={1.7} />
             </button>
         </div>
     );
@@ -764,7 +661,7 @@ function MembershipList({ items, onEdit, onDelete }) {
             <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             <th className="px-4 py-3.5">Kode</th>
                             <th className="px-4 py-3.5">Nama</th>
                             <th className="px-4 py-3.5">Durasi</th>
@@ -775,45 +672,45 @@ function MembershipList({ items, onEdit, onDelete }) {
                             <th className="px-4 py-3.5 text-right">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-border">
                         {items.map((m) => (
                             <tr
                                 key={m.id}
-                                className="transition hover:bg-slate-50/70"
+                                className="transition hover:bg-muted/70"
                             >
                                 <td className="px-4 py-4">
-                                    <span className="inline-flex items-center rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-mono font-semibold text-slate-700">
+                                    <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-mono font-semibold text-foreground">
                                         {m.code}
                                     </span>
                                 </td>
                                 <td className="px-4 py-4">
                                     <div className="min-w-0">
-                                        <p className="font-medium text-slate-800">
+                                        <p className="font-medium text-foreground">
                                             {m.name}
                                         </p>
                                         {m.description && (
-                                            <p className="mt-0.5 max-w-[200px] truncate text-xs text-slate-400">
+                                            <p className="mt-0.5 max-w-[200px] truncate text-xs text-muted-foreground">
                                                 {m.description}
                                             </p>
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-4 py-4 text-slate-600">
+                                <td className="px-4 py-4 text-muted-foreground">
                                     {formatDuration(
                                         m.duration_type,
                                         m.duration_value,
                                     )}
                                 </td>
-                                <td className="px-4 py-4 text-right font-medium text-slate-800">
+                                <td className="px-4 py-4 text-right font-medium text-foreground">
                                     {formatIDR(m.price)}
                                 </td>
                                 <td className="px-4 py-4 text-center">
                                     {m.discount_percent ? (
-                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                                        <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
                                             {m.discount_percent}%
                                         </span>
                                     ) : (
-                                        <span className="text-slate-400">
+                                        <span className="text-muted-foreground">
                                             —
                                         </span>
                                     )}
@@ -840,37 +737,37 @@ function MembershipList({ items, onEdit, onDelete }) {
             </div>
 
             {/* Mobile cards */}
-            <div className="divide-y divide-slate-100 md:hidden">
+            <div className="divide-y divide-border md:hidden">
                 {items.map((m) => (
                     <div key={m.id} className="p-4">
                         <div className="flex items-start justify-between">
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="inline-flex items-center rounded-lg bg-slate-100 px-2 py-0.5 text-xs font-mono font-semibold text-slate-700">
+                                    <span className="inline-flex items-center rounded-lg bg-muted px-2 py-0.5 text-xs font-mono font-semibold text-foreground">
                                         {m.code}
                                     </span>
                                     <StatusBadge active={m.is_active} />
                                 </div>
-                                <p className="mt-1 font-medium text-slate-800">
+                                <p className="mt-1 font-medium text-foreground">
                                     {m.name}
                                 </p>
                                 {m.description && (
-                                    <p className="mt-0.5 text-sm text-slate-400 line-clamp-2">
+                                    <p className="mt-0.5 text-sm text-muted-foreground line-clamp-2">
                                         {m.description}
                                     </p>
                                 )}
                                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                                    <span className="text-sm text-slate-600">
+                                    <span className="text-sm text-muted-foreground">
                                         {formatDuration(
                                             m.duration_type,
                                             m.duration_value,
                                         )}
                                     </span>
-                                    <span className="text-sm font-medium text-slate-800">
+                                    <span className="text-sm font-medium text-foreground">
                                         {formatIDR(m.price)}
                                     </span>
                                     {m.discount_percent ? (
-                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                                        <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
                                             Diskon {m.discount_percent}%
                                         </span>
                                     ) : null}
@@ -882,40 +779,16 @@ function MembershipList({ items, onEdit, onDelete }) {
                             <div className="ml-3 flex shrink-0 items-center gap-1">
                                 <button
                                     onClick={() => onEdit(m)}
-                                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
+                                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary transition hover:bg-primary/10"
                                 >
-                                    <svg
-                                        className="h-3.5 w-3.5"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.7}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-                                        />
-                                    </svg>
+                                    <Pencil className="h-3.5 w-3.5" strokeWidth={1.7} />
                                     Edit
                                 </button>
                                 <button
                                     onClick={() => onDelete(m)}
-                                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                                    className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-destructive transition hover:bg-destructive/10"
                                 >
-                                    <svg
-                                        className="h-3.5 w-3.5"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.7}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                        />
-                                    </svg>
+                                    <Trash2 className="h-3.5 w-3.5" strokeWidth={1.7} />
                                     Hapus
                                 </button>
                             </div>

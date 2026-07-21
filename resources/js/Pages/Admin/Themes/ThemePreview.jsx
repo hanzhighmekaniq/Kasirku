@@ -1,159 +1,357 @@
-import { generateColorScale } from "@/Theme/generateShades";
 import { useMemo } from "react";
 
-const SEMANTIC = {
-    success: "#16A34A",
-    warning: "#F59E0B",
-    danger: "#DC2626",
-};
-
 /**
- * Bangun token preview minimal (light/dark) dari 3 warna dasar — versi
- * ringkas dari `buildTheme()` di Theme/templates.js, khusus untuk preview
- * standalone di luar ThemeProvider (tidak perlu context/CSS variable).
+ * ThemePreview — rich mini-dashboard preview matching theme-create.html's
+ * live preview panel. Shows sidebar strip, topbar, stat cards, list, chart
+ * bars, and a swatch row.
+ *
+ * @param {Object} props
+ * @param {Object} props.tokens — shadcn/ui token keys (hex values)
+ * @param {boolean} props.isDark — mode label
+ * @param {boolean} props.compact — shorter version for card-level preview
  */
-function buildPreviewTokens({ primary, secondary, accent, isDark }) {
-    const primaryScale = generateColorScale(primary || "#4F46E5");
-    const accentScale = generateColorScale(accent || "#8B5CF6");
-    const secondaryScale = generateColorScale(secondary || "#64748B");
-
-    if (isDark) {
-        return {
-            primary: primaryScale,
-            accent: accentScale,
-            secondary: secondaryScale,
-            ...SEMANTIC,
-            background: "#0F172A",
-            surface: "#1E293B",
-            card: "#1F2937",
-            border: "#334155",
-            textPrimary: "#F8FAFC",
-            textSecondary: "#CBD5E1",
-            textMuted: "#94A3B8",
-            tableHeader: "#1E293B",
-            tableRow: "#1E293B",
-            tableHover: "#334155",
-        };
-    }
-
-    return {
-        primary: primaryScale,
-        accent: accentScale,
-        secondary: secondaryScale,
-        ...SEMANTIC,
-        background: "#F8FAFC",
-        surface: "#FFFFFF",
-        card: "#FFFFFF",
-        border: "#E2E8F0",
-        textPrimary: "#0F172A",
-        textSecondary: "#64748B",
-        textMuted: "#94A3B8",
-        tableHeader: "#F8FAFC",
-        tableRow: "#FFFFFF",
-        tableHover: "#F1F5F9",
-    };
-}
-
-/**
- * Preview mini dashboard standalone — dipakai di Create/Edit (live preview
- * saat user pilih warna) dan Index (preview kecil per-card). Tidak
- * bergantung pada ThemeProvider, murni generate token dari 3 hex + is_dark.
- */
-export default function ThemePreview({ primary, secondary, accent, isDark = false, compact = false }) {
-    const t = useMemo(
-        () => buildPreviewTokens({ primary, secondary, accent, isDark }),
-        [primary, secondary, accent, isDark],
-    );
-
-    const stats = [
-        { label: "Penjualan", value: "Rp 2.450.000", color: t.primary["600"] },
-        { label: "Transaksi", value: "48", color: t.success },
-        { label: "Stok Menipis", value: "3 item", color: t.warning },
-    ];
+export default function ThemePreview({
+    tokens = {},
+    isDark = false,
+    compact = false,
+}) {
+    const t = tokens;
+    const h = compact ? 210 : 340;
 
     return (
         <div
-            className={`flex w-full flex-col gap-2.5 rounded-xl border p-3 ${compact ? "h-32" : "h-full"}`}
-            style={{ background: t.background, borderColor: t.border }}
+            className="overflow-hidden rounded-xl border"
+            style={{
+                background: t.background || "#fff",
+                borderColor: t.border || "#e2e8f0",
+            }}
         >
-            <div className="grid grid-cols-3 gap-2">
-                {stats.map((s) => (
-                    <div
-                        key={s.label}
-                        className="rounded-lg border p-2"
-                        style={{ background: t.card, borderColor: t.border }}
-                    >
-                        <p
-                            className="truncate text-[8px] font-semibold uppercase tracking-wide"
-                            style={{ color: t.textMuted }}
-                        >
-                            {s.label}
-                        </p>
-                        <p className="mt-0.5 text-xs font-bold" style={{ color: s.color }}>
-                            {s.value}
-                        </p>
-                    </div>
-                ))}
-            </div>
-
-            {!compact && (
+            <div style={{ display: "flex", height: h }}>
+                {/* Sidebar strip */}
                 <div
-                    className="flex-1 overflow-hidden rounded-lg border"
-                    style={{ background: t.card, borderColor: t.border }}
+                    style={{
+                        width: compact ? 70 : 96,
+                        background: t.sidebar || t.card || "#fff",
+                        borderRight: `1px solid ${t.border || "#e2e8f0"}`,
+                        padding: compact ? 10 : 12,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: compact ? 8 : 8,
+                    }}
                 >
                     <div
-                        className="flex items-center justify-between px-2.5 py-2"
-                        style={{ background: t.tableHeader, borderBottom: `1px solid ${t.border}` }}
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                        }}
                     >
-                        <span className="text-[10px] font-semibold" style={{ color: t.textPrimary }}>
-                            Transaksi Terbaru
-                        </span>
-                        <span
-                            className="rounded px-1.5 py-0.5 text-[9px] font-bold text-white"
-                            style={{ background: t.primary["600"] }}
-                        >
-                            Lihat Semua
-                        </span>
-                    </div>
-                    {["SL-001 · 08:12", "SL-002 · 08:20", "SL-003 · 08:35"].map((row, i) => (
                         <div
-                            key={row}
-                            className="flex items-center justify-between px-2.5 py-1.5 text-[10px]"
                             style={{
-                                background: i % 2 === 0 ? t.tableRow : t.tableHover,
-                                color: t.textSecondary,
+                                width: compact ? 14 : 16,
+                                height: compact ? 14 : 16,
+                                borderRadius: 5,
+                                background: t.primary || "#4F46E5",
+                            }}
+                        />
+                        {!compact && (
+                            <div
+                                style={{
+                                    height: 7,
+                                    flex: 1,
+                                    borderRadius: 2,
+                                    background: t.sidebarForeground || t.foreground || "#0f172a",
+                                    opacity: 0.85,
+                                }}
+                            />
+                        )}
+                    </div>
+                    <div
+                        style={{
+                            marginTop: 4,
+                            height: compact ? 8 : 8,
+                            borderRadius: 3,
+                            background: t.primary || "#4F46E5",
+                            opacity: 0.15,
+                        }}
+                    />
+                    <div
+                        style={{
+                            height: 6,
+                            borderRadius: 3,
+                            background: t.sidebarForeground || t.foreground || "#0f172a",
+                            opacity: 0.18,
+                            width: "80%",
+                        }}
+                    />
+                    <div
+                        style={{
+                            height: 6,
+                            borderRadius: 3,
+                            background: t.sidebarForeground || t.foreground || "#0f172a",
+                            opacity: 0.18,
+                            width: "65%",
+                        }}
+                    />
+                    <div
+                        style={{
+                            height: 6,
+                            borderRadius: 3,
+                            background: t.sidebarForeground || t.foreground || "#0f172a",
+                            opacity: 0.18,
+                            width: "75%",
+                        }}
+                    />
+                    <div
+                        style={{
+                            marginTop: "auto",
+                            height: 6,
+                            borderRadius: 3,
+                            background: t.sidebarForeground || t.foreground || "#0f172a",
+                            opacity: 0.1,
+                            width: "60%",
+                        }}
+                    />
+                </div>
+
+                {/* Main area */}
+                <div
+                    style={{
+                        flex: 1,
+                        padding: compact ? 10 : 14,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: compact ? 10 : 12,
+                        minWidth: 0,
+                    }}
+                >
+                    {/* Topbar */}
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                        }}
+                    >
+                        <div
+                            style={{
+                                height: compact ? 8 : 9,
+                                width: compact ? 90 : 110,
+                                borderRadius: 3,
+                                background: t.foreground || "#0f172a",
+                                opacity: 0.9,
+                            }}
+                        />
+                        <div
+                            style={{
+                                marginLeft: "auto",
+                                height: compact ? 18 : 24,
+                                width: compact ? 60 : 90,
+                                borderRadius: 6,
+                                background: t.input || t.card || "#f1f5f9",
+                                border: `1px solid ${t.border || "#e2e8f0"}`,
+                            }}
+                        />
+                        <div
+                            style={{
+                                height: compact ? 18 : 24,
+                                padding: `0 ${compact ? 8 : 12}px`,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                borderRadius: 6,
+                                background: t.primary || "#4F46E5",
+                                color: t.primaryForeground || "#fff",
+                                fontSize: compact ? 9 : 10.5,
+                                fontWeight: 600,
                             }}
                         >
-                            <span>{row}</span>
-                            <span className="font-semibold" style={{ color: t.textPrimary }}>
-                                Rp {45 + i * 10}.000
-                            </span>
+                            Action
                         </div>
-                    ))}
-                </div>
-            )}
+                    </div>
 
-            <div className="flex items-center gap-1.5">
-                {["600", "500", "400"].map((shade) => (
-                    <span
-                        key={shade}
-                        className="h-3.5 w-3.5 rounded-full border border-black/5"
-                        style={{ background: t.primary[shade] }}
-                    />
-                ))}
-                {["600", "500"].map((shade) => (
-                    <span
-                        key={`a-${shade}`}
-                        className="h-3.5 w-3.5 rounded-full border border-black/5"
-                        style={{ background: t.accent[shade] }}
-                    />
-                ))}
-                <span
-                    className="ml-auto rounded-full px-2 py-0.5 text-[9px] font-bold text-white"
-                    style={{ background: isDark ? "#334155" : "#94A3B8" }}
-                >
-                    {isDark ? "Dark" : "Light"}
-                </span>
+                    {/* Stat cards */}
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: compact ? 8 : 10,
+                        }}
+                    >
+                        {[
+                            { l: "Revenue", v: "Rp 24.8k" },
+                            { l: "Users", v: "1,204" },
+                        ].map(({ l, v }) => (
+                            <div
+                                key={l}
+                                style={{
+                                    background: t.card || "#fff",
+                                    color: t.cardForeground || "#0f172a",
+                                    border: `1px solid ${t.border || "#e2e8f0"}`,
+                                    borderRadius: 8,
+                                    padding: compact ? "9px 10px" : "10px 12px",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        fontSize: compact ? 8 : 9.5,
+                                        color: t.mutedForeground || "#64748b",
+                                        fontWeight: 500,
+                                    }}
+                                >
+                                    {l}
+                                </div>
+                                <div
+                                    style={{
+                                        fontSize: compact ? 12 : 14,
+                                        fontWeight: 600,
+                                        marginTop: 2,
+                                    }}
+                                >
+                                    {v}
+                                </div>
+                                <div
+                                    style={{
+                                        display: "inline-block",
+                                        marginTop: 6,
+                                        padding: "2px 6px",
+                                        borderRadius: 4,
+                                        background: t.accent || t.primary + "1a" || "#EEF2FF",
+                                        color: t.accentForeground || t.primary || "#4F46E5",
+                                        fontSize: compact ? 8 : 9.5,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    +12.4%
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {!compact && (
+                        <>
+                            {/* List */}
+                            <div
+                                style={{
+                                    background: t.card || "#fff",
+                                    color: t.cardForeground || "#0f172a",
+                                    border: `1px solid ${t.border || "#e2e8f0"}`,
+                                    borderRadius: 8,
+                                    padding: 10,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 8,
+                                    flex: 1,
+                                }}
+                            >
+                                {[0, 1, 2].map((i) => (
+                                    <div
+                                        key={i}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 8,
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: 18,
+                                                height: 18,
+                                                borderRadius: 9999,
+                                                background:
+                                                    t.primary || "#4F46E5",
+                                                opacity: 0.95 - i * 0.2,
+                                            }}
+                                        />
+                                        <div
+                                            style={{
+                                                flex: 1,
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: 3,
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    height: 6,
+                                                    width: `${60 + i * 8}%`,
+                                                    background:
+                                                        t.foreground || "#0f172a",
+                                                    opacity: 0.85,
+                                                    borderRadius: 2,
+                                                }}
+                                            />
+                                            <div
+                                                style={{
+                                                    height: 5,
+                                                    width: `${40 + i * 5}%`,
+                                                    background:
+                                                        t.mutedForeground || "#64748b",
+                                                    opacity: 0.6,
+                                                    borderRadius: 2,
+                                                }}
+                                            />
+                                        </div>
+                                        <div
+                                            style={{
+                                                padding: "2px 6px",
+                                                borderRadius: 4,
+                                                background:
+                                                    t.accent || t.primary + "1a" || "#EEF2FF",
+                                                color:
+                                                    t.accentForeground ||
+                                                    t.primary ||
+                                                    "#4F46E5",
+                                                fontSize: 9.5,
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            Live
+                                        </div>
+                                        <div
+                                            style={{
+                                                padding: "2px 6px",
+                                                borderRadius: 4,
+                                                background:
+                                                    t.destructive || "#DC2626",
+                                                color:
+                                                    t.destructiveForeground || "#fff",
+                                                fontSize: 9.5,
+                                                fontWeight: 600,
+                                                opacity: i === 2 ? 1 : 0,
+                                            }}
+                                        >
+                                            !
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Chart bars */}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                }}
+                            >
+                                {["chart1", "chart2", "chart3", "chart4", "chart5"].map(
+                                    (k, i) => (
+                                        <div
+                                            key={k}
+                                            style={{
+                                                flex: 1,
+                                                height: 16 + i * 4,
+                                                borderRadius: 4,
+                                                background:
+                                                    t[k] || "#4F46E5",
+                                            }}
+                                        />
+                                    ),
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );

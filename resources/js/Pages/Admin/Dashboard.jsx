@@ -44,9 +44,9 @@ function TrendBadge({ value, suffix = "%" }) {
         <span
             className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                 isUp
-                    ? "bg-emerald-100 text-emerald-700"
+                    ? "bg-emerald-100 text-success"
                     : isDown
-                      ? "bg-red-100 text-red-600"
+                      ? "bg-red-100 text-destructive"
                       : "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))]"
             }`}
         >
@@ -141,10 +141,10 @@ function HeroRevenueCard({ todaySales, todayCount, aov, salesTrend, countTrend, 
         session: "Sesi Hari Ini",
     };
     return (
-        <div className="rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 via-[rgb(var(--color-card))] to-[rgb(var(--color-card))] p-6 shadow-sm">
+        <div className="rounded-2xl border border-primary-200 bg-[rgb(var(--color-card))] p-6 shadow-sm">
             <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary-600">
+                    <p className="text-xs font-semibold uppercase text-[rgb(var(--color-cardForeground))] tracking-wider text-primary-600">
                         {GREETING[storeType] ?? "Penjualan Hari Ini"}
                     </p>
                     <p className="mt-2 text-4xl font-bold tracking-tight text-[rgb(var(--color-text-primary))]">
@@ -542,9 +542,9 @@ export default function Dashboard({
                             </Link>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-[rgb(var(--color-card))] px-5 py-4 shadow-sm">
+                        <div className="flex items-center justify-between rounded-2xl border border-success/20 bg-gradient-to-r from-emerald-50 to-[rgb(var(--color-card))] px-5 py-4 shadow-sm">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/100">
                                     <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -559,7 +559,7 @@ export default function Dashboard({
                             </div>
                             <Link
                                 href={route("admin.cashier-shifts.show", activeShift.id)}
-                                className="rounded-lg border border-emerald-200 bg-[rgb(var(--color-card))] px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50"
+                                className="rounded-lg border border-success/20 bg-[rgb(var(--color-card))] px-3 py-1.5 text-xs font-medium text-success transition hover:bg-success/10"
                             >
                                 Lihat Shift
                             </Link>
@@ -589,7 +589,7 @@ export default function Dashboard({
                         ))}
                         <button
                             onClick={applyBranchFilter}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-primary-700"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
                         >
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -631,7 +631,7 @@ export default function Dashboard({
                         value={fmt(stats.today_sales)}
                         sub={`${fmtNum(stats.today_count)} transaksi`}
                         icon="💰"
-                        accent="bg-emerald-50 text-emerald-600"
+                        accent="bg-success/10 text-emerald-600"
                         trend={stats.today_sales_trend}
                     />
                     <StatCard
@@ -647,7 +647,7 @@ export default function Dashboard({
                         value={fmt(stats.today_profit)}
                         sub="Revenue - Pembelian - Pengeluaran"
                         icon="💵"
-                        accent={stats.today_profit >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}
+                        accent={stats.today_profit >= 0 ? "bg-success/10 text-emerald-600" : "bg-destructive/10 text-destructive"}
                         trend={stats.today_profit_trend}
                     />
                     <StatCard
@@ -667,7 +667,7 @@ export default function Dashboard({
                             value={`${fmtNum(stats.low_stock)} item`}
                             sub={stats.low_stock > 0 ? "Perlu segera restok" : "Stok aman"}
                             icon={stats.low_stock > 0 ? "⚠️" : "✅"}
-                            accent={stats.low_stock > 0 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-500"}
+                            accent={stats.low_stock > 0 ? "bg-amber-50 text-amber-600" : "bg-success/10 text-emerald-500"}
                         />
                     ) : (
                         <StatCard

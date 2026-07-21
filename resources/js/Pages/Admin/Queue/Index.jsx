@@ -2,12 +2,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useCallback, useState } from 'react';
 import { Clock, Hash, Phone, Plus, User, X } from 'lucide-react';
+import Button from '@/Components/ui/Button';
 
 const STATUS_META = {
     waiting: { label: 'Menunggu', color: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
     serving: { label: 'Dilayani', color: 'bg-sky-50 text-sky-700 border-sky-200', dot: 'bg-sky-500' },
     completed: { label: 'Selesai', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    cancelled: { label: 'Batal', color: 'bg-slate-100 text-slate-500 border-slate-200', dot: 'bg-slate-400' },
+    cancelled: { label: 'Batal', color: 'bg-muted text-muted-foreground border-border', dot: 'bg-slate-400' },
 };
 
 function formatTime(ts) {
@@ -44,54 +45,54 @@ function AddQueueModal({ open, onClose, processing }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-            <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl">
                 <div className="mb-5 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-slate-900">Tambah Antrian</h3>
-                    <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                    <h3 className="text-lg font-semibold text-foreground">Tambah Antrian</h3>
+                    <button onClick={onClose} className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground">
                         <X size={18} />
                     </button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">Nama Pelanggan</label>
+                        <label className="block text-sm font-medium text-foreground">Nama Pelanggan</label>
                         <input
                             type="text"
                             value={form.customer_name}
                             onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
                             maxLength={100}
-                            className="mt-1.5 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                            className="mt-1.5 block w-full rounded-xl border border-border px-3.5 py-2.5 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                             placeholder="Opsional"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">No. Telepon</label>
+                        <label className="block text-sm font-medium text-foreground">No. Telepon</label>
                         <input
                             type="text"
                             value={form.customer_phone}
                             onChange={(e) => setForm({ ...form, customer_phone: e.target.value })}
                             maxLength={20}
-                            className="mt-1.5 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                            className="mt-1.5 block w-full rounded-xl border border-border px-3.5 py-2.5 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                             placeholder="Opsional"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">Catatan</label>
+                        <label className="block text-sm font-medium text-foreground">Catatan</label>
                         <textarea
                             value={form.notes}
                             onChange={(e) => setForm({ ...form, notes: e.target.value })}
                             maxLength={500}
                             rows={2}
-                            className="mt-1.5 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                            className="mt-1.5 block w-full rounded-xl border border-border px-3.5 py-2.5 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                             placeholder="Opsional"
                         />
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
-                        <button type="button" onClick={onClose} className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                        <Button type="button" variant="outline" onClick={onClose}>
                             Batal
-                        </button>
-                        <button type="submit" disabled={processing} className="rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:opacity-60">
+                        </Button>
+                        <Button type="submit" loading={processing}>
                             {processing ? 'Menambahkan...' : 'Tambah'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -103,21 +104,21 @@ function QueueCard({ queue, onStatusChange, onDelete }) {
     const meta = STATUS_META[queue.status] || STATUS_META.waiting;
 
     return (
-        <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
+        <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md">
             {/* Queue Number */}
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-xl font-bold text-primary-700">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xl font-bold text-primary">
                 {queue.queue_number}
             </div>
 
             {/* Info */}
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-slate-800">
+                    <p className="text-sm font-semibold text-foreground">
                         {queue.customer_name || 'Tanpa Nama'}
                     </p>
                     <StatusBadge status={queue.status} />
                 </div>
-                <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">
+                <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                     {queue.customer_phone && (
                         <span className="flex items-center gap-1">
                             <Phone size={11} /> {queue.customer_phone}
@@ -129,7 +130,7 @@ function QueueCard({ queue, onStatusChange, onDelete }) {
                         </span>
                     )}
                     {queue.notes && (
-                        <span className="truncate text-slate-400">{queue.notes}</span>
+                        <span className="truncate text-muted-foreground">{queue.notes}</span>
                     )}
                 </div>
             </div>
@@ -156,13 +157,13 @@ function QueueCard({ queue, onStatusChange, onDelete }) {
                     <>
                         <button
                             onClick={() => onStatusChange(queue.id, 'cancelled')}
-                            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:bg-slate-50"
+                            className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:bg-muted"
                         >
                             Batal
                         </button>
                         <button
                             onClick={() => onDelete(queue)}
-                            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-500 transition hover:bg-red-50"
+                            className="rounded-lg border border-destructive/20 px-3 py-1.5 text-xs font-semibold text-destructive transition hover:bg-destructive/10"
                         >
                             Hapus
                         </button>
@@ -194,21 +195,20 @@ export default function Index({ queues = [], stats = {} }) {
         <AuthenticatedLayout
             header={
                 <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-slate-800">Antrian</h2>
-                    <button
+                    <h2 className="text-lg font-semibold text-foreground">Antrian</h2>
+                    <Button
                         onClick={() => setShowAdd(true)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:from-primary-600 hover:to-primary-700"
+                        icon={Plus}
                     >
-                        <Plus size={16} />
                         <span className="hidden sm:inline">Tambah Antrian</span>
-                    </button>
+                    </Button>
                 </div>
             }
         >
             <Head title="Antrian" />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     {flash.success}
                 </div>
             )}
@@ -230,7 +230,7 @@ export default function Index({ queues = [], stats = {} }) {
             {/* Active queues */}
             {activeQueues.length > 0 && (
                 <section className="mb-6">
-                    <h3 className="mb-3 text-sm font-semibold text-slate-700">
+                    <h3 className="mb-3 text-sm font-semibold text-foreground">
                         Antrian Aktif ({activeQueues.length})
                     </h3>
                     <div className="space-y-2">
@@ -243,23 +243,24 @@ export default function Index({ queues = [], stats = {} }) {
 
             {/* Empty state */}
             {activeQueues.length === 0 && (
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 py-16 text-center">
-                    <Hash size={40} className="text-slate-300" />
-                    <h3 className="mt-4 text-base font-semibold text-slate-800">Antrian Kosong</h3>
-                    <p className="mt-1 text-sm text-slate-500">Belum ada pelanggan dalam antrian hari ini.</p>
-                    <button
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+                    <Hash size={40} className="text-muted-foreground/50" />
+                    <h3 className="mt-4 text-base font-semibold text-foreground">Antrian Kosong</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">Belum ada pelanggan dalam antrian hari ini.</p>
+                    <Button
                         onClick={() => setShowAdd(true)}
-                        className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+                        icon={Plus}
+                        className="mt-4"
                     >
-                        <Plus size={16} /> Tambah Antrian
-                    </button>
+                        Tambah Antrian
+                    </Button>
                 </div>
             )}
 
             {/* Done queues */}
             {doneQueues.length > 0 && (
                 <section className="mt-6">
-                    <h3 className="mb-3 text-sm font-semibold text-slate-500">
+                    <h3 className="mb-3 text-sm font-semibold text-muted-foreground">
                         Riwayat Hari Ini ({doneQueues.length})
                     </h3>
                     <div className="space-y-2 opacity-70">

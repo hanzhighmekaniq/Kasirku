@@ -1,7 +1,8 @@
-﻿import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import { Eye } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
+import Button from "@/Components/ui/Button";
 
 export default function Index({ suppliers, stats }) {
     const { flash } = usePage().props;
@@ -46,41 +47,25 @@ export default function Index({ suppliers, stats }) {
             header={
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-800">
+                        <h2 className="text-lg font-semibold text-foreground">
                             Supplier
                         </h2>
                     </div>
-                    <Link
-                        href={route("admin.suppliers.create")}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
-                    >
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                            />
-                        </svg>
+                    <Button as={Link} href={route("admin.suppliers.create")} icon={Plus}>
                         Tambah Supplier
-                    </Link>
+                    </Button>
                 </div>
             }
         >
             <Head title="Supplier" />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     {flash.success}
                 </div>
             )}
             {flash?.errors && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                     {typeof flash.errors === "object"
                         ? Object.values(flash.errors).flat().join(". ")
                         : flash.errors}
@@ -89,47 +74,47 @@ export default function Index({ suppliers, stats }) {
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-slate-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">
+                <div className="rounded-2xl border border-border border-l-4 border-l-muted-foreground/30 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">
                         Total Supplier
                     </p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">
+                    <p className="mt-1 text-xl font-bold text-foreground">
                         {stats.total}
                     </p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-emerald-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">
+                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">
                         Total Produk
                     </p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">
+                    <p className="mt-1 text-xl font-bold text-foreground">
                         {stats.total_products}
                     </p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-blue-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">
+                <div className="rounded-2xl border border-border border-l-4 border-l-blue-400 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">
                         Total Pembelian
                     </p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">
+                    <p className="mt-1 text-xl font-bold text-foreground">
                         {stats.total_purchases}
                     </p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-amber-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">
+                <div className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">
                         Nilai Pembelian
                     </p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">
+                    <p className="mt-1 text-xl font-bold text-foreground">
                         {fmtCurrency(stats.total_purchase_value)}
                     </p>
                 </div>
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
-                <div className="border-b border-slate-100 p-4">
+                <div className="border-b border-border p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <div className="relative flex-1">
-                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
                                 <svg
                                     className="h-4 w-4"
                                     fill="none"
@@ -149,18 +134,18 @@ export default function Index({ suppliers, stats }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nama, kode, telepon, email..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                     </div>
                     <div className="pt-4 flex items-center justify-between">
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                             Menampilkan{" "}
-                            <span className="font-semibold text-slate-700">
+                            <span className="font-semibold text-foreground">
                                 {filtered.length}
                             </span>{" "}
                             dari{" "}
-                            <span className="font-semibold text-slate-700">
+                            <span className="font-semibold text-foreground">
                                 {suppliers.length}
                             </span>{" "}
                             supplier
@@ -170,9 +155,9 @@ export default function Index({ suppliers, stats }) {
 
                 {filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                             <svg
-                                className="h-8 w-8 text-slate-400"
+                                className="h-8 w-8 text-muted-foreground"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
@@ -185,12 +170,12 @@ export default function Index({ suppliers, stats }) {
                                 />
                             </svg>
                         </div>
-                        <h3 className="mt-4 text-base font-semibold text-slate-800">
+                        <h3 className="mt-4 text-base font-semibold text-foreground">
                             {search
                                 ? "Supplier tidak ditemukan"
                                 : "Belum ada supplier"}
                         </h3>
-                        <p className="mt-1 max-w-sm text-sm text-slate-500">
+                        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                             {search
                                 ? "Coba kata kunci lain."
                                 : "Mulai dengan menambahkan supplier pertama."}
@@ -200,32 +185,32 @@ export default function Index({ suppliers, stats }) {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead>
-                                <tr className="border-b border-slate-100 bg-slate-50/60">
-                                    <th className="px-6 py-3.5 font-medium text-slate-500">
+                                <tr className="border-b border-border bg-muted/50">
+                                    <th className="px-6 py-3.5 font-medium text-muted-foreground">
                                         Supplier
                                     </th>
-                                    <th className="px-6 py-3.5 font-medium text-slate-500">
+                                    <th className="px-6 py-3.5 font-medium text-muted-foreground">
                                         Kontak
                                     </th>
-                                    <th className="px-6 py-3.5 font-medium text-slate-500">
+                                    <th className="px-6 py-3.5 font-medium text-muted-foreground">
                                         Telepon
                                     </th>
-                                    <th className="px-6 py-3.5 text-center font-medium text-slate-500">
+                                    <th className="px-6 py-3.5 text-center font-medium text-muted-foreground">
                                         Produk
                                     </th>
-                                    <th className="px-6 py-3.5 text-center font-medium text-slate-500">
+                                    <th className="px-6 py-3.5 text-center font-medium text-muted-foreground">
                                         Pembelian
                                     </th>
-                                    <th className="px-6 py-3.5 text-right font-medium text-slate-500">
+                                    <th className="px-6 py-3.5 text-right font-medium text-muted-foreground">
                                         Aksi
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-border">
                                 {filtered.map((s) => (
                                     <tr
                                         key={s.id}
-                                        className="transition hover:bg-slate-50/50"
+                                        className="transition hover:bg-muted/50"
                                     >
                                         <td className="px-6 py-3.5">
                                             <Link
@@ -241,23 +226,23 @@ export default function Index({ suppliers, stats }) {
                                                         .toUpperCase()}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="font-semibold text-slate-800 hover:text-primary-600 transition">
+                                                    <p className="font-semibold text-foreground hover:text-primary-600 transition">
                                                         {s.name}
                                                     </p>
-                                                    <p className="text-xs text-slate-400">
+                                                    <p className="text-xs text-muted-foreground">
                                                         {s.code}
                                                     </p>
                                                 </div>
                                             </Link>
                                         </td>
-                                        <td className="px-6 py-3.5 text-slate-600">
+                                        <td className="px-6 py-3.5 text-muted-foreground">
                                             {s.contact_person || (
-                                                <span className="text-slate-300">
+                                                <span className="text-muted-foreground/50">
                                                     -
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-3.5 text-slate-600">
+                                        <td className="px-6 py-3.5 text-muted-foreground">
                                             {s.phone ? (
                                                 <a
                                                     href={`tel:${s.phone}`}
@@ -266,7 +251,7 @@ export default function Index({ suppliers, stats }) {
                                                     {s.phone}
                                                 </a>
                                             ) : (
-                                                <span className="text-slate-300">
+                                                <span className="text-muted-foreground/50">
                                                     -
                                                 </span>
                                             )}
@@ -277,7 +262,7 @@ export default function Index({ suppliers, stats }) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-3.5 text-center">
-                                            <span className="inline-flex min-w-[28px] justify-center rounded-lg bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-600">
+                                            <span className="inline-flex min-w-[28px] justify-center rounded-lg bg-success/10 px-2 py-0.5 text-xs font-semibold text-emerald-600">
                                                 {s.purchases_count ?? 0}
                                             </span>
                                         </td>
@@ -288,7 +273,7 @@ export default function Index({ suppliers, stats }) {
                                                         "admin.suppliers.show",
                                                         s.id,
                                                     )}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-muted-foreground"
                                                     title="Lihat Detail"
                                                 >
                                                     <Eye className="h-5 w-5" strokeWidth={1.8} />
@@ -298,7 +283,7 @@ export default function Index({ suppliers, stats }) {
                                                         "admin.suppliers.edit",
                                                         s.id,
                                                     )}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-primary-50 hover:text-primary-600"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
                                                     title="Edit"
                                                 >
                                                     <svg
@@ -319,7 +304,7 @@ export default function Index({ suppliers, stats }) {
                                                     onClick={() =>
                                                         setConfirmDelete(s)
                                                     }
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                                                     title="Hapus"
                                                 >
                                                     <svg
@@ -352,15 +337,15 @@ export default function Index({ suppliers, stats }) {
                     className="fixed inset-0 z-50 flex items-center justify-center p-4"
                     onMouseDown={() => !processing && setConfirmDelete(null)}
                 >
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
                     <div
-                        className="relative w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+                        className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-lg font-semibold text-slate-900">
+                        <h3 className="text-lg font-semibold text-foreground">
                             Hapus Supplier?
                         </h3>
-                        <p className="mt-2 text-sm text-slate-500">
+                        <p className="mt-2 text-sm text-muted-foreground">
                             Supplier <strong>{confirmDelete.name}</strong> (
                             {confirmDelete.code}) akan dihapus permanen.{" "}
                             {confirmDelete.purchases_count > 0 &&
@@ -377,7 +362,7 @@ export default function Index({ suppliers, stats }) {
                             <button
                                 onClick={() => setConfirmDelete(null)}
                                 disabled={processing}
-                                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
                             >
                                 Batal
                             </button>

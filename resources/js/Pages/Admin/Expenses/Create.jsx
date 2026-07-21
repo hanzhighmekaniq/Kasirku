@@ -2,11 +2,12 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Plus, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import Button from "@/Components/ui/Button";
 import SectionCard from '@/Components/ui/SectionCard';
 import Select from '@/Components/ui/Select';
 import CurrencyInput from '@/Components/ui/CurrencyInput';
 import Field from '@/Components/ui/Field';
-import ConfirmDeleteModal from './ConfirmDeleteModal';
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 export default function Create({ categories: initialCategories }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -107,7 +108,7 @@ export default function Create({ categories: initialCategories }) {
         setDeleteLoading(false);
     };
 
-    const inputCls = 'block w-full rounded-xl border bg-white px-3 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200';
+    const inputCls = 'block w-full rounded-xl border bg-card px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20';
 
     const categoryOptions = categories.map((c) => ({ value: c.id, label: c.name }));
     const noCategories = categories.length === 0;
@@ -122,12 +123,12 @@ export default function Create({ categories: initialCategories }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route('admin.expenses.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">Catat Pengeluaran</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Catat Pengeluaran</h2>
                 </div>
             }
         >
@@ -140,16 +141,15 @@ export default function Create({ categories: initialCategories }) {
                         <div>
                             <Field label="Kategori Pengeluaran" required error={errors.expense_category_id}>
                                 {noCategories && !showQuickCat ? (
-                                    <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-6 text-center">
-                                        <p className="text-sm text-slate-500">Belum ada kategori pengeluaran</p>
-                                        <button
+                                    <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/50 py-6 text-center">
+                                        <p className="text-sm text-muted-foreground">Belum ada kategori pengeluaran</p>
+                                        <Button
                                             type="button"
                                             onClick={() => setShowQuickCat(true)}
-                                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
+                                            icon={Plus}
                                         >
-                                            <Plus className="h-4 w-4" strokeWidth={2} />
                                             Tambah Kategori
-                                        </button>
+                                        </Button>
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
@@ -173,7 +173,7 @@ export default function Create({ categories: initialCategories }) {
                                                             );
                                                             if (cat) setDeleteTarget(cat);
                                                         }}
-                                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-400 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+                                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground transition hover:border-red-300 hover:bg-destructive/10 hover:text-destructive"
                                                         title={`Hapus kategori "${selectedCategoryName}"`}
                                                     >
                                                         <Trash2 className="h-4 w-4" strokeWidth={1.7} />
@@ -193,14 +193,14 @@ export default function Create({ categories: initialCategories }) {
                                                 Tambah Kategori Baru
                                             </button>
                                         ) : (
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+                                            <div className="flex items-center gap-2 rounded-xl border border-border bg-muted p-2">
                                                 <input
                                                     type="text"
                                                     value={quickCatName}
                                                     onChange={(e) => setQuickCatName(e.target.value)}
                                                     placeholder="Nama kategori..."
                                                     autoFocus
-                                                    className="block flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                                    className="block flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                     onKeyDown={(e) => {
                                                         if (e.key === 'Enter') {
                                                             e.preventDefault();
@@ -213,18 +213,15 @@ export default function Create({ categories: initialCategories }) {
                                                         }
                                                     }}
                                                 />
-                                                <button
+                                                <Button
                                                     type="button"
                                                     onClick={quickCreateCategory}
                                                     disabled={quickCatSaving || !quickCatName.trim()}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
+                                                    size="sm"
+                                                    loading={quickCatSaving}
                                                 >
-                                                    {quickCatSaving ? (
-                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
-                                                    ) : (
-                                                        'Simpan'
-                                                    )}
-                                                </button>
+                                                    Simpan
+                                                </Button>
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -232,14 +229,14 @@ export default function Create({ categories: initialCategories }) {
                                                         setQuickCatName('');
                                                         setQuickCatError('');
                                                     }}
-                                                    className="rounded-lg px-2 py-2 text-xs text-slate-500 transition hover:bg-slate-200"
+                                                    className="rounded-lg px-2 py-2 text-xs text-muted-foreground transition hover:bg-muted/70"
                                                 >
                                                     Batal
                                                 </button>
                                             </div>
                                         )}
                                         {quickCatError && (
-                                            <p className="flex items-center gap-1.5 text-xs text-red-600">
+                                            <p className="flex items-center gap-1.5 text-xs text-destructive">
                                                 <AlertCircle className="h-3.5 w-3.5" />
                                                 {quickCatError}
                                             </p>
@@ -277,20 +274,16 @@ export default function Create({ categories: initialCategories }) {
                             />
                         </Field>
 
-                        <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                        <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
                             <Link
                                 href={route('admin.expenses.index')}
-                                className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                className="inline-flex justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                             >
                                 Batal
                             </Link>
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-60"
-                            >
-                                {processing ? 'Menyimpan...' : 'Simpan Pengeluaran'}
-                            </button>
+                            <Button type="submit" loading={processing}>
+                                Simpan Pengeluaran
+                            </Button>
                         </div>
                     </form>
                 </SectionCard>

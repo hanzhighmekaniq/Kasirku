@@ -22,12 +22,50 @@ class ThemePresetController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
+        // Generate token set minimal (36 keys) dari 3 warna dasar — dipakai
+        // untuk quick custom preset lewat form 3-warna (bukan editor 36
+        // token lengkap). Light & dark sengaja identik di sini karena
+        // endpoint ini legacy/quick-create, bukan full customization.
+        $tokens = $this->buildQuickTokens($validated['primary'], $validated['secondary'], $validated['accent']);
+
         $preset = $user->themePresets()->create([
-            ...$validated,
+            'name' => $validated['name'],
             'is_system' => false,
+            'tokens' => [
+                'light' => $tokens,
+                'dark' => $tokens,
+            ],
         ]);
 
         return response()->json(['success' => true, 'preset' => $preset]);
+    }
+
+    /**
+     * Generate 36-key token set minimal dari 3 warna dasar (primary,
+     * secondary, accent). Dipakai quick custom preset — bukan editor
+     * penuh 36 token seperti di Admin\ThemeController.
+     *
+     * @return array<string, string>
+     */
+    private function buildQuickTokens(string $primary, string $secondary, string $accent): array
+    {
+        return [
+            'background' => '#F8FAFC', 'foreground' => '#0F172A',
+            'card' => '#FFFFFF', 'cardForeground' => '#0F172A',
+            'popover' => '#FFFFFF', 'popoverForeground' => '#0F172A',
+            'primary' => $primary, 'primaryForeground' => '#FFFFFF',
+            'secondary' => $secondary, 'secondaryForeground' => '#0F172A',
+            'muted' => '#F1F5F9', 'mutedForeground' => '#64748B',
+            'accent' => $accent, 'accentForeground' => '#FFFFFF',
+            'destructive' => '#DC2626', 'destructiveForeground' => '#FFFFFF',
+            'border' => '#E2E8F0', 'input' => '#E2E8F0', 'ring' => $primary,
+            'chart1' => $primary, 'chart2' => $accent, 'chart3' => '#16A34A', 'chart4' => '#F59E0B', 'chart5' => '#8B5CF6',
+            'radius' => '0.5rem',
+            'sidebar' => '#FFFFFF', 'sidebarForeground' => '#0F172A',
+            'success' => '#16A34A', 'successForeground' => '#FFFFFF',
+            'warning' => '#F59E0B', 'warningForeground' => '#FFFFFF',
+            'info' => '#0284C7', 'infoForeground' => '#FFFFFF',
+        ];
     }
 
     public function destroy(ThemePreset $preset)

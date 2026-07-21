@@ -34,7 +34,7 @@ function StatusBadge({ promo }) {
 
     if (!promo.is_active) {
         return (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-slate-100 text-slate-500">
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-muted text-muted-foreground">
                 <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                 Nonaktif
             </span>
@@ -50,15 +50,15 @@ function StatusBadge({ promo }) {
     }
     if (end && end < now) {
         return (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-red-50 text-red-500">
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-destructive/10 text-destructive">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
                 Berakhir
             </span>
         );
     }
     return (
-        <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-emerald-50 text-emerald-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-success/10 text-success">
+            <span className="h-1.5 w-1.5 rounded-full bg-success/100 animate-pulse" />
             Aktif
         </span>
     );
@@ -82,12 +82,12 @@ function formatDate(d) {
 function InfoRow({ icon: Icon, label, value }) {
     return (
         <div className="flex items-center gap-3 py-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                 <Icon size={15} />
             </div>
             <div className="min-w-0 flex-1">
-                <p className="text-xs text-slate-500">{label}</p>
-                <p className="text-sm font-medium text-slate-800">{value}</p>
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="text-sm font-medium text-foreground">{value}</p>
             </div>
         </div>
     );
@@ -105,21 +105,21 @@ export default function Show({ promotion }) {
                     <div className="flex items-center gap-3">
                         <Link
                             href={route('admin.promotions.index')}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                             aria-label="Kembali"
                         >
                             <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
                         </Link>
                         <div>
-                            <h2 className="text-lg font-semibold text-slate-800">{promo.name}</h2>
-                            <p className="text-xs text-slate-500">Kode: {promo.code}</p>
+                            <h2 className="text-lg font-semibold text-foreground">{promo.name}</h2>
+                            <p className="text-xs text-muted-foreground">Kode: {promo.code}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <StatusBadge promo={promo} />
                         <Link
                             href={route('admin.promotions.edit', promo.id)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                            className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
                         >
                             <Pencil size={14} />
                             Edit
@@ -134,8 +134,8 @@ export default function Show({ promotion }) {
                 {/* ── Kolom kiri: Detail ── */}
                 <div className="space-y-5 lg:col-span-2">
                     {/* Info Utama */}
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-4 text-sm font-semibold text-slate-800">Informasi Promo</h3>
+                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <h3 className="mb-4 text-sm font-semibold text-foreground">Informasi Promo</h3>
                         <div className="grid gap-1 sm:grid-cols-2">
                             <InfoRow icon={TypeIcon} label="Tipe" value={TYPE_LABELS[promo.type] || promo.type} />
                             <InfoRow icon={ScopeIcon} label="Scope" value={SCOPE_META[promo.scope]?.label || promo.scope} />
@@ -160,8 +160,8 @@ export default function Show({ promotion }) {
                     </div>
 
                     {/* Jadwal */}
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-4 text-sm font-semibold text-slate-800">Jadwal</h3>
+                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <h3 className="mb-4 text-sm font-semibold text-foreground">Jadwal</h3>
                         <div className="grid gap-1 sm:grid-cols-2">
                             <InfoRow icon={Calendar} label="Tanggal Mulai" value={formatDate(promo.start_date)} />
                             <InfoRow icon={Calendar} label="Tanggal Berakhir" value={formatDate(promo.end_date)} />
@@ -172,14 +172,14 @@ export default function Show({ promotion }) {
 
                     {/* Produk Terikat */}
                     {promo.products?.length > 0 && (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                            <h3 className="mb-4 text-sm font-semibold text-slate-800">
+                        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                            <h3 className="mb-4 text-sm font-semibold text-foreground">
                                 Produk Terikat ({promo.products_count ?? promo.products.length})
                             </h3>
-                            <div className="overflow-hidden rounded-xl border border-slate-100">
+                            <div className="overflow-hidden rounded-xl border border-border">
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="bg-slate-50 text-left text-xs font-semibold text-slate-500">
+                                        <tr className="bg-muted text-left text-xs font-semibold text-muted-foreground">
                                             <th className="px-4 py-2.5">Nama</th>
                                             <th className="px-4 py-2.5">SKU</th>
                                             <th className="px-4 py-2.5 text-right">Harga</th>
@@ -187,9 +187,9 @@ export default function Show({ promotion }) {
                                     </thead>
                                     <tbody>
                                         {promo.products.map((p) => (
-                                            <tr key={p.id} className="border-t border-slate-100">
-                                                <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
-                                                <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{p.sku || '—'}</td>
+                                            <tr key={p.id} className="border-t border-border">
+                                                <td className="px-4 py-2.5 font-medium text-foreground">{p.name}</td>
+                                                <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{p.sku || '—'}</td>
                                                 <td className="px-4 py-2.5 text-right">{fmt(p.sell_price)}</td>
                                             </tr>
                                         ))}
@@ -201,9 +201,9 @@ export default function Show({ promotion }) {
 
                     {/* Free Product (bogo/bundle) */}
                     {promo.free_product && (
-                        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                        <div className="rounded-2xl border border-success/20 bg-success/10 p-5">
                             <h3 className="mb-2 text-sm font-semibold text-emerald-800">Produk Gratis</h3>
-                            <p className="text-sm text-emerald-700">
+                            <p className="text-sm text-success">
                                 {promo.free_product.name} — {fmt(promo.free_product.sell_price)}
                             </p>
                         </div>
@@ -212,22 +212,22 @@ export default function Show({ promotion }) {
 
                 {/* ── Kolom kanan: Ringkasan ── */}
                 <div className="space-y-5">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 className="mb-4 text-sm font-semibold text-slate-800">Ringkasan</h3>
+                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <h3 className="mb-4 text-sm font-semibold text-foreground">Ringkasan</h3>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs text-slate-500">Status</span>
+                                <span className="text-xs text-muted-foreground">Status</span>
                                 <StatusBadge promo={promo} />
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-xs text-slate-500">Penggunaan</span>
-                                <span className="text-sm font-medium text-slate-800">
+                                <span className="text-xs text-muted-foreground">Penggunaan</span>
+                                <span className="text-sm font-medium text-foreground">
                                     {promo.used_count ?? 0}
                                     {promo.max_usage ? ` / ${promo.max_usage}` : ''}
                                 </span>
                             </div>
                             {promo.max_usage && (
-                                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                                     <div
                                         className="h-full rounded-full bg-primary-500 transition-all"
                                         style={{ width: `${Math.min(100, ((promo.used_count ?? 0) / promo.max_usage) * 100)}%` }}
@@ -235,8 +235,8 @@ export default function Show({ promotion }) {
                                 </div>
                             )}
                             <div className="flex items-center justify-between">
-                                <span className="text-xs text-slate-500">Produk Terikat</span>
-                                <span className="text-sm font-medium text-slate-800">
+                                <span className="text-xs text-muted-foreground">Produk Terikat</span>
+                                <span className="text-sm font-medium text-foreground">
                                     {promo.products_count ?? promo.products?.length ?? 0}
                                 </span>
                             </div>

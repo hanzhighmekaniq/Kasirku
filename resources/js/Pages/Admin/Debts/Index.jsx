@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
+import Button from "@/Components/ui/Button";
 
 const fmt = (n) =>
     "Rp" +
@@ -38,24 +39,24 @@ export default function Index({ customers }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-lg font-semibold text-slate-800">Hutang / Kasbon</h2>
+                <h2 className="text-lg font-semibold text-foreground">Hutang / Kasbon</h2>
             }
         >
             <Head title="Hutang / Kasbon" />
 
             {flash?.success && (
-                <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{flash.success}</div>
+                <div className="mb-5 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success">{flash.success}</div>
             )}
             {flash?.error && (
-                <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{flash.error}</div>
+                <div className="mb-5 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">{flash.error}</div>
             )}
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-3.5">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                <div className="border-b border-border bg-muted/50 px-5 py-3.5">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-slate-700">Daftar Pelanggan Berhutang</span>
-                            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">
+                            <span className="text-sm font-semibold text-foreground">Daftar Pelanggan Berhutang</span>
+                            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
                                 {customers.length}
                             </span>
                         </div>
@@ -64,22 +65,22 @@ export default function Index({ customers }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari pelanggan..."
-                            className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-primary-400 focus:ring-1 focus:ring-primary-100"
+                            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20"
                         />
                     </div>
                 </div>
 
                 {filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50">
-                            <svg className="h-8 w-8 text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-success/10">
+                            <svg className="h-8 w-8 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <h3 className="mt-4 text-base font-semibold text-slate-800">
+                        <h3 className="mt-4 text-base font-semibold text-foreground">
                             {search ? "Pelanggan tidak ditemukan" : "Tidak ada pelanggan berhutang"}
                         </h3>
-                        <p className="mt-1 max-w-sm text-sm text-slate-500">
+                        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                             {search ? "Coba kata kunci lain." : "Semua pelanggan sudah melunasi hutangnya."}
                         </p>
                     </div>
@@ -87,7 +88,7 @@ export default function Index({ customers }) {
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                     <th className="px-4 py-3.5">Pelanggan</th>
                                     <th className="px-4 py-3.5">Telepon</th>
                                     <th className="px-4 py-3.5 text-right">Total Hutang</th>
@@ -96,33 +97,34 @@ export default function Index({ customers }) {
                                     <th className="px-4 py-3.5 text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-border">
                                 {filtered.map((c) => (
-                                    <tr key={c.id} className="transition hover:bg-slate-50/70">
+                                    <tr key={c.id} className="transition hover:bg-muted/50">
                                         <td className="px-4 py-3.5">
-                                            <p className="font-medium text-slate-800">{c.name}</p>
-                                            {c.code && <p className="text-xs text-slate-400">{c.code}</p>}
+                                            <p className="font-medium text-foreground">{c.name}</p>
+                                            {c.code && <p className="text-xs text-muted-foreground">{c.code}</p>}
                                         </td>
-                                        <td className="px-4 py-3.5 text-slate-600">{c.phone || "—"}</td>
+                                        <td className="px-4 py-3.5 text-muted-foreground">{c.phone || "—"}</td>
                                         <td className="px-4 py-3.5 text-right">
-                                            <span className="font-semibold text-red-600">{fmt(c.debt_balance)}</span>
+                                            <span className="font-semibold text-destructive">{fmt(c.debt_balance)}</span>
                                         </td>
-                                        <td className="px-4 py-3.5 text-right text-slate-600">
+                                        <td className="px-4 py-3.5 text-right text-muted-foreground">
                                             {(c.credit_limit ?? 0) > 0 ? fmt(c.credit_limit) : "—"}
                                         </td>
                                         <td className="px-4 py-3.5 text-right">
-                                            <span className={(c.credit_limit ?? 0) > 0 && (c.credit_limit - c.debt_balance) < 50000 ? "font-semibold text-amber-600" : "text-slate-600"}>
+                                            <span className={(c.credit_limit ?? 0) > 0 && (c.credit_limit - c.debt_balance) < 50000 ? "font-semibold text-warning" : "text-muted-foreground"}>
                                                 {(c.credit_limit ?? 0) > 0 ? fmt(c.credit_limit - c.debt_balance) : "—"}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3.5 text-right">
-                                            <button
+                                            <Button
                                                 type="button"
+                                                variant="success"
+                                                size="sm"
                                                 onClick={() => { setPayModal(c); setPayAmount(""); }}
-                                                className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition"
                                             >
                                                 Lunasi
-                                            </button>
+                                            </Button>
                                         </td>
                                     </tr>
                                 ))}
@@ -135,16 +137,16 @@ export default function Index({ customers }) {
             {/* Pay Modal */}
             {payModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setPayModal(null)} />
-                    <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
-                        <h3 className="text-base font-bold text-slate-800">Lunasi Hutang</h3>
-                        <p className="mt-1 text-sm text-slate-500">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setPayModal(null)} />
+                    <div className="relative w-full max-w-sm rounded-2xl bg-popover p-6 shadow-2xl">
+                        <h3 className="text-base font-bold text-foreground">Lunasi Hutang</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
                             {payModal.name} — Sisa hutang: <strong>{fmt(payModal.debt_balance)}</strong>
                         </p>
                         <div className="mt-4">
-                            <label className="mb-1 block text-xs font-semibold text-slate-500">Jumlah Pelunasan</label>
+                            <label className="mb-1 block text-xs font-semibold text-muted-foreground">Jumlah Pelunasan</label>
                             <div className="relative">
-                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">Rp</span>
                                 <input
                                     type="number"
                                     value={payAmount}
@@ -153,15 +155,24 @@ export default function Index({ customers }) {
                                     max={payModal.debt_balance}
                                     placeholder="0"
                                     autoFocus
-                                    className="block w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                    className="block w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
                         </div>
                         <div className="mt-5 flex justify-end gap-2">
-                            <button type="button" onClick={() => setPayModal(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">Batal</button>
-                            <button type="button" onClick={handlePay} disabled={paying || !payAmount || Number(payAmount) <= 0} className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
+                            <Button type="button" variant="outline" size="sm" onClick={() => setPayModal(null)}>
+                                Batal
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="success"
+                                size="sm"
+                                onClick={handlePay}
+                                disabled={!payAmount || Number(payAmount) <= 0}
+                                loading={paying}
+                            >
                                 {paying ? "Memproses..." : "Bayar"}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

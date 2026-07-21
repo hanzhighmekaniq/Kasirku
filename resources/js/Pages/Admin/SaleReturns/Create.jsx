@@ -2,12 +2,13 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import Field from "@/Components/ui/Field";
+import Button from "@/Components/ui/Button";
 import SectionCard from "@/Components/ui/SectionCard";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 
 const fmtRp = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 const inputCls =
-    "block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200";
+    "block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20";
 
 export default function Create({ sales }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -103,7 +104,7 @@ export default function Create({ sales }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route("admin.sale-returns.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <svg
@@ -121,10 +122,10 @@ export default function Create({ sales }) {
                         </svg>
                     </Link>
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-800">
+                        <h2 className="text-lg font-semibold text-foreground">
                             Buat Retur Penjualan
                         </h2>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                             Pilih penjualan yang akan diretur
                         </p>
                     </div>
@@ -162,7 +163,7 @@ export default function Create({ sales }) {
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                <label className="mb-1.5 block text-sm font-medium text-foreground">
                                     Tanggal Retur
                                 </label>
                                 <input
@@ -174,7 +175,7 @@ export default function Create({ sales }) {
                                     className={inputCls}
                                 />
                                 {errors.return_date && (
-                                    <p className="mt-1 text-xs text-red-500">
+                                    <p className="mt-1 text-xs text-destructive">
                                         {errors.return_date}
                                     </p>
                                 )}
@@ -182,7 +183,7 @@ export default function Create({ sales }) {
                         </div>
 
                         <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                            <label className="mb-1.5 block text-sm font-medium text-foreground">
                                 Catatan
                             </label>
                             <textarea
@@ -195,7 +196,7 @@ export default function Create({ sales }) {
                                 placeholder="Opsional..."
                             />
                             {errors.notes && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-destructive">
                                     {errors.notes}
                                 </p>
                             )}
@@ -215,19 +216,19 @@ export default function Create({ sales }) {
                     >
                         <div className="-m-6">
                             {loadingItems ? (
-                                <p className="px-6 py-8 text-center text-sm text-slate-400">
+                                <p className="px-6 py-8 text-center text-sm text-muted-foreground">
                                     Memuat...
                                 </p>
                             ) : saleItems.length === 0 ? (
-                                <p className="px-6 py-8 text-center text-sm text-slate-400">
+                                <p className="px-6 py-8 text-center text-sm text-muted-foreground">
                                     Tidak ada item
                                 </p>
                             ) : (
-                                <div className="divide-y divide-slate-100">
+                                <div className="divide-y divide-border">
                                     {saleItems.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="px-6 py-4 transition hover:bg-slate-50/50"
+                                            className="px-6 py-4 transition hover:bg-muted/50"
                                         >
                                             <div className="flex items-start gap-4">
                                                 <input
@@ -236,13 +237,13 @@ export default function Create({ sales }) {
                                                     onChange={() =>
                                                         toggleItem(item)
                                                     }
-                                                    className="mt-1 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                                                    className="mt-1 h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
                                                 />
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-medium text-slate-800">
+                                                    <p className="text-sm font-medium text-foreground">
                                                         {item.product_name}
                                                     </p>
-                                                    <p className="text-xs text-slate-400">
+                                                    <p className="text-xs text-muted-foreground">
                                                         SKU: {item.product_sku}{" "}
                                                         · Qty: {item.quantity} ·
                                                         Harga:{" "}
@@ -254,7 +255,7 @@ export default function Create({ sales }) {
                                                             {item.returned_qty}
                                                         </p>
                                                     )}
-                                                    <p className="text-xs text-slate-400">
+                                                    <p className="text-xs text-muted-foreground">
                                                         Bisa diretur:{" "}
                                                         {item.returnable_qty}
                                                     </p>
@@ -264,7 +265,7 @@ export default function Create({ sales }) {
                                                 <div className="mt-3 ml-8 space-y-2">
                                                     <div className="flex gap-3">
                                                         <div className="w-24">
-                                                            <label className="block text-xs text-slate-500 mb-1">
+                                                            <label className="block text-xs text-muted-foreground mb-1">
                                                                 Qty Retur
                                                             </label>
                                                             <input
@@ -285,11 +286,11 @@ export default function Create({ sales }) {
                                                                             .value,
                                                                     )
                                                                 }
-                                                                className="block w-full rounded-lg border-slate-300 py-1.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                                                className="block w-full rounded-lg border-border py-1.5 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                             />
                                                         </div>
                                                         <div className="flex-1">
-                                                            <label className="block text-xs text-slate-500 mb-1">
+                                                            <label className="block text-xs text-muted-foreground mb-1">
                                                                 Alasan
                                                             </label>
                                                             <input
@@ -306,7 +307,7 @@ export default function Create({ sales }) {
                                                                     )
                                                                 }
                                                                 placeholder="Rusak / salah / lainnya..."
-                                                                className="block w-full rounded-lg border-slate-300 py-1.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                                                className="block w-full rounded-lg border-border py-1.5 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                             />
                                                         </div>
                                                     </div>
@@ -321,14 +322,14 @@ export default function Create({ sales }) {
                 )}
 
                 {errors.items && (
-                    <p className="text-sm text-red-500">{errors.items}</p>
+                    <p className="text-sm text-destructive">{errors.items}</p>
                 )}
 
                 {/* Summary */}
                 {selectedItems.length > 0 && (
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-900">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-base font-semibold text-foreground">
                                 Ringkasan Retur
                             </h3>
                         </div>
@@ -339,11 +340,11 @@ export default function Create({ sales }) {
                                         key={item.id}
                                         className="flex items-center justify-between text-sm"
                                     >
-                                        <span className="text-slate-600">
+                                        <span className="text-muted-foreground">
                                             {item.product_name} ×{" "}
                                             {item.return_qty}
                                         </span>
-                                        <span className="font-medium text-slate-700">
+                                        <span className="font-medium text-foreground">
                                             {fmtRp(
                                                 item.return_qty *
                                                     item.unit_price,
@@ -351,9 +352,9 @@ export default function Create({ sales }) {
                                         </span>
                                     </div>
                                 ))}
-                                <hr className="border-slate-100" />
+                                <hr className="border-border" />
                                 <div className="flex items-center justify-between text-base">
-                                    <span className="font-semibold text-slate-800">
+                                    <span className="font-semibold text-foreground">
                                         Total Retur
                                     </span>
                                     <span className="text-lg font-bold text-primary-600">
@@ -369,42 +370,17 @@ export default function Create({ sales }) {
                 <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                     <Link
                         href={route("admin.sale-returns.index")}
-                        className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                        className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                     >
                         Batal
                     </Link>
-                    <button
+                    <Button
                         type="submit"
-                        disabled={processing || selectedItems.length === 0}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
+                        loading={processing}
+                        disabled={selectedItems.length === 0}
                     >
-                        {processing ? (
-                            <>
-                                <svg
-                                    className="h-4 w-4 animate-spin"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                    />
-                                    <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                                    />
-                                </svg>
-                                Menyimpan...
-                            </>
-                        ) : (
-                            "Simpan Retur"
-                        )}
-                    </button>
+                        Simpan Retur
+                    </Button>
                 </div>
             </form>
         </AuthenticatedLayout>

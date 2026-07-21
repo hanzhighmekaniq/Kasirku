@@ -11,9 +11,9 @@ export default function Shifts({ from, to, summary, byCashier = [], shifts = [] 
     const { flash } = usePage().props;
 
     return (
-        <AuthenticatedLayout header={<h2 className="text-lg font-semibold text-slate-800">Laporan Shift</h2>}>
+        <AuthenticatedLayout header={<h2 className="text-lg font-semibold text-foreground">Laporan Shift</h2>}>
             <Head title="Laporan Shift" />
-            {flash?.success && <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{flash.success}</div>}
+            {flash?.success && <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>}
 
             <div className="mb-5 flex items-center justify-between">
                 <DateRangeFilter from={from} to={to} routeName="admin.reports.shifts" />
@@ -27,13 +27,13 @@ export default function Shifts({ from, to, summary, byCashier = [], shifts = [] 
             ]} />
 
             <div className="mt-5 grid gap-5 lg:grid-cols-3">
-                <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    <div className="px-5 py-4 border-b border-slate-100">
-                        <h3 className="text-sm font-semibold text-slate-800">Daftar Shift</h3>
+                <div className="lg:col-span-2 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-border">
+                        <h3 className="text-sm font-semibold text-foreground">Daftar Shift</h3>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead><tr className="bg-slate-50 text-left text-xs font-semibold text-slate-500">
+                            <thead><tr className="bg-muted text-left text-xs font-semibold text-muted-foreground">
                                 <th className="px-4 py-2.5">Tanggal</th>
                                 <th className="px-4 py-2.5">Kasir</th>
                                 <th className="px-4 py-2.5">Cabang</th>
@@ -43,31 +43,31 @@ export default function Shifts({ from, to, summary, byCashier = [], shifts = [] 
                                 <th className="px-4 py-2.5 text-right">Kas Akhir</th>
                             </tr></thead>
                             <tbody>{shifts.length > 0 ? shifts.map((s) => (
-                                <tr key={s.id} className="border-t border-slate-100">
+                                <tr key={s.id} className="border-t border-border">
                                     <td className="px-4 py-2.5">{fmtDate(s.opened_at)}</td>
-                                    <td className="px-4 py-2.5 font-medium text-slate-800">{s.user_name}</td>
-                                    <td className="px-4 py-2.5 text-slate-600">{s.branch_name}</td>
+                                    <td className="px-4 py-2.5 font-medium text-foreground">{s.user_name}</td>
+                                    <td className="px-4 py-2.5 text-muted-foreground">{s.branch_name}</td>
                                     <td className="px-4 py-2.5">{fmtTime(s.opened_at)}</td>
                                     <td className="px-4 py-2.5">{fmtTime(s.closed_at)}</td>
                                     <td className="px-4 py-2.5 text-right">{fmt(s.opening_cash)}</td>
                                     <td className="px-4 py-2.5 text-right font-medium">{fmt(s.closing_cash)}</td>
                                 </tr>
-                            )) : <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">Belum ada data</td></tr>}</tbody>
+                            )) : <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Belum ada data</td></tr>}</tbody>
                         </table>
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="mb-4 text-sm font-semibold text-slate-800">Per Kasir</h3>
+                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <h3 className="mb-4 text-sm font-semibold text-foreground">Per Kasir</h3>
                     {byCashier.length > 0 ? byCashier.map((c, i) => (
                         <div key={i} className="flex items-center justify-between border-b border-slate-50 py-2 last:border-0">
                             <div>
-                                <span className="text-sm font-medium text-slate-800">{c.name}</span>
-                                <span className="ml-2 text-xs text-slate-500">{c.count} shift</span>
+                                <span className="text-sm font-medium text-foreground">{c.name}</span>
+                                <span className="ml-2 text-xs text-muted-foreground">{c.count} shift</span>
                             </div>
-                            <span className="text-sm font-medium text-slate-800">{fmt(c.total_opening)}</span>
+                            <span className="text-sm font-medium text-foreground">{fmt(c.total_opening)}</span>
                         </div>
-                    )) : <p className="text-sm text-slate-500">Belum ada data</p>}
+                    )) : <p className="text-sm text-muted-foreground">Belum ada data</p>}
                 </div>
             </div>
         </AuthenticatedLayout>

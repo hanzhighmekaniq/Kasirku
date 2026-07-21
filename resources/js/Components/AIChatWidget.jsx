@@ -58,7 +58,7 @@ export default function AIChatWidget({ filters }) {
         return (
             <button
                 onClick={() => setOpen(true)}
-                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-lg shadow-primary-200 transition hover:bg-primary-700 hover:scale-105 active:scale-95"
+                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 hover:scale-105 active:scale-95"
                 title="Tanya AI"
             >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -69,7 +69,7 @@ export default function AIChatWidget({ filters }) {
     }
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 flex w-[380px] flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/60">
+        <div className="fixed bottom-6 right-6 z-50 flex w-[380px] flex-col rounded-2xl border border-border bg-card shadow-2xl shadow-slate-200/60">
             {/* Header */}
             <div className="flex items-center justify-between rounded-t-2xl bg-gradient-to-r from-primary-600 to-primary-600 px-4 py-3 text-white">
                 <div className="flex items-center gap-2">
@@ -78,7 +78,7 @@ export default function AIChatWidget({ filters }) {
                     </svg>
                     <span className="text-sm font-semibold">Tanya AI</span>
                 </div>
-                <button onClick={() => setOpen(false)} className="rounded-lg p-1 transition hover:bg-white/20">
+                <button onClick={() => setOpen(false)} className="rounded-lg p-1 transition hover:bg-card/20">
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -91,11 +91,11 @@ export default function AIChatWidget({ filters }) {
                     <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] rounded-xl px-3.5 py-2.5 leading-relaxed ${
                             m.role === 'user'
-                                ? 'bg-primary-600 text-white'
-                                : 'bg-slate-50 text-slate-700 ring-1 ring-slate-200/60'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted text-foreground ring-1 ring-slate-200/60'
                         }`}>
                             {m.period && (
-                                <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400">{m.period}</p>
+                                <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{m.period}</p>
                             )}
                             <p className="whitespace-pre-wrap">{m.text}</p>
                         </div>
@@ -103,7 +103,7 @@ export default function AIChatWidget({ filters }) {
                 ))}
                 {loading && (
                     <div className="flex justify-start">
-                        <div className="max-w-[85%] rounded-xl bg-slate-50 px-3.5 py-2.5 ring-1 ring-slate-200/60">
+                        <div className="max-w-[85%] rounded-xl bg-muted px-3.5 py-2.5 ring-1 ring-slate-200/60">
                             <div className="flex items-center gap-1.5">
                                 <span className="h-2 w-2 animate-bounce rounded-full bg-slate-300" style={{ animationDelay: '0ms' }} />
                                 <span className="h-2 w-2 animate-bounce rounded-full bg-slate-300" style={{ animationDelay: '150ms' }} />
@@ -116,7 +116,7 @@ export default function AIChatWidget({ filters }) {
             </div>
 
             {/* Input */}
-            <div className="border-t border-slate-100 p-3">
+            <div className="border-t border-border p-3">
                 <div className="flex items-end gap-2">
                     <textarea
                         value={input}
@@ -124,12 +124,12 @@ export default function AIChatWidget({ filters }) {
                         onKeyDown={handleKey}
                         placeholder="Tanya tentang laporan..."
                         rows={1}
-                        className="min-h-[38px] flex-1 resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+                        className="min-h-[38px] flex-1 resize-none rounded-xl border border-border px-3 py-2 text-sm outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                     />
                     <button
                         onClick={send}
                         disabled={loading || !input.trim()}
-                        className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-primary-600 text-white transition hover:bg-primary-700 disabled:opacity-40"
+                        className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground transition hover:bg-primary/90 disabled:opacity-40"
                     >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />

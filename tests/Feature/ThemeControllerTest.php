@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ThemePreset;
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -11,10 +12,24 @@ use Tests\TestCase;
  * CRUD tema custom (Admin\ThemeController) + proteksi is_system.
  * Preset dengan is_system = true adalah tema built-in bawaan aplikasi dan
  * tidak boleh bisa diubah/dihapus oleh user manapun (termasuk owner).
+ *
+ * Struktur data sekarang: 1 row per tema, kolom `tokens` JSON berbentuk
+ * {light: {...36 keys}, dark: {...36 keys}} — bukan kolom primary/
+ * secondary/accent/is_dark/light_tokens/dark_tokens terpisah lagi.
  */
 class ThemeControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    /** Token set minimal (subset) untuk payload test — cukup untuk lolos validasi. */
+    private function sampleTokens(string $primary = '#FF5733'): array
+    {
+        return [
+            'primary' => $primary,
+            'background' => '#FFFFFF',
+            'foreground' => '#0F172A',
+        ];
+    }
 
     public function test_index_lists_own_presets_only(): void
     {
@@ -37,14 +52,14 @@ class ThemeControllerTest extends TestCase
     {
         $user = User::factory()->create(['is_developer' => true]);
 
-        $response = $this->actingAs($user)->post('/app/themes', [
-            'name' => 'Tema Toko Saya',
-            'description' => 'Tema custom milik saya',
-            'primary' => '#FF5733',
-            'secondary' => '#64748B',
-            'accent' => '#FFA07A',
-            'is_dark' => false,
-        ]);
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
+            ->actingAs($user)
+            ->post('/app/themes', [
+                'name' => 'Tema Toko Saya',
+                'description' => 'Tema custom milik saya',
+                'light_tokens' => $this->sampleTokens('#FF5733'),
+                'dark_tokens' => $this->sampleTokens('#FF5733'),
+            ]);
 
         $response->assertRedirect(route('admin.themes.index'));
         $this->assertDatabaseHas('theme_presets', [
@@ -52,6 +67,9 @@ class ThemeControllerTest extends TestCase
             'name' => 'Tema Toko Saya',
             'is_system' => false,
         ]);
+
+        $theme = ThemePreset::where('name', 'Tema Toko Saya')->first();
+        $this->assertEquals('#FF5733', $theme->tokens['light']['primary']);
     }
 
     public function test_user_can_update_own_custom_theme(): void
@@ -59,21 +77,24 @@ class ThemeControllerTest extends TestCase
         $user = User::factory()->create(['is_developer' => true]);
         $theme = ThemePreset::factory()->create(['user_id' => $user->id, 'is_system' => false]);
 
-        $response = $this->actingAs($user)->put("/app/themes/{$theme->id}", [
-            'name' => 'Tema Baru',
-            'description' => null,
-            'primary' => '#111111',
-            'secondary' => '#222222',
-            'accent' => '#333333',
-            'is_dark' => true,
-        ]);
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
+            ->actingAs($user)
+            ->put("/app/themes/{$theme->id}", [
+                'name' => 'Tema Baru',
+                'description' => null,
+                'light_tokens' => $this->sampleTokens('#111111'),
+                'dark_tokens' => $this->sampleTokens('#222222'),
+            ]);
 
         $response->assertRedirect(route('admin.themes.index'));
         $this->assertDatabaseHas('theme_presets', [
             'id' => $theme->id,
             'name' => 'Tema Baru',
-            'primary' => '#111111',
         ]);
+
+        $theme->refresh();
+        $this->assertEquals('#111111', $theme->tokens['light']['primary']);
+        $this->assertEquals('#222222', $theme->tokens['dark']['primary']);
     }
 
     public function test_user_can_delete_own_custom_theme(): void
@@ -81,7 +102,9 @@ class ThemeControllerTest extends TestCase
         $user = User::factory()->create(['is_developer' => true]);
         $theme = ThemePreset::factory()->create(['user_id' => $user->id, 'is_system' => false]);
 
-        $response = $this->actingAs($user)->delete("/app/themes/{$theme->id}");
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
+            ->actingAs($user)
+            ->delete("/app/themes/{$theme->id}");
 
         $response->assertRedirect(route('admin.themes.index'));
         $this->assertDatabaseMissing('theme_presets', ['id' => $theme->id]);
@@ -92,12 +115,13 @@ class ThemeControllerTest extends TestCase
         $user = User::factory()->create(['is_developer' => true]);
         $system = ThemePreset::factory()->create(['user_id' => null, 'is_system' => true, 'name' => 'Ocean Blue']);
 
-        $response = $this->actingAs($user)->put("/app/themes/{$system->id}", [
-            'name' => 'Hacked Name',
-            'primary' => '#000000',
-            'secondary' => '#000000',
-            'accent' => '#000000',
-        ]);
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
+            ->actingAs($user)
+            ->put("/app/themes/{$system->id}", [
+                'name' => 'Hacked Name',
+                'light_tokens' => $this->sampleTokens('#000000'),
+                'dark_tokens' => $this->sampleTokens('#000000'),
+            ]);
 
         $response->assertSessionHasErrors('theme');
         $this->assertDatabaseHas('theme_presets', [
@@ -111,7 +135,9 @@ class ThemeControllerTest extends TestCase
         $user = User::factory()->create(['is_developer' => true]);
         $system = ThemePreset::factory()->create(['user_id' => null, 'is_system' => true]);
 
-        $response = $this->actingAs($user)->delete("/app/themes/{$system->id}");
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
+            ->actingAs($user)
+            ->delete("/app/themes/{$system->id}");
 
         $response->assertSessionHasErrors('theme');
         $this->assertDatabaseHas('theme_presets', ['id' => $system->id]);
@@ -123,12 +149,13 @@ class ThemeControllerTest extends TestCase
         $other = User::factory()->create(['is_developer' => true]);
         $theme = ThemePreset::factory()->create(['user_id' => $other->id, 'is_system' => false]);
 
-        $response = $this->actingAs($user)->put("/app/themes/{$theme->id}", [
-            'name' => 'Hijack',
-            'primary' => '#000000',
-            'secondary' => '#000000',
-            'accent' => '#000000',
-        ]);
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
+            ->actingAs($user)
+            ->put("/app/themes/{$theme->id}", [
+                'name' => 'Hijack',
+                'light_tokens' => $this->sampleTokens('#000000'),
+                'dark_tokens' => $this->sampleTokens('#000000'),
+            ]);
 
         $response->assertStatus(403);
     }
@@ -139,7 +166,9 @@ class ThemeControllerTest extends TestCase
         $other = User::factory()->create(['is_developer' => true]);
         $theme = ThemePreset::factory()->create(['user_id' => $other->id, 'is_system' => false]);
 
-        $response = $this->actingAs($user)->delete("/app/themes/{$theme->id}");
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
+            ->actingAs($user)
+            ->delete("/app/themes/{$theme->id}");
 
         $response->assertStatus(403);
         $this->assertDatabaseHas('theme_presets', ['id' => $theme->id]);
@@ -149,13 +178,14 @@ class ThemeControllerTest extends TestCase
     {
         $user = User::factory()->create(['is_developer' => true]);
 
-        $response = $this->actingAs($user)->post('/app/themes', [
-            'name' => '',
-            'primary' => 'not-a-hex-color',
-            'secondary' => '#64748B',
-            'accent' => '#FFA07A',
-        ]);
+        $response = $this->withoutMiddleware(ValidateCsrfToken::class)
+            ->actingAs($user)
+            ->post('/app/themes', [
+                'name' => '',
+                'light_tokens' => ['primary' => 'not-a-hex-color'],
+                'dark_tokens' => $this->sampleTokens(),
+            ]);
 
-        $response->assertSessionHasErrors(['name', 'primary']);
+        $response->assertSessionHasErrors(['name', 'light_tokens.primary']);
     }
 }

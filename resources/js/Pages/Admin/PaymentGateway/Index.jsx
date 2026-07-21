@@ -2,6 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import { ArrowLeftRight, CreditCard, Pencil, Plus, Power, PowerOff, Trash2 } from "lucide-react";
+import Button from "@/Components/ui/Button";
 
 const PROVIDER_META = {
     midtrans: {
@@ -144,58 +145,54 @@ export default function Index({ gateways = [], stats = {} }) {
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-800">
+                        <h2 className="text-lg font-semibold text-foreground">
                             Payment Gateway
                         </h2>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                             Konfigurasi gateway pembayaran online
                         </p>
                     </div>
-                    <Link
-                        href={route("admin.payment-gateway.create")}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
-                    >
-                        <Plus className="h-4 w-4" strokeWidth={2} />
+                    <Button as={Link} href={route("admin.payment-gateway.create")} icon={Plus}>
                         <span className="hidden sm:inline">Tambah Gateway</span>
                         <span className="sm:hidden">Tambah</span>
-                    </Link>
+                    </Button>
                 </div>
             }
         >
             <Head title="Payment Gateway" />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     {flash.success}
                 </div>
             )}
             {flash?.error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                     {flash.error}
                 </div>
             )}
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-slate-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">
+                <div className="rounded-2xl border border-border border-l-4 border-l-muted-foreground/30 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">
                         Total Gateway
                     </p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">
+                    <p className="mt-1 text-xl font-bold text-foreground">
                         {stats.total ?? gateways.length}
                     </p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-emerald-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">Aktif</p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">
+                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">Aktif</p>
+                    <p className="mt-1 text-xl font-bold text-foreground">
                         {stats.active ?? 0}
                     </p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-slate-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">
+                <div className="rounded-2xl border border-border border-l-4 border-l-muted-foreground/30 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">
                         Nonaktif
                     </p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">
+                    <p className="mt-1 text-xl font-bold text-foreground">
                         {stats.inactive ?? 0}
                     </p>
                 </div>
@@ -203,29 +200,25 @@ export default function Index({ gateways = [], stats = {} }) {
 
             {/* Gateway Cards */}
             {gateways.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-center shadow-sm">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card py-16 text-center shadow-sm">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                         <CreditCard
-                            className="h-8 w-8 text-slate-400"
+                            className="h-8 w-8 text-muted-foreground"
                             strokeWidth={1.4}
                         />
                     </div>
-                    <p className="mt-4 text-sm font-medium text-slate-600">
+                    <p className="mt-4 text-sm font-medium text-muted-foreground">
                         Belum ada payment gateway
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-muted-foreground">
                         Tambahkan gateway untuk menerima pembayaran online
                     </p>
-                    <Link
-                        href={route("admin.payment-gateway.create")}
-                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
-                    >
-                        <Plus className="h-4 w-4" strokeWidth={2} />
+                    <Button as={Link} href={route("admin.payment-gateway.create")} icon={Plus} className="mt-5">
                         Tambah Gateway
-                    </Link>
+                    </Button>
                 </div>
             ) : (
-                <div className="p-2 lg:p-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+                <div className="p-2 lg:p-4 overflow-hidden rounded-2xl border border-border bg-card shadow-sm grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                     {gateways.map((gw) => {
                         const meta = PROVIDER_META[gw.provider] ?? {};
                         const allMethods = PROVIDER_METHODS[gw.provider] ?? [];
@@ -235,10 +228,10 @@ export default function Index({ gateways = [], stats = {} }) {
                         return (
                             <div
                                 key={gw.id}
-                                className={`group relative overflow-hidden rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
+                                className={`group relative overflow-hidden rounded-2xl border bg-card shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
                                     gw.is_active
-                                        ? "border-slate-200/80"
-                                        : "border-slate-200/80 opacity-60 grayscale hover:opacity-80 hover:grayscale-0"
+                                        ? "border-border/80"
+                                        : "border-border/80 opacity-60 grayscale hover:opacity-80 hover:grayscale-0"
                                 }`}
                             >
                                 {/* Decorative gradient accent bar */}
@@ -260,10 +253,10 @@ export default function Index({ gateways = [], stats = {} }) {
                                                 />
                                             </div>
                                             <div className="min-w-0">
-                                                <h3 className="text-base font-bold text-slate-800">
+                                                <h3 className="text-base font-bold text-foreground">
                                                     {meta.label}
                                                 </h3>
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-muted-foreground">
                                                     {meta.desc}
                                                 </p>
                                             </div>
@@ -274,8 +267,8 @@ export default function Index({ gateways = [], stats = {} }) {
                                             <span
                                                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold ring-1 ${
                                                     gw.is_active
-                                                        ? "bg-emerald-50 text-emerald-600 ring-emerald-200"
-                                                        : "bg-slate-100 text-slate-500 ring-slate-200"
+                                                        ? "bg-success/10 text-emerald-600 ring-emerald-200"
+                                                        : "bg-muted text-muted-foreground ring-slate-200"
                                                 }`}
                                             >
                                                 <span className={`relative flex h-2 w-2 ${
@@ -284,7 +277,7 @@ export default function Index({ gateways = [], stats = {} }) {
                                                     {gw.is_active && (
                                                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                                                     )}
-                                                    <span className={`relative inline-flex h-2 w-2 rounded-full ${gw.is_active ? "bg-emerald-500" : "bg-slate-400"}`} />
+                                                    <span className={`relative inline-flex h-2 w-2 rounded-full ${gw.is_active ? "bg-success/100" : "bg-slate-400"}`} />
                                                 </span>
                                                 {gw.is_active ? "Aktif" : "Nonaktif"}
                                             </span>
@@ -305,15 +298,15 @@ export default function Index({ gateways = [], stats = {} }) {
                                 </div>
 
                                 {/* Divider */}
-                                <div className="mx-5 border-t border-slate-100" />
+                                <div className="mx-5 border-t border-border" />
 
                                 {/* Methods */}
                                 <div className="px-5 py-4">
                                     <div className="mb-3 flex items-center justify-between">
-                                        <span className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
                                             Metode
                                         </span>
-                                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
                                             {enabledCount}/{allMethods.length}
                                         </span>
                                     </div>
@@ -330,7 +323,7 @@ export default function Index({ gateways = [], stats = {} }) {
                                                     className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all duration-200 ${
                                                         enabled
                                                             ? "bg-primary-50 text-primary-600 ring-1 ring-primary-200/60"
-                                                            : "bg-slate-50 text-slate-400 ring-1 ring-slate-100"
+                                                            : "bg-muted text-muted-foreground ring-1 ring-slate-100"
                                                     }`}
                                                 >
                                                     <span className="text-xs">{m.icon}</span>
@@ -342,10 +335,10 @@ export default function Index({ gateways = [], stats = {} }) {
 
                                     {gw.merchant_id && (
                                         <div className="mt-3 flex items-center gap-1.5">
-                                            <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
+                                            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                                                 Merchant
                                             </span>
-                                            <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[11px] font-medium text-slate-600">
+                                            <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] font-medium text-muted-foreground">
                                                 {gw.merchant_id}
                                             </span>
                                         </div>
@@ -353,14 +346,14 @@ export default function Index({ gateways = [], stats = {} }) {
                                 </div>
 
                                 {/* Card Footer — Actions */}
-                                <div className="flex items-center gap-1.5 border-t border-slate-100 bg-slate-50/40 px-5 py-3">
+                                <div className="flex items-center gap-1.5 border-t border-border bg-muted/40 px-5 py-3">
                                     <button
                                         onClick={() => handleToggle(gw)}
                                         disabled={toggling === gw.id}
                                         className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
                                             gw.is_active
                                                 ? "bg-amber-50 text-amber-600 hover:bg-amber-100 hover:shadow-sm"
-                                                : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:shadow-sm"
+                                                : "bg-success/10 text-emerald-600 hover:bg-emerald-100 hover:shadow-sm"
                                         }`}
                                         title={
                                             gw.is_active
@@ -403,7 +396,7 @@ export default function Index({ gateways = [], stats = {} }) {
                                             "admin.payment-gateway.edit",
                                             { store_payment_gateway: gw.id },
                                         )}
-                                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-200 hover:shadow-sm"
+                                        className="inline-flex items-center gap-1.5 rounded-xl bg-muted px-2.5 py-1.5 text-xs font-semibold text-muted-foreground transition-all duration-200 hover:bg-muted/70 hover:shadow-sm"
                                     >
                                         <Pencil
                                             className="h-3.5 w-3.5"
@@ -413,7 +406,7 @@ export default function Index({ gateways = [], stats = {} }) {
                                     <div className="flex-1" />
                                     <button
                                         onClick={() => setDeleting(gw)}
-                                        className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-red-500 transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:shadow-sm"
+                                        className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-destructive transition-all duration-200 hover:bg-destructive/10 hover:text-destructive hover:shadow-sm"
                                     >
                                         <Trash2
                                             className="h-3.5 w-3.5"
@@ -445,26 +438,26 @@ function DeleteModal({ gateway, onConfirm, onClose }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
                 onClick={onClose}
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             />
             <div
                 role="dialog"
                 aria-modal="true"
-                className="relative w-full max-w-md transform rounded-2xl bg-white p-6 shadow-2xl transition-all duration-200 sm:p-7"
+                className="relative w-full max-w-md transform rounded-2xl bg-card p-6 shadow-2xl transition-all duration-200 sm:p-7"
             >
                 <div className="flex items-start gap-4">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100">
-                        <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                        <svg className="h-6 w-6 text-destructive" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                         </svg>
                     </div>
                     <div className="min-w-0">
-                        <h3 className="text-lg font-semibold text-slate-900">Hapus gateway?</h3>
-                        <p className="mt-1 text-sm text-slate-500">
-                            <span className="font-semibold text-slate-700">{meta.label}</span> akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
+                        <h3 className="text-lg font-semibold text-foreground">Hapus gateway?</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            <span className="font-semibold text-foreground">{meta.label}</span> akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
                         </p>
                         {gateway.merchant_id && (
-                            <p className="mt-2 rounded-lg bg-slate-50 px-3 py-2 font-mono text-xs text-slate-500">
+                            <p className="mt-2 rounded-lg bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
                                 Merchant: {gateway.merchant_id}
                             </p>
                         )}
@@ -475,7 +468,7 @@ function DeleteModal({ gateway, onConfirm, onClose }) {
                     <button
                         type="button"
                         onClick={onClose}
-                        className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                        className="inline-flex justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                     >
                         Batal
                     </button>

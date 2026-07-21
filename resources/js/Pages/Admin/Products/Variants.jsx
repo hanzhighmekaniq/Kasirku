@@ -1,10 +1,12 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
+import Button from "@/Components/ui/Button";
+import { Plus } from "lucide-react";
 
 const inputCls =
-    "block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200";
+    "block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20";
 
 function VariantForm({ product, variant, onClose, onSaved }) {
     const isEdit = !!variant;
@@ -50,13 +52,13 @@ function VariantForm({ product, variant, onClose, onSaved }) {
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-16">
             <div
                 onClick={onClose}
-                className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             />
-            <div className="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl sm:p-7 mb-10">
-                <h3 className="text-base font-semibold text-slate-900">
+            <div className="relative w-full max-w-2xl rounded-2xl bg-card p-6 shadow-2xl sm:p-7 mb-10">
+                <h3 className="text-base font-semibold text-foreground">
                     {isEdit ? "Edit Varian" : "Tambah Varian"}
                 </h3>
-                <p className="mt-0.5 text-sm text-slate-500">
+                <p className="mt-0.5 text-sm text-muted-foreground">
                     Produk: {product.name}
                 </p>
 
@@ -64,9 +66,9 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                     {/* Info Dasar */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2">
-                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                            <label className="mb-1.5 block text-sm font-medium text-foreground">
                                 Nama Varian{" "}
-                                <span className="text-red-500">*</span>
+                                <span className="text-destructive">*</span>
                             </label>
                             <input
                                 type="text"
@@ -78,14 +80,14 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                 placeholder="Contoh: Large, Merah, Coklat"
                             />
                             {errors.name && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-destructive">
                                     {errors.name}
                                 </p>
                             )}
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                                SKU <span className="text-red-500">*</span>
+                            <label className="mb-1.5 block text-sm font-medium text-foreground">
+                                SKU <span className="text-destructive">*</span>
                             </label>
                             <input
                                 type="text"
@@ -97,13 +99,13 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                 placeholder="SKU unik varian"
                             />
                             {errors.sku && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-destructive">
                                     {errors.sku}
                                 </p>
                             )}
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                            <label className="mb-1.5 block text-sm font-medium text-foreground">
                                 Barcode
                             </label>
                             <input
@@ -116,7 +118,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                 placeholder="Otomatis jika kosong"
                             />
                             {errors.barcode && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-destructive">
                                     {errors.barcode}
                                 </p>
                             )}
@@ -126,12 +128,12 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                     {/* Harga */}
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                            <label className="mb-1.5 block text-sm font-medium text-foreground">
                                 Harga Jual{" "}
-                                <span className="text-red-500">*</span>
+                                <span className="text-destructive">*</span>
                             </label>
                             <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                                     Rp
                                 </span>
                                 <input
@@ -145,17 +147,17 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                 />
                             </div>
                             {errors.price && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-destructive">
                                     {errors.price}
                                 </p>
                             )}
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                            <label className="mb-1.5 block text-sm font-medium text-foreground">
                                 Harga Beli
                             </label>
                             <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                                     Rp
                                 </span>
                                 <input
@@ -170,11 +172,11 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                             </div>
                         </div>
                         <div>
-                            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                            <label className="mb-1.5 block text-sm font-medium text-foreground">
                                 Margin
                             </label>
                             <div
-                                className={`rounded-xl border px-3 py-2 ${margin < 0 ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50"}`}
+                                className={`rounded-xl border px-3 py-2 ${margin < 0 ? "border-rose-200 bg-rose-50" : "border-success/20 bg-success/10"}`}
                             >
                                 <div
                                     className={`text-sm font-bold ${margin < 0 ? "text-rose-700" : "text-emerald-800"}`}
@@ -195,22 +197,22 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.is_active ? "bg-primary-600" : "bg-slate-200"}`}
                         >
                             <span
-                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${data.is_active ? "translate-x-5" : "translate-x-0"}`}
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ${data.is_active ? "translate-x-5" : "translate-x-0"}`}
                             />
                         </button>
-                        <span className="text-sm font-medium text-slate-700">
+                        <span className="text-sm font-medium text-foreground">
                             Aktif
                         </span>
                     </div>
 
                     {/* Grosir Bertingkat */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="rounded-xl border border-border bg-card p-4">
                         <div className="flex items-center justify-between mb-3">
                             <div>
-                                <div className="text-sm font-semibold text-slate-900">
+                                <div className="text-sm font-semibold text-foreground">
                                     Grosir Bertingkat
                                 </div>
-                                <div className="text-[11px] text-slate-500">
+                                <div className="text-[11px] text-muted-foreground">
                                     Maks 5 tier · beli lebih banyak, harga
                                     lebih murah
                                 </div>
@@ -240,7 +242,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                             )}
                         </div>
                         {data.price_tiers.length === 0 ? (
-                            <p className="text-xs text-slate-400 italic text-center py-3">
+                            <p className="text-xs text-muted-foreground italic text-center py-3">
                                 Belum ada tier grosir.
                             </p>
                         ) : (
@@ -272,14 +274,14 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="Min qty"
-                                                className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 pr-10 text-xs"
+                                                className="w-full rounded-lg border border-border px-2.5 py-1.5 pr-10 text-xs"
                                             />
-                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                 {product.unit}
                                             </span>
                                         </div>
                                         <div className="col-span-5 relative">
-                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                 Rp
                                             </span>
                                             <input
@@ -300,7 +302,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="Harga"
-                                                className="w-full rounded-lg border border-slate-200 py-1.5 pl-8 pr-2 text-xs"
+                                                className="w-full rounded-lg border border-border py-1.5 pl-8 pr-2 text-xs"
                                             />
                                         </div>
                                         <button
@@ -335,10 +337,10 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                     <div className="rounded-xl border border-amber-200/70 bg-amber-50/40 p-4">
                         <div className="flex items-center justify-between mb-3">
                             <div>
-                                <div className="text-sm font-semibold text-slate-900">
+                                <div className="text-sm font-semibold text-foreground">
                                     Multi Satuan (Kemasan)
                                 </div>
-                                <div className="text-[11px] text-slate-500">
+                                <div className="text-[11px] text-muted-foreground">
                                     Cth: Dus berisi 12 {product.unit}
                                 </div>
                             </div>
@@ -370,7 +372,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                             </button>
                         </div>
                         {data.packaging_units.length === 0 ? (
-                            <p className="text-xs text-slate-400 italic text-center py-3">
+                            <p className="text-xs text-muted-foreground italic text-center py-3">
                                 Belum ada kemasan tambahan.
                             </p>
                         ) : (
@@ -398,7 +400,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="Nama (Dus, Box)"
-                                                className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs"
+                                                className="w-full rounded-lg border border-border px-2.5 py-1.5 text-xs"
                                             />
                                         </div>
                                         <div className="col-span-2 relative">
@@ -421,14 +423,14 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="12"
-                                                className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 pr-8 text-xs"
+                                                className="w-full rounded-lg border border-border px-2.5 py-1.5 pr-8 text-xs"
                                             />
-                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                 {product.unit}
                                             </span>
                                         </div>
                                         <div className="col-span-3 relative">
-                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                 Rp
                                             </span>
                                             <input
@@ -450,7 +452,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="Harga"
-                                                className="w-full rounded-lg border border-slate-200 py-1.5 pl-8 pr-2 text-xs"
+                                                className="w-full rounded-lg border border-border py-1.5 pl-8 pr-2 text-xs"
                                             />
                                         </div>
                                         <div className="col-span-3">
@@ -471,7 +473,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="Barcode"
-                                                className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs"
+                                                className="w-full rounded-lg border border-border px-2.5 py-1.5 text-xs"
                                             />
                                         </div>
                                         <button
@@ -498,9 +500,9 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                         </button>
                                         {pu.conversion_qty > 0 &&
                                             pu.sell_price > 0 && (
-                                                <div className="col-span-12 text-[11px] text-slate-500 pl-1">
+                                                <div className="col-span-12 text-[11px] text-muted-foreground pl-1">
                                                     ≈{" "}
-                                                    <span className="font-semibold text-emerald-700">
+                                                    <span className="font-semibold text-success">
                                                         Rp{" "}
                                                         {Math.round(
                                                             pu.sell_price /
@@ -524,21 +526,18 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                             type="button"
                             onClick={onClose}
                             disabled={processing}
-                            className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                            className="inline-flex justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60"
                         >
                             Batal
                         </button>
-                        <button
+                        <Button
                             type="submit"
-                            disabled={processing}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
+                            loading={processing}
                         >
-                            {processing
-                                ? "Menyimpan..."
-                                : isEdit
-                                  ? "Simpan Perubahan"
-                                  : "Tambah Varian"}
-                        </button>
+                            {isEdit
+                                ? "Simpan Perubahan"
+                                : "Tambah Varian"}
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -584,7 +583,7 @@ export default function Variants({ product }) {
                     <div className="flex items-center gap-3">
                         <Link
                             href={route("admin.products.show", product.id)}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                             aria-label="Kembali"
                         >
                             <svg
@@ -602,54 +601,45 @@ export default function Variants({ product }) {
                             </svg>
                         </Link>
                         <div>
-                            <h2 className="text-lg font-semibold text-slate-800">
+                            <h2 className="text-lg font-semibold text-foreground">
                                 Varian Produk
                             </h2>
                         </div>
                     </div>
-                    <button
+                    <Button
                         onClick={() => {
                             setEditVariant(null);
                             setShowForm(true);
                         }}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
+                        icon={Plus}
                     >
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
                         <span className="hidden sm:inline">Tambah Varian</span>
                         <span className="sm:hidden">Tambah</span>
-                    </button>
+                    </Button>
                 </div>
             }
         >
             <Head title={`Varian - ${product.name}`} />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     {flash.success}
                 </div>
             )}
             {flash?.error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                     {flash.error}
                 </div>
             )}
 
             {/* Product summary card */}
-            <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div className="flex items-center gap-4">
                     {product.image ? (
                         <img
                             src={`/storage/${product.image}`}
                             alt={product.name}
-                            className="h-14 w-14 shrink-0 rounded-xl object-cover border border-slate-200"
+                            className="h-14 w-14 shrink-0 rounded-xl object-cover border border-border"
                         />
                     ) : (
                         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10">
@@ -669,20 +659,20 @@ export default function Variants({ product }) {
                         </div>
                     )}
                     <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-slate-800">
+                        <p className="font-semibold text-foreground">
                             {product.name}
                         </p>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                        <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                             <span>
                                 SKU:{" "}
-                                <span className="font-mono font-medium text-slate-700">
+                                <span className="font-mono font-medium text-foreground">
                                     {product.sku}
                                 </span>
                             </span>
                             {product.barcode && (
                                 <span>
                                     Barcode:{" "}
-                                    <span className="font-mono font-medium text-slate-700">
+                                    <span className="font-mono font-medium text-foreground">
                                         {product.barcode}
                                     </span>
                                 </span>
@@ -690,7 +680,7 @@ export default function Variants({ product }) {
                         </div>
                     </div>
                     <div className="hidden sm:block text-right">
-                        <p className="text-sm text-slate-500">Total Varian</p>
+                        <p className="text-sm text-muted-foreground">Total Varian</p>
                         <p className="text-2xl font-bold text-primary-600">
                             {variants.length}
                         </p>
@@ -699,12 +689,12 @@ export default function Variants({ product }) {
             </div>
 
             {/* Variants table */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {variants.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                             <svg
-                                className="h-8 w-8 text-slate-400"
+                                className="h-8 w-8 text-muted-foreground"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
@@ -717,31 +707,23 @@ export default function Variants({ product }) {
                                 />
                             </svg>
                         </div>
-                        <h3 className="mt-4 text-base font-semibold text-slate-800">
+                        <h3 className="mt-4 text-base font-semibold text-foreground">
                             Belum ada varian
                         </h3>
-                        <p className="mt-1 max-w-sm text-sm text-slate-500">
+                        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                             Tambahkan varian untuk produk ini (contoh: Ukuran S,
                             M, L atau Warna Merah, Biru).
                         </p>
-                        <button
+                        <Button
                             onClick={() => {
                                 setEditVariant(null);
                                 setShowForm(true);
                             }}
-                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
+                            icon={Plus}
+                            className="mt-5"
                         >
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                            >
-                                <path d="M12 4.5v15m7.5-7.5h-15" />
-                            </svg>
                             Tambah Varian
-                        </button>
+                        </Button>
                     </div>
                 ) : (
                     <>
@@ -749,7 +731,7 @@ export default function Variants({ product }) {
                         <div className="hidden overflow-x-auto md:block">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                         <th className="px-5 py-3.5">
                                             Nama Varian
                                         </th>
@@ -777,29 +759,29 @@ export default function Variants({ product }) {
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-border">
                                     {variants.map((v) => (
                                         <tr
                                             key={v.id}
-                                            className="transition hover:bg-slate-50/70"
+                                            className="transition hover:bg-muted/70"
                                         >
-                                            <td className="px-5 py-4 font-medium text-slate-800">
+                                            <td className="px-5 py-4 font-medium text-foreground">
                                                 {v.name}
                                             </td>
-                                            <td className="px-5 py-4 text-slate-600 font-mono text-xs">
+                                            <td className="px-5 py-4 text-muted-foreground font-mono text-xs">
                                                 {v.sku}
                                             </td>
-                                            <td className="px-5 py-4 text-slate-500 hidden lg:table-cell">
+                                            <td className="px-5 py-4 text-muted-foreground hidden lg:table-cell">
                                                 {v.barcode || (
-                                                    <span className="text-slate-300 italic text-xs">
+                                                    <span className="text-muted-foreground/50 italic text-xs">
                                                         &mdash;
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="px-5 py-4 text-right text-slate-500">
+                                            <td className="px-5 py-4 text-right text-muted-foreground">
                                                 {fmt(v.cost_price)}
                                             </td>
-                                            <td className="px-5 py-4 text-right font-medium text-slate-800">
+                                            <td className="px-5 py-4 text-right font-medium text-foreground">
                                                 {fmt(v.price)}
                                             </td>
                                             <td className="px-5 py-4 text-center">
@@ -809,7 +791,7 @@ export default function Variants({ product }) {
                                                         tier
                                                     </span>
                                                 ) : (
-                                                    <span className="text-xs text-slate-300">
+                                                    <span className="text-xs text-muted-foreground/50">
                                                         —
                                                     </span>
                                                 )}
@@ -825,14 +807,14 @@ export default function Variants({ product }) {
                                                         kemasan
                                                     </span>
                                                 ) : (
-                                                    <span className="text-xs text-slate-300">
+                                                    <span className="text-xs text-muted-foreground/50">
                                                         —
                                                     </span>
                                                 )}
                                             </td>
                                             <td className="px-5 py-4 text-center">
                                                 <span
-                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${v.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
+                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${v.is_active ? "bg-emerald-100 text-success" : "bg-muted text-muted-foreground"}`}
                                                 >
                                                     {v.is_active
                                                         ? "Aktif"
@@ -846,7 +828,7 @@ export default function Variants({ product }) {
                                                             setEditVariant(v);
                                                             setShowForm(true);
                                                         }}
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-50 hover:text-primary-600"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
                                                         title="Edit"
                                                     >
                                                         <svg
@@ -867,7 +849,7 @@ export default function Variants({ product }) {
                                                         onClick={() =>
                                                             setTarget(v)
                                                         }
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                                                         title="Hapus"
                                                     >
                                                         <svg
@@ -893,36 +875,36 @@ export default function Variants({ product }) {
                         </div>
 
                         {/* Mobile cards */}
-                        <div className="divide-y divide-slate-100 md:hidden">
+                        <div className="divide-y divide-border md:hidden">
                             {variants.map((v) => (
                                 <div key={v.id} className="p-4">
                                     <div className="flex items-start justify-between">
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-2">
-                                                <p className="font-medium text-slate-800">
+                                                <p className="font-medium text-foreground">
                                                     {v.name}
                                                 </p>
                                                 <span
-                                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${v.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
+                                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${v.is_active ? "bg-emerald-100 text-success" : "bg-muted text-muted-foreground"}`}
                                                 >
                                                     {v.is_active
                                                         ? "Aktif"
                                                         : "Nonaktif"}
                                                 </span>
                                             </div>
-                                            <p className="mt-0.5 text-xs text-slate-400">
+                                            <p className="mt-0.5 text-xs text-muted-foreground">
                                                 SKU: {v.sku}
                                                 {v.barcode
                                                     ? ` · ${v.barcode}`
                                                     : ""}
                                             </p>
                                             <div className="mt-2 flex items-center gap-3 text-sm">
-                                                <span className="font-semibold text-slate-800">
+                                                <span className="font-semibold text-foreground">
                                                     {fmt(v.price)}
                                                 </span>
                                                 {Number(v.cost_price || 0) >
                                                     0 && (
-                                                    <span className="text-xs text-slate-500">
+                                                    <span className="text-xs text-muted-foreground">
                                                         Beli:{" "}
                                                         {fmt(v.cost_price)}
                                                     </span>
@@ -981,7 +963,7 @@ export default function Variants({ product }) {
                                         </button>
                                         <button
                                             onClick={() => setTarget(v)}
-                                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-destructive transition hover:bg-destructive/10"
                                         >
                                             <svg
                                                 className="h-3.5 w-3.5"

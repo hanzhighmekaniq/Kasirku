@@ -95,7 +95,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
                 onClick={() => !processing && onClose?.()}
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             />
             <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-modal))] p-6 shadow-2xl">
                 <div className="mb-4 flex items-center justify-between">
@@ -131,7 +131,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                             onClick={() => handleTypeChange("in")}
                             className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
                                 isIn
-                                    ? "bg-[rgb(var(--color-card))] text-emerald-700 shadow-sm"
+                                    ? "bg-[rgb(var(--color-card))] text-success shadow-sm"
                                     : "text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
                             }`}
                         >
@@ -142,7 +142,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                             onClick={() => handleTypeChange("out")}
                             className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
                                 !isIn
-                                    ? "bg-[rgb(var(--color-card))] text-red-700 shadow-sm"
+                                    ? "bg-[rgb(var(--color-card))] text-destructive shadow-sm"
                                     : "text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
                             }`}
                         >
@@ -212,7 +212,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     className={`mt-0.5 text-xl font-bold ${
                                         product.track_stock &&
                                         activeStock <= (product.stock_minimum || 0)
-                                            ? "text-red-600"
+                                            ? "text-destructive"
                                             : "text-[rgb(var(--color-text-primary))]"
                                     }`}
                                 >
@@ -234,7 +234,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     placeholder="0"
                                     min="0.0001"
                                     step="any"
-                                    className={`w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-[rgb(var(--color-text-muted))] focus:border-primary-500 focus:ring-2 focus:ring-primary-200 ${
+                                    className={`w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-[rgb(var(--color-text-muted))] focus:border-ring focus:ring-2 focus:ring-ring/20 ${
                                         isLargeQty
                                             ? "border-amber-400 bg-amber-50"
                                             : "border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] text-[rgb(var(--color-text-primary))]"
@@ -249,7 +249,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     </p>
                                 )}
                                 {!isIn && qty && Number(qty) > activeStock && (
-                                    <p className="mt-1 text-xs text-red-600">
+                                    <p className="mt-1 text-xs text-destructive">
                                         ⚠️ Qty melebihi stok saat ini (
                                         {activeStock} {activeUnit})
                                     </p>
@@ -278,7 +278,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                             placeholder={activeCostPrice || "0"}
                                             min="0"
                                             step="any"
-                                            className="w-full rounded-xl border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 pl-10 pr-3.5 text-sm text-[rgb(var(--color-text-primary))] shadow-sm transition placeholder:text-[rgb(var(--color-text-muted))] focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                            className="w-full rounded-xl border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 pl-10 pr-3.5 text-sm text-[rgb(var(--color-text-primary))] shadow-sm transition placeholder:text-[rgb(var(--color-text-muted))] focus:border-ring focus:ring-2 focus:ring-ring/20"
                                         />
                                     </div>
                                     <p className="mt-1 text-xs text-[rgb(var(--color-text-muted))]">
@@ -315,14 +315,14 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     placeholder="misal: produksi batch #45"
-                                    className="w-full rounded-xl border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 px-3.5 text-sm text-[rgb(var(--color-text-primary))] shadow-sm transition placeholder:text-[rgb(var(--color-text-muted))] focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                    className="w-full rounded-xl border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 px-3.5 text-sm text-[rgb(var(--color-text-primary))] shadow-sm transition placeholder:text-[rgb(var(--color-text-muted))] focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
                         </>
                     )}
 
                     {error && (
-                        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+                        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                             {error}
                         </div>
                     )}

@@ -1,4 +1,5 @@
 import { Link } from "@inertiajs/react";
+import Button from "@/Components/ui/Button";
 import Select from "@/Components/ui/Select";
 
 const STATUS_OPTIONS = [
@@ -17,19 +18,19 @@ function inputCls(hasError) {
     return `mt-1 block w-full rounded-xl border shadow-sm text-sm transition focus:ring-2 ${
         hasError
             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-slate-300 focus:border-primary-500 focus:ring-primary-200"
+            : "border-border focus:border-ring focus:ring-ring/20"
     }`;
 }
 
 function Field({ label, hint, error, required, children }) {
     return (
         <div>
-            <label className="block text-sm font-medium text-slate-700">
-                {label} {required && <span className="text-red-500">*</span>}
+            <label className="block text-sm font-medium text-foreground">
+                {label} {required && <span className="text-destructive">*</span>}
             </label>
             {children}
-            {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
-            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+            {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+            {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
     );
 }
@@ -66,8 +67,8 @@ export default function EmployeeForm({
     return (
         <form onSubmit={onSubmit} className="space-y-5">
             {/* Info Dasar */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="mb-4 text-sm font-semibold text-slate-700">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <h3 className="mb-4 text-sm font-semibold text-foreground">
                     Informasi Dasar
                 </h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -169,8 +170,8 @@ export default function EmployeeForm({
 
             {/* Komisi — hanya untuk store type dengan feature commission */}
             {showCommission && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="mb-4 text-sm font-semibold text-slate-700">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <h3 className="mb-4 text-sm font-semibold text-foreground">
                     Komisi
                 </h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -194,7 +195,7 @@ export default function EmployeeForm({
                         >
                             <div className="relative">
                                 {data.commission_type === "flat" && (
-                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
                                         Rp
                                     </span>
                                 )}
@@ -226,13 +227,13 @@ export default function EmployeeForm({
                                     className={`${inputCls(!!errors.commission_value)} ${data.commission_type === "flat" ? "pl-10" : ""}`}
                                 />
                                 {data.commission_type === "percent" && (
-                                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-slate-400">
+                                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
                                         %
                                     </span>
                                 )}
                             </div>
                             {!errors.commission_value && (
-                                <p className="mt-1 text-xs text-slate-400">
+                                <p className="mt-1 text-xs text-muted-foreground">
                                     {data.commission_type === "percent"
                                         ? "Komisi dihitung dari total transaksi."
                                         : "Komisi tetap per transaksi."}
@@ -245,7 +246,7 @@ export default function EmployeeForm({
             )}
 
             {/* Akun Login */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <label className="flex items-start gap-3 cursor-pointer">
                     <input
                         type="checkbox"
@@ -253,13 +254,13 @@ export default function EmployeeForm({
                         onChange={(e) =>
                             setData("create_account", e.target.checked)
                         }
-                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 shadow-sm focus:ring-primary-500"
+                        className="mt-0.5 h-4 w-4 rounded border-border text-primary-600 shadow-sm focus:ring-primary-500"
                     />
                     <span>
-                        <span className="block text-sm font-medium text-slate-800">
+                        <span className="block text-sm font-medium text-foreground">
                             Buat / aktifkan akun login
                         </span>
-                        <span className="mt-0.5 block text-xs text-slate-500">
+                        <span className="mt-0.5 block text-xs text-muted-foreground">
                             Aktifkan jika karyawan perlu masuk ke dashboard atau
                             POS.
                         </span>
@@ -267,11 +268,11 @@ export default function EmployeeForm({
                 </label>
 
                 {showAccountFields && (
-                    <div className="mt-5 space-y-5 border-t border-slate-100 pt-5">
+                    <div className="mt-5 space-y-5 border-t border-border pt-5">
                         <div>
-                            <span className="block text-sm font-medium text-slate-700 mb-2">
+                            <span className="block text-sm font-medium text-foreground mb-2">
                                 Role Akun{" "}
-                                <span className="text-red-500">*</span>
+                                <span className="text-destructive">*</span>
                             </span>
                             <div className="flex flex-wrap gap-3">
                                 {assignableRoles.length > 0
@@ -291,7 +292,7 @@ export default function EmployeeForm({
                                                           e.target.value,
                                                       )
                                                   }
-                                                  className="rounded-full border-slate-300 text-primary-600 shadow-sm focus:ring-primary-500"
+                                                  className="rounded-full border-border text-primary-600 shadow-sm focus:ring-primary-500"
                                               />
                                               <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
                                                   {r.name}
@@ -319,7 +320,7 @@ export default function EmployeeForm({
                                                           e.target.value,
                                                       )
                                                   }
-                                                  className="rounded-full border-slate-300 text-primary-600 shadow-sm focus:ring-primary-500"
+                                                  className="rounded-full border-border text-primary-600 shadow-sm focus:ring-primary-500"
                                               />
                                               <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
                                                   {l}
@@ -328,7 +329,7 @@ export default function EmployeeForm({
                                       ))}
                             </div>
                             {errors.role && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-destructive">
                                     {errors.role}
                                 </p>
                             )}
@@ -385,38 +386,13 @@ export default function EmployeeForm({
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <Link
                     href={cancelHref}
-                    className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                 >
                     Batal
                 </Link>
-                <button
-                    type="submit"
-                    disabled={processing}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
-                >
-                    {processing && (
-                        <svg
-                            className="h-4 w-4 animate-spin"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                        >
-                            <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                            />
-                            <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                            />
-                        </svg>
-                    )}
+                <Button type="submit" loading={processing}>
                     {submitLabel}
-                </button>
+                </Button>
             </div>
         </form>
     );

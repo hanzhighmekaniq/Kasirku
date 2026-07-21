@@ -14,12 +14,12 @@ const fmtDate = (d) =>
 const STATUS_CONFIG = {
     completed: {
         label: "Selesai",
-        color: "bg-emerald-100 text-emerald-700",
-        dot: "bg-emerald-500",
+        color: "bg-emerald-100 text-success",
+        dot: "bg-success/100",
     },
     cancelled: {
         label: "Dibatalkan",
-        color: "bg-slate-100 text-slate-500",
+        color: "bg-muted text-muted-foreground",
         dot: "bg-slate-400",
     },
 };
@@ -39,10 +39,10 @@ function StatusBadge({ status }) {
 function InfoRow({ label, value, isRaw }) {
     return (
         <div className="flex items-center justify-between gap-3">
-            <dt className="text-sm text-slate-500">{label}</dt>
+            <dt className="text-sm text-muted-foreground">{label}</dt>
             <dd
                 className={`text-right text-sm ${
-                    isRaw ? "" : "font-medium text-slate-800"
+                    isRaw ? "" : "font-medium text-foreground"
                 }`}
             >
                 {value}
@@ -85,7 +85,7 @@ export default function Show({ saleReturn }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route("admin.sale-returns.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <svg
@@ -103,10 +103,10 @@ export default function Show({ saleReturn }) {
                         </svg>
                     </Link>
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-800">
+                        <h2 className="text-lg font-semibold text-foreground">
                             {saleReturn.return_no}
                         </h2>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-muted-foreground">
                             Detail Retur Penjualan
                         </p>
                     </div>
@@ -114,7 +114,7 @@ export default function Show({ saleReturn }) {
                         {saleReturn.status === "completed" && (
                             <button
                                 onClick={() => setConfirmingCancel(true)}
-                                className="rounded-lg border border-amber-200 bg-white px-3 py-1 text-xs font-medium text-amber-600 transition hover:bg-amber-50"
+                                className="rounded-lg border border-amber-200 bg-card px-3 py-1 text-xs font-medium text-amber-600 transition hover:bg-amber-50"
                             >
                                 Batalkan Retur
                             </button>
@@ -128,16 +128,16 @@ export default function Show({ saleReturn }) {
 
             <div className="space-y-5">
                 {/* Info Card */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                        <h3 className="text-base font-semibold text-slate-900">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="border-b border-border bg-muted/50 px-6 py-4">
+                        <h3 className="text-base font-semibold text-foreground">
                             Informasi Retur
                         </h3>
                     </div>
                     <div className="space-y-3 p-6">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             <div>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground">
                                     Penjualan Asal
                                 </p>
                                 {saleReturn.sale ? (
@@ -151,37 +151,37 @@ export default function Show({ saleReturn }) {
                                         {saleReturn.sale.sale_no}
                                     </Link>
                                 ) : (
-                                    <p className="text-sm text-slate-500">-</p>
+                                    <p className="text-sm text-muted-foreground">-</p>
                                 )}
                             </div>
                             <div>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground">
                                     Pelanggan
                                 </p>
-                                <p className="text-sm font-medium text-slate-800">
+                                <p className="text-sm font-medium text-foreground">
                                     {saleReturn.customer?.name ?? "-"}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground">
                                     Tanggal Retur
                                 </p>
-                                <p className="text-sm text-slate-800">
+                                <p className="text-sm text-foreground">
                                     {fmtDate(saleReturn.return_date)}
                                 </p>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             <div>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground">
                                     Dibuat Oleh
                                 </p>
-                                <p className="text-sm text-slate-800">
+                                <p className="text-sm text-foreground">
                                     {saleReturn.user?.name ?? "-"}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground">
                                     Total Retur
                                 </p>
                                 <p className="text-sm font-bold text-primary-600">
@@ -190,11 +190,11 @@ export default function Show({ saleReturn }) {
                             </div>
                         </div>
                         {saleReturn.notes && (
-                            <div className="border-t border-slate-100 pt-3">
-                                <p className="text-xs text-slate-400 mb-1">
+                            <div className="border-t border-border pt-3">
+                                <p className="text-xs text-muted-foreground mb-1">
                                     Catatan
                                 </p>
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-muted-foreground">
                                     {saleReturn.notes}
                                 </p>
                             </div>
@@ -214,8 +214,8 @@ export default function Show({ saleReturn }) {
                             </div>
                         )}
                         {saleReturn.status === "cancelled" && (
-                            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                <p className="text-xs text-slate-500">
+                            <div className="rounded-xl border border-border bg-muted px-4 py-3">
+                                <p className="text-xs text-muted-foreground">
                                     Retur telah dibatalkan. Pembayaran dan stok
                                     dikembalikan seperti semula.
                                 </p>
@@ -225,42 +225,42 @@ export default function Show({ saleReturn }) {
                 </div>
 
                 {/* Items Table */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                        <h3 className="text-base font-semibold text-slate-900">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="border-b border-border bg-muted/50 px-6 py-4">
+                        <h3 className="text-base font-semibold text-foreground">
                             Item Diretur
                         </h3>
                     </div>
                     <div className="p-0">
                         <table className="w-full text-left text-sm">
                             <thead>
-                                <tr className="border-b border-slate-100 bg-slate-50/60">
-                                    <th className="px-5 py-3 font-medium text-slate-500">
+                                <tr className="border-b border-border bg-muted/50">
+                                    <th className="px-5 py-3 font-medium text-muted-foreground">
                                         Produk
                                     </th>
-                                    <th className="px-5 py-3 text-right font-medium text-slate-500">
+                                    <th className="px-5 py-3 text-right font-medium text-muted-foreground">
                                         Qty
                                     </th>
-                                    <th className="px-5 py-3 text-right font-medium text-slate-500">
+                                    <th className="px-5 py-3 text-right font-medium text-muted-foreground">
                                         Harga Satuan
                                     </th>
-                                    <th className="px-5 py-3 text-right font-medium text-slate-500">
+                                    <th className="px-5 py-3 text-right font-medium text-muted-foreground">
                                         Subtotal
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-border">
                                 {(saleReturn.items ?? []).map((item) => (
                                     <tr
                                         key={item.id}
-                                        className="hover:bg-slate-50/50"
+                                        className="hover:bg-muted/50"
                                     >
                                         <td className="px-5 py-3">
-                                            <p className="font-medium text-slate-800">
+                                            <p className="font-medium text-foreground">
                                                 {item.product?.name ?? "-"}
                                             </p>
                                             {item.product?.sku && (
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-muted-foreground">
                                                     SKU: {item.product.sku}
                                                 </p>
                                             )}
@@ -270,22 +270,22 @@ export default function Show({ saleReturn }) {
                                                 </p>
                                             )}
                                         </td>
-                                        <td className="px-5 py-3 text-right text-slate-600">
+                                        <td className="px-5 py-3 text-right text-muted-foreground">
                                             {item.quantity}
                                         </td>
-                                        <td className="px-5 py-3 text-right text-slate-600">
+                                        <td className="px-5 py-3 text-right text-muted-foreground">
                                             {fmtRp(item.unit_price)}
                                         </td>
-                                        <td className="px-5 py-3 text-right font-medium text-slate-700">
+                                        <td className="px-5 py-3 text-right font-medium text-foreground">
                                             {fmtRp(item.subtotal)}
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-                        <div className="border-t border-slate-100 bg-slate-50/60 px-6 py-3">
+                        <div className="border-t border-border bg-muted/50 px-6 py-3">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-semibold text-slate-800">
+                                <span className="text-sm font-semibold text-foreground">
                                     Total Retur
                                 </span>
                                 <span className="text-base font-bold text-primary-600">
@@ -300,13 +300,13 @@ export default function Show({ saleReturn }) {
             {/* Cancel Confirmation Modal */}
             {confirmingCancel && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
                     onMouseDown={() =>
                         !processing && setConfirmingCancel(false)
                     }
                 >
                     <div
-                        className="mx-4 w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+                        className="mx-4 w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
                         <svg
@@ -322,10 +322,10 @@ export default function Show({ saleReturn }) {
                                 d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
                             />
                         </svg>
-                        <h3 className="mb-2 text-center text-base font-semibold text-slate-900">
+                        <h3 className="mb-2 text-center text-base font-semibold text-foreground">
                             Batalkan Retur?
                         </h3>
-                        <p className="mb-5 text-center text-sm text-slate-500">
+                        <p className="mb-5 text-center text-sm text-muted-foreground">
                             Pembayaran akan dikembalikan ke penjualan dan stok
                             akan dikurangi kembali. Tindakan ini tidak bisa
                             di-undo.
@@ -334,7 +334,7 @@ export default function Show({ saleReturn }) {
                             <button
                                 onClick={() => setConfirmingCancel(false)}
                                 disabled={processing}
-                                className="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                className="flex-1 rounded-xl border border-border bg-card py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                             >
                                 Tutup
                             </button>

@@ -5,7 +5,7 @@ const inp = (err) =>
     `mt-1.5 block w-full rounded-xl border text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
         err
             ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-            : "border-slate-200 focus:border-primary-400 focus:ring-primary-100"
+            : "border-border focus:border-ring focus:ring-ring/20"
     }`;
 
 /* ── Main Form ──────────────────────────────────────────── */
@@ -23,8 +23,8 @@ export default function CategoryForm({
         <form onSubmit={onSubmit} className="space-y-5">
             {/* Nama */}
             <div>
-                <label className="block text-sm font-medium text-slate-700">
-                    Nama Kategori <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground">
+                    Nama Kategori <span className="text-destructive">*</span>
                 </label>
                 <input
                     type="text"
@@ -35,7 +35,7 @@ export default function CategoryForm({
                     className={inp(errors.name)}
                 />
                 {errors.name && (
-                    <p className="mt-1 text-xs text-red-600">{errors.name}</p>
+                    <p className="mt-1 text-xs text-destructive">{errors.name}</p>
                 )}
             </div>
 
@@ -69,7 +69,7 @@ export default function CategoryForm({
 
             {/* Deskripsi */}
             <div>
-                <label className="block text-sm font-medium text-slate-700">
+                <label className="block text-sm font-medium text-foreground">
                     Deskripsi
                 </label>
                 <textarea
@@ -82,17 +82,17 @@ export default function CategoryForm({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
+            <div className="flex justify-end gap-3 border-t border-border pt-4">
                 <Link
                     href={cancelHref}
-                    className="rounded-xl border border-slate-200 px-5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                    className="rounded-xl border border-border px-5 py-2 text-sm font-medium text-muted-foreground hover:bg-muted"
                 >
                     Batal
                 </Link>
                 <button
                     type="submit"
                     disabled={processing}
-                    className="rounded-xl bg-primary-600 px-6 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
+                    className="rounded-xl bg-primary-600 px-6 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
                 >
                     {processing ? "Menyimpan..." : submitLabel}
                 </button>

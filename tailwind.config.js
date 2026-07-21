@@ -1,4 +1,4 @@
-import defaultTheme from 'tailwindcss/defaultTheme';
+﻿import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';
 import containerQueries from '@tailwindcss/container-queries';
 
@@ -106,12 +106,6 @@ export default {
                 sidebar: {
                     DEFAULT: withOpacity('--sidebar', '255 255 255'),
                     foreground: withOpacity('--sidebar-foreground', '15 23 42'),
-                    primary: withOpacity('--sidebar-primary', '79 70 229'),
-                    'primary-foreground': withOpacity('--sidebar-primary-foreground', '255 255 255'),
-                    accent: withOpacity('--sidebar-accent', '241 245 249'),
-                    'accent-foreground': withOpacity('--sidebar-accent-foreground', '15 23 42'),
-                    border: withOpacity('--sidebar-border', '226 232 240'),
-                    ring: withOpacity('--sidebar-ring', '79 70 229'),
                 },
             },
             borderRadius: {

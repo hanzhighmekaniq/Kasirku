@@ -47,22 +47,16 @@ class ThemeController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $data = [
-            ...$validated,
-            'is_dark' => $request->boolean('is_dark'),
+        ThemePreset::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
             'user_id' => $user->id,
             'is_system' => false,
-        ];
-
-        // Simpan full token JSON jika dikirim
-        if ($request->has('light_tokens')) {
-            $data['light_tokens'] = $request->input('light_tokens');
-        }
-        if ($request->has('dark_tokens')) {
-            $data['dark_tokens'] = $request->input('dark_tokens');
-        }
-
-        ThemePreset::create($data);
+            'tokens' => [
+                'light' => $request->input('light_tokens', []),
+                'dark' => $request->input('dark_tokens', []),
+            ],
+        ]);
 
         return redirect()
             ->route('admin.themes.index')
@@ -94,19 +88,14 @@ class ThemeController extends Controller
 
         $validated = $this->validated($request);
 
-        $data = [
-            ...$validated,
-            'is_dark' => $request->boolean('is_dark'),
-        ];
-
-        if ($request->has('light_tokens')) {
-            $data['light_tokens'] = $request->input('light_tokens');
-        }
-        if ($request->has('dark_tokens')) {
-            $data['dark_tokens'] = $request->input('dark_tokens');
-        }
-
-        $theme->update($data);
+        $theme->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'tokens' => [
+                'light' => $request->input('light_tokens', $theme->light_tokens),
+                'dark' => $request->input('dark_tokens', $theme->dark_tokens),
+            ],
+        ]);
 
         return redirect()
             ->route('admin.themes.index')
@@ -138,27 +127,25 @@ class ThemeController extends Controller
     }
 
     /**
-     * @return array{name: string, description: ?string, primary: string, secondary: string, accent: string, is_dark: bool}
+     * @return array{name: string, description: ?string}
      */
     private function validated(Request $request): array
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:255'],
-            'primary' => ['required', 'string', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
-            'secondary' => ['required', 'string', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
-            'accent' => ['required', 'string', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
-            'is_dark' => ['nullable', 'boolean'],
+            'light_tokens' => ['required', 'array'],
+            'light_tokens.primary' => ['required', 'string', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
+            'dark_tokens' => ['required', 'array'],
+            'dark_tokens.primary' => ['required', 'string', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
         ]);
 
         // Normalisasi description kosong jadi null (bukan empty string).
         $validated['description'] = $validated['description'] ?: null;
 
-        // is_dark tidak dipakai dari sini — di-set explicit via
-        // $request->boolean('is_dark') di store()/update() supaya konsisten
-        // walau checkbox unchecked tidak mengirim field sama sekali.
-        unset($validated['is_dark']);
-
-        return $validated;
+        return [
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+        ];
     }
 }

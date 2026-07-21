@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import Button from "@/Components/ui/Button";
 
 const METHOD_LABELS = {
     qris:        { label: 'QRIS',           icon: '📱' },
@@ -18,7 +19,7 @@ const METHOD_LABELS = {
 function inputCls(err = false) {
     return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         err ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-            : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'}`;
+            : 'border-border focus:border-ring focus:ring-ring/20'}`;
 }
 
 function ProviderCard({ provider, config, onSave }) {
@@ -51,7 +52,7 @@ function ProviderCard({ provider, config, onSave }) {
     };
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div className={`flex items-center justify-between bg-gradient-to-r ${meta.color} px-6 py-4`}>
                 <div>
                     <h3 className="text-base font-bold text-white">{meta.label}</h3>
@@ -60,9 +61,9 @@ function ProviderCard({ provider, config, onSave }) {
                 <button
                     type="button"
                     onClick={() => setData('is_active', !data.is_active)}
-                    className={`relative h-7 w-12 rounded-full transition-colors ${data.is_active ? 'bg-white/30' : 'bg-black/20'}`}
+                    className={`relative h-7 w-12 rounded-full transition-colors ${data.is_active ? 'bg-card/30' : 'bg-black/20'}`}
                 >
-                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${data.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
+                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-card shadow transition-transform ${data.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
             </div>
 
@@ -77,7 +78,7 @@ function ProviderCard({ provider, config, onSave }) {
                             className={`flex-1 rounded-xl border py-2 text-xs font-semibold capitalize transition ${
                                 data.environment === env
                                     ? 'border-primary-500 bg-primary-50 text-primary-700'
-                                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                    : 'border-border text-muted-foreground hover:bg-muted'
                             }`}
                         >
                             {env === 'sandbox' ? '🧪 Sandbox' : '🚀 Production'}
@@ -88,7 +89,7 @@ function ProviderCard({ provider, config, onSave }) {
                 {/* API Keys */}
                 <div className="space-y-3">
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                        <label className="mb-1 block text-sm font-medium text-foreground">
                             Server Key
                             {config?.has_server_key && <span className="ml-2 text-xs text-emerald-600">✓ Sudah diset</span>}
                         </label>
@@ -99,10 +100,10 @@ function ProviderCard({ provider, config, onSave }) {
                             placeholder={config?.has_server_key ? '••••••••' : 'SB-Mid-server-xxxxx'}
                             className={inputCls(!!errors.server_key)}
                         />
-                        <p className="mt-1 text-xs text-slate-400">Kosongkan jika tidak ingin mengubah key yang sudah ada.</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Kosongkan jika tidak ingin mengubah key yang sudah ada.</p>
                     </div>
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                        <label className="mb-1 block text-sm font-medium text-foreground">
                             Client Key
                             {config?.has_client_key && <span className="ml-2 text-xs text-emerald-600">✓ Sudah diset</span>}
                         </label>
@@ -115,7 +116,7 @@ function ProviderCard({ provider, config, onSave }) {
                         />
                     </div>
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-slate-700">Merchant ID</label>
+                        <label className="mb-1 block text-sm font-medium text-foreground">Merchant ID</label>
                         <input
                             type="text"
                             value={data.merchant_id}
@@ -128,7 +129,7 @@ function ProviderCard({ provider, config, onSave }) {
 
                 {/* Enabled methods */}
                 <div>
-                    <p className="mb-2 text-sm font-medium text-slate-700">Metode yang Diaktifkan</p>
+                    <p className="mb-2 text-sm font-medium text-foreground">Metode yang Diaktifkan</p>
                     <div className="flex flex-wrap gap-2">
                         {allMethods.map((m) => {
                             const active = data.enabled_methods.includes(m);
@@ -139,7 +140,7 @@ function ProviderCard({ provider, config, onSave }) {
                                     type="button"
                                     onClick={() => toggleMethod(m)}
                                     className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
-                                        active ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        active ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-border text-muted-foreground hover:bg-muted'
                                     }`}
                                 >
                                     {meta.icon} {meta.label}
@@ -149,13 +150,13 @@ function ProviderCard({ provider, config, onSave }) {
                     </div>
                 </div>
 
-                <button
+                <Button
                     type="submit"
-                    disabled={processing}
-                    className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
+                    loading={processing}
+                    className="w-full"
                 >
-                    {processing ? 'Menyimpan...' : 'Simpan Konfigurasi'}
-                </button>
+                    Simpan Konfigurasi
+                </Button>
             </form>
         </div>
     );
@@ -166,12 +167,12 @@ export default function PaymentGatewaySettings({ providers, configs }) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-lg font-semibold text-slate-800">Payment Gateway</h2>}
+            header={<h2 className="text-lg font-semibold text-foreground">Payment Gateway</h2>}
         >
             <Head title="Payment Gateway" />
 
             {flash?.success && (
-                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     {flash.success}
                 </div>

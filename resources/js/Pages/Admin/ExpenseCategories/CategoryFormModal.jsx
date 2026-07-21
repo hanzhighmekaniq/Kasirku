@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import { Loader2 } from 'lucide-react';
+import Button from "@/Components/ui/Button";
 
 export default function CategoryFormModal({ open, category = null, onClose }) {
     const isEdit = !!category;
@@ -59,29 +60,29 @@ export default function CategoryFormModal({ open, category = null, onClose }) {
         }
     };
 
-    const inputCls = 'block w-full rounded-xl border bg-white px-3 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200';
+    const inputCls = 'block w-full rounded-xl border bg-card px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20';
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
                 onClick={() => !processing && onClose()}
-                className={`absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-200 ${
+                className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${
                     show ? 'opacity-100' : 'opacity-0'
                 }`}
             />
             <div
                 role="dialog"
                 aria-modal="true"
-                className={`relative w-full max-w-lg transform rounded-2xl bg-white shadow-2xl transition-all duration-200 ${
+                className={`relative w-full max-w-lg transform rounded-2xl bg-card shadow-2xl transition-all duration-200 ${
                     show ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-3 scale-95 opacity-0'
                 }`}
             >
                 {/* Header */}
-                <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5 rounded-t-2xl">
-                    <h3 className="text-base font-semibold text-slate-900">
+                <div className="border-b border-border bg-muted/50 px-6 py-5 rounded-t-2xl">
+                    <h3 className="text-base font-semibold text-foreground">
                         {isEdit ? 'Edit Kategori' : 'Tambah Kategori'}
                     </h3>
-                    <p className="mt-0.5 text-sm text-slate-500">
+                    <p className="mt-0.5 text-sm text-muted-foreground">
                         {isEdit ? 'Perbarui informasi kategori pengeluaran.' : 'Buat kategori pengeluaran baru.'}
                     </p>
                 </div>
@@ -89,8 +90,8 @@ export default function CategoryFormModal({ open, category = null, onClose }) {
                 {/* Form */}
                 <form onSubmit={submit} className="p-6 space-y-5">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">
-                            Nama Kategori <span className="text-red-500">*</span>
+                        <label className="block text-sm font-medium text-foreground">
+                            Nama Kategori <span className="text-destructive">*</span>
                         </label>
                         <input
                             type="text"
@@ -100,11 +101,11 @@ export default function CategoryFormModal({ open, category = null, onClose }) {
                             placeholder="Contoh: Sewa Tempat"
                             autoFocus
                         />
-                        {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+                        {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name}</p>}
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">Deskripsi</label>
+                        <label className="block text-sm font-medium text-foreground">Deskripsi</label>
                         <textarea
                             value={data.description}
                             onChange={(e) => setData('description', e.target.value)}
@@ -112,33 +113,26 @@ export default function CategoryFormModal({ open, category = null, onClose }) {
                             className={`${inputCls} ${errors.description ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
                             placeholder="Deskripsi singkat tentang kategori ini..."
                         />
-                        {errors.description && <p className="mt-1 text-xs text-red-500">{errors.description}</p>}
+                        {errors.description && <p className="mt-1 text-xs text-destructive">{errors.description}</p>}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                    <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
                         <button
                             type="button"
                             onClick={() => !processing && onClose()}
                             disabled={processing}
-                            className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                            className="inline-flex justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60"
                         >
                             Batal
                         </button>
-                        <button
+                        <Button
                             type="submit"
-                            disabled={processing || !data.name.trim()}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-60"
+                            loading={processing}
+                            disabled={!data.name.trim()}
                         >
-                            {processing ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
-                                    {isEdit ? 'Menyimpan...' : 'Membuat...'}
-                                </>
-                            ) : (
-                                isEdit ? 'Simpan Perubahan' : 'Buat Kategori'
-                            )}
-                        </button>
+                            {isEdit ? 'Simpan Perubahan' : 'Buat Kategori'}
+                        </Button>
                     </div>
                 </form>
             </div>

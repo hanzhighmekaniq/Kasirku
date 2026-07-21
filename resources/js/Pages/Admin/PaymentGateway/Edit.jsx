@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { ArrowLeft, Check } from "lucide-react";
+import Button from "@/Components/ui/Button";
 import SectionCard from "@/Components/ui/SectionCard";
 import Field from "@/Components/ui/Field";
 
@@ -86,7 +87,7 @@ export default function Edit({ gateway }) {
     };
 
     const inputCls =
-        "block w-full rounded-xl border bg-white px-3 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200";
+        "block w-full rounded-xl border bg-card px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20";
 
     return (
         <AuthenticatedLayout
@@ -94,19 +95,19 @@ export default function Edit({ gateway }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route("admin.payment-gateway.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">Edit {providerCfg.label}</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Edit {providerCfg.label}</h2>
                 </div>
             }
         >
             <Head title={`Edit ${providerCfg.label}`} />
 
             {flash?.error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{flash.error}</div>
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
             )}
 
             <div className="mx-auto max-w-2xl">
@@ -114,7 +115,7 @@ export default function Edit({ gateway }) {
                     <form onSubmit={submit} className="space-y-5">
                         {/* Status */}
                         <Field label="Status">
-                            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <div className="flex items-start gap-3 rounded-xl border border-border bg-muted p-4">
                                 <button
                                     type="button"
                                     role="switch"
@@ -124,13 +125,13 @@ export default function Edit({ gateway }) {
                                         data.is_active ? "bg-green-500" : "bg-slate-300"
                                     }`}
                                 >
-                                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition duration-200 ${
+                                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg transition duration-200 ${
                                         data.is_active ? "translate-x-5" : "translate-x-0"
                                     }`} />
                                 </button>
                                 <div>
-                                    <p className="text-sm font-medium text-slate-700">{data.is_active ? "Aktif" : "Nonaktif"}</p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-sm font-medium text-foreground">{data.is_active ? "Aktif" : "Nonaktif"}</p>
+                                    <p className="text-xs text-muted-foreground">
                                         {data.is_active ? "Gateway tersedia dan bisa dipilih saat transaksi di kasir." : "Gateway disembunyikan dan tidak muncul di kasir."}
                                     </p>
                                 </div>
@@ -139,7 +140,7 @@ export default function Edit({ gateway }) {
 
                         {/* Environment */}
                         <Field label="Environment">
-                            <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <div className="flex items-start gap-3 rounded-xl border border-border bg-muted p-4">
                                 <button
                                     type="button"
                                     role="switch"
@@ -149,15 +150,15 @@ export default function Edit({ gateway }) {
                                         data.environment === "production" ? "bg-primary-500" : "bg-amber-400"
                                     }`}
                                 >
-                                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition duration-200 ${
+                                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg transition duration-200 ${
                                         data.environment === "production" ? "translate-x-5" : "translate-x-0"
                                     }`} />
                                 </button>
                                 <div>
-                                    <p className="text-sm font-medium text-slate-700">
+                                    <p className="text-sm font-medium text-foreground">
                                         {data.environment === "production" ? "Production (Live)" : "Sandbox (Testing)"}
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-muted-foreground">
                                         {data.environment === "production"
                                             ? "Transaksi sungguhan dengan uang asli. Pastikan API key production."
                                             : "Mode uji coba — transaksi simulasi, tidak ada uang sungguhan."}
@@ -192,7 +193,7 @@ export default function Edit({ gateway }) {
                                             className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
                                                 enabled
                                                     ? "border-primary-300 bg-primary-50 text-primary-700"
-                                                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50"
+                                                    : "border-border bg-card text-muted-foreground hover:border-border hover:bg-muted"
                                             }`}
                                         >
                                             <span>{m.icon}</span>
@@ -205,20 +206,16 @@ export default function Edit({ gateway }) {
                         </Field>
 
                         {/* Actions */}
-                        <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                        <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
                             <Link
                                 href={route("admin.payment-gateway.index")}
-                                className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                className="inline-flex justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                             >
                                 Batal
                             </Link>
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
-                            >
+                            <Button type="submit" loading={processing} className="w-full">
                                 {processing ? "Menyimpan..." : "Simpan Perubahan"}
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </SectionCard>

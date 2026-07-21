@@ -99,11 +99,11 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                 if (e.target === e.currentTarget) handleClose();
             }}
         >
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-sm">
                 {/* Header */}
                 <div className="flex justify-between items-center px-4 py-3 border-b">
                     <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
                             <span className="relative flex h-2.5 w-2.5">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
@@ -113,7 +113,7 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                     </div>
                     <button
                         onClick={handleClose}
-                        className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg p-1.5 transition"
+                        className="text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-lg p-1.5 transition"
                         title="Tutup Scanner"
                     >
                         <svg
@@ -136,11 +136,11 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                 <div className="p-3">
                     <div className="relative bg-black rounded-xl overflow-hidden aspect-video">
                         {error ? (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50 text-red-600 p-4">
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/10 text-destructive p-4">
                                 <p className="text-sm text-center">{error}</p>
                                 <button
                                     onClick={startScanning}
-                                    className="mt-3 px-4 py-2 bg-primary-600 text-white text-sm rounded-lg"
+                                    className="mt-3 px-4 py-2 bg-primary text-primary-foreground text-sm rounded-lg"
                                 >
                                     Coba Lagi
                                 </button>
@@ -205,12 +205,12 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
 
                 {/* Footer */}
                 <div className="px-4 pb-4 flex items-center justify-between">
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                         Kamera tetap aktif — scan berkali-kali
                     </p>
                     <button
                         onClick={handleClose}
-                        className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition text-sm font-medium"
+                        className="px-4 py-2 bg-muted text-foreground rounded-xl hover:bg-muted/70 transition text-sm font-medium"
                     >
                         Selesai Scan
                     </button>

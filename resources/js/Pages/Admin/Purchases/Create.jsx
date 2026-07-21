@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Field from "@/Components/ui/Field";
 import SectionCard from "@/Components/ui/SectionCard";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
+import Button from "@/Components/ui/Button";
 
 /* ── helpers ──────────────────────────────────────── */
 const fmtRp = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
@@ -12,7 +13,7 @@ const inputCls = (hasError = false) =>
     `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         hasError
             ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-slate-300 focus:border-primary-500 focus:ring-primary-200"
+            : "border-border focus:border-ring focus:ring-ring/20"
     }`;
 
 /* ── Product combobox ──────────────────────────────── */
@@ -85,12 +86,12 @@ export function ProductCombobox({
 
     return (
         <div ref={containerRef} className="relative">
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
                 Cari {storeType === "fnb" ? "Bahan Baku" : "Produk"}
             </label>
             <div className="relative">
                 <svg
-                    className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-slate-400"
+                    className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={1.8}
@@ -124,7 +125,7 @@ export function ProductCombobox({
                             setQuery("");
                             inputRef.current?.focus();
                         }}
-                        className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600"
+                        className="absolute inset-y-0 right-3 flex items-center text-muted-foreground hover:text-muted-foreground"
                     >
                         <svg
                             className="h-4 w-4"
@@ -145,9 +146,9 @@ export function ProductCombobox({
 
             {/* Dropdown */}
             {open && (
-                <div className="absolute z-40 mt-1.5 max-h-72 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div className="absolute z-40 mt-1.5 max-h-72 w-full overflow-y-auto rounded-2xl border border-border bg-card shadow-xl">
                     {filtered.length === 0 ? (
-                        <div className="px-4 py-8 text-center text-sm text-slate-400">
+                        <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                             Produk tidak ditemukan
                         </div>
                     ) : (
@@ -161,16 +162,16 @@ export function ProductCombobox({
                                 className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition ${
                                     i === idx
                                         ? "bg-primary-50"
-                                        : "hover:bg-slate-50"
+                                        : "hover:bg-muted"
                                 }`}
                             >
                                 <div className="min-w-0 flex-1">
                                     <p
-                                        className={`truncate font-medium ${i === idx ? "text-primary-700" : "text-slate-800"}`}
+                                        className={`truncate font-medium ${i === idx ? "text-primary-700" : "text-foreground"}`}
                                     >
                                         {p.name}
                                     </p>
-                                    <p className="text-xs text-slate-400">
+                                    <p className="text-xs text-muted-foreground">
                                         {p.sku}
                                     </p>
                                 </div>
@@ -178,15 +179,15 @@ export function ProductCombobox({
                                     <span
                                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                                             (p.stock ?? 0) > 0
-                                                ? "bg-emerald-50 text-emerald-700"
-                                                : "bg-red-50 text-red-600"
+                                                ? "bg-success/10 text-success"
+                                                : "bg-destructive/10 text-destructive"
                                         }`}
                                     >
                                         {p.stock ?? 0}{" "}
                                         {p.base_unit || unitLabel}
                                     </span>
                                     {p.cost_price > 0 && (
-                                        <span className="text-xs text-slate-400">
+                                        <span className="text-xs text-muted-foreground">
                                             {fmtRp(p.cost_price)}
                                         </span>
                                     )}
@@ -195,7 +196,7 @@ export function ProductCombobox({
                         ))
                     )}
                     {products.length > 30 && (
-                        <div className="border-t border-slate-100 px-4 py-2 text-center text-xs text-slate-400">
+                        <div className="border-t border-border px-4 py-2 text-center text-xs text-muted-foreground">
                             Ketik untuk menyaring lebih lanjut
                         </div>
                     )}
@@ -400,7 +401,7 @@ export default function Create({
                 <div className="flex items-center gap-3">
                     <Link
                         href={route("admin.purchases.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted"
                         aria-label="Kembali"
                     >
                         <svg
@@ -417,7 +418,7 @@ export default function Create({
                             />
                         </svg>
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">
+                    <h2 className="text-lg font-semibold text-foreground">
                         Tambah Pembelian
                     </h2>
                 </div>
@@ -426,7 +427,7 @@ export default function Create({
             <Head title="Tambah Pembelian" />
 
             {flash?.error && (
-                <div className="mb-4 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="mb-4 flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                     <svg
                         className="h-5 w-5 shrink-0"
                         fill="none"
@@ -620,7 +621,7 @@ export default function Create({
                                                     }
                                                     onKeyDown={handleAddKey}
                                                     min="1"
-                                                    className="block w-full rounded-xl border border-primary-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                                    className="block w-full rounded-xl border border-primary-300 bg-card px-3 py-2 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                 />
                                             </div>
                                             <div className="col-span-5 sm:col-span-5">
@@ -642,7 +643,7 @@ export default function Create({
                                                         onKeyDown={handleAddKey}
                                                         min="0"
                                                         placeholder="0"
-                                                        className="block w-full rounded-xl border border-primary-300 bg-white py-2 pl-8 pr-3 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                                        className="block w-full rounded-xl border border-primary-300 bg-card py-2 pl-8 pr-3 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                     />
                                                 </div>
                                             </div>
@@ -654,7 +655,7 @@ export default function Create({
                                                         pendingProduct.is_variant &&
                                                         !pendingVariantId
                                                     }
-                                                    className="w-full rounded-xl bg-primary-600 py-2 text-sm font-semibold text-white transition hover:bg-primary-700 active:bg-primary-800 disabled:opacity-40"
+                                                    className="w-full rounded-xl bg-primary-600 py-2 text-sm font-semibold text-white transition hover:bg-primary/90 active:bg-primary-800 disabled:opacity-40"
                                                 >
                                                     + Tambah
                                                 </button>
@@ -673,7 +674,7 @@ export default function Create({
                                 )}
 
                                 {errors.items && (
-                                    <p className="text-xs text-red-600">
+                                    <p className="text-xs text-destructive">
                                         {typeof errors.items === "string"
                                             ? errors.items
                                             : "Minimal 1 item wajib ditambahkan"}
@@ -682,9 +683,9 @@ export default function Create({
 
                                 {/* Daftar item */}
                                 {data.items.length === 0 ? (
-                                    <div className="rounded-2xl border-2 border-dashed border-slate-200 py-10 text-center">
+                                    <div className="rounded-2xl border-2 border-dashed border-border py-10 text-center">
                                         <svg
-                                            className="mx-auto mb-3 h-10 w-10 text-slate-300"
+                                            className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             strokeWidth={1.3}
@@ -696,16 +697,16 @@ export default function Create({
                                                 d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
                                             />
                                         </svg>
-                                        <p className="text-sm text-slate-400">
+                                        <p className="text-sm text-muted-foreground">
                                             Cari dan pilih produk di atas untuk
                                             menambahkan item
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="overflow-hidden rounded-2xl border border-slate-200">
+                                    <div className="overflow-hidden rounded-2xl border border-border">
                                         <table className="w-full text-sm">
                                             <thead>
-                                                <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                                <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                                     <th className="px-4 py-3">
                                                         Produk
                                                     </th>
@@ -721,19 +722,19 @@ export default function Create({
                                                     <th className="px-4 py-3 w-10" />
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-100">
+                                            <tbody className="divide-y divide-border">
                                                 {data.items.map((item, i) => (
                                                     <tr
                                                         key={i}
-                                                        className="hover:bg-slate-50/70 transition"
+                                                        className="hover:bg-muted/70 transition"
                                                     >
                                                         <td className="px-4 py-3">
-                                                            <p className="font-medium text-slate-800">
+                                                            <p className="font-medium text-foreground">
                                                                 {
                                                                     item.product_name
                                                                 }
                                                                 {item.variant_name && (
-                                                                    <span className="text-slate-500">
+                                                                    <span className="text-muted-foreground">
                                                                         {" "}
                                                                         —{" "}
                                                                         {
@@ -742,12 +743,12 @@ export default function Create({
                                                                     </span>
                                                                 )}
                                                             </p>
-                                                            <p className="text-xs text-slate-400">
+                                                            <p className="text-xs text-muted-foreground">
                                                                 {
                                                                     item.product_sku
                                                                 }
                                                                 {item.unit_name && (
-                                                                    <span className="ml-1.5 rounded-full bg-slate-100 px-1.5 py-0.5 text-slate-500">
+                                                                    <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground">
                                                                         {
                                                                             item.unit_name
                                                                         }
@@ -770,12 +771,12 @@ export default function Create({
                                                                     )
                                                                 }
                                                                 min="1"
-                                                                className="h-8 w-16 rounded-lg border border-slate-300 px-2 text-center text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200 block mx-auto"
+                                                                className="h-8 w-16 rounded-lg border border-border px-2 text-center text-xs focus:border-ring focus:ring-2 focus:ring-ring/20 block mx-auto"
                                                             />
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <div className="relative">
-                                                                <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-xs text-slate-400">
+                                                                <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-xs text-muted-foreground">
                                                                     Rp
                                                                 </span>
                                                                 <input
@@ -795,11 +796,11 @@ export default function Create({
                                                                         )
                                                                     }
                                                                     min="0"
-                                                                    className="h-8 w-28 rounded-lg border border-slate-300 pl-7 pr-2 text-right text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                                                    className="h-8 w-28 rounded-lg border border-border pl-7 pr-2 text-right text-xs focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                                 />
                                                             </div>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right text-sm font-semibold text-slate-700">
+                                                        <td className="px-4 py-3 text-right text-sm font-semibold text-foreground">
                                                             {fmtRp(
                                                                 item.quantity *
                                                                     item.cost_price,
@@ -813,7 +814,7 @@ export default function Create({
                                                                         i,
                                                                     )
                                                                 }
-                                                                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500"
+                                                                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                                                             >
                                                                 <svg
                                                                     className="h-4 w-4"
@@ -858,7 +859,7 @@ export default function Create({
                                         error={errors[key]}
                                     >
                                         <div className="relative">
-                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
                                                 Rp
                                             </span>
                                             <input
@@ -904,7 +905,7 @@ export default function Create({
                                         error={errors.paid_amount}
                                     >
                                         <div className="relative">
-                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
                                                 Rp
                                             </span>
                                             <input
@@ -931,7 +932,7 @@ export default function Create({
                                                     )
                                                 }
                                                 disabled={grandTotal <= 0}
-                                                className="absolute inset-y-1 right-1 rounded-lg bg-emerald-500 px-3 text-xs font-bold text-white transition hover:bg-emerald-600 disabled:opacity-40"
+                                                className="absolute inset-y-1 right-1 rounded-lg bg-success/100 px-3 text-xs font-bold text-white transition hover:bg-emerald-600 disabled:opacity-40"
                                             >
                                                 Bayar Lunas
                                             </button>
@@ -944,10 +945,10 @@ export default function Create({
                                     <div
                                         className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium ${
                                             paymentStatus === "paid"
-                                                ? "bg-emerald-50 text-emerald-700"
+                                                ? "bg-success/10 text-success"
                                                 : paymentStatus === "partial"
                                                   ? "bg-amber-50 text-amber-700"
-                                                  : "bg-slate-50 text-slate-500"
+                                                  : "bg-muted text-muted-foreground"
                                         }`}
                                     >
                                         {paymentStatus === "paid" && (
@@ -1014,8 +1015,8 @@ export default function Create({
                         <SectionCard title="Ringkasan">
                             <dl className="space-y-2.5 text-sm">
                                 <div className="flex justify-between">
-                                    <dt className="text-slate-500">Item</dt>
-                                    <dd className="font-medium text-slate-700">
+                                    <dt className="text-muted-foreground">Item</dt>
+                                    <dd className="font-medium text-foreground">
                                         {data.items.length}{" "}
                                         {storeType === "fnb"
                                             ? "bahan baku"
@@ -1023,45 +1024,45 @@ export default function Create({
                                     </dd>
                                 </div>
                                 <div className="flex justify-between">
-                                    <dt className="text-slate-500">Subtotal</dt>
-                                    <dd className="font-medium text-slate-700">
+                                    <dt className="text-muted-foreground">Subtotal</dt>
+                                    <dd className="font-medium text-foreground">
                                         {fmtRp(subtotal)}
                                     </dd>
                                 </div>
                                 {Number(data.discount_amount) > 0 && (
                                     <div className="flex justify-between">
-                                        <dt className="text-slate-500">
+                                        <dt className="text-muted-foreground">
                                             Diskon
                                         </dt>
-                                        <dd className="font-medium text-red-500">
+                                        <dd className="font-medium text-destructive">
                                             – {fmtRp(data.discount_amount)}
                                         </dd>
                                     </div>
                                 )}
                                 {Number(data.tax_amount) > 0 && (
                                     <div className="flex justify-between">
-                                        <dt className="text-slate-500">
+                                        <dt className="text-muted-foreground">
                                             Pajak
                                         </dt>
-                                        <dd className="font-medium text-slate-700">
+                                        <dd className="font-medium text-foreground">
                                             + {fmtRp(data.tax_amount)}
                                         </dd>
                                     </div>
                                 )}
                                 {Number(data.shipping_amount) > 0 && (
                                     <div className="flex justify-between">
-                                        <dt className="text-slate-500">
+                                        <dt className="text-muted-foreground">
                                             Ongkir
                                         </dt>
-                                        <dd className="font-medium text-slate-700">
+                                        <dd className="font-medium text-foreground">
                                             + {fmtRp(data.shipping_amount)}
                                         </dd>
                                     </div>
                                 )}
 
-                                <div className="border-t border-slate-100 pt-2.5">
+                                <div className="border-t border-border pt-2.5">
                                     <div className="flex items-center justify-between">
-                                        <dt className="font-semibold text-slate-700">
+                                        <dt className="font-semibold text-foreground">
                                             Grand Total
                                         </dt>
                                         <dd className="text-lg font-bold text-primary-600">
@@ -1073,7 +1074,7 @@ export default function Create({
                                 {paidAmount > 0 && (
                                     <>
                                         <div className="flex justify-between">
-                                            <dt className="text-slate-500">
+                                            <dt className="text-muted-foreground">
                                                 Dibayar
                                             </dt>
                                             <dd className="font-semibold text-emerald-600">
@@ -1082,7 +1083,7 @@ export default function Create({
                                         </div>
                                         {remaining > 0 && (
                                             <div className="flex justify-between">
-                                                <dt className="font-semibold text-slate-700">
+                                                <dt className="font-semibold text-foreground">
                                                     Sisa Bayar
                                                 </dt>
                                                 <dd className="font-bold text-amber-600">
@@ -1097,16 +1098,16 @@ export default function Create({
                                     <span
                                         className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wide ${
                                             paymentStatus === "paid"
-                                                ? "bg-emerald-100 text-emerald-700"
+                                                ? "bg-emerald-100 text-success"
                                                 : paymentStatus === "partial"
                                                   ? "bg-amber-100 text-amber-700"
-                                                  : "bg-slate-100 text-slate-500"
+                                                  : "bg-muted text-muted-foreground"
                                         }`}
                                     >
                                         <span
                                             className={`h-1.5 w-1.5 rounded-full ${
                                                 paymentStatus === "paid"
-                                                    ? "bg-emerald-500"
+                                                    ? "bg-success/100"
                                                     : paymentStatus ===
                                                         "partial"
                                                       ? "bg-amber-500"
@@ -1124,25 +1125,24 @@ export default function Create({
                         </SectionCard>
 
                         <div className="flex flex-col gap-2">
-                            <button
+                            <Button
                                 type="submit"
-                                disabled={processing || data.items.length === 0}
-                                className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
+                                loading={processing}
+                                disabled={data.items.length === 0}
+                                className="w-full"
                             >
-                                {processing
-                                    ? "Menyimpan..."
-                                    : "Simpan Pembelian"}
-                            </button>
+                                Simpan Pembelian
+                            </Button>
                             <Link
                                 href={route("admin.purchases.index")}
-                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                                className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-center text-sm font-medium text-foreground transition hover:bg-muted"
                             >
                                 Batal
                             </Link>
                         </div>
 
                         {data.items.length === 0 && (
-                            <p className="text-center text-xs text-slate-400">
+                            <p className="text-center text-xs text-muted-foreground">
                                 Tambahkan minimal 1 item untuk menyimpan
                             </p>
                         )}

@@ -12,26 +12,26 @@ const fmtDt = (d) =>
         : "-";
 
 const STATUS_CLS = {
-    open: "bg-emerald-100 text-emerald-700",
-    closed: "bg-slate-100 text-slate-600",
+    open: "bg-emerald-100 text-success",
+    closed: "bg-muted text-muted-foreground",
 };
 const STATUS_LBL = { open: "Berjalan", closed: "Tutup" };
 
 function InfoRow({ label, children }) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-slate-50 py-2 last:border-0">
-            <span className="shrink-0 text-sm text-slate-500">{label}</span>
-            <span className="text-right text-sm font-medium text-slate-800">
+            <span className="shrink-0 text-sm text-muted-foreground">{label}</span>
+            <span className="text-right text-sm font-medium text-foreground">
                 {children}
             </span>
         </div>
     );
 }
 
-function SumRow({ label, value, cls = "text-slate-700" }) {
+function SumRow({ label, value, cls = "text-foreground" }) {
     return (
         <div className="flex items-center justify-between py-1.5">
-            <span className="text-sm text-slate-500">{label}</span>
+            <span className="text-sm text-muted-foreground">{label}</span>
             <span className={`text-sm font-semibold ${cls}`}>{value}</span>
         </div>
     );
@@ -164,7 +164,7 @@ export default function Show({
                     <div className="flex items-center gap-2 min-w-0">
                         <Link
                             href={route("admin.cashier-shifts.index")}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
                         >
                             <svg
                                 className="h-5 w-5"
@@ -181,10 +181,10 @@ export default function Show({
                             </svg>
                         </Link>
                         <div className="min-w-0 flex-1">
-                            <h2 className="truncate font-mono text-base font-semibold text-slate-800">
+                            <h2 className="truncate font-mono text-base font-semibold text-foreground">
                                 {shift.shift_no}
                             </h2>
-                            <p className="truncate text-xs text-slate-400">
+                            <p className="truncate text-xs text-muted-foreground">
                                 Kasir: {shift.user?.name ?? "-"}
                             </p>
                         </div>
@@ -198,7 +198,7 @@ export default function Show({
                                     "admin.cashier-shifts.show",
                                     prevShift.id,
                                 )}
-                                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                                 title={prevShift.shift_no}
                             >
                                 <svg
@@ -223,7 +223,7 @@ export default function Show({
                                     "admin.cashier-shifts.show",
                                     nextShift.id,
                                 )}
-                                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                                 title={nextShift.shift_no}
                             >
                                 Berikutnya
@@ -250,7 +250,7 @@ export default function Show({
             <div className="space-y-4">
                 {/* Banner tutup shift */}
                 {isOpen && canClose && (
-                    <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+                    <div className="flex items-center justify-between rounded-2xl border border-success/20 bg-success/10 px-5 py-4">
                         <div>
                             <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
                                 <Link
@@ -283,7 +283,7 @@ export default function Show({
                             <p className="text-sm font-semibold text-emerald-800">
                                 Shift Sedang{" "}
                                 <span
-                                    className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${STATUS_CLS[shift.status] ?? "bg-slate-100 text-slate-600"}`}
+                                    className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${STATUS_CLS[shift.status] ?? "bg-muted text-muted-foreground"}`}
                                 >
                                     {STATUS_LBL[shift.status] ?? shift.status}
                                 </span>
@@ -294,7 +294,7 @@ export default function Show({
                         </div>
                         <button
                             onClick={openCloseModal}
-                            className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-primary-700"
+                            className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-primary/90"
                         >
                             Tutup Shift
                         </button>
@@ -312,9 +312,9 @@ export default function Show({
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                     {/* Kiri: info + pembayaran */}
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                            <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 flex items-center justify-between flex-wrap gap-2">
-                                <p className="text-sm font-semibold text-slate-800">
+                        <div className="rounded-2xl border border-border bg-card shadow-sm">
+                            <div className="border-b border-border bg-muted px-5 py-3 flex items-center justify-between flex-wrap gap-2">
+                                <p className="text-sm font-semibold text-foreground">
                                     Informasi Shift
                                 </p>
                                 {canManage && (
@@ -336,7 +336,7 @@ export default function Show({
                                                 });
                                                 setShowEdit(true);
                                             }}
-                                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                                            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
                                         >
                                             Edit
                                         </button>
@@ -344,7 +344,7 @@ export default function Show({
                                             <button
                                                 onClick={handleReopen}
                                                 disabled={reopening}
-                                                className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                                                className="rounded-lg border border-success/20 bg-card px-3 py-1.5 text-xs font-medium text-success hover:bg-success/10 disabled:opacity-50"
                                             >
                                                 {reopening
                                                     ? "..."
@@ -353,13 +353,13 @@ export default function Show({
                                         )}
                                         <button
                                             onClick={() => setShowDelete(true)}
-                                            className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50"
+                                            className="rounded-lg border border-destructive/20 bg-card px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
                                         >
                                             Hapus
                                         </button>
                                         <button
                                             onClick={() => window.print()}
-                                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                                            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
                                             title="Cetak rekap shift"
                                         >
                                             <svg
@@ -407,21 +407,21 @@ export default function Show({
                                     </InfoRow>
                                 )}
                                 {shift.opening_note && (
-                                    <div className="mt-3 rounded-lg bg-slate-50 px-4 py-3">
-                                        <p className="mb-1 text-xs font-medium text-slate-400">
+                                    <div className="mt-3 rounded-lg bg-muted px-4 py-3">
+                                        <p className="mb-1 text-xs font-medium text-muted-foreground">
                                             Catatan Pembukaan
                                         </p>
-                                        <p className="text-sm text-slate-700">
+                                        <p className="text-sm text-foreground">
                                             {shift.opening_note}
                                         </p>
                                     </div>
                                 )}
                                 {shift.closing_note && (
-                                    <div className="mt-2 rounded-lg bg-slate-50 px-4 py-3">
-                                        <p className="mb-1 text-xs font-medium text-slate-400">
+                                    <div className="mt-2 rounded-lg bg-muted px-4 py-3">
+                                        <p className="mb-1 text-xs font-medium text-muted-foreground">
                                             Catatan Penutupan
                                         </p>
-                                        <p className="text-sm text-slate-700">
+                                        <p className="text-sm text-foreground">
                                             {shift.closing_note}
                                         </p>
                                     </div>
@@ -431,34 +431,34 @@ export default function Show({
 
                         {/* Rincian pembayaran */}
                         {(summary?.payment_breakdown ?? []).length > 0 && (
-                            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                                <div className="border-b border-slate-100 bg-slate-50 px-5 py-3">
-                                    <p className="text-sm font-semibold text-slate-800">
+                            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                                <div className="border-b border-border bg-muted px-5 py-3">
+                                    <p className="text-sm font-semibold text-foreground">
                                         Rincian Pembayaran
                                     </p>
                                 </div>
                                 <table className="w-full text-left text-sm">
-                                    <thead className="border-b border-slate-100 bg-slate-50/60">
+                                    <thead className="border-b border-border bg-muted/50">
                                         <tr>
-                                            <th className="px-5 py-2.5 text-xs font-semibold text-slate-500">
+                                            <th className="px-5 py-2.5 text-xs font-semibold text-muted-foreground">
                                                 Metode
                                             </th>
-                                            <th className="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">
+                                            <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
                                                 Total (Sistem)
                                             </th>
                                             {!isOpen && (
                                                 <>
-                                                    <th className="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">
+                                                    <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
                                                         Aktual
                                                     </th>
-                                                    <th className="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">
+                                                    <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
                                                         Selisih
                                                     </th>
                                                 </>
                                             )}
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-border">
                                         {summary.payment_breakdown.map((p) => {
                                             const pm = (
                                                 shift.payments ?? []
@@ -470,22 +470,22 @@ export default function Show({
                                             return (
                                                 <tr
                                                     key={p.payment_method_id}
-                                                    className="hover:bg-slate-50"
+                                                    className="hover:bg-muted"
                                                 >
                                                     <td className="px-5 py-2.5">
-                                                        <span className="font-medium text-slate-800">
+                                                        <span className="font-medium text-foreground">
                                                             {p.method_name}
                                                         </span>
-                                                        <span className="ml-2 text-xs text-slate-400">
+                                                        <span className="ml-2 text-xs text-muted-foreground">
                                                             {p.method_type}
                                                         </span>
                                                     </td>
-                                                    <td className="px-5 py-2.5 text-right font-medium text-slate-700">
+                                                    <td className="px-5 py-2.5 text-right font-medium text-foreground">
                                                         {fmt(p.total)}
                                                     </td>
                                                     {!isOpen && (
                                                         <>
-                                                            <td className="px-5 py-2.5 text-right text-slate-600">
+                                                            <td className="px-5 py-2.5 text-right text-muted-foreground">
                                                                 {pm?.actual_amount !=
                                                                 null
                                                                     ? fmt(
@@ -497,7 +497,7 @@ export default function Show({
                                                                 {pm?.difference_amount !=
                                                                 null ? (
                                                                     <span
-                                                                        className={`font-semibold ${pm.difference_amount === 0 ? "text-slate-500" : pm.difference_amount > 0 ? "text-emerald-600" : "text-red-500"}`}
+                                                                        className={`font-semibold ${pm.difference_amount === 0 ? "text-muted-foreground" : pm.difference_amount > 0 ? "text-emerald-600" : "text-destructive"}`}
                                                                     >
                                                                         {pm.difference_amount >=
                                                                         0
@@ -525,9 +525,9 @@ export default function Show({
                         {/* Komisi Karyawan — service/ticket */}
                         {["service", "ticket"].includes(storeType) &&
                             (typeSummary?.commissions ?? []).length > 0 && (
-                                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                                    <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 flex items-center justify-between">
-                                        <p className="text-sm font-semibold text-slate-800">
+                                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                                    <div className="border-b border-border bg-muted px-5 py-3 flex items-center justify-between">
+                                        <p className="text-sm font-semibold text-foreground">
                                             Komisi Karyawan
                                         </p>
                                         <span className="text-sm font-semibold text-primary-700">
@@ -535,30 +535,30 @@ export default function Show({
                                         </span>
                                     </div>
                                     <table className="w-full text-left text-sm">
-                                        <thead className="border-b border-slate-100 bg-slate-50/60">
+                                        <thead className="border-b border-border bg-muted/50">
                                             <tr>
-                                                <th className="px-5 py-2.5 text-xs font-semibold text-slate-500">
+                                                <th className="px-5 py-2.5 text-xs font-semibold text-muted-foreground">
                                                     Karyawan
                                                 </th>
-                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">
+                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
                                                     Transaksi
                                                 </th>
-                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">
+                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
                                                     Total Komisi
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100">
+                                        <tbody className="divide-y divide-border">
                                             {typeSummary.commissions.map(
                                                 (c, i) => (
                                                     <tr
                                                         key={i}
-                                                        className="hover:bg-slate-50"
+                                                        className="hover:bg-muted"
                                                     >
-                                                        <td className="px-5 py-2.5 font-medium text-slate-800">
+                                                        <td className="px-5 py-2.5 font-medium text-foreground">
                                                             {c.employee_name}
                                                         </td>
-                                                        <td className="px-5 py-2.5 text-right text-slate-600">
+                                                        <td className="px-5 py-2.5 text-right text-muted-foreground">
                                                             {
                                                                 c.transaction_count
                                                             }
@@ -580,44 +580,44 @@ export default function Show({
                         {["retail", "fnb"].includes(storeType) &&
                             (typeSummary?.category_breakdown ?? []).length >
                                 0 && (
-                                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                                    <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 flex items-center justify-between">
-                                        <p className="text-sm font-semibold text-slate-800">
+                                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                                    <div className="border-b border-border bg-muted px-5 py-3 flex items-center justify-between">
+                                        <p className="text-sm font-semibold text-foreground">
                                             Penjualan per Kategori
                                         </p>
-                                        <span className="text-xs text-slate-400">
+                                        <span className="text-xs text-muted-foreground">
                                             {typeSummary.total_transactions}{" "}
                                             transaksi
                                         </span>
                                     </div>
                                     <table className="w-full text-left text-sm">
-                                        <thead className="border-b border-slate-100 bg-slate-50/60">
+                                        <thead className="border-b border-border bg-muted/50">
                                             <tr>
-                                                <th className="px-5 py-2.5 text-xs font-semibold text-slate-500">
+                                                <th className="px-5 py-2.5 text-xs font-semibold text-muted-foreground">
                                                     Kategori
                                                 </th>
-                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">
+                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
                                                     Qty
                                                 </th>
-                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-slate-500">
+                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
                                                     Total
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100">
+                                        <tbody className="divide-y divide-border">
                                             {typeSummary.category_breakdown.map(
                                                 (c, i) => (
                                                     <tr
                                                         key={i}
-                                                        className="hover:bg-slate-50"
+                                                        className="hover:bg-muted"
                                                     >
-                                                        <td className="px-5 py-2.5 font-medium text-slate-800">
+                                                        <td className="px-5 py-2.5 font-medium text-foreground">
                                                             {c.category_name}
                                                         </td>
-                                                        <td className="px-5 py-2.5 text-right text-slate-500">
+                                                        <td className="px-5 py-2.5 text-right text-muted-foreground">
                                                             {c.qty}
                                                         </td>
-                                                        <td className="px-5 py-2.5 text-right font-semibold text-slate-700">
+                                                        <td className="px-5 py-2.5 text-right font-semibold text-foreground">
                                                             {fmt(c.total)}
                                                         </td>
                                                     </tr>
@@ -637,18 +637,18 @@ export default function Show({
                             "hospitality",
                         ].includes(storeType) &&
                             typeSummary?.total_transactions != null && (
-                                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm px-5 py-4">
+                                <div className="rounded-2xl border border-border bg-card shadow-sm px-5 py-4">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-sm text-slate-500">
+                                        <p className="text-sm text-muted-foreground">
                                             Total Transaksi Shift
                                         </p>
-                                        <p className="text-sm font-semibold text-slate-800">
+                                        <p className="text-sm font-semibold text-foreground">
                                             {typeSummary.total_transactions}
                                         </p>
                                     </div>
                                     {typeSummary.booking_count != null && (
                                         <div className="flex items-center justify-between mt-2">
-                                            <p className="text-sm text-slate-500">
+                                            <p className="text-sm text-muted-foreground">
                                                 Booking Dibayar
                                             </p>
                                             <p className="text-sm font-semibold text-primary-700">
@@ -661,9 +661,9 @@ export default function Show({
                     </div>
 
                     {/* Kanan: ringkasan keuangan */}
-                    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm self-start">
-                        <div className="border-b border-slate-100 bg-slate-50 px-5 py-3">
-                            <p className="text-sm font-semibold text-slate-800">
+                    <div className="rounded-2xl border border-border bg-card shadow-sm self-start">
+                        <div className="border-b border-border bg-muted px-5 py-3">
+                            <p className="text-sm font-semibold text-foreground">
                                 Ringkasan Keuangan
                             </p>
                         </div>
@@ -684,7 +684,7 @@ export default function Show({
                                 label="Total Refund"
                                 value={fmt(summary?.total_refunds)}
                             />
-                            <div className="my-2 border-t border-slate-100" />
+                            <div className="my-2 border-t border-border" />
                             <SumRow
                                 label="Ekspektasi Kas"
                                 value={fmt(summary?.expected_cash)}
@@ -701,10 +701,10 @@ export default function Show({
                                         value={fmt(shift.cash_difference)}
                                         cls={
                                             shift.cash_difference === 0
-                                                ? "text-slate-700"
+                                                ? "text-foreground"
                                                 : shift.cash_difference > 0
                                                   ? "text-emerald-600"
-                                                  : "text-red-500"
+                                                  : "text-destructive"
                                         }
                                     />
                                 </>
@@ -721,14 +721,14 @@ export default function Show({
                     onMouseDown={() => !closing && setShowClose(false)}
                 >
                     <div
-                        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+                        className="w-full max-w-lg overflow-hidden rounded-2xl bg-card shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
-                        <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-800">
+                        <div className="border-b border-border bg-muted px-6 py-4">
+                            <h3 className="text-base font-semibold text-foreground">
                                 Tutup Shift — {shift.shift_no}
                             </h3>
-                            <p className="text-xs text-slate-500 mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                                 Masukkan kas aktual untuk menutup shift.
                             </p>
                         </div>
@@ -751,12 +751,12 @@ export default function Show({
                                 </div>
                             )}
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                <label className="mb-1.5 block text-sm font-medium text-foreground">
                                     Kas Aktual (Fisik){" "}
-                                    <span className="text-red-500">*</span>
+                                    <span className="text-destructive">*</span>
                                 </label>
                                 <div className="relative">
-                                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-slate-400">
+                                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-muted-foreground">
                                         Rp
                                     </span>
                                     <input
@@ -771,13 +771,13 @@ export default function Show({
                                                 actual_cash: e.target.value,
                                             }))
                                         }
-                                        className="block w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-primary-500 focus:ring-primary-200"
+                                        className="block w-full rounded-xl border-border pl-9 text-sm focus:border-ring focus:ring-ring/20"
                                         placeholder="0"
                                     />
                                 </div>
                                 {closeData.actual_cash !== "" && (
                                     <p
-                                        className={`mt-1 text-xs font-medium ${parseFloat(closeData.actual_cash) >= (summary?.expected_cash ?? 0) ? "text-emerald-600" : "text-red-500"}`}
+                                        className={`mt-1 text-xs font-medium ${parseFloat(closeData.actual_cash) >= (summary?.expected_cash ?? 0) ? "text-emerald-600" : "text-destructive"}`}
                                     >
                                         Selisih:{" "}
                                         {fmt(
@@ -804,9 +804,9 @@ export default function Show({
                             </div>
                             {(summary?.payment_breakdown ?? []).length > 0 && (
                                 <div>
-                                    <p className="mb-2 text-sm font-medium text-slate-700">
+                                    <p className="mb-2 text-sm font-medium text-foreground">
                                         Aktual per Metode{" "}
-                                        <span className="font-normal text-slate-400">
+                                        <span className="font-normal text-muted-foreground">
                                             (opsional)
                                         </span>
                                     </p>
@@ -817,15 +817,15 @@ export default function Show({
                                                 className="flex items-center gap-3"
                                             >
                                                 <div className="w-36 shrink-0">
-                                                    <p className="text-sm font-medium text-slate-700">
+                                                    <p className="text-sm font-medium text-foreground">
                                                         {p.method_name}
                                                     </p>
-                                                    <p className="text-xs text-slate-400">
+                                                    <p className="text-xs text-muted-foreground">
                                                         {fmt(p.total)}
                                                     </p>
                                                 </div>
                                                 <div className="relative flex-1">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-slate-400">
+                                                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-muted-foreground">
                                                         Rp
                                                     </span>
                                                     <input
@@ -854,7 +854,7 @@ export default function Show({
                                                                 }),
                                                             )
                                                         }
-                                                        className="block w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-primary-500 focus:ring-primary-200"
+                                                        className="block w-full rounded-xl border-border pl-9 text-sm focus:border-ring focus:ring-ring/20"
                                                         placeholder="0"
                                                     />
                                                 </div>
@@ -864,7 +864,7 @@ export default function Show({
                                 </div>
                             )}
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                                <label className="mb-1.5 block text-sm font-medium text-foreground">
                                     Catatan Penutupan
                                 </label>
                                 <textarea
@@ -877,22 +877,22 @@ export default function Show({
                                             closing_note: e.target.value,
                                         }))
                                     }
-                                    className="block w-full rounded-xl border-slate-300 text-sm focus:border-primary-500 focus:ring-primary-200"
+                                    className="block w-full rounded-xl border-border text-sm focus:border-ring focus:ring-ring/20"
                                     placeholder="Opsional..."
                                 />
                             </div>
                         </div>
-                        <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
+                        <div className="flex justify-end gap-2 border-t border-border bg-muted px-6 py-4">
                             <button
                                 onClick={() => setShowClose(false)}
-                                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
                             >
                                 Batal
                             </button>
                             <button
                                 onClick={handleClose}
                                 disabled={closing || !closeData.actual_cash}
-                                className="rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-primary-700 disabled:opacity-60"
+                                className="rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-primary/90 disabled:opacity-60"
                             >
                                 {closing ? "Menutup..." : "Tutup Shift"}
                             </button>
@@ -908,11 +908,11 @@ export default function Show({
                     onMouseDown={() => !editing && setShowEdit(false)}
                 >
                     <div
-                        className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
+                        className="w-full max-w-md overflow-hidden rounded-2xl bg-card shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
-                        <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-800">
+                        <div className="border-b border-border bg-muted px-6 py-4">
+                            <h3 className="text-base font-semibold text-foreground">
                                 Edit Shift — {shift.shift_no}
                             </h3>
                         </div>
@@ -940,7 +940,7 @@ export default function Show({
                                 },
                             ].map(({ key, label, type }) => (
                                 <div key={key}>
-                                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                                    <label className="mb-1 block text-sm font-medium text-foreground">
                                         {label}
                                     </label>
                                     {type === "textarea" ? (
@@ -953,7 +953,7 @@ export default function Show({
                                                     [key]: e.target.value,
                                                 }))
                                             }
-                                            className="block w-full rounded-xl border-slate-300 text-sm focus:border-primary-500 focus:ring-primary-200"
+                                            className="block w-full rounded-xl border-border text-sm focus:border-ring focus:ring-ring/20"
                                         />
                                     ) : (
                                         <input
@@ -966,23 +966,23 @@ export default function Show({
                                                     [key]: e.target.value,
                                                 }))
                                             }
-                                            className="block w-full rounded-xl border-slate-300 text-sm focus:border-primary-500 focus:ring-primary-200"
+                                            className="block w-full rounded-xl border-border text-sm focus:border-ring focus:ring-ring/20"
                                         />
                                     )}
                                 </div>
                             ))}
                         </div>
-                        <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
+                        <div className="flex justify-end gap-2 border-t border-border bg-muted px-6 py-4">
                             <button
                                 onClick={() => setShowEdit(false)}
-                                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
                             >
                                 Batal
                             </button>
                             <button
                                 onClick={handleEdit}
                                 disabled={editing}
-                                className="rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-60"
+                                className="rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
                             >
                                 {editing ? "Menyimpan..." : "Simpan"}
                             </button>
@@ -998,13 +998,13 @@ export default function Show({
                     onMouseDown={() => !deleting && setShowDelete(false)}
                 >
                     <div
-                        className="w-full max-w-sm overflow-hidden rounded-2xl bg-white p-6 shadow-2xl"
+                        className="w-full max-w-sm overflow-hidden rounded-2xl bg-card p-6 shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-base font-semibold text-slate-800">
+                        <h3 className="text-base font-semibold text-foreground">
                             Hapus Shift?
                         </h3>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Shift{" "}
                             <span className="font-mono font-semibold">
                                 {shift.shift_no}
@@ -1015,7 +1015,7 @@ export default function Show({
                             <button
                                 onClick={() => setShowDelete(false)}
                                 disabled={deleting}
-                                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
                             >
                                 Batal
                             </button>

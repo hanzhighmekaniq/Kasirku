@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import Button from "@/Components/ui/Button";
 
 import CurrencyInput from '@/Components/ui/CurrencyInput';
 import Field from '@/Components/ui/Field';
@@ -62,10 +63,10 @@ export default function PromotionForm({
     };
 
     const inputCls = (field) =>
-        `block w-full rounded-xl border bg-white px-3 py-2.5 text-sm shadow-sm transition focus:ring-2 ${
+        `block w-full rounded-xl border bg-card px-3 py-2.5 text-sm shadow-sm transition focus:ring-2 ${
             errors[field]
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'
+                : 'border-border focus:border-ring focus:ring-ring/20'
         }`;
 
     const showTierPrice = data.type === 'tiered' || data.type === 'member_price';
@@ -95,10 +96,10 @@ export default function PromotionForm({
 
             {/* Scope */}
             <div>
-                <label className="block text-sm font-medium text-slate-700">
-                    Cakupan Promo <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-foreground">
+                    Cakupan Promo <span className="text-destructive">*</span>
                 </label>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-muted-foreground">
                     Per Item = berlaku per item | Keranjang = berlaku untuk total belanja
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-3">
@@ -110,17 +111,17 @@ export default function PromotionForm({
                             className={`rounded-xl border-2 px-4 py-3 text-left transition ${
                                 data.scope === s.value
                                     ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-200'
-                                    : 'border-slate-200 bg-white hover:border-slate-300'
+                                    : 'border-border bg-card hover:border-border'
                             }`}
                         >
-                            <p className={`text-sm font-semibold ${data.scope === s.value ? 'text-primary-700' : 'text-slate-700'}`}>
+                            <p className={`text-sm font-semibold ${data.scope === s.value ? 'text-primary-700' : 'text-foreground'}`}>
                                 {s.label}
                             </p>
-                            <p className="mt-0.5 text-xs text-slate-400">{s.desc}</p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{s.desc}</p>
                         </button>
                     ))}
                 </div>
-                {errors.scope && <p className="mt-1.5 text-sm text-red-600">{errors.scope}</p>}
+                {errors.scope && <p className="mt-1.5 text-sm text-destructive">{errors.scope}</p>}
             </div>
 
             {/* Tipe & Nilai */}
@@ -134,7 +135,7 @@ export default function PromotionForm({
                             placeholder="Pilih tipe promo..."
                         />
                     </div>
-                    {typeHint && <p className="mt-1 text-xs text-slate-400">{typeHint}</p>}
+                    {typeHint && <p className="mt-1 text-xs text-muted-foreground">{typeHint}</p>}
                 </Field>
 
                 <Field
@@ -163,7 +164,7 @@ export default function PromotionForm({
                                     placeholder="10"
                                     className={`${inputCls('discount_value')} pr-10`}
                                 />
-                                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-slate-400">
+                                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
                                     %
                                 </span>
                             </div>
@@ -185,7 +186,7 @@ export default function PromotionForm({
                                     placeholder="3"
                                     className={`${inputCls('discount_value')} pl-10`}
                                 />
-                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
                                     x
                                 </span>
                             </div>
@@ -212,7 +213,7 @@ export default function PromotionForm({
                             error={!!errors.min_purchase_amount}
                         />
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-muted-foreground">
                         {data.scope === 'cart' ? 'Minimum total belanja' : 'Minimum belanja per item'}
                     </p>
                 </Field>
@@ -227,7 +228,7 @@ export default function PromotionForm({
                                 error={!!errors.max_discount_amount}
                             />
                         </div>
-                        <p className="mt-1 text-xs text-slate-400">Batas maksimal diskon</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Batas maksimal diskon</p>
                     </Field>
                 )}
 
@@ -242,7 +243,7 @@ export default function PromotionForm({
                             placeholder="cth. 3"
                             className={`mt-1.5 ${inputCls('min_quantity')}`}
                         />
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-muted-foreground">
                             Jumlah minimum agar harga tier berlaku
                         </p>
                     </Field>
@@ -258,7 +259,7 @@ export default function PromotionForm({
                                 placeholder="Pilih tier..."
                             />
                         </div>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-muted-foreground">
                             Hanya berlaku untuk pelanggan tier ini
                         </p>
                     </Field>
@@ -277,7 +278,7 @@ export default function PromotionForm({
                                 placeholder="Pilih produk gratis..."
                             />
                         </div>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-muted-foreground">
                             Produk yang diberikan gratis
                         </p>
                     </Field>
@@ -286,13 +287,13 @@ export default function PromotionForm({
 
             {/* Flash Sale Time Window */}
             <div>
-                <p className="block text-sm font-medium text-slate-700">
+                <p className="block text-sm font-medium text-foreground">
                     Jam Berlaku{' '}
-                    <span className="text-xs font-normal text-slate-400">
+                    <span className="text-xs font-normal text-muted-foreground">
                         (opsional — untuk flash sale)
                     </span>
                 </p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-muted-foreground">
                     Kosongkan jika promo berlaku sepanjang hari
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-3">
@@ -346,14 +347,14 @@ export default function PromotionForm({
                         }`}
                     >
                         <span
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg ring-0 transition duration-200 ease-in-out ${
                                 data.is_active ? 'translate-x-5' : 'translate-x-0'
                             }`}
                         />
                     </button>
                     <div>
-                        <p className="text-sm font-medium text-slate-700">Aktif</p>
-                        <p className="text-xs text-slate-400">Promo akan tampil di POS jika aktif</p>
+                        <p className="text-sm font-medium text-foreground">Aktif</p>
+                        <p className="text-xs text-muted-foreground">Promo akan tampil di POS jika aktif</p>
                     </div>
                 </div>
 
@@ -369,7 +370,7 @@ export default function PromotionForm({
                             className={inputCls('max_usage')}
                         />
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-muted-foreground">
                         {Number(data.max_usage) > 0
                             ? `Promo berhenti setelah ${data.max_usage}x transaksi${promotion ? ` (sudah ${promotion.used_count ?? 0}x dipakai)` : ''}`
                             : 'Kosongkan atau 0 untuk tanpa batas'}
@@ -380,19 +381,19 @@ export default function PromotionForm({
             {/* Product Selection — only for scope=item */}
             {showProductPickerSection && (
                 <div>
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-sm font-medium text-foreground">
                         Produk{' '}
-                        <span className="text-xs font-normal text-slate-400">
+                        <span className="text-xs font-normal text-muted-foreground">
                             (opsional — kosongkan untuk berlaku umum)
                         </span>
                     </label>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-muted-foreground">
                         Pilih produk spesifik, atau kosongkan jika promo berlaku untuk semua produk.
                     </p>
 
                     {selectedProducts.length > 0 && (
                         <div className="mt-3">
-                            <p className="mb-2 text-xs font-medium text-slate-500">
+                            <p className="mb-2 text-xs font-medium text-muted-foreground">
                                 {selectedProducts.length} produk dipilih
                             </p>
                             <div className="flex flex-wrap gap-1.5">
@@ -422,7 +423,7 @@ export default function PromotionForm({
                         <button
                             type="button"
                             onClick={() => setShowProductPicker(!showProductPicker)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-primary-400 hover:text-primary-600"
+                            className="inline-flex items-center gap-2 rounded-xl border border-dashed border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-primary-400 hover:text-primary-600"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -437,20 +438,20 @@ export default function PromotionForm({
                         </button>
 
                         {showProductPicker && (
-                            <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
-                                <div className="border-b border-slate-100 bg-slate-50/60 p-3">
+                            <div className="mt-3 overflow-hidden rounded-xl border border-border">
+                                <div className="border-b border-border bg-muted/50 p-3">
                                     <input
                                         type="text"
                                         value={productSearch}
                                         onChange={(e) => setProductSearch(e.target.value)}
                                         placeholder="Cari produk..."
-                                        className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                        className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                         autoFocus
                                     />
                                 </div>
                                 <div className="max-h-60 overflow-y-auto">
                                     {filteredProducts.length === 0 ? (
-                                        <div className="px-4 py-6 text-center text-sm text-slate-500">
+                                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
                                             {products.length === 0
                                                 ? 'Tidak ada produk aktif'
                                                 : 'Produk tidak ditemukan'}
@@ -464,14 +465,14 @@ export default function PromotionForm({
                                                 className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition hover:bg-primary-50"
                                             >
                                                 <div>
-                                                    <p className="font-medium text-slate-800">{p.name}</p>
-                                                    <p className="text-xs text-slate-400">
+                                                    <p className="font-medium text-foreground">{p.name}</p>
+                                                    <p className="text-xs text-muted-foreground">
                                                         {p.sku} • Rp{' '}
                                                         {Number(p.sell_price).toLocaleString('id-ID')}
                                                     </p>
                                                 </div>
                                                 <svg
-                                                    className="h-4 w-4 text-slate-400"
+                                                    className="h-4 w-4 text-muted-foreground"
                                                     fill="none"
                                                     viewBox="0 0 24 24"
                                                     strokeWidth={2}
@@ -494,20 +495,19 @@ export default function PromotionForm({
             )}
 
             {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+            <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
                 <a
                     href={cancelHref}
-                    className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="inline-flex justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                 >
                     Batal
                 </a>
-                <button
+                <Button
                     type="submit"
-                    disabled={processing}
-                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-60"
+                    loading={processing}
                 >
-                    {processing ? 'Menyimpan...' : submitLabel}
-                </button>
+                    {submitLabel}
+                </Button>
             </div>
         </form>
     );

@@ -2,6 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import { ChevronDown, Plus } from "lucide-react";
+import Button from "@/Components/ui/Button";
 import Dropdown from "@/Components/Dropdown";
 
 const fmt = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
@@ -14,8 +15,8 @@ const fmtDt = (d) =>
         : "-";
 
 const STATUS_CLS = {
-    open: "bg-emerald-100 text-emerald-700",
-    closed: "bg-slate-100 text-slate-600",
+    open: "bg-emerald-100 text-success",
+    closed: "bg-muted text-muted-foreground",
 };
 const STATUS_LBL = { open: "Berjalan", closed: "Tutup" };
 
@@ -92,18 +93,14 @@ export default function Index({
         <AuthenticatedLayout
             header={
                 <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-slate-800">
+                    <h2 className="text-lg font-semibold text-foreground">
                         {pageLabel}
                     </h2>
                     {canOpen && (
-                        <Link
-                            href={route("admin.cashier-shifts.create")}
-                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
-                        >
-                            <Plus className="h-4 w-4" strokeWidth={2} />
+                        <Button as={Link} href={route("admin.cashier-shifts.create")} icon={Plus}>
                             <span className="hidden sm:inline">Buka Shift</span>
                             <span className="sm:hidden">Buka</span>
-                        </Link>
+                        </Button>
                     )}
                 </div>
             }
@@ -112,7 +109,7 @@ export default function Index({
 
             <div className="space-y-4">
                 {activeShift && (
-                    <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3">
+                    <div className="flex items-center justify-between rounded-2xl border border-success/20 bg-success/10 px-5 py-3">
                         <div>
                             <p className="text-sm font-semibold text-emerald-800">
                                 Shift Aktif:{" "}
@@ -129,7 +126,7 @@ export default function Index({
                                 "admin.cashier-shifts.show",
                                 activeShift.id,
                             )}
-                            className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
+                            className="rounded-lg border border-emerald-300 bg-card px-3 py-1.5 text-xs font-medium text-success hover:bg-success/10"
                         >
                             Lihat Detail
                         </Link>
@@ -137,12 +134,12 @@ export default function Index({
                 )}
 
                 {/* Table card */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                     {/* Toolbar */}
-                    <div className="border-b border-slate-100 p-4">
+                    <div className="border-b border-border p-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                             <div className="relative flex-1">
-                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
                                 </span>
                                 <form onSubmit={(e) => { e.preventDefault(); applySearch(e); }} className="flex-1">
@@ -151,32 +148,32 @@ export default function Index({
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Cari no. shift / kasir..."
-                                        className="block w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                        className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                                     />
                                 </form>
                             </div>
                             <Dropdown>
                                 <Dropdown.Trigger>
-                                    <button className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition hover:bg-slate-50">
-                                        <span className={status ? "text-slate-700" : "text-slate-400"}>
+                                    <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
+                                        <span className={status ? "text-foreground" : "text-muted-foreground"}>
                                             {status === "open" ? "Berjalan" : status === "closed" ? "Tutup" : "Semua Status"}
                                         </span>
-                                        <ChevronDown className="h-3.5 w-3.5 text-slate-400" strokeWidth={2} />
+                                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
                                     </button>
                                 </Dropdown.Trigger>
                                 <Dropdown.Content width="48">
-                                    <button onClick={() => applyFilter("")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${!status ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Semua</button>
-                                    <button onClick={() => applyFilter("open")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "open" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Berjalan</button>
-                                    <button onClick={() => applyFilter("closed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "closed" ? "bg-primary-50 font-medium text-primary-600" : "text-slate-600 hover:bg-slate-50"}`}>Tutup</button>
+                                    <button onClick={() => applyFilter("")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${!status ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Semua</button>
+                                    <button onClick={() => applyFilter("open")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "open" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Berjalan</button>
+                                    <button onClick={() => applyFilter("closed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "closed" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Tutup</button>
                                 </Dropdown.Content>
                             </Dropdown>
                         </div>
                         <div className="pt-4 flex items-center justify-between">
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-muted-foreground">
                                 Menampilkan{" "}
-                                <span className="font-semibold text-slate-700">{list.length}</span>{" "}
+                                <span className="font-semibold text-foreground">{list.length}</span>{" "}
                                 dari{" "}
-                                <span className="font-semibold text-slate-700">{shifts.total}</span>{" "}
+                                <span className="font-semibold text-foreground">{shifts.total}</span>{" "}
                                 shift
                             </p>
                         </div>
@@ -184,7 +181,7 @@ export default function Index({
                     <div className="overflow-x-auto">
                         <table className="w-full min-w-[640px] text-left text-sm">
                             <thead>
-                                <tr className="border-b border-slate-100 bg-slate-50/60 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                     {[
                                         "No. Shift",
                                         "Kasir",
@@ -197,19 +194,19 @@ export default function Index({
                                     ].map((h, i) => (
                                         <th
                                             key={i}
-                                            className="px-4 py-3 text-xs font-semibold text-slate-500"
+                                            className="px-4 py-3 text-xs font-semibold text-muted-foreground"
                                         >
                                             {h}
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-border">
                                 {list.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan={8}
-                                            className="px-4 py-12 text-center text-sm text-slate-400"
+                                            className="px-4 py-12 text-center text-sm text-muted-foreground"
                                         >
                                             Belum ada data shift
                                         </td>
@@ -218,24 +215,24 @@ export default function Index({
                                     list.map((shift) => (
                                         <tr
                                             key={shift.id}
-                                            className="hover:bg-slate-50/60"
+                                            className="hover:bg-muted/50"
                                         >
-                                            <td className="px-4 py-3 font-mono text-xs font-medium text-slate-800">
+                                            <td className="px-4 py-3 font-mono text-xs font-medium text-foreground">
                                                 {shift.shift_no}
                                             </td>
-                                            <td className="px-4 py-3 text-slate-600">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {shift.user?.name ?? "-"}
                                             </td>
-                                            <td className="px-4 py-3 text-slate-500">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {shift.branch?.name ?? "Pusat"}
                                             </td>
-                                            <td className="px-4 py-3 text-xs text-slate-500">
+                                            <td className="px-4 py-3 text-xs text-muted-foreground">
                                                 {fmtDt(shift.opened_at)}
                                             </td>
-                                            <td className="px-4 py-3 text-xs text-slate-500">
+                                            <td className="px-4 py-3 text-xs text-muted-foreground">
                                                 {fmtDt(shift.closed_at)}
                                             </td>
-                                            <td className="px-4 py-3 font-medium text-slate-700">
+                                            <td className="px-4 py-3 font-medium text-foreground">
                                                 {shift.status === "closed"
                                                     ? fmt(shift.total_sales)
                                                     : "-"}
@@ -246,7 +243,7 @@ export default function Index({
                                                         STATUS_CLS[
                                                             shift.status
                                                         ] ??
-                                                        "bg-slate-100 text-slate-600"
+                                                        "bg-muted text-muted-foreground"
                                                     }`}
                                                 >
                                                     {STATUS_LBL[shift.status] ??
@@ -277,7 +274,7 @@ export default function Index({
                                                                     reopening ===
                                                                     shift.id
                                                                 }
-                                                                className="rounded-lg px-2.5 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"
+                                                                className="rounded-lg px-2.5 py-1 text-xs font-medium text-emerald-600 hover:bg-success/10 disabled:opacity-50"
                                                             >
                                                                 {reopening ===
                                                                 shift.id
@@ -292,7 +289,7 @@ export default function Index({
                                                                     shift,
                                                                 )
                                                             }
-                                                            className="rounded-lg px-2.5 py-1 text-xs font-medium text-red-500 hover:bg-red-50"
+                                                            className="rounded-lg px-2.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
                                                         >
                                                             Hapus
                                                         </button>
@@ -307,8 +304,8 @@ export default function Index({
                     </div>
 
                     {(shifts?.last_page ?? 1) > 1 && (
-                        <div className="flex flex-col gap-3 border-t border-slate-100 px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
-                            <span className="text-xs text-slate-500">
+                        <div className="flex flex-col gap-3 border-t border-border px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <span className="text-xs text-muted-foreground">
                                 {shifts.total} shift &bull; Halaman{" "}
                                 {shifts.current_page} dari{" "}
                                 {shifts.last_page}
@@ -321,10 +318,10 @@ export default function Index({
                                         preserveScroll
                                         className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                                             link.active
-                                                ? "bg-primary-600 text-white shadow-sm"
+                                                ? "bg-primary text-primary-foreground shadow-sm"
                                                 : link.url
-                                                  ? "text-slate-600 hover:bg-slate-100"
-                                                  : "cursor-not-allowed text-slate-300"
+                                                  ? "text-muted-foreground hover:bg-muted"
+                                                  : "cursor-not-allowed text-muted-foreground/50"
                                         }`}
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
@@ -343,13 +340,13 @@ export default function Index({
                     onMouseDown={() => !deleting && setDeleteTarget(null)}
                 >
                     <div
-                        className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+                        className="mx-4 w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-base font-semibold text-slate-800">
+                        <h3 className="text-base font-semibold text-foreground">
                             Hapus Shift?
                         </h3>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Shift{" "}
                             <span className="font-mono font-semibold">
                                 {deleteTarget.shift_no}
@@ -359,7 +356,7 @@ export default function Index({
                         <div className="mt-5 flex justify-end gap-2">
                             <button
                                 onClick={() => setDeleteTarget(null)}
-                                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted"
                             >
                                 Batal
                             </button>

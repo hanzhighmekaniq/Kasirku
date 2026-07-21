@@ -36,12 +36,12 @@ export default function Create({ products }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route('admin.promotions.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">Tambah Promo</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Tambah Promo</h2>
                 </div>
             }
         >

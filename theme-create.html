@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Create Theme — Theme Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root{
+    --bg:#0A0A0B; --surface:#0F1012; --surface-2:#141518; --surface-3:#1A1B1F;
+    --border:#1F2024; --border-strong:#26272C;
+    --text:#F4F4F5; --text-muted:#8A8B90; --text-dim:#5E5F65;
+    --accent:#3B82F6;
+  }
+  html,body{background:var(--bg);color:var(--text);font-family:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
+  .brd{border-color:var(--border);} .brd-s{border-color:var(--border-strong);}
+  .txt-muted{color:var(--text-muted);} .txt-dim{color:var(--text-dim);}
+  .surface{background:var(--surface);} .surface-2{background:var(--surface-2);}
+  .nav-item{color:var(--text-muted);transition:all .15s ease;position:relative;}
+  .nav-item:hover{color:var(--text);background:var(--surface-2);}
+  .nav-item.active{color:var(--text);background:var(--surface-2);}
+  .nav-item.active .nav-dot{opacity:1;}
+  .nav-dot{opacity:0;width:3px;height:16px;border-radius:2px;background:var(--accent);position:absolute;left:-1px;top:50%;transform:translateY(-50%);}
+  .btn-primary{background:var(--accent);color:#fff;transition:.15s;}
+  .btn-primary:hover{background:#2f74e6;}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border-strong);transition:.15s;}
+  .btn-ghost:hover{background:var(--surface-2);border-color:#33343a;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;}
+  .field{background:var(--surface-2);border:1px solid var(--border-strong);border-radius:8px;color:var(--text);transition:.15s;}
+  .field:focus{outline:none;border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+  .icon-btn{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;color:var(--text-muted);transition:.15s;}
+  .icon-btn:hover{background:var(--surface-2);color:var(--text);}
+
+  /* mode switcher */
+  .mode-switch{display:inline-flex;padding:3px;background:var(--surface-2);border:1px solid var(--border-strong);border-radius:9px;}
+  .mode-btn{padding:6px 14px;font-size:12.5px;font-weight:500;border-radius:6px;color:var(--text-muted);display:inline-flex;align-items:center;gap:6px;transition:.15s;}
+  .mode-btn.active{background:var(--surface-3);color:#fff;box-shadow:inset 0 0 0 1px var(--border-strong);}
+  .mode-btn.active[data-mode="light"]{color:#F5D06B;}
+  .mode-btn.active[data-mode="dark"]{color:#7CB8FF;}
+
+  /* color row */
+  .color-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;transition:.15s;}
+  .color-row:hover{background:var(--surface-2);}
+  .color-label .k{font-size:12.5px;font-weight:500;color:var(--text);}
+  .color-label .d{font-size:11px;color:var(--text-dim);margin-top:1px;}
+  .swatch-picker{position:relative;width:36px;height:28px;border-radius:6px;border:1px solid var(--border-strong);overflow:hidden;cursor:pointer;}
+  .swatch-picker input{position:absolute;inset:-4px;opacity:0;cursor:pointer;}
+  .hex-input{width:100px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11.5px;text-transform:uppercase;padding:6px 8px;background:var(--surface-3);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);}
+  .hex-input:focus{outline:none;border-color:var(--accent);}
+
+  .group-title{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);padding:14px 12px 8px;border-top:1px solid var(--border);margin-top:6px;}
+  .group-title:first-child{border-top:none;margin-top:0;padding-top:2px;}
+
+  /* preview */
+  .preview-wrap{border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:#26272C;border-radius:10px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  @media (max-width: 900px){ .sidebar{display:none;} .main{padding-left:0!important;} }
+
+  .chart-swatch{display:inline-flex;flex-direction:column;align-items:stretch;gap:0;}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar fixed inset-y-0 left-0 w-[240px] border-r brd flex flex-col" style="background:var(--surface);">
+  <div class="px-5 h-16 flex items-center gap-2.5 border-b brd">
+    <div class="w-8 h-8 rounded-[8px] flex items-center justify-center" style="background:linear-gradient(180deg,#1a1b1f,#0f1012);border:1px solid var(--border-strong);">
+      <i data-lucide="palette" class="w-4 h-4" style="color:#3B82F6"></i>
+    </div>
+    <div>
+      <div class="text-[13.5px] font-semibold tracking-tight">Theme Studio</div>
+      <div class="text-[10.5px] txt-dim -mt-0.5">Workspace</div>
+    </div>
+  </div>
+  <nav class="flex-1 px-3 py-4 space-y-0.5">
+    <div class="px-2 text-[10.5px] uppercase tracking-wider txt-dim mb-2 mt-1">Workspace</div>
+    <a href="/" class="nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] text-[13px] font-medium">
+      <span class="nav-dot"></span><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Overview
+    </a>
+    <a href="/themes" class="nav-item active flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] text-[13px] font-medium">
+      <span class="nav-dot"></span><i data-lucide="palette" class="w-4 h-4"></i> Themes
+      <span class="ml-auto text-[10.5px] px-1.5 py-0.5 rounded-md" style="background:#1A1B1F;color:#8A8B90;">2</span>
+    </a>
+    <a class="nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] text-[13px] font-medium">
+      <span class="nav-dot"></span><i data-lucide="component" class="w-4 h-4"></i> Components
+    </a>
+    <a class="nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] text-[13px] font-medium">
+      <span class="nav-dot"></span><i data-lucide="type" class="w-4 h-4"></i> Typography
+    </a>
+    <a class="nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-[8px] text-[13px] font-medium">
+      <span class="nav-dot"></span><i data-lucide="book-open" class="w-4 h-4"></i> Documentation
+    </a>
+  </nav>
+  <div class="px-3 py-3 border-t brd">
+    <div class="flex items-center gap-2.5 px-2.5 py-2 rounded-[8px]" style="background:var(--surface-2);">
+      <div class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold" style="background:#2A3B5A;color:#BFD5FF;">MR</div>
+      <div class="min-w-0 flex-1">
+        <div class="text-[12px] font-medium truncate">Maulida R.</div>
+        <div class="text-[10.5px] txt-dim truncate">maulida@studio.io</div>
+      </div>
+      <i data-lucide="chevron-right" class="w-3.5 h-3.5 txt-dim"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main pl-[240px]">
+  <!-- Top bar -->
+  <div class="h-16 border-b brd px-8 flex items-center justify-between sticky top-0 z-30" style="background:rgba(10,10,11,.85);backdrop-filter:blur(8px);">
+    <div class="flex items-center gap-2 text-[12.5px] txt-muted">
+      <a href="/" class="hover:text-white">Workspace</a>
+      <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+      <a href="/themes" class="hover:text-white">Themes</a>
+      <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+      <span class="text-white">Create</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="/themes" class="btn-ghost text-[12.5px] font-medium px-3 py-2 rounded-[8px]">Cancel</a>
+      <button class="btn-ghost text-[12.5px] font-medium px-3 py-2 rounded-[8px] inline-flex items-center gap-1.5">
+        <i data-lucide="save" class="w-3.5 h-3.5"></i> Save draft
+      </button>
+      <button onclick="saveTheme()" class="btn-primary text-[12.5px] font-semibold px-3.5 py-2 rounded-[8px] inline-flex items-center gap-1.5">
+        <i data-lucide="check" class="w-3.5 h-3.5"></i> Create Theme
+      </button>
+    </div>
+  </div>
+
+  <div class="px-8 py-8 max-w-[1400px]">
+    <!-- Header -->
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-[24px] font-semibold tracking-tight">Create a new theme</h1>
+        <p class="text-[13.5px] txt-muted mt-1.5 max-w-[560px]">Design your theme in both Light and Dark mode simultaneously. Every token maps directly to your application's design system.</p>
+      </div>
+      <div class="flex items-center gap-2 text-[11.5px] txt-muted px-3 py-2 rounded-[8px] border brd">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Auto-saved · just now
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_460px] gap-6">
+      <!-- LEFT: Form -->
+      <div class="space-y-5">
+        <!-- Meta card -->
+        <div class="card p-6">
+          <div class="flex items-center gap-2 mb-4">
+            <i data-lucide="info" class="w-4 h-4 txt-muted"></i>
+            <div class="text-[13.5px] font-semibold">Theme details</div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-[11.5px] font-medium txt-muted">Theme name</label>
+              <input id="themeName" value="Twitter" oninput="onNameInput()" class="field w-full mt-1.5 px-3 py-2 text-[13px]" placeholder="e.g. Twitter" />
+              <div class="text-[11px] txt-dim mt-1.5">Display name shown in the theme list.</div>
+            </div>
+            <div>
+              <label class="text-[11.5px] font-medium txt-muted">Slug</label>
+              <div class="mt-1.5 flex items-stretch">
+                <span class="inline-flex items-center px-3 text-[12px] txt-dim border border-r-0 brd-s rounded-l-[8px]" style="background:var(--surface-3)">themes/</span>
+                <input id="themeSlug" value="twitter" class="field w-full px-3 py-2 text-[13px] rounded-l-none" style="border-top-left-radius:0;border-bottom-left-radius:0" />
+              </div>
+              <div class="text-[11px] txt-dim mt-1.5">Used in URLs and CSS variable prefixes.</div>
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-[11.5px] font-medium txt-muted">Description <span class="txt-dim font-normal">(optional)</span></label>
+              <textarea rows="2" class="field w-full mt-1.5 px-3 py-2 text-[13px] resize-none" placeholder="A short description of this theme's intent, brand, or use case."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colors card -->
+        <div class="card overflow-hidden">
+          <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b brd">
+            <div class="flex items-center gap-2">
+              <i data-lucide="droplet" class="w-4 h-4 txt-muted"></i>
+              <div class="text-[13.5px] font-semibold">Color tokens</div>
+              <span class="text-[11px] txt-dim">· 25 tokens</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="mode-switch" id="modeSwitch">
+                <button class="mode-btn active" data-mode="light" onclick="setMode('light')">
+                  <i data-lucide="sun" class="w-3.5 h-3.5"></i> Light mode
+                </button>
+                <button class="mode-btn" data-mode="dark" onclick="setMode('dark')">
+                  <i data-lucide="moon" class="w-3.5 h-3.5"></i> Dark mode
+                </button>
+              </div>
+              <button onclick="copyFromOther()" class="btn-ghost text-[11.5px] font-medium px-2.5 py-1.5 rounded-[7px] inline-flex items-center gap-1.5">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy from other mode
+              </button>
+            </div>
+          </div>
+
+          <div class="px-4 py-3" id="colorGroups"></div>
+
+          <div class="px-6 py-3 border-t brd flex items-center justify-between text-[11.5px] txt-muted">
+            <div class="inline-flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Both Light &amp; Dark variants are saved together when you create the theme.</div>
+            <button onclick="resetMode()" class="hover:text-white inline-flex items-center gap-1.5"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset this mode</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Preview -->
+      <div class="xl:sticky xl:top-24 self-start space-y-4">
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="eye" class="w-4 h-4 txt-muted"></i>
+              <div class="text-[13px] font-semibold">Live preview</div>
+            </div>
+            <div id="previewModeBadge" class="text-[11px] px-2 py-1 rounded-md border brd-s txt-muted"></div>
+          </div>
+          <div id="previewArea" class="preview-wrap"></div>
+          <div class="mt-3 grid grid-cols-5 gap-1.5" id="previewSwatches"></div>
+        </div>
+
+        <div class="card p-4">
+          <div class="flex items-center justify-between">
+            <div class="text-[12.5px] font-semibold">CSS variables</div>
+            <button onclick="copyCSS()" class="text-[11px] txt-muted hover:text-white inline-flex items-center gap-1.5"><i data-lucide="clipboard" class="w-3.5 h-3.5"></i> Copy</button>
+          </div>
+          <pre id="cssOut" class="mt-2.5 text-[10.5px] leading-relaxed font-mono p-3 rounded-[8px] overflow-auto max-h-[220px]" style="background:var(--surface-2);color:#B7BABF;"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const TOKEN_GROUPS = [
+  { title:"Primary", items:[
+    ["primary","Primary","Main brand color for actions"],
+    ["primaryForeground","Primary Foreground","Text on primary surfaces"],
+  ]},
+  { title:"Background & Foreground", items:[
+    ["background","Background","App background"],
+    ["foreground","Foreground","Default text color"],
+  ]},
+  { title:"Secondary", items:[
+    ["secondary","Secondary","Secondary surface / action"],
+    ["secondaryForeground","Secondary Foreground","Text on secondary"],
+  ]},
+  { title:"Accent", items:[
+    ["accent","Accent","Subtle highlight background"],
+    ["accentForeground","Accent Foreground","Text on accent"],
+  ]},
+  { title:"Card", items:[
+    ["card","Card","Card surface"],
+    ["cardForeground","Card Foreground","Text inside cards"],
+  ]},
+  { title:"Popover", items:[
+    ["popover","Popover","Popover / menu surface"],
+    ["popoverForeground","Popover Foreground","Text inside popovers"],
+  ]},
+  { title:"Muted", items:[
+    ["muted","Muted","Muted surface"],
+    ["mutedForeground","Muted Foreground","Muted / secondary text"],
+  ]},
+  { title:"Destructive", items:[
+    ["destructive","Destructive","Errors, destructive actions"],
+    ["destructiveForeground","Destructive Foreground","Text on destructive"],
+  ]},
+  { title:"Border, Input & Ring", items:[
+    ["border","Border","Divider and outlines"],
+    ["input","Input","Input background"],
+    ["ring","Ring","Focus ring color"],
+  ]},
+  { title:"Chart", items:[
+    ["chart1","Chart 1","Data series 1"],
+    ["chart2","Chart 2","Data series 2"],
+    ["chart3","Chart 3","Data series 3"],
+    ["chart4","Chart 4","Data series 4"],
+    ["chart5","Chart 5","Data series 5"],
+  ]},
+  { title:"Sidebar", items:[
+    ["sidebar","Sidebar","Sidebar background"],
+    ["sidebarForeground","Sidebar Foreground","Sidebar text"],
+  ]},
+];
+
+const DEFAULTS = {
+  light: {
+    primary:"#1E9DF1", primaryForeground:"#FFFFFF",
+    background:"#FFFFFF", foreground:"#0F1419",
+    secondary:"#0F1419", secondaryForeground:"#FFFFFF",
+    accent:"#E3ECF6", accentForeground:"#1E9DF1",
+    card:"#F7F8F8", cardForeground:"#0F1419",
+    popover:"#FFFFFF", popoverForeground:"#0F1419",
+    muted:"#E5E5E6", mutedForeground:"#0F1419",
+    destructive:"#F4212E", destructiveForeground:"#FFFFFF",
+    border:"#E1EAEF", input:"#F7F9FA", ring:"#1DA1F2",
+    chart1:"#1E9DF1", chart2:"#00B87A", chart3:"#F7B928", chart4:"#17BF63", chart5:"#E0245E",
+    sidebar:"#F7F8F8", sidebarForeground:"#0F1419",
+  },
+  dark: {
+    primary:"#0099FF", primaryForeground:"#FFFFFF",
+    background:"#000000", foreground:"#E7E9EA",
+    secondary:"#F0F3F4", secondaryForeground:"#0F1419",
+    accent:"#061622", accentForeground:"#1C9CF0",
+    card:"#17181C", cardForeground:"#D9D9D9",
+    popover:"#17181C", popoverForeground:"#E7E9EA",
+    muted:"#181818", mutedForeground:"#72767A",
+    destructive:"#F4212E", destructiveForeground:"#FFFFFF",
+    border:"#242628", input:"#22303C", ring:"#1DA1F2",
+    chart1:"#0099FF", chart2:"#00B87A", chart3:"#F7B928", chart4:"#17BF63", chart5:"#E0245E",
+    sidebar:"#000000", sidebarForeground:"#E7E9EA",
+  }
+};
+
+const state = {
+  mode: "light",
+  values: JSON.parse(JSON.stringify(DEFAULTS)),
+};
+
+function slugify(s){ return s.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+function onNameInput(){ document.getElementById("themeSlug").value = slugify(document.getElementById("themeName").value); }
+
+function renderGroups(){
+  const c = state.values[state.mode];
+  const html = TOKEN_GROUPS.map(g => `
+    <div class="group-title">${g.title}</div>
+    ${g.items.map(([key,label,desc])=>`
+      <div class="color-row" data-key="${key}">
+        <div class="color-label">
+          <div class="k">${label}</div>
+          <div class="d">${desc} · <span class="txt-dim">${key}</span></div>
+        </div>
+        <label class="swatch-picker" style="background:${c[key]}">
+          <input type="color" value="${c[key]}" oninput="updateColor('${key}', this.value)" />
+        </label>
+        <input class="hex-input" value="${c[key].toUpperCase()}" oninput="updateHex('${key}', this.value)" maxlength="7" />
+      </div>
+    `).join("")}
+  `).join("");
+  document.getElementById("colorGroups").innerHTML = html;
+}
+
+function updateColor(key,val){
+  state.values[state.mode][key] = val.toUpperCase();
+  const row = document.querySelector(`.color-row[data-key="${key}"]`);
+  row.querySelector(".swatch-picker").style.background = val;
+  row.querySelector(".hex-input").value = val.toUpperCase();
+  renderPreview();
+}
+function updateHex(key,val){
+  if(!/^#([0-9a-fA-F]{6})$/.test(val)) return;
+  state.values[state.mode][key] = val.toUpperCase();
+  const row = document.querySelector(`.color-row[data-key="${key}"]`);
+  row.querySelector(".swatch-picker").style.background = val;
+  row.querySelector("input[type=color]").value = val;
+  renderPreview();
+}
+
+function setMode(mode){
+  state.mode = mode;
+  document.querySelectorAll(".mode-btn").forEach(b=>b.classList.toggle("active", b.dataset.mode===mode));
+  renderGroups();
+  renderPreview();
+  lucide.createIcons();
+}
+
+function copyFromOther(){
+  const other = state.mode === "light" ? "dark" : "light";
+  state.values[state.mode] = { ...state.values[other] };
+  renderGroups();
+  renderPreview();
+}
+function resetMode(){
+  state.values[state.mode] = { ...DEFAULTS[state.mode] };
+  renderGroups();
+  renderPreview();
+}
+
+function renderPreview(){
+  const c = state.values[state.mode];
+  document.getElementById("previewModeBadge").innerHTML =
+    state.mode==="light"
+      ? `<span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full" style="background:#F5D06B"></span>Light mode</span>`
+      : `<span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full" style="background:#7CB8FF"></span>Dark mode</span>`;
+
+  document.getElementById("previewArea").innerHTML = `
+  <div style="background:${c.background};color:${c.foreground};display:flex;height:340px;">
+    <div style="width:96px;background:${c.sidebar};color:${c.sidebarForeground};border-right:1px solid ${c.border};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div style="width:16px;height:16px;border-radius:5px;background:${c.primary}"></div>
+        <div style="height:7px;flex:1;border-radius:2px;background:${c.foreground};opacity:.85"></div>
+      </div>
+      <div style="margin-top:6px;height:8px;border-radius:3px;background:${c.primary};opacity:.15"></div>
+      <div style="height:6px;border-radius:3px;background:${c.foreground};opacity:.18;width:80%"></div>
+      <div style="height:6px;border-radius:3px;background:${c.foreground};opacity:.18;width:65%"></div>
+      <div style="height:6px;border-radius:3px;background:${c.foreground};opacity:.18;width:75%"></div>
+      <div style="margin-top:auto;height:6px;border-radius:3px;background:${c.foreground};opacity:.1;width:60%"></div>
+    </div>
+    <div style="flex:1;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="height:9px;width:110px;border-radius:3px;background:${c.foreground};opacity:.9"></div>
+        <div style="margin-left:auto;height:24px;width:90px;border-radius:6px;background:${c.input};border:1px solid ${c.border}"></div>
+        <div style="height:24px;padding:0 12px;display:inline-flex;align-items:center;border-radius:6px;background:${c.primary};color:${c.primaryForeground};font-size:10.5px;font-weight:600;">Action</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${[["Revenue","$24.8k"],["Users","1,204"]].map(([l,v])=>`
+          <div style="background:${c.card};color:${c.cardForeground};border:1px solid ${c.border};border-radius:8px;padding:10px 12px;">
+            <div style="font-size:9.5px;color:${c.mutedForeground};font-weight:500;">${l}</div>
+            <div style="font-size:14px;font-weight:600;margin-top:2px;">${v}</div>
+            <div style="display:inline-block;margin-top:6px;padding:2px 6px;border-radius:4px;background:${c.accent};color:${c.accentForeground};font-size:9.5px;font-weight:600;">+12.4%</div>
+          </div>`).join("")}
+      </div>
+      <div style="background:${c.card};color:${c.cardForeground};border:1px solid ${c.border};border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;flex:1;">
+        ${[0,1,2].map(i=>`
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:18px;height:18px;border-radius:9999px;background:${c.primary};opacity:${.95-i*.2}"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+              <div style="height:6px;width:${60+i*8}%;background:${c.foreground};opacity:.85;border-radius:2px;"></div>
+              <div style="height:5px;width:${40+i*5}%;background:${c.mutedForeground};opacity:.6;border-radius:2px;"></div>
+            </div>
+            <div style="padding:2px 6px;border-radius:4px;background:${c.accent};color:${c.accentForeground};font-size:9.5px;font-weight:600;">Live</div>
+            <div style="padding:2px 6px;border-radius:4px;background:${c.destructive};color:${c.destructiveForeground};font-size:9.5px;font-weight:600;opacity:${i===2?1:0};">!</div>
+          </div>`).join("")}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        ${["chart1","chart2","chart3","chart4","chart5"].map((k,i)=>`
+          <div style="flex:1;height:${16+i*4}px;border-radius:4px;background:${c[k]}"></div>`).join("")}
+      </div>
+    </div>
+  </div>`;
+
+  const keys = ["primary","background","card","accent","muted"];
+  document.getElementById("previewSwatches").innerHTML = keys.map(k=>`
+    <div class="text-center">
+      <div style="height:26px;border-radius:6px;background:${c[k]};border:1px solid var(--border-strong);"></div>
+      <div class="text-[10px] txt-dim mt-1 truncate">${k}</div>
+    </div>`).join("");
+
+  renderCSS();
+}
+
+function renderCSS(){
+  const build = (mode)=>{
+    const c = state.values[mode];
+    const body = Object.entries(c).map(([k,v])=>`  --${k.replace(/[A-Z]/g,m=>"-"+m.toLowerCase())}: ${v};`).join("\n");
+    return `${mode==="light"?":root":".dark"} {\n${body}\n}`;
+  };
+  document.getElementById("cssOut").textContent = build("light") + "\n\n" + build("dark");
+}
+
+function copyCSS(){ navigator.clipboard.writeText(document.getElementById("cssOut").textContent); }
+
+function saveTheme(){
+  const payload = {
+    name: document.getElementById("themeName").value,
+    slug: document.getElementById("themeSlug").value,
+    light: state.values.light,
+    dark: state.values.dark,
+  };
+  console.log("SAVE THEME", payload);
+  alert("Theme created!\n\nName: " + payload.name + "\nSlug: " + payload.slug + "\n\n(See console for full payload — both Light & Dark saved together.)");
+}
+
+renderGroups();
+renderPreview();
+lucide.createIcons();
+</script>
+</body>
+</html>

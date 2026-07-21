@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useEffect, useState, useMemo, useRef } from 'react';
+import Button from "@/Components/ui/Button";
 
 function formatRupiah(amount) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount || 0);
@@ -63,18 +64,18 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
     if (selected && !open) {
         return (
             <div ref={containerRef}>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                    Pembelian Asal <span className="text-red-500">*</span>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">
+                    Pembelian Asal <span className="text-destructive">*</span>
                 </label>
                 <div className="flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50/40 px-4 py-3">
                     <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-primary-700">{selected.purchase_no}</p>
-                        <p className="text-xs text-slate-500">{selected.supplier?.name} &bull; {selected.items_count} item &bull; {formatDate(selected.purchase_date)}</p>
+                        <p className="text-xs text-muted-foreground">{selected.supplier?.name} &bull; {selected.items_count} item &bull; {formatDate(selected.purchase_date)}</p>
                     </div>
                     <button
                         type="button"
                         onClick={clearSelection}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted/70 hover:text-muted-foreground"
                         title="Ganti pembelian"
                     >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -88,11 +89,11 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
 
     return (
         <div ref={containerRef} className="relative">
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Pembelian Asal <span className="text-red-500">*</span>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Pembelian Asal <span className="text-destructive">*</span>
             </label>
             <div className="relative">
-                <svg className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                <svg className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
                 <input
@@ -103,15 +104,15 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
                     onFocus={() => setOpen(true)}
                     onKeyDown={onKey}
                     placeholder="Ketik nomor pembelian atau nama supplier…"
-                    className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                    className="block w-full rounded-xl border border-border py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                     autoComplete="off"
                 />
             </div>
 
             {open && (
-                <div className="absolute z-40 mt-1.5 max-h-72 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div className="absolute z-40 mt-1.5 max-h-72 w-full overflow-y-auto rounded-2xl border border-border bg-card shadow-xl">
                     {filtered.length === 0 ? (
-                        <div className="px-4 py-8 text-center text-sm text-slate-400">
+                        <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                             Pembelian tidak ditemukan
                         </div>
                     ) : filtered.map((p, i) => (
@@ -122,24 +123,24 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
                             onClick={() => pick(p)}
                             onMouseEnter={() => setIdx(i)}
                             className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition ${
-                                i === idx ? 'bg-primary-50' : 'hover:bg-slate-50'
+                                i === idx ? 'bg-primary-50' : 'hover:bg-muted'
                             }`}
                         >
                             <div className="min-w-0 flex-1">
-                                <p className={`truncate font-medium ${i === idx ? 'text-primary-700' : 'text-slate-800'}`}>
+                                <p className={`truncate font-medium ${i === idx ? 'text-primary-700' : 'text-foreground'}`}>
                                     {p.purchase_no}
                                 </p>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground">
                                     {p.supplier?.name || '-'} &bull; {p.items_count} item
                                 </p>
                             </div>
-                            <span className="shrink-0 text-xs text-slate-400">
+                            <span className="shrink-0 text-xs text-muted-foreground">
                                 {formatDate(p.purchase_date)}
                             </span>
                         </button>
                     ))}
                     {purchases.length > 30 && (
-                        <div className="border-t border-slate-100 px-4 py-2 text-center text-xs text-slate-400">
+                        <div className="border-t border-border px-4 py-2 text-center text-xs text-muted-foreground">
                             Ketik untuk menyaring lebih lanjut
                         </div>
                     )}
@@ -252,7 +253,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
         `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
             errors[field]
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                : 'border-slate-300 focus:border-primary-500 focus:ring-primary-200'
+                : 'border-border focus:border-ring focus:ring-ring/20'
         }`;
 
     return (
@@ -261,14 +262,14 @@ export default function Create({ purchases, storeType = 'retail' }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route('admin.purchase-returns.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                         </svg>
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">Buat {pageTitle}</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Buat {pageTitle}</h2>
                 </div>
             }
         >
@@ -276,10 +277,10 @@ export default function Create({ purchases, storeType = 'retail' }) {
 
             <form onSubmit={submit} className="mx-auto max-w-3xl space-y-6">
                 {/* Header Info */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
-                        <h3 className="text-base font-semibold text-slate-900">Informasi Retur</h3>
-                        <p className="mt-0.5 text-sm text-slate-500">Pilih pembelian asal dan isi data retur.</p>
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="border-b border-border bg-muted/50 px-6 py-5">
+                        <h3 className="text-base font-semibold text-foreground">Informasi Retur</h3>
+                        <p className="mt-0.5 text-sm text-muted-foreground">Pilih pembelian asal dan isi data retur.</p>
                     </div>
                     <div className="p-6">
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -290,8 +291,8 @@ export default function Create({ purchases, storeType = 'retail' }) {
                             />
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700">
-                                    Tanggal Retur <span className="text-red-500">*</span>
+                                <label className="block text-sm font-medium text-foreground">
+                                    Tanggal Retur <span className="text-destructive">*</span>
                                 </label>
                                 <input
                                     type="date"
@@ -299,13 +300,13 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                     onChange={(e) => setData('return_date', e.target.value)}
                                     className={`mt-1.5 ${inputCls('return_date')}`}
                                 />
-                                {errors.return_date && <p className="mt-1.5 text-sm text-red-600">{errors.return_date}</p>}
+                                {errors.return_date && <p className="mt-1.5 text-sm text-destructive">{errors.return_date}</p>}
                             </div>
                         </div>
 
                         <div className="mt-4">
-                            <label className="block text-sm font-medium text-slate-700">
-                                Catatan <span className="text-xs font-normal text-slate-400">(opsional)</span>
+                            <label className="block text-sm font-medium text-foreground">
+                                Catatan <span className="text-xs font-normal text-muted-foreground">(opsional)</span>
                             </label>
                             <textarea
                                 value={data.notes}
@@ -319,18 +320,18 @@ export default function Create({ purchases, storeType = 'retail' }) {
                 </div>
 
                 {/* Items Selection */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
-                        <h3 className="text-base font-semibold text-slate-900">Item yang Diretur</h3>
-                        <p className="mt-0.5 text-sm text-slate-500">Pilih item dari pembelian asal yang akan dikembalikan ke supplier.</p>
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="border-b border-border bg-muted/50 px-6 py-5">
+                        <h3 className="text-base font-semibold text-foreground">Item yang Diretur</h3>
+                        <p className="mt-0.5 text-sm text-muted-foreground">Pilih item dari pembelian asal yang akan dikembalikan ke supplier.</p>
                     </div>
                     <div className="p-6">
                         {!data.purchase_id ? (
-                            <div className="rounded-xl border border-dashed border-slate-300 py-10 text-center">
-                                <svg className="mx-auto h-10 w-10 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                            <div className="rounded-xl border border-dashed border-border py-10 text-center">
+                                <svg className="mx-auto h-10 w-10 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272" />
                                 </svg>
-                                <p className="mt-3 text-sm text-slate-500">Pilih pembelian asal terlebih dahulu</p>
+                                <p className="mt-3 text-sm text-muted-foreground">Pilih pembelian asal terlebih dahulu</p>
                             </div>
                         ) : loadingItems ? (
                             <div className="flex items-center justify-center py-10">
@@ -338,11 +339,11 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                 </svg>
-                                <span className="ml-3 text-sm text-slate-500">Memuat item pembelian...</span>
+                                <span className="ml-3 text-sm text-muted-foreground">Memuat item pembelian...</span>
                             </div>
                         ) : purchaseItems.length === 0 ? (
-                            <div className="rounded-xl border border-dashed border-slate-300 py-10 text-center">
-                                <p className="text-sm text-slate-500">Tidak ada item pada pembelian ini</p>
+                            <div className="rounded-xl border border-dashed border-border py-10 text-center">
+                                <p className="text-sm text-muted-foreground">Tidak ada item pada pembelian ini</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -350,7 +351,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                     <div
                                         key={idx}
                                         className={`rounded-xl border p-4 transition ${
-                                            item.selected ? 'border-primary-300 bg-primary-50/30' : 'border-slate-200 hover:border-slate-300'
+                                            item.selected ? 'border-primary-300 bg-primary-50/30' : 'border-border hover:border-border'
                                         }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -359,32 +360,32 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                     type="checkbox"
                                                     checked={item.selected}
                                                     onChange={() => toggleItem(idx)}
-                                                    className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                                                    className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
                                                 />
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <p className="text-sm font-medium text-slate-800">{item.product_name}</p>
-                                                        <p className="text-xs text-slate-400">SKU: {item.product_sku}</p>
+                                                        <p className="text-sm font-medium text-foreground">{item.product_name}</p>
+                                                        <p className="text-xs text-muted-foreground">SKU: {item.product_sku}</p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="text-sm font-medium text-slate-600">Beli: {item.quantity}</p>
+                                                        <p className="text-sm font-medium text-muted-foreground">Beli: {item.quantity}</p>
                                                         {item.returned_qty > 0 && (
                                                             <p className="text-xs text-amber-600">Sudah diretur: {item.returned_qty}</p>
                                                         )}
-                                                        <p className={`text-xs font-medium ${item.returnable_qty > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                                        <p className={`text-xs font-medium ${item.returnable_qty > 0 ? 'text-emerald-600' : 'text-destructive'}`}>
                                                             Sisa bisa diretur: {item.returnable_qty}
                                                         </p>
-                                                        <p className="text-xs text-slate-400">{formatRupiah(item.cost_price)}/pc</p>
+                                                        <p className="text-xs text-muted-foreground">{formatRupiah(item.cost_price)}/pc</p>
                                                     </div>
                                                 </div>
 
                                                 {item.selected && (
                                                     <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                                                         <div>
-                                                            <label className="block text-xs font-medium text-slate-600">
-                                                                Jumlah Retur <span className="text-red-500">*</span>
+                                                            <label className="block text-xs font-medium text-muted-foreground">
+                                                                Jumlah Retur <span className="text-destructive">*</span>
                                                             </label>
                                                             <input
                                                                 type="number"
@@ -393,12 +394,12 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                                 value={item.return_qty || ''}
                                                                 onChange={(e) => updateQty(idx, parseInt(e.target.value) || 0)}
                                                                 disabled={item.returnable_qty <= 0}
-                                                                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 disabled:bg-slate-100 disabled:text-slate-400"
+                                                                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:bg-muted disabled:text-muted-foreground"
                                                             />
-                                                            <p className="mt-1 text-xs text-slate-400">Maks: {item.returnable_qty}</p>
+                                                            <p className="mt-1 text-xs text-muted-foreground">Maks: {item.returnable_qty}</p>
                                                         </div>
                                                         <div>
-                                                            <label className="block text-xs font-medium text-slate-600">
+                                                            <label className="block text-xs font-medium text-muted-foreground">
                                                                 Alasan Retur
                                                             </label>
                                                             <input
@@ -406,7 +407,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                                 value={item.reason || ''}
                                                                 onChange={(e) => updateReason(idx, e.target.value)}
                                                                 placeholder="Rusak, tidak sesuai, dll."
-                                                                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                                                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                             />
                                                         </div>
                                                     </div>
@@ -418,27 +419,27 @@ export default function Create({ purchases, storeType = 'retail' }) {
                             </div>
                         )}
 
-                        {errors.items && <p className="mt-2 text-sm text-red-600">{errors.items}</p>}
+                        {errors.items && <p className="mt-2 text-sm text-destructive">{errors.items}</p>}
                     </div>
                 </div>
 
                 {/* Summary */}
                 {selectedItems.length > 0 && (
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                         <div className="p-6">
-                            <h3 className="text-sm font-semibold text-slate-700 mb-3">Ringkasan Retur</h3>
+                            <h3 className="text-sm font-semibold text-foreground mb-3">Ringkasan Retur</h3>
                             <div className="space-y-2">
                                 {selectedItems.map((item, idx) => (
                                     <div key={idx} className="flex items-center justify-between text-sm">
-                                        <span className="text-slate-600">
+                                        <span className="text-muted-foreground">
                                             {item.product_name} × {item.return_qty}
                                         </span>
-                                        <span className="font-medium text-slate-800">{formatRupiah(item.return_qty * item.cost_price)}</span>
+                                        <span className="font-medium text-foreground">{formatRupiah(item.return_qty * item.cost_price)}</span>
                                     </div>
                                 ))}
-                                <div className="border-t border-slate-100 pt-2 mt-2">
+                                <div className="border-t border-border pt-2 mt-2">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold text-slate-700">Total Retur</span>
+                                        <span className="text-sm font-semibold text-foreground">Total Retur</span>
                                         <span className="text-lg font-bold text-primary-600">{formatRupiah(subtotal)}</span>
                                     </div>
                                 </div>
@@ -448,20 +449,20 @@ export default function Create({ purchases, storeType = 'retail' }) {
                 )}
 
                 {/* Actions */}
-                <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+                <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
                     <Link
                         href={route('admin.purchase-returns.index')}
-                        className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                        className="inline-flex justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                     >
                         Batal
                     </Link>
-                    <button
+                    <Button
                         type="submit"
-                        disabled={processing || selectedItems.length === 0}
-                        className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-60"
+                        loading={processing}
+                        disabled={selectedItems.length === 0}
                     >
-                        {processing ? 'Menyimpan...' : 'Simpan Retur'}
-                    </button>
+                        Simpan Retur
+                    </Button>
                 </div>
             </form>
         </AuthenticatedLayout>

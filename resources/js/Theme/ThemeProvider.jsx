@@ -18,7 +18,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { usePage } from '@inertiajs/react';
-import { buildShadcnTemplate, FALLBACK_THEME } from './templates';
+import { FALLBACK_THEME } from './templates';
 import {
     SHADCN_TOKEN_KEYS,
     TOKEN_TO_CSS_VAR,
@@ -56,13 +56,13 @@ function buildSystemThemesById(systemThemes) {
     const map = {};
     for (const t of systemThemes || []) {
         if (!t?.slug) continue;
+        const tokens = t.tokens || {};
         map[t.slug] = {
             id: t.slug,
             label: t.name,
             description: t.description,
-            recommendedMode: t.is_dark ? 'dark' : 'light',
-            light: t.light_tokens || FALLBACK_THEME.light,
-            dark: t.dark_tokens || FALLBACK_THEME.dark,
+            light: tokens.light || FALLBACK_THEME.light,
+            dark: tokens.dark || FALLBACK_THEME.dark,
         };
     }
     return map;
@@ -70,21 +70,22 @@ function buildSystemThemesById(systemThemes) {
 
 /** Resolve ThemeDefinition aktif dari preference + lookup preset sistem. */
 function resolveThemeDefinition(preference, systemThemesById) {
-    if (preference?.templateId === 'custom' && preference.customTokens) {
+    // Custom tema: user buat via halaman /admin/themes — customTokens berisi
+    // {light: ThemeTokens, dark: ThemeTokens} dengan 36 key per mode.
+    if (preference?.templateId === 'custom' && preference.customTokens?.light && preference.customTokens?.dark) {
         return {
             id: 'custom',
             label: 'Custom Theme',
             description: 'Tema kustom buatan sendiri.',
-            recommendedMode: 'light',
-            light: preference.customTokens.light || preference.customTokens,
-            dark: preference.customTokens.dark || preference.customTokens,
+            light: preference.customTokens.light,
+            dark: preference.customTokens.dark,
         };
     }
+    // Preset sistem: lookup by slug dari DB
     if (preference?.templateId && systemThemesById[preference.templateId]) {
         return systemThemesById[preference.templateId];
     }
-    // Fallback: preset sistem pertama yang tersedia, atau tema hardcoded
-    // darurat kalau DB belum di-seed sama sekali.
+    // Fallback: preset sistem pertama, atau tema hardcoded darurat
     const first = Object.values(systemThemesById)[0];
     return first || FALLBACK_THEME;
 }
@@ -252,20 +253,20 @@ export function ThemeProvider({ children }) {
         return () => mq.removeEventListener('change', handler);
     }, [preference.mode, themeDefinition]);
 
-    /** Ganti preset sistem (by slug). */
+    /** Ganti preset sistem (by slug). Setiap tema sudah punya light & dark
+     * eksplisit, jadi mode user (light/dark/system) tidak perlu diubah
+     * mengikuti tema — cukup ganti templateId, mode tetap seperti semula. */
     const setTemplate = useCallback((templateId) => {
         setPreference((prev) => {
-            const def = systemThemesById[templateId];
             const next = {
                 ...prev,
                 templateId,
                 customTokens: templateId === 'custom' ? prev.customTokens : null,
-                mode: prev.mode === 'system' && def?.recommendedMode ? def.recommendedMode : prev.mode,
             };
             persist(next, showToast);
             return next;
         });
-    }, [showToast, systemThemesById]);
+    }, [showToast]);
 
     /** Ganti mode (light/dark/system). */
     const setMode = useCallback((mode) => {
@@ -285,17 +286,6 @@ export function ThemeProvider({ children }) {
         });
     }, [showToast]);
 
-    /** Backward-compat: set custom dari 3 warna dasar. */
-    const setCustomColors = useCallback((colors) => {
-        // Generate full token set dari 3 warna
-        const light = buildShadcnTemplate({
-            primaryHex: colors.primary || '#4F46E5',
-            accentHex: colors.accent || '#8B5CF6',
-            overrides: { secondary: colors.secondary || '#64748B' },
-        });
-        setCustomTokens({ light, dark: light }); // dark = same for backward compat
-    }, [setCustomTokens]);
-
     const value = useMemo(
         () => ({
             preference,
@@ -304,10 +294,9 @@ export function ThemeProvider({ children }) {
             templates: systemThemesList,
             setTemplate,
             setMode,
-            setCustomColors,
             setCustomTokens,
         }),
-        [preference, themeDefinition, isDark, systemThemesList, setTemplate, setMode, setCustomColors, setCustomTokens],
+        [preference, themeDefinition, isDark, systemThemesList, setTemplate, setMode, setCustomTokens],
     );
 
     return (

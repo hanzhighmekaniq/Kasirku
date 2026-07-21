@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ── Theme Engine: shadcn/ui Token Definitions ─────────────────
  *
  * 36 token per mode (light + dark) sesuai shadcn/ui convention + 4 status.
@@ -38,13 +38,7 @@ export const SHADCN_TOKEN_KEYS = [
     'radius',
     'sidebar',
     'sidebarForeground',
-    'sidebarPrimary',
-    'sidebarPrimaryForeground',
-    'sidebarAccent',
-    'sidebarAccentForeground',
-    'sidebarBorder',
-    'sidebarRing',
-    'success',
+                      'success',
     'warning',
     'info',
 ];
@@ -81,12 +75,6 @@ export const TOKEN_TO_CSS_VAR = {
     radius: '--radius',
     sidebar: '--sidebar',
     sidebarForeground: '--sidebar-foreground',
-    sidebarPrimary: '--sidebar-primary',
-    sidebarPrimaryForeground: '--sidebar-primary-foreground',
-    sidebarAccent: '--sidebar-accent',
-    sidebarAccentForeground: '--sidebar-accent-foreground',
-    sidebarBorder: '--sidebar-border',
-    sidebarRing: '--sidebar-ring',
     success: '--success',
     warning: '--warning',
     info: '--info',
@@ -117,12 +105,6 @@ export const SHADCN_TO_OLD_ALIAS = {
     ring: '--color-input-focus',
     sidebar: '--color-sidebar',
     sidebarForeground: '--color-sidebar-text',
-    sidebarPrimary: '--color-primary-500',
-    sidebarPrimaryForeground: '--color-primary-foreground',
-    sidebarAccent: '--color-surface-secondary',
-    sidebarAccentForeground: '--color-sidebar-text',
-    sidebarBorder: '--color-border',
-    sidebarRing: '--color-input-focus',
     success: '--color-success',
     warning: '--color-warning',
     info: '--color-info',
@@ -143,8 +125,6 @@ export const TOKEN_PAIRS = [
     ['accent', 'accentForeground'],
     ['destructive', 'destructiveForeground'],
     ['sidebar', 'sidebarForeground'],
-    ['sidebarPrimary', 'sidebarPrimaryForeground'],
-    ['sidebarAccent', 'sidebarAccentForeground'],
 ];
 
 /**
@@ -161,9 +141,7 @@ export const SINGLE_TOKENS = [
     'chart4',
     'chart5',
     'radius',
-    'sidebarBorder',
-    'sidebarRing',
-    'success',
+          'success',
     'warning',
     'info',
 ];
@@ -200,12 +178,6 @@ export const TOKEN_LABELS = {
     radius: 'Radius',
     sidebar: 'Sidebar',
     sidebarForeground: 'Sidebar Foreground',
-    sidebarPrimary: 'Sidebar Primary',
-    sidebarPrimaryForeground: 'Sidebar Primary FG',
-    sidebarAccent: 'Sidebar Accent',
-    sidebarAccentForeground: 'Sidebar Accent FG',
-    sidebarBorder: 'Sidebar Border',
-    sidebarRing: 'Sidebar Ring',
     success: 'Success',
     warning: 'Warning',
     info: 'Info',
@@ -265,12 +237,6 @@ export const TEMPLATE_IDS = [
  * @property {string} radius
  * @property {string} sidebar
  * @property {string} sidebarForeground
- * @property {string} sidebarPrimary
- * @property {string} sidebarPrimaryForeground
- * @property {string} sidebarAccent
- * @property {string} sidebarAccentForeground
- * @property {string} sidebarBorder
- * @property {string} sidebarRing
  * @property {string} success
  * @property {string} warning
  * @property {string} info
@@ -279,7 +245,6 @@ export const TEMPLATE_IDS = [
  * @property {string} id
  * @property {string} label
  * @property {string} description
- * @property {'light'|'dark'} recommendedMode
  * @property {ThemeTokens} light
  * @property {ThemeTokens} dark
  *
