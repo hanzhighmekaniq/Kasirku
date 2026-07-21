@@ -33,10 +33,10 @@ export default function SessionKasir(props) {
             {/* Stats */}
             <div className="grid grid-cols-4 gap-3 mb-5">
                 {stats.map((s, i) => (
-                    <div key={i} className="rounded-2xl bg-white border border-slate-200 p-4">
-                        <div className="text-[10.5px] uppercase tracking-widest text-slate-500 font-medium">{s.l}</div>
+                    <div key={i} className="rounded-2xl bg-card border border-border p-4">
+                        <div className="text-[10.5px] uppercase tracking-widest text-muted-foreground font-medium">{s.l}</div>
                         <div className="mt-1 text-[24px] font-semibold tracking-tight tabular-nums">{s.v}</div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">{s.s}</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">{s.s}</div>
                     </div>
                 ))}
             </div>
@@ -45,20 +45,20 @@ export default function SessionKasir(props) {
             <div className="flex items-end justify-between mb-3">
                 <div>
                     <div className="text-[15px] font-semibold tracking-tight">Rooms</div>
-                    <div className="text-[11.5px] text-slate-500 mt-0.5">{rooms.length} rooms · live timers</div>
+                    <div className="text-[11.5px] text-muted-foreground mt-0.5">{rooms.length} rooms · live timers</div>
                 </div>
                 <div className="flex gap-1.5">
-                    <button className="h-8 px-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-[11.5px] shadow-sm">All</button>
-                    <button className="h-8 px-3 rounded-lg border border-slate-200 text-[11.5px] hover:bg-slate-50">PS</button>
-                    <button className="h-8 px-3 rounded-lg border border-slate-200 text-[11.5px] hover:bg-slate-50">Karaoke</button>
-                    <button className="h-8 px-3 rounded-lg border border-slate-200 text-[11.5px] hover:bg-slate-50">Billiard</button>
+                    <button className="h-8 px-3 rounded-lg bg-primary text-white text-[11.5px] shadow-sm">All</button>
+                    <button className="h-8 px-3 rounded-lg border border-border text-[11.5px] hover:bg-muted">PS</button>
+                    <button className="h-8 px-3 rounded-lg border border-border text-[11.5px] hover:bg-muted">Karaoke</button>
+                    <button className="h-8 px-3 rounded-lg border border-border text-[11.5px] hover:bg-muted">Billiard</button>
                 </div>
             </div>
             <div className="grid grid-cols-3 gap-3 mb-6">
                 {rooms.map((r, i) => {
                     const isActive = r.st === "active";
                     return (
-                        <div key={i} className={`rounded-2xl border ${isActive ? "border-indigo-400 shadow-md" : "border-slate-200"} bg-white overflow-hidden`}>
+                        <div key={i} className={`rounded-2xl border ${isActive ? "border-indigo-400 shadow-md" : "border-border"} bg-card overflow-hidden`}>
                             <div className={`h-16 bg-gradient-to-br ${r.bg} relative`}>
                                 <div className="absolute inset-0 flex items-center justify-between px-4">
                                     <div className="text-white">
@@ -66,32 +66,32 @@ export default function SessionKasir(props) {
                                         <div className="text-[14px] font-semibold">{r.n}</div>
                                     </div>
                                     {isActive ? (
-                                        <span className="inline-flex items-center rounded-md bg-white/20 border border-white/20 px-2 py-0.5 text-[10.5px] font-medium text-white">
+                                        <span className="inline-flex items-center rounded-md bg-card/20 border border-white/20 px-2 py-0.5 text-[10.5px] font-medium text-white">
                                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 mr-1 animate-pulse"></span>Live
                                         </span>
                                     ) : r.st === "cleaning" ? (
-                                        <span className="inline-flex items-center rounded-md bg-white/20 border border-white/20 px-2 py-0.5 text-[10.5px] font-medium text-white">Cleaning</span>
+                                        <span className="inline-flex items-center rounded-md bg-card/20 border border-white/20 px-2 py-0.5 text-[10.5px] font-medium text-white">Cleaning</span>
                                     ) : (
-                                        <span className="inline-flex items-center rounded-md bg-white/20 border border-white/20 px-2 py-0.5 text-[10.5px] font-medium text-white">Idle</span>
+                                        <span className="inline-flex items-center rounded-md bg-card/20 border border-white/20 px-2 py-0.5 text-[10.5px] font-medium text-white">Idle</span>
                                     )}
                                 </div>
                             </div>
                             <div className="p-4">
                                 <div className="flex items-baseline justify-between">
                                     <div className="text-[26px] font-semibold tabular-nums tracking-tight">{r.elapsed}</div>
-                                    <div className="text-[11px] text-slate-500">{r.end}</div>
+                                    <div className="text-[11px] text-muted-foreground">{r.end}</div>
                                 </div>
-                                <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                                    <div className={`h-full ${isActive ? "bg-emerald-500" : "bg-slate-200"}`} style={{ width: isActive ? "60%" : "0%" }}></div>
+                                <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+                                    <div className={`h-full ${isActive ? "bg-success" : "bg-slate-200"}`} style={{ width: isActive ? "60%" : "0%" }}></div>
                                 </div>
                                 <div className="mt-3 flex items-center justify-between text-[11.5px]">
-                                    <span className="text-slate-500">{k.fmt(r.rate)}/hr</span>
+                                    <span className="text-muted-foreground">{k.fmt(r.rate)}/hr</span>
                                     <span className="font-semibold tabular-nums">{r.bill > 0 ? k.fmt(r.bill) : "—"}</span>
                                 </div>
                                 <div className="mt-3 grid grid-cols-3 gap-1.5">
-                                    <button className="h-8 rounded-lg border border-slate-200 text-[11px] font-medium hover:bg-slate-50">+15m</button>
-                                    <button className="h-8 rounded-lg border border-slate-200 text-[11px] font-medium hover:bg-slate-50">Pause</button>
-                                    <button className={`h-8 rounded-lg ${isActive ? "bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-sm" : "border border-slate-200 text-slate-400 cursor-not-allowed"} text-[11px] font-medium`}>Stop</button>
+                                    <button className="h-8 rounded-lg border border-border text-[11px] font-medium hover:bg-muted">+15m</button>
+                                    <button className="h-8 rounded-lg border border-border text-[11px] font-medium hover:bg-muted">Pause</button>
+                                    <button className={`h-8 rounded-lg ${isActive ? "bg-primary text-white shadow-sm" : "border border-border text-muted-foreground/60 cursor-not-allowed"} text-[11px] font-medium`}>Stop</button>
                                 </div>
                             </div>
                         </div>
@@ -101,16 +101,16 @@ export default function SessionKasir(props) {
 
             {/* Additional Orders + Timer */}
             <div className="grid grid-cols-3 gap-5">
-                <div className="col-span-2 rounded-2xl bg-white border border-slate-200 p-4">
+                <div className="col-span-2 rounded-2xl bg-card border border-border p-4">
                     <div className="flex items-end justify-between mb-3">
                         <div>
                             <div className="text-[15px] font-semibold tracking-tight">Additional Orders · PS5 Room 01</div>
-                            <div className="text-[11.5px] text-slate-500 mt-0.5">Charged to session</div>
+                            <div className="text-[11.5px] text-muted-foreground mt-0.5">Charged to session</div>
                         </div>
                     </div>
-                    <div className="overflow-hidden rounded-xl border border-slate-200">
+                    <div className="overflow-hidden rounded-xl border border-border">
                         <table className="w-full text-[12.5px]">
-                            <thead className="bg-slate-50 text-slate-500 text-[10.5px] uppercase tracking-widest">
+                            <thead className="bg-muted/50 text-muted-foreground text-[10.5px] uppercase tracking-widest">
                                 <tr>
                                     <th className="text-left px-4 py-2 font-medium">Item</th>
                                     <th className="text-left px-4 py-2 font-medium">Qty</th>
@@ -120,7 +120,7 @@ export default function SessionKasir(props) {
                             </thead>
                             <tbody>
                                 {orders.map((o, i) => (
-                                    <tr key={i} className="border-t border-slate-100 hover:bg-slate-50/50">
+                                    <tr key={i} className="border-t border-border hover:bg-muted/50">
                                         <td className="px-4 py-2.5">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-lg">{o.ic}</span>
@@ -128,7 +128,7 @@ export default function SessionKasir(props) {
                                             </div>
                                         </td>
                                         <td className="px-4 py-2.5">×{o.qty}</td>
-                                        <td className="px-4 py-2.5 text-slate-500 tabular-nums">13:{20 + i * 8}</td>
+                                        <td className="px-4 py-2.5 text-muted-foreground tabular-nums">13:{20 + i * 8}</td>
                                         <td className="px-4 py-2.5 text-right font-semibold tabular-nums">{k.fmt(o.qty * o.price)}</td>
                                     </tr>
                                 ))}
@@ -149,8 +149,8 @@ export default function SessionKasir(props) {
                         <div className="flex items-center justify-between"><span className="text-white/60">F&B</span><span className="tabular-nums">{k.fmt(22100)}</span></div>
                     </div>
                     <div className="mt-5 grid grid-cols-2 gap-2">
-                        <button className="h-10 rounded-lg bg-white/10 text-white text-[12px] font-medium">+30 min</button>
-                        <button className="h-10 rounded-lg bg-white text-slate-900 text-[12px] font-semibold">Add F&B</button>
+                        <button className="h-10 rounded-lg bg-card/10 text-white text-[12px] font-medium">+30 min</button>
+                        <button className="h-10 rounded-lg bg-card text-foreground text-[12px] font-semibold">Add F&B</button>
                     </div>
                 </div>
             </div>

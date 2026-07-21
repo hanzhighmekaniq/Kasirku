@@ -176,10 +176,10 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                 Margin
                             </label>
                             <div
-                                className={`rounded-xl border px-3 py-2 ${margin < 0 ? "border-rose-200 bg-rose-50" : "border-success/20 bg-success/10"}`}
+                                className={`rounded-xl border px-3 py-2 ${margin < 0 ? "border-destructive/20 bg-destructive/5" : "border-success/20 bg-success/10"}`}
                             >
                                 <div
-                                    className={`text-sm font-bold ${margin < 0 ? "text-rose-700" : "text-emerald-800"}`}
+                                    className={`text-sm font-bold ${margin < 0 ? "text-destructive" : "text-success"}`}
                                 >
                                     Rp {margin.toLocaleString("id-ID")}
                                 </div>
@@ -194,7 +194,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                             onClick={() =>
                                 setData("is_active", !data.is_active)
                             }
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.is_active ? "bg-primary-600" : "bg-slate-200"}`}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.is_active ? "bg-primary" : "bg-muted"}`}
                         >
                             <span
                                 className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ${data.is_active ? "translate-x-5" : "translate-x-0"}`}
@@ -226,7 +226,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                             { min_qty: "", price: "" },
                                         ])
                                     }
-                                    className="inline-flex items-center gap-1 rounded-lg bg-primary-50 px-2.5 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-100"
+                                    className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
                                 >
                                     <svg
                                         className="h-3.5 w-3.5"
@@ -252,7 +252,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                         key={i}
                                         className="grid grid-cols-12 gap-2 items-center"
                                     >
-                                        <span className="col-span-2 inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700 border border-primary-100 justify-self-start">
+                                        <span className="col-span-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10 justify-self-start">
                                             Tier {i + 1}
                                         </span>
                                         <div className="col-span-4 relative">
@@ -315,7 +315,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     ),
                                                 )
                                             }
-                                            className="col-span-1 justify-self-end rounded p-1 text-rose-500 hover:bg-rose-50"
+                                            className="col-span-1 justify-self-end rounded p-1 text-destructive hover:bg-destructive/10"
                                         >
                                             <svg
                                                 className="h-4 w-4"
@@ -334,7 +334,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                     </div>
 
                     {/* Multi Satuan / Kemasan */}
-                    <div className="rounded-xl border border-amber-200/70 bg-amber-50/40 p-4">
+                    <div className="rounded-xl border border-warning/20 bg-warning/5 p-4">
                         <div className="flex items-center justify-between mb-3">
                             <div>
                                 <div className="text-sm font-semibold text-foreground">
@@ -357,7 +357,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                         },
                                     ])
                                 }
-                                className="inline-flex items-center gap-1 rounded-lg bg-primary-50 px-2.5 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-100"
+                                className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
                             >
                                 <svg
                                     className="h-3.5 w-3.5"
@@ -486,7 +486,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     ),
                                                 )
                                             }
-                                            className="col-span-1 justify-self-end rounded p-1 text-rose-500 hover:bg-rose-50"
+                                            className="col-span-1 justify-self-end rounded p-1 text-destructive hover:bg-destructive/10"
                                         >
                                             <svg
                                                 className="h-4 w-4"
@@ -681,7 +681,7 @@ export default function Variants({ product }) {
                     </div>
                     <div className="hidden sm:block text-right">
                         <p className="text-sm text-muted-foreground">Total Varian</p>
-                        <p className="text-2xl font-bold text-primary-600">
+                        <p className="text-2xl font-bold text-primary">
                             {variants.length}
                         </p>
                     </div>
@@ -786,7 +786,7 @@ export default function Variants({ product }) {
                                             </td>
                                             <td className="px-5 py-4 text-center">
                                                 {v.price_tiers?.length > 0 ? (
-                                                    <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">
+                                                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                                                         {v.price_tiers.length}{" "}
                                                         tier
                                                     </span>
@@ -799,7 +799,7 @@ export default function Variants({ product }) {
                                             <td className="px-5 py-4 text-center">
                                                 {v.packaging_units?.length >
                                                 0 ? (
-                                                    <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                                                    <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
                                                         {
                                                             v.packaging_units
                                                                 .length
@@ -814,7 +814,7 @@ export default function Variants({ product }) {
                                             </td>
                                             <td className="px-5 py-4 text-center">
                                                 <span
-                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${v.is_active ? "bg-emerald-100 text-success" : "bg-muted text-muted-foreground"}`}
+                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${v.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}
                                                 >
                                                     {v.is_active
                                                         ? "Aktif"
@@ -828,7 +828,7 @@ export default function Variants({ product }) {
                                                             setEditVariant(v);
                                                             setShowForm(true);
                                                         }}
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                         title="Edit"
                                                     >
                                                         <svg
@@ -885,7 +885,7 @@ export default function Variants({ product }) {
                                                     {v.name}
                                                 </p>
                                                 <span
-                                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${v.is_active ? "bg-emerald-100 text-success" : "bg-muted text-muted-foreground"}`}
+                                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${v.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}
                                                 >
                                                     {v.is_active
                                                         ? "Aktif"
@@ -916,7 +916,7 @@ export default function Variants({ product }) {
                                                 <div className="mt-2 flex flex-wrap gap-1.5">
                                                     {v.price_tiers?.length >
                                                         0 && (
-                                                        <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-medium text-primary-700">
+                                                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
                                                             {
                                                                 v.price_tiers
                                                                     .length
@@ -926,7 +926,7 @@ export default function Variants({ product }) {
                                                     )}
                                                     {v.packaging_units
                                                         ?.length > 0 && (
-                                                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                                                        <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning">
                                                             {
                                                                 v.packaging_units
                                                                     .length
@@ -944,7 +944,7 @@ export default function Variants({ product }) {
                                                 setEditVariant(v);
                                                 setShowForm(true);
                                             }}
-                                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
+                                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary transition hover:bg-primary/10"
                                         >
                                             <svg
                                                 className="h-3.5 w-3.5"

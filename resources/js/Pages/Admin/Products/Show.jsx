@@ -41,13 +41,13 @@ const movementLabel = (type) => MOVEMENT_LABEL[type] ?? type ?? "—";
 const TYPE_META = {
     finished_goods: {
         label: "Barang Jadi",
-        cls: "bg-violet-50 text-violet-700 border border-violet-200",
+        cls: "bg-accent/10 text-accent-foreground border border-accent/20",
     },
     raw_material: {
         label: "Bahan Baku",
-        cls: "bg-amber-100 text-amber-700",
+        cls: "bg-warning/10 text-warning",
     },
-    combo: { label: "Combo/Paket", cls: "bg-violet-100 text-violet-700" },
+    combo: { label: "Combo/Paket", cls: "bg-accent/10 text-accent-foreground" },
 };
 
 const EXPIRY_META = {
@@ -58,8 +58,8 @@ const EXPIRY_META = {
     },
     expiring_soon: {
         label: "Hampir Habis",
-        cls: "bg-amber-50 text-amber-700 border border-amber-200",
-        dot: "bg-amber-500",
+        cls: "bg-warning/5 text-warning border border-warning/20",
+        dot: "bg-warning/100",
     },
     expired: {
         label: "Kadaluarsa",
@@ -126,7 +126,7 @@ function StockTable({ stocks }) {
                                 </td>
                                 <td className="px-6 py-3 text-right">
                                     <span
-                                        className={`font-semibold ${avail <= 0 ? "text-destructive" : "text-emerald-600"}`}
+                                        className={`font-semibold ${avail <= 0 ? "text-destructive" : "text-success"}`}
                                     >
                                         {avail}
                                     </span>
@@ -183,7 +183,7 @@ function BatchTable({ batches }) {
                                 key={b.id}
                                 className={`transition hover:bg-muted ${status === "expired" ? "bg-destructive/10/30" : ""}`}
                             >
-                                <td className="px-6 py-3 font-mono text-xs font-semibold text-primary-600">
+                                <td className="px-6 py-3 font-mono text-xs font-semibold text-primary">
                                     {b.batch_no}
                                 </td>
                                 <td className="px-6 py-3 text-right font-semibold text-foreground">
@@ -271,7 +271,7 @@ function BucketMarginTable({ bucketMargins }) {
                             </td>
                             <td className="px-6 py-3 text-right">
                                 <span
-                                    className={`font-semibold ${b.margin_rp < 0 ? "text-destructive" : "text-emerald-600"}`}
+                                    className={`font-semibold ${b.margin_rp < 0 ? "text-destructive" : "text-success"}`}
                                 >
                                     {fmt(b.margin_rp)}
                                 </span>
@@ -297,7 +297,7 @@ function VariantsTable({ variants, productId }) {
                 </p>
                 <Link
                     href={route("admin.products.variants.index", productId)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/10"
                 >
                     <svg
                         className="h-3.5 w-3.5"
@@ -333,7 +333,7 @@ function VariantsTable({ variants, productId }) {
                                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${v.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}
                             >
                                 <span
-                                    className={`h-1.5 w-1.5 rounded-full ${v.is_active ? "bg-success/100" : "bg-slate-400"}`}
+                                    className={`h-1.5 w-1.5 rounded-full ${v.is_active ? "bg-success/100" : "bg-muted-foreground"}`}
                                 />
                                 {v.is_active ? "Aktif" : "Nonaktif"}
                             </span>
@@ -347,12 +347,12 @@ function VariantsTable({ variants, productId }) {
                             </span>
                             <div className="flex gap-1">
                                 {v.price_tiers?.length > 0 && (
-                                    <span className="inline-flex items-center rounded-full bg-primary-50 px-1.5 py-0.5 text-[10px] font-medium text-primary-700">
+                                    <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
                                         {v.price_tiers.length} grosir
                                     </span>
                                 )}
                                 {v.packaging_units?.length > 0 && (
-                                    <span className="inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                                    <span className="inline-flex items-center rounded-full bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">
                                         {v.packaging_units.length} kemasan
                                     </span>
                                 )}
@@ -363,7 +363,7 @@ function VariantsTable({ variants, productId }) {
             </div>
             <Link
                 href={route("admin.products.variants.index", productId)}
-                className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-medium text-primary-600 transition hover:bg-primary-100"
+                className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/20"
             >
                 <svg
                     className="h-4 w-4"
@@ -470,7 +470,7 @@ export default function Show({
                         >
                             Produk
                         </Link>
-                        <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-muted" />
                         <span className="text-foreground font-medium">
                             Detail
                         </span>
@@ -497,7 +497,7 @@ export default function Show({
                                             });
                                         }
                                     }}
-                                    className="inline-flex items-center gap-1.5 rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-100"
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success transition hover:bg-success/20"
                                 >
                                     <svg
                                         className="h-4 w-4"
@@ -516,7 +516,7 @@ export default function Show({
                                     onClick={() =>
                                         setStockModal({ product, type: "out" })
                                     }
-                                    className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition hover:bg-red-100"
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/20"
                                 >
                                     <svg
                                         className="h-4 w-4"
@@ -532,7 +532,7 @@ export default function Show({
                         )}
                         <Link
                             href={route("admin.products.edit", product.id)}
-                            className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-600 rounded-lg hover:from-primary-700 hover:to-primary-700 shadow-sm transition"
+                            className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 shadow-sm transition"
                         >
                             Edit Produk
                         </Link>
@@ -551,7 +551,7 @@ export default function Show({
             {/* ── Low Stock Alert ── */}
             {isLowStock && !alertDismissed && (
                 <div className="mb-6 bg-destructive/10 border border-destructive/20 rounded-2xl p-4 flex items-start gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <div className="flex-shrink-0 w-10 h-10 bg-destructive/10 rounded-full flex items-center justify-center">
                         <svg
                             className="w-5 h-5 text-destructive"
                             fill="none"
@@ -567,7 +567,7 @@ export default function Show({
                         </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-red-900">
+                        <p className="text-sm font-semibold text-destructive">
                             Perhatian: Stok menipis
                         </p>
                         <p className="text-sm text-destructive mt-0.5">
@@ -578,7 +578,7 @@ export default function Show({
                     </div>
                     <button
                         onClick={() => setAlertDismissed(true)}
-                        className="flex-shrink-0 p-1 text-red-400 hover:text-destructive rounded"
+                        className="flex-shrink-0 p-1 text-destructive/60 hover:text-destructive rounded"
                     >
                         <svg
                             className="w-5 h-5"
@@ -599,10 +599,10 @@ export default function Show({
 
             {/* ── Expired Batch Alert ── */}
             {batchStats.expired > 0 && (
-                <div className="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <div className="mb-6 bg-warning/5 border border-warning/20 rounded-2xl p-4 flex items-start gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 bg-warning/10 rounded-full flex items-center justify-center">
                         <svg
-                            className="w-5 h-5 text-amber-600"
+                            className="w-5 h-5 text-warning"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={1.8}
@@ -616,10 +616,10 @@ export default function Show({
                         </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-amber-900">
+                        <p className="text-sm font-semibold text-warning">
                             Batch kadaluarsa
                         </p>
-                        <p className="text-sm text-amber-700 mt-0.5">
+                        <p className="text-sm text-warning mt-0.5">
                             <strong>{batchStats.expired} batch</strong> produk
                             ini sudah kadaluarsa.{" "}
                             <button
@@ -644,8 +644,8 @@ export default function Show({
                                 className="w-32 h-32 rounded-2xl object-cover shadow-lg"
                             />
                         ) : (
-                            <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-primary-500 via-primary-500 to-purple-600 flex items-center justify-center shadow-lg">
-                                <span className="text-5xl font-bold text-white">
+                            <div className="w-32 h-32 rounded-2xl bg-primary flex items-center justify-center shadow-lg">
+                                <span className="text-5xl font-bold text-primary-foreground">
                                     {product.name
                                         .split(" ")
                                         .map((w) => w[0])
@@ -662,24 +662,24 @@ export default function Show({
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${product.is_active ? "bg-success/10 text-success border border-success/20" : "bg-muted text-muted-foreground"}`}
                             >
                                 <span
-                                    className={`w-1.5 h-1.5 rounded-full ${product.is_active ? "bg-success/100 animate-pulse" : "bg-slate-400"}`}
+                                    className={`w-1.5 h-1.5 rounded-full ${product.is_active ? "bg-success/100 animate-pulse" : "bg-muted-foreground"}`}
                                 />
                                 {product.is_active ? "Aktif" : "Nonaktif"}
                             </span>
                             {product.track_stock && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-200">
-                                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 text-accent-foreground text-xs font-medium border border-accent/20">
+                                    <span className="w-1.5 h-1.5 bg-accent rounded-full" />
                                     Dipantau
                                 </span>
                             )}
                             {product.is_sellable && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-50 text-primary-700 text-xs font-medium border border-primary-200">
-                                    <span className="w-1.5 h-1.5 bg-primary-500 rounded-full" />
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20">
+                                    <span className="w-1.5 h-1.5 bg-primary rounded-full" />
                                     Bisa Dijual
                                 </span>
                             )}
                         </div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+                        <h1 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
                             {product.name}
                         </h1>
                         {product.description && (
@@ -712,13 +712,13 @@ export default function Show({
 
             {/* ── Stat Cards ── */}
             <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-gradient-to-br from-primary-600 to-primary-600 rounded-2xl p-5 text-white shadow-sm">
+                <div className="bg-primary rounded-2xl p-5 text-primary-foreground shadow-sm">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-primary-100 uppercase tracking-wider">
+                        <span className="text-xs font-medium text-primary-foreground/60 uppercase tracking-wider">
                             Stok Tersedia
                         </span>
                         <svg
-                            className="w-5 h-5 text-primary-200"
+                            className="w-5 h-5 text-primary-foreground/60"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={1.8}
@@ -732,7 +732,7 @@ export default function Show({
                         </svg>
                     </div>
                     <div className="text-3xl font-bold">{totalStock}</div>
-                    <div className="text-xs text-primary-100 mt-1">
+                    <div className="text-xs text-primary-foreground/60 mt-1">
                         Reserved: {reserved} • Tersedia:{" "}
                         {totalStock - reserved}
                     </div>
@@ -743,7 +743,7 @@ export default function Show({
                             Harga Jual
                         </span>
                         <svg
-                            className="w-5 h-5 text-emerald-500"
+                            className="w-5 h-5 text-success"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={1.8}
@@ -795,7 +795,7 @@ export default function Show({
                             Margin
                         </span>
                         <svg
-                            className="w-5 h-5 text-violet-500"
+                            className="w-5 h-5 text-accent"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={1.8}
@@ -808,7 +808,7 @@ export default function Show({
                             />
                         </svg>
                     </div>
-                    <div className="text-2xl font-bold text-emerald-600">
+                    <div className="text-2xl font-bold text-success">
                         {margin}%
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
@@ -831,14 +831,14 @@ export default function Show({
                                         onClick={() => setActiveTab(t.id)}
                                         className={`px-4 py-2 text-sm font-medium rounded-lg border transition whitespace-nowrap ${
                                             activeTab === t.id
-                                                ? "text-primary-600 border-primary-300 bg-primary-50"
+                                                ? "text-primary border-primary/30 bg-primary/10"
                                                 : "text-muted-foreground border-transparent hover:bg-muted"
                                         }`}
                                     >
                                         {t.label}
                                         {t.count !== undefined && (
                                             <span
-                                                className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold ${activeTab === t.id ? "bg-primary-100 text-primary-700" : "bg-muted text-muted-foreground"}`}
+                                                className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold ${activeTab === t.id ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
                                             >
                                                 {t.count}
                                             </span>
@@ -941,7 +941,7 @@ export default function Show({
                                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${product.track_stock ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}
                                     >
                                         <span
-                                            className={`h-1.5 w-1.5 rounded-full ${product.track_stock ? "bg-success/100" : "bg-slate-400"}`}
+                                            className={`h-1.5 w-1.5 rounded-full ${product.track_stock ? "bg-success/100" : "bg-muted-foreground"}`}
                                         />
                                         {product.track_stock ? "Ya" : "Tidak"}
                                     </span>
@@ -976,9 +976,9 @@ export default function Show({
                                 )}
                                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted border border-border transition text-left group"
                             >
-                                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center group-hover:bg-primary-100 transition">
+                                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition">
                                     <svg
-                                        className="w-5 h-5 text-primary-600"
+                                        className="w-5 h-5 text-primary"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         strokeWidth={1.7}
@@ -1003,7 +1003,7 @@ export default function Show({
                                     )}
                                 </div>
                                 <svg
-                                    className="w-4 h-4 text-muted-foreground group-hover:text-primary-600 transition"
+                                    className="w-4 h-4 text-muted-foreground group-hover:text-primary transition"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -1028,9 +1028,9 @@ export default function Show({
                                     }
                                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted border border-border transition text-left group"
                                 >
-                                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-emerald-100 transition">
+                                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center group-hover:bg-success/20 transition">
                                         <svg
-                                            className="w-5 h-5 text-emerald-600"
+                                            className="w-5 h-5 text-success"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             strokeWidth={1.7}
@@ -1052,7 +1052,7 @@ export default function Show({
                                         </div>
                                     </div>
                                     <svg
-                                        className="w-4 h-4 text-muted-foreground group-hover:text-emerald-600 transition"
+                                        className="w-4 h-4 text-muted-foreground group-hover:text-success transition"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -1075,9 +1075,9 @@ export default function Show({
                                     }
                                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted border border-border transition text-left group"
                                 >
-                                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition">
+                                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-warning/5 flex items-center justify-center group-hover:bg-warning/10 transition">
                                         <svg
-                                            className="w-5 h-5 text-amber-600"
+                                            className="w-5 h-5 text-warning"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             strokeWidth={1.7}
@@ -1099,7 +1099,7 @@ export default function Show({
                                         </div>
                                     </div>
                                     <svg
-                                        className="w-4 h-4 text-muted-foreground group-hover:text-amber-600 transition"
+                                        className="w-4 h-4 text-muted-foreground group-hover:text-warning transition"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -1117,23 +1117,23 @@ export default function Show({
                     </section>
 
                     {/* Ringkasan */}
-                    <section className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 text-white">
+                    <section className="bg-foreground rounded-2xl p-6 text-primary-foreground">
                         <div className="flex items-center gap-2 mb-3">
                             <svg
-                                className="w-5 h-5 text-amber-400"
+                                className="w-5 h-5 text-warning"
                                 fill="currentColor"
                                 viewBox="0 0 20 20"
                             >
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.539 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>
-                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-primary-foreground/60">
                                 Ringkasan
                             </span>
                         </div>
-                        <p className="text-sm text-muted-foreground/50 leading-relaxed">
+                        <p className="text-sm text-primary-foreground/60 leading-relaxed">
                             Produk performa{" "}
                             <span
-                                className={`font-semibold ${margin >= 30 ? "text-emerald-400" : margin >= 15 ? "text-amber-400" : "text-red-400"}`}
+                                className={`font-semibold ${margin >= 30 ? "text-success" : margin >= 15 ? "text-warning" : "text-destructive/60"}`}
                             >
                                 {margin >= 30
                                     ? "baik"
@@ -1146,7 +1146,7 @@ export default function Show({
                                 <>
                                     {" "}
                                     Perhatikan{" "}
-                                    <span className="text-amber-400 font-semibold">
+                                    <span className="text-warning font-semibold">
                                         {batchStats.expiring_soon} batch
                                     </span>{" "}
                                     yang mendekati kadaluarsa.
@@ -1155,7 +1155,7 @@ export default function Show({
                             {batchStats.expired > 0 && (
                                 <>
                                     {" "}
-                                    <span className="text-red-400 font-semibold">
+                                    <span className="text-destructive/60 font-semibold">
                                         {batchStats.expired} batch
                                     </span>{" "}
                                     sudah kadaluarsa.
@@ -1216,7 +1216,7 @@ export default function Show({
                                                 </td>
                                                 <td className="px-5 py-3">
                                                     <span
-                                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${isIn ? "bg-emerald-100 text-success" : "bg-red-100 text-destructive"}`}
+                                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${isIn ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
                                                     >
                                                         {isIn ? "+" : "-"}
                                                         {movementLabel(
@@ -1265,7 +1265,7 @@ export default function Show({
                                 setStockModal({ product, type: "in" });
                             }
                         }}
-                        className="w-14 h-14 rounded-full bg-gradient-to-r from-primary-600 to-primary-600 shadow-lg flex items-center justify-center text-white hover:from-primary-700 hover:to-primary-700 transition"
+                        className="w-14 h-14 rounded-full bg-primary shadow-lg flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition"
                     >
                         <svg
                             className="w-6 h-6"

@@ -377,7 +377,7 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                 onClick={toggle}
                 className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${hasActive
                     ? "text-primary"
-                    : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                    : "text-sidebar-foreground/50 hover:bg-muted hover:text-foreground"
                     }`}
             >
                 <GroupIcons

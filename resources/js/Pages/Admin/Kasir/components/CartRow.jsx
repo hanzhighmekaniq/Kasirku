@@ -14,10 +14,10 @@ function IconBtn({ onClick, title, children, red, amber }) {
             title={title}
             className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
                 red
-                    ? "text-slate-400 hover:bg-red-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
+                    ? "text-muted-foreground/60 hover:bg-red-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
                     : amber
-                      ? "text-slate-400 hover:bg-amber-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
-                      : "text-slate-400 hover:bg-indigo-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
+                      ? "text-muted-foreground/60 hover:bg-amber-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
+                      : "text-muted-foreground/60 hover:bg-indigo-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
             }`}
         >
             {children}
@@ -32,9 +32,9 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
     const hasPromo = (item.promoDiscount ?? 0) > 0;
 
     return (
-        <div className="group flex items-center gap-2.5 rounded-xl bg-white px-2.5 py-2.5 shadow-sm ring-1 ring-slate-200/70 hover:shadow-md hover:ring-indigo-200 transition-all">
+        <div className="group flex items-center gap-2.5 rounded-xl bg-card px-2.5 py-2.5 shadow-sm ring-1 ring-slate-200/70 hover:shadow-md hover:ring-indigo-200 transition-all">
             {/* Product thumbnail */}
-            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200/50">
+            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-slate-200/50">
                 {productImage ? (
                     <img
                         src={productImage}
@@ -42,7 +42,7 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
                         className="h-full w-full object-cover"
                     />
                 ) : (
-                    <div className="flex h-full w-full items-center justify-center text-slate-400">
+                    <div className="flex h-full w-full items-center justify-center text-muted-foreground/60">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                         </svg>
@@ -54,7 +54,7 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
             <div className="min-w-0 flex-1">
                 {/* Product name + unit/variant */}
                 <div className="flex items-baseline gap-1.5">
-                    <p className="truncate text-sm font-bold text-slate-900 leading-tight">
+                    <p className="truncate text-sm font-bold text-foreground leading-tight">
                         {item.name}
                     </p>
                     {item.variantName && (
@@ -70,7 +70,7 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
                 </div>
 
                 {/* Price per unit */}
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                     {fmt(item.price)} × {item.qty}
                     <span className="mx-1 text-slate-300">=</span>
                     <span className="font-bold text-indigo-600">{fmt(hasPromo ? afterPromo : itemTotal)}</span>
@@ -91,7 +91,7 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
                 {item.modifiers?.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-1">
                         {item.modifiers.map((m, idx) => (
-                            <span key={idx} className="inline-flex items-center gap-0.5 rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-semibold text-slate-600">
+                            <span key={idx} className="inline-flex items-center gap-0.5 rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-semibold text-muted-foreground">
                                 +{m.name}
                             </span>
                         ))}
@@ -119,14 +119,14 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
                     </svg>
                 </IconBtn>
 
-                <div className="flex items-center gap-0.5 rounded-lg bg-slate-100 ring-1 ring-slate-200 p-0.5">
+                <div className="flex items-center gap-0.5 rounded-lg bg-muted ring-1 ring-slate-200 p-0.5">
                     <IconBtn onClick={() => onQty(item.cartId, -1)} title="Kurangi">
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
                         </svg>
                     </IconBtn>
-                    <div className="flex h-8 min-w-[2.25rem] items-center justify-center rounded-md bg-white px-2 shadow-sm ring-1 ring-slate-200/50">
-                        <span className="text-sm font-extrabold text-slate-900">
+                    <div className="flex h-8 min-w-[2.25rem] items-center justify-center rounded-md bg-card px-2 shadow-sm ring-1 ring-slate-200/50">
+                        <span className="text-sm font-extrabold text-foreground">
                             {item.qty}
                         </span>
                     </div>

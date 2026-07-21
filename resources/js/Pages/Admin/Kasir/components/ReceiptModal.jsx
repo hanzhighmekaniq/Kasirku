@@ -33,103 +33,103 @@ export default function ReceiptModal({
                     </p>
                 </div>
             )}
-            <p className="text-center text-sm font-bold text-slate-900">
+            <p className="text-center text-sm font-bold text-foreground">
                 {storeName}
             </p>
-            <p className="mt-0.5 text-center text-slate-500">
+            <p className="mt-0.5 text-center text-muted-foreground">
                 {receipt.saleNo}
                 {receipt.isOffline && (
-                    <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700">
+                    <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-warning">
                         TMP
                     </span>
                 )}
             </p>
-            <p className="text-center text-slate-400">
+            <p className="text-center text-muted-foreground/60">
                 {new Date().toLocaleString("id-ID")}
             </p>
             {receipt.tableName && (
-                <p className="text-center text-slate-600 font-medium">
+                <p className="text-center text-muted-foreground font-medium">
                     Meja {receipt.tableName}
                 </p>
             )}
             {receipt.takeawayCustomerName && !receipt.deliveryAddress && (
-                <p className="text-center text-slate-700 font-medium">
+                <p className="text-center text-card-foreground font-medium">
                     {receipt.takeawayCustomerName}
                 </p>
             )}
             {receipt.customerName &&
                 !receipt.deliveryAddress &&
                 !receipt.takeawayCustomerName && (
-                    <p className="text-center text-slate-500">
+                    <p className="text-center text-muted-foreground">
                         Pelanggan: {receipt.customerName}
                     </p>
                 )}
             {receipt.employeeName && (
-                <p className="text-center text-slate-600">
+                <p className="text-center text-muted-foreground">
                     Dikerjakan oleh: <span className="font-medium">{receipt.employeeName}</span>
                 </p>
             )}
             {receipt.rentalInfo && (
                 <>
-                    <p className="text-center text-slate-600">
+                    <p className="text-center text-muted-foreground">
                         Sewa: <span className="font-medium">{receipt.rentalInfo.duration} {receipt.rentalInfo.unit}</span>
                     </p>
-                    <p className="text-center text-slate-500">
+                    <p className="text-center text-muted-foreground">
                         Kembali: {receipt.rentalInfo.returnDate}
                     </p>
                 </>
             )}
             {receipt.hospitalityInfo && (
                 <>
-                    <div className="my-2 border-t border-dashed border-slate-200" />
-                    <p className="text-center font-bold text-slate-800">🏨 INFO MENGINAP</p>
+                    <div className="my-2 border-t border-dashed border-border" />
+                    <p className="text-center font-bold text-foreground">🏨 INFO MENGINAP</p>
                     {receipt.hospitalityInfo.roomNumber && (
-                        <p className="text-center text-slate-600">Kamar: {receipt.hospitalityInfo.roomNumber}</p>
+                        <p className="text-center text-muted-foreground">Kamar: {receipt.hospitalityInfo.roomNumber}</p>
                     )}
-                    <p className="text-center text-slate-500">
+                    <p className="text-center text-muted-foreground">
                         {receipt.hospitalityInfo.duration} {receipt.hospitalityInfo.unitLabel}
                     </p>
-                    <p className="text-center text-slate-500">
+                    <p className="text-center text-muted-foreground">
                         Check-out: {receipt.hospitalityInfo.checkoutDate}
                     </p>
                     {receipt.hospitalityInfo.guestCount > 1 && (
-                        <p className="text-center text-slate-400">{receipt.hospitalityInfo.guestCount} tamu</p>
+                        <p className="text-center text-muted-foreground/60">{receipt.hospitalityInfo.guestCount} tamu</p>
                     )}
                 </>
             )}
             {receipt.parkingInfo && (
                 <>
-                    <div className="my-2 border-t border-dashed border-slate-200" />
-                    <p className="text-center font-bold text-slate-800">🅿️ TIKET PARKIR</p>
-                    <p className="text-center font-mono text-2xl font-bold tracking-widest text-indigo-700">
+                    <div className="my-2 border-t border-dashed border-border" />
+                    <p className="text-center font-bold text-foreground">🅿️ TIKET PARKIR</p>
+                    <p className="text-center font-mono text-2xl font-bold tracking-widest text-primary">
                         {receipt.parkingInfo.plateNumber}
                     </p>
-                    <p className="text-center text-slate-600">
+                    <p className="text-center text-muted-foreground">
                         {receipt.parkingInfo.vehicleLabel}
                     </p>
-                    <p className="text-center text-slate-500 text-xs">
+                    <p className="text-center text-muted-foreground text-xs">
                         Masuk: {receipt.parkingInfo.entryTime}
                     </p>
                     {receipt.parkingInfo.ticketNo && (
-                        <p className="text-center text-slate-400 text-xs">Tiket: {receipt.parkingInfo.ticketNo}</p>
+                        <p className="text-center text-muted-foreground/60 text-xs">Tiket: {receipt.parkingInfo.ticketNo}</p>
                     )}
-                    <p className="text-center text-[10px] text-slate-400 mt-1">
+                    <p className="text-center text-[10px] text-muted-foreground/60 mt-1">
                         Simpan tiket ini untuk keluar
                     </p>
                 </>
             )}
             {receipt.sessionInfo && (
                 <>
-                    <div className="my-2 border-t border-dashed border-slate-200" />
-                    <p className="text-center font-bold text-slate-800">🎮 INFO SESI</p>
+                    <div className="my-2 border-t border-dashed border-border" />
+                    <p className="text-center font-bold text-foreground">🎮 INFO SESI</p>
                     {receipt.sessionInfo.unitName && (
-                        <p className="text-center font-mono text-xl font-bold text-indigo-700">{receipt.sessionInfo.unitName}</p>
+                        <p className="text-center font-mono text-xl font-bold text-primary">{receipt.sessionInfo.unitName}</p>
                     )}
-                    <p className="text-center text-slate-500 text-xs">Mulai: {receipt.sessionInfo.startTime}</p>
+                    <p className="text-center text-muted-foreground text-xs">Mulai: {receipt.sessionInfo.startTime}</p>
                     {receipt.sessionInfo.guestCount > 1 && (
-                        <p className="text-center text-slate-400 text-xs">{receipt.sessionInfo.guestCount} pengguna</p>
+                        <p className="text-center text-muted-foreground/60 text-xs">{receipt.sessionInfo.guestCount} pengguna</p>
                     )}
-                    <p className="text-center text-[10px] text-slate-400 mt-1">
+                    <p className="text-center text-[10px] text-muted-foreground/60 mt-1">
                         {receipt.sessionInfo.orderType === 'prepaid' ? 'Prepaid — bayar di awal' : 'Postpaid — bayar saat selesai'}
                     </p>
                 </>
@@ -137,11 +137,11 @@ export default function ReceiptModal({
             {receipt.deliveryAddress && (
                 <>
                     {receipt.deliveryCustomerName && (
-                        <p className="text-center text-slate-700 font-medium">
+                        <p className="text-center text-card-foreground font-medium">
                             {receipt.deliveryCustomerName}
                         </p>
                     )}
-                    <p className="text-center text-slate-500">
+                    <p className="text-center text-muted-foreground">
                         {receipt.deliveryAddress.replace(/^Penerima: .*\n/, "")}
                     </p>
                 </>
@@ -151,26 +151,26 @@ export default function ReceiptModal({
             {receipt.items.map((item, i) => (
                 <div key={i} className="mb-1">
                     <div className="flex justify-between">
-                        <span className="text-slate-700">
+                        <span className="text-card-foreground">
                             {item.name}
                             {item.variantName ? ` (${item.variantName})` : ""}
                         </span>
-                        <span className="text-slate-800">
+                        <span className="text-foreground">
                             {fmt(item.subtotal)}
                         </span>
                     </div>
-                    <span className="text-slate-400">
+                    <span className="text-muted-foreground/60">
                         {item.qty} × {fmt(item.price)}
                     </span>
                     {item.modifiers?.map((m, j) => (
-                        <div key={j} className="text-slate-400 pl-2">
+                        <div key={j} className="text-muted-foreground/60 pl-2">
                             {m.name}{" "}
                             {m.price_addition > 0 &&
                                 `+${fmtShort(m.price_addition)}`}
                         </div>
                     ))}
                     {(item.promoDiscount ?? 0) > 0 && (
-                        <div className="text-emerald-600 text-xs pl-2">
+                        <div className="text-success text-xs pl-2">
                             Promo {item.promoName}: -{fmt(item.promoDiscount)}
                         </div>
                     )}
@@ -183,13 +183,13 @@ export default function ReceiptModal({
                 <span>{fmt(receipt.subtotal)}</span>
             </div>
             {(receipt.totalPromoDisc ?? 0) > 0 && (
-                <div className="flex justify-between text-emerald-600">
+                <div className="flex justify-between text-success">
                     <span>Diskon Promo</span>
                     <span>-{fmt(receipt.totalPromoDisc)}</span>
                 </div>
             )}
             {(receipt.cartPromoDiscount ?? 0) > 0 && (
-                <div className="flex justify-between text-emerald-600">
+                <div className="flex justify-between text-success">
                     <span>{receipt.cartPromoName || "Diskon Keranjang"}</span>
                     <span>-{fmt(receipt.cartPromoDiscount)}</span>
                 </div>
@@ -212,18 +212,18 @@ export default function ReceiptModal({
                     <span>{fmt(receipt.deliveryFee)}</span>
                 </div>
             )}
-            <div className="flex justify-between font-bold text-slate-900 text-sm mt-1">
+            <div className="flex justify-between font-bold text-foreground text-sm mt-1">
                 <span>Total</span>
                 <span>{fmt(receipt.grandTotal)}</span>
             </div>
             {receipt.payments.map((p, i) => (
-                <div key={i} className="flex justify-between text-slate-600">
+                <div key={i} className="flex justify-between text-muted-foreground">
                     <span>{p.methodName}</span>
                     <span>{fmt(p.amount)}</span>
                 </div>
             ))}
             {receipt.change > 0 && (
-                <div className="flex justify-between text-emerald-600">
+                <div className="flex justify-between text-success">
                     <span>Kembalian</span>
                     <span>{fmt(receipt.change)}</span>
                 </div>
@@ -232,12 +232,12 @@ export default function ReceiptModal({
             {receipt.isOffline && (
                 <>
                     <div className="my-3 border-t border-dashed border-amber-300" />
-                    <div className="rounded-xl bg-amber-50 px-3 py-2.5 text-center">
+                    <div className="rounded-xl bg-warning/10 px-3 py-2.5 text-center">
                         <p className="text-[10px] font-medium text-amber-800">
                             Transaksi akan dikirim otomatis saat koneksi
                             kembali.
                         </p>
-                        <p className="mt-0.5 text-[9px] text-amber-600">
+                        <p className="mt-0.5 text-[9px] text-warning">
                             Simpan struk ini sebagai bukti transaksi sementara.
                         </p>
                     </div>
@@ -247,17 +247,17 @@ export default function ReceiptModal({
             {footer && (
                 <>
                     <div className="my-3 border-t border-dashed border-slate-300" />
-                    <p className="whitespace-pre-wrap text-center text-slate-500">
+                    <p className="whitespace-pre-wrap text-center text-muted-foreground">
                         {footer}
                     </p>
                 </>
             )}
 
             <div className="my-3 border-t border-dashed border-slate-300" />
-            <p className="text-center text-slate-400">
+            <p className="text-center text-muted-foreground/60">
                 Terima kasih atas kunjungan Anda
             </p>
-            <p className="text-center text-[9px] text-slate-300">
+            <p className="text-center text-[9px] text-muted-foreground/30">
                 Dicetak: {new Date().toLocaleString("id-ID")}
             </p>
         </>
@@ -301,32 +301,32 @@ export default function ReceiptModal({
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div
                     onClick={onClose}
-                    className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                    className="absolute inset-0 bg-primary/60 backdrop-blur-sm"
                 />
-                <div className="relative w-full max-w-xs rounded-2xl bg-white shadow-2xl">
+                <div className="relative w-full max-w-xs rounded-2xl bg-card shadow-2xl">
                     <div className="px-6 py-5 font-mono text-xs max-h-[70vh] overflow-y-auto">
                         {receiptContent}
                     </div>
 
-                    <div className="flex gap-2 border-t border-slate-100 px-5 py-4">
+                    <div className="flex gap-2 border-t border-border px-5 py-4">
                         <button
                             type="button"
                             onClick={onNewTransaction}
-                            className="flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                            className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition hover:from-indigo-600 hover:to-violet-700"
                         >
                             Transaksi Baru
                         </button>
                         <button
                             type="button"
                             onClick={() => window.print()}
-                            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted/50"
                         >
                             🖨️ Print
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-50"
+                            className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted/50"
                         >
                             Tutup
                         </button>

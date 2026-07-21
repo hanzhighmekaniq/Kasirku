@@ -76,7 +76,7 @@ export default function ShiftModal({ show, onClose, suggestedShiftNo }) {
                         type="button"
                         onClick={handleClose}
                         disabled={submitting}
-                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                        className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-muted-foreground transition hover:bg-muted disabled:opacity-50"
                     >
                         Batal
                     </button>
@@ -84,7 +84,7 @@ export default function ShiftModal({ show, onClose, suggestedShiftNo }) {
                         type="button"
                         onClick={submit}
                         disabled={submitting}
-                        className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {submitting ? "Membuka..." : "Buka Shift"}
                     </button>
@@ -93,24 +93,24 @@ export default function ShiftModal({ show, onClose, suggestedShiftNo }) {
         >
             <div className="space-y-4">
                 <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    <label className="mb-1.5 block text-sm font-medium text-card-foreground">
                         Modal Awal / Kas Awal{" "}
-                        <span className="text-rose-500">*</span>
+                        <span className="text-destructive">*</span>
                     </label>
                     <CurrencyInput
                         value={openingCash}
                         onChange={setOpeningCash}
                         placeholder="0"
                     />
-                    <p className="mt-1.5 text-[11px] text-slate-400">
+                    <p className="mt-1.5 text-[11px] text-muted-foreground/60">
                         Jumlah uang tunai di laci saat mulai shift.
                     </p>
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    <label className="mb-1.5 block text-sm font-medium text-card-foreground">
                         Catatan{" "}
-                        <span className="font-normal text-slate-400">
+                        <span className="font-normal text-muted-foreground/60">
                             (opsional)
                         </span>
                     </label>
@@ -119,12 +119,12 @@ export default function ShiftModal({ show, onClose, suggestedShiftNo }) {
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
                         placeholder="Contoh: shift pagi, kasir A..."
-                        className="block w-full rounded-xl border-slate-200 bg-slate-50 text-sm shadow-sm transition focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-100"
+                        className="block w-full rounded-xl border-border bg-muted/50 text-sm shadow-sm transition focus:border-slate-400 focus:bg-card focus:ring-2 focus:ring-slate-100"
                     />
                 </div>
 
                 {error && (
-                    <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-medium text-rose-700">
+                    <div className="flex items-start gap-2 rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2.5 text-xs font-medium text-destructive">
                         <TriangleAlert size={15} className="mt-0.5 shrink-0" />
                         <span>{error}</span>
                     </div>

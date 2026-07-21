@@ -14,9 +14,9 @@ export default function ParkingKasir(props) {
     }
 
     const stMap = {
-        free: "bg-white border-slate-200 text-slate-700 hover:border-indigo-400",
-        occ: "bg-indigo-500 text-white border-indigo-500 shadow-sm",
-        res: "bg-amber-50 border-amber-200 text-amber-800",
+        free: "bg-card border-border text-card-foreground hover:border-indigo-400",
+        occ: "bg-indigo-500 text-white border-primary shadow-sm",
+        res: "bg-warning/10 border-amber-200 text-amber-800",
     };
 
     const activeVehicles = [
@@ -38,24 +38,24 @@ export default function ParkingKasir(props) {
             {/* Stats */}
             <div className="grid grid-cols-4 gap-3 mb-5">
                 {stats.map((s, i) => (
-                    <div key={i} className="rounded-2xl bg-white border border-slate-200 p-4">
-                        <div className="text-[10.5px] uppercase tracking-widest text-slate-500 font-medium">{s.l}</div>
+                    <div key={i} className="rounded-2xl bg-card border border-border p-4">
+                        <div className="text-[10.5px] uppercase tracking-widest text-muted-foreground font-medium">{s.l}</div>
                         <div className="mt-1 text-[24px] font-semibold tracking-tight tabular-nums">{s.v}</div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">{s.s}</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">{s.s}</div>
                     </div>
                 ))}
             </div>
 
             {/* Slot grid + ANPR */}
             <div className="grid grid-cols-3 gap-5 mb-5">
-                <div className="col-span-2 rounded-2xl bg-white border border-slate-200 p-4">
+                <div className="col-span-2 rounded-2xl bg-card border border-border p-4">
                     <div className="flex items-end justify-between mb-3">
                         <div>
                             <div className="text-[15px] font-semibold tracking-tight">Slots · Level A</div>
-                            <div className="text-[11.5px] text-slate-500 mt-0.5">48 slots · Zone North</div>
+                            <div className="text-[11.5px] text-muted-foreground mt-0.5">48 slots · Zone North</div>
                         </div>
                         <div className="flex items-center gap-2 text-[11px]">
-                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-white border border-slate-200"></span>Free</span>
+                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-card border border-border"></span>Free</span>
                             <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-indigo-500"></span>Occupied</span>
                             <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-amber-100 border border-amber-200"></span>Reserved</span>
                         </div>
@@ -77,7 +77,7 @@ export default function ParkingKasir(props) {
                         <div className="absolute inset-3 border border-emerald-400/70 rounded-lg"></div>
                         <div className="text-center">
                             <div className="text-[10.5px] uppercase tracking-widest text-emerald-300 font-medium">Plate Detected</div>
-                            <div className="mt-2 inline-block bg-white text-slate-900 rounded-md px-4 py-1.5 text-[20px] font-bold tracking-widest">B 1892 KL</div>
+                            <div className="mt-2 inline-block bg-card text-foreground rounded-md px-4 py-1.5 text-[20px] font-bold tracking-widest">B 1892 KL</div>
                         </div>
                     </div>
                     <div className="mt-4 space-y-2 text-[12.5px]">
@@ -86,25 +86,25 @@ export default function ParkingKasir(props) {
                         <div className="flex items-center justify-between"><span className="text-white/60">Assigned slot</span><span className="font-medium">A-06</span></div>
                         <div className="flex items-center justify-between"><span className="text-white/60">Rate</span><span className="font-medium">{k.fmt(2500)} · first hour</span></div>
                     </div>
-                    <button className="mt-auto h-11 rounded-xl bg-white text-slate-900 font-semibold text-[13px] mt-4">Open Gate & Print Ticket</button>
+                    <button className="mt-auto h-11 rounded-xl bg-card text-foreground font-semibold text-[13px] mt-4">Open Gate & Print Ticket</button>
                 </div>
             </div>
 
             {/* Active vehicles table */}
-            <div className="rounded-2xl bg-white border border-slate-200 p-4">
+            <div className="rounded-2xl bg-card border border-border p-4">
                 <div className="flex items-end justify-between mb-3">
                     <div>
                         <div className="text-[15px] font-semibold tracking-tight">Active Vehicles</div>
-                        <div className="text-[11.5px] text-slate-500 mt-0.5">{activeVehicles.length} currently inside · sortable</div>
+                        <div className="text-[11.5px] text-muted-foreground mt-0.5">{activeVehicles.length} currently inside · sortable</div>
                     </div>
                     <div className="flex gap-1.5">
-                        <button className="h-8 px-3 rounded-lg border border-slate-200 text-[11.5px] hover:bg-slate-50">Filter</button>
-                        <button className="h-8 px-3 rounded-lg bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-[11.5px] shadow-sm">Export CSV</button>
+                        <button className="h-8 px-3 rounded-lg border border-border text-[11.5px] hover:bg-muted">Filter</button>
+                        <button className="h-8 px-3 rounded-lg bg-primary text-white text-[11.5px] shadow-sm">Export CSV</button>
                     </div>
                 </div>
-                <div className="overflow-hidden rounded-xl border border-slate-200">
+                <div className="overflow-hidden rounded-xl border border-border">
                     <table className="w-full text-[12.5px]">
-                        <thead className="bg-slate-50 text-slate-500 text-[10.5px] uppercase tracking-widest">
+                        <thead className="bg-muted/50 text-muted-foreground text-[10.5px] uppercase tracking-widest">
                             <tr>
                                 <th className="text-left px-4 py-2 font-medium">Plate</th>
                                 <th className="text-left px-4 py-2 font-medium">Slot</th>
@@ -117,17 +117,17 @@ export default function ParkingKasir(props) {
                         </thead>
                         <tbody>
                             {activeVehicles.map((a, i) => (
-                                <tr key={i} className="border-t border-slate-100 hover:bg-slate-50/50">
+                                <tr key={i} className="border-t border-border hover:bg-muted/50">
                                     <td className="px-4 py-2.5 font-mono font-semibold">{a.plate}</td>
                                     <td className="px-4 py-2.5">
-                                        <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[10.5px] font-medium text-indigo-700 border border-indigo-100">{a.slot}</span>
+                                        <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[10.5px] font-medium text-primary border border-primary/10">{a.slot}</span>
                                     </td>
-                                    <td className="px-4 py-2.5 text-slate-600">{a.type}</td>
+                                    <td className="px-4 py-2.5 text-muted-foreground">{a.type}</td>
                                     <td className="px-4 py-2.5 tabular-nums">{a.in}</td>
                                     <td className="px-4 py-2.5 tabular-nums">{a.dur}</td>
                                     <td className="px-4 py-2.5 text-right font-semibold tabular-nums">{a.fee}</td>
                                     <td className="px-4 py-2.5 text-right">
-                                        <button className="text-[11.5px] font-medium text-indigo-600">Check-out →</button>
+                                        <button className="text-[11.5px] font-medium text-primary">Check-out →</button>
                                     </td>
                                 </tr>
                             ))}

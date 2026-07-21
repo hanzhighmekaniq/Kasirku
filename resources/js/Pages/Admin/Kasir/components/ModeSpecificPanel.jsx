@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from "react";
 
 export default function ModeSpecificPanel({ k }) {
     const sectionClass =
-        "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm";
-    const labelClass = "mb-1 block text-xs font-medium text-slate-600";
+        "overflow-hidden rounded-2xl border border-border bg-card shadow-sm";
+    const labelClass = "mb-1 block text-xs font-medium text-muted-foreground";
     const inputClass =
         "block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
 
@@ -29,7 +29,7 @@ export default function ModeSpecificPanel({ k }) {
 
     return (
         <div className={sectionClass}>
-            <div className="border-b border-slate-100 bg-indigo-50/60 px-3 py-2">
+            <div className="border-b border-border bg-primary/10 px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-base leading-none shrink-0">
@@ -44,14 +44,14 @@ export default function ModeSpecificPanel({ k }) {
                         <button
                             type="button"
                             onClick={() => setShowDesc(!showDesc)}
-                            className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-600 transition hover:bg-indigo-200"
+                            className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-primary transition hover:bg-indigo-200"
                             title="Info mode POS"
                         >
                             !
                         </button>
                         {showDesc && (
-                            <div className="absolute right-0 top-6 z-50 w-60 rounded-xl border border-indigo-100 bg-white p-3 shadow-xl">
-                                <p className="text-[11px] leading-relaxed text-slate-600">
+                            <div className="absolute right-0 top-6 z-50 w-60 rounded-xl border border-primary/10 bg-card p-3 shadow-xl">
+                                <p className="text-[11px] leading-relaxed text-muted-foreground">
                                     {k.modeConfig.description}
                                 </p>
                                 {k.modeConfig.features?.length > 0 && (
@@ -61,7 +61,7 @@ export default function ModeSpecificPanel({ k }) {
                                             .map((feature) => (
                                                 <span
                                                     key={feature}
-                                                    className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-600 ring-1 ring-indigo-100"
+                                                    className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-indigo-100"
                                                 >
                                                     {feature.replace(/_/g, " ")}
                                                 </span>
@@ -71,7 +71,7 @@ export default function ModeSpecificPanel({ k }) {
                                 <button
                                     type="button"
                                     onClick={() => setShowDesc(false)}
-                                    className="mt-2 text-[10px] text-slate-400 hover:text-slate-600 transition"
+                                    className="mt-2 text-[10px] text-muted-foreground/60 hover:text-muted-foreground transition"
                                 >
                                     Tutup
                                 </button>
@@ -119,7 +119,7 @@ export default function ModeSpecificPanel({ k }) {
                                         placeholder="Nama petugas / penjaga"
                                         className={inputClass}
                                     />
-                                    <p className="mt-1 text-[10px] text-amber-600">
+                                    <p className="mt-1 text-[10px] text-warning">
                                         💡 Tambahkan data karyawan di menu{" "}
                                         <strong>Karyawan</strong> agar bisa
                                         pilih dari daftar dan komisi dihitung
@@ -160,11 +160,11 @@ export default function ModeSpecificPanel({ k }) {
                 {k.isService && (
                     <>
                         {k.isService && !k.selectedCustomer && (
-                            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+                            <div className="rounded-xl border border-amber-200 bg-warning/10 px-3 py-2.5 text-xs text-warning">
                                 <span className="font-semibold">
                                     ⚠️ Customer wajib diisi
                                 </span>
-                                <span className="block mt-0.5 text-amber-600">
+                                <span className="block mt-0.5 text-warning">
                                     Pilih pelanggan dari dropdown di atas
                                     sebelum bayar
                                 </span>
@@ -208,7 +208,7 @@ export default function ModeSpecificPanel({ k }) {
                                         placeholder="Nama pegawai / teknisi"
                                         className={inputClass}
                                     />
-                                    <p className="mt-1 text-[10px] text-amber-600">
+                                    <p className="mt-1 text-[10px] text-warning">
                                         💡 Tambahkan data karyawan di menu{" "}
                                         <strong>Karyawan</strong> agar bisa
                                         pilih dari daftar dan komisi dihitung
@@ -231,7 +231,7 @@ export default function ModeSpecificPanel({ k }) {
                                 className={inputClass}
                             />
                         </div>
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[11px] text-muted-foreground">
                             Komisi karyawan dihitung otomatis saat transaksi
                             selesai.
                         </p>
@@ -241,11 +241,11 @@ export default function ModeSpecificPanel({ k }) {
                 {k.isRental && (
                     <>
                         {!k.selectedCustomer && (
-                            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+                            <div className="rounded-xl border border-amber-200 bg-warning/10 px-3 py-2.5 text-xs text-warning">
                                 <span className="font-semibold">
                                     ⚠️ Customer wajib diisi
                                 </span>
-                                <span className="block mt-0.5 text-amber-600">
+                                <span className="block mt-0.5 text-warning">
                                     Pilih penyewa dari dropdown pelanggan di
                                     atas
                                 </span>
@@ -297,11 +297,11 @@ export default function ModeSpecificPanel({ k }) {
                         </div>
                         {/* Estimasi tanggal kembali — kalkulasi otomatis */}
                         {k.rentalDuration > 0 && (
-                            <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5">
-                                <p className="text-[10px] font-semibold text-indigo-500 mb-1">
+                            <div className="rounded-xl bg-primary/10 border border-primary/10 px-3 py-2.5">
+                                <p className="text-[10px] font-semibold text-primary mb-1">
                                     Estimasi Kembali
                                 </p>
-                                <p className="text-sm font-bold text-indigo-700">
+                                <p className="text-sm font-bold text-primary">
                                     {(() => {
                                         const now = new Date();
                                         const ms =
@@ -339,7 +339,7 @@ export default function ModeSpecificPanel({ k }) {
                                 </p>
                             </div>
                         )}
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[11px] text-muted-foreground">
                             Rental wajib menjaga availability, deposit, tanggal
                             sewa, return, dan denda telat/rusak.
                         </p>
@@ -350,11 +350,11 @@ export default function ModeSpecificPanel({ k }) {
                     <>
                         {/* Warning customer wajib */}
                         {!k.selectedCustomer && (
-                            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+                            <div className="rounded-xl border border-amber-200 bg-warning/10 px-3 py-2.5 text-xs text-warning">
                                 <span className="font-semibold">
                                     ⚠️ Data tamu wajib diisi
                                 </span>
-                                <span className="block mt-0.5 text-amber-600">
+                                <span className="block mt-0.5 text-warning">
                                     Pilih atau tambahkan tamu dari dropdown
                                     pelanggan di atas
                                 </span>
@@ -423,11 +423,11 @@ export default function ModeSpecificPanel({ k }) {
                         </div>
                         {/* Estimasi check-out */}
                         {k.rentalDuration > 0 && (
-                            <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-3 py-2.5">
-                                <p className="text-[10px] font-semibold text-indigo-500 mb-1">
+                            <div className="rounded-xl bg-primary/10 border border-primary/10 px-3 py-2.5">
+                                <p className="text-[10px] font-semibold text-primary mb-1">
                                     🏨 Estimasi Check-out
                                 </p>
-                                <p className="text-sm font-bold text-indigo-700">
+                                <p className="text-sm font-bold text-primary">
                                     {(() => {
                                         const now = new Date();
                                         const ms =
@@ -461,7 +461,7 @@ export default function ModeSpecificPanel({ k }) {
                                 </p>
                             </div>
                         )}
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[11px] text-muted-foreground">
                             Hotel/villa: kamar, tamu, check-in/out otomatis
                             tercatat.
                         </p>
@@ -474,7 +474,7 @@ export default function ModeSpecificPanel({ k }) {
                         <div>
                             <label className={labelClass}>
                                 🚗 Plat Nomor{" "}
-                                <span className="text-red-500">*</span>
+                                <span className="text-destructive">*</span>
                             </label>
                             <input
                                 type="text"
@@ -507,8 +507,8 @@ export default function ModeSpecificPanel({ k }) {
                                             k.ticketSlot === opt.v ||
                                             (!k.ticketSlot &&
                                                 opt.v === "motorcycle")
-                                                ? "border-indigo-400 bg-indigo-50 text-indigo-700"
-                                                : "border-slate-200 text-slate-500 hover:border-slate-300"
+                                                ? "border-indigo-400 bg-primary/10 text-primary"
+                                                : "border-border text-muted-foreground hover:border-slate-300"
                                         }`}
                                     >
                                         {opt.l}
@@ -532,21 +532,21 @@ export default function ModeSpecificPanel({ k }) {
                             />
                         </div>
                         {/* Info waktu masuk */}
-                        <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5">
-                            <p className="text-[10px] font-medium text-slate-500">
+                        <div className="rounded-xl bg-muted/50 border border-border px-3 py-2.5">
+                            <p className="text-[10px] font-medium text-muted-foreground">
                                 ⏰ Waktu Masuk
                             </p>
-                            <p className="text-sm font-bold text-slate-700">
+                            <p className="text-sm font-bold text-card-foreground">
                                 {new Date().toLocaleString("id-ID", {
                                     dateStyle: "medium",
                                     timeStyle: "short",
                                 })}
                             </p>
-                            <p className="text-[10px] text-slate-400 mt-0.5">
+                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                                 Dicatat otomatis saat transaksi diproses
                             </p>
                         </div>
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[11px] text-muted-foreground">
                             Parkir: catat masuk, bayar saat keluar. Plat &amp;
                             waktu masuk tersimpan otomatis.
                         </p>
@@ -559,7 +559,7 @@ export default function ModeSpecificPanel({ k }) {
                         <div>
                             <label className={labelClass}>
                                 🖥️ Unit / Room{" "}
-                                <span className="text-red-500">*</span>
+                                <span className="text-destructive">*</span>
                             </label>
                             <input
                                 type="text"
@@ -587,11 +587,11 @@ export default function ModeSpecificPanel({ k }) {
                             />
                         </div>
                         {/* Info sesi */}
-                        <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2.5">
-                            <p className="text-[10px] font-semibold text-emerald-600 mb-1">
+                        <div className="rounded-xl bg-success/10 border border-emerald-200 px-3 py-2.5">
+                            <p className="text-[10px] font-semibold text-success mb-1">
                                 ⏱️ Sesi Dimulai
                             </p>
-                            <p className="text-sm font-bold text-emerald-700">
+                            <p className="text-sm font-bold text-success">
                                 {new Date().toLocaleString("id-ID", {
                                     dateStyle: "medium",
                                     timeStyle: "short",
@@ -601,7 +601,7 @@ export default function ModeSpecificPanel({ k }) {
                                 Timer mulai saat transaksi diproses
                             </p>
                         </div>
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[11px] text-muted-foreground">
                             Session: catat unit, pengguna, dan waktu mulai.
                             Bayar di awal (prepaid) atau akhir (postpaid).
                         </p>

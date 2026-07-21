@@ -178,17 +178,17 @@ export default function PaymentModal({
         <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
             <div
                 onClick={onClose}
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-primary/60 backdrop-blur-sm"
             />
 
-            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
-                <div className="shrink-0 flex items-center justify-between border-b border-slate-100 px-5 py-4">
+            <div className="relative w-full max-w-md max-h-[90vh] flex flex-col rounded-t-2xl bg-card shadow-2xl sm:rounded-2xl">
+                <div className="shrink-0 flex items-center justify-between border-b border-border px-5 py-4">
                     <div className="flex items-center gap-2">
                         {mode && (
                             <button
                                 type="button"
                                 onClick={goBack}
-                                className="text-slate-400 hover:text-slate-700 transition"
+                                className="text-muted-foreground/60 hover:text-card-foreground transition"
                             >
                                 <svg
                                     className="h-5 w-5"
@@ -205,7 +205,7 @@ export default function PaymentModal({
                                 </svg>
                             </button>
                         )}
-                        <h3 className="font-semibold text-slate-900">
+                        <h3 className="font-semibold text-foreground">
                             {!mode
                                 ? "Pilih Metode Pembayaran"
                                 : mode === "offline"
@@ -217,7 +217,7 @@ export default function PaymentModal({
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-slate-400 hover:text-slate-700"
+                        className="text-muted-foreground/60 hover:text-card-foreground"
                     >
                         <svg
                             className="h-5 w-5"
@@ -236,26 +236,26 @@ export default function PaymentModal({
                 </div>
 
                 {/* Total */}
-                <div className="shrink-0 bg-indigo-50 px-5 py-4">
+                <div className="shrink-0 bg-primary/10 px-5 py-4">
                     {roundingAdjustment !== 0 && (
                         <div className="flex justify-between mb-1">
-                            <span className="text-xs text-slate-500">Subtotal</span>
-                            <span className="text-xs text-slate-500">{fmt(grandTotal)}</span>
+                            <span className="text-xs text-muted-foreground">Subtotal</span>
+                            <span className="text-xs text-muted-foreground">{fmt(grandTotal)}</span>
                         </div>
                     )}
                     {roundingAdjustment !== 0 && (
                         <div className="flex justify-between mb-1">
-                            <span className="text-xs text-slate-500">Pembulatan</span>
-                            <span className="text-xs text-emerald-600">
+                            <span className="text-xs text-muted-foreground">Pembulatan</span>
+                            <span className="text-xs text-success">
                                 {roundingAdjustment > 0 ? '+' : ''}{fmt(roundingAdjustment)}
                             </span>
                         </div>
                     )}
                     <div className="flex justify-between">
-                        <span className="text-sm text-slate-600">
+                        <span className="text-sm text-muted-foreground">
                             Total Bayar
                         </span>
-                        <span className="text-xl font-bold text-indigo-700">
+                        <span className="text-xl font-bold text-primary">
                             {fmt(displayTotal)}
                         </span>
                     </div>
@@ -267,21 +267,21 @@ export default function PaymentModal({
                         <button
                             type="button"
                             onClick={goOffline}
-                            className="group flex w-full items-center gap-4 rounded-2xl border-2 border-slate-200 bg-white p-5 text-left transition hover:border-emerald-400 hover:bg-emerald-50 hover:shadow-md"
+                            className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-emerald-400 hover:bg-success/10 hover:shadow-md"
                         >
                             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-2xl transition group-hover:bg-emerald-200">
                                 💵
                             </div>
                             <div className="flex-1">
-                                <p className="text-base font-bold text-slate-900 group-hover:text-emerald-700">
+                                <p className="text-base font-bold text-foreground group-hover:text-success">
                                     Bayar Offline
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-xs text-muted-foreground">
                                     Tunai, kartu debit/kredit, transfer bank
                                 </p>
                             </div>
                             <svg
-                                className="h-5 w-5 text-slate-300 group-hover:text-emerald-500 transition"
+                                className="h-5 w-5 text-muted-foreground/30 group-hover:text-success transition"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={2}
@@ -299,21 +299,21 @@ export default function PaymentModal({
                             <button
                                 type="button"
                                 onClick={() => setMode("online")}
-                                className="group flex w-full items-center gap-4 rounded-2xl border-2 border-slate-200 bg-white p-5 text-left transition hover:border-indigo-400 hover:bg-indigo-50 hover:shadow-md"
+                                className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-indigo-400 hover:bg-primary/10 hover:shadow-md"
                             >
                                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-2xl transition group-hover:bg-indigo-200">
                                     🌐
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-base font-bold text-slate-900 group-hover:text-indigo-700">
+                                    <p className="text-base font-bold text-foreground group-hover:text-primary">
                                         Bayar Online
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-muted-foreground">
                                         QRIS, e-wallet, virtual account
                                     </p>
                                 </div>
                                 <svg
-                                    className="h-5 w-5 text-slate-300 group-hover:text-indigo-500 transition"
+                                    className="h-5 w-5 text-muted-foreground/30 group-hover:text-indigo-500 transition"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     strokeWidth={2}
@@ -332,21 +332,21 @@ export default function PaymentModal({
                             <button
                                 type="button"
                                 onClick={goDebt}
-                                className="group flex w-full items-center gap-4 rounded-2xl border-2 border-slate-200 bg-white p-5 text-left transition hover:border-amber-400 hover:bg-amber-50 hover:shadow-md"
+                                className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-amber-400 hover:bg-warning/10 hover:shadow-md"
                             >
                                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-2xl transition group-hover:bg-amber-200">
                                     📒
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-base font-bold text-slate-900 group-hover:text-amber-700">
+                                    <p className="text-base font-bold text-foreground group-hover:text-warning">
                                         Hutang / Kasbon
                                     </p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-muted-foreground">
                                         Catat sebagai hutang pelanggan
                                     </p>
                                 </div>
                                 <svg
-                                    className="h-5 w-5 text-slate-300 group-hover:text-amber-500 transition"
+                                    className="h-5 w-5 text-muted-foreground/30 group-hover:text-amber-500 transition"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     strokeWidth={2}
@@ -379,7 +379,7 @@ export default function PaymentModal({
                                                 onClick={() =>
                                                     update(0, "amount", v)
                                                 }
-                                                className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${Number(payments[0].amount) === v ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-600 hover:border-emerald-300"}`}
+                                                className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${Number(payments[0].amount) === v ? "border-emerald-500 bg-success/10 text-success" : "border-border text-muted-foreground hover:border-emerald-300"}`}
                                             >
                                                 {fmt(v)}
                                             </button>
@@ -391,7 +391,7 @@ export default function PaymentModal({
                             {payments.map((p, i) => (
                                 <div
                                     key={i}
-                                    className="space-y-2 rounded-xl border border-slate-200 p-3"
+                                    className="space-y-2 rounded-xl border border-border p-3"
                                 >
                                     <div className="flex items-center gap-2">
                                         <select
@@ -438,7 +438,7 @@ export default function PaymentModal({
                                     </div>
                                     <div className="flex gap-2 items-center">
                                         <div className="relative flex-1">
-                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">
+                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground/60">
                                                 Rp
                                             </span>
                                             <input
@@ -468,7 +468,7 @@ export default function PaymentModal({
                                                                 )),
                                                     )
                                                 }
-                                                className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-[11px] font-bold text-emerald-600 hover:bg-emerald-100 transition"
+                                                className="shrink-0 rounded-lg border border-emerald-200 bg-success/10 px-2.5 py-2 text-[11px] font-bold text-success hover:bg-emerald-100 transition"
                                                 title="Isi sisa pembayaran"
                                             >
                                                 Sisa
@@ -482,7 +482,7 @@ export default function PaymentModal({
                                 <button
                                     type="button"
                                     onClick={add}
-                                    className="w-full rounded-xl border border-dashed border-slate-300 py-2 text-xs font-medium text-slate-500 hover:border-emerald-300 hover:text-emerald-600 transition"
+                                    className="w-full rounded-xl border border-dashed border-slate-300 py-2 text-xs font-medium text-muted-foreground hover:border-emerald-300 hover:text-success transition"
                                 >
                                     + Tambah metode pembayaran (split)
                                 </button>
@@ -490,29 +490,29 @@ export default function PaymentModal({
                         </div>
 
                         {/* Fixed: Summary */}
-                        <div className="shrink-0 border-t border-slate-100 px-5 py-3 bg-white">
-                            <div className="rounded-xl bg-slate-50 px-4 py-3 space-y-1 text-sm">
+                        <div className="shrink-0 border-t border-border px-5 py-3 bg-card">
+                            <div className="rounded-xl bg-muted/50 px-4 py-3 space-y-1 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-slate-500">
+                                    <span className="text-muted-foreground">
                                         Dibayar
                                     </span>
-                                    <span className="font-semibold text-slate-800">
+                                    <span className="font-semibold text-foreground">
                                         {fmt(totalPaid)}
                                     </span>
                                 </div>
                                 {change > 0 && (
                                     <div className="flex justify-between">
-                                        <span className="text-slate-500">
+                                        <span className="text-muted-foreground">
                                             Kembalian
                                         </span>
-                                        <span className="font-bold text-emerald-600">
+                                        <span className="font-bold text-success">
                                             {fmt(change)}
                                         </span>
                                     </div>
                                 )}
                                 {remaining > 0 && (
                                     <div className="flex justify-between">
-                                        <span className="text-slate-500">
+                                        <span className="text-muted-foreground">
                                             Kurang
                                         </span>
                                         <span className="font-bold text-red-600">
@@ -532,12 +532,12 @@ export default function PaymentModal({
                             {/* ── Pelanggan belum dipilih: tampilkan pencarian ── */}
                             {!customer && (
                                 <div>
-                                    <p className="mb-2 text-sm font-semibold text-slate-800">
-                                        Pilih Pelanggan <span className="text-red-500">*</span>
+                                    <p className="mb-2 text-sm font-semibold text-foreground">
+                                        Pilih Pelanggan <span className="text-destructive">*</span>
                                     </p>
                                     <div className="relative mb-2">
                                         <svg
-                                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none"
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 pointer-events-none"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             strokeWidth={2}
@@ -559,7 +559,7 @@ export default function PaymentModal({
                                     </div>
                                     <div className="space-y-1.5">
                                         {filteredCustomers.length === 0 ? (
-                                            <p className="px-2 py-4 text-center text-xs text-slate-400">
+                                            <p className="px-2 py-4 text-center text-xs text-muted-foreground/60">
                                                 Pelanggan tidak ditemukan
                                             </p>
                                         ) : (
@@ -571,23 +571,23 @@ export default function PaymentModal({
                                                         key={c.id}
                                                         type="button"
                                                         onClick={() => onSelectCustomer?.(c.id)}
-                                                        className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200 px-3 py-2 text-left transition hover:border-amber-300 hover:bg-amber-50"
+                                                        className="flex w-full items-center gap-2.5 rounded-xl border border-border px-3 py-2 text-left transition hover:border-amber-300 hover:bg-warning/10"
                                                     >
-                                                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
+                                                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-muted-foreground">
                                                             {c.name?.charAt(0)?.toUpperCase()}
                                                         </span>
                                                         <div className="min-w-0 flex-1">
-                                                            <p className="truncate text-sm font-medium text-slate-800">
+                                                            <p className="truncate text-sm font-medium text-foreground">
                                                                 {c.name}
                                                             </p>
-                                                            <p className="truncate text-[10.5px] text-slate-400">
+                                                            <p className="truncate text-[10.5px] text-muted-foreground/60">
                                                                 {c.phone ? c.phone : c.code ?? ""}
                                                             </p>
                                                         </div>
                                                         {c.credit_limit > 0 && (
-                                                            <span className="shrink-0 text-[10px] font-semibold text-slate-500">
+                                                            <span className="shrink-0 text-[10px] font-semibold text-muted-foreground">
                                                                 Sisa limit{" "}
-                                                                <span className={cCredit > 0 ? "text-emerald-600" : "text-red-500"}>
+                                                                <span className={cCredit > 0 ? "text-success" : "text-destructive"}>
                                                                     {fmt(cCredit)}
                                                                 </span>
                                                             </span>
@@ -603,15 +603,15 @@ export default function PaymentModal({
                             {/* ── Pelanggan sudah dipilih: tampilkan info + form ── */}
                             {customer && (
                                 <>
-                                    <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+                                    <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-warning/10 px-3 py-2.5">
                                         <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-200 text-sm font-bold text-amber-800">
                                             {customer.name?.charAt(0)?.toUpperCase()}
                                         </span>
                                         <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-semibold text-slate-800">
+                                            <p className="truncate text-sm font-semibold text-foreground">
                                                 {customer.name}
                                             </p>
-                                            <p className="truncate text-[10.5px] text-slate-500">
+                                            <p className="truncate text-[10.5px] text-muted-foreground">
                                                 {customer.phone ?? customer.code ?? ""}
                                             </p>
                                         </div>
@@ -629,19 +629,19 @@ export default function PaymentModal({
 
                                     {/* Detail hutang pelanggan — ringkas tapi lengkap */}
                                     <div className="grid grid-cols-2 gap-2">
-                                        <div className="rounded-xl bg-slate-50 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wide text-slate-400">
+                                        <div className="rounded-xl bg-muted/50 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
                                                 Hutang saat ini
                                             </p>
-                                            <p className="mt-0.5 text-sm font-bold text-slate-800">
+                                            <p className="mt-0.5 text-sm font-bold text-foreground">
                                                 {fmt(customer.debt_balance ?? 0)}
                                             </p>
                                         </div>
-                                        <div className="rounded-xl bg-slate-50 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wide text-slate-400">
+                                        <div className="rounded-xl bg-muted/50 px-3 py-2">
+                                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
                                                 Limit kredit
                                             </p>
-                                            <p className="mt-0.5 text-sm font-bold text-slate-800">
+                                            <p className="mt-0.5 text-sm font-bold text-foreground">
                                                 {customer.credit_limit > 0
                                                     ? fmt(customer.credit_limit)
                                                     : "Tanpa limit"}
@@ -658,7 +658,7 @@ export default function PaymentModal({
                                     {/* ─── Pilihan: Full Hutang vs Bayar Sebagian ─── */}
                                     {debtSubMode === null && (
                                         <div className="space-y-2 pt-1">
-                                            <p className="text-xs font-medium text-slate-500">
+                                            <p className="text-xs font-medium text-muted-foreground">
                                                 Bagaimana pelanggan ingin membayar?
                                             </p>
                                             <button
@@ -674,20 +674,20 @@ export default function PaymentModal({
                                                         pg_method: "",
                                                     }]);
                                                 }}
-                                                className="group flex w-full items-center gap-3 rounded-2xl border-2 border-slate-200 bg-white p-4 text-left transition hover:border-amber-400 hover:bg-amber-50 hover:shadow-sm"
+                                                className="group flex w-full items-center gap-3 rounded-2xl border-2 border-border bg-card p-4 text-left transition hover:border-amber-400 hover:bg-warning/10 hover:shadow-sm"
                                             >
                                                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-xl transition group-hover:bg-amber-200">
                                                     📒
                                                 </div>
                                                 <div className="flex-1">
-                                                    <p className="text-sm font-bold text-slate-900 group-hover:text-amber-700">
+                                                    <p className="text-sm font-bold text-foreground group-hover:text-warning">
                                                         Full Hutang
                                                     </p>
-                                                    <p className="text-[11px] text-slate-500">
+                                                    <p className="text-[11px] text-muted-foreground">
                                                         Seluruh {fmt(displayTotal)} dicatat sebagai hutang
                                                     </p>
                                                 </div>
-                                                <svg className="h-5 w-5 text-slate-300 group-hover:text-amber-500 transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <svg className="h-5 w-5 text-muted-foreground/30 group-hover:text-amber-500 transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                                 </svg>
                                             </button>
@@ -716,20 +716,20 @@ export default function PaymentModal({
                                                         },
                                                     ]);
                                                 }}
-                                                className="group flex w-full items-center gap-3 rounded-2xl border-2 border-slate-200 bg-white p-4 text-left transition hover:border-emerald-400 hover:bg-emerald-50 hover:shadow-sm"
+                                                className="group flex w-full items-center gap-3 rounded-2xl border-2 border-border bg-card p-4 text-left transition hover:border-emerald-400 hover:bg-success/10 hover:shadow-sm"
                                             >
                                                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-xl transition group-hover:bg-emerald-200">
                                                     💵
                                                 </div>
                                                 <div className="flex-1">
-                                                    <p className="text-sm font-bold text-slate-900 group-hover:text-emerald-700">
+                                                    <p className="text-sm font-bold text-foreground group-hover:text-success">
                                                         Bayar Sebagian
                                                     </p>
-                                                    <p className="text-[11px] text-slate-500">
+                                                    <p className="text-[11px] text-muted-foreground">
                                                         Bayar tunai/transfer dulu, sisanya hutang
                                                     </p>
                                                 </div>
-                                                <svg className="h-5 w-5 text-slate-300 group-hover:text-emerald-500 transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <svg className="h-5 w-5 text-muted-foreground/30 group-hover:text-success transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                                 </svg>
                                             </button>
@@ -738,7 +738,7 @@ export default function PaymentModal({
 
                                     {/* ─── Full Hutang — konfirmasi ringkas ─── */}
                                     {debtSubMode === "full" && (
-                                        <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 space-y-2">
+                                        <div className="rounded-2xl border border-amber-200 bg-warning/10/50 p-4 space-y-2">
                                             <div className="flex items-center justify-between">
                                                 <p className="text-sm font-semibold text-amber-800">
                                                     Seluruhnya dihutang
@@ -746,15 +746,15 @@ export default function PaymentModal({
                                                 <button
                                                     type="button"
                                                     onClick={() => setDebtSubMode(null)}
-                                                    className="text-[11px] font-medium text-amber-600 hover:text-amber-800 underline underline-offset-2"
+                                                    className="text-[11px] font-medium text-warning hover:text-amber-800 underline underline-offset-2"
                                                 >
                                                     Ubah
                                                 </button>
                                             </div>
-                                            <p className="text-2xl font-bold text-amber-700 tabular-nums">
+                                            <p className="text-2xl font-bold text-warning tabular-nums">
                                                 {fmt(displayTotal)}
                                             </p>
-                                            <p className="text-[11px] text-slate-500">
+                                            <p className="text-[11px] text-muted-foreground">
                                                 Hutang {customer.name} akan bertambah menjadi{" "}
                                                 <strong>{fmt((customer.debt_balance ?? 0) + displayTotal)}</strong>
                                             </p>
@@ -765,21 +765,21 @@ export default function PaymentModal({
                                     {debtSubMode === "partial" && (
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <p className="text-sm font-semibold text-slate-800">
+                                                <p className="text-sm font-semibold text-foreground">
                                                     Bayar Sebagian
                                                 </p>
                                                 <button
                                                     type="button"
                                                     onClick={() => setDebtSubMode(null)}
-                                                    className="text-[11px] font-medium text-slate-500 hover:text-slate-800 underline underline-offset-2"
+                                                    className="text-[11px] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2"
                                                 >
                                                     Ubah
                                                 </button>
                                             </div>
 
                                             {/* Baris pertama: bayar tunai/kartu */}
-                                            <div className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/30 p-3">
-                                                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">
+                                            <div className="space-y-2 rounded-xl border border-emerald-200 bg-success/10/30 p-3">
+                                                <p className="text-[11px] font-semibold uppercase tracking-wider text-success">
                                                     Dibayar sekarang
                                                 </p>
                                                 <div className="flex items-center gap-2">
@@ -794,7 +794,7 @@ export default function PaymentModal({
                                                     </select>
                                                 </div>
                                                 <div className="relative">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-slate-400">Rp</span>
+                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground/60">Rp</span>
                                                     <input
                                                         type="number"
                                                         value={payments[0]?.amount ?? ""}
@@ -810,11 +810,11 @@ export default function PaymentModal({
                                             </div>
 
                                             {/* Baris kedua: sisa menjadi hutang */}
-                                            <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50/30 p-3">
-                                                <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-600">
+                                            <div className="space-y-2 rounded-xl border border-amber-200 bg-warning/10/30 p-3">
+                                                <p className="text-[11px] font-semibold uppercase tracking-wider text-warning">
                                                     Dicatat sebagai hutang
                                                 </p>
-                                                <p className="text-lg font-bold text-amber-700 tabular-nums">
+                                                <p className="text-lg font-bold text-warning tabular-nums">
                                                     {fmt(Number(payments[1]?.amount) || 0)}
                                                 </p>
                                             </div>
@@ -832,28 +832,28 @@ export default function PaymentModal({
 
                         {/* Fixed: Summary */}
                         {customer && debtSubMode && (
-                            <div className="shrink-0 border-t border-slate-100 px-5 py-3 bg-white">
-                                <div className="rounded-xl bg-slate-50 px-4 py-3 space-y-1 text-sm">
+                            <div className="shrink-0 border-t border-border px-5 py-3 bg-card">
+                                <div className="rounded-xl bg-muted/50 px-4 py-3 space-y-1 text-sm">
                                     <div className="flex justify-between">
-                                        <span className="text-slate-500">Dicatat sebagai hutang</span>
-                                        <span className="font-semibold text-amber-600">{fmt(debtPortion)}</span>
+                                        <span className="text-muted-foreground">Dicatat sebagai hutang</span>
+                                        <span className="font-semibold text-warning">{fmt(debtPortion)}</span>
                                     </div>
                                     {debtSubMode === "partial" && (
                                         <div className="flex justify-between">
-                                            <span className="text-slate-500">Dibayar tunai</span>
-                                            <span className="font-semibold text-slate-800">{fmt(totalPaid - debtPortion)}</span>
+                                            <span className="text-muted-foreground">Dibayar tunai</span>
+                                            <span className="font-semibold text-foreground">{fmt(totalPaid - debtPortion)}</span>
                                         </div>
                                     )}
                                     {remaining > 0 && (
                                         <div className="flex justify-between">
-                                            <span className="text-slate-500">Kurang</span>
+                                            <span className="text-muted-foreground">Kurang</span>
                                             <span className="font-bold text-red-600">{fmt(remaining)}</span>
                                         </div>
                                     )}
                                     {change > 0 && (
                                         <div className="flex justify-between">
-                                            <span className="text-slate-500">Kembalian</span>
-                                            <span className="font-bold text-emerald-600">{fmt(change)}</span>
+                                            <span className="text-muted-foreground">Kembalian</span>
+                                            <span className="font-bold text-success">{fmt(change)}</span>
                                         </div>
                                     )}
                                 </div>
@@ -865,7 +865,7 @@ export default function PaymentModal({
                 {/* ═══ MODE: ONLINE — PG method chooser ═══ */}
                 {mode === "online" && !isPgPayment && pgMethods?.length > 0 && (
                     <div className="flex-1 overflow-y-auto min-h-0 px-5 py-5 space-y-3">
-                        <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                        <p className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
                             Pilih metode pembayaran online
                         </p>
                         <div className="grid grid-cols-2 gap-2">
@@ -885,24 +885,24 @@ export default function PaymentModal({
                                         onClick={() => selectPgMethod(pg)}
                                         className={`group flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition hover:shadow-md ${
                                             isQris
-                                                ? "col-span-2 border-indigo-200 bg-indigo-50/50 hover:border-indigo-400 hover:bg-indigo-50"
-                                                : "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/30"
+                                                ? "col-span-2 border-indigo-200 bg-primary/10/50 hover:border-indigo-400 hover:bg-primary/10"
+                                                : "border-border bg-card hover:border-primary/30 hover:bg-primary/10/30"
                                         }`}
                                     >
                                         <span className="text-2xl">
                                             {lbl.icon}
                                         </span>
                                         <div className="flex-1">
-                                            <p className="text-sm font-bold text-slate-900">
+                                            <p className="text-sm font-bold text-foreground">
                                                 {lbl.label}
                                             </p>
-                                            <p className="text-[10px] text-slate-400">
+                                            <p className="text-[10px] text-muted-foreground/60">
                                                 {isQris
                                                     ? "Scan dengan semua aplikasi"
                                                     : "Pembayaran instan"}
                                             </p>
                                         </div>
-                                        <span className="rounded-lg bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-600 group-hover:bg-indigo-200">
+                                        <span className="rounded-lg bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-primary group-hover:bg-indigo-200">
                                             ONLINE
                                         </span>
                                     </button>
@@ -915,22 +915,22 @@ export default function PaymentModal({
                 {/* ═══ MODE: ONLINE — selected PG, showing info ═══ */}
                 {mode === "online" && isPgPayment && (
                     <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-3">
-                        <div className="flex items-center gap-3 rounded-xl bg-indigo-50 p-4">
+                        <div className="flex items-center gap-3 rounded-xl bg-primary/10 p-4">
                             <span className="text-2xl">
                                 {PG_METHOD_LABELS[payments[0]?.pg_method]
                                     ?.icon ?? "💳"}
                             </span>
                             <div>
-                                <p className="text-sm font-bold text-slate-900">
+                                <p className="text-sm font-bold text-foreground">
                                     {PG_METHOD_LABELS[payments[0]?.pg_method]
                                         ?.label ?? payments[0]?.pg_method}
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-xs text-muted-foreground">
                                     {fmt(displayTotal)}
                                 </p>
                             </div>
                         </div>
-                        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                        <div className="rounded-xl border border-amber-200 bg-warning/10 px-4 py-3 text-xs text-warning">
                             <span className="font-semibold">
                                 Pembayaran Online
                             </span>{" "}
@@ -939,10 +939,10 @@ export default function PaymentModal({
                             terpotong.
                         </div>
                         {/* Summary */}
-                        <div className="rounded-xl bg-slate-50 px-4 py-3 space-y-1 text-sm">
+                        <div className="rounded-xl bg-muted/50 px-4 py-3 space-y-1 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-slate-500">Total</span>
-                                <span className="font-semibold text-slate-800">
+                                <span className="text-muted-foreground">Total</span>
+                                <span className="font-semibold text-foreground">
                                     {fmt(displayTotal)}
                                 </span>
                             </div>
@@ -951,7 +951,7 @@ export default function PaymentModal({
                 )}
 
                 {/* ═══ BOTTOM BUTTON ═══ */}
-                <div className="shrink-0 border-t border-slate-100 px-5 py-4">
+                <div className="shrink-0 border-t border-border px-5 py-4">
                     {mode === "offline" && (
                         <button
                             type="button"
@@ -1025,7 +1025,7 @@ export default function PaymentModal({
                             type="button"
                             disabled={submitting}
                             onClick={() => onConfirm(payments, change)}
-                            className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white shadow-lg shadow-primary/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {submitting ? (
                                 <span className="inline-flex items-center gap-2">

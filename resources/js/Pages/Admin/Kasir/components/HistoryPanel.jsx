@@ -8,24 +8,24 @@ const fmt = (n) =>
 /* ── History panel ───────────────────────────────────── */
 export default function HistoryPanel({ sales, onPrint, onClose, loading }) {
     const STATUS_CLS = {
-        completed: "bg-emerald-50 text-emerald-700",
+        completed: "bg-success/10 text-success",
         cancelled: "bg-red-50 text-red-600",
-        draft: "bg-slate-100 text-slate-600",
+        draft: "bg-muted text-muted-foreground",
     };
     return (
         <div className="fixed inset-0 z-40 flex justify-end">
             <div
                 onClick={onClose}
-                className="flex-1 bg-slate-900/40 backdrop-blur-sm"
+                className="flex-1 bg-primary/40 backdrop-blur-sm"
             />
-            <div className="w-full max-w-sm bg-white shadow-2xl flex flex-col">
-                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-                    <h3 className="font-semibold text-slate-900">
+            <div className="w-full max-w-sm bg-card shadow-2xl flex flex-col">
+                <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                    <h3 className="font-semibold text-foreground">
                         Riwayat Hari Ini
                     </h3>
                     <button
                         onClick={onClose}
-                        className="text-slate-400 hover:text-slate-700"
+                        className="text-muted-foreground/60 hover:text-card-foreground"
                     >
                         <svg
                             className="h-5 w-5"
@@ -45,7 +45,7 @@ export default function HistoryPanel({ sales, onPrint, onClose, loading }) {
                 <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
                     {sales.length === 0 ? (
                         <div className="flex flex-col items-center py-12 text-center">
-                            <p className="text-sm text-slate-400">
+                            <p className="text-sm text-muted-foreground/60">
                                 Belum ada transaksi hari ini.
                             </p>
                         </div>
@@ -53,16 +53,16 @@ export default function HistoryPanel({ sales, onPrint, onClose, loading }) {
                         sales.map((s) => (
                             <div
                                 key={s.id}
-                                className="px-5 py-3 group hover:bg-slate-50 transition-colors"
+                                className="px-5 py-3 group hover:bg-muted transition-colors"
                             >
                                 <div className="flex items-center justify-between">
-                                    <span className="font-mono text-xs font-semibold text-indigo-600">
+                                    <span className="font-mono text-xs font-semibold text-primary">
                                         {s.sale_no}
                                     </span>
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => onPrint(s.id)}
-                                            className="hidden group-hover:flex items-center gap-1 text-xs text-indigo-600 font-medium hover:text-indigo-700"
+                                            className="hidden group-hover:flex items-center gap-1 text-xs text-primary font-medium hover:text-primary"
                                             title="Cetak Struk"
                                         >
                                             <svg
@@ -87,14 +87,14 @@ export default function HistoryPanel({ sales, onPrint, onClose, loading }) {
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between mt-0.5">
-                                    <span className="text-sm text-slate-500">
+                                    <span className="text-sm text-muted-foreground">
                                         {s.customer?.name ?? "Umum"}
                                     </span>
-                                    <span className="font-semibold text-slate-800">
+                                    <span className="font-semibold text-foreground">
                                         {fmt(s.grand_total)}
                                     </span>
                                 </div>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground/60">
                                     {new Date(s.sale_date).toLocaleTimeString(
                                         "id-ID",
                                         { hour: "2-digit", minute: "2-digit" },

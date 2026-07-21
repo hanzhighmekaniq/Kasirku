@@ -11,33 +11,33 @@ import Select from "@/Components/ui/Select";
 const TYPE_LABEL = {
     finished_goods: {
         label: "Barang Jadi",
-        bg: "bg-blue-100",
-        text: "text-blue-700",
+        bg: "bg-accent/10",
+        text: "text-accent-foreground",
     },
     raw_material: {
         label: "Bahan Baku",
-        bg: "bg-purple-100",
-        text: "text-purple-700",
+        bg: "bg-accent/10",
+        text: "text-accent-foreground",
     },
     combo: {
         label: "Combo/Paket",
-        bg: "bg-pink-100",
-        text: "text-pink-700",
+        bg: "bg-accent/10",
+        text: "text-accent-foreground",
     },
     service: {
         label: "Jasa/Layanan",
-        bg: "bg-teal-100",
-        text: "text-teal-700",
+        bg: "bg-accent/10",
+        text: "text-accent-foreground",
     },
     rental_item: {
         label: "Item Rental",
-        bg: "bg-cyan-100",
-        text: "text-cyan-700",
+        bg: "bg-accent/10",
+        text: "text-accent-foreground",
     },
     time_based: {
         label: "Berbasis Waktu",
-        bg: "bg-rose-100",
-        text: "text-rose-700",
+        bg: "bg-accent/10",
+        text: "text-accent-foreground",
     },
 };
 
@@ -114,34 +114,34 @@ function StockBadge({ product }) {
     const min = product.stock_minimum ?? 0;
     if (stock <= 0) {
         return (
-            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-destructive">
+            <span className="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
                 Habis
             </span>
         );
     }
     if (stock <= min) {
         return (
-            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+            <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning">
                 Menipis
             </span>
         );
     }
     return (
-        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-success">
-            Cukup
+            <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
+                Cukup
         </span>
     );
 }
 
 function StatusBadge({ isActive }) {
     return isActive ? (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-success">
-            <span className="h-1.5 w-1.5 rounded-full bg-success/100"></span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
+            <span className="h-1.5 w-1.5 rounded-full bg-success"></span>
             Aktif
         </span>
     ) : (
         <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground"></span>
             Nonaktif
         </span>
     );
@@ -161,7 +161,7 @@ function IndicatorBadges({ product }) {
         badges.push(
             <span
                 key="variant"
-                className="inline-flex items-center gap-1 rounded-md border border-primary-200 bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700"
+                className="inline-flex items-center gap-1 rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
             >
                 Variant {variantCount}
             </span>,
@@ -171,7 +171,7 @@ function IndicatorBadges({ product }) {
         badges.push(
             <span
                 key="unit"
-                className="inline-flex items-center rounded-md border border-teal-200 bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700"
+                className="inline-flex items-center rounded-md border border-accent/20 bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent-foreground"
             >
                 Multi-Satuan
             </span>,
@@ -181,7 +181,7 @@ function IndicatorBadges({ product }) {
         badges.push(
             <span
                 key="tier"
-                className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700"
+                className="inline-flex items-center rounded-md border border-warning/20 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning"
             >
                 Grosir
             </span>,
@@ -189,7 +189,7 @@ function IndicatorBadges({ product }) {
     }
 
     if (badges.length === 0) {
-        return <span className="text-xs text-[rgb(var(--color-text-muted))]">&mdash;</span>;
+        return <span className="text-xs text-muted-foreground">&mdash;</span>;
     }
 
     return <div className="flex flex-wrap gap-1">{badges}</div>;
@@ -197,20 +197,20 @@ function IndicatorBadges({ product }) {
 
 function SummaryCard({ label, value, color = "slate", icon }) {
     const bgColors = {
-        blue: "bg-primary-100 text-primary-600",
-        emerald: "bg-emerald-100 text-emerald-600",
-        amber: "bg-amber-100 text-amber-600",
-        slate: "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))]",
+        blue: "bg-primary/10 text-primary",
+        emerald: "bg-success/10 text-success",
+        amber: "bg-warning/10 text-warning",
+        slate: "bg-muted text-muted-foreground",
     };
 
     return (
-        <div className="rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] p-4 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-xs font-medium text-[rgb(var(--color-text-muted))] sm:text-sm">
+                    <p className="text-xs font-medium text-muted-foreground sm:text-sm">
                         {label}
                     </p>
-                    <p className="mt-1 text-2xl font-bold text-[rgb(var(--color-text-primary))] sm:text-3xl">
+                    <p className="mt-1 text-2xl font-bold text-foreground sm:text-3xl">
                         {value}
                     </p>
                 </div>
@@ -232,15 +232,15 @@ function DetailRow({ product, onStockModal }) {
 
     if (hasVariants) {
         return (
-            <div className="border-t border-[rgb(var(--color-divider))] bg-gradient-to-b from-[rgb(var(--color-surface-secondary))]/80 to-[rgb(var(--color-card))] px-5 py-4">
+            <div className="border-t border-border bg-gradient-to-b from-muted/80 to-card px-5 py-4">
                 <div className="mb-3 flex items-center gap-2">
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-primary-100 text-primary-600">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-primary">
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                         </svg>
                     </span>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[rgb(var(--color-text-secondary))]">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-card-foreground">
                         {variants.length} Variant
                     </h4>
                 </div>
@@ -259,15 +259,15 @@ function DetailRow({ product, onStockModal }) {
                         return (
                             <div
                                 key={v.id}
-                                className={`group relative rounded-xl border bg-[rgb(var(--color-card))] p-3.5 transition-all hover:shadow-md ${isOut ? "border-destructive/20 bg-destructive/10/30" : isLow ? "border-amber-200 bg-amber-50/30" : "border-[rgb(var(--color-border))]"}`}
+                                className={`group relative rounded-xl border bg-card p-3.5 transition-all hover:shadow-md ${isOut ? "border-destructive/20 bg-destructive/10/30" : isLow ? "border-warning/20 bg-warning/5" : "border-border"}`}
                             >
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-semibold text-[rgb(var(--color-text-primary))]">{v.name}</p>
-                                        <p className="mt-0.5 font-mono text-[11px] text-[rgb(var(--color-text-muted))]">{v.sku}</p>
+                                        <p className="truncate text-sm font-semibold text-foreground">{v.name}</p>
+                                        <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{v.sku}</p>
                                     </div>
                                     {product.track_stock && (
-                                        <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${isOut ? "bg-red-100 text-destructive" : isLow ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-success"}`}>
+                                        <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${isOut ? "bg-destructive/10 text-destructive" : isLow ? "bg-warning/10 text-warning" : "bg-success/10 text-success"}`}>
                                             {isOut ? "Habis" : isLow ? "Menipis" : vStock}
                                         </span>
                                     )}
@@ -275,31 +275,31 @@ function DetailRow({ product, onStockModal }) {
 
                                 <div className="mb-2.5 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                                     <div>
-                                        <span className="text-[rgb(var(--color-text-muted))]">Jual</span>
-                                        <p className="font-semibold text-[rgb(var(--color-text-secondary))]">Rp {Number(v.price || 0).toLocaleString("id-ID")}</p>
+                                        <span className="text-muted-foreground">Jual</span>
+                                        <p className="font-semibold text-card-foreground">Rp {Number(v.price || 0).toLocaleString("id-ID")}</p>
                                     </div>
                                     <div>
-                                        <span className="text-[rgb(var(--color-text-muted))]">Modal</span>
-                                        <p className="font-medium text-[rgb(var(--color-text-secondary))]">Rp {Number(v.cost_price || 0).toLocaleString("id-ID")}</p>
+                                        <span className="text-muted-foreground">Modal</span>
+                                        <p className="font-medium text-card-foreground">Rp {Number(v.cost_price || 0).toLocaleString("id-ID")}</p>
                                     </div>
                                 </div>
 
                                 {units && (
-                                    <p className="mb-1 truncate text-[11px] text-[rgb(var(--color-text-muted))]" title={units}>
-                                        <span className="font-medium text-[rgb(var(--color-text-secondary))]">Satuan:</span> {units}
+                                    <p className="mb-1 truncate text-[11px] text-muted-foreground" title={units}>
+                                        <span className="font-medium text-card-foreground">Satuan:</span> {units}
                                     </p>
                                 )}
                                 {tiers && (
-                                    <p className="mb-2.5 truncate text-[11px] text-[rgb(var(--color-text-muted))]" title={tiers}>
-                                        <span className="font-medium text-[rgb(var(--color-text-secondary))]">Grosir:</span> {tiers}
+                                    <p className="mb-2.5 truncate text-[11px] text-muted-foreground" title={tiers}>
+                                        <span className="font-medium text-card-foreground">Grosir:</span> {tiers}
                                     </p>
                                 )}
 
-                                <div className="flex items-center gap-1.5 border-t border-[rgb(var(--color-divider))] pt-2.5">
+                                <div className="flex items-center gap-1.5 border-t border-border pt-2.5">
                                     {product.track_stock && (
                                         <button
                                             onClick={() => onStockModal?.({ product, variant: v, type: "in" })}
-                                            className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] text-xs font-medium text-[rgb(var(--color-text-secondary))] transition hover:bg-[rgb(var(--color-surface-secondary))]"
+                                            className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-lg border border-border bg-card text-xs font-medium text-card-foreground transition hover:bg-muted"
                                             title={`Atur Stok ${v.name}`}
                                         >
                                             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -315,7 +315,7 @@ function DetailRow({ product, onStockModal }) {
                                             "&variant_id=" + v.id +
                                             (product.supplier_id ? "&supplier_id=" + product.supplier_id : "")
                                         }
-                                        className={`inline-flex h-7 items-center justify-center gap-1 rounded-lg border text-xs font-medium transition ${product.supplier_id ? "border-primary-200 bg-primary-50 text-primary-700 hover:bg-primary-100" : "border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] text-[rgb(var(--color-text-muted))] hover:bg-[rgb(var(--color-surface-secondary))]"}`}
+                                        className={`inline-flex h-7 items-center justify-center gap-1 rounded-lg border text-xs font-medium transition ${product.supplier_id ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/20" : "border-border bg-card text-muted-foreground hover:bg-muted"}`}
                                         title={product.supplier_id ? `Beli ${v.name} dari Supplier` : "Belum ada supplier — buka Purchase"}
                                     >
                                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -341,30 +341,30 @@ function DetailRow({ product, onStockModal }) {
         : null;
 
     return (
-        <div className="border-t border-[rgb(var(--color-divider))] bg-gradient-to-b from-[rgb(var(--color-surface-secondary))]/80 to-[rgb(var(--color-card))] px-5 py-4">
+        <div className="border-t border-border bg-gradient-to-b from-[rgb(var(--color-surface-secondary))]/80 to-[rgb(var(--color-card))] px-5 py-4">
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs sm:grid-cols-4">
                 <div>
-                    <span className="text-[rgb(var(--color-text-muted))]">Harga Jual</span>
-                    <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">Rp {Number(product.sell_price || 0).toLocaleString("id-ID")}</p>
+                    <span className="text-muted-foreground">Harga Jual</span>
+                    <p className="text-sm font-semibold text-foreground">Rp {Number(product.sell_price || 0).toLocaleString("id-ID")}</p>
                 </div>
                 <div>
-                    <span className="text-[rgb(var(--color-text-muted))]">Harga Modal</span>
-                    <p className="text-sm font-medium text-[rgb(var(--color-text-secondary))]">Rp {Number(product.cost_price || 0).toLocaleString("id-ID")}</p>
+                    <span className="text-muted-foreground">Harga Modal</span>
+                    <p className="text-sm font-medium text-card-foreground">Rp {Number(product.cost_price || 0).toLocaleString("id-ID")}</p>
                 </div>
                 <div>
-                    <span className="text-[rgb(var(--color-text-muted))]">Stok Saat Ini</span>
-                    <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">{product.stock ?? 0}</p>
+                    <span className="text-muted-foreground">Stok Saat Ini</span>
+                    <p className="text-sm font-semibold text-foreground">{product.stock ?? 0}</p>
                 </div>
                 {units && (
                     <div>
-                        <span className="text-[rgb(var(--color-text-muted))]">Multi-Satuan</span>
-                        <p className="truncate text-sm text-[rgb(var(--color-text-secondary))]" title={units}>{units}</p>
+                        <span className="text-muted-foreground">Multi-Satuan</span>
+                        <p className="truncate text-sm text-card-foreground" title={units}>{units}</p>
                     </div>
                 )}
                 {tiers && (
                     <div className="col-span-2">
-                        <span className="text-[rgb(var(--color-text-muted))]">Harga Grosir</span>
-                        <p className="truncate text-sm text-[rgb(var(--color-text-secondary))]" title={tiers}>{tiers}</p>
+                        <span className="text-muted-foreground">Harga Grosir</span>
+                        <p className="truncate text-sm text-card-foreground" title={tiers}>{tiers}</p>
                     </div>
                 )}
             </div>
@@ -390,15 +390,15 @@ function PriceCell({ product, bold = true }) {
             min === max
                 ? `Rp ${min.toLocaleString("id-ID")}`
                 : `Rp ${min.toLocaleString("id-ID")} – Rp ${max.toLocaleString("id-ID")}`;
-        return <span className="text-xs text-[rgb(var(--color-text-secondary))]">{text}</span>;
+        return <span className="text-xs text-card-foreground">{text}</span>;
     }
 
     return (
         <span
             className={
                 bold
-                    ? "font-semibold text-[rgb(var(--color-text-primary))]"
-                    : "text-xs text-[rgb(var(--color-text-secondary))]"
+                    ? "font-semibold text-foreground"
+                    : "text-xs text-card-foreground"
             }
         >
             Rp {Number(product.sell_price || 0).toLocaleString("id-ID")}
@@ -411,7 +411,7 @@ function CostPriceCell({ product }) {
     if (variants.length > 0) {
         const costs = variants.map((v) => Number(v.cost_price || 0)).filter((c) => c > 0);
         if (costs.length === 0) {
-            return <span className="text-xs text-[rgb(var(--color-text-muted))]">&mdash;</span>;
+            return <span className="text-xs text-muted-foreground">&mdash;</span>;
         }
         const min = Math.min(...costs);
         const max = Math.max(...costs);
@@ -419,11 +419,11 @@ function CostPriceCell({ product }) {
             min === max
                 ? `Rp ${min.toLocaleString("id-ID")}`
                 : `Rp ${min.toLocaleString("id-ID")} – Rp ${max.toLocaleString("id-ID")}`;
-        return <span className="text-xs text-[rgb(var(--color-text-muted))]">{text}</span>;
+        return <span className="text-xs text-muted-foreground">{text}</span>;
     }
 
     return (
-        <span className="text-[rgb(var(--color-text-muted))]">
+        <span className="text-muted-foreground">
             Rp {Number(product.cost_price || 0).toLocaleString("id-ID")}
         </span>
     );
@@ -433,12 +433,12 @@ function StockWithVariant({ product }) {
     const variantCount = product.variants?.length ?? 0;
     return (
         <div className="flex flex-col items-center gap-1">
-            <span className="font-semibold text-[rgb(var(--color-text-primary))]">
+            <span className="font-semibold text-foreground">
                 {product.stock ?? 0}
             </span>
             <StockBadge product={product} />
             {variantCount > 0 && (
-                <span className="text-[10px] text-[rgb(var(--color-text-muted))]">
+                <span className="text-[10px] text-muted-foreground">
                     {variantCount} variant
                 </span>
             )}
@@ -580,13 +580,13 @@ export default function Index({
             header={
                 <div className="flex w-full items-center justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold text-[rgb(var(--color-text-primary))] sm:text-3xl">
+                        <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
                             Manajemen {pageTitle}
                         </h2>
-                        <p className="mt-1 text-sm text-[rgb(var(--color-text-muted))]">
+                        <p className="mt-1 text-sm text-muted-foreground">
                             Kelola produk, variant, satuan, dan harga grosir
                             {currentBranch && (
-                                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-xs font-medium text-primary-700">
+                                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
@@ -684,15 +684,15 @@ export default function Index({
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
-                <div className="border-b border-[rgb(var(--color-divider))] p-4">
+                <div className="border-b border-border p-4">
                     <div className="flex flex-col gap-3">
                         {/* Search + Filter Toggle */}
                         <div className="flex gap-2">
                             <div className="relative flex-1">
                                 <svg
-                                    className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[rgb(var(--color-text-muted))]"
+                                    className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     stroke="currentColor"
@@ -711,7 +711,7 @@ export default function Index({
                                         }
                                     }}
                                     placeholder="Cari nama, SKU, atau barcode..."
-                                    className="w-full rounded-lg border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 pl-10 pr-3 text-sm text-[rgb(var(--color-text-primary))] outline-none focus:border-ring focus:ring-2 focus:ring-primary-500"
+                                    className="w-full rounded-lg border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 pl-10 pr-3 text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-primary-500"
                                 />
                             </div>
                             {/* Filter toggle — mobile only */}
@@ -719,8 +719,8 @@ export default function Index({
                                 onClick={() => setShowFilter(!showFilter)}
                                 className={`inline-flex items-center justify-center rounded-lg border px-3 transition lg:hidden ${
                                     showFilter || hasFilters
-                                        ? "border-primary-300 bg-primary-50 text-primary-600"
-                                        : "border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))]"
+                                        ? "border-primary/30 bg-primary/10 text-primary"
+                                        : "border-border text-card-foreground hover:bg-muted"
                                 }`}
                             >
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -788,7 +788,7 @@ export default function Index({
                                                 { preserveState: true, replace: true },
                                             );
                                         }}
-                                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[rgb(var(--color-border))] px-3 py-2.5 text-sm font-medium text-[rgb(var(--color-text-secondary))] transition hover:bg-[rgb(var(--color-surface-secondary))]"
+                                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2.5 text-sm font-medium text-card-foreground transition hover:bg-muted"
                                     >
                                         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                                             <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
@@ -799,7 +799,7 @@ export default function Index({
                                 )}
                                 <Link
                                     href={route("admin.products.create")}
-                                    className="hidden lg:inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
+                                    className="hidden lg:inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                                 >
                                     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                                         <path strokeLinecap="round" d="M12 5v14M5 12h14" />
@@ -809,9 +809,9 @@ export default function Index({
                             </div>
                         </div>
                     </div>
-                    <p className="mt-3 text-sm text-[rgb(var(--color-text-muted))]">
+                    <p className="mt-3 text-sm text-muted-foreground">
                         Menampilkan{" "}
-                        <span className="font-semibold text-[rgb(var(--color-text-secondary))]">
+                        <span className="font-semibold text-card-foreground">
                             {list.length}
                         </span>{" "}
                         dari {products.total} {pageTitle.toLowerCase()}
@@ -821,9 +821,9 @@ export default function Index({
                 {/* Empty state */}
                 {list.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[rgb(var(--color-surface-secondary))]">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
                             <svg
-                                className="h-8 w-8 text-[rgb(var(--color-text-muted))]"
+                                className="h-8 w-8 text-muted-foreground"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
@@ -836,12 +836,12 @@ export default function Index({
                                 />
                             </svg>
                         </div>
-                        <h3 className="mt-4 text-base font-semibold text-[rgb(var(--color-text-primary))]">
+                        <h3 className="mt-4 text-base font-semibold text-foreground">
                             {hasFilters
                                 ? `${pageTitle} tidak ditemukan`
                                 : `Belum ada ${pageTitle.toLowerCase()}`}
                         </h3>
-                        <p className="mt-1 max-w-sm text-sm text-[rgb(var(--color-text-muted))]">
+                        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                             {hasFilters
                                 ? "Coba kata kunci atau filter lain."
                                 : `Mulai dengan menambahkan ${pageTitle.toLowerCase()} pertama.`}
@@ -849,7 +849,7 @@ export default function Index({
                         {!hasFilters && (
                             <Link
                                 href={route("admin.products.create")}
-                                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
+                                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                             >
                                 <svg
                                     className="h-5 w-5"
@@ -872,10 +872,10 @@ export default function Index({
                         {/* Desktop table */}
                         <div className="hidden overflow-x-auto lg:block">
                             <table className="w-full text-sm">
-                                 <thead className="bg-[rgb(var(--color-table-header))] text-xs uppercase tracking-wide text-[rgb(var(--color-text-secondary))]">
+                                 <thead className="bg-[rgb(var(--color-table-header))] text-xs uppercase tracking-wide text-card-foreground">
                                     <tr>
                                         <th
-                                            className="cursor-pointer select-none px-4 py-3 text-left font-semibold transition hover:text-[rgb(var(--color-text-primary))]"
+                                            className="cursor-pointer select-none px-4 py-3 text-left font-semibold transition hover:text-foreground"
                                             onClick={() => toggleSort("name")}
                                         >
                                             <span className="inline-flex items-center gap-1">
@@ -899,7 +899,7 @@ export default function Index({
                                             </th>
                                         )}
                                         <th
-                                            className="cursor-pointer select-none px-4 py-3 text-right font-semibold transition hover:text-[rgb(var(--color-text-primary))]"
+                                            className="cursor-pointer select-none px-4 py-3 text-right font-semibold transition hover:text-foreground"
                                             onClick={() => toggleSort("sell_price")}
                                         >
                                             <span className="inline-flex items-center justify-end gap-1">
@@ -916,7 +916,7 @@ export default function Index({
                                         </th>
                                         {showStock && (
                                             <th
-                                                className="cursor-pointer select-none px-4 py-3 text-center font-semibold transition hover:text-[rgb(var(--color-text-primary))]"
+                                                className="cursor-pointer select-none px-4 py-3 text-center font-semibold transition hover:text-foreground"
                                                 onClick={() => toggleSort("stock")}
                                             >
                                                 <span className="inline-flex items-center justify-center gap-1">
@@ -955,10 +955,10 @@ export default function Index({
                                                                     alt={
                                                                         product.name
                                                                     }
-                                                                    className="h-10 w-10 shrink-0 rounded-lg border border-[rgb(var(--color-border))] object-cover"
+                                                                    className="h-10 w-10 shrink-0 rounded-lg border border-border object-cover"
                                                                 />
                                                             ) : (
-                                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--color-surface-secondary))] text-xs font-semibold text-[rgb(var(--color-text-secondary))]">
+                                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-semibold text-card-foreground">
                                                                     {product.name
                                                                         .split(
                                                                             " ",
@@ -985,19 +985,19 @@ export default function Index({
                                                                         "admin.products.show",
                                                                         product.id,
                                                                     )}
-                                                                    className="block max-w-[200px] truncate font-semibold text-[rgb(var(--color-text-primary))] transition-colors hover:text-primary-600"
+                                                                    className="block max-w-[200px] truncate font-semibold text-foreground transition-colors hover:text-primary"
                                                                 >
                                                                     {
                                                                         product.name
                                                                     }
                                                                 </Link>
-                                                                <p className="font-mono text-xs text-[rgb(var(--color-text-muted))]">
+                                                                <p className="font-mono text-xs text-muted-foreground">
                                                                     {product.sku}
                                                                     {product.barcode
                                                                         ? ` · ${product.barcode}`
                                                                         : ""}
                                                                 </p>
-                                                                <p className="text-xs text-[rgb(var(--color-text-muted))]">
+                                                                <p className="text-xs text-muted-foreground">
                                                                     Satuan:{" "}
                                                                     {product.unit}
                                                                 </p>
@@ -1009,10 +1009,10 @@ export default function Index({
                                                             type={product.type}
                                                         />
                                                     </td>
-                                                    <td className="px-4 py-3 text-[rgb(var(--color-text-secondary))]">
+                                                    <td className="px-4 py-3 text-card-foreground">
                                                         {product.category
                                                             ?.name ?? (
-                                                            <span className="text-xs italic text-[rgb(var(--color-text-muted))]">
+                                                            <span className="text-xs italic text-muted-foreground">
                                                                 &mdash;
                                                             </span>
                                                         )}
@@ -1053,7 +1053,7 @@ export default function Index({
                                                                                     },
                                                                                 );
                                                                             }}
-                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-2 text-xs font-medium text-[rgb(var(--color-text-secondary))] shadow-sm transition hover:bg-[rgb(var(--color-surface-secondary))]"
+                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-border bg-card px-2 text-xs font-medium text-card-foreground shadow-sm transition hover:bg-muted"
                                                                             title="Stok Manual"
                                                                         >
                                                                             <svg
@@ -1089,7 +1089,7 @@ export default function Index({
                                                                             ) =>
                                                                                 e.stopPropagation()
                                                                             }
-                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-primary-200 bg-primary-50 px-2 text-xs font-medium text-primary-700 shadow-sm transition hover:bg-primary-100"
+                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-primary/20 bg-primary/10 px-2 text-xs font-medium text-primary shadow-sm transition hover:bg-primary/20"
                                                                             title="Beli dari Supplier"
                                                                         >
                                                                             <svg
@@ -1128,7 +1128,7 @@ export default function Index({
                                                                             product.id,
                                                                         )
                                                                     }
-                                                                    className="rounded p-1.5 text-[rgb(var(--color-text-secondary))] transition hover:bg-[rgb(var(--color-surface-secondary))]"
+                                                                    className="rounded p-1.5 text-card-foreground transition hover:bg-muted"
                                                                     title="Detail"
                                                                 >
                                                                     <svg
@@ -1152,7 +1152,7 @@ export default function Index({
                                                                         "admin.products.variants.index",
                                                                         product.id,
                                                                     )}
-                                                                    className="rounded p-1.5 text-[rgb(var(--color-text-secondary))] transition hover:bg-amber-50 hover:text-amber-600"
+                                                                    className="rounded p-1.5 text-card-foreground transition hover:bg-warning/5 hover:text-warning"
                                                                     title="Kelola Varian"
                                                                 >
                                                                     <svg
@@ -1181,7 +1181,7 @@ export default function Index({
                                                                             "admin.products.recipes.index",
                                                                             product.id,
                                                                         )}
-                                                                        className="rounded p-1.5 text-[rgb(var(--color-text-secondary))] transition hover:bg-orange-50 hover:text-orange-600"
+                                                                        className="rounded p-1.5 text-card-foreground transition hover:bg-orange-50 hover:text-orange-600"
                                                                         title="Kelola Resep"
                                                                     >
                                                                         <svg
@@ -1206,7 +1206,7 @@ export default function Index({
                                                                     "admin.products.show",
                                                                     product.id,
                                                                 )}
-                                                                className="rounded p-1.5 text-[rgb(var(--color-text-secondary))] transition hover:bg-primary-50 hover:text-primary-600"
+                                                                className="rounded p-1.5 text-card-foreground transition hover:bg-primary/10 hover:text-primary"
                                                                 title="Lihat Detail"
                                                             >
                                                                 <Eye
@@ -1221,7 +1221,7 @@ export default function Index({
                                                                     "admin.products.edit",
                                                                     product.id,
                                                                 )}
-                                                                className="rounded p-1.5 text-[rgb(var(--color-text-secondary))] transition hover:bg-amber-50 hover:text-amber-600"
+                                                                className="rounded p-1.5 text-card-foreground transition hover:bg-warning/5 hover:text-warning"
                                                                 title="Edit"
                                                             >
                                                                 <svg
@@ -1308,10 +1308,10 @@ export default function Index({
                                                 <img
                                                     src={`/storage/${product.image}`}
                                                     alt={product.name}
-                                                    className="h-10 w-10 shrink-0 rounded-lg border border-[rgb(var(--color-border))] object-cover"
+                                                    className="h-10 w-10 shrink-0 rounded-lg border border-border object-cover"
                                                 />
                                             ) : (
-                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--color-surface-secondary))] text-xs font-semibold text-[rgb(var(--color-text-secondary))]">
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-semibold text-card-foreground">
                                                     {product.name
                                                         .split(" ")
                                                         .slice(0, 2)
@@ -1327,7 +1327,7 @@ export default function Index({
                                                             "admin.products.show",
                                                             product.id,
                                                         )}
-                                                        className="font-semibold text-[rgb(var(--color-text-primary))] transition-colors hover:text-primary-600"
+                                                        className="font-semibold text-foreground transition-colors hover:text-primary"
                                                     >
                                                         {product.name}
                                                     </Link>
@@ -1335,13 +1335,13 @@ export default function Index({
                                                         type={product.type}
                                                     />
                                                 </div>
-                                                <p className="mt-0.5 font-mono text-xs text-[rgb(var(--color-text-muted))]">
+                                                <p className="mt-0.5 font-mono text-xs text-muted-foreground">
                                                     {product.sku}
                                                     {product.barcode
                                                         ? ` · ${product.barcode}`
                                                         : ""}
                                                 </p>
-                                                <p className="text-xs text-[rgb(var(--color-text-muted))]">
+                                                <p className="text-xs text-muted-foreground">
                                                     {product.category?.name ??
                                                         "—"}{" "}
                                                     · {product.unit}
@@ -1351,7 +1351,7 @@ export default function Index({
                                                         product={product}
                                                     />
                                                     {showMargin && (
-                                                        <span className="text-xs text-[rgb(var(--color-text-muted))]">
+                                                        <span className="text-xs text-muted-foreground">
                                                             <CostPriceCell product={product} />
                                                         </span>
                                                     )}
@@ -1392,7 +1392,7 @@ export default function Index({
                                                                     product.id,
                                                                 )
                                                             }
-                                                            className="text-[rgb(var(--color-text-secondary))]"
+                                                            className="text-card-foreground"
                                                         >
                                                             {isExp
                                                                 ? "Sembunyikan"
@@ -1410,7 +1410,7 @@ export default function Index({
                                                                         },
                                                                     )
                                                                 }
-                                                                className="text-primary-600"
+                                                                className="text-primary"
                                                             >
                                                                 Stok
                                                             </button>
@@ -1420,7 +1420,7 @@ export default function Index({
                                                             "admin.products.edit",
                                                             product.id,
                                                         )}
-                                                        className="text-amber-600"
+                                                        className="text-warning"
                                                     >
                                                         Edit
                                                     </Link>
@@ -1448,8 +1448,8 @@ export default function Index({
 
             {/* Pagination */}
             {(products?.last_page ?? 1) > 1 && (
-                <div className="mt-4 flex flex-col items-center justify-between gap-3 rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-4 py-3 sm:flex-row">
-                    <p className="text-sm text-[rgb(var(--color-text-muted))]">
+                <div className="mt-4 flex flex-col items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:flex-row">
+                    <p className="text-sm text-muted-foreground">
                         Halaman {products.current_page} dari{" "}
                         {products.last_page} · {products.total}{" "}
                         {pageTitle.toLowerCase()}
@@ -1471,8 +1471,8 @@ export default function Index({
                                     link.active
                                         ? "bg-primary text-primary-foreground"
                                         : link.url
-                                          ? "border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-secondary))]"
-                                          : "cursor-default text-[rgb(var(--color-text-muted))]"
+                                          ? "border border-border text-card-foreground hover:bg-muted"
+                                          : "cursor-default text-muted-foreground"
                                 }`}
                                 dangerouslySetInnerHTML={{
                                     __html: link.label,

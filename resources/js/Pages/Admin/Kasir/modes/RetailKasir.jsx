@@ -11,12 +11,12 @@ export default function RetailKasir(props) {
     const chipClass = (active) =>
         `shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition ${
             active
-                ? "bg-slate-900 text-white shadow-sm"
-                : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
+                ? "bg-secondary text-secondary-foreground shadow-sm"
+                : "border border-border bg-card text-muted-foreground hover:border-secondary hover:text-secondary-foreground"
         }`;
 
     const categoryChips = (
-        <div className="flex items-center gap-2 overflow-x-auto border-b border-slate-100 px-4 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex items-center gap-2 overflow-x-auto border-b border-border rounded-b-lg bg-card px-1 lg:px-2 py-1.5 lg:py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button onClick={() => k.setActiveCat("")} className={chipClass(!k.activeCat)}>
                 Semua
             </button>
@@ -38,16 +38,16 @@ export default function RetailKasir(props) {
     );
 
     const mainContent = (
-        <div className="@container flex-1 overflow-y-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="@container flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {k.filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <div className="mb-4 rounded-2xl bg-slate-100 p-6">
-                        <PackageX size={44} className="text-slate-300" />
+                    <div className="mb-4 rounded-2xl bg-muted p-6">
+                        <PackageX size={44} className="text-muted-foreground/30" />
                     </div>
-                    <p className="text-base font-semibold text-slate-600">
+                    <p className="text-base font-semibold text-foreground">
                         {k.search ? "Produk tidak ditemukan" : "Belum ada produk"}
                     </p>
-                    <p className="mt-1 text-sm text-slate-400">
+                    <p className="mt-1 text-sm text-muted-foreground">
                         {k.search
                             ? "Coba kata kunci atau barcode lain"
                             : "Tambahkan produk terlebih dahulu"}
@@ -55,10 +55,8 @@ export default function RetailKasir(props) {
                 </div>
             ) : (
                 <>
-                    <p className="mb-3 text-[11.5px] font-medium text-slate-400">
-                        {k.filtered.length} produk
-                    </p>
-                    <div className="grid grid-cols-1 gap-3 @xs:grid-cols-2 @md:grid-cols-3 @xl:grid-cols-4 @4xl:grid-cols-5">
+                    
+                    <div className="grid grid-cols-1  py-2 lg:py-3 gap-3 @xs:grid-cols-2 @md:grid-cols-3 @xl:grid-cols-4 @4xl:grid-cols-5">
                         {k.filtered.map((p) => (
                             <ProductCard
                                 key={p.id}

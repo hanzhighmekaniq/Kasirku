@@ -154,11 +154,11 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
-            <div onClick={onClose} className="absolute inset-0 bg-slate-900/60" />
-            <div className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
+            <div onClick={onClose} className="absolute inset-0 bg-black/60" />
+            <div className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-popover text-popover-foreground shadow-2xl sm:rounded-3xl">
                 {/* Header */}
-                <div className="flex items-start gap-4 border-b border-slate-100 p-5">
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-slate-100">
+                <div className="flex items-start gap-4 border-b border-border p-5">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-muted">
                         {product.image ? (
                             <img
                                 src={`/storage/${product.image}`}
@@ -167,19 +167,19 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                             />
                         ) : (
                             <div className="flex h-full w-full items-center justify-center">
-                                <svg className="h-7 w-7 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <svg className="h-7 w-7 text-muted-foreground/30" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
                                 </svg>
                             </div>
                         )}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <h3 className="truncate text-base font-semibold text-slate-900">{product.name}</h3>
-                        <p className="mt-0.5 text-xs text-slate-500">
+                        <h3 className="truncate text-base font-semibold text-popover-foreground">{product.name}</h3>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                             SKU · {product.sku} · {product.unit || "Pcs"}
                         </p>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-700">
+                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -192,8 +192,8 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                     {hasActiveVariants && (
                         <section>
                             <div className="mb-3 flex items-center justify-between">
-                                <h4 className="text-sm font-semibold text-slate-900">Choose Variant</h4>
-                                <span className="text-[11px] text-slate-500">Required</span>
+                                <h4 className="text-sm font-semibold text-popover-foreground">Choose Variant</h4>
+                                <span className="text-[11px] text-muted-foreground">Required</span>
                             </div>
                             <div className="space-y-2.5">
                                 {/* Default (product dasar) — hanya tampil saat sell_base aktif */}
@@ -201,10 +201,10 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                 <div
                                     className={`overflow-hidden rounded-2xl border transition-colors ${
                                         isDefaultOutOfStock
-                                            ? "border-slate-200 bg-slate-50 opacity-60"
+                                            ? "border-border bg-muted/50 opacity-60"
                                             : isDefaultSelected
-                                              ? "border-indigo-500 bg-gradient-to-b from-indigo-50/60 to-white ring-1 ring-indigo-200"
-                                              : "border-slate-200 bg-white"
+                                              ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                              : "border-border bg-card"
                                     }`}
                                 >
                                     <div
@@ -214,8 +214,8 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                         <span
                                             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition ${
                                                 isDefaultSelected
-                                                    ? "border-indigo-500 bg-indigo-500 text-white"
-                                                    : "border-slate-200 bg-white text-transparent"
+                                                    ? "border-primary bg-primary text-primary-foreground"
+                                                    : "border-border bg-card text-transparent"
                                             }`}
                                         >
                                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
@@ -223,18 +223,18 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                             </svg>
                                         </span>
                                         <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-semibold text-slate-900">
-                                                {product.name} <span className="text-slate-400 font-normal">(Default)</span>
+                                            <p className="truncate text-sm font-semibold text-popover-foreground">
+                                                {product.name} <span className="text-muted-foreground font-normal">(Default)</span>
                                             </p>
-                                            <p className="mt-0.5 text-[11px] text-slate-400">SKU · {product.sku}</p>
+                                            <p className="mt-0.5 text-[11px] text-muted-foreground">SKU · {product.sku}</p>
                                         </div>
                                         <div className="text-right">
                                             {isDefaultOutOfStock ? (
-                                                <p className="text-xs font-semibold text-red-500">Stok habis</p>
+                                                <p className="text-xs font-semibold text-destructive">Stok habis</p>
                                             ) : (
                                                 <>
-                                                    <p className="text-sm font-semibold text-slate-900">{fmt(product.sell_price)}</p>
-                                                    <p className="text-[10px] text-slate-400">Retail</p>
+                                                    <p className="text-sm font-semibold text-popover-foreground">{fmt(product.sell_price)}</p>
+                                                    <p className="text-[10px] text-muted-foreground">Retail</p>
                                                 </>
                                             )}
                                         </div>
@@ -253,10 +253,10 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                             key={v.id}
                                             className={`overflow-hidden rounded-2xl border transition-colors ${
                                                 variantOutOfStock
-                                                    ? "border-slate-200 bg-slate-50 opacity-60"
+                                                    ? "border-border bg-muted/50 opacity-60"
                                                     : isActive
-                                                      ? "border-indigo-500 bg-gradient-to-b from-indigo-50/60 to-white ring-1 ring-indigo-200"
-                                                      : "border-slate-200 bg-white"
+                                                      ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                                      : "border-border bg-card"
                                             }`}
                                         >
                                             <div
@@ -266,8 +266,8 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                                 <span
                                                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition ${
                                                         isActive
-                                                            ? "border-indigo-500 bg-indigo-500 text-white"
-                                                            : "border-slate-200 bg-white text-transparent"
+                                                            ? "border-primary bg-primary text-primary-foreground"
+                                                            : "border-border bg-card text-transparent"
                                                     }`}
                                                 >
                                                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
@@ -275,16 +275,16 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                                     </svg>
                                                 </span>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="truncate text-sm font-semibold text-slate-900">{v.name}</p>
-                                                    {v.sku && <p className="mt-0.5 text-[11px] text-slate-400">SKU · {v.sku}</p>}
+                                                    <p className="truncate text-sm font-semibold text-popover-foreground">{v.name}</p>
+                                                    {v.sku && <p className="mt-0.5 text-[11px] text-muted-foreground">SKU · {v.sku}</p>}
                                                 </div>
                                                 <div className="text-right">
                                                     {variantOutOfStock ? (
-                                                        <p className="text-xs font-semibold text-red-500">Stok habis</p>
+                                                        <p className="text-xs font-semibold text-destructive">Stok habis</p>
                                                     ) : (
                                                         <>
-                                                            <p className="text-sm font-semibold text-slate-900">{fmt(v.price)}</p>
-                                                            <p className="text-[10px] text-slate-400">Retail</p>
+                                                            <p className="text-sm font-semibold text-popover-foreground">{fmt(v.price)}</p>
+                                                            <p className="text-[10px] text-muted-foreground">Retail</p>
                                                         </>
                                                     )}
                                                 </div>
@@ -295,7 +295,7 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                                             e.stopPropagation();
                                                             setExpandedVariantId((cur) => (cur === v.id ? null : v.id));
                                                         }}
-                                                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100"
+                                                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted"
                                                     >
                                                         <svg
                                                             className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
@@ -310,15 +310,15 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                                 )}
                                             </div>
                                             {tiers.length > 0 && isExpanded && (
-                                                <div className="space-y-1.5 border-t border-slate-100 px-3.5 pb-4 pt-3">
+                                                <div className="space-y-1.5 border-t border-border px-3.5 pb-4 pt-3">
                                                     <div className="flex items-center justify-between text-xs">
-                                                        <span className="text-slate-500">Retail</span>
-                                                        <span className="font-medium text-slate-900">{fmt(v.price)}</span>
+                                                        <span className="text-muted-foreground">Retail</span>
+                                                        <span className="font-medium text-popover-foreground">{fmt(v.price)}</span>
                                                     </div>
                                                     {tiers.map((t) => (
                                                         <div key={t.id ?? t.min_qty} className="flex items-center justify-between text-xs">
-                                                            <span className="text-slate-500">{t.min_qty}+ pcs</span>
-                                                            <span className="font-medium text-emerald-600">{fmt(t.price)}</span>
+                                                            <span className="text-muted-foreground">{t.min_qty}+ pcs</span>
+                                                            <span className="font-medium text-success">{fmt(t.price)}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -334,8 +334,8 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                     {unitOptions.length > 1 && (
                         <section>
                             <div className="mb-3 flex items-center justify-between">
-                                <h4 className="text-sm font-semibold text-slate-900">Choose Unit</h4>
-                                <span className="text-[11px] text-slate-500">Multi-unit</span>
+                                <h4 className="text-sm font-semibold text-popover-foreground">Choose Unit</h4>
+                                <span className="text-[11px] text-muted-foreground">Multi-unit</span>
                             </div>
                             <div className="grid grid-cols-1 gap-2.5">
                                 {unitOptions.map((u) => {
@@ -347,15 +347,15 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                             onClick={() => setSelectedUnitKey(u.key)}
                                             className={`flex items-center gap-3 rounded-2xl border p-3.5 text-left transition ${
                                                 isActive
-                                                    ? "border-indigo-500 bg-gradient-to-b from-indigo-50/60 to-white ring-1 ring-indigo-200"
-                                                    : "border-slate-200 bg-white hover:border-indigo-300"
+                                                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                                    : "border-border bg-card hover:border-primary/30"
                                             }`}
                                         >
                                             <span
                                                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition ${
                                                     isActive
-                                                        ? "border-indigo-500 bg-indigo-500 text-white"
-                                                        : "border-slate-200 bg-white text-transparent"
+                                                        ? "border-primary bg-primary text-primary-foreground"
+                                                        : "border-border bg-card text-transparent"
                                                 }`}
                                             >
                                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
@@ -363,20 +363,20 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                                 </svg>
                                             </span>
                                             <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-semibold text-slate-900">
+                                                <p className="text-sm font-semibold text-popover-foreground">
                                                     {u.name}
                                                     {u.isBase && (
-                                                        <span className="ml-1.5 text-[10px] font-medium text-slate-400">(satuan dasar)</span>
+                                                        <span className="ml-1.5 text-[10px] font-medium text-muted-foreground">(satuan dasar)</span>
                                                     )}
                                                 </p>
                                                 {!u.isBase && (
-                                                    <p className="text-[11px] text-slate-400">
+                                                    <p className="text-[11px] text-muted-foreground">
                                                         1 {u.name} = {u.conversion} {product.unit || "pcs"}
                                                     </p>
                                                 )}
                                             </div>
                                             {!u.isBase && (
-                                                <span className="shrink-0 text-sm font-semibold text-slate-900">{fmt(u.price)}</span>
+                                                <span className="shrink-0 text-sm font-semibold text-popover-foreground">{fmt(u.price)}</span>
                                             )}
                                         </button>
                                     );
@@ -388,18 +388,18 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                     {/* Quantity */}
                     <section>
                         <div className="mb-3 flex items-center justify-between">
-                            <h4 className="text-sm font-semibold text-slate-900">Quantity</h4>
+                            <h4 className="text-sm font-semibold text-popover-foreground">Quantity</h4>
                             {product.track_stock && currentStock !== null && (
-                                <span className={`text-[11px] font-medium ${currentStock <= 0 ? "text-red-500" : "text-slate-500"}`}>
+                                <span className={`text-[11px] font-medium ${currentStock <= 0 ? "text-destructive" : "text-muted-foreground"}`}>
                                     Stok: {currentStock} {selectedUnit && !selectedUnit.isBase ? selectedUnit.name : product.unit || "pcs"}
                                 </span>
                             )}
                         </div>
-                        <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
+                        <div className="inline-flex items-center gap-2 rounded-2xl border border-border bg-card p-1.5 shadow-sm">
                             <button
                                 type="button"
                                 onClick={() => setQty((q) => Math.max(1, q - 1))}
-                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground hover:bg-muted/80"
                             >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
@@ -413,12 +413,12 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                                     const v = parseInt(e.target.value, 10);
                                     setQty(Number.isFinite(v) && v >= 1 ? v : 1);
                                 }}
-                                className="w-16 border-0 bg-transparent text-center text-base font-semibold text-slate-900 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                className="w-16 border-0 bg-transparent text-center text-base font-semibold text-popover-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                             />
                             <button
                                 type="button"
                                 onClick={() => setQty((q) => q + 1)}
-                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white hover:bg-black"
+                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                             >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
@@ -429,27 +429,27 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
 
                     {/* Notes */}
                     <section>
-                        <h4 className="mb-3 text-sm font-semibold text-slate-900">Item Notes</h4>
+                        <h4 className="mb-3 text-sm font-semibold text-popover-foreground">Item Notes</h4>
                         <textarea
                             rows={3}
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                             placeholder="Catatan opsional..."
-                            className="w-full resize-none rounded-2xl border border-slate-200 bg-white p-4 text-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                            className="w-full resize-none rounded-2xl border border-border bg-card p-4 text-sm outline-none transition focus:border-ring focus:ring-4 focus:ring-ring/10"
                         />
                     </section>
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center gap-3 border-t border-slate-100 bg-white px-5 py-4">
+                <div className="flex items-center gap-3 border-t border-border bg-popover px-5 py-4">
                     <div className="flex-1">
-                        <div className="text-[11px] uppercase tracking-wide text-slate-500">Subtotal</div>
-                        <div className="text-lg font-semibold text-slate-900">{fmt(subtotal)}</div>
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Subtotal</div>
+                        <div className="text-lg font-semibold text-popover-foreground">{fmt(subtotal)}</div>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="h-11 rounded-2xl bg-slate-100 px-4 text-sm font-medium text-slate-900 hover:bg-slate-200"
+                        className="h-11 rounded-2xl bg-muted px-4 text-sm font-medium text-popover-foreground hover:bg-muted/80"
                     >
                         Cancel
                     </button>
@@ -457,7 +457,7 @@ export default function RetailProductModal({ product, onConfirm, onClose }) {
                         type="button"
                         disabled={!canConfirm}
                         onClick={handleConfirm}
-                        className="h-11 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="h-11 rounded-2xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {selectedVariantId === null
                             ? "Stok habis"

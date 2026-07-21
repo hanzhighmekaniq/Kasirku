@@ -15,9 +15,9 @@ const fmtDate = (d) =>
 /* ── Expiry badge ─────────────────────────────────────── */
 const STATUS_META = {
     active:        { label: 'Aktif',          dot: 'bg-success/100', badge: 'bg-success/10 text-success' },
-    expiring_soon: { label: 'Hampir Habis',   dot: 'bg-amber-500',   badge: 'bg-amber-50 text-amber-700'   },
+    expiring_soon: { label: 'Hampir Habis',   dot: 'bg-warning',   badge: 'bg-warning/10 text-warning'   },
     expired:       { label: 'Kadaluarsa',     dot: 'bg-destructive/100',     badge: 'bg-destructive/10 text-destructive'       },
-    no_expiry:     { label: 'Tanpa Expired',  dot: 'bg-slate-400',   badge: 'bg-muted text-muted-foreground'  },
+    no_expiry:     { label: 'Tanpa Expired',  dot: 'bg-muted-foreground',   badge: 'bg-muted text-muted-foreground'  },
 };
 
 function ExpiryBadge({ status }) {
@@ -35,7 +35,7 @@ function DaysChip({ days }) {
     if (days === null || days === undefined) return <span className="text-muted-foreground">—</span>;
     if (days < 0) return <span className="font-medium text-destructive">{Math.abs(days)} hari lalu</span>;
     if (days === 0) return <span className="font-semibold text-destructive">Hari ini</span>;
-    return <span className={`font-medium ${days <= 30 ? 'text-amber-600' : 'text-muted-foreground'}`}>{days} hari lagi</span>;
+    return <span className={`font-medium ${days <= 30 ? 'text-warning' : 'text-muted-foreground'}`}>{days} hari lagi</span>;
 }
 
 const STATUS_OPTS = [
@@ -141,14 +141,14 @@ export default function Index({ batches, products, filters }) {
                 </div>
                 <button
                     onClick={() => { setStatus('expiring_soon'); applyFilter(productId, 'expiring_soon'); }}
-                    className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 text-left shadow-sm transition hover:border-amber-300 hover:shadow-md"
+                    className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 text-left shadow-sm transition hover:border-warning/30 hover:shadow-md"
                 >
                     <p className="text-xs font-medium text-muted-foreground">Hampir Kadaluarsa</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{counts.expiring_soon}</p>
                 </button>
                 <button
                     onClick={() => { setStatus('expired'); applyFilter(productId, 'expired'); }}
-                    className="rounded-2xl border border-border border-l-4 border-l-red-400 bg-card p-4 text-left shadow-sm transition hover:border-red-300 hover:shadow-md"
+                    className="rounded-2xl border border-border border-l-4 border-l-destructive/40 bg-card p-4 text-left shadow-sm transition hover:border-destructive/30 hover:shadow-md"
                 >
                     <p className="text-xs font-medium text-muted-foreground">Kadaluarsa</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{counts.expired}</p>
@@ -167,14 +167,14 @@ export default function Index({ batches, products, filters }) {
                                 onClick={() => { setProdDropdownOpen(!prodDropdownOpen); setProdSearch(''); }}
                                 className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium shadow-sm transition ${
                                     selectedProduct
-                                        ? 'border-primary-300 bg-primary-50 text-primary-700 hover:bg-primary-100'
+                                        ? 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/10'
                                         : 'border-border bg-card text-foreground hover:bg-muted'
                                 }`}
                             >
                                 <Boxes className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                                 <span className="max-w-[200px] truncate">{selectedProduct ? selectedProduct.name : 'Semua Produk'}</span>
                                 {selectedProduct ? (
-                                    <button type="button" onClick={(e) => { e.stopPropagation(); setProductId(''); applyFilter('', status); setProdDropdownOpen(false); }} className="ml-1 rounded-full p-0.5 text-primary-400 hover:bg-primary-100 hover:text-primary-600">
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); setProductId(''); applyFilter('', status); setProdDropdownOpen(false); }} className="ml-1 rounded-full p-0.5 text-primary hover:bg-primary/10 hover:text-primary">
                                         <X className="h-3.5 w-3.5" strokeWidth={2} />
                                     </button>
                                 ) : (
@@ -201,7 +201,7 @@ export default function Index({ batches, products, filters }) {
                                             type="button"
                                             onClick={() => { setProductId(''); applyFilter('', status); setProdDropdownOpen(false); setProdSearch(''); }}
                                             className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                !productId ? 'bg-primary-50 font-semibold text-primary-700' : 'text-muted-foreground hover:bg-muted'
+                                                !productId ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:bg-muted'
                                             }`}
                                         >
                                             Semua Produk
@@ -215,7 +215,7 @@ export default function Index({ batches, products, filters }) {
                                                     type="button"
                                                     onClick={() => { setProductId(p.id); applyFilter(p.id, status); setProdDropdownOpen(false); setProdSearch(''); }}
                                                     className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                        Number(productId) === p.id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-muted-foreground hover:bg-muted'
+                                                        Number(productId) === p.id ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:bg-muted'
                                                     }`}
                                                 >
                                                     <span className="block truncate">{p.name}</span>
@@ -301,7 +301,7 @@ export default function Index({ batches, products, filters }) {
                                                 <p className="text-sm font-semibold text-foreground">{b.product?.name ?? '—'}</p>
                                                 <p className="text-xs text-muted-foreground">{b.product?.sku}</p>
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-4 font-mono text-xs font-semibold text-primary-600">{b.batch_no}</td>
+                                            <td className="whitespace-nowrap px-5 py-4 font-mono text-xs font-semibold text-primary">{b.batch_no}</td>
                                             <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{b.branch?.name ?? '—'}</td>
                                             <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-foreground">{b.quantity}</td>
                                             <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{fmt(b.cost_price)}</td>
@@ -321,7 +321,7 @@ export default function Index({ batches, products, filters }) {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Link
                                                         href={route('admin.product-batches.edit', b.id)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                         title="Edit"
                                                     >
                                                         <Pencil className="h-4 w-4" strokeWidth={1.8} />
@@ -363,7 +363,7 @@ export default function Index({ batches, products, filters }) {
                                 <div className="flex items-start justify-between">
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-semibold text-foreground">{b.product?.name ?? '—'}</p>
-                                        <p className="font-mono text-xs text-primary-600">{b.batch_no}</p>
+                                        <p className="font-mono text-xs text-primary">{b.batch_no}</p>
                                         {b.branch?.name && (
                                             <p className="mt-0.5 text-xs text-muted-foreground">{b.branch.name}</p>
                                         )}
@@ -405,7 +405,7 @@ export default function Index({ batches, products, filters }) {
                                     </Link>
                                     <button
                                         onClick={() => setTarget(b)}
-                                        className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-red-100"
+                                        className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/10"
                                     >
                                         <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                         Hapus

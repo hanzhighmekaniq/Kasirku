@@ -92,11 +92,11 @@ export default function CustomerModal({ show, onClose, k }) {
             bodyClass="!px-0 !py-0"
         >
             {/* Search + tambah baru */}
-            <div className="border-b border-slate-100 px-5 py-3">
+            <div className="border-b border-border px-5 py-3">
                 <div className="relative">
                     <Search
                         size={16}
-                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60"
                     />
                     <input
                         type="text"
@@ -104,7 +104,7 @@ export default function CustomerModal({ show, onClose, k }) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari nama atau telepon..."
-                        className="block w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm shadow-sm transition focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-100"
+                        className="block w-full rounded-xl border-border bg-muted/50 py-2.5 pl-10 pr-3 text-sm shadow-sm transition focus:border-slate-400 focus:bg-card focus:ring-2 focus:ring-slate-100"
                     />
                 </div>
 
@@ -112,30 +112,30 @@ export default function CustomerModal({ show, onClose, k }) {
                     <button
                         type="button"
                         onClick={() => setAddOpen(true)}
-                        className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-400 hover:bg-slate-50"
+                        className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-semibold text-muted-foreground transition hover:border-slate-400 hover:bg-muted"
                     >
                         <UserPlus size={15} />
                         Tambah Pelanggan Baru
                     </button>
                 ) : (
-                    <div className="mt-2.5 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div className="mt-2.5 space-y-2 rounded-xl border border-border bg-muted/50 p-3">
                         <input
                             type="text"
                             autoFocus
                             value={addName}
                             onChange={(e) => setAddName(e.target.value)}
                             placeholder="Nama pelanggan *"
-                            className="block w-full rounded-lg border-slate-200 py-2 text-sm shadow-sm focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                            className="block w-full rounded-lg border-border py-2 text-sm shadow-sm focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                         />
                         <input
                             type="text"
                             value={addPhone}
                             onChange={(e) => setAddPhone(e.target.value)}
                             placeholder="Nomor telepon (opsional)"
-                            className="block w-full rounded-lg border-slate-200 py-2 text-sm shadow-sm focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                            className="block w-full rounded-lg border-border py-2 text-sm shadow-sm focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                         />
                         {addError && (
-                            <p className="flex items-center gap-1.5 text-xs font-medium text-rose-600">
+                            <p className="flex items-center gap-1.5 text-xs font-medium text-destructive">
                                 <TriangleAlert size={13} /> {addError}
                             </p>
                         )}
@@ -144,14 +144,14 @@ export default function CustomerModal({ show, onClose, k }) {
                                 type="button"
                                 onClick={submitAdd}
                                 disabled={!addName.trim() || adding}
-                                className="flex-1 rounded-lg bg-slate-900 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50"
+                                className="flex-1 rounded-lg bg-primary py-2 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50"
                             >
                                 {adding ? "Menyimpan..." : "Simpan & Pilih"}
                             </button>
                             <button
                                 type="button"
                                 onClick={resetAdd}
-                                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                                className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground transition hover:bg-muted"
                             >
                                 Batal
                             </button>
@@ -166,24 +166,24 @@ export default function CustomerModal({ show, onClose, k }) {
                 <button
                     type="button"
                     onClick={() => choose(null)}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-slate-50 ${!selectedId ? "bg-slate-50" : ""}`}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-muted ${!selectedId ? "bg-muted/50" : ""}`}
                 >
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
                         U
                     </span>
                     <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-slate-700">Umum</p>
-                        <p className="text-[11px] text-slate-400">
+                        <p className="text-sm font-semibold text-card-foreground">Umum</p>
+                        <p className="text-[11px] text-muted-foreground/60">
                             Transaksi tanpa pelanggan
                         </p>
                     </div>
                     {!selectedId && (
-                        <Check size={17} className="shrink-0 text-slate-900" />
+                        <Check size={17} className="shrink-0 text-foreground" />
                     )}
                 </button>
 
                 {filtered.length === 0 ? (
-                    <p className="px-3 py-8 text-center text-sm text-slate-400">
+                    <p className="px-3 py-8 text-center text-sm text-muted-foreground/60">
                         Pelanggan tidak ditemukan
                     </p>
                 ) : (
@@ -194,16 +194,16 @@ export default function CustomerModal({ show, onClose, k }) {
                                 key={c.id}
                                 type="button"
                                 onClick={() => choose(c)}
-                                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-slate-50 ${isSel ? "bg-slate-50" : ""}`}
+                                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-muted ${isSel ? "bg-muted/50" : ""}`}
                             >
                                 <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-800 text-xs font-bold uppercase text-white">
                                     {c.name?.charAt(0) ?? "?"}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-semibold text-slate-700">
+                                    <p className="truncate text-sm font-semibold text-card-foreground">
                                         {c.name}
                                     </p>
-                                    <p className="truncate text-[11px] text-slate-400">
+                                    <p className="truncate text-[11px] text-muted-foreground/60">
                                         {c.phone || "Tanpa telepon"}
                                         {c.code ? ` · ${c.code}` : ""}
                                     </p>
@@ -218,7 +218,7 @@ export default function CustomerModal({ show, onClose, k }) {
                                 {isSel && (
                                     <Check
                                         size={17}
-                                        className="shrink-0 text-slate-900"
+                                        className="shrink-0 text-foreground"
                                     />
                                 )}
                             </button>

@@ -213,7 +213,7 @@ export default function Edit({
                         >
                             Produk
                         </Link>
-                        <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-muted" />
                         <span className="text-foreground font-medium">
                             Edit Produk
                         </span>
@@ -321,7 +321,7 @@ export default function Edit({
                                                 onClick={() =>
                                                     setShowScanner(true)
                                                 }
-                                                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-600 px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-primary/90"
+                                                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
                                             >
                                                 <ScanLine className="h-4 w-4" />
                                                 Scan
@@ -428,7 +428,7 @@ export default function Edit({
                                 subtitle="Atur harga jual, modal, grosir bertingkat, dan kemasan"
                             >
                                 {product.is_variant && (
-                                    <div className="mb-4 flex items-center justify-between rounded-xl border border-primary-100 bg-primary-50/50 p-4">
+                                    <div className="mb-4 flex items-center justify-between rounded-xl border border-primary/10 bg-primary/10/50 p-4">
                                         <div>
                                             <p className="text-sm font-semibold text-foreground">Jual Produk Dasar</p>
                                             <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -439,7 +439,7 @@ export default function Edit({
                                         <button
                                             type="button"
                                             onClick={() => setData("sell_base", !data.sell_base)}
-                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.sell_base ? "bg-primary-600" : "bg-slate-300"}`}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${data.sell_base ? "bg-primary" : "bg-muted"}`}
                                         >
                                             <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ${data.sell_base ? "translate-x-5" : "translate-x-0"}`} />
                                         </button>
@@ -481,15 +481,15 @@ export default function Edit({
                                             <Field label="Margin">
                                                 <div className="flex gap-2">
                                                     <div
-                                                        className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-rose-200 bg-rose-50" : "border-success/20 bg-success/10"}`}
+                                                        className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-destructive/20 bg-destructive/5" : "border-success/20 bg-success/10"}`}
                                                     >
                                                         <div
-                                                            className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-rose-600" : "text-success"}`}
+                                                            className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-destructive" : "text-success"}`}
                                                         >
                                                             Rupiah
                                                         </div>
                                                         <div
-                                                            className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-rose-700" : "text-emerald-800"}`}
+                                                            className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-destructive" : "text-success"}`}
                                                         >
                                                             Rp{" "}
                                                             {marginRp.toLocaleString(
@@ -498,15 +498,15 @@ export default function Edit({
                                                         </div>
                                                     </div>
                                                     <div
-                                                        className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-rose-200 bg-rose-50" : "border-success/20 bg-success/10"}`}
+                                                        className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-destructive/20 bg-destructive/5" : "border-success/20 bg-success/10"}`}
                                                     >
                                                         <div
-                                                            className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-rose-600" : "text-success"}`}
+                                                            className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-destructive" : "text-success"}`}
                                                         >
                                                             Persen
                                                         </div>
                                                         <div
-                                                            className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-rose-700" : "text-emerald-800"}`}
+                                                            className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-destructive" : "text-success"}`}
                                                         >
                                                             {marginPct.toFixed(1)}
                                                             %
@@ -519,11 +519,11 @@ export default function Edit({
 
                                     {/* MULTI SATUAN */}
                                     {feat.multiUnit && (
-                                        <div className="rounded-xl border border-amber-200/70 bg-amber-50/40 p-4">
+                                        <div className="rounded-xl border border-warning/20 bg-warning/5 p-4">
                                             <div className="flex items-center justify-between mb-3">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100">
-                                                        <Package className="h-4 w-4 text-amber-700" />
+                                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/10">
+                                                        <Package className="h-4 w-4 text-warning" />
                                                     </div>
                                                     <div>
                                                         <div className="text-sm font-semibold text-foreground">
@@ -552,7 +552,7 @@ export default function Edit({
                                                             ],
                                                         )
                                                     }
-                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary-50 px-3 py-2 text-xs font-semibold text-primary-600 transition hover:bg-primary-100"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/10"
                                                 >
                                                     <Plus className="h-4 w-4" />
                                                     Tambah kemasan
@@ -563,7 +563,7 @@ export default function Edit({
                                                     (pu, i) => (
                                                         <div
                                                             key={i}
-                                                            className="grid grid-cols-12 gap-2 items-center rounded-xl bg-card p-2.5 border border-amber-100"
+                                                            className="grid grid-cols-12 gap-2 items-center rounded-xl bg-card p-2.5 border border-warning/10"
                                                         >
                                                             <div className="col-span-12 sm:col-span-3">
                                                                 <input
@@ -699,7 +699,7 @@ export default function Edit({
                                                                             ),
                                                                         )
                                                                     }
-                                                                    className="rounded-lg p-1.5 text-rose-500 transition hover:bg-rose-50"
+                                                                    className="rounded-lg p-1.5 text-destructive transition hover:bg-destructive/10"
                                                                 >
                                                                     <X className="h-4 w-4" />
                                                                 </button>
@@ -743,8 +743,8 @@ export default function Edit({
                                     <div className="rounded-xl border border-border bg-card/50 p-4">
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-2">
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-50">
-                                                    <BarChart3 className="h-4 w-4 text-primary-600" />
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                                                    <BarChart3 className="h-4 w-4 text-primary" />
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-semibold text-foreground">
@@ -768,7 +768,7 @@ export default function Edit({
                                                             },
                                                         ])
                                                     }
-                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary-50 px-3 py-2 text-xs font-semibold text-primary-600 transition hover:bg-primary-100"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/10"
                                                 >
                                                     <Plus className="h-4 w-4" />
                                                     Tambah tier
@@ -783,7 +783,7 @@ export default function Edit({
                                                         className="grid grid-cols-12 gap-2 items-center rounded-xl bg-card p-2.5 border border-border"
                                                     >
                                                         <div className="col-span-2 flex items-center justify-center">
-                                                            <span className="inline-flex items-center rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700 border border-primary-100">
+                                                            <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10">
                                                                 Tier {i + 1}
                                                             </span>
                                                         </div>
@@ -876,7 +876,7 @@ export default function Edit({
                                                                         ),
                                                                     )
                                                                 }
-                                                                className="rounded-lg p-1.5 text-rose-500 transition hover:bg-rose-50"
+                                                                className="rounded-lg p-1.5 text-destructive transition hover:bg-destructive/10"
                                                             >
                                                                 <X className="h-4 w-4" />
                                                             </button>
@@ -1213,7 +1213,7 @@ export default function Edit({
                         <SectionCard title="Gambar Produk" accent="violet">
                             <div className="space-y-3">
                                 <div
-                                    className="group relative aspect-square w-full overflow-hidden rounded-xl border-2 border-dashed border-border bg-gradient-to-br from-primary-50/30 to-violet-50/30 transition hover:border-primary-400 hover:bg-primary-50/40 cursor-pointer"
+                                    className="group relative aspect-square w-full overflow-hidden rounded-xl border-2 border-dashed border-border bg-gradient-to-br from-primary-50/30 to-primary/3 transition hover:border-primary-400 hover:bg-primary/10/40 cursor-pointer"
                                     onClick={() =>
                                         document
                                             .getElementById("imageInput")
@@ -1344,7 +1344,7 @@ export default function Edit({
             <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 lg:hidden">
                 <Link
                     href={route("admin.products.index")}
-                    className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-slate-200 transition hover:bg-destructive/10 hover:text-destructive hover:ring-red-200"
+                    className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-border transition hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/20"
                     title="Batal"
                 >
                     <X className="h-5 w-5" strokeWidth={2} />
@@ -1418,10 +1418,10 @@ function SectionCard({
     children,
 }) {
     const accents = {
-        indigo: "from-primary-50/60 to-violet-50/60",
-        violet: "from-violet-50/60 to-purple-50/60",
-        emerald: "from-emerald-50/60 to-teal-50/60",
-        amber: "from-amber-50/60 to-orange-50/60",
+        indigo: "from-primary/5 to-primary/3",
+        violet: "from-primary/5 to-primary/3",
+        emerald: "from-success/5 to-success/3",
+        amber: "from-warning/5 to-warning/3",
     };
 
     return (
@@ -1431,7 +1431,7 @@ function SectionCard({
             >
                 <div className="flex items-start gap-3">
                     {step && (
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50 to-violet-50 text-sm font-bold text-primary-600">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-primary/10 bg-gradient-to-br from-primary-50 to-primary/5 text-sm font-bold text-primary">
                             {String(step).padStart(2, "0")}
                         </span>
                     )}
@@ -1464,7 +1464,7 @@ function ToggleSwitch({ checked, onChange, disabled = false }) {
             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${
                 checked
                     ? "bg-gradient-to-r from-primary-500 to-primary-500"
-                    : "bg-slate-300"
+                    : "bg-muted"
             } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
         >
             <span
@@ -1485,7 +1485,7 @@ function SettingToggle({
 }) {
     if (!show) return null;
     return (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5 transition hover:border-primary-200 cursor-pointer">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5 transition hover:border-primary/20 cursor-pointer">
             <div>
                 <p className="text-sm font-semibold text-foreground">{label}</p>
                 <p className="text-[11px] text-muted-foreground">{description}</p>
@@ -1501,12 +1501,12 @@ function SummaryChip({ label, active, show = true }) {
         <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                 active
-                    ? "border border-emerald-100 bg-success/10 text-success"
+                    ? "border border-success/10 bg-success/10 text-success"
                     : "border border-border bg-muted text-muted-foreground"
             }`}
         >
             <span
-                className={`h-1.5 w-1.5 rounded-full ${active ? "bg-success/100" : "bg-slate-400"}`}
+                className={`h-1.5 w-1.5 rounded-full ${active ? "bg-success/100" : "bg-muted"}`}
             />
             {label}
         </span>
@@ -1517,7 +1517,7 @@ function Field({ label, required, error, hint, children }) {
     return (
         <div>
             <label className="mb-1.5 block text-[0.8rem] font-semibold tracking-wide text-muted-foreground">
-                {label} {required && <span className="text-rose-500">*</span>}
+                {label} {required && <span className="text-destructive">*</span>}
                 {hint && (
                     <span className="ml-1 text-[11px] font-normal text-muted-foreground">
                         ({hint})
@@ -1543,6 +1543,6 @@ function SummaryRow({ label, value }) {
 
 function inputCls(hasError) {
     return `block w-full rounded-xl border border-border bg-card py-2.5 px-3.5 text-sm transition outline-none focus:border-ring focus:ring-4 focus:ring-primary-500/10 ${
-        hasError ? "border-red-300 focus:border-red-500 focus:ring-red-200" : ""
+        hasError ? "border-destructive focus:border-destructive focus:ring-destructive/20" : ""
     }`;
 }

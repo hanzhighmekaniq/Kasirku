@@ -15,11 +15,11 @@ import Tooltip from "./Tooltip";
  *   disabled — bila true, tombol non-aktif
  */
 const VARIANTS = {
-    ghost: "text-slate-500 hover:bg-slate-100 hover:text-slate-900",
-    subtle: "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900",
-    solid: "bg-slate-900 text-white hover:bg-slate-700",
-    danger: "text-slate-400 hover:bg-rose-50 hover:text-rose-600",
-    success: "text-slate-400 hover:bg-emerald-50 hover:text-emerald-600",
+    ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
+    subtle: "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground",
+    solid: "bg-primary text-white hover:bg-slate-700",
+    danger: "text-muted-foreground/60 hover:bg-destructive/5 hover:text-destructive",
+    success: "text-muted-foreground/60 hover:bg-success/10 hover:text-success",
 };
 
 const SIZES = {
@@ -42,7 +42,7 @@ export default function TipButton({
 }) {
     const s = SIZES[size] ?? SIZES.md;
     const variantClass = active
-        ? "bg-slate-900 text-white"
+        ? "bg-primary text-white"
         : (VARIANTS[variant] ?? VARIANTS.ghost);
 
     return (

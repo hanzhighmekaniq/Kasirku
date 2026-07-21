@@ -38,7 +38,7 @@ const UNIT_OPTS = [
 function inputCls(err) {
     return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         err
-            ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
             : "border-border focus:border-ring focus:ring-ring/20"
     }`;
 }
@@ -54,9 +54,9 @@ function IngredientRow({ recipe, onDelete, deleting }) {
             className={`flex items-center gap-3 rounded-xl border p-3.5 transition ${isLowStock ? "border-destructive/20 bg-destructive/10/50" : "border-border bg-card"}`}
         >
             {/* Avatar */}
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400/20 to-orange-400/20">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning/10">
                 <Utensils
-                    className="h-5 w-5 text-amber-600"
+                    className="h-5 w-5 text-warning"
                     strokeWidth={1.7}
                 />
             </div>
@@ -75,13 +75,13 @@ function IngredientRow({ recipe, onDelete, deleting }) {
                         </span>
                     )}
                     {isLowStock && (
-                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-destructive">
+                        <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
                             Stok Habis
                         </span>
                     )}
                 </div>
                 <div className="mt-0.5 flex flex-wrap items-center gap-3 text-sm">
-                    <span className="font-semibold text-primary-700">
+                    <span className="font-semibold text-primary">
                         {fmtNum(recipe.quantity)} {recipe.unit}
                     </span>
                     <span className="text-muted-foreground">
@@ -224,16 +224,16 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                 {
                                     label: "Harga Jual",
                                     value: fmt(product.sell_price),
-                                    color: "text-primary-700",
+                                    color: "text-primary",
                                 },
                                 {
                                     label: "Margin",
                                     value: `${margin}%`,
                                     color:
                                         Number(margin) >= 30
-                                            ? "text-emerald-600"
+                                            ? "text-success"
                                             : Number(margin) >= 10
-                                              ? "text-amber-600"
+                                              ? "text-warning"
                                               : "text-destructive",
                                 },
                             ].map((s) => (
@@ -269,9 +269,9 @@ export default function Recipes({ product, recipes, rawMaterials }) {
 
                         {recipes.length === 0 ? (
                             <div className="flex flex-col items-center py-14 text-center">
-                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-warning/5">
                                     <Utensils
-                                        className="h-8 w-8 text-amber-400"
+                                        className="h-8 w-8 text-warning"
                                         strokeWidth={1.5}
                                     />
                                 </div>
@@ -299,12 +299,12 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                     </div>
 
                     {/* Info box */}
-                    <div className="flex items-start gap-3 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-3">
+                    <div className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-primary/10 px-4 py-3">
                         <Info
                             className="mt-0.5 h-5 w-5 shrink-0 text-primary-400"
                             strokeWidth={1.8}
                         />
-                        <p className="text-xs text-primary-700">
+                        <p className="text-xs text-primary">
                             <strong>Snapshot otomatis.</strong> Saat produk
                             terjual, resep saat itu di-snapshot ke data
                             transaksi. Perubahan resep di masa depan tidak akan
@@ -349,7 +349,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                     ))}
                                 </select>
                                 {availableMaterials.length === 0 && (
-                                    <p className="mt-1.5 text-xs text-amber-600">
+                                    <p className="mt-1.5 text-xs text-warning">
                                         Semua bahan sudah ditambahkan, atau
                                         belum ada produk bertipe{" "}
                                         <strong>Bahan Baku</strong>.
@@ -409,7 +409,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
 
                             {/* Preview HPP bahan ini */}
                             {data.raw_material_id && data.quantity && (
-                                <div className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                                <div className="rounded-xl bg-warning/5 px-3 py-2 text-xs text-warning">
                                     HPP bahan ini:{" "}
                                     <strong>
                                         {fmt(
@@ -436,7 +436,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                                     onChange={(e) =>
                                         setData("is_nullable", e.target.checked)
                                     }
-                                    className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
+                                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                                 />
                                 <div>
                                     <p className="text-sm font-medium text-foreground">
@@ -482,7 +482,7 @@ export default function Recipes({ product, recipes, rawMaterials }) {
                         </p>
                         <Link
                             href={route("admin.products.create")}
-                            className="flex items-center gap-2 text-xs text-primary-600 hover:text-primary-700 transition"
+                            className="flex items-center gap-2 text-xs text-primary hover:text-primary transition"
                         >
                             <Plus className="h-4 w-4" strokeWidth={2} />
                             Buat produk baru dengan tipe "Bahan Baku"

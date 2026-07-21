@@ -60,6 +60,11 @@ export default function ProductCard({ product, onClick }) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [showGrosir]);
 
+    const handleCardClick = () => {
+        if (isDisabled) return;
+        onClick?.();
+    };
+
     const handleAddClick = (e) => {
         e.stopPropagation();
         if (isDisabled) return;
@@ -67,17 +72,17 @@ export default function ProductCard({ product, onClick }) {
     };
 
     const priceBlock = hasActiveVariants ? (
-        <div className="text-[12.5px] text-slate-500">
+        <div className="text-[12.5px] text-muted-foreground">
             Starting from{" "}
-            <span className="font-semibold text-slate-900">
+            <span className="font-semibold text-card-foreground">
                 {fmt(Math.min(...activeVariants.map((v) => Number(v.price))))}
             </span>
         </div>
     ) : (
-        <span className="text-[15px] font-semibold tracking-tight text-slate-900">
+        <span className="text-[15px] font-semibold tracking-tight text-card-foreground">
             {fmt(product.sell_price)}
             {hasUnits && (
-                <span className="ml-1 text-[10px] font-medium text-slate-400">
+                <span className="ml-1 text-[10px] font-medium text-muted-foreground/60">
                     /{product.unit || "Pcs"}
                 </span>
             )}
@@ -92,14 +97,15 @@ export default function ProductCard({ product, onClick }) {
 
     return (
         <article
-            className={`group relative flex min-w-[150px] flex-col overflow-hidden rounded-3xl border bg-white transition-all duration-300 ${
+            onClick={handleCardClick}
+            className={`group relative flex min-w-[150px] flex-col overflow-hidden rounded-3xl border border-2 bg-card transition-all duration-300 ${
                 isDisabled
-                    ? "border-slate-200 opacity-60"
-                    : "border-slate-200 shadow-sm hover:-translate-y-1 hover:shadow-xl hover:border-slate-300"
+                    ? "border-border opacity-60 cursor-not-allowed"
+                    : "border-border shadow-sm hover:-translate-y-1 hover:shadow-xl hover:border-border cursor-pointer"
             }`}
         >
             {/* Image area — aspek 4/3 ala index1.html */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50">
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/50">
                 {product.image ? (
                     <img
                         src={`/storage/${product.image}`}
@@ -109,7 +115,7 @@ export default function ProductCard({ product, onClick }) {
                 ) : (
                     <div className="flex h-full w-full items-center justify-center">
                         <svg
-                            className="h-14 w-14 text-slate-300"
+                            className="h-14 w-14 text-muted-foreground/30"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={1.5}
@@ -125,35 +131,35 @@ export default function ProductCard({ product, onClick }) {
                 )}
 
                 {/* Badge status — pojok kiri atas: Low stock > Has Variants > In Stock */}
-                <div className="absolute top-3 left-3">
+                <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
                     {isLowStock ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 shadow-sm">
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[11px] font-semibold text-warning shadow-sm">
+                            <span className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-warning" />
                             Low stock
                         </span>
                     ) : hasActiveVariants ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 shadow-sm">
-                            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[11px] font-semibold text-accent-foreground shadow-sm">
+                            <span className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-accent" />
                             Has Variants
                         </span>
                     ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 shadow-sm">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[11px] font-semibold text-success shadow-sm">
+                            <span className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-success" />
                             In Stock
                         </span>
                     )}
                 </div>
 
-                {/* Tombol "+" bulat, pojok kanan bawah — hover scale up, bg gelap */}
+                {/* Tombol "+" bulat, pojok kanan bawah — responsive size */}
                 <button
                     type="button"
                     onClick={handleAddClick}
                     disabled={isDisabled}
                     title={isDisabled ? "Tidak tersedia" : "Tambah ke keranjang"}
-                    className={`absolute bottom-3 right-3 flex h-12 w-12 items-center justify-center rounded-2xl shadow-lg shadow-black/20 transition-transform duration-300 group-hover:scale-110 active:scale-95 ${
+                    className={`absolute bottom-2 right-2 sm:bottom-3 sm:right-3 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl shadow-lg shadow-black/20 transition-transform duration-300 active:scale-95 ${
                         isDisabled
-                            ? "bg-slate-300 text-slate-400 cursor-not-allowed"
-                            : "bg-slate-900 text-white hover:bg-black"
+                            ? "bg-muted text-muted-foreground cursor-not-allowed"
+                            : "bg-primary text-primary-foreground hover:bg-primary/90"
                     }`}
                 >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -163,33 +169,33 @@ export default function ProductCard({ product, onClick }) {
 
                 {/* Disabled overlay */}
                 {isDisabled && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-                        <div className="rounded-lg bg-slate-900 px-4 py-2 font-bold text-white shadow-lg">
-                            <span className="text-sm">HABIS</span>
+                    <div className="absolute inset-0 flex items-center justify-center bg-foreground/40 backdrop-blur-sm">
+                        <div className="rounded-lg bg-foreground px-3 py-1.5 sm:px-4 sm:py-2 font-bold text-background shadow-lg">
+                            <span className="text-xs sm:text-sm">HABIS</span>
                         </div>
                     </div>
                 )}
             </div>
 
             {/* Info area */}
-            <div className="flex flex-1 flex-col p-4">
-                <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-1 flex-col p-3 sm:p-4">
+                <div className="flex items-start justify-between gap-2 sm:gap-3">
                     <div className="min-w-0">
-                        <h3 className="line-clamp-2 text-[15px] font-semibold leading-tight text-slate-900">
+                        <h3 className="line-clamp-2 text-[13px] sm:text-[15px] font-semibold leading-tight text-card-foreground">
                             {product.name}
                         </h3>
-                        <p className="mt-0.5 text-xs text-slate-500">SKU · {product.sku}</p>
+                        <p className="mt-0.5 text-[10px] sm:text-xs text-muted-foreground">SKU · {product.sku}</p>
                     </div>
-                    <span className="shrink-0 inline-flex items-center rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-700">
+                    <span className="shrink-0 inline-flex items-center rounded-lg bg-muted px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-[11px] font-medium text-muted-foreground">
                         {product.unit || "Pcs"}
                     </span>
                 </div>
 
-                <div className="mt-4 flex items-end justify-between gap-3">
+                <div className="mt-3 sm:mt-4 flex items-end justify-between gap-2 sm:gap-3">
                     <div className="min-w-0">
                         {priceBlock}
                         {unitEquations.length > 0 && (
-                            <p className="mt-1 text-[11px] text-slate-500">
+                            <p className="mt-1 text-[10px] sm:text-[11px] text-muted-foreground">
                                 {unitEquations.join(" · ")}
                             </p>
                         )}
@@ -201,16 +207,16 @@ export default function ProductCard({ product, onClick }) {
                                         e.stopPropagation();
                                         setShowGrosir((v) => !v);
                                     }}
-                                    className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 transition hover:bg-emerald-100"
+                                    className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success transition hover:bg-success/20"
                                 >
-                                    <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-white">
+                                    <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-success text-[9px] font-bold text-success-foreground">
                                         !
                                     </span>
                                     Ada harga grosir
                                 </button>
                                 {showGrosir && (
-                                    <div className="absolute bottom-full left-0 z-50 mb-2 w-56 rounded-xl border border-slate-200 bg-white p-3 shadow-xl">
-                                        <p className="mb-2 text-[11px] font-semibold text-slate-700">
+                                    <div className="absolute bottom-full left-0 z-50 mb-2 w-56 rounded-xl border border-border bg-popover p-3 shadow-xl">
+                                        <p className="mb-2 text-[11px] font-semibold text-popover-foreground">
                                             Harga Grosir
                                         </p>
                                         <div className="space-y-1.5">
@@ -221,25 +227,25 @@ export default function ProductCard({ product, onClick }) {
                                                         key={i}
                                                         className="flex items-center justify-between text-[11px]"
                                                     >
-                                                        <span className="text-slate-500">
+                                                        <span className="text-muted-foreground">
                                                             Min {tier.min_qty} {product.unit || "pcs"}
                                                         </span>
-                                                        <span className="font-semibold text-slate-800">
+                                                        <span className="font-semibold text-popover-foreground">
                                                             {fmt(Number(tier.price))}/{product.unit || "pcs"}
                                                         </span>
                                                     </div>
                                                 ))}
                                         </div>
-                                        <div className="mt-2 border-t border-slate-100 pt-2 text-[10px] text-slate-400">
+                                        <div className="mt-2 border-t border-border pt-2 text-[10px] text-muted-foreground">
                                             Harga berlaku otomatis sesuai jumlah
                                         </div>
-                                        <div className="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 border-b border-r border-slate-200 bg-white" />
+                                        <div className="absolute -bottom-1.5 left-6 h-3 w-3 rotate-45 border-b border-r border-border bg-popover" />
                                     </div>
                                 )}
                             </div>
                         ) : (
                             (hasGrosir || activeVariants.some((v) => v.price_tiers?.length > 0)) && (
-                                <p className="mt-1 text-[11px] font-medium text-emerald-600">
+                                <p className="mt-1 text-[11px] font-medium text-success">
                                     Ada harga grosir
                                 </p>
                             )

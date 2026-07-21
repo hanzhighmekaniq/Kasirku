@@ -27,25 +27,25 @@ export default function PosModal({
 }) {
     return (
         <Modal show={show} onClose={onClose} maxWidth={maxWidth}>
-            <div className="flex items-start gap-3 border-b border-slate-100 px-5 py-4">
+            <div className="flex items-start gap-3 border-b border-border px-5 py-4">
                 {Icon && (
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
                         <Icon size={19} strokeWidth={2} />
                     </div>
                 )}
                 <div className="min-w-0 flex-1">
-                    <h2 className="text-[15px] font-bold tracking-tight text-slate-900">
+                    <h2 className="text-[15px] font-bold tracking-tight text-foreground">
                         {title}
                     </h2>
                     {subtitle && (
-                        <p className="mt-0.5 text-xs text-slate-500">{subtitle}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
                     )}
                 </div>
                 <button
                     type="button"
                     onClick={onClose}
                     aria-label="Tutup"
-                    className="-mr-1.5 -mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                    className="-mr-1.5 -mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition hover:bg-muted hover:text-card-foreground"
                 >
                     <X size={18} strokeWidth={2.2} />
                 </button>
@@ -54,7 +54,7 @@ export default function PosModal({
             <div className={`px-5 py-4 ${bodyClass}`}>{children}</div>
 
             {footer && (
-                <div className="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-3.5">
+                <div className="flex items-center justify-end gap-2 border-t border-border bg-muted/50 px-5 py-3.5">
                     {footer}
                 </div>
             )}

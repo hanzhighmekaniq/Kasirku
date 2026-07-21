@@ -44,7 +44,7 @@ export default function HeldTransactionsModal({ show, onClose, k }) {
             bodyClass="!px-0 !py-0"
         >
             {k.cart.length > 0 && held.length > 0 && (
-                <div className="flex items-start gap-2 border-b border-amber-100 bg-amber-50/70 px-5 py-2.5 text-[11px] font-medium text-amber-700">
+                <div className="flex items-start gap-2 border-b border-amber-100 bg-warning/10 px-5 py-2.5 text-[11px] font-medium text-warning">
                     <TriangleAlert size={14} className="mt-0.5 shrink-0" />
                     <span>
                         Keranjang aktif akan tergantikan saat melanjutkan. Tahan
@@ -56,13 +56,13 @@ export default function HeldTransactionsModal({ show, onClose, k }) {
             <div className="max-h-[52vh] overflow-y-auto p-2">
                 {held.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
-                        <div className="mb-3 rounded-2xl bg-slate-100 p-4">
-                            <ShoppingCart size={32} className="text-slate-300" />
+                        <div className="mb-3 rounded-2xl bg-muted p-4">
+                            <ShoppingCart size={32} className="text-muted-foreground/30" />
                         </div>
-                        <p className="text-sm font-semibold text-slate-500">
+                        <p className="text-sm font-semibold text-muted-foreground">
                             Belum ada transaksi ditahan
                         </p>
-                        <p className="mt-0.5 text-xs text-slate-400">
+                        <p className="mt-0.5 text-xs text-muted-foreground/60">
                             Tekan tombol "Tahan" untuk menyimpan transaksi
                             sementara.
                         </p>
@@ -71,18 +71,18 @@ export default function HeldTransactionsModal({ show, onClose, k }) {
                     held.map((item) => (
                         <div
                             key={item.id}
-                            className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-slate-50"
+                            className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-muted"
                         >
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    <p className="truncate text-sm font-semibold text-slate-800">
+                                    <p className="truncate text-sm font-semibold text-foreground">
                                         {item.label || "Pelanggan Umum"}
                                     </p>
-                                    <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                                         {orderLabel(item.orderType)}
                                     </span>
                                 </div>
-                                <p className="mt-0.5 text-[11px] text-slate-400">
+                                <p className="mt-0.5 text-[11px] text-muted-foreground/60">
                                     {item.itemCount} item · {k.fmt(item.total)} ·{" "}
                                     {timeLabel(item.heldAt)}
                                 </p>
@@ -90,7 +90,7 @@ export default function HeldTransactionsModal({ show, onClose, k }) {
                             <button
                                 type="button"
                                 onClick={() => resume(item)}
-                                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
+                                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700"
                             >
                                 <Play size={13} />
                                 Lanjutkan
@@ -99,7 +99,7 @@ export default function HeldTransactionsModal({ show, onClose, k }) {
                                 type="button"
                                 onClick={() => k.deleteHeldTransaction(item.id)}
                                 aria-label="Hapus transaksi ditahan"
-                                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition hover:bg-destructive/5 hover:text-destructive"
                             >
                                 <Trash2 size={16} />
                             </button>

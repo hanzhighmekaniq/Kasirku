@@ -58,21 +58,21 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
         <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
             <div
                 onClick={onClose}
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-primary/60 backdrop-blur-sm"
             />
-            <div className="relative w-full max-w-md bg-white shadow-2xl rounded-t-2xl sm:rounded-2xl">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+            <div className="relative w-full max-w-md bg-card shadow-2xl rounded-t-2xl sm:rounded-2xl">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                     <div>
-                        <h3 className="font-semibold text-slate-900">
+                        <h3 className="font-semibold text-foreground">
                             {product.name}
                         </h3>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                             {fmt(product.sell_price)}
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-slate-400 hover:text-slate-700"
+                        className="text-muted-foreground/60 hover:text-card-foreground"
                     >
                         <svg
                             className="w-5 h-5"
@@ -92,12 +92,12 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                 <div className="px-5 py-4 space-y-5 overflow-y-auto max-h-72">
                     {groups.map((g) => (
                         <div key={g.id}>
-                            <p className="mb-2 text-sm font-semibold text-slate-800">
+                            <p className="mb-2 text-sm font-semibold text-foreground">
                                 {g.name}
                                 {g.is_required && (
-                                    <span className="ml-1 text-red-500">*</span>
+                                    <span className="ml-1 text-destructive">*</span>
                                 )}
-                                <span className="ml-1 text-xs font-normal text-slate-400">
+                                <span className="ml-1 text-xs font-normal text-muted-foreground/60">
                                     (
                                     {g.selection_type === "single"
                                         ? "Pilih 1"
@@ -129,14 +129,14 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                                                 }
                                                 className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
                                                     active
-                                                        ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                                                        : "border-slate-200 text-slate-600 hover:border-indigo-300"
+                                                        ? "border-primary bg-primary/10 text-primary"
+                                                        : "border-border text-muted-foreground hover:border-primary/30"
                                                 }`}
                                             >
                                                 {m.name}{" "}
                                                 {Number(m.price_addition) >
                                                     0 && (
-                                                    <span className="text-slate-400">
+                                                    <span className="text-muted-foreground/60">
                                                         +
                                                         {fmtShort(
                                                             m.price_addition,
@@ -150,7 +150,7 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                         </div>
                     ))}
                     <div>
-                        <p className="mb-1 text-sm font-medium text-slate-700">
+                        <p className="mb-1 text-sm font-medium text-card-foreground">
                             Catatan Item
                         </p>
                         <input
@@ -158,11 +158,11 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                             value={itemNote}
                             onChange={(e) => setItemNote(e.target.value)}
                             placeholder="cth. tanpa es, pedas"
-                            className="block w-full text-sm rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full text-sm rounded-xl border-slate-300 focus:border-primary focus:ring-2 focus:ring-indigo-200"
                         />
                     </div>
                 </div>
-                <div className="px-5 py-4 border-t border-slate-100">
+                <div className="px-5 py-4 border-t border-border">
                     ```jsx
                     <button
                         type="button"
@@ -171,7 +171,7 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                         className="
         w-full
         rounded-lg sm:rounded-lg md:rounded-xl
-        bg-gradient-to-r from-indigo-500 to-violet-600
+        bg-primary
         px-3 sm:px-4 md:px-5
         py-1.5 sm:py-2 md:py-2.5
         text-xs sm:text-sm md:text-sm
