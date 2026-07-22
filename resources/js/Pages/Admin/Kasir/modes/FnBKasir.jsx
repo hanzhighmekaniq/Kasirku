@@ -155,18 +155,18 @@ export default function FnBKasir(props) {
                 {/* Order type pill + context */}
                 <div className="lg:col-span-2 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-muted/40 px-3 py-2.5 shadow-sm">
                     {/* Pill switcher */}
-                    <div className="inline-flex rounded-xl bg-muted p-1 gap-0.5">
+                    <div className="inline-flex rounded-xl bg-muted p-0.5 sm:p-1 gap-0.5">
                         {orderTypes.map((o) => (
                             <button
                                 key={o.v}
                                 type="button"
                                 onClick={() => k.handleOrderTypeChange(o.v)}
-                                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-all
+                                className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 text-[11px] sm:text-[13px] font-semibold transition-all
                                     ${k.orderType === o.v
                                         ? "bg-card text-foreground shadow-sm"
                                         : "text-muted-foreground hover:text-foreground"}`}
                             >
-                                {o.icon}
+                                <span className="hidden sm:inline">{o.icon}</span>
                                 {o.l}
                             </button>
                         ))}

@@ -51,7 +51,7 @@ export default function PosModal({
                 </button>
             </div>
 
-            <div className={`px-5 py-4 ${bodyClass}`}>{children}</div>
+            <div className={`px-5 py-4 overflow-y-auto ${bodyClass}`}>{children}</div>
 
             {footer && (
                 <div className="flex items-center justify-end gap-2 border-t border-border bg-muted/50 px-5 py-3.5">

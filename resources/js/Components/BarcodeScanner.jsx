@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/library";
+import { X, ScanLine, CheckCircle2 } from "lucide-react";
 
 /**
- * BarcodeScanner - Kamera tetap aktif setelah scan
- * - Scan berhasil → beep + notif → kamera tetap ON
- * - Close manual via tombol
+ * BarcodeScanner — full-screen modern barcode scanner.
+ * Camera fills entire screen with a rectangular scan area in the center.
+ * Corner brackets + animated scan line for visual guidance.
  */
 export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
     const videoRef = useRef(null);
     const [error, setError] = useState(null);
-    const [lastScan, setLastScan] = useState(null); // notif hasil scan
+    const [lastScan, setLastScan] = useState(null);
     const codeReader = useRef(null);
     const streamRef = useRef(null);
-    const cooldownRef = useRef(false); // cegah scan double
+    const cooldownRef = useRef(false);
 
     useEffect(() => {
         if (!isOpen) {
@@ -31,9 +32,7 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
             streamRef.current = null;
         }
         if (codeReader.current) {
-            try {
-                codeReader.current.reset();
-            } catch (e) {}
+            try { codeReader.current.reset(); } catch {}
             codeReader.current = null;
         }
         if (videoRef.current) videoRef.current.srcObject = null;
@@ -43,27 +42,20 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
         try {
             setError(null);
             stopAll();
-
             codeReader.current = new BrowserMultiFormatReader();
 
             await codeReader.current.decodeFromVideoDevice(
                 null,
                 videoRef.current,
-                (result, err) => {
+                (result) => {
                     if (result && !cooldownRef.current) {
-                        // Cooldown 1.5 detik — cegah scan barcode yang sama berkali-kali
                         cooldownRef.current = true;
-                        setTimeout(() => {
-                            cooldownRef.current = false;
-                        }, 1500);
+                        setTimeout(() => { cooldownRef.current = false; }, 1500);
 
                         const barcode = result.getText();
                         setLastScan(barcode);
+                        setTimeout(() => setLastScan(null), 2500);
 
-                        // Hapus notif setelah 2 detik
-                        setTimeout(() => setLastScan(null), 2000);
-
-                        // Callback ke Kasir.jsx — kamera TIDAK dimatikan
                         if (onScan) onScan(barcode);
                     }
                 },
@@ -75,9 +67,7 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
         } catch (err) {
             console.error("Scanner error:", err);
             if (err.name === "NotAllowedError") {
-                setError(
-                    "Izin kamera ditolak. Izinkan akses kamera di browser.",
-                );
+                setError("Izin kamera ditolak. Izinkan akses kamera di browser.");
             } else {
                 setError("Gagal mengakses kamera: " + err.message);
             }
@@ -93,129 +83,133 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
     if (!isOpen) return null;
 
     return (
-        <div
-            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-            onClick={(e) => {
-                if (e.target === e.currentTarget) handleClose();
-            }}
-        >
-            <div className="bg-card rounded-2xl shadow-2xl w-full max-w-sm">
-                {/* Header */}
-                <div className="flex justify-between items-center px-4 py-3 border-b">
-                    <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                            <span className="relative flex h-2.5 w-2.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                            </span>
-                            Scan Barcode
-                        </span>
-                    </div>
-                    <button
-                        onClick={handleClose}
-                        className="text-muted-foreground hover:text-muted-foreground hover:bg-muted rounded-lg p-1.5 transition"
-                        title="Tutup Scanner"
-                    >
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+        <div className="fixed inset-0 z-[9999] bg-black">
+            {/* Camera video — full screen */}
+            <video
+                ref={videoRef}
+                className="absolute inset-0 h-full w-full object-cover"
+                playsInline
+                muted
+                autoPlay
+            />
+
+            {/* Dark overlay with scan window cutout */}
+            <div className="absolute inset-0 pointer-events-none">
+                {/* Top bar */}
+                <div className="pointer-events-auto absolute top-0 left-0 right-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent px-5 py-4">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleClose}
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm text-white transition hover:bg-white/20"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    </button>
-                </div>
-
-                {/* Camera */}
-                <div className="p-3">
-                    <div className="relative bg-black rounded-xl overflow-hidden aspect-video">
-                        {error ? (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/10 text-destructive p-4">
-                                <p className="text-sm text-center">{error}</p>
-                                <button
-                                    onClick={startScanning}
-                                    className="mt-3 px-4 py-2 bg-primary text-primary-foreground text-sm rounded-lg"
-                                >
-                                    Coba Lagi
-                                </button>
-                            </div>
-                        ) : (
-                            <>
-                                <video
-                                    ref={videoRef}
-                                    className="w-full h-full object-cover"
-                                    playsInline
-                                    muted
-                                    autoPlay
-                                />
-                                {/* Kotak scan */}
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <div
-                                        className="border-2 border-green-400 rounded-xl"
-                                        style={{ width: "75%", height: "45%" }}
-                                    >
-                                        {/* Sudut-sudut animasi */}
-                                        <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-green-400 rounded-tl-lg -translate-x-0.5 -translate-y-0.5" />
-                                        <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-green-400 rounded-tr-lg translate-x-0.5 -translate-y-0.5" />
-                                        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-green-400 rounded-bl-lg -translate-x-0.5 translate-y-0.5" />
-                                        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-green-400 rounded-br-lg translate-x-0.5 translate-y-0.5" />
-                                    </div>
-                                </div>
-
-                                {/* Notif sukses scan */}
-                                {lastScan && (
-                                    <div className="absolute top-3 left-3 right-3 flex items-center justify-center">
-                                        <div className="flex items-center gap-2 bg-green-500 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg animate-bounce">
-                                            <svg
-                                                className="w-4 h-4 shrink-0"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2.5}
-                                                    d="M5 13l4 4L19 7"
-                                                />
-                                            </svg>
-                                            Produk ditambahkan!
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Info bawah */}
-                                <div className="absolute bottom-3 left-3 right-3 text-center">
-                                    <span className="inline-block bg-black bg-opacity-50 text-white text-xs px-3 py-1 rounded-full">
-                                        {lastScan
-                                            ? `✓ ${lastScan}`
-                                            : "Arahkan barcode ke kotak hijau"}
-                                    </span>
-                                </div>
-                            </>
-                        )}
+                            <X size={20} />
+                        </button>
+                        <div>
+                            <h3 className="text-[15px] font-semibold text-white">Scan Barcode</h3>
+                            <p className="text-[11px] text-white/60">Arahkan barcode ke area scan</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="relative flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                        </span>
+                        <span className="text-[11px] text-white/70 font-medium">Aktif</span>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="px-4 pb-4 flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
-                        Kamera tetap aktif — scan berkali-kali
-                    </p>
-                    <button
-                        onClick={handleClose}
-                        className="px-4 py-2 bg-muted text-foreground rounded-xl hover:bg-muted/70 transition text-sm font-medium"
-                    >
-                        Selesai Scan
-                    </button>
+                {/* Semi-transparent overlay — 4 panels around scan area */}
+                {/* Scan area: centered, ~70% width, ~35% height */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    {/* Top dark panel */}
+                    <div className="absolute top-0 left-0 right-0 bg-black/60" style={{ height: "calc(50% - 18%)" }} />
+                    {/* Bottom dark panel */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60" style={{ height: "calc(50% - 18%)" }} />
+                    {/* Left dark panel */}
+                    <div className="absolute bg-black/60" style={{ top: "calc(50% - 18%)", bottom: "calc(50% - 18%)", left: 0, right: "calc(50% + 35%)" }} />
+                    {/* Right dark panel */}
+                    <div className="absolute bg-black/60" style={{ top: "calc(50% - 18%)", bottom: "calc(50% - 18%)", left: "calc(50% + 35%)", right: 0 }} />
+                </div>
+
+                {/* Scan area frame */}
+                <div
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                    style={{ width: "70%", height: "36%" }}
+                >
+                    {/* Corner brackets — thin, clean, no rounded */}
+                    {/* Top-left */}
+                    <div className="absolute top-0 left-0 w-8 h-8 border-t-[3px] border-l-[3px] border-white" />
+                    {/* Top-right */}
+                    <div className="absolute top-0 right-0 w-8 h-8 border-t-[3px] border-r-[3px] border-white" />
+                    {/* Bottom-left */}
+                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-[3px] border-l-[3px] border-white" />
+                    {/* Bottom-right */}
+                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-[3px] border-r-[3px] border-white" />
+
+                    {/* Animated scan line */}
+                    <div className="absolute inset-x-0 top-0 overflow-hidden">
+                        <div className="scan-line-anim h-[2px] w-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
+                    </div>
+
+                    {/* Side guides — subtle horizontal lines */}
+                    <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-px bg-white/10" />
                 </div>
             </div>
+
+            {/* Error state */}
+            {error && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-20 p-6">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 mb-4">
+                        <X size={32} className="text-red-400" />
+                    </div>
+                    <p className="text-sm text-center text-white/80 max-w-xs">{error}</p>
+                    <button
+                        onClick={startScanning}
+                        className="mt-5 px-6 py-3 bg-white text-black text-sm font-semibold rounded-xl"
+                    >
+                        Coba Lagi
+                    </button>
+                    <button
+                        onClick={handleClose}
+                        className="mt-3 px-6 py-2 text-sm text-white/50 hover:text-white/80 transition"
+                    >
+                        Tutup
+                    </button>
+                </div>
+            )}
+
+            {/* Bottom toast — last scan result */}
+            <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
+                <div className="flex flex-col items-center pb-8">
+                    {/* Success toast */}
+                    {lastScan && (
+                        <div className="flex items-center gap-2.5 bg-emerald-500/90 backdrop-blur-sm text-white px-5 py-3 rounded-2xl shadow-lg shadow-emerald-500/20 mb-4 animate-bounce">
+                            <CheckCircle2 size={18} />
+                            <span className="text-sm font-semibold">{lastScan}</span>
+                            <span className="text-sm text-white/80">ditambahkan</span>
+                        </div>
+                    )}
+
+                    {/* Hint text */}
+                    <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm text-white/60 px-4 py-2 rounded-full">
+                        <ScanLine size={14} />
+                        <span className="text-[12px]">
+                            {lastScan ? "Scan barcode berikutnya..." : "Arahkan barcode ke area scan"}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Scan line animation CSS */}
+            <style>{`
+                .scan-line-anim {
+                    animation: scanMove 2s ease-in-out infinite;
+                }
+                @keyframes scanMove {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(calc(36vh - 2px)); }
+                }
+            `}</style>
         </div>
     );
 }

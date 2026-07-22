@@ -2,11 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { fmt } from "./helpers";
 
 /**
- * Product card — mengikuti desain index1.html: gambar 4/3, badge status di
- * pojok kiri atas, tombol "+" bulat di pojok kanan bawah gambar, info produk
- * ringkas di bawah. Klik tombol "+" TIDAK lagi membuka modal apa pun secara
- * lokal — semua keputusan modal (variant/unit/modifier/retail) diserahkan ke
- * parent lewat `onClick` (lihat useKasir.handleProductClick).
+ * Product card — gambar 4/3, badge status di pojok kiri atas, info produk
+ * ringkas di bawah. Klik card = tambah produk (tombol + dihapus).
+ * Semua keputusan modal diserahkan ke parent lewat `onClick`.
  */
 export default function ProductCard({ product, onClick }) {
     const [showGrosir, setShowGrosir] = useState(false);
@@ -65,35 +63,25 @@ export default function ProductCard({ product, onClick }) {
         onClick?.();
     };
 
-    const handleAddClick = (e) => {
-        e.stopPropagation();
-        if (isDisabled) return;
-        onClick?.();
-    };
-
     const priceBlock = hasActiveVariants ? (
-        <div className="text-[12.5px] text-muted-foreground">
-            Starting from{" "}
+        <div className="text-[10px] sm:text-[12.5px] text-muted-foreground">
+            From{" "}
             <span className="font-semibold text-card-foreground">
                 {fmt(Math.min(...activeVariants.map((v) => Number(v.price))))}
             </span>
         </div>
     ) : (
-        <span className="text-[15px] font-semibold tracking-tight text-card-foreground">
+        <span className="text-[12px] sm:text-[15px] font-semibold tracking-tight text-card-foreground">
             {fmt(product.sell_price)}
             {hasUnits && (
-                <span className="ml-1 text-[10px] font-medium text-muted-foreground/60">
+                <span className="ml-1 text-[9px] sm:text-[10px] font-medium text-muted-foreground/60">
                     /{product.unit || "Pcs"}
                 </span>
             )}
         </span>
     );
 
-    const unitEquations = hasUnits
-        ? packagingUnits
-              .filter((u) => u.conversion_qty)
-              .map((u) => `1 ${u.name} = ${u.conversion_qty} ${product.unit || "pcs"}`)
-        : [];
+
 
     return (
         <article
@@ -150,23 +138,6 @@ export default function ProductCard({ product, onClick }) {
                     )}
                 </div>
 
-                {/* Tombol "+" bulat, pojok kanan bawah — responsive size */}
-                <button
-                    type="button"
-                    onClick={handleAddClick}
-                    disabled={isDisabled}
-                    title={isDisabled ? "Tidak tersedia" : "Tambah ke keranjang"}
-                    className={`absolute bottom-2 right-2 sm:bottom-3 sm:right-3 flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl shadow-lg shadow-black/20 transition-transform duration-300 active:scale-95 ${
-                        isDisabled
-                            ? "bg-muted text-muted-foreground cursor-not-allowed"
-                            : "bg-primary text-primary-foreground hover:bg-primary/90"
-                    }`}
-                >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                </button>
-
                 {/* Disabled overlay */}
                 {isDisabled && (
                     <div className="absolute inset-0 flex items-center justify-center bg-foreground/40 backdrop-blur-sm">
@@ -178,25 +149,25 @@ export default function ProductCard({ product, onClick }) {
             </div>
 
             {/* Info area */}
-            <div className="flex flex-1 flex-col p-3 sm:p-4">
-                <div className="flex items-start justify-between gap-2 sm:gap-3">
+            <div className="flex flex-1 flex-col p-2 sm:p-4">
+                <div className="flex items-start justify-between gap-1.5 sm:gap-3">
                     <div className="min-w-0">
-                        <h3 className="line-clamp-2 text-[13px] sm:text-[15px] font-semibold leading-tight text-card-foreground">
+                        <h3 className="line-clamp-2 text-[11px] sm:text-[15px] font-semibold leading-tight text-card-foreground">
                             {product.name}
                         </h3>
-                        <p className="mt-0.5 text-[10px] sm:text-xs text-muted-foreground">SKU · {product.sku}</p>
+                        <p className="mt-0.5 hidden sm:block text-xs text-muted-foreground">SKU · {product.sku}</p>
                     </div>
-                    <span className="shrink-0 inline-flex items-center rounded-lg bg-muted px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-[11px] font-medium text-muted-foreground">
+                    <span className="shrink-0 inline-flex items-center rounded-md bg-muted px-1 py-0.5 sm:px-2 sm:py-1 text-[9px] sm:text-[11px] font-medium text-muted-foreground">
                         {product.unit || "Pcs"}
                     </span>
                 </div>
 
-                <div className="mt-3 sm:mt-4 flex items-end justify-between gap-2 sm:gap-3">
+                <div className="mt-2 sm:mt-4 flex items-end justify-between gap-1.5 sm:gap-3">
                     <div className="min-w-0">
                         {priceBlock}
-                        {unitEquations.length > 0 && (
-                            <p className="mt-1 text-[10px] sm:text-[11px] text-muted-foreground">
-                                {unitEquations.join(" · ")}
+                        {hasUnits && (
+                            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-[11px] font-medium text-primary">
+                                Ada multi satuan
                             </p>
                         )}
                         {showGrosirButton ? (

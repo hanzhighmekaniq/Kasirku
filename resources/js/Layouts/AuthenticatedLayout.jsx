@@ -1230,7 +1230,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
                 )}
 
-                <main className="flex-1 p-4 bg-background">
+                <main className="flex-1 p-1 md:p-4 bg-background">
                     <div className="mx-auto w-full max-w-[1920px]">
                         {children}
                     </div>

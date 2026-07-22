@@ -232,174 +232,177 @@ export default function KasirLayout({
 
     /* ── order context row: order type + customer/table/delivery ── */
     const orderContextRow = (
-        <div className="border-b border-border bg-card px-3.5 py-2.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="flex items-center gap-1.5 w-max">
-                {/* Order type toggle */}
-                <div className="inline-flex shrink-0 rounded-xl bg-muted p-0.5">
-                    {k.orderOpts.filter((o) => o.v !== "wholesale").map((o) => (
+        <div className="border-b border-border bg-card px-3.5 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+                {/* LEFT group: order type + customer + table + delivery */}
+                <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden min-w-0">
+                    {/* Order type toggle */}
+                    <div className="inline-flex shrink-0 rounded-xl bg-muted p-0.5">
+                        {k.orderOpts.filter((o) => o.v !== "wholesale").map((o) => (
+                            <button
+                                key={o.v}
+                                onClick={() => k.handleOrderTypeChange(o.v)}
+                                className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold whitespace-nowrap transition ${k.orderType === o.v
+                                        ? "bg-card text-foreground shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                            >
+                                {o.l}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Customer selector */}
+                    {selectedCustomerObj ? (
+                        <div className="flex h-9 shrink-0 items-center gap-2 rounded-xl border border-border bg-card px-2.5">
+                            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold uppercase text-primary-foreground">
+                                {selectedCustomerObj.name?.charAt(0) ?? "?"}
+                            </span>
+                            <div className="hidden sm:block min-w-0 leading-tight">
+                                <p className="truncate text-[12px] font-semibold text-foreground max-w-[120px]">
+                                    {selectedCustomerObj.name}
+                                </p>
+                            </div>
+                            <TipButton label="Ganti Pelanggan" icon={Pencil} size="sm" onClick={() => setShowCustomerModal(true)} />
+                            <TipButton label="Hapus Pelanggan" icon={X} size="sm" variant="danger" onClick={() => { k.setSelectedCustomer(""); k.setCustomerSearch(""); }} />
+                        </div>
+                    ) : (
                         <button
-                            key={o.v}
-                            onClick={() => k.handleOrderTypeChange(o.v)}
-                            className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold whitespace-nowrap transition ${k.orderType === o.v
-                                    ? "bg-card text-foreground shadow-sm"
-                                    : "text-muted-foreground hover:text-foreground"
-                                }`}
+                            type="button"
+                            onClick={() => setShowCustomerModal(true)}
+                            className={`flex h-9 shrink-0 items-center gap-2 rounded-xl border border-dashed px-2.5 text-[12px] font-semibold transition ${isWholesale ? "border-warning bg-warning/5 text-warning hover:bg-warning/10" : "border-border text-muted-foreground hover:border-border hover:bg-muted/50"}`}
                         >
-                            {o.l}
+                            <UserRound size={14} className="shrink-0" />
+                            <span className="hidden sm:inline whitespace-nowrap">
+                                Pelanggan
+                                {isWholesale && <span className="text-destructive"> *</span>}
+                            </span>
                         </button>
-                    ))}
+                    )}
+
+                    {/* Table selector (fnb & hospitality) */}
+                    {showTableSelector && (
+                        <div className="relative shrink-0">
+                            {k.selectedTable ? (
+                                <div className="flex h-9 items-center gap-1.5 rounded-xl border border-border bg-muted/50 px-2.5">
+                                    <LayoutGrid size={14} className="shrink-0 text-muted-foreground" />
+                                    <span className="truncate text-xs font-semibold text-card-foreground">
+                                        {k.tableLabel}{" "}
+                                        {tables.find((t) => String(t.id) === String(k.selectedTable))?.table_number}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => { k.setSelectedTable(""); k.setTableSearch(""); }}
+                                        aria-label="Hapus pilihan meja"
+                                        className="ml-auto shrink-0 rounded-full p-0.5 text-muted-foreground/60 transition hover:bg-muted hover:text-card-foreground"
+                                    >
+                                        <X size={12} strokeWidth={2.5} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="relative">
+                                    <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
+                                    <input
+                                        ref={k.tableInputRef}
+                                        type="text"
+                                        placeholder={`Pilih ${k.tableLabel.toLowerCase()}...`}
+                                        value={k.tableSearch}
+                                        onFocus={(e) => {
+                                            const r = e.target.getBoundingClientRect();
+                                            k.setTableDropdownPos({ top: r.bottom + 4, left: r.left, width: r.width });
+                                            k.setShowTableDropdown(true);
+                                        }}
+                                        onChange={(e) => {
+                                            k.setTableSearch(e.target.value);
+                                            const r = e.target.getBoundingClientRect();
+                                            k.setTableDropdownPos({ top: r.bottom + 4, left: r.left, width: r.width });
+                                            k.setShowTableDropdown(true);
+                                        }}
+                                        className={`h-9 w-40 rounded-xl border pl-7 pr-2 text-xs outline-none focus:ring-2 focus:ring-border ${tableGate ? "border-warning bg-warning/5" : "border-border"}`}
+                                    />
+                                </div>
+                            )}
+                            {k.showTableDropdown &&
+                                !k.selectedTable &&
+                                ReactDOM.createPortal(
+                                    <div
+                                        ref={k.tableDropdownRef}
+                                        className="z-[9999] max-h-52 overflow-y-auto rounded-xl border border-border bg-card shadow-2xl"
+                                        style={{
+                                            position: "fixed",
+                                            top: k.tableDropdownPos.top,
+                                            left: k.tableDropdownPos.left,
+                                            width: k.tableDropdownPos.width,
+                                        }}
+                                    >
+                                        {(() => {
+                                            const q = k.tableSearch.toLowerCase().trim();
+                                            const filtered = tables.filter(
+                                                (t) => !q || String(t.table_number).includes(q) || String(t.capacity).includes(q),
+                                            );
+                                            if (filtered.length === 0)
+                                                return (
+                                                    <p className="px-3 py-3 text-center text-xs text-muted-foreground/60">
+                                                        Tidak ada {k.tableLabel.toLowerCase()}
+                                                    </p>
+                                                );
+                                            return filtered.map((t) => (
+                                                <button
+                                                    key={t.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        k.setSelectedTable(t.id);
+                                                        k.setShowTableDropdown(false);
+                                                        k.setTableSearch("");
+                                                    }}
+                                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-muted/50"
+                                                >
+                                                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+                                                        {t.table_number}
+                                                    </span>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="font-medium text-card-foreground">
+                                                            {k.tableLabel} {t.table_number}
+                                                        </p>
+                                                        <p className="text-[10px] text-muted-foreground/60">
+                                                            Kapasitas {t.capacity}
+                                                        </p>
+                                                    </div>
+                                                </button>
+                                            ));
+                                        })()}
+                                    </div>,
+                                    document.body,
+                                )}
+                        </div>
+                    )}
+
+                    {/* Delivery info */}
+                    {isDelivery && (
+                        <button
+                            type="button"
+                            onClick={() => setShowInfoModal(true)}
+                            className={`flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-left transition ${hasDeliveryInfo ? "border-border bg-card hover:bg-muted/50" : "border-warning bg-warning/5 hover:bg-warning/10"}`}
+                        >
+                            <Truck size={14} className={`shrink-0 ${hasDeliveryInfo ? "text-muted-foreground" : "text-warning"}`} />
+                            <span className="hidden sm:inline text-[12px] font-medium whitespace-nowrap">
+                                {hasDeliveryInfo
+                                    ? (k.deliveryCustomerName || selectedCustomerObj?.name || "Info Kirim")
+                                    : "Isi Info Kirim"
+                                }
+                            </span>
+                            {!hasDeliveryInfo && <span className="text-destructive text-[12px]">*</span>}
+                        </button>
+                    )}
                 </div>
 
-                {/* Customer selector */}
-                {selectedCustomerObj ? (
-                    <div className="flex h-9 shrink-0 items-center gap-2 rounded-xl border border-border bg-card px-2.5">
-                        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold uppercase text-primary-foreground">
-                            {selectedCustomerObj.name?.charAt(0) ?? "?"}
-                        </span>
-                        <div className="hidden sm:block min-w-0 leading-tight">
-                            <p className="truncate text-[12px] font-semibold text-foreground max-w-[120px]">
-                                {selectedCustomerObj.name}
-                            </p>
-                        </div>
-                        <TipButton label="Ganti Pelanggan" icon={Pencil} size="sm" onClick={() => setShowCustomerModal(true)} />
-                        <TipButton label="Hapus Pelanggan" icon={X} size="sm" variant="danger" onClick={() => { k.setSelectedCustomer(""); k.setCustomerSearch(""); }} />
-                    </div>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={() => setShowCustomerModal(true)}
-                        className={`flex h-9 shrink-0 items-center gap-2 rounded-xl border border-dashed px-2.5 text-[12px] font-semibold transition ${isWholesale ? "border-warning bg-warning/5 text-warning hover:bg-warning/10" : "border-border text-muted-foreground hover:border-border hover:bg-muted/50"}`}
-                    >
-                        <UserRound size={14} className="shrink-0" />
-                        <span className="hidden sm:inline whitespace-nowrap">
-                            Pelanggan
-                            {isWholesale && <span className="text-destructive"> *</span>}
-                        </span>
-                    </button>
-                )}
-
-                {/* Table selector (fnb & hospitality) */}
-                {showTableSelector && (
-                    <div className="relative shrink-0">
-                        {k.selectedTable ? (
-                            <div className="flex h-9 items-center gap-1.5 rounded-xl border border-border bg-muted/50 px-2.5">
-                                <LayoutGrid size={14} className="shrink-0 text-muted-foreground" />
-                                <span className="truncate text-xs font-semibold text-card-foreground">
-                                    {k.tableLabel}{" "}
-                                    {tables.find((t) => String(t.id) === String(k.selectedTable))?.table_number}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => { k.setSelectedTable(""); k.setTableSearch(""); }}
-                                    aria-label="Hapus pilihan meja"
-                                    className="ml-auto shrink-0 rounded-full p-0.5 text-muted-foreground/60 transition hover:bg-muted hover:text-card-foreground"
-                                >
-                                    <X size={12} strokeWidth={2.5} />
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="relative">
-                                <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
-                                <input
-                                    ref={k.tableInputRef}
-                                    type="text"
-                                    placeholder={`Pilih ${k.tableLabel.toLowerCase()}...`}
-                                    value={k.tableSearch}
-                                    onFocus={(e) => {
-                                        const r = e.target.getBoundingClientRect();
-                                        k.setTableDropdownPos({ top: r.bottom + 4, left: r.left, width: r.width });
-                                        k.setShowTableDropdown(true);
-                                    }}
-                                    onChange={(e) => {
-                                        k.setTableSearch(e.target.value);
-                                        const r = e.target.getBoundingClientRect();
-                                        k.setTableDropdownPos({ top: r.bottom + 4, left: r.left, width: r.width });
-                                        k.setShowTableDropdown(true);
-                                    }}
-                                    className={`h-9 w-40 rounded-xl border pl-7 pr-2 text-xs outline-none focus:ring-2 focus:ring-border ${tableGate ? "border-warning bg-warning/5" : "border-border"}`}
-                                />
-                            </div>
-                        )}
-                        {k.showTableDropdown &&
-                            !k.selectedTable &&
-                            ReactDOM.createPortal(
-                                <div
-                                    ref={k.tableDropdownRef}
-                                    className="z-[9999] max-h-52 overflow-y-auto rounded-xl border border-border bg-card shadow-2xl"
-                                    style={{
-                                        position: "fixed",
-                                        top: k.tableDropdownPos.top,
-                                        left: k.tableDropdownPos.left,
-                                        width: k.tableDropdownPos.width,
-                                    }}
-                                >
-                                    {(() => {
-                                        const q = k.tableSearch.toLowerCase().trim();
-                                        const filtered = tables.filter(
-                                            (t) => !q || String(t.table_number).includes(q) || String(t.capacity).includes(q),
-                                        );
-                                        if (filtered.length === 0)
-                                            return (
-                                                <p className="px-3 py-3 text-center text-xs text-muted-foreground/60">
-                                                    Tidak ada {k.tableLabel.toLowerCase()}
-                                                </p>
-                                            );
-                                        return filtered.map((t) => (
-                                            <button
-                                                key={t.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    k.setSelectedTable(t.id);
-                                                    k.setShowTableDropdown(false);
-                                                    k.setTableSearch("");
-                                                }}
-                                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-muted/50"
-                                            >
-                                                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
-                                                    {t.table_number}
-                                                </span>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="font-medium text-card-foreground">
-                                                        {k.tableLabel} {t.table_number}
-                                                    </p>
-                                                    <p className="text-[10px] text-muted-foreground/60">
-                                                        Kapasitas {t.capacity}
-                                                    </p>
-                                                </div>
-                                            </button>
-                                        ));
-                                    })()}
-                                </div>,
-                                document.body,
-                            )}
-                    </div>
-                )}
-
-                {/* Delivery info */}
-                {isDelivery && (
-                    <button
-                        type="button"
-                        onClick={() => setShowInfoModal(true)}
-                        className={`flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-left transition ${hasDeliveryInfo ? "border-border bg-card hover:bg-muted/50" : "border-warning bg-warning/5 hover:bg-warning/10"}`}
-                    >
-                        <Truck size={14} className={`shrink-0 ${hasDeliveryInfo ? "text-muted-foreground" : "text-warning"}`} />
-                        <span className="hidden sm:inline text-[12px] font-medium whitespace-nowrap">
-                            {hasDeliveryInfo
-                                ? (k.deliveryCustomerName || selectedCustomerObj?.name || "Info Kirim")
-                                : "Isi Info Kirim"
-                            }
-                        </span>
-                        {!hasDeliveryInfo && <span className="text-destructive text-[12px]">*</span>}
-                    </button>
-                )}
-
-                {/* Fullscreen only: History + Keluar */}
+                {/* RIGHT group: History + Keluar Fullscreen (fullscreen only) */}
                 {isFullscreen && (
-                    <>
+                    <div className="flex items-center gap-1.5 shrink-0 md:hidden">
                         <button
                             type="button"
                             onClick={() => k.setShowHistory(true)}
-                            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-border bg-card px-2.5 text-[12px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground md:hidden"
+                            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-border bg-card px-2.5 text-[12px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
                             title="Riwayat Transaksi"
                         >
                             <History size={14} />
@@ -408,13 +411,13 @@ export default function KasirLayout({
                         <button
                             type="button"
                             onClick={() => setIsFullscreen(false)}
-                            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-border bg-card px-2.5 text-[12px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground md:hidden"
+                            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl border border-border bg-card px-2.5 text-[12px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
                             title="Keluar Fullscreen"
                         >
                             <Minimize2 size={14} />
                             <span className="hidden sm:inline">Keluar</span>
                         </button>
-                    </>
+                    </div>
                 )}
             </div>
         </div>
@@ -422,7 +425,7 @@ export default function KasirLayout({
 
     /* ── search bar (default) ── */
     const defaultSearchBar = (
-        <div className="flex items-center gap-2.5 border-b border-border px-3.5 py-1 lg:py-2 bg-card">
+        <div className="flex items-center gap-2 border-b border-border px-3.5 py-1 lg:py-2 bg-card">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                 <Search size={18} />
             </div>
@@ -431,6 +434,12 @@ export default function KasirLayout({
                 type="text"
                 value={k.search}
                 onChange={(e) => k.setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        k.handleSearchEnter();
+                    }
+                }}
                 placeholder="Cari produk atau ketik barcode... ( / )"
                 className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[15px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0"
             />
@@ -1112,12 +1121,12 @@ export default function KasirLayout({
             <button
                 type="button"
                 onClick={() => k.setCartPanelOpen(true)}
-                className={`fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-primary px-5 py-4 text-sm font-semibold text-white shadow-xl transition-all hover:scale-105 hover:bg-primary/80 active:scale-95 md:hidden ${k.cartPanelOpen ? "hidden" : ""}`}
+                className={`fixed bottom-4 right-4 z-30 flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2.5 text-xs font-semibold text-white shadow-xl transition-all hover:scale-105 hover:bg-primary/80 active:scale-95 md:hidden ${k.cartPanelOpen ? "hidden" : ""}`}
             >
-                <ShoppingCart size={22} />
+                <ShoppingCart size={16} />
                 Keranjang
                 {k.cart.length > 0 && (
-                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-card text-sm font-extrabold text-foreground shadow-md">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-card text-[11px] font-extrabold text-foreground shadow-md">
                         {k.cart.length}
                     </span>
                 )}

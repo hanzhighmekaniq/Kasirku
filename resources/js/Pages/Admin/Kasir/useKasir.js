@@ -583,8 +583,51 @@ export default function useKasir({
             if (existing) {
                 return prev.map((c) => {
                     if (c.cartId !== existing.cartId) return c;
-                    const updated = { ...c, qty: c.qty + qty };
-                    return recalcPromo(updated);
+                    const newQty = c.qty + qty;
+
+                    // Recalculate tier price for merged item
+                    let newPrice = c.price;
+                    const hasTiers =
+                        product?.price_tiers?.length ||
+                        (product?.variants ?? []).some(
+                            (v) =>
+                                v.id === c.variantId &&
+                                v.price_tiers?.length,
+                        );
+                    if (hasTiers && !c.packagingUnitId) {
+                        const tierPrice = getTierPrice(
+                            product,
+                            newQty,
+                            c.variantId ?? null,
+                        );
+                        if (tierPrice !== null) {
+                            const modExtra = (c.modifiers ?? []).reduce(
+                                (s, m) => s + (m.price_addition ?? 0),
+                                0,
+                            );
+                            newPrice = tierPrice + modExtra;
+                        } else {
+                            const v = c.variantId
+                                ? (product?.variants ?? []).find(
+                                      (v) => v.id === c.variantId,
+                                  )
+                                : null;
+                            const base = v
+                                ? Number(v.price)
+                                : Number(product?.sell_price ?? c.price);
+                            const modExtra = (c.modifiers ?? []).reduce(
+                                (s, m) => s + (m.price_addition ?? 0),
+                                0,
+                            );
+                            newPrice = base + modExtra;
+                        }
+                    }
+
+                    return recalcPromo({
+                        ...c,
+                        qty: newQty,
+                        price: newPrice,
+                    });
                 });
             }
 
@@ -812,6 +855,52 @@ export default function useKasir({
         if (!found) {
             console.log("[Scan] Tidak ketemu");
             alert('Produk dengan barcode "' + barcode + '" tidak ditemukan');
+        }
+    };
+
+    /* ── search Enter handler (hardware scanner support) ── */
+    const handleSearchEnter = () => {
+        const q = search.trim();
+        if (!q) return;
+
+        // 1. Exact barcode match on product
+        const byBarcode = products.find((p) => p.barcode === q);
+        if (byBarcode) {
+            handleProductClick(byBarcode);
+            setSearch("");
+            return;
+        }
+
+        // 2. Variant barcode match
+        for (const p of products) {
+            const v = (p.variants ?? []).find((v) => v.barcode === q);
+            if (v) {
+                handleProductClick(p);
+                setSearch("");
+                return;
+            }
+        }
+
+        // 3. Packaging unit barcode match
+        for (const p of products) {
+            const pu = (p.packaging_units ?? []).find((u) => u.barcode === q);
+            if (pu) {
+                addToCart(p, null, [], "", pu);
+                setSearch("");
+                return;
+            }
+        }
+
+        // 4. Fuzzy match by name/SKU — if exactly 1 result, use it
+        const lower = q.toLowerCase();
+        const matches = products.filter(
+            (p) =>
+                p.name.toLowerCase().includes(lower) ||
+                p.sku?.toLowerCase().includes(lower),
+        );
+        if (matches.length === 1) {
+            handleProductClick(matches[0]);
+            setSearch("");
         }
     };
 
@@ -2119,6 +2208,7 @@ export default function useKasir({
         deleteHeldTransaction,
         handleProductClick,
         handleBarcodeScan,
+        handleSearchEnter,
         playBeep,
         handleOrderTypeChange,
         handlePrintHistory,
