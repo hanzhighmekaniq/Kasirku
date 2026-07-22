@@ -16,7 +16,7 @@ export default function RetailKasir(props) {
         }`;
 
     const categoryChips = (
-        <div className="flex items-center gap-2 overflow-x-auto border-b border-border rounded-b-lg bg-card px-1 lg:px-2 py-1.5 lg:py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex items-center gap-2 overflow-x-auto  rounded-b-lg px-1 lg:px-2 py-2 tollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button onClick={() => k.setActiveCat("")} className={chipClass(!k.activeCat)}>
                 Semua
             </button>
@@ -56,7 +56,7 @@ export default function RetailKasir(props) {
             ) : (
                 <>
                     
-                    <div className="grid grid-cols-1 py-2 lg:py-3 gap-3 @xs:grid-cols-2 @md:grid-cols-3 @xl:grid-cols-4 @4xl:grid-cols-5">
+                    <div className="grid grid-cols-1 gap-3 @xs:grid-cols-2 @md:grid-cols-3 @xl:grid-cols-4 @4xl:grid-cols-5">
                         {k.filtered.map((p) => (
                             <ProductCard
                                 key={p.id}

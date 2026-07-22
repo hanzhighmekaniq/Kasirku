@@ -1,19 +1,24 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { BrowserMultiFormatReader } from "@zxing/library";
-import { X, ScanLine, CheckCircle2 } from "lucide-react";
+import { X, ScanLine, CheckCircle2, SwitchCamera } from "lucide-react";
 
 /**
  * BarcodeScanner — full-screen modern barcode scanner.
  * Camera fills entire screen with a rectangular scan area in the center.
  * Corner brackets + animated scan line for visual guidance.
+ * Supports switching between front and back cameras.
  */
 export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
     const videoRef = useRef(null);
     const [error, setError] = useState(null);
     const [lastScan, setLastScan] = useState(null);
+    const [facingMode, setFacingMode] = useState("environment");
+    const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
     const codeReader = useRef(null);
     const streamRef = useRef(null);
     const cooldownRef = useRef(false);
+    const scanningRef = useRef(false);
+    const animFrameRef = useRef(null);
 
     useEffect(() => {
         if (!isOpen) {
@@ -22,17 +27,35 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
             setLastScan(null);
             return;
         }
-        startScanning();
+        checkCameras().then(() => startScanning());
         return () => stopAll();
     }, [isOpen]);
 
+    const checkCameras = async () => {
+        try {
+            if (!navigator.mediaDevices?.enumerateDevices) return;
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter((d) => d.kind === "videoinput");
+            setHasMultipleCameras(videoDevices.length > 1);
+        } catch {
+            // ignore — will be caught during getUserMedia
+        }
+    };
+
     const stopAll = () => {
+        scanningRef.current = false;
+        if (animFrameRef.current) {
+            cancelAnimationFrame(animFrameRef.current);
+            animFrameRef.current = null;
+        }
         if (streamRef.current) {
             streamRef.current.getTracks().forEach((t) => t.stop());
             streamRef.current = null;
         }
         if (codeReader.current) {
-            try { codeReader.current.reset(); } catch {}
+            try {
+                codeReader.current.reset();
+            } catch {}
             codeReader.current = null;
         }
         if (videoRef.current) videoRef.current.srcObject = null;
@@ -42,37 +65,92 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
         try {
             setError(null);
             stopAll();
-            codeReader.current = new BrowserMultiFormatReader();
 
-            await codeReader.current.decodeFromVideoDevice(
-                null,
-                videoRef.current,
-                (result) => {
-                    if (result && !cooldownRef.current) {
-                        cooldownRef.current = true;
-                        setTimeout(() => { cooldownRef.current = false; }, 1500);
-
-                        const barcode = result.getText();
-                        setLastScan(barcode);
-                        setTimeout(() => setLastScan(null), 2500);
-
-                        if (onScan) onScan(barcode);
-                    }
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode,
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
                 },
-            );
+            });
 
-            if (videoRef.current?.srcObject) {
-                streamRef.current = videoRef.current.srcObject;
+            streamRef.current = stream;
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                await videoRef.current.play();
             }
+
+            // After getting stream, re-check for multiple cameras
+            // (permission grant may reveal more devices)
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter((d) => d.kind === "videoinput");
+            setHasMultipleCameras(videoDevices.length > 1);
+
+            codeReader.current = new BrowserMultiFormatReader();
+            scanningRef.current = true;
+            decodeLoop();
         } catch (err) {
             console.error("Scanner error:", err);
-            if (err.name === "NotAllowedError") {
-                setError("Izin kamera ditolak. Izinkan akses kamera di browser.");
-            } else {
-                setError("Gagal mengakses kamera: " + err.message);
-            }
+            handleCameraError(err);
         }
     };
+
+    const decodeLoop = async () => {
+        if (!scanningRef.current || !codeReader.current || !videoRef.current)
+            return;
+
+        try {
+            const result = await codeReader.current.decodeOnceFromVideoElement(
+                videoRef.current,
+            );
+            if (result && !cooldownRef.current) {
+                cooldownRef.current = true;
+                setTimeout(() => {
+                    cooldownRef.current = false;
+                }, 1500);
+
+                const barcode = result.getText();
+                setLastScan(barcode);
+                setTimeout(() => setLastScan(null), 2500);
+
+                if (onScan) onScan(barcode);
+            }
+        } catch {
+            // No barcode found in this frame — normal
+        }
+
+        if (scanningRef.current) {
+            animFrameRef.current = requestAnimationFrame(decodeLoop);
+        }
+    };
+
+    const handleCameraError = (err) => {
+        if (err.name === "NotAllowedError") {
+            setError(
+                "Izin kamera ditolak. Izinkan akses kamera di pengaturan browser.",
+            );
+        } else if (err.name === "NotFoundError") {
+            setError("Tidak ada kamera ditemukan di perangkat ini.");
+        } else if (err.name === "OverconstrainedError") {
+            setError(
+                "Kamera tidak mendukung konfigurasi yang diminta. Coba ganti kamera.",
+            );
+        } else {
+            setError("Gagal mengakses kamera: " + err.message);
+        }
+    };
+
+    const switchCamera = useCallback(() => {
+        setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
+    }, []);
+
+    // Restart scanning when facingMode changes (and scanner is open)
+    useEffect(() => {
+        if (!isOpen) return;
+        startScanning();
+        return () => stopAll();
+    }, [facingMode]);
 
     const handleClose = () => {
         stopAll();
@@ -105,16 +183,35 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                             <X size={20} />
                         </button>
                         <div>
-                            <h3 className="text-[15px] font-semibold text-white">Scan Barcode</h3>
-                            <p className="text-[11px] text-white/60">Arahkan barcode ke area scan</p>
+                            <h3 className="text-[15px] font-semibold text-white">
+                                Scan Barcode
+                            </h3>
+                            <p className="text-[11px] text-white/60">
+                                Arahkan barcode ke area scan
+                            </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        {hasMultipleCameras && (
+                            <button
+                                onClick={switchCamera}
+                                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm text-white transition hover:bg-white/20"
+                                title={
+                                    facingMode === "environment"
+                                        ? "Ganti ke kamera depan"
+                                        : "Ganti ke kamera belakang"
+                                }
+                            >
+                                <SwitchCamera size={20} />
+                            </button>
+                        )}
                         <span className="relative flex h-2.5 w-2.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
                         </span>
-                        <span className="text-[11px] text-white/70 font-medium">Aktif</span>
+                        <span className="text-[11px] text-white/70 font-medium">
+                            Aktif
+                        </span>
                     </div>
                 </div>
 
@@ -122,13 +219,35 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                 {/* Scan area: centered, ~70% width, ~35% height */}
                 <div className="absolute inset-0 flex items-center justify-center">
                     {/* Top dark panel */}
-                    <div className="absolute top-0 left-0 right-0 bg-black/60" style={{ height: "calc(50% - 18%)" }} />
+                    <div
+                        className="absolute top-0 left-0 right-0 bg-black/60"
+                        style={{ height: "calc(50% - 18%)" }}
+                    />
                     {/* Bottom dark panel */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60" style={{ height: "calc(50% - 18%)" }} />
+                    <div
+                        className="absolute bottom-0 left-0 right-0 bg-black/60"
+                        style={{ height: "calc(50% - 18%)" }}
+                    />
                     {/* Left dark panel */}
-                    <div className="absolute bg-black/60" style={{ top: "calc(50% - 18%)", bottom: "calc(50% - 18%)", left: 0, right: "calc(50% + 35%)" }} />
+                    <div
+                        className="absolute bg-black/60"
+                        style={{
+                            top: "calc(50% - 18%)",
+                            bottom: "calc(50% - 18%)",
+                            left: 0,
+                            right: "calc(50% + 35%)",
+                        }}
+                    />
                     {/* Right dark panel */}
-                    <div className="absolute bg-black/60" style={{ top: "calc(50% - 18%)", bottom: "calc(50% - 18%)", left: "calc(50% + 35%)", right: 0 }} />
+                    <div
+                        className="absolute bg-black/60"
+                        style={{
+                            top: "calc(50% - 18%)",
+                            bottom: "calc(50% - 18%)",
+                            left: "calc(50% + 35%)",
+                            right: 0,
+                        }}
+                    />
                 </div>
 
                 {/* Scan area frame */}
@@ -162,13 +281,24 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 mb-4">
                         <X size={32} className="text-red-400" />
                     </div>
-                    <p className="text-sm text-center text-white/80 max-w-xs">{error}</p>
+                    <p className="text-sm text-center text-white/80 max-w-xs">
+                        {error}
+                    </p>
                     <button
                         onClick={startScanning}
                         className="mt-5 px-6 py-3 bg-white text-black text-sm font-semibold rounded-xl"
                     >
                         Coba Lagi
                     </button>
+                    {hasMultipleCameras && (
+                        <button
+                            onClick={switchCamera}
+                            className="mt-3 px-6 py-2.5 text-sm text-white/70 hover:text-white transition flex items-center gap-2"
+                        >
+                            <SwitchCamera size={16} />
+                            Ganti Kamera
+                        </button>
+                    )}
                     <button
                         onClick={handleClose}
                         className="mt-3 px-6 py-2 text-sm text-white/50 hover:text-white/80 transition"
@@ -185,8 +315,12 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                     {lastScan && (
                         <div className="flex items-center gap-2.5 bg-emerald-500/90 backdrop-blur-sm text-white px-5 py-3 rounded-2xl shadow-lg shadow-emerald-500/20 mb-4 animate-bounce">
                             <CheckCircle2 size={18} />
-                            <span className="text-sm font-semibold">{lastScan}</span>
-                            <span className="text-sm text-white/80">ditambahkan</span>
+                            <span className="text-sm font-semibold">
+                                {lastScan}
+                            </span>
+                            <span className="text-sm text-white/80">
+                                ditambahkan
+                            </span>
                         </div>
                     )}
 
@@ -194,7 +328,9 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                     <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm text-white/60 px-4 py-2 rounded-full">
                         <ScanLine size={14} />
                         <span className="text-[12px]">
-                            {lastScan ? "Scan barcode berikutnya..." : "Arahkan barcode ke area scan"}
+                            {lastScan
+                                ? "Scan barcode berikutnya..."
+                                : "Arahkan barcode ke area scan"}
                         </span>
                     </div>
                 </div>

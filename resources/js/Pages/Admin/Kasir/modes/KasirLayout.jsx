@@ -153,23 +153,57 @@ export default function KasirLayout({
         <div className="flex w-full items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
                 <h2 className="text-lg font-semibold text-foreground">Kasir</h2>
+
+            </div>
+            <div className="flex items-center gap-1.5">
                 {showShiftUI && activeShift && (
                     <Tooltip label={canViewShift ? "Detail / Tutup Shift" : "Shift Aktif"}>
                         <Link
-                            href={canViewShift ? route("admin.cashier-shifts.show", activeShift.id) : "#"}
-                            className={`hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted border border-border transition ${canViewShift ? "hover:border-primary/30 hover:bg-primary/5 cursor-pointer" : "cursor-default"}`}
+                            href={
+                                canViewShift
+                                    ? route("admin.cashier-shifts.show", activeShift.id)
+                                    : "#"
+                            }
+                            className={`
+            relative flex items-center justify-center
+            h-9 w-9 sm:h-auto sm:w-auto
+            sm:gap-2 sm:px-2 sm:py-1
+            rounded-lg bg-muted border border-border
+            transition
+            ${canViewShift
+                                    ? " cursor-pointer"
+                                    : "cursor-default"
+                                }
+        `}
                             onClick={canViewShift ? undefined : (e) => e.preventDefault()}
                         >
-                            <Clock size={15} className="text-primary" />
-                            <div className="leading-tight">
-                                <div className="text-[11px] font-semibold text-foreground">Shift Aktif</div>
-                                <div className="text-[10px] text-muted-foreground">{activeShift.shift_no}</div>
+                            <Clock size={17} className="shrink-0" />
+
+                            {/* Indikator shift aktif — mobile */}
+                            <span
+                                className="
+                sm:hidden
+                absolute -top-0.5 -right-0.5
+                h-2.5 w-2.5
+                rounded-full
+                bg-emerald-500
+                border-2 border-background
+            "
+                            />
+
+                            {/* Desktop */}
+                            <div className="hidden sm:block leading-tight">
+                                <div className="text-[14px] font-semibold text-foreground">
+                                    Shift Aktif
+                                </div>
+
+                                <div className="text-[10px] text-muted-foreground">
+                                    {activeShift.shift_no}
+                                </div>
                             </div>
                         </Link>
                     </Tooltip>
                 )}
-            </div>
-            <div className="flex items-center gap-1.5">
                 {heldCount > 0 && (
                     <div className="relative hidden md:block">
                         <Tooltip label="Transaksi Ditahan">
@@ -243,8 +277,8 @@ export default function KasirLayout({
                                 key={o.v}
                                 onClick={() => k.handleOrderTypeChange(o.v)}
                                 className={`flex h-9 items-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold whitespace-nowrap transition ${k.orderType === o.v
-                                        ? "bg-card text-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground"
+                                    ? "bg-card text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
                                     }`}
                             >
                                 {o.l}
@@ -425,8 +459,8 @@ export default function KasirLayout({
 
     /* ── search bar (default) ── */
     const defaultSearchBar = (
-        <div className="flex items-center gap-2 border-b border-border px-3.5 py-1 lg:py-2 bg-card">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+        <div className="flex items-center gap-2 border rounded-xl  border-border py-1 px-2 ">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                 <Search size={18} />
             </div>
             <input
@@ -441,13 +475,13 @@ export default function KasirLayout({
                     }
                 }}
                 placeholder="Cari produk atau ketik barcode... ( / )"
-                className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[15px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0"
+                className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[13px] lg:text-[15px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0"
             />
             <TipButton
                 label="Scan Barcode (Kamera)"
                 icon={ScanLine}
                 variant="solid"
-                size="lg"
+                size="md"
                 onClick={() => k.setShowScanner(true)}
             />
         </div>
@@ -530,7 +564,7 @@ export default function KasirLayout({
                 {/* Customer selector */}
                 {selectedCustomerObj ? (
                     <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-1.5">
-                        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold uppercase text-white">
+                        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold uppercase text-primary-foreground">
                             {selectedCustomerObj.name?.charAt(0) ?? "?"}
                         </span>
                         <div className="min-w-0 flex-1 leading-tight">
@@ -660,7 +694,7 @@ export default function KasirLayout({
                 className={`kasir-main-content flex ${topPadding} transition-all duration-300`}
             >
                 {/* LEFT: product panel */}
-                <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden md:p-4">
+                <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden p-4">
                     {shiftBanner}
                     {showSearch && (searchBar || defaultSearchBar)}
                     {categoryChips}
@@ -713,12 +747,12 @@ export default function KasirLayout({
 
                 {/* Fullscreen quick actions */}
                 {isFullscreen && (
-                    <div className="flex items-stretch gap-2 border-b border-border bg-muted/50/80 px-3 py-2">
+                    <div className="flex items-stretch gap-2 border-b border-border bg-muted/50 px-3 py-2">
                         {heldCount > 0 && (
                             <button
                                 type="button"
                                 onClick={() => setShowHeldModal(true)}
-                                className="relative flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 text-xs font-semibold text-card-foreground shadow-sm transition hover:bg-muted/50"
+                                className="relative flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted py-2.5 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted/80"
                             >
                                 <Layers size={16} />
                                 <span className="hidden sm:inline">Ditahan</span>
@@ -730,7 +764,7 @@ export default function KasirLayout({
                         <button
                             type="button"
                             onClick={() => k.setShowHistory(true)}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 text-xs font-semibold text-card-foreground shadow-sm transition hover:bg-muted/50"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted py-2.5 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted/80"
                         >
                             <History size={16} />
                             <span className="hidden sm:inline">Riwayat</span>
@@ -738,7 +772,7 @@ export default function KasirLayout({
                         <button
                             type="button"
                             onClick={() => setIsFullscreen(false)}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 text-xs font-semibold text-card-foreground shadow-sm transition hover:border-destructive/20 hover:bg-destructive/5 hover:text-destructive"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted py-2.5 text-xs font-semibold text-foreground shadow-sm transition hover:border-destructive/20 hover:bg-destructive/5 hover:text-destructive"
                         >
                             <Minimize2 size={16} />
                             <span className="hidden sm:inline">Keluar</span>
@@ -802,82 +836,156 @@ export default function KasirLayout({
                 {/* Bottom: aksi cepat + totals + pay (pinned) */}
                 <div className="shrink-0 border-t border-border bg-card px-4 py-2.5 space-y-2.5">
 
-                    {/* ── 1 baris: Pelanggan + Diantar + Info + Meja + Catatan + Diskon ── */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    {/* ── 1 baris: Pelanggan + Diantar + Info + Meja | Catatan + Diskon ── */}
+                    <div className="flex w-full items-center justify-between gap-2">
 
-                        {/* Pelanggan */}
-                        {selectedCustomerObj ? (
-                            <button type="button" onClick={() => setShowCustomerModal(true)}
-                                className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80">
-                                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
-                                    {selectedCustomerObj.name?.charAt(0) ?? "?"}
-                                </span>
-                                <span className="max-w-[60px] truncate">{selectedCustomerObj.name}</span>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); k.setSelectedCustomer(""); k.setCustomerSearch(""); }}
-                                    className="ml-0.5 text-muted-foreground/50 hover:text-destructive">
-                                    <X size={10} strokeWidth={2.5} />
+                        {/* ── KIRI ── */}
+                        <div className="flex items-center gap-1.5">
+
+                            {/* Pelanggan */}
+                            {selectedCustomerObj ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCustomerModal(true)}
+                                    className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80"
+                                >
+                                    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
+                                        {selectedCustomerObj.name?.charAt(0) ?? "?"}
+                                    </span>
+
+                                    <span className="max-w-[60px] truncate">
+                                        {selectedCustomerObj.name}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            k.setSelectedCustomer("");
+                                            k.setCustomerSearch("");
+                                        }}
+                                        className="ml-0.5 text-muted-foreground/50 hover:text-destructive"
+                                    >
+                                        <X size={10} strokeWidth={2.5} />
+                                    </button>
                                 </button>
-                            </button>
-                        ) : (
-                            <button type="button" onClick={() => setShowCustomerModal(true)}
-                                className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:border-foreground/30 hover:text-foreground">
-                                <UserRound size={12} />
-                                <span>Tamu</span>
-                            </button>
-                        )}
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCustomerModal(true)}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted"
+                                >
+                                    <UserRound size={12} />
+                                    <span>Tamu</span>
+                                </button>
+                            )}
 
-                        <span className="h-3.5 w-px bg-border" />
+                            <span className="h-3.5 w-px bg-border" />
 
-                        {/* Toggle Diantar */}
-                        <label className="inline-flex items-center gap-1 cursor-pointer select-none">
-                            <input type="checkbox" checked={isDelivery}
-                                onChange={(e) => k.handleOrderTypeChange(e.target.checked ? "delivery" : "takeaway")}
-                                className="h-3 w-3 rounded border-border accent-primary" />
-                            <span className="text-[11px] font-medium text-foreground">Antar</span>
-                        </label>
-
-                        {/* Info Kirim */}
-                        {isDelivery && (
-                            <button type="button" onClick={() => setShowInfoModal(true)}
-                                className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
-                                    ${hasDeliveryInfo ? "bg-muted text-foreground hover:bg-muted/80" : "border border-dashed border-warning text-warning hover:bg-warning/5"}`}>
-                                <Truck size={12} />
-                                <span className="max-w-[70px] truncate">
-                                    {hasDeliveryInfo ? (k.deliveryCustomerName || "Kirim") : "Info *"}
+                            {/* Toggle Diantar */}
+                            <label className="inline-flex cursor-pointer select-none items-center gap-1">
+                                <input
+                                    type="checkbox"
+                                    checked={isDelivery}
+                                    onChange={(e) =>
+                                        k.handleOrderTypeChange(
+                                            e.target.checked ? "delivery" : "takeaway"
+                                        )
+                                    }
+                                    className="h-3 w-3 rounded border-border accent-primary"
+                                />
+                                <span className="text-[11px] font-medium text-foreground">
+                                    Antar
                                 </span>
+                            </label>
+
+                            {/* Info Kirim */}
+                            {isDelivery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowInfoModal(true)}
+                                    className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition ${hasDeliveryInfo
+                                        ? "bg-muted text-foreground hover:bg-muted/80"
+                                        : "border border-dashed border-warning text-warning hover:bg-warning/5"
+                                        }`}
+                                >
+                                    <Truck size={12} />
+                                    <span className="max-w-[70px] truncate">
+                                        {hasDeliveryInfo
+                                            ? k.deliveryCustomerName || "Kirim"
+                                            : "Info *"}
+                                    </span>
+                                </button>
+                            )}
+
+                            {/* Meja — FnB */}
+                            {showTableSelector && k.selectedTable && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        k.setSelectedTable("");
+                                        k.setTableSearch("");
+                                    }}
+                                    className="inline-flex items-center gap-1 rounded-lg bg-muted px-1.5 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80"
+                                >
+                                    <LayoutGrid size={11} />
+                                    <span>
+                                        {
+                                            tables.find(
+                                                (t) =>
+                                                    String(t.id) === String(k.selectedTable)
+                                            )?.table_number
+                                        }
+                                    </span>
+                                    <X
+                                        size={10}
+                                        strokeWidth={2.5}
+                                        className="text-muted-foreground/50"
+                                    />
+                                </button>
+                            )}
+
+                        </div>
+
+                        {/* ── KANAN ── */}
+                        <div className="flex shrink-0 items-center gap-1.5">
+
+                            {/* Catatan */}
+                            <button
+                                type="button"
+                                onClick={() => setShowNoteModal(true)}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-1 text-[11px] font-medium transition ${noteActive
+                                    ? "border-success/30 bg-success/10 text-success"
+                                    : "border-border bg-muted text-foreground hover:bg-muted/80"
+                                    }`}
+                            >
+                                <MessageSquare size={12} />
+                                <span>Catatan</span>
+
+                                {noteActive && (
+                                    <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                                )}
                             </button>
-                        )}
 
-                        {/* Meja — FnB */}
-                        {showTableSelector && k.selectedTable && (
-                            <button type="button"
-                                onClick={() => { k.setSelectedTable(""); k.setTableSearch(""); }}
-                                className="inline-flex items-center gap-1 rounded-lg bg-muted px-1.5 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80">
-                                <LayoutGrid size={11} />
-                                <span>{tables.find((t) => String(t.id) === String(k.selectedTable))?.table_number}</span>
-                                <X size={10} strokeWidth={2.5} className="text-muted-foreground/50" />
+                            {/* Diskon */}
+                            <button
+                                type="button"
+                                onClick={() => setShowAdjustModal(true)}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-1 text-[11px] font-medium transition ${adjustActive
+                                    ? "border-success/30 bg-success/10 text-success"
+                                    : "border-border bg-muted text-foreground hover:bg-muted/80"
+                                    }`}
+                            >
+                                <Tag size={12} />
+                                <span>Diskon</span>
+
+                                {adjustActive && (
+                                    <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                                )}
                             </button>
-                        )}
 
-                        <span className="h-3.5 w-px bg-border" />
+                        </div>
 
-                        {/* Catatan */}
-                        <button type="button" onClick={() => setShowNoteModal(true)}
-                            className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
-                                ${noteActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-                            <MessageSquare size={12} />
-                            <span>Catatan</span>
-                            {noteActive && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
-                        </button>
-
-                        {/* Diskon */}
-                        <button type="button" onClick={() => setShowAdjustModal(true)}
-                            className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
-                                ${adjustActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-                            <Tag size={12} />
-                            <span>Diskon</span>
-                            {adjustActive && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
-                        </button>
                     </div>
 
                     {/* Ringkasan total */}
@@ -966,7 +1074,7 @@ export default function KasirLayout({
                             type="button"
                             disabled={k.cart.length === 0 || blockedByShift}
                             onClick={() => k.holdTransaction()}
-                            className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-4 py-3.5 text-[14px] font-bold text-card-foreground transition hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-muted px-4 py-3.5 text-[14px] font-bold text-foreground transition hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-40"
                             title="Tahan transaksi (simpan sementara)"
                         >
                             <Pause size={16} />
@@ -1076,75 +1184,156 @@ export default function KasirLayout({
                 {/* Bottom: totals + pay */}
                 <div className="shrink-0 border-t border-border bg-card px-4 py-2.5 space-y-2.5">
 
-                    {/* 1 baris: Pelanggan + Diantar + Info + Meja + Catatan + Diskon */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                        {selectedCustomerObj ? (
-                            <button type="button" onClick={() => setShowCustomerModal(true)}
-                                className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80">
-                                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
-                                    {selectedCustomerObj.name?.charAt(0) ?? "?"}
-                                </span>
-                                <span className="max-w-[60px] truncate">{selectedCustomerObj.name}</span>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); k.setSelectedCustomer(""); k.setCustomerSearch(""); }}
-                                    className="ml-0.5 text-muted-foreground/50 hover:text-destructive">
-                                    <X size={10} strokeWidth={2.5} />
+                    {/* 1 baris: Pelanggan + Diantar + Info + Meja | Catatan + Diskon */}
+                    <div className="flex w-full items-center justify-between gap-2">
+
+                        {/* KIRI */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                            {selectedCustomerObj ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCustomerModal(true)}
+                                    className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80"
+                                >
+                                    <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
+                                        {selectedCustomerObj.name?.charAt(0) ?? "?"}
+                                    </span>
+
+                                    <span className="max-w-[60px] truncate">
+                                        {selectedCustomerObj.name}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            k.setSelectedCustomer("");
+                                            k.setCustomerSearch("");
+                                        }}
+                                        className="ml-0.5 text-muted-foreground/50 hover:text-destructive"
+                                    >
+                                        <X size={10} strokeWidth={2.5} />
+                                    </button>
                                 </button>
-                            </button>
-                        ) : (
-                            <button type="button" onClick={() => setShowCustomerModal(true)}
-                                className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:border-foreground/30 hover:text-foreground">
-                                <UserRound size={12} />
-                                <span>Tamu</span>
-                            </button>
-                        )}
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCustomerModal(true)}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted"
+                                >
+                                    <UserRound size={12} />
+                                    <span>Tamu</span>
+                                </button>
+                            )}
 
-                        <span className="h-3.5 w-px bg-border" />
+                            <span className="h-3.5 w-px bg-border" />
 
-                        <label className="inline-flex items-center gap-1 cursor-pointer select-none">
-                            <input type="checkbox" checked={isDelivery}
-                                onChange={(e) => k.handleOrderTypeChange(e.target.checked ? "delivery" : "takeaway")}
-                                className="h-3 w-3 rounded border-border accent-primary" />
-                            <span className="text-[11px] font-medium text-foreground">Antar</span>
-                        </label>
-
-                        {isDelivery && (
-                            <button type="button" onClick={() => setShowInfoModal(true)}
-                                className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
-                                    ${hasDeliveryInfo ? "bg-muted text-foreground hover:bg-muted/80" : "border border-dashed border-warning text-warning hover:bg-warning/5"}`}>
-                                <Truck size={12} />
-                                <span className="max-w-[70px] truncate">
-                                    {hasDeliveryInfo ? (k.deliveryCustomerName || "Kirim") : "Info *"}
+                            {/* Antar */}
+                            <label className="inline-flex items-center gap-1 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={isDelivery}
+                                    onChange={(e) =>
+                                        k.handleOrderTypeChange(
+                                            e.target.checked ? "delivery" : "takeaway"
+                                        )
+                                    }
+                                    className="h-3 w-3 rounded border-border accent-primary"
+                                />
+                                <span className="text-[11px] font-medium text-foreground">
+                                    Antar
                                 </span>
+                            </label>
+
+                            {/* Info Kirim */}
+                            {isDelivery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowInfoModal(true)}
+                                    className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition ${hasDeliveryInfo
+                                            ? "bg-muted text-foreground hover:bg-muted/80"
+                                            : "border border-dashed border-warning text-warning hover:bg-warning/5"
+                                        }`}
+                                >
+                                    <Truck size={12} />
+
+                                    <span className="max-w-[70px] truncate">
+                                        {hasDeliveryInfo
+                                            ? k.deliveryCustomerName || "Kirim"
+                                            : "Info *"}
+                                    </span>
+                                </button>
+                            )}
+
+                            {/* Meja */}
+                            {showTableSelector && k.selectedTable && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        k.setSelectedTable("");
+                                        k.setTableSearch("");
+                                    }}
+                                    className="inline-flex items-center gap-1 rounded-lg bg-muted px-1.5 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80"
+                                >
+                                    <LayoutGrid size={11} />
+
+                                    <span>
+                                        {
+                                            tables.find(
+                                                (t) =>
+                                                    String(t.id) === String(k.selectedTable)
+                                            )?.table_number
+                                        }
+                                    </span>
+
+                                    <X
+                                        size={10}
+                                        strokeWidth={2.5}
+                                        className="text-muted-foreground/50"
+                                    />
+                                </button>
+                            )}
+                        </div>
+
+
+                        {/* KANAN */}
+                        <div className="flex shrink-0 items-center gap-1.5">
+
+                            {/* Catatan */}
+                            <button
+                                type="button"
+                                onClick={() => setShowNoteModal(true)}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-1 text-[11px] font-medium transition ${noteActive
+                                        ? "border-success/30 bg-success/10 text-success"
+                                        : "border-border bg-muted text-foreground hover:bg-muted/80"
+                                    }`}
+                            >
+                                <MessageSquare size={12} />
+                                <span>Catatan</span>
+
+                                {noteActive && (
+                                    <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                                )}
                             </button>
-                        )}
 
-                        {showTableSelector && k.selectedTable && (
-                            <button type="button"
-                                onClick={() => { k.setSelectedTable(""); k.setTableSearch(""); }}
-                                className="inline-flex items-center gap-1 rounded-lg bg-muted px-1.5 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80">
-                                <LayoutGrid size={11} />
-                                <span>{tables.find((t) => String(t.id) === String(k.selectedTable))?.table_number}</span>
-                                <X size={10} strokeWidth={2.5} className="text-muted-foreground/50" />
+                            {/* Diskon */}
+                            <button
+                                type="button"
+                                onClick={() => setShowAdjustModal(true)}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-1 text-[11px] font-medium transition ${adjustActive
+                                        ? "border-success/30 bg-success/10 text-success"
+                                        : "border-border bg-muted text-foreground hover:bg-muted/80"
+                                    }`}
+                            >
+                                <Tag size={12} />
+                                <span>Diskon</span>
+
+                                {adjustActive && (
+                                    <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                                )}
                             </button>
-                        )}
 
-                        <span className="h-3.5 w-px bg-border" />
-
-                        <button type="button" onClick={() => setShowNoteModal(true)}
-                            className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
-                                ${noteActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-                            <MessageSquare size={12} />
-                            <span>Catatan</span>
-                            {noteActive && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
-                        </button>
-
-                        <button type="button" onClick={() => setShowAdjustModal(true)}
-                            className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
-                                ${adjustActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-                            <Tag size={12} />
-                            <span>Diskon</span>
-                            {adjustActive && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
-                        </button>
+                        </div>
                     </div>
 
                     <div className="space-y-1.5">
@@ -1191,7 +1380,7 @@ export default function KasirLayout({
                     </div>
 
                     <div className="flex gap-2">
-                        <button type="button" disabled={k.cart.length === 0 || blockedByShift} onClick={() => k.holdTransaction()} className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-4 py-3.5 text-[14px] font-bold text-card-foreground transition hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-40" title="Tahan transaksi (simpan sementara)">
+                        <button type="button" disabled={k.cart.length === 0 || blockedByShift} onClick={() => k.holdTransaction()} className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-muted px-4 py-3.5 text-[14px] font-bold text-foreground transition hover:bg-muted/80 disabled:cursor-not-allowed disabled:opacity-40" title="Tahan transaksi (simpan sementara)">
                             <Pause size={16} />
                             Tahan
                         </button>
@@ -1224,7 +1413,7 @@ export default function KasirLayout({
             <button
                 type="button"
                 onClick={() => k.setCartPanelOpen(true)}
-                className={`fixed bottom-4 right-4 z-30 flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2.5 text-xs font-semibold text-white shadow-xl transition-all hover:scale-105 hover:bg-primary/80 active:scale-95 md:hidden ${k.cartPanelOpen ? "hidden" : ""}`}
+                className={`fixed bottom-8 right-4 z-30 flex items-center gap-1.5 rounded-full bg-primary px-4 py-3 text-xs font-semibold text-white shadow-xl transition-all hover:scale-105 hover:bg-primary/80 active:scale-95 md:hidden ${k.cartPanelOpen ? "hidden" : ""}`}
             >
                 <ShoppingCart size={16} />
                 Keranjang
@@ -1379,7 +1568,7 @@ export default function KasirLayout({
         // semua modal tampil konsisten seperti mode non-fullscreen. Aman karena
         // AuthenticatedLayout tidak dirender saat fullscreen.
         return (
-            <div className="fixed inset-0 z-40 flex flex-col overflow-x-hidden bg-[#f1f3f6] p-3">
+            <div className="fixed inset-0 z-40 flex flex-col overflow-x-hidden bg-background p-3">
                 {posContent("h-full")}
             </div>
         );
