@@ -1,4 +1,5 @@
 import * as ReactDOM from "react-dom";
+import { useState } from "react";
 import { fmt, fmtShort } from "./helpers";
 
 export default function ReceiptModal({
@@ -8,7 +9,11 @@ export default function ReceiptModal({
     onClose,
     onNewTransaction,
 }) {
-    const receiptContent = (
+    // Split receipt state — jika ada splitPayers, user bisa ganti halaman struk
+    const hasSplit = receipt.splitPayers && receipt.splitPayers.length > 0 && receipt.splitReceiptMode === "per_payer";
+    const [splitPage, setSplitPage] = useState(0); // 0 = total, 1+ = per payer index
+
+    const receiptContent = (splitPayer = null) => (
         <>
             {receipt.isOffline && (
                 <div className="-mx-6 -mt-5 mb-4 rounded-t-2xl bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-3 text-center">
@@ -246,7 +251,46 @@ export default function ReceiptModal({
 
             {footer && (
                 <>
-                    <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-slate-300" />
+            {/* Split bill summary jika ada */}
+            {!splitPayer && receipt.splitPayers && receipt.splitPayers.length > 0 && (
+                <>
+                    <p className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                        Split Bill — {receipt.splitPayers.length} Orang
+                    </p>
+                    {receipt.splitPayers.map((p, i) => {
+                        const method = p.methodName || "-";
+                        const change = Math.max(0, (Number(p.paid_amount) || Number(p.amount)) - Number(p.amount));
+                        return (
+                            <div key={i} className="text-[10px] mb-1">
+                                <div className="flex justify-between font-semibold text-foreground">
+                                    <span>{p.name || `Orang ${i + 1}`}</span>
+                                    <span>{fmt(p.amount)}</span>
+                                </div>
+                                <div className="flex justify-between text-muted-foreground">
+                                    <span>{method}</span>
+                                    {change > 0 && <span>Kembalian {fmt(change)}</span>}
+                                </div>
+                            </div>
+                        );
+                    })}
+                    <div className="my-2 border-t border-dashed border-slate-300" />
+                </>
+            )}
+            {/* Payer header jika ini struk per orang */}
+            {splitPayer && (
+                <>
+                    <p className="text-center text-[11px] font-bold text-violet-700 mb-0.5">
+                        Struk untuk: {splitPayer.name || "Tamu"}
+                    </p>
+                    <p className="text-center text-[10px] text-muted-foreground mb-2">
+                        Tagihan: {fmt(splitPayer.amount)}
+                        {splitPayer.methodName ? ` · ${splitPayer.methodName}` : ""}
+                    </p>
+                    <div className="my-2 border-t border-dashed border-slate-300" />
+                </>
+            )}
+            <div className="my-3 border-t border-dashed border-slate-300" />
                     <p className="whitespace-pre-wrap text-center text-muted-foreground">
                         {footer}
                     </p>
@@ -304,8 +348,29 @@ export default function ReceiptModal({
                     className="absolute inset-0 bg-primary/60 backdrop-blur-sm"
                 />
                 <div className="relative w-full max-w-xs rounded-2xl bg-card shadow-2xl">
+                    {/* Split pager — navigasi antar struk per orang */}
+                    {hasSplit && (
+                        <div className="flex items-center justify-between border-b border-border px-4 py-2">
+                            <button type="button"
+                                onClick={() => setSplitPage(0)}
+                                className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${splitPage === 0 ? "bg-violet-100 text-violet-700" : "text-muted-foreground hover:bg-muted"}`}>
+                                Total
+                            </button>
+                            <div className="flex items-center gap-1">
+                                {receipt.splitPayers.map((p, i) => (
+                                    <button key={i} type="button"
+                                        onClick={() => setSplitPage(i + 1)}
+                                        className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${splitPage === i + 1 ? "bg-violet-100 text-violet-700" : "text-muted-foreground hover:bg-muted"}`}>
+                                        {p.name || `#${i + 1}`}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     <div className="px-6 py-5 font-mono text-xs max-h-[70vh] overflow-y-auto">
-                        {receiptContent}
+                        {hasSplit && splitPage > 0
+                            ? receiptContent(receipt.splitPayers[splitPage - 1])
+                            : receiptContent()}
                     </div>
 
                     <div className="flex gap-2 border-t border-border px-5 py-4">
@@ -336,7 +401,11 @@ export default function ReceiptModal({
 
             {/* ─── Tampilan print — Portal langsung ke body agar tidak ada extra space ─── */}
             {ReactDOM.createPortal(
-                <div className="print-only-receipt">{receiptContent}</div>,
+                <div className="print-only-receipt">
+                    {hasSplit && splitPage > 0
+                        ? receiptContent(receipt.splitPayers[splitPage - 1])
+                        : receiptContent()}
+                </div>,
                 document.body,
             )}
         </>

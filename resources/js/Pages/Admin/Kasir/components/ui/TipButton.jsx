@@ -32,7 +32,7 @@ export default function TipButton({
     label,
     icon: Icon,
     onClick,
-    side = "top",
+    side = "buttom",
     variant = "ghost",
     size = "md",
     active = false,
@@ -52,7 +52,7 @@ export default function TipButton({
                 onClick={onClick}
                 disabled={disabled}
                 aria-label={label}
-                className={`inline-flex shrink-0 items-center justify-center transition ${s.box} ${variantClass} disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
+                className={`inline-flex shrink-0 items-center justify-left transition justify-center ${s.box} ${variantClass} disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
             >
                 {Icon && <Icon size={s.icon} strokeWidth={2} />}
             </button>

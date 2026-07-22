@@ -233,7 +233,7 @@ export default function KasirLayout({
     /* ── order context row: order type + customer/table/delivery ── */
     const orderContextRow = (
         <div className="border-b border-border bg-card px-3.5 py-2.5">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between lg:justify-end gap-2">
                 {/* LEFT group: order type + customer + table + delivery */}
                 <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden min-w-0">
                     {/* Order type toggle */}
@@ -660,9 +660,8 @@ export default function KasirLayout({
                 className={`kasir-main-content flex ${topPadding} transition-all duration-300`}
             >
                 {/* LEFT: product panel */}
-                <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl  ">
+                <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden md:p-4">
                     {shiftBanner}
-                    {orderContextRow}
                     {showSearch && (searchBar || defaultSearchBar)}
                     {categoryChips}
                     {mainContent}
@@ -695,8 +694,8 @@ export default function KasirLayout({
             <aside
                 className="fixed right-0 z-30 flex flex-col border-l border-border bg-card shadow-xl max-md:hidden"
                 style={{
-                    top: isFullscreen ? "0" : "65px",
-                    height: isFullscreen ? "100vh" : "calc(100vh - 65px)",
+                    top: isFullscreen ? "0" : "56px",
+                    height: isFullscreen ? "100vh" : "calc(100vh - 56px)",
                     width: `${k.sidebarWidth}px`,
                 }}
             >
@@ -801,30 +800,83 @@ export default function KasirLayout({
                 </div>
 
                 {/* Bottom: aksi cepat + totals + pay (pinned) */}
-                <div className="shrink-0 space-y-3 border-t border-border bg-card px-4 py-3">
-                    {/* Aksi cepat: Catatan + Diskon */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setShowNoteModal(true)}
-                            className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[13px] font-semibold transition ${noteActive ? "border-success/30 bg-success/10 text-success" : "border-border bg-card text-muted-foreground hover:bg-muted/50"}`}
-                        >
-                            <MessageSquare size={15} />
-                            Catatan
-                            {noteActive && (
-                                <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                            )}
+                <div className="shrink-0 border-t border-border bg-card px-4 py-2.5 space-y-2.5">
+
+                    {/* ── 1 baris: Pelanggan + Diantar + Info + Meja + Catatan + Diskon ── */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+
+                        {/* Pelanggan */}
+                        {selectedCustomerObj ? (
+                            <button type="button" onClick={() => setShowCustomerModal(true)}
+                                className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80">
+                                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
+                                    {selectedCustomerObj.name?.charAt(0) ?? "?"}
+                                </span>
+                                <span className="max-w-[60px] truncate">{selectedCustomerObj.name}</span>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); k.setSelectedCustomer(""); k.setCustomerSearch(""); }}
+                                    className="ml-0.5 text-muted-foreground/50 hover:text-destructive">
+                                    <X size={10} strokeWidth={2.5} />
+                                </button>
+                            </button>
+                        ) : (
+                            <button type="button" onClick={() => setShowCustomerModal(true)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:border-foreground/30 hover:text-foreground">
+                                <UserRound size={12} />
+                                <span>Tamu</span>
+                            </button>
+                        )}
+
+                        <span className="h-3.5 w-px bg-border" />
+
+                        {/* Toggle Diantar */}
+                        <label className="inline-flex items-center gap-1 cursor-pointer select-none">
+                            <input type="checkbox" checked={isDelivery}
+                                onChange={(e) => k.handleOrderTypeChange(e.target.checked ? "delivery" : "takeaway")}
+                                className="h-3 w-3 rounded border-border accent-primary" />
+                            <span className="text-[11px] font-medium text-foreground">Antar</span>
+                        </label>
+
+                        {/* Info Kirim */}
+                        {isDelivery && (
+                            <button type="button" onClick={() => setShowInfoModal(true)}
+                                className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
+                                    ${hasDeliveryInfo ? "bg-muted text-foreground hover:bg-muted/80" : "border border-dashed border-warning text-warning hover:bg-warning/5"}`}>
+                                <Truck size={12} />
+                                <span className="max-w-[70px] truncate">
+                                    {hasDeliveryInfo ? (k.deliveryCustomerName || "Kirim") : "Info *"}
+                                </span>
+                            </button>
+                        )}
+
+                        {/* Meja — FnB */}
+                        {showTableSelector && k.selectedTable && (
+                            <button type="button"
+                                onClick={() => { k.setSelectedTable(""); k.setTableSearch(""); }}
+                                className="inline-flex items-center gap-1 rounded-lg bg-muted px-1.5 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80">
+                                <LayoutGrid size={11} />
+                                <span>{tables.find((t) => String(t.id) === String(k.selectedTable))?.table_number}</span>
+                                <X size={10} strokeWidth={2.5} className="text-muted-foreground/50" />
+                            </button>
+                        )}
+
+                        <span className="h-3.5 w-px bg-border" />
+
+                        {/* Catatan */}
+                        <button type="button" onClick={() => setShowNoteModal(true)}
+                            className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
+                                ${noteActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                            <MessageSquare size={12} />
+                            <span>Catatan</span>
+                            {noteActive && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => setShowAdjustModal(true)}
-                            className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[13px] font-semibold transition ${adjustActive ? "border-success/30 bg-success/10 text-success" : "border-border bg-card text-muted-foreground hover:bg-muted/50"}`}
-                        >
-                            <Tag size={15} />
-                            Diskon
-                            {adjustActive && (
-                                <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                            )}
+
+                        {/* Diskon */}
+                        <button type="button" onClick={() => setShowAdjustModal(true)}
+                            className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
+                                ${adjustActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                            <Tag size={12} />
+                            <span>Diskon</span>
+                            {adjustActive && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
                         </button>
                     </div>
 
@@ -1022,24 +1074,75 @@ export default function KasirLayout({
                 </div>
 
                 {/* Bottom: totals + pay */}
-                <div className="shrink-0 space-y-3 border-t border-border bg-card px-4 py-3">
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setShowNoteModal(true)}
-                            className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[13px] font-semibold transition ${noteActive ? "border-success/30 bg-success/10 text-success" : "border-border bg-card text-muted-foreground hover:bg-muted/50"}`}
-                        >
-                            <MessageSquare size={15} />
-                            Catatan
+                <div className="shrink-0 border-t border-border bg-card px-4 py-2.5 space-y-2.5">
+
+                    {/* 1 baris: Pelanggan + Diantar + Info + Meja + Catatan + Diskon */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        {selectedCustomerObj ? (
+                            <button type="button" onClick={() => setShowCustomerModal(true)}
+                                className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80">
+                                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
+                                    {selectedCustomerObj.name?.charAt(0) ?? "?"}
+                                </span>
+                                <span className="max-w-[60px] truncate">{selectedCustomerObj.name}</span>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); k.setSelectedCustomer(""); k.setCustomerSearch(""); }}
+                                    className="ml-0.5 text-muted-foreground/50 hover:text-destructive">
+                                    <X size={10} strokeWidth={2.5} />
+                                </button>
+                            </button>
+                        ) : (
+                            <button type="button" onClick={() => setShowCustomerModal(true)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:border-foreground/30 hover:text-foreground">
+                                <UserRound size={12} />
+                                <span>Tamu</span>
+                            </button>
+                        )}
+
+                        <span className="h-3.5 w-px bg-border" />
+
+                        <label className="inline-flex items-center gap-1 cursor-pointer select-none">
+                            <input type="checkbox" checked={isDelivery}
+                                onChange={(e) => k.handleOrderTypeChange(e.target.checked ? "delivery" : "takeaway")}
+                                className="h-3 w-3 rounded border-border accent-primary" />
+                            <span className="text-[11px] font-medium text-foreground">Antar</span>
+                        </label>
+
+                        {isDelivery && (
+                            <button type="button" onClick={() => setShowInfoModal(true)}
+                                className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
+                                    ${hasDeliveryInfo ? "bg-muted text-foreground hover:bg-muted/80" : "border border-dashed border-warning text-warning hover:bg-warning/5"}`}>
+                                <Truck size={12} />
+                                <span className="max-w-[70px] truncate">
+                                    {hasDeliveryInfo ? (k.deliveryCustomerName || "Kirim") : "Info *"}
+                                </span>
+                            </button>
+                        )}
+
+                        {showTableSelector && k.selectedTable && (
+                            <button type="button"
+                                onClick={() => { k.setSelectedTable(""); k.setTableSearch(""); }}
+                                className="inline-flex items-center gap-1 rounded-lg bg-muted px-1.5 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80">
+                                <LayoutGrid size={11} />
+                                <span>{tables.find((t) => String(t.id) === String(k.selectedTable))?.table_number}</span>
+                                <X size={10} strokeWidth={2.5} className="text-muted-foreground/50" />
+                            </button>
+                        )}
+
+                        <span className="h-3.5 w-px bg-border" />
+
+                        <button type="button" onClick={() => setShowNoteModal(true)}
+                            className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
+                                ${noteActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                            <MessageSquare size={12} />
+                            <span>Catatan</span>
                             {noteActive && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => setShowAdjustModal(true)}
-                            className={`flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[13px] font-semibold transition ${adjustActive ? "border-success/30 bg-success/10 text-success" : "border-border bg-card text-muted-foreground hover:bg-muted/50"}`}
-                        >
-                            <Tag size={15} />
-                            Diskon
+
+                        <button type="button" onClick={() => setShowAdjustModal(true)}
+                            className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition
+                                ${adjustActive ? "bg-success/10 text-success" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                            <Tag size={12} />
+                            <span>Diskon</span>
                             {adjustActive && <span className="h-1.5 w-1.5 rounded-full bg-success" />}
                         </button>
                     </div>
@@ -1216,6 +1319,7 @@ export default function KasirLayout({
                     selectedCustomer={k.selectedCustomer}
                     customers={k.customers}
                     onSelectCustomer={k.setSelectedCustomer}
+                    cartItems={k.cart}
                 />
             )}
             {k.showReceipt && k.receiptData && (
@@ -1282,8 +1386,8 @@ export default function KasirLayout({
     }
 
     return (
-        <AuthenticatedLayout header={headerContent}>
-            {posContent("h-[calc(100vh-65px)] sm:h-[calc(100vh-73px)]")}
+        <AuthenticatedLayout header={headerContent} noPadding>
+            {posContent("h-[calc(100vh-56px)]")}
         </AuthenticatedLayout>
     );
 }

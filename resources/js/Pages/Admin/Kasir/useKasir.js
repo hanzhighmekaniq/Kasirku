@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { router } from "@inertiajs/react";
 import { enqueue } from "@/Services/mutationQueue";
+import { playAddToCart, playRemoveItem, playQtyUp, playQtyDown, playPaymentSuccess, playError } from "@/Hooks/useSound";
 import {
     getPosModeConfig,
     modeHasFeature,
@@ -648,6 +649,7 @@ export default function useKasir({
                 note: itemNote,
             };
             const withPromo = recalcPromo(newItem);
+            playAddToCart();
             return [...prev, withPromo];
         });
     };
@@ -735,10 +737,14 @@ export default function useKasir({
                 })
                 .filter((c) => c.qty > 0);
         });
+        if (delta > 0) playQtyUp();
+        else playQtyDown();
     };
 
-    const removeItem = (cartId) =>
+    const removeItem = (cartId) => {
+        playRemoveItem();
         setCart((prev) => prev.filter((c) => c.cartId !== cartId));
+    };
 
     const clearCart = () => {
         setCart([]);
@@ -1205,7 +1211,7 @@ export default function useKasir({
     };
 
     /* ── submit ── */
-    const handleConfirmPayment = async (payments, change) => {
+    const handleConfirmPayment = async (payments, change, splitMeta = null) => {
         // Catatan: enforcement shift ditangani di layer lain — tombol Bayar
         // dinonaktifkan oleh KasirLayout saat shift wajib tapi belum dibuka,
         // dan backend (middleware ensure.shift) mengembalikan 422 untuk kasir
@@ -1511,8 +1517,20 @@ export default function useKasir({
                     startTime:  new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
                     orderType:  orderType,
                 } : null,
+                // Split bill meta
+                splitPayers: splitMeta?.payers?.map(p => ({
+                    name: p.name || null,
+                    customer_id: p.customer_id || null,
+                    amount: Number(p.amount) || 0,
+                    paid_amount: Number(p.paid_amount) || Number(p.amount) || 0,
+                    change_amount: Math.max(0, (Number(p.paid_amount) || Number(p.amount)) - Number(p.amount)),
+                    methodName: paymentMethods.find(m => String(m.id) === String(p.method_id))?.name ?? null,
+                    items: p.items ?? [],
+                })) ?? null,
+                splitReceiptMode: splitMeta?.splitReceipt ? "per_payer" : "1",
             });
 
+            playPaymentSuccess();
             setShowReceipt(true);
             setHistoryList((prev) => [
                 {
@@ -1679,6 +1697,7 @@ export default function useKasir({
                         } : null,
                         isOffline: true,
                     });
+                    playPaymentSuccess();
                     setShowReceipt(true);
                     clearCart();
                 } catch (queueErr) {
@@ -1847,6 +1866,7 @@ export default function useKasir({
                             } : null,
                             isOffline: true,
                         });
+                        playPaymentSuccess();
                         setShowReceipt(true);
                         clearCart();
                     } catch (queueErr) {
@@ -1980,6 +2000,7 @@ export default function useKasir({
         });
 
         setPgModalData(null);
+        playPaymentSuccess();
         setShowReceipt(true);
         setHistoryList((prev) => [
             {

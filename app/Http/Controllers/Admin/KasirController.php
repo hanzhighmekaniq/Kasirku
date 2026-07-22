@@ -863,6 +863,11 @@ class KasirController extends Controller
                         'paid_at' => $now,
                         'amount' => $pay['amount'],
                         'reference_no' => $pay['reference_no'] ?? null,
+                        'payer_name' => $pay['payer_name'] ?? null,
+                        'payer_customer_id' => $pay['payer_customer_id'] ?? null,
+                        'paid_amount' => $pay['paid_amount'] ?? null,
+                        'change_amount' => $pay['change_amount'] ?? null,
+                        'is_split' => ! empty($pay['is_split']),
                     ]);
 
                     // Track debt payments

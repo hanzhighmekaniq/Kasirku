@@ -145,111 +145,11 @@ export default function FnBKasir(props) {
 
     /* ══════════════════════════════════════════════
        SEARCH BAR (override default KasirLayout)
+       Hanya search input + delivery extra fields
+       Order type + customer sudah ada di keranjang
     ══════════════════════════════════════════════ */
     const searchBar = (
-        <div className="shrink-0 space-y-3 border-b border-border bg-card px-4 pt-3 pb-3">
-
-            {/* Row 1: Order type + table/extra + customer */}
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-
-                {/* Order type pill + context */}
-                <div className="lg:col-span-2 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-muted/40 px-3 py-2.5 shadow-sm">
-                    {/* Pill switcher */}
-                    <div className="inline-flex rounded-xl bg-muted p-0.5 sm:p-1 gap-0.5">
-                        {orderTypes.map((o) => (
-                            <button
-                                key={o.v}
-                                type="button"
-                                onClick={() => k.handleOrderTypeChange(o.v)}
-                                className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 text-[11px] sm:text-[13px] font-semibold transition-all
-                                    ${k.orderType === o.v
-                                        ? "bg-card text-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground"}`}
-                            >
-                                <span className="hidden sm:inline">{o.icon}</span>
-                                {o.l}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Dine In: meja */}
-                    {k.orderType === "dine_in" && (
-                        k.selectedTable ? (
-                            <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5">
-                                <Grid3x3 size={14} className="text-primary" />
-                                <span className="text-[13px] font-medium text-card-foreground">Meja</span>
-                                <span className="text-[13px] font-bold text-foreground">
-                                    {tables.find((t) => String(t.id) === String(k.selectedTable))?.table_number}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => { k.setSelectedTable(""); k.setTableSearch?.(""); }}
-                                    className="ml-1 rounded-full p-0.5 text-muted-foreground/50 hover:text-destructive"
-                                >
-                                    <X size={12} strokeWidth={2.5} />
-                                </button>
-                            </div>
-                        ) : (
-                            <button
-                                type="button"
-                                className="flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-[13px] text-muted-foreground hover:border-primary hover:bg-primary/5 hover:text-primary transition"
-                            >
-                                <Grid3x3 size={14} />
-                                <span className="font-medium">Meja</span>
-                                <span className="font-bold text-foreground">—</span>
-                            </button>
-                        )
-                    )}
-
-                    {/* Take Away: badge */}
-                    {k.orderType === "takeaway" && (
-                        <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5">
-                            <ShoppingBag size={14} className="text-muted-foreground" />
-                            <span className="text-[13px] text-muted-foreground">No.</span>
-                            <span className="text-[13px] font-bold text-foreground">TA-024</span>
-                        </div>
-                    )}
-
-                    {/* Delivery: platform chips */}
-                    {k.orderType === "delivery" && (
-                        <div className="flex flex-wrap items-center gap-1.5">
-                            {deliveryPlatforms.map((p) => (
-                                <button
-                                    key={p}
-                                    type="button"
-                                    onClick={() => setDeliveryPlatform(p)}
-                                    className={`rounded-lg border px-2.5 py-1 text-[12px] font-medium transition
-                                        ${deliveryPlatform === p
-                                            ? "border-primary/40 bg-primary/10 text-primary font-semibold"
-                                            : "border-border text-muted-foreground hover:bg-muted/50"}`}
-                                >
-                                    {p}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Customer selector */}
-                <button
-                    type="button"
-                    onClick={() => k.setShowCustomerModal?.(true)}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2.5 text-left shadow-sm transition hover:border-primary/40 hover:bg-primary/5"
-                >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                        {selectedCustomerObj
-                            ? <span className="text-sm font-bold text-primary">{selectedCustomerObj.name?.charAt(0)}</span>
-                            : <UserRound size={18} />}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <p className="text-[11px] text-muted-foreground">Pelanggan</p>
-                        <p className="truncate text-[13px] font-semibold text-foreground">
-                            {selectedCustomerObj ? selectedCustomerObj.name : "Pelanggan Umum"}
-                        </p>
-                    </div>
-                    <ChevronRight size={15} className="shrink-0 text-muted-foreground/50" />
-                </button>
-            </div>
+        <div className="shrink-0 space-y-2 border-b border-border bg-card px-4 pt-3 pb-3">
 
             {/* Delivery extra fields */}
             {k.orderType === "delivery" && (

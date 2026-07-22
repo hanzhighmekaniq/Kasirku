@@ -984,7 +984,7 @@ function SidebarContent({
 }
 
 /* ─── Main layout ────────────────────────────────────────────── */
-export default function AuthenticatedLayout({ header, children }) {
+export default function AuthenticatedLayout({ header, children, noPadding = false }) {
     const {
         auth,
         currentStore,
@@ -1230,10 +1230,12 @@ export default function AuthenticatedLayout({ header, children }) {
                     </div>
                 )}
 
-                <main className="flex-1 p-1 md:p-4 bg-background">
-                    <div className="mx-auto w-full max-w-[1920px]">
-                        {children}
-                    </div>
+                <main className={noPadding ? "flex-1 flex flex-col overflow-hidden bg-background" : "flex-1 p-1 md:p-4 bg-background"}>
+                    {noPadding ? children : (
+                        <div className="mx-auto w-full max-w-[1920px]">
+                            {children}
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

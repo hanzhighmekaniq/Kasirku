@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { fmt, PG_METHOD_LABELS, findPgPaymentMethod } from "./helpers";
+
+/* ── uid kecil untuk split payers ── */
+let _uid = 0;
+const uid = () => ++_uid;
 
 export default function PaymentModal({
     grandTotal,
@@ -13,6 +17,7 @@ export default function PaymentModal({
     selectedCustomer = null,
     customers = [],
     onSelectCustomer,
+    cartItems = [],
 }) {
     const displayTotal = roundedGrandTotal ?? grandTotal;
 
@@ -20,7 +25,7 @@ export default function PaymentModal({
     const offlineMethods = paymentMethods.filter((m) => m.type !== "debt");
     const debtMethod = paymentMethods.find((m) => m.type === "debt");
 
-    const [mode, setMode] = useState(null); // null = choose, 'offline', 'online', 'debt'
+    const [mode, setMode] = useState(null); // null = choose, 'offline', 'online', 'debt', 'split'
     const [payments, setPayments] = useState([
         {
             method_id: offlineMethods[0]?.id ?? "",
@@ -31,6 +36,141 @@ export default function PaymentModal({
             pg_method: "",
         },
     ]);
+
+    // ── Split Bill Wizard state ────────────────────────────────────
+    // splitStep: 1 = pilih mode, 2 = jumlah orang, 3 = assign item, 4 = bayar
+    const [splitStep, setSplitStep] = useState(1);
+    const [splitMode, setSplitMode] = useState("item"); // 'item' | 'equal'
+    const [splitReceiptMode, setSplitReceiptMode] = useState("per_payer"); // '1' | 'per_payer'
+
+    const makePayer = (name) => ({
+        _id: uid(),
+        name,
+        customer_id: null,
+        customerQuery: "",
+        showCustomerSearch: false,
+        method_id: offlineMethods[0]?.id ?? "",
+        assignments: [], // [{ cartId, unitIndex }]
+        subtotal: 0,
+        discount: 0,
+        tax: 0,
+        service: 0,
+        total: 0,
+        paid_amount: "",
+        paid: false,
+    });
+
+    const [payers, setPayers] = useState([]);
+
+    // Total unit assignable (qty dipecah per unit)
+    const totalUnits = useMemo(
+        () => cartItems.reduce((s, it) => s + Number(it.qty || 1), 0),
+        [cartItems],
+    );
+    const cartSubtotal = useMemo(
+        () => cartItems.reduce((s, it) => s + Number(it.price) * Number(it.qty), 0),
+        [cartItems],
+    );
+    // Total diskon & pajak yang berlaku di transaksi (dari total keseluruhan)
+    const totalDiscTax = Math.max(0, cartSubtotal - displayTotal); // net effect, dipakai proporsional sederhana
+
+    const updatePayer = (id, patch) =>
+        setPayers((prev) => prev.map((p) => (p._id === id ? { ...p, ...patch } : p)));
+
+    const removePayer = (id) =>
+        setPayers((prev) => prev.filter((p) => p._id !== id));
+
+    /** Set jumlah orang — generate ulang array payers, pertahankan nama yang sudah diketik jika masih ada */
+    const setPayerCount = (count) => {
+        setPayers((prev) => {
+            const next = [];
+            for (let i = 0; i < count; i++) {
+                if (prev[i]) {
+                    next.push(prev[i]);
+                } else {
+                    next.push(makePayer(`Orang ${i + 1}`));
+                }
+            }
+            return next;
+        });
+    };
+
+    /** Assign 1 unit item ke payer tertentu (atau null untuk "Belum") */
+    const assignUnit = (cartId, unitIndex, payerId) => {
+        setPayers((prev) =>
+            prev.map((p) => {
+                const filtered = p.assignments.filter(
+                    (a) => !(a.cartId === cartId && a.unitIndex === unitIndex),
+                );
+                if (String(p._id) === String(payerId)) {
+                    return { ...p, assignments: [...filtered, { cartId, unitIndex }] };
+                }
+                return { ...p, assignments: filtered };
+            }),
+        );
+    };
+
+    const getUnitOwner = (cartId, unitIndex) =>
+        payers.find((p) => p.assignments.some((a) => a.cartId === cartId && a.unitIndex === unitIndex));
+
+    const assignedUnitsCount = payers.reduce((s, p) => s + p.assignments.length, 0);
+    const allUnitsAssigned = assignedUnitsCount === totalUnits && totalUnits > 0;
+
+    /** Hitung subtotal per payer dari assignments (by-item mode) lalu alokasikan diskon/pajak proporsional */
+    const recalcSplitFromItems = () => {
+        const itemMap = {};
+        cartItems.forEach((item) => { itemMap[item.cartId] = item; });
+
+        setPayers((prev) => {
+            const withSubtotal = prev.map((p) => {
+                const subtotal = p.assignments.reduce((s, a) => {
+                    const it = itemMap[a.cartId];
+                    return s + (it ? Number(it.price) : 0);
+                }, 0);
+                return { ...p, subtotal };
+            });
+
+            const sumSubtotal = withSubtotal.reduce((s, p) => s + p.subtotal, 0) || 1;
+            const totalAdjust = displayTotal - sumSubtotal; // bisa negatif (diskon) atau positif (pajak/service)
+
+            let allocatedSoFar = 0;
+            return withSubtotal.map((p, i) => {
+                const share = p.subtotal / sumSubtotal;
+                let adjust = Math.round(share * totalAdjust);
+                if (i === withSubtotal.length - 1) {
+                    // sisa pembulatan masuk ke orang terakhir
+                    adjust = totalAdjust - allocatedSoFar;
+                } else {
+                    allocatedSoFar += adjust;
+                }
+                const total = Math.max(0, p.subtotal + adjust);
+                return { ...p, discount: adjust < 0 ? -adjust : 0, tax: adjust > 0 ? adjust : 0, total };
+            });
+        });
+    };
+
+    /** Bagi rata — dipakai untuk mode 'equal' */
+    const applyEqualSplit = () => {
+        setPayers((prev) => {
+            const n = prev.length;
+            if (n === 0) return prev;
+            const each = Math.floor(displayTotal / n);
+            const remainder = displayTotal - each * n;
+            return prev.map((p, i) => {
+                const total = i === n - 1 ? each + remainder : each;
+                return { ...p, subtotal: total, discount: 0, tax: 0, total };
+            });
+        });
+    };
+
+    const goSplit = () => {
+        setSplitStep(1);
+        setSplitMode("item");
+        setPayers([]);
+        setMode("split");
+    };
+
+    const splitAllPaid = payers.length > 0 && payers.every((p) => p.paid);
 
     const customer = customers.find(
         (c) => String(c.id) === String(selectedCustomer),
@@ -113,6 +253,8 @@ export default function PaymentModal({
                 pg_method: "",
             },
         ]);
+        setSplitStep(1);
+        setPayers([]);
         setMode(null);
     };
 
@@ -212,7 +354,9 @@ export default function PaymentModal({
                                   ? "Pembayaran Offline"
                                   : mode === "debt"
                                     ? "Hutang / Kasbon"
-                                    : "Pembayaran Online"}
+                                    : mode === "split"
+                                      ? "Split Bill"
+                                      : "Pembayaran Online"}
                         </h3>
                     </div>
                     <button
@@ -360,6 +504,38 @@ export default function PaymentModal({
                                 </svg>
                             </button>
                         )}
+
+                        {/* Split Bill */}
+                        <button
+                            type="button"
+                            onClick={goSplit}
+                            className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-violet-400 hover:bg-violet-50 hover:shadow-md"
+                        >
+                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-2xl transition group-hover:bg-violet-200">
+                                🧾
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-base font-bold text-foreground group-hover:text-violet-600">
+                                    Split Bill
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    Bayar terpisah per orang, struk per orang
+                                </p>
+                            </div>
+                            <svg
+                                className="h-5 w-5 text-muted-foreground/30 group-hover:text-violet-500 transition"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                                />
+                            </svg>
+                        </button>
                     </div>
                 )}
 
@@ -859,6 +1035,330 @@ export default function PaymentModal({
                                 </div>
                             </div>
                         )}
+                    </>
+                )}
+
+                {/* ═══ MODE: SPLIT BILL — WIZARD 4 STEP ═══ */}
+                {mode === "split" && (
+                    <>
+                        {/* Step indicator */}
+                        <div className="shrink-0 flex items-center gap-1.5 px-5 py-3 border-b border-border">
+                            {[1, 2, 3, 4].map((s) => (
+                                <div key={s} className="flex items-center gap-1.5 flex-1">
+                                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition
+                                        ${splitStep === s ? "bg-violet-600 text-white" : splitStep > s ? "bg-violet-100 text-violet-600" : "bg-muted text-muted-foreground/50"}`}>
+                                        {splitStep > s ? "✓" : s}
+                                    </span>
+                                    {s < 4 && <span className={`h-0.5 flex-1 rounded ${splitStep > s ? "bg-violet-300" : "bg-muted"}`} />}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* ── STEP 1: Pilih Mode ── */}
+                        {splitStep === 1 && (
+                            <div className="flex-1 overflow-y-auto min-h-0 px-5 py-6 space-y-4">
+                                <p className="text-center text-sm font-semibold text-foreground">Bagaimana cara membagi bill?</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button type="button"
+                                        onClick={() => { setSplitMode("item"); setSplitStep(2); }}
+                                        className="group flex flex-col items-center gap-2 rounded-2xl border-2 border-border bg-card p-5 transition hover:border-violet-400 hover:bg-violet-50">
+                                        <span className="text-3xl">🧾</span>
+                                        <p className="text-sm font-bold text-foreground group-hover:text-violet-600">Per Item</p>
+                                        <p className="text-[11px] text-muted-foreground text-center">Bayar sesuai menu yang dipilih</p>
+                                    </button>
+                                    <button type="button"
+                                        onClick={() => { setSplitMode("equal"); setSplitStep(2); }}
+                                        className="group flex flex-col items-center gap-2 rounded-2xl border-2 border-border bg-card p-5 transition hover:border-violet-400 hover:bg-violet-50">
+                                        <span className="text-3xl">⚖️</span>
+                                        <p className="text-sm font-bold text-foreground group-hover:text-violet-600">Bagi Rata</p>
+                                        <p className="text-[11px] text-muted-foreground text-center">Total dibagi rata per orang</p>
+                                    </button>
+                                </div>
+                                <p className="text-center text-[12px] text-muted-foreground">
+                                    Total transaksi: <span className="font-bold text-foreground">{fmt(displayTotal)}</span>
+                                </p>
+                            </div>
+                        )}
+
+                        {/* ── STEP 2: Jumlah Orang + Nama ── */}
+                        {splitStep === 2 && (
+                            <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-4">
+                                <p className="text-sm font-semibold text-foreground">Berapa orang?</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    {[2, 3, 4, 5, 6].map((n) => (
+                                        <button key={n} type="button"
+                                            onClick={() => setPayerCount(n)}
+                                            className={`h-10 w-10 rounded-xl border-2 text-sm font-bold transition
+                                                ${payers.length === n ? "border-violet-500 bg-violet-100 text-violet-700" : "border-border text-muted-foreground hover:border-violet-300"}`}>
+                                            {n}
+                                        </button>
+                                    ))}
+                                    <button type="button"
+                                        onClick={() => setPayerCount(Math.min(10, payers.length + 1 || 2))}
+                                        className="h-10 w-10 rounded-xl border-2 border-dashed border-border text-sm font-bold text-muted-foreground transition hover:border-violet-300">
+                                        +
+                                    </button>
+                                </div>
+
+                                {payers.length > 0 && (
+                                    <div className="space-y-2">
+                                        {payers.map((payer, i) => (
+                                            <div key={payer._id} className="space-y-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[11px] font-bold text-violet-700">
+                                                        {i + 1}
+                                                    </span>
+                                                    <input type="text"
+                                                        placeholder={`Orang ${i + 1}`}
+                                                        value={payer.name}
+                                                        onChange={(e) => updatePayer(payer._id, { name: e.target.value })}
+                                                        className="flex-1 rounded-xl border border-border bg-background px-3 py-1.5 text-[13px] outline-none focus:border-violet-400" />
+                                                    <button type="button"
+                                                        onClick={() => updatePayer(payer._id, { showCustomerSearch: !payer.showCustomerSearch })}
+                                                        className="rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-muted transition"
+                                                        title="Cari pelanggan">
+                                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75l-2.489-2.489m0 0a3.375 3.375 0 10-4.773-4.773 3.375 3.375 0 004.773 4.773z" />
+                                                        </svg>
+                                                    </button>
+                                                    {payers.length > 2 && (
+                                                        <button type="button" onClick={() => removePayer(payer._id)}
+                                                            className="rounded-lg p-1.5 text-destructive/60 hover:bg-destructive/10 transition">
+                                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {payer.showCustomerSearch && (
+                                                    <div className="ml-9 space-y-1.5">
+                                                        <input type="text" placeholder="Cari pelanggan..."
+                                                            value={payer.customerQuery}
+                                                            onChange={(e) => updatePayer(payer._id, { customerQuery: e.target.value })}
+                                                            className="w-full rounded-xl border border-border bg-background px-3 py-1.5 text-[12px] outline-none focus:border-violet-400" />
+                                                        <div className="max-h-28 overflow-y-auto rounded-xl border border-border bg-card divide-y divide-border">
+                                                            {customers.filter((c) => {
+                                                                const q = (payer.customerQuery || "").toLowerCase();
+                                                                return !q || c.name?.toLowerCase().includes(q) || c.phone?.includes(q);
+                                                            }).slice(0, 5).map((c) => (
+                                                                <button key={c.id} type="button"
+                                                                    onClick={() => updatePayer(payer._id, { customer_id: c.id, name: c.name, showCustomerSearch: false })}
+                                                                    className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-muted/50">
+                                                                    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[10px] font-bold text-violet-700">
+                                                                        {c.name?.charAt(0)}
+                                                                    </span>
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-[12px] font-medium text-foreground truncate">{c.name}</p>
+                                                                        <p className="text-[10px] text-muted-foreground">{c.phone}</p>
+                                                                    </div>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ── STEP 3: Assign Item per Unit (hanya mode 'item') ── */}
+                        {splitStep === 3 && splitMode === "item" && (
+                            <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-semibold text-foreground">Assign menu ke siapa?</p>
+                                    <span className={`text-[11px] font-semibold ${allUnitsAssigned ? "text-success" : "text-warning"}`}>
+                                        {assignedUnitsCount}/{totalUnits} unit terbagi
+                                    </span>
+                                </div>
+                                {cartItems.map((item) => {
+                                    const qty = Number(item.qty) || 1;
+                                    return (
+                                        <div key={item.cartId} className="rounded-xl border border-border bg-muted/20 p-3 space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[12.5px] font-semibold text-foreground">{item.name}</p>
+                                                <p className="text-[11px] text-muted-foreground">{fmt(item.price)}/unit</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                {Array.from({ length: qty }).map((_, unitIndex) => {
+                                                    const owner = getUnitOwner(item.cartId, unitIndex);
+                                                    return (
+                                                        <div key={unitIndex} className="flex items-center gap-2">
+                                                            <span className={`w-14 shrink-0 text-[10.5px] font-medium ${owner ? "text-success" : "text-muted-foreground"}`}>
+                                                                Unit {unitIndex + 1}
+                                                            </span>
+                                                            <select
+                                                                value={owner?._id ?? ""}
+                                                                onChange={(e) => assignUnit(item.cartId, unitIndex, e.target.value || null)}
+                                                                className={`flex-1 rounded-lg border text-[11.5px] px-2 py-1.5 outline-none transition
+                                                                    ${owner ? "border-success/30 bg-success/5 text-foreground" : "border-warning/40 bg-warning/5 text-warning"}`}>
+                                                                <option value="">— Belum —</option>
+                                                                {payers.map((p, i) => (
+                                                                    <option key={p._id} value={p._id}>{p.name || `Orang ${i + 1}`}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* ── STEP 4: Bayar + Struk ── */}
+                        {splitStep === 4 && (
+                            <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-3">
+                                <div className="rounded-2xl border border-border bg-muted/30 p-3.5 space-y-2">
+                                    <p className="text-[12px] font-semibold text-foreground">Struk</p>
+                                    {[["per_payer", `Struk per orang (${payers.length} struk)`], ["1", "1 struk total"]].map(([v, l]) => (
+                                        <label key={v} className="flex items-center gap-2.5 cursor-pointer">
+                                            <input type="radio" name="splitReceipt" value={v}
+                                                checked={splitReceiptMode === v}
+                                                onChange={() => setSplitReceiptMode(v)}
+                                                className="accent-violet-600" />
+                                            <span className="text-[13px] text-foreground">{l}</span>
+                                        </label>
+                                    ))}
+                                </div>
+
+                                {payers.map((payer, i) => {
+                                    const selectedMethod = offlineMethods.find((m) => String(m.id) === String(payer.method_id));
+                                    const isCash = selectedMethod?.type === "cash";
+                                    const paidAmt = Number(payer.paid_amount) || 0;
+                                    const payerChange = isCash ? Math.max(0, paidAmt - payer.total) : 0;
+                                    const itemCount = payer.assignments?.length ?? 0;
+                                    return (
+                                        <div key={payer._id}
+                                            className={`rounded-2xl border-2 p-4 space-y-3 transition ${payer.paid ? "border-success/30 bg-success/5" : "border-border bg-card"}`}>
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-sm font-bold text-foreground">{payer.name || `Orang ${i + 1}`}</p>
+                                                    <p className="text-[11px] text-muted-foreground">
+                                                        {splitMode === "item" ? `${itemCount} item · ` : ""}Tagihan {fmt(payer.total)}
+                                                    </p>
+                                                </div>
+                                                <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                                                    <input type="checkbox" checked={payer.paid}
+                                                        onChange={(e) => updatePayer(payer._id, { paid: e.target.checked })}
+                                                        className="h-4 w-4 rounded border-border accent-success" />
+                                                    <span className={`text-[12px] font-semibold ${payer.paid ? "text-success" : "text-muted-foreground"}`}>Sudah Bayar</span>
+                                                </label>
+                                            </div>
+
+                                            {splitMode === "item" && (payer.discount > 0 || payer.tax > 0) && (
+                                                <div className="flex gap-3 text-[11px] text-muted-foreground">
+                                                    {payer.discount > 0 && <span>Diskon −{fmt(payer.discount)}</span>}
+                                                    {payer.tax > 0 && <span>Pajak +{fmt(payer.tax)}</span>}
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <select
+                                                    value={payer.method_id}
+                                                    onChange={(e) => updatePayer(payer._id, { method_id: Number(e.target.value) })}
+                                                    className="rounded-xl border border-border bg-background px-3 py-2 text-[13px] outline-none focus:border-violet-400">
+                                                    {offlineMethods.map((m) => (
+                                                        <option key={m.id} value={m.id}>{m.name}</option>
+                                                    ))}
+                                                </select>
+                                                {isCash ? (
+                                                    <input type="number" min={0}
+                                                        placeholder={String(payer.total)}
+                                                        value={payer.paid_amount}
+                                                        onChange={(e) => updatePayer(payer._id, { paid_amount: e.target.value })}
+                                                        className="rounded-xl border border-border bg-background px-3 py-2 text-[13px] outline-none focus:border-violet-400" />
+                                                ) : (
+                                                    <div className="flex items-center rounded-xl bg-muted px-3 py-2 text-[13px] font-semibold text-muted-foreground">
+                                                        {fmt(payer.total)}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {isCash && payerChange > 0 && (
+                                                <div className="flex justify-between rounded-lg bg-success/10 px-3 py-1.5">
+                                                    <span className="text-[11px] text-success">Kembalian</span>
+                                                    <span className="text-[11px] font-bold text-success">{fmt(payerChange)}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+
+                                <div className="flex justify-between text-[12px] px-1">
+                                    <span className="text-muted-foreground">Terbayar</span>
+                                    <span className="font-semibold text-foreground">
+                                        {payers.filter((p) => p.paid).length}/{payers.length} orang
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── Footer navigasi wizard ── */}
+                        <div className="shrink-0 border-t border-border px-5 py-4 flex gap-2">
+                            {splitStep > 1 && (
+                                <button type="button"
+                                    onClick={() => {
+                                        if (splitStep === 3) setSplitStep(2);
+                                        else if (splitStep === 4) setSplitStep(splitMode === "item" ? 3 : 2);
+                                        else setSplitStep((s) => s - 1);
+                                    }}
+                                    className="rounded-xl border border-border px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted transition">
+                                    Kembali
+                                </button>
+                            )}
+
+                            {splitStep === 2 && (
+                                <button type="button"
+                                    disabled={payers.length < 2}
+                                    onClick={() => {
+                                        if (splitMode === "equal") {
+                                            applyEqualSplit();
+                                            setSplitStep(4);
+                                        } else {
+                                            setSplitStep(3);
+                                        }
+                                    }}
+                                    className="flex-1 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    Lanjut →
+                                </button>
+                            )}
+
+                            {splitStep === 3 && (
+                                <button type="button"
+                                    disabled={!allUnitsAssigned}
+                                    onClick={() => { recalcSplitFromItems(); setSplitStep(4); }}
+                                    className="flex-1 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {allUnitsAssigned ? "Lanjut →" : `Assign ${totalUnits - assignedUnitsCount} unit lagi`}
+                                </button>
+                            )}
+
+                            {splitStep === 4 && (
+                                <button type="button"
+                                    disabled={!splitAllPaid || submitting}
+                                    onClick={() => {
+                                        const splitPayments = payers.map((p) => ({
+                                            method_id: p.method_id,
+                                            amount: p.total,
+                                            reference_no: "",
+                                            is_pg: false,
+                                            pg_provider: "",
+                                            pg_method: "",
+                                            payer_name: p.name || null,
+                                            payer_customer_id: p.customer_id || null,
+                                            paid_amount: p.paid_amount || p.total,
+                                            change_amount: Math.max(0, (Number(p.paid_amount) || Number(p.total)) - Number(p.total)),
+                                            is_split: true,
+                                        }));
+                                        onConfirm(splitPayments, 0, { splitReceipt: splitReceiptMode === "per_payer", payers });
+                                    }}
+                                    className="flex-1 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {submitting ? "Memproses..." : splitAllPaid ? `Proses Split Bill — ${payers.length} Orang` : "Centang semua sudah bayar"}
+                                </button>
+                            )}
+                        </div>
                     </>
                 )}
 

@@ -12,7 +12,7 @@ export default function RetailKasir(props) {
         `shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition ${
             active
                 ? "bg-secondary text-secondary-foreground shadow-sm"
-                : "border border-border bg-card text-muted-foreground hover:border-secondary hover:text-secondary-foreground"
+                : "border border-border bg-card text-muted-foreground hover:border-secondary hover:text-secondary"
         }`;
 
     const categoryChips = (
@@ -56,7 +56,7 @@ export default function RetailKasir(props) {
             ) : (
                 <>
                     
-                    <div className="grid grid-cols-1 px-1 md:px-2 py-2 lg:py-3 gap-3 @xs:grid-cols-2 @md:grid-cols-3 @xl:grid-cols-4 @4xl:grid-cols-5">
+                    <div className="grid grid-cols-1 py-2 lg:py-3 gap-3 @xs:grid-cols-2 @md:grid-cols-3 @xl:grid-cols-4 @4xl:grid-cols-5">
                         {k.filtered.map((p) => (
                             <ProductCard
                                 key={p.id}
