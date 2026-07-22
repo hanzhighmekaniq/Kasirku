@@ -1,13 +1,27 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { BrowserMultiFormatReader } from "@zxing/library";
+import {
+    BrowserMultiFormatReader,
+    NotFoundException,
+    DecodeHintType,
+    BarcodeFormat,
+} from "@zxing/library";
 import { X, ScanLine, CheckCircle2, SwitchCamera } from "lucide-react";
 
-/**
- * BarcodeScanner — full-screen modern barcode scanner.
- * Camera fills entire screen with a rectangular scan area in the center.
- * Corner brackets + animated scan line for visual guidance.
- * Supports switching between front and back cameras.
- */
+const SCAN_HINTS = (() => {
+    const hints = new Map();
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.QR_CODE,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.ITF,
+    ]);
+    return hints;
+})();
+
 export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
     const videoRef = useRef(null);
     const [error, setError] = useState(null);
@@ -15,10 +29,7 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
     const [facingMode, setFacingMode] = useState("environment");
     const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
     const codeReader = useRef(null);
-    const streamRef = useRef(null);
     const cooldownRef = useRef(false);
-    const scanningRef = useRef(false);
-    const animFrameRef = useRef(null);
 
     useEffect(() => {
         if (!isOpen) {
@@ -27,38 +38,34 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
             setLastScan(null);
             return;
         }
-        checkCameras().then(() => startScanning());
+        startScanning();
         return () => stopAll();
     }, [isOpen]);
 
-    const checkCameras = async () => {
-        try {
-            if (!navigator.mediaDevices?.enumerateDevices) return;
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const videoDevices = devices.filter((d) => d.kind === "videoinput");
-            setHasMultipleCameras(videoDevices.length > 1);
-        } catch {
-            // ignore — will be caught during getUserMedia
-        }
-    };
+    useEffect(() => {
+        if (!isOpen) return;
+        stopAll();
+        startScanning();
+    }, [facingMode]);
 
     const stopAll = () => {
-        scanningRef.current = false;
-        if (animFrameRef.current) {
-            cancelAnimationFrame(animFrameRef.current);
-            animFrameRef.current = null;
-        }
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach((t) => t.stop());
-            streamRef.current = null;
-        }
         if (codeReader.current) {
             try {
                 codeReader.current.reset();
             } catch {}
             codeReader.current = null;
         }
-        if (videoRef.current) videoRef.current.srcObject = null;
+    };
+
+    const checkMultipleCameras = async () => {
+        try {
+            const tempReader = new BrowserMultiFormatReader();
+            const devices = await tempReader.listVideoInputDevices();
+            setHasMultipleCameras(devices.length > 1);
+            tempReader.reset();
+        } catch {
+            setHasMultipleCameras(false);
+        }
     };
 
     const startScanning = async () => {
@@ -66,62 +73,43 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
             setError(null);
             stopAll();
 
-            const stream = await navigator.mediaDevices.getUserMedia({
+            codeReader.current = new BrowserMultiFormatReader(SCAN_HINTS);
+
+            const constraints = {
                 video: {
                     facingMode,
                     width: { ideal: 1280 },
                     height: { ideal: 720 },
                 },
-            });
+            };
 
-            streamRef.current = stream;
+            await codeReader.current.decodeFromConstraints(
+                constraints,
+                videoRef.current,
+                (result, err) => {
+                    if (result && !cooldownRef.current) {
+                        cooldownRef.current = true;
+                        setTimeout(() => {
+                            cooldownRef.current = false;
+                        }, 1500);
 
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                await videoRef.current.play();
-            }
+                        const barcode = result.getText();
+                        setLastScan(barcode);
+                        setTimeout(() => setLastScan(null), 2500);
 
-            // After getting stream, re-check for multiple cameras
-            // (permission grant may reveal more devices)
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const videoDevices = devices.filter((d) => d.kind === "videoinput");
-            setHasMultipleCameras(videoDevices.length > 1);
+                        if (onScan) onScan(barcode);
+                    }
 
-            codeReader.current = new BrowserMultiFormatReader();
-            scanningRef.current = true;
-            decodeLoop();
+                    if (err && !(err instanceof NotFoundException)) {
+                        console.error("Scan error:", err);
+                    }
+                },
+            );
+
+            checkMultipleCameras();
         } catch (err) {
             console.error("Scanner error:", err);
             handleCameraError(err);
-        }
-    };
-
-    const decodeLoop = async () => {
-        if (!scanningRef.current || !codeReader.current || !videoRef.current)
-            return;
-
-        try {
-            const result = await codeReader.current.decodeOnceFromVideoElement(
-                videoRef.current,
-            );
-            if (result && !cooldownRef.current) {
-                cooldownRef.current = true;
-                setTimeout(() => {
-                    cooldownRef.current = false;
-                }, 1500);
-
-                const barcode = result.getText();
-                setLastScan(barcode);
-                setTimeout(() => setLastScan(null), 2500);
-
-                if (onScan) onScan(barcode);
-            }
-        } catch {
-            // No barcode found in this frame — normal
-        }
-
-        if (scanningRef.current) {
-            animFrameRef.current = requestAnimationFrame(decodeLoop);
         }
     };
 
@@ -142,15 +130,10 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
     };
 
     const switchCamera = useCallback(() => {
-        setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
+        setFacingMode((prev) =>
+            prev === "environment" ? "user" : "environment",
+        );
     }, []);
-
-    // Restart scanning when facingMode changes (and scanner is open)
-    useEffect(() => {
-        if (!isOpen) return;
-        startScanning();
-        return () => stopAll();
-    }, [facingMode]);
 
     const handleClose = () => {
         stopAll();
@@ -162,7 +145,6 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
 
     return (
         <div className="fixed inset-0 z-[9999] bg-black">
-            {/* Camera video — full screen */}
             <video
                 ref={videoRef}
                 className="absolute inset-0 h-full w-full object-cover"
@@ -171,9 +153,7 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                 autoPlay
             />
 
-            {/* Dark overlay with scan window cutout */}
             <div className="absolute inset-0 pointer-events-none">
-                {/* Top bar */}
                 <div className="pointer-events-auto absolute top-0 left-0 right-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent px-5 py-4">
                     <div className="flex items-center gap-3">
                         <button
@@ -215,20 +195,15 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                     </div>
                 </div>
 
-                {/* Semi-transparent overlay — 4 panels around scan area */}
-                {/* Scan area: centered, ~70% width, ~35% height */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                    {/* Top dark panel */}
                     <div
                         className="absolute top-0 left-0 right-0 bg-black/60"
                         style={{ height: "calc(50% - 18%)" }}
                     />
-                    {/* Bottom dark panel */}
                     <div
                         className="absolute bottom-0 left-0 right-0 bg-black/60"
                         style={{ height: "calc(50% - 18%)" }}
                     />
-                    {/* Left dark panel */}
                     <div
                         className="absolute bg-black/60"
                         style={{
@@ -238,7 +213,6 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                             right: "calc(50% + 35%)",
                         }}
                     />
-                    {/* Right dark panel */}
                     <div
                         className="absolute bg-black/60"
                         style={{
@@ -250,32 +224,23 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                     />
                 </div>
 
-                {/* Scan area frame */}
                 <div
                     className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
                     style={{ width: "70%", height: "36%" }}
                 >
-                    {/* Corner brackets — thin, clean, no rounded */}
-                    {/* Top-left */}
                     <div className="absolute top-0 left-0 w-8 h-8 border-t-[3px] border-l-[3px] border-white" />
-                    {/* Top-right */}
                     <div className="absolute top-0 right-0 w-8 h-8 border-t-[3px] border-r-[3px] border-white" />
-                    {/* Bottom-left */}
                     <div className="absolute bottom-0 left-0 w-8 h-8 border-b-[3px] border-l-[3px] border-white" />
-                    {/* Bottom-right */}
                     <div className="absolute bottom-0 right-0 w-8 h-8 border-b-[3px] border-r-[3px] border-white" />
 
-                    {/* Animated scan line */}
                     <div className="absolute inset-x-0 top-0 overflow-hidden">
                         <div className="scan-line-anim h-[2px] w-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
                     </div>
 
-                    {/* Side guides — subtle horizontal lines */}
                     <div className="absolute left-2 right-2 top-1/2 -translate-y-1/2 h-px bg-white/10" />
                 </div>
             </div>
 
-            {/* Error state */}
             {error && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-20 p-6">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 mb-4">
@@ -308,10 +273,8 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                 </div>
             )}
 
-            {/* Bottom toast — last scan result */}
             <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
                 <div className="flex flex-col items-center pb-8">
-                    {/* Success toast */}
                     {lastScan && (
                         <div className="flex items-center gap-2.5 bg-emerald-500/90 backdrop-blur-sm text-white px-5 py-3 rounded-2xl shadow-lg shadow-emerald-500/20 mb-4 animate-bounce">
                             <CheckCircle2 size={18} />
@@ -324,7 +287,6 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                         </div>
                     )}
 
-                    {/* Hint text */}
                     <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm text-white/60 px-4 py-2 rounded-full">
                         <ScanLine size={14} />
                         <span className="text-[12px]">
@@ -336,7 +298,6 @@ export default function BarcodeScanner({ onScan, onClose, isOpen = false }) {
                 </div>
             </div>
 
-            {/* Scan line animation CSS */}
             <style>{`
                 .scan-line-anim {
                     animation: scanMove 2s ease-in-out infinite;
