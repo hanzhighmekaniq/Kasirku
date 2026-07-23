@@ -36,6 +36,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SaleController;
 use App\Http\Controllers\Admin\SaleReturnController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\SplitBillController;
 use App\Http\Controllers\Admin\StockAdjustmentController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\StockOpnameController;
@@ -44,12 +45,15 @@ use App\Http\Controllers\Admin\StoreSwitchController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\WalletController as AdminWalletController;
 use App\Http\Controllers\Admin\WasteController;
 use App\Http\Controllers\Developer\BranchController;
 use App\Http\Controllers\Developer\DashboardController as DevDashboardController;
+use App\Http\Controllers\Developer\PaymentGatewayController as DevPaymentGatewayController;
 use App\Http\Controllers\Developer\PlanController;
 use App\Http\Controllers\Developer\StoreController as DevStoreController;
 use App\Http\Controllers\Developer\UserController as DevUserController;
+use App\Http\Controllers\Developer\WalletController as DevWalletController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\ThemePresetController;
@@ -147,6 +151,46 @@ Route::middleware(['auth', 'developer', 'single-session'])
             App\Http\Controllers\Developer\RoleController::class,
             'reset',
         ])->name('roles.reset');
+
+        // ── Payment Gateway (platform-level, satu akun untuk semua store) ──
+        Route::get('/payment-gateway', [
+            DevPaymentGatewayController::class,
+            'index',
+        ])->name('payment-gateway.index');
+        Route::post('/payment-gateway', [
+            DevPaymentGatewayController::class,
+            'store',
+        ])->name('payment-gateway.store');
+        Route::put('/payment-gateway/{paymentGateway}', [
+            DevPaymentGatewayController::class,
+            'update',
+        ])->name('payment-gateway.update');
+        Route::delete('/payment-gateway/{paymentGateway}', [
+            DevPaymentGatewayController::class,
+            'destroy',
+        ])->name('payment-gateway.destroy');
+        Route::patch('/payment-gateway/{paymentGateway}/toggle', [
+            DevPaymentGatewayController::class,
+            'toggle',
+        ])->name('payment-gateway.toggle');
+        Route::patch('/payment-gateway/{paymentGateway}/env', [
+            DevPaymentGatewayController::class,
+            'toggleEnv',
+        ])->name('payment-gateway.toggle-env');
+
+        // ── Wallet — saldo semua store dari pembayaran PG ──────────────
+        Route::get('/wallets', [
+            DevWalletController::class,
+            'index',
+        ])->name('wallets.index');
+        Route::get('/wallets/{store}', [
+            DevWalletController::class,
+            'show',
+        ])->name('wallets.show');
+        Route::post('/wallets/{store}/adjust', [
+            DevWalletController::class,
+            'adjust',
+        ])->name('wallets.adjust');
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name(
@@ -249,6 +293,18 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 'store',
             ])->name('kasir.store');
 
+            // New payment flow (phase-split)
+            Route::post('/kasir/start', [KasirController::class, 'start'])->name('kasir.start');
+            Route::post('/kasir/finalize', [KasirController::class, 'finalize'])->name('kasir.finalize');
+            Route::post('/kasir/cancel-pending/{sale}', [KasirController::class, 'cancelPending'])->name('kasir.cancel-pending');
+
+            // Split bill
+            Route::post('/kasir/split/start', [SplitBillController::class, 'start'])->name('kasir.split.start');
+            Route::post('/kasir/split/pay-offline', [SplitBillController::class, 'payOffline'])->name('kasir.split.pay-offline');
+            Route::post('/kasir/split/create-pg', [SplitBillController::class, 'createPg'])->name('kasir.split.create-pg');
+            Route::get('/kasir/split/{sale}', [SplitBillController::class, 'show'])->name('kasir.split.show');
+            Route::post('/kasir/split/{sale}/cancel', [SplitBillController::class, 'cancel'])->name('kasir.split.cancel');
+
             // Payment gateway (untuk POS) — perlu fitur payment_gateway
             Route::middleware('feature:payment_gateway')->group(function () {
                 Route::post('/payment-gateway/create', [
@@ -263,6 +319,10 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                     PaymentGatewayController::class,
                     'pendingTransactions',
                 ])->name('payment-gateway.pending');
+                Route::post('/payment-gateway/retry', [
+                    PaymentGatewayController::class,
+                    'retryTransaction',
+                ])->name('payment-gateway.retry');
             });
         });
 
@@ -974,14 +1034,11 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 PaymentMethodController::class,
                 'updateSort',
             ])->name('payment-methods.sort');
-            Route::post('/payment-methods/pg/{provider}', [
-                PaymentMethodController::class,
-                'savePgSettings',
-            ])->name('payment-methods.pg.save');
         });
 
         // ─────────────────────────────────────────────────────────────────
-        // PAYMENT GATEWAY — permission: setting.edit
+        // PAYMENT GATEWAY — info page (dikelola platform, bukan per-store)
+        // permission: setting.edit
         // ─────────────────────────────────────────────────────────────────
         Route::middleware([
             'feature:payment_gateway',
@@ -991,34 +1048,19 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 PaymentGatewayController::class,
                 'index',
             ])->name('payment-gateway.index');
-            Route::get('/payment-gateway/create', [
-                PaymentGatewayController::class,
-                'create',
-            ])->name('payment-gateway.create');
-            Route::post('/payment-gateway', [
-                PaymentGatewayController::class,
-                'store',
-            ])->name('payment-gateway.store');
-            Route::get('/payment-gateway/{store_payment_gateway}/edit', [
-                PaymentGatewayController::class,
-                'edit',
-            ])->name('payment-gateway.edit');
-            Route::put('/payment-gateway/{store_payment_gateway}', [
-                PaymentGatewayController::class,
-                'update',
-            ])->name('payment-gateway.update');
-            Route::delete('/payment-gateway/{store_payment_gateway}', [
-                PaymentGatewayController::class,
-                'destroy',
-            ])->name('payment-gateway.destroy');
-            Route::patch('/payment-gateway/{store_payment_gateway}/toggle', [
-                PaymentGatewayController::class,
-                'toggle',
-            ])->name('payment-gateway.toggle');
-            Route::patch('/payment-gateway/{store_payment_gateway}/env', [
-                PaymentGatewayController::class,
-                'toggleEnv',
-            ])->name('payment-gateway.toggle-env');
+        });
+
+        // ─────────────────────────────────────────────────────────────────
+        // WALLET — saldo dari pembayaran PG, permission: setting.view
+        // ─────────────────────────────────────────────────────────────────
+        Route::middleware([
+            'feature:payment_gateway',
+            'permission:setting.view',
+        ])->group(function () {
+            Route::get('/wallet', [
+                AdminWalletController::class,
+                'index',
+            ])->name('wallet.index');
         });
 
         // ─────────────────────────────────────────────────────────────────

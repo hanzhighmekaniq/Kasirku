@@ -14,6 +14,7 @@ class CustomerDebtLog extends Model
         'type',
         'amount',
         'balance_after',
+        'due_date',
         'notes',
         'created_by',
     ];

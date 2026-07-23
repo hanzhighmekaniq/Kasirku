@@ -226,6 +226,9 @@ class ProductController extends Controller
                 : 0;
         $profitRp = $product->sell_price - $product->cost_price;
 
+        $storeId = session('current_store_id');
+        $store = Store::with('storeType')->find($storeId);
+
         return Inertia::render('Admin/Products/Show', [
             'product' => $product,
             'totalStock' => $totalStock,
@@ -235,6 +238,7 @@ class ProductController extends Controller
             'profitRp' => $profitRp,
             'stockMovements' => $stockMovements,
             'bucketMargins' => $this->buildBucketMargins($product),
+            'storeType' => $store?->getRelation('storeType')?->code ?? 'retail',
         ]);
     }
 

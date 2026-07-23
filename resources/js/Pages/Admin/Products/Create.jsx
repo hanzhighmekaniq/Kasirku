@@ -6,7 +6,6 @@ import TreePicker from "@/Components/TreePicker";
 import Select from "@/Components/ui/Select";
 import {
     BarChart3,
-    ChevronLeft,
     ClipboardList,
     DollarSign,
     ExternalLink,
@@ -60,6 +59,17 @@ const DEFAULT_TYPE = {
 
 const NO_STOCK_TYPES = ["service", "time_based"];
 
+const PAGE_TITLE = {
+    retail: "Produk",
+    fnb: "Menu & Produk",
+    service: "Layanan & Produk",
+    rental: "Item Sewa",
+    ticket: "Tiket & Paket",
+    hospitality: "Kamar & Layanan",
+    parking: "Tarif Parkir",
+    session: "Paket Sesi",
+};
+
 export default function Create({
     categories,
     suppliers,
@@ -72,6 +82,8 @@ export default function Create({
 
     const { storeTypeFeatures = [] } = usePage().props;
     const has = (f) => storeTypeFeatures.includes(f);
+
+    const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
 
     const availableTypes = RELEVANT_TYPES[storeType] ?? ["finished_goods"];
     const defaultType = DEFAULT_TYPE[storeType] ?? "finished_goods";
@@ -179,49 +191,26 @@ export default function Create({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href={route("admin.products.index")}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                            aria-label="Kembali"
-                        >
-                            <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
-                        </Link>
-                        <div className="leading-tight">
-                            <div className="text-sm font-semibold text-foreground">Retail POS</div>
-                            <div className="text-[11px] text-muted-foreground">Manajemen Produk</div>
-                        </div>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Manajemen {pageTitle}
                     </div>
-                    <nav className="hidden md:flex items-center text-xs text-muted-foreground gap-2">
-                        <Link href={route("admin.products.index")} className="hover:text-foreground">
-                            Produk
-                        </Link>
-                        <span className="h-1.5 w-1.5 rounded-full bg-muted" />
-                        <span className="text-foreground font-medium">Tambah Produk</span>
-                    </nav>
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href={route("admin.products.index")}
-                            className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
-                        >
-                            <X className="h-4 w-4" />
-                            <span className="hidden sm:inline">Batal</span>
-                        </Link>
+                    <div className="text-[11px] text-muted-foreground">
+                        Tambah
                     </div>
                 </div>
             }
         >
-            <Head title="Tambah Produk" />
+            <Head title={`Tambah ${pageTitle}`} />
 
             {/* Hero */}
             <section className="mb-6">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
                                 <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                Produk baru
+                                {pageTitle} baru
                             </span>
                             <span className="text-muted-foreground">·</span>
                             <span>{productTypes[data.type] ?? data.type}</span>
@@ -229,15 +218,15 @@ export default function Create({
                         <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
                             Buat{" "}
                             <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                                produk baru
+                                {pageTitle.toLowerCase()} baru
                             </span>{" "}
                             untuk katalogmu
                         </h1>
                         <p className="mt-2 max-w-xl text-xs text-muted-foreground">
-                            Lengkapi detail produk — mulai dari identitas, harga, kemasan, sampai varian. Ringkasan di kanan akan berubah otomatis seiring kamu mengisi.
+                            Lengkapi detail — mulai dari identitas, harga, kemasan, sampai varian.
+                            Ringkasan di kanan akan berubah otomatis seiring kamu mengisi.
                         </p>
                     </div>
-                 
                 </div>
             </section>
 

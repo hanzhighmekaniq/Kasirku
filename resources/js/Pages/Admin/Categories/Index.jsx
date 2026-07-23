@@ -34,20 +34,13 @@ export default function Index({ categories, stats = {}, filters = {} }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">
-                        Kategori
-                    </h2>
-                    <Button
-                        as={Link}
-                        href={route("admin.categories.create")}
-                        icon={Plus}
-                    >
-                        <span className="hidden sm:inline">
-                            Tambah Kategori
-                        </span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Manajemen Kategori
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Daftar
+                    </div>
                 </div>
             }
         >
@@ -55,56 +48,69 @@ export default function Index({ categories, stats = {}, filters = {} }) {
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
-                <div className=" border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            doSearch(search);
-                        }}
-                        className="relative w-full sm:max-w-xs"
-                    >
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Cari kategori..."
-                            className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-10 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                        />
-                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.8}
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                />
-                            </svg>
-                        </span>
-                        <button
-                            type="submit"
-                            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-primary-500"
+                <div className="border-b border-border p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                doSearch(search);
+                            }}
+                            className="relative w-full sm:max-w-xs"
                         >
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.8}
-                                stroke="currentColor"
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Cari kategori..."
+                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-10 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            />
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+                                <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.8}
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                                    />
+                                </svg>
+                            </span>
+                            <button
+                                type="submit"
+                                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-primary-500"
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                />
-                            </svg>
-                        </button>
-                    </form>
-                    <div className="pt-4 flex items-center ">
+                                <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.8}
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                                    />
+                                </svg>
+                            </button>
+                        </form>
+                        <Button
+                            as={Link}
+                            href={route("admin.categories.create")}
+                            icon={Plus}
+                            className="shrink-0"
+                        >
+                            <span className="hidden sm:inline">
+                                Tambah Kategori
+                            </span>
+                            <span className="sm:hidden">Tambah</span>
+                        </Button>
+                    </div>
+                    <div className="pt-3 flex items-center">
                         <p className="text-xs text-muted-foreground">
                             Menampilkan{" "}
                             <span className="font-semibold text-foreground">

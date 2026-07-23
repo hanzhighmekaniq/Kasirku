@@ -6,6 +6,7 @@ use App\Helpers\BarcodeHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -14,6 +15,9 @@ class ProductVariantController extends Controller
 {
     public function index(Product $product)
     {
+        $storeId = session('current_store_id');
+        $store = Store::with('storeType')->find($storeId);
+
         $product->load([
             'variants.priceTiers',
             'variants.packagingUnits',
@@ -22,6 +26,7 @@ class ProductVariantController extends Controller
 
         return Inertia::render('Admin/Products/Variants', [
             'product' => $product,
+            'storeType' => $store?->getRelation('storeType')?->code ?? 'retail',
         ]);
     }
 

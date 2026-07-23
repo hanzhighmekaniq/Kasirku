@@ -12,43 +12,66 @@ class CheckPendingPgPayments extends Command
 {
     protected $signature = 'pg:check-pending';
 
-    protected $description = 'Check pending PG transactions with payment providers and finalize if paid';
+    protected $description = 'Check pending/unknown PG transactions with payment providers and finalize if paid';
 
     public function handle(): int
     {
-        $pendingTrxs = PaymentGatewayTransaction::with('sale.store')
-            ->where('status', 'pending')
+        $trxs = PaymentGatewayTransaction::with('sale.store')
+            ->whereIn('status', ['pending', 'unknown'])
             ->where('created_at', '>=', now()->subHours(2))
             ->get();
 
-        if ($pendingTrxs->isEmpty()) {
-            $this->info('No pending PG transactions.');
+        if ($trxs->isEmpty()) {
+            $this->info('No pending/unknown PG transactions.');
+
             return self::SUCCESS;
         }
 
-        $this->info("Checking {$pendingTrxs->count()} pending transaction(s)...");
+        $this->info("Checking {$trxs->count()} transaction(s)...");
 
         $finalized = 0;
 
-        foreach ($pendingTrxs as $pgTrx) {
+        foreach ($trxs as $pgTrx) {
             $sale = $pgTrx->sale;
-            if (!$sale || !$sale->store_id) {
+            if (! $sale || ! $sale->store_id) {
                 $this->warn("  Skip pg_trx #{$pgTrx->id}: no sale/store found");
+
                 continue;
             }
 
             try {
-                $gateway = PaymentGatewayFactory::make($pgTrx->provider, $sale->store_id);
-                $result  = $gateway->getStatus($pgTrx->external_id);
+                $gateway = PaymentGatewayFactory::make($pgTrx->provider);
 
-                $pgTrx->update([
-                    'status'       => $result['status'],
-                    'raw_response' => $result['raw'],
-                ]);
+                if ($pgTrx->status === 'unknown') {
+                    // Ambiguous after a 5xx/timeout — reconcile before touching anything.
+                    $result = $gateway->reconcile($pgTrx->external_id);
+
+                    if (! $result['found']) {
+                        // Still not found after reconciliation attempts — safe to mark
+                        // failed so the cashier can retry with a fresh attempt.
+                        $pgTrx->update(['status' => 'failed']);
+                        $this->line("  → #{$pgTrx->id} ({$pgTrx->external_id}) → not found at provider, marked failed");
+
+                        continue;
+                    }
+
+                    $pgTrx->markReconciled($result['status']);
+                } else {
+                    $result = $gateway->getStatus($pgTrx->external_id);
+                    $pgTrx->update([
+                        'status' => $result['status'],
+                        'status_checked_at' => now(),
+                        'raw_response' => $result['raw'],
+                    ]);
+                }
 
                 if ($result['status'] === 'paid') {
-                    $pgController = new PaymentGatewayController();
-                    $pgController->finalizeSale($sale, $pgTrx);
+                    $pgController = new PaymentGatewayController;
+                    if ($pgTrx->sale_split_payer_id) {
+                        $pgController->finalizeSplitPayerPayment($pgTrx);
+                    } else {
+                        $pgController->finalizeSale($sale, $pgTrx);
+                    }
                     $finalized++;
                     $this->info("  ✓ #{$pgTrx->id} ({$pgTrx->external_id}) → PAID & finalized");
                 } else {
@@ -61,6 +84,7 @@ class CheckPendingPgPayments extends Command
         }
 
         $this->info("Done. {$finalized} transaction(s) finalized.");
+
         return self::SUCCESS;
     }
 }

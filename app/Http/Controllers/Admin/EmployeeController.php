@@ -147,10 +147,23 @@ class EmployeeController extends Controller
             ->where('name', '!=', 'developer')
             ->get(['id', 'name', 'description']);
 
+        $employee->load([
+            'branch:id,name,code',
+            'user:id,name,email',
+        ]);
+
+        $userRoles = $employee->user_id
+            ? DB::table('model_has_roles')
+                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                ->where('model_has_roles.model_id', $employee->user_id)
+                ->where('model_has_roles.model_type', User::class)
+                ->where('model_has_roles.store_id', $storeId)
+                ->pluck('roles.name')
+            : collect();
+
         return Inertia::render('Admin/Employees/Edit', [
-            'employee' => $employee->load([
-                'branch:id,name,code',
-                'user:id,name,email',
+            'employee' => array_merge($employee->toArray(), [
+                'user_roles' => $userRoles,
             ]),
             'branches' => $this->branchOptions($request),
             'roles' => $roles,
@@ -347,7 +360,10 @@ class EmployeeController extends Controller
     {
         $storeId = session('current_store_id');
 
-        abort_unless($storeId && $employee->store_id === $storeId, 404);
+        abort_unless(
+            $storeId && (int) $employee->store_id === (int) $storeId,
+            404,
+        );
     }
 
     private function resolveStoreType(): string

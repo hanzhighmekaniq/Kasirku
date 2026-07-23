@@ -11,7 +11,7 @@ import {
 } from "./config/posModes";
 import { getTierPrice as sharedGetTierPrice } from "./components/helpers";
 
-/* ── formatters ──────────────────────────────────────── */
+/* â”€â”€ formatters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const fmt = (n) =>
     new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -22,7 +22,7 @@ const fmt = (n) =>
 const fmtShort = (n) =>
     new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(n ?? 0);
 
-/* ── ORDER TYPE options — 7 adaptive POS modes ─────────── */
+/* â”€â”€ ORDER TYPE options â€” 7 adaptive POS modes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const ORDER_TYPES = Object.fromEntries(
     Object.entries(POS_MODES).map(([code, config]) => [
         code,
@@ -36,23 +36,23 @@ const TIER_COLORS = {
     gold: "bg-yellow-100 text-yellow-700",
 };
 
-/* ── PG method labels ─────────────────────────────── */
+/* â”€â”€ PG method labels â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const PG_METHOD_LABELS = {
-    qris: { label: "QRIS", icon: "📱", badge: "QR" },
-    gopay: { label: "GoPay", icon: "🟢", badge: "EP" },
-    shopeepay: { label: "ShopeePay", icon: "🟠", badge: "EP" },
-    dana: { label: "DANA", icon: "🔵", badge: "EP" },
-    ovo: { label: "OVO", icon: "🟣", badge: "EP" },
-    bca_va: { label: "VA BCA", icon: "🏦", badge: "VA" },
-    mandiri_va: { label: "VA Mandiri", icon: "🏦", badge: "VA" },
-    bri_va: { label: "VA BRI", icon: "🏦", badge: "VA" },
-    bni_va: { label: "VA BNI", icon: "🏦", badge: "VA" },
-    permata_va: { label: "VA Permata", icon: "🏦", badge: "VA" },
+    qris: { label: "QRIS", icon: "ðŸ“±", badge: "QR" },
+    gopay: { label: "GoPay", icon: "ðŸŸ¢", badge: "EP" },
+    shopeepay: { label: "ShopeePay", icon: "ðŸŸ ", badge: "EP" },
+    dana: { label: "DANA", icon: "ðŸ”µ", badge: "EP" },
+    ovo: { label: "OVO", icon: "ðŸŸ£", badge: "EP" },
+    bca_va: { label: "VA BCA", icon: "ðŸ¦", badge: "VA" },
+    mandiri_va: { label: "VA Mandiri", icon: "ðŸ¦", badge: "VA" },
+    bri_va: { label: "VA BRI", icon: "ðŸ¦", badge: "VA" },
+    bni_va: { label: "VA BNI", icon: "ðŸ¦", badge: "VA" },
+    permata_va: { label: "VA Permata", icon: "ðŸ¦", badge: "VA" },
 };
 
 /** Match pg_method to existing payment_methods id by code/name */
 function findPgPaymentMethod(pgMethod, paymentMethods) {
-    const code = pgMethod.replace("_va", "").toUpperCase(); // qris→QRIS, gopay→GOPAY, bca_va→BCA
+    const code = pgMethod.replace("_va", "").toUpperCase(); // qrisâ†’QRIS, gopayâ†’GOPAY, bca_vaâ†’BCA
     return paymentMethods.find((m) => {
         const mc = m.code?.toUpperCase();
         const mn = m.name?.toLowerCase();
@@ -65,7 +65,7 @@ function findPgPaymentMethod(pgMethod, paymentMethods) {
     });
 }
 
-/** Ambil harga tier yang berlaku untuk qty tertentu — variant-aware dengan fallback ke product level */
+/** Ambil harga tier yang berlaku untuk qty tertentu â€” variant-aware dengan fallback ke product level */
 const getTierPrice = sharedGetTierPrice;
 
 export default function useKasir({
@@ -85,7 +85,7 @@ export default function useKasir({
     employees = [],
     storeFeatureSettings = {},
 }) {
-    /* ── mode detection ─────────────────────────────────── */
+    /* â”€â”€ mode detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     const activeMode = normalizePosMode(posMode || storeType);
     const modeConfig = getPosModeConfig(activeMode);
     const isRetail = activeMode === "retail";
@@ -103,23 +103,23 @@ export default function useKasir({
     const orderOpts = modeConfig.orderTypes;
     const hasModeFeature = (feature) => modeHasFeature(activeMode, feature);
 
-    // Label & order type pemicu pemilih ruang — "Meja" untuk fnb (dine_in),
+    // Label & order type pemicu pemilih ruang â€” "Meja" untuk fnb (dine_in),
     // "Kamar" untuk hospitality (check_in). Order type-nya BEDA per mode,
     // jangan disamakan jadi "dine_in" untuk semua.
     const tableLabel = isHospitality ? "Kamar" : "Meja";
     const tableTriggerOrderType = isHospitality ? "check_in" : "dine_in";
 
-    /* ── state ── */
+    /* â”€â”€ state â”€â”€ */
     const [customers, setCustomers] = useState(initialCustomers || []);
     const [search, setSearch] = useState("");
     const [activeCat, setActiveCat] = useState("");
     const [cart, setCart] = useState([]);
-    // Ref (bukan state) untuk penomoran cartId — dibaca & ditulis secara
+    // Ref (bukan state) untuk penomoran cartId â€” dibaca & ditulis secara
     // synchronous di dalam addToCart, jadi aman dari stale closure walau
     // addToCart dipanggil berkali-kali sebelum React sempat re-render.
     const cartIdSeqRef = useRef(0);
 
-    // ── Transaksi ditahan (Hold / Park) — disimpan di localStorage saja ──
+    // â”€â”€ Transaksi ditahan (Hold / Park) â€” disimpan di localStorage saja â”€â”€
     const HELD_KEY = `pos:held:${storeName || "default"}`;
     const [heldTransactions, setHeldTransactions] = useState(() => {
         try {
@@ -129,11 +129,11 @@ export default function useKasir({
         }
     });
 
-    /* ── scanner state ── */
+    /* â”€â”€ scanner state â”€â”€ */
     const [showScanner, setShowScanner] = useState(false);
     const [scanning, setScanning] = useState(false);
 
-    /* ── Diskon & pajak manual ──────────────────────────────────
+    /* â”€â”€ Diskon & pajak manual â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
      * Dimodelkan sebagai { type, value } supaya kasir bisa memilih
      * persentase (%) atau nominal tetap (Rp). Nilai Rupiah `discount`
      * dan `tax` DITURUNKAN dari sini di bagian totals (lihat di bawah),
@@ -147,7 +147,7 @@ export default function useKasir({
     const [taxName, setTaxName] = useState("");
 
     // Backward-compat: setDiscount(n)/setTax(n) memperlakukan input sebagai
-    // nominal tetap (fixed) — dipakai halaman fallback Kasir.jsx.
+    // nominal tetap (fixed) â€” dipakai halaman fallback Kasir.jsx.
     const setDiscount = (v) => {
         setDiscountType("fixed");
         setDiscountValue(Number(v) || 0);
@@ -181,7 +181,7 @@ export default function useKasir({
 
     const [orderType, setOrderType] = useState(orderOpts[0].v);
 
-    /* ── customer / table / delivery ── */
+    /* â”€â”€ customer / table / delivery â”€â”€ */
     const [selectedCustomer, setSelectedCustomer] = useState("");
     const [customerSearch, setCustomerSearch] = useState("");
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
@@ -196,7 +196,7 @@ export default function useKasir({
     const [deliveryFee, setDeliveryFee] = useState("");
     const [deliveryCustomerName, setDeliveryCustomerName] = useState("");
     const [takeawayCustomerName, setTakeawayCustomerName] = useState("");
-    // Info tambahan pickup/delivery — dikumpulkan via modal, dilipat ke
+    // Info tambahan pickup/delivery â€” dikumpulkan via modal, dilipat ke
     // `notes` saat submit (tanpa mengubah skema backend).
     const [deliveryPhone, setDeliveryPhone] = useState("");
     const [deliveryCourier, setDeliveryCourier] = useState("");
@@ -220,7 +220,7 @@ export default function useKasir({
      *
      * PERHATIAN: ticketEvent, ticketSlot, dan roomNumber di-reuse lintas
      * mode dengan ARTI BERBEDA tergantung activeMode saat ini (bukan bug,
-     * tapi technical debt penamaan — hati-hati saat menambah fitur baru):
+     * tapi technical debt penamaan â€” hati-hati saat menambah fitur baru):
      *
      * - ticketEvent : nama event (ticket) | nama petugas fallback (service) | plat nomor kendaraan (parking)
      * - ticketSlot  : no. booking/slot (ticket) | no. booking-antrian (service) | jenis kendaraan (parking)
@@ -234,13 +234,13 @@ export default function useKasir({
     const [guestCount, setGuestCount] = useState(1);
     const [selectedEmployee, setSelectedEmployee] = useState("");
 
-    /* ── modal / UI state ── */
+    /* â”€â”€ modal / UI state â”€â”€ */
     const [modifierTarget, setModifierTarget] = useState(null);
     const [variantTarget, setVariantTarget] = useState(null);
-    // Non-retail multi-satuan (legacy UnitModal) — dipakai mode selain retail
+    // Non-retail multi-satuan (legacy UnitModal) â€” dipakai mode selain retail
     // yang produknya punya packaging_units tapi tanpa variant/modifier.
     const [unitTarget, setUnitTarget] = useState(null);
-    // Retail-only: modal adaptif tunggal (variant → unit → qty → notes)
+    // Retail-only: modal adaptif tunggal (variant â†’ unit â†’ qty â†’ notes)
     // menggantikan VariantModal + UnitModal untuk mode retail.
     const [retailProductTarget, setRetailProductTarget] = useState(null);
     const [showPayment, setShowPayment] = useState(false);
@@ -253,18 +253,18 @@ export default function useKasir({
     const [cartPanelOpen, setCartPanelOpen] = useState(false);
     const [sidebarWidth, setSidebarWidth] = useState(384);
     const sidebarResizing = useRef(false);
-    const [pgModalData, setPgModalData] = useState(null);
-    // { productName, available, requested } | null — dipakai StockAlertModal
+    // PG data handled inline by GatewayPanel inside PaymentView â€” no modal needed.
+    // { productName, available, requested } | null â€” dipakai StockAlertModal
     const [stockAlert, setStockAlert] = useState(null);
 
-    /* ── refs ── */
+    /* â”€â”€ refs â”€â”€ */
     const customerDropdownRef = useRef(null);
     const customerInputRef = useRef(null);
     const tableDropdownRef = useRef(null);
     const tableInputRef = useRef(null);
     const barcodeRef = useRef(null);
 
-    /* ── sidebar resize ── */
+    /* â”€â”€ sidebar resize â”€â”€ */
     useEffect(() => {
         const onMouseMove = (e) => {
             if (!sidebarResizing.current) return;
@@ -290,7 +290,7 @@ export default function useKasir({
         document.body.style.userSelect = "none";
     };
 
-    /* ── filtering ── */
+    /* â”€â”€ filtering â”€â”€ */
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
         return products.filter((p) => {
@@ -304,7 +304,7 @@ export default function useKasir({
         });
     }, [products, search, activeCat]);
 
-    /* ── customer tier ── */
+    /* â”€â”€ customer tier â”€â”€ */
     const customerTier = useMemo(() => {
         if (!selectedCustomer) return null;
         const cust = customers.find(
@@ -313,7 +313,7 @@ export default function useKasir({
         return cust?.tier ?? null;
     }, [selectedCustomer, customers]);
 
-    /* ── promo helpers ── */
+    /* â”€â”€ promo helpers â”€â”€ */
     // Mirror backend PromotionService logic for frontend preview
     const findBestPromoForItem = (productId, qty, unitPrice) => {
         if (!promotions.length) return null;
@@ -327,7 +327,7 @@ export default function useKasir({
         );
 
         for (const promo of itemPromos) {
-            // Check if product is in this promo (or promo applies to all — no products)
+            // Check if product is in this promo (or promo applies to all â€” no products)
             const hasProducts = promo.products && promo.products.length > 0;
             if (hasProducts && !promo.products.some((p) => p.id === productId))
                 continue;
@@ -472,7 +472,7 @@ export default function useKasir({
         );
     }, [customerTier]);
 
-    /* ── scanner helpers ── */
+    /* â”€â”€ scanner helpers â”€â”€ */
     const playBeep = () => {
         const audioContext = new (
             window.AudioContext || window.webkitAudioContext
@@ -496,7 +496,7 @@ export default function useKasir({
         oscillator.stop(audioContext.currentTime + 0.1);
     };
 
-    /* ── cart helpers ── */
+    /* â”€â”€ cart helpers â”€â”€ */
     /**
      * Tambah produk ke keranjang.
      *
@@ -504,7 +504,7 @@ export default function useKasir({
      * menambah qty > 1 (misal `for (let i=0;i<qty;i++) addToCart(...)`).
      * Karena setCart bersifat asinkron, tiap iterasi loop akan membaca
      * state `cart` yang belum ter-update oleh iterasi sebelumnya (stale
-     * closure) — akibatnya item yang sama malah tercatat sebagai beberapa
+     * closure) â€” akibatnya item yang sama malah tercatat sebagai beberapa
      * baris terpisah di keranjang alih-alih qty-nya bertambah.
      * Gunakan parameter `qty` di bawah untuk menambah lebih dari 1 sekaligus
      * dalam satu update state.
@@ -517,9 +517,9 @@ export default function useKasir({
         packagingUnit = null,
         qty = 1,
     ) => {
-        // ── Cek stok sebelum masuk keranjang ──
+        // â”€â”€ Cek stok sebelum masuk keranjang â”€â”€
         // Stok dicek dari bucket yang sesuai (product+variant+packaging_unit),
-        // bukan flat product.stock — bucket tidak melakukan konversi otomatis,
+        // bukan flat product.stock â€” bucket tidak melakukan konversi otomatis,
         // jadi qty yang dicek adalah qty asli dalam satuan bucket itu sendiri.
         if (product.track_stock) {
             const bucketStock = packagingUnit
@@ -566,7 +566,7 @@ export default function useKasir({
             0,
         );
 
-        // Cek tier price untuk qty yang diminta — variant-aware
+        // Cek tier price untuk qty yang diminta â€” variant-aware
         const tierPrice = !packagingUnit
             ? getTierPrice(product, qty, variant?.id ?? null)
             : null;
@@ -659,7 +659,7 @@ export default function useKasir({
             const item = prev.find((c) => c.cartId === cartId);
             if (!item) return prev;
 
-            // Cek stok bucket jika menambah qty — bucket yang sama persis
+            // Cek stok bucket jika menambah qty â€” bucket yang sama persis
             // (product + variant + packaging_unit), tanpa konversi otomatis.
             if (delta > 0) {
                 const product = products.find((p) => p.id === item.productId);
@@ -710,7 +710,7 @@ export default function useKasir({
                     // Recalculate tier price if product has tiers
                     const product = products.find((p) => p.id === c.productId);
                     let newPrice = c.price;
-                    // Recalculate tier price — variant-aware
+                    // Recalculate tier price â€” variant-aware
                     const hasTiers = product?.price_tiers?.length ||
                         (product?.variants ?? []).some((v) => v.id === c.variantId && v.price_tiers?.length);
                     if (hasTiers && !c.packagingUnitId) {
@@ -721,7 +721,7 @@ export default function useKasir({
                             );
                             newPrice = tierPrice + modExtra;
                         } else {
-                            // No tier matches — fallback to base price (variant or product)
+                            // No tier matches â€” fallback to base price (variant or product)
                             const variant = c.variantId
                                 ? (product?.variants ?? []).find((v) => v.id === c.variantId)
                                 : null;
@@ -774,7 +774,7 @@ export default function useKasir({
         setSelectedEmployee("");
     };
 
-    /* ── click product ── */
+    /* â”€â”€ click product â”€â”€ */
     const handleProductClick = (product) => {
         const hasModifiers = (product.modifier_groups ?? []).length > 0;
         const hasVariants =
@@ -782,13 +782,13 @@ export default function useKasir({
         const hasUnits = (product.packaging_units ?? []).length > 0;
 
         if (hasModifiers) {
-            // Produk dengan modifier — buka ModifierModal (behaviour lama)
+            // Produk dengan modifier â€” buka ModifierModal (behaviour lama)
             setModifierTarget(product);
             return;
         }
 
-        // Retail: produk dengan variant atau multi-satuan → RetailProductModal
-        // Produk simple (tanpa variant & tanpa multi-satuan) → langsung cart
+        // Retail: produk dengan variant atau multi-satuan â†’ RetailProductModal
+        // Produk simple (tanpa variant & tanpa multi-satuan) â†’ langsung cart
         if (isRetail) {
             if (!hasVariants && !hasUnits) {
                 addToCart(product);
@@ -799,18 +799,18 @@ export default function useKasir({
         }
 
         if (hasVariants) {
-            // Produk dengan variant tapi tanpa modifier — buka VariantModal
+            // Produk dengan variant tapi tanpa modifier â€” buka VariantModal
             setVariantTarget(product);
         } else if (hasUnits) {
-            // Produk non-retail dengan multi-satuan — buka UnitModal (legacy)
+            // Produk non-retail dengan multi-satuan â€” buka UnitModal (legacy)
             setUnitTarget(product);
         } else {
-            // Produk biasa — langsung masuk cart
+            // Produk biasa â€” langsung masuk cart
             addToCart(product);
         }
     };
 
-    /* ── barcode scan handler ── */
+    /* â”€â”€ barcode scan handler â”€â”€ */
     const handleBarcodeScan = (barcode) => {
         setScanning(false);
 
@@ -864,7 +864,7 @@ export default function useKasir({
         }
     };
 
-    /* ── search Enter handler (hardware scanner support) ── */
+    /* â”€â”€ search Enter handler (hardware scanner support) â”€â”€ */
     const handleSearchEnter = () => {
         const q = search.trim();
         if (!q) return;
@@ -897,7 +897,7 @@ export default function useKasir({
             }
         }
 
-        // 4. Fuzzy match by name/SKU — if exactly 1 result, use it
+        // 4. Fuzzy match by name/SKU â€” if exactly 1 result, use it
         const lower = q.toLowerCase();
         const matches = products.filter(
             (p) =>
@@ -910,13 +910,13 @@ export default function useKasir({
         }
     };
 
-    /* ── order type change ── */
+    /* â”€â”€ order type change â”€â”€ */
     const handleOrderTypeChange = (v) => {
         setOrderType(v);
         if (v !== "dine_in") setSelectedTable("");
     };
 
-    /* ── print history ── */
+    /* â”€â”€ print history â”€â”€ */
     const handlePrintHistory = async (saleId) => {
         setHistoryPrintLoading(true);
         try {
@@ -983,7 +983,7 @@ export default function useKasir({
         }
     };
 
-    /* ── outside click for dropdowns ── */
+    /* â”€â”€ outside click for dropdowns â”€â”€ */
     useEffect(() => {
         const handleClick = (e) => {
             const clickedOutsideCustomer =
@@ -1004,13 +1004,13 @@ export default function useKasir({
         return () => document.removeEventListener("mousedown", handleClick);
     }, []);
 
-    /* ── totals ── */
+    /* â”€â”€ totals â”€â”€ */
     const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
     const totalPromoDisc = cart.reduce((s, c) => s + (c.promoDiscount ?? 0), 0);
 
-    /* ── Diskon & pajak manual (Rp) — diturunkan dari type + value ──
+    /* â”€â”€ Diskon & pajak manual (Rp) â€” diturunkan dari type + value â”€â”€
      * Alur perhitungan mengikuti preview modal:
-     *   Subtotal → −Diskon Promo → −Diskon Manual → +Pajak Manual → +Ongkir
+     *   Subtotal â†’ âˆ’Diskon Promo â†’ âˆ’Diskon Manual â†’ +Pajak Manual â†’ +Ongkir
      * Basis diskon manual = subtotal setelah promo.
      * Basis pajak manual  = subtotal setelah diskon (promo + manual).
      */
@@ -1040,21 +1040,54 @@ export default function useKasir({
             Number(deliveryFee || 0),
     );
 
-    /* ── cash rounding ── */
+    /* â”€â”€ cash rounding â”€â”€ */
     const cashRoundingSettings = storeFeatureSettings?.cash_rounding;
     const cashRoundingEnabled = !!cashRoundingSettings;
     const cashRoundingNearest = cashRoundingSettings?.cash_rounding_nearest ?? 100;
+    const cashRoundingMode = cashRoundingSettings?.cash_rounding_mode ?? "nearest";
 
-    const roundedGrandTotal = cashRoundingEnabled
-        ? Math.round(grandTotal / cashRoundingNearest) * cashRoundingNearest
-        : grandTotal;
-    const roundingAdjustment = cashRoundingEnabled
-        ? roundedGrandTotal - grandTotal
-        : 0;
+    // Rounding override state (kasir bisa ganti saat transaksi)
+    const [roundingOverrideMode, setRoundingOverrideMode] = useState("store_default"); // store_default | down | up | custom
+    const [roundingCustomValue, setRoundingCustomValue] = useState("");
 
-    /* ── field wajib per mode yang belum terisi — dipakai untuk disable
+    // Reset override saat modal dibuka/ditutup
+    useEffect(() => {
+        setRoundingOverrideMode("store_default");
+        setRoundingCustomValue("");
+    }, [showPayment]);
+
+    // Hitung rounded total berdasarkan mode aktif
+    const computeRounded = (amount, nearest, mode) => {
+        switch (mode) {
+            case "up": return Math.ceil(amount / nearest) * nearest;
+            case "down": return Math.floor(amount / nearest) * nearest;
+            default: return Math.round(amount / nearest) * nearest;
+        }
+    };
+
+    const activeRoundingMode = roundingOverrideMode === "store_default" ? cashRoundingMode : roundingOverrideMode;
+
+    let roundedGrandTotal = grandTotal;
+    let roundingAdjustment = 0;
+
+    if (cashRoundingEnabled) {
+        if (activeRoundingMode === "custom" && roundingCustomValue !== "") {
+            const custom = Number(roundingCustomValue);
+            const cap = cashRoundingNearest;
+            if (Math.abs(custom - grandTotal) <= cap) {
+                roundedGrandTotal = custom;
+            } else {
+                roundedGrandTotal = computeRounded(grandTotal, cashRoundingNearest, cashRoundingMode);
+            }
+        } else {
+            roundedGrandTotal = computeRounded(grandTotal, cashRoundingNearest, activeRoundingMode);
+        }
+        roundingAdjustment = roundedGrandTotal - grandTotal;
+    }
+
+    /* â”€â”€ field wajib per mode yang belum terisi â€” dipakai untuk disable
        tombol Bayar & tampilkan pesan kontekstual SEBELUM user klik bayar,
-       bukan cuma alert() setelah modal pembayaran terbuka ── */
+       bukan cuma alert() setelah modal pembayaran terbuka â”€â”€ */
     const missingRequiredField = (() => {
         if ((isService || isRental || isHospitality) && !selectedCustomer) {
             return "Pilih pelanggan dulu";
@@ -1065,7 +1098,7 @@ export default function useKasir({
         if (isSession && !roomNumber.trim()) {
             return "Isi nama unit dulu";
         }
-        // Delivery — penerima + alamat wajib (semua mode)
+        // Delivery â€” penerima + alamat wajib (semua mode)
         if (orderType === "delivery") {
             if (!deliveryCustomerName.trim() && !selectedCustomer) {
                 return "Lengkapi info pengiriman";
@@ -1074,24 +1107,24 @@ export default function useKasir({
                 return "Lengkapi info pengiriman";
             }
         }
-        // Grosir (retail) — pelanggan wajib
+        // Grosir (retail) â€” pelanggan wajib
         if (isRetail && orderType === "wholesale" && !selectedCustomer) {
             return "Pilih pelanggan grosir dulu";
         }
         return null;
     })();
 
-    /* ── Hold / Park transaksi (localStorage) ────────────────────
+    /* â”€â”€ Hold / Park transaksi (localStorage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
      * Kasir bisa "menahan" transaksi berjalan (mis. pelanggan lupa ambil
      * barang) lalu melanjutkannya nanti tanpa kehilangan keranjang. Semua
-     * disimpan di localStorage — tidak menyentuh backend.
+     * disimpan di localStorage â€” tidak menyentuh backend.
      */
     const persistHeld = (list) => {
         setHeldTransactions(list);
         try {
             localStorage.setItem(HELD_KEY, JSON.stringify(list));
         } catch {
-            /* storage penuh / tidak tersedia — abaikan */
+            /* storage penuh / tidak tersedia â€” abaikan */
         }
     };
 
@@ -1188,9 +1221,9 @@ export default function useKasir({
         persistHeld(heldTransactions.filter((h) => h.id !== id));
     };
 
-    /* ── compose notes ──────────────────────────────────────────
+    /* â”€â”€ compose notes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
      * Info tambahan pickup/delivery (telepon, kurir, waktu ambil, catatan
-     * pengiriman) dilipat ke field `notes` secara non-destruktif — catatan
+     * pengiriman) dilipat ke field `notes` secara non-destruktif â€” catatan
      * transaksi yang diketik kasir tetap dipertahankan di akhir.
      */
     const buildComposedNotes = () => {
@@ -1206,699 +1239,15 @@ export default function useKasir({
             if (pickupTime.trim()) parts.push(`Ambil: ${pickupTime.trim()}`);
         }
         if (note.trim()) parts.push(note.trim());
-        const joined = parts.join(" • ");
+        const joined = parts.join(" â€¢ ");
         return joined ? joined.slice(0, 500) : null;
     };
 
-    /* ── submit ── */
-    const handleConfirmPayment = async (payments, change, splitMeta = null) => {
-        // Catatan: enforcement shift ditangani di layer lain — tombol Bayar
-        // dinonaktifkan oleh KasirLayout saat shift wajib tapi belum dibuka,
-        // dan backend (middleware ensure.shift) mengembalikan 422 untuk kasir
-        // yang wajib shift. User yang tidak wajib shift (owner/admin/developer)
-        // tetap bisa bertransaksi tanpa shift aktif.
-        if (orderType === "delivery" && !deliveryAddress.trim()) {
-            alert("Alamat pengiriman wajib diisi untuk delivery.");
-            setSubmitting(false);
-            return;
-        }
-        if (
-            orderType === "delivery" &&
-            !deliveryCustomerName.trim() &&
-            !selectedCustomer
-        ) {
-            alert("Nama penerima wajib diisi untuk delivery.");
-            setSubmitting(false);
-            return;
-        }
-        // Customer wajib untuk service
-        if (isService && !selectedCustomer) {
-            alert(
-                "Layanan service wajib memilih customer terlebih dahulu.\n\nTambahkan customer baru dari dropdown pelanggan di atas.",
-            );
-            return;
-        }
-        // Customer wajib untuk rental
-        if (isRental && !selectedCustomer) {
-            alert(
-                "Sewa barang wajib memilih customer.\n\nPilih atau tambahkan customer dari dropdown di atas.",
-            );
-            return;
-        }
-        // Customer wajib untuk hospitality
-        if (isHospitality && !selectedCustomer) {
-            alert('Menginap wajib memilih customer/tamu.\n\nPilih atau tambahkan tamu dari dropdown di atas.');
-            return;
-        }
-        // Plat nomor wajib untuk parking
-        if (isParking && !ticketEvent.trim()) {
-            alert('Parkir wajib mengisi plat nomor kendaraan.');
-            return;
-        }
-        // Unit wajib untuk session
-        if (isSession && !roomNumber.trim()) {
-            alert('Session wajib mengisi nama unit/room (misal: PC-01, PS-03).');
-            return;
-        }
-        setSubmitting(true);
-        const idempotencyKey = crypto.randomUUID();
-        const payload = {
-            customer_id: selectedCustomer || null,
-            table_id: selectedTable || null,
-            order_type: orderType,
-            discount_amount: Number(discount),
-            tax_amount: Number(tax),
-            shipping_amount:
-                orderType === "delivery" ? Number(deliveryFee || 0) : 0,
-            rounding_adjustment: roundingAdjustment,
-            delivery_address: orderType === "delivery" ? deliveryAddress : null,
-            customer_name:
-                orderType === "delivery"
-                    ? deliveryCustomerName.trim() || null
-                    : orderType === "takeaway"
-                      ? takeawayCustomerName.trim() || null
-                      : null,
-            notes: buildComposedNotes(),
-            payments: payments.map((p) => ({
-                method_id: p.method_id,
-                amount: Number(p.amount),
-                reference_no: p.reference_no || null,
-                is_pg: p.is_pg || false,
-                pg_provider: p.pg_provider || null,
-                pg_method: p.pg_method || null,
-            })),
-            items: cart.map((c) => ({
-                product_id: c.productId,
-                variant_id: c.variantId,
-                packaging_unit_id: c.packagingUnitId || null,
-                unit_name: c.packagingUnitName || null,
-                unit_conversion_qty: c.conversionQty || 1,
-                quantity: c.qty,
-                price: Number(product_sell_price(c)),
-                discount_amount: 0,
-                modifiers: c.modifiers,
-                notes: c.note || null,
-            })),
-            idempotency_key: idempotencyKey,
-            // ── Mode-specific fields ──────────────────────────────────────
-            ...(isRental && rentalDuration
-                ? {
-                      rental_duration: Number(rentalDuration),
-                      rental_unit: rentalUnit,
-                      room_number: roomNumber || null,
-                  }
-                : {}),
-            ...(isService
-                ? {
-                      employee_id: selectedEmployee || null,
-                      ticket_slot: ticketSlot || null,
-                  }
-                : {}),
-            ...(isTicket
-                ? {
-                      ticket_event: ticketEvent || null,
-                      ticket_slot: ticketSlot || null,
-                      employee_id: selectedEmployee || null,
-                  }
-                : {}),
-            ...(isHospitality
-                ? {
-                      room_number:      roomNumber || null,
-                      guest_count:      Number(guestCount) || 1,
-                      rental_duration:  rentalDuration || 1,
-                      rental_unit:      rentalUnit || 'per_day',
-                  }
-                : {}),
-            ...(isParking
-                ? {
-                      ticket_event: ticketEvent || null,   // plat nomor
-                      ticket_slot:  ticketSlot || null,    // jenis kendaraan
-                      room_number:  roomNumber || null,    // no. tiket
-                  }
-                : {}),
-            ...(isSession ? {
-                room_number:  roomNumber || null,
-                guest_count:  Number(guestCount) || 1,
-            } : {}),
-        };
-
-        try {
-            const { data } = await axios.post(
-                route("admin.kasir.store"),
-                payload,
-            );
-            if (!data.success) throw new Error(data.message ?? "Gagal");
-
-            // ── PG flow: create payment gateway transaction ──
-            if (data.is_pg && data.pg_info) {
-                try {
-                    const pgRes = await axios.post(
-                        route("admin.payment-gateway.create"),
-                        {
-                            sale_id: data.sale_id,
-                            provider: data.pg_info.provider,
-                            payment_type: data.pg_info.method,
-                        },
-                    );
-
-                    setShowPayment(false);
-
-                    setPgModalData({
-                        pgTrxId: pgRes.data.pg_trx_id,
-                        amount: data.grand_total,
-                        saleId: data.sale_id,
-                        saleNo: data.sale_no,
-                        change: data.change,
-                        grandTotal: data.grand_total,
-                        paymentType: data.pg_info.method,
-                        qrCode: pgRes.data.qr_code,
-                        qrImageUrl: pgRes.data.qr_image_url,
-                        vaNumber: pgRes.data.va_number,
-                        vaBank: pgRes.data.va_bank,
-                        paymentUrl: pgRes.data.payment_url,
-                        payments: payments.map((p) => ({
-                            methodName:
-                                PG_METHOD_LABELS[p.pg_method]?.label ??
-                                p.pg_method ??
-                                "PG",
-                            amount: Number(p.amount),
-                        })),
-                        customer:
-                            customers.find(
-                                (c) =>
-                                    String(c.id) === String(selectedCustomer),
-                            ) ?? null,
-                        table:
-                            tables.find(
-                                (t) => String(t.id) === String(selectedTable),
-                            ) ?? null,
-                        orderType,
-                    });
-                    return; // don't show receipt yet — PGPaymentModal will handle it
-                } catch (pgErr) {
-                    console.error("PG create transaction error:", pgErr);
-                    alert(
-                        "Gagal membuat link pembayaran: " +
-                            (pgErr.response?.data?.message ?? pgErr.message),
-                    );
-                    setSubmitting(false);
-                    return;
-                }
-            }
-
-            const customer = customers.find(
-                (c) => String(c.id) === String(selectedCustomer),
-            );
-            const table = tables.find(
-                (t) => String(t.id) === String(selectedTable),
-            );
-            const methodMap = Object.fromEntries(
-                paymentMethods.map((m) => [m.id, m.name]),
-            );
-
-            setReceiptData({
-                saleNo: data.sale_no,
-                items: cart.map((c) => ({
-                    name: c.name,
-                    variantName: c.variantName,
-                    qty: c.qty,
-                    price: c.price,
-                    subtotal: c.price * c.qty,
-                    promoDiscount: c.promoDiscount ?? 0,
-                    promoName: c.promoName ?? null,
-                    modifiers: c.modifiers,
-                })),
-                subtotal,
-                discount: Number(discount),
-                tax: Number(tax),
-                totalPromoDisc,
-                cartPromoDiscount,
-                cartPromoName,
-                grandTotal: data.grand_total,
-                change: data.change,
-                payments: payments.map((p) => ({
-                    methodName: methodMap[p.method_id] ?? "?",
-                    amount: Number(p.amount),
-                })),
-                customerName: customer?.name ?? null,
-                tableName: table?.table_number ?? null,
-                orderType,
-                deliveryAddress:
-                    orderType === "delivery" ? deliveryAddress : null,
-                deliveryFee:
-                    orderType === "delivery" ? Number(deliveryFee || 0) : 0,
-                deliveryCustomerName:
-                    orderType === "delivery"
-                        ? deliveryCustomerName || customer?.name
-                        : null,
-                takeawayCustomerName:
-                    orderType === "takeaway"
-                        ? takeawayCustomerName || null
-                        : null,
-                employeeName: selectedEmployee
-                    ? (employees.find(
-                          (e) => String(e.id) === String(selectedEmployee),
-                      )?.name ?? null)
-                    : null,
-                rentalInfo:
-                    isRental && rentalDuration > 0
-                        ? {
-                              duration: rentalDuration,
-                              unit:
-                                  rentalUnit === "per_hour"
-                                      ? "jam"
-                                      : rentalUnit === "per_day"
-                                        ? "hari"
-                                        : "minggu",
-                              returnDate: (() => {
-                                  const now = new Date();
-                                  const ms =
-                                      rentalUnit === "per_hour"
-                                          ? rentalDuration * 3600000
-                                          : rentalUnit === "per_day"
-                                            ? rentalDuration * 86400000
-                                            : rentalDuration * 604800000;
-                                  return new Date(
-                                      now.getTime() + ms,
-                                  ).toLocaleString("id-ID", {
-                                      dateStyle: "medium",
-                                      timeStyle: "short",
-                                  });
-                              })(),
-                          }
-                        : null,
-                hospitalityInfo: isHospitality ? {
-                    roomNumber: roomNumber || null,
-                    guestCount: Number(guestCount) || 1,
-                    duration: rentalDuration || 1,
-                    unitLabel: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_week' ? 'minggu' : 'malam',
-                    checkoutDate: (() => {
-                        const now = new Date();
-                        const ms = rentalUnit === 'per_hour'
-                            ? (rentalDuration || 1) * 3600000
-                            : rentalUnit === 'per_week'
-                            ? (rentalDuration || 1) * 604800000
-                            : (rentalDuration || 1) * 86400000;
-                        const co = new Date(now.getTime() + ms);
-                        return co.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
-                    })(),
-                } : null,
-                parkingInfo: isParking ? {
-                    plateNumber: ticketEvent || '-',
-                    vehicleLabel: ticketSlot === 'motorcycle' ? '🏍️ Motor' :
-                                  ticketSlot === 'car'        ? '🚗 Mobil' :
-                                  ticketSlot === 'truck'      ? '🚛 Truk' : '🏍️ Motor',
-                    ticketNo:    roomNumber || null,
-                    entryTime:   new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
-                } : null,
-                sessionInfo: isSession ? {
-                    unitName:   roomNumber || null,
-                    guestCount: guestCount || 1,
-                    startTime:  new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
-                    orderType:  orderType,
-                } : null,
-                // Split bill meta
-                splitPayers: splitMeta?.payers?.map(p => ({
-                    name: p.name || null,
-                    customer_id: p.customer_id || null,
-                    amount: Number(p.amount) || 0,
-                    paid_amount: Number(p.paid_amount) || Number(p.amount) || 0,
-                    change_amount: Math.max(0, (Number(p.paid_amount) || Number(p.amount)) - Number(p.amount)),
-                    methodName: paymentMethods.find(m => String(m.id) === String(p.method_id))?.name ?? null,
-                    items: p.items ?? [],
-                })) ?? null,
-                splitReceiptMode: splitMeta?.splitReceipt ? "per_payer" : "1",
-            });
-
-            playPaymentSuccess();
-            setShowReceipt(true);
-            setHistoryList((prev) => [
-                {
-                    id: data.sale_id,
-                    sale_no: data.sale_no,
-                    grand_total: data.grand_total,
-                    status: "completed",
-                    sale_date: new Date().toISOString(),
-                    customer: customer ?? null,
-                    payment_status: "paid",
-                    order_type: orderType,
-                },
-                ...prev.slice(0, 19),
-            ]);
-            clearCart();
-        } catch (e) {
-            // Network error — save to offline queue
-            if (!e.response) {
-                try {
-                    await enqueue({
-                        type: "sale",
-                        url: route("admin.kasir.store"),
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN":
-                                document
-                                    .querySelector('meta[name="csrf-token"]')
-                                    ?.getAttribute("content") ?? "",
-                            "X-Inertia": "false",
-                            Accept: "application/json",
-                        },
-                        body: { ...payload, idempotency_key: idempotencyKey },
-                        meta: {
-                            items: cart.map((c) => ({
-                                name: c.name,
-                                qty: c.qty,
-                                price: c.price,
-                            })),
-                            grandTotal,
-                            customer:
-                                customers.find(
-                                    (c) =>
-                                        String(c.id) ===
-                                        String(selectedCustomer),
-                                )?.name ?? "Umum",
-                        },
-                    });
-                    setShowPayment(false);
-
-                    const offlineCustomer = customers.find(
-                        (c) => String(c.id) === String(selectedCustomer),
-                    );
-                    const offlineTable = tables.find(
-                        (t) => String(t.id) === String(selectedTable),
-                    );
-                    const methodMap = Object.fromEntries(
-                        paymentMethods.map((m) => [m.id, m.name]),
-                    );
-
-                    setReceiptData({
-                        saleNo: "TMP-" + Date.now(),
-                        items: cart.map((c) => ({
-                            name: c.name,
-                            variantName: c.variantName,
-                            qty: c.qty,
-                            price: c.price,
-                            subtotal: c.price * c.qty,
-                            promoDiscount: c.promoDiscount ?? 0,
-                            promoName: c.promoName ?? null,
-                            modifiers: c.modifiers,
-                        })),
-                        subtotal,
-                        discount: Number(discount),
-                        tax: Number(tax),
-                        totalPromoDisc,
-                        cartPromoDiscount,
-                        cartPromoName,
-                        grandTotal,
-                        change,
-                        payments: payments.map((p) => ({
-                            methodName: methodMap[p.method_id] ?? "?",
-                            amount: Number(p.amount),
-                        })),
-                        customerName: offlineCustomer?.name ?? null,
-                        tableName: offlineTable?.table_number ?? null,
-                        orderType,
-                        deliveryAddress:
-                            orderType === "delivery" ? deliveryAddress : null,
-                        deliveryFee:
-                            orderType === "delivery"
-                                ? Number(deliveryFee || 0)
-                                : 0,
-                        deliveryCustomerName:
-                            orderType === "delivery"
-                                ? deliveryCustomerName || offlineCustomer?.name
-                                : null,
-                        takeawayCustomerName:
-                            orderType === "takeaway"
-                                ? takeawayCustomerName || null
-                                : null,
-                        employeeName: selectedEmployee
-                            ? (employees.find(
-                                  (e) =>
-                                      String(e.id) === String(selectedEmployee),
-                              )?.name ?? null)
-                            : null,
-                        rentalInfo:
-                            isRental && rentalDuration > 0
-                                ? {
-                                      duration: rentalDuration,
-                                      unit:
-                                          rentalUnit === "per_hour"
-                                              ? "jam"
-                                              : rentalUnit === "per_day"
-                                                ? "hari"
-                                                : "minggu",
-                                      returnDate: (() => {
-                                          const now = new Date();
-                                          const ms =
-                                              rentalUnit === "per_hour"
-                                                  ? rentalDuration * 3600000
-                                                  : rentalUnit === "per_day"
-                                                    ? rentalDuration * 86400000
-                                                    : rentalDuration *
-                                                      604800000;
-                                          return new Date(
-                                              now.getTime() + ms,
-                                          ).toLocaleString("id-ID", {
-                                              dateStyle: "medium",
-                                              timeStyle: "short",
-                                          });
-                                      })(),
-                                  }
-                                : null,
-                        hospitalityInfo: isHospitality ? {
-                            roomNumber: roomNumber || null,
-                            guestCount: Number(guestCount) || 1,
-                            duration: rentalDuration || 1,
-                            unitLabel: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_week' ? 'minggu' : 'malam',
-                            checkoutDate: (() => {
-                                const now = new Date();
-                                const ms = rentalUnit === 'per_hour'
-                                    ? (rentalDuration || 1) * 3600000
-                                    : rentalUnit === 'per_week'
-                                    ? (rentalDuration || 1) * 604800000
-                                    : (rentalDuration || 1) * 86400000;
-                                const co = new Date(now.getTime() + ms);
-                                return co.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
-                            })(),
-                        } : null,
-                        parkingInfo: isParking ? {
-                            plateNumber: ticketEvent || '-',
-                            vehicleLabel: ticketSlot === 'motorcycle' ? '🏍️ Motor' :
-                                          ticketSlot === 'car'        ? '🚗 Mobil' :
-                                          ticketSlot === 'truck'      ? '🚛 Truk' : '🏍️ Motor',
-                            ticketNo:    roomNumber || null,
-                            entryTime:   new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
-                        } : null,
-                        sessionInfo: isSession ? {
-                            unitName:   roomNumber || null,
-                            guestCount: guestCount || 1,
-                            startTime:  new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
-                            orderType:  orderType,
-                        } : null,
-                        isOffline: true,
-                    });
-                    playPaymentSuccess();
-                    setShowReceipt(true);
-                    clearCart();
-                } catch (queueErr) {
-                    alert(
-                        "Gagal menyimpan transaksi offline: " +
-                            queueErr.message,
-                    );
-                }
-            } else {
-                // Server error
-                const status = e.response?.status;
-                const isServerError = status >= 500 && status < 600;
-
-                if (isServerError) {
-                    try {
-                        await enqueue({
-                            type: "sale",
-                            url: route("admin.kasir.store"),
-                            method: "POST",
-                            headers: {
-                                "X-CSRF-TOKEN":
-                                    document
-                                        .querySelector(
-                                            'meta[name="csrf-token"]',
-                                        )
-                                        ?.getAttribute("content") ?? "",
-                                "X-Inertia": "false",
-                                Accept: "application/json",
-                            },
-                            body: {
-                                ...payload,
-                                idempotency_key: idempotencyKey,
-                            },
-                            meta: {
-                                items: cart.map((c) => ({
-                                    name: c.name,
-                                    qty: c.qty,
-                                    price: c.price,
-                                })),
-                                grandTotal,
-                                customer:
-                                    customers.find(
-                                        (c) =>
-                                            String(c.id) ===
-                                            String(selectedCustomer),
-                                    )?.name ?? "Umum",
-                            },
-                        });
-                        setShowPayment(false);
-
-                        const offlineCustomer = customers.find(
-                            (c) => String(c.id) === String(selectedCustomer),
-                        );
-                        const offlineTable = tables.find(
-                            (t) => String(t.id) === String(selectedTable),
-                        );
-                        const methodMap = Object.fromEntries(
-                            paymentMethods.map((m) => [m.id, m.name]),
-                        );
-
-                        setReceiptData({
-                            saleNo: "TMP-" + Date.now(),
-                            items: cart.map((c) => ({
-                                name: c.name,
-                                variantName: c.variantName,
-                                qty: c.qty,
-                                price: c.price,
-                                subtotal: c.price * c.qty,
-                                promoDiscount: c.promoDiscount ?? 0,
-                                promoName: c.promoName ?? null,
-                                modifiers: c.modifiers,
-                            })),
-                            subtotal,
-                            discount: Number(discount),
-                            tax: Number(tax),
-                            totalPromoDisc,
-                            cartPromoDiscount,
-                            cartPromoName,
-                            grandTotal,
-                            change,
-                            payments: payments.map((p) => ({
-                                methodName: methodMap[p.method_id] ?? "?",
-                                amount: Number(p.amount),
-                            })),
-                            customerName: offlineCustomer?.name ?? null,
-                            tableName: offlineTable?.table_number ?? null,
-                            orderType,
-                            deliveryAddress:
-                                orderType === "delivery"
-                                    ? deliveryAddress
-                                    : null,
-                            deliveryFee:
-                                orderType === "delivery"
-                                    ? Number(deliveryFee || 0)
-                                    : 0,
-                            deliveryCustomerName:
-                                orderType === "delivery"
-                                    ? deliveryCustomerName ||
-                                      offlineCustomer?.name
-                                    : null,
-                            employeeName: selectedEmployee
-                                ? (employees.find(
-                                      (e) =>
-                                          String(e.id) ===
-                                          String(selectedEmployee),
-                                  )?.name ?? null)
-                                : null,
-                            rentalInfo:
-                                isRental && rentalDuration > 0
-                                    ? {
-                                          duration: rentalDuration,
-                                          unit:
-                                              rentalUnit === "per_hour"
-                                                  ? "jam"
-                                                  : rentalUnit === "per_day"
-                                                    ? "hari"
-                                                    : "minggu",
-                                          returnDate: (() => {
-                                              const now = new Date();
-                                              const ms =
-                                                  rentalUnit === "per_hour"
-                                                      ? rentalDuration * 3600000
-                                                      : rentalUnit === "per_day"
-                                                        ? rentalDuration *
-                                                          86400000
-                                                        : rentalDuration *
-                                                          604800000;
-                                              return new Date(
-                                                  now.getTime() + ms,
-                                              ).toLocaleString("id-ID", {
-                                                  dateStyle: "medium",
-                                                  timeStyle: "short",
-                                              });
-                                          })(),
-                                      }
-                                    : null,
-                            hospitalityInfo: isHospitality ? {
-                                roomNumber: roomNumber || null,
-                                guestCount: Number(guestCount) || 1,
-                                duration: rentalDuration || 1,
-                                unitLabel: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_week' ? 'minggu' : 'malam',
-                                checkoutDate: (() => {
-                                    const now = new Date();
-                                    const ms = rentalUnit === 'per_hour'
-                                        ? (rentalDuration || 1) * 3600000
-                                        : rentalUnit === 'per_week'
-                                        ? (rentalDuration || 1) * 604800000
-                                        : (rentalDuration || 1) * 86400000;
-                                    const co = new Date(now.getTime() + ms);
-                                    return co.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
-                                })(),
-                            } : null,
-                            parkingInfo: isParking ? {
-                                plateNumber: ticketEvent || '-',
-                                vehicleLabel: ticketSlot === 'motorcycle' ? '🏍️ Motor' :
-                                              ticketSlot === 'car'        ? '🚗 Mobil' :
-                                              ticketSlot === 'truck'      ? '🚛 Truk' : '🏍️ Motor',
-                                ticketNo:    roomNumber || null,
-                                entryTime:   new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
-                            } : null,
-                            sessionInfo: isSession ? {
-                                unitName:   roomNumber || null,
-                                guestCount: guestCount || 1,
-                                startTime:  new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
-                                orderType:  orderType,
-                            } : null,
-                            isOffline: true,
-                        });
-                        playPaymentSuccess();
-                        setShowReceipt(true);
-                        clearCart();
-                    } catch (queueErr) {
-                        alert(
-                            "Gagal menyimpan transaksi offline: " +
-                                queueErr.message,
-                        );
-                    }
-                } else {
-                    // Validation / client error (4xx) — tampilkan pesan error
-                    const msg = e.response?.data?.message
-                        ? e.response.data.message
-                        : e.response?.data?.errors
-                          ? Object.values(e.response.data.errors)
-                                .flat()
-                                .join("\n")
-                          : e.message;
-                    alert("Gagal memproses transaksi:\n" + msg);
-                }
-            }
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    /** Called when PG payment is confirmed by polling */
-    const handlePgSuccess = (pgResult) => {
-        const customer = pgModalData?.customer;
-        const table = pgModalData?.table;
+    const handlePgSuccess = (pgTransaction) => {
+        const customer = customers.find(c => String(c.id) === String(selectedCustomer));
 
         setReceiptData({
-            saleNo: pgModalData.saleNo,
+            saleNo: pgTransaction.saleNo,
             items: cart.map((c) => ({
                 name: c.name,
                 variantName: c.variantName,
@@ -1915,58 +1264,26 @@ export default function useKasir({
             totalPromoDisc,
             cartPromoDiscount,
             cartPromoName,
-            grandTotal: pgModalData.grandTotal,
-            change: pgModalData.change,
-            payments: pgModalData.payments,
+            grandTotal: pgTransaction.grandTotal,
+            change: pgTransaction.change,
+            payments: pgTransaction.payments,
             customerName: customer?.name ?? null,
-            tableName: table?.table_number ?? null,
-            orderType: pgModalData.orderType,
-            deliveryAddress:
-                pgModalData.orderType === "delivery" ? deliveryAddress : null,
-            deliveryFee:
-                pgModalData.orderType === "delivery"
-                    ? Number(deliveryFee || 0)
-                    : 0,
-            deliveryCustomerName:
-                pgModalData.orderType === "delivery"
-                    ? deliveryCustomerName || customer?.name
-                    : null,
-            takeawayCustomerName:
-                pgModalData.orderType === "takeaway"
-                    ? takeawayCustomerName || null
-                    : null,
-            employeeName: selectedEmployee
-                ? (employees.find(
-                      (e) => String(e.id) === String(selectedEmployee),
-                  )?.name ?? null)
-                : null,
-            rentalInfo:
-                isRental && rentalDuration > 0
-                    ? {
-                          duration: rentalDuration,
-                          unit:
-                              rentalUnit === "per_hour"
-                                  ? "jam"
-                                  : rentalUnit === "per_day"
-                                    ? "hari"
-                                    : "minggu",
-                          returnDate: (() => {
-                              const now = new Date();
-                              const ms =
-                                  rentalUnit === "per_hour"
-                                      ? rentalDuration * 3600000
-                                      : rentalUnit === "per_day"
-                                        ? rentalDuration * 86400000
-                                        : rentalDuration * 604800000;
-                              return new Date(
-                                  now.getTime() + ms,
-                              ).toLocaleString("id-ID", {
-                                  dateStyle: "medium",
-                                  timeStyle: "short",
-                              });
-                          })(),
-                      }
-                    : null,
+            tableName: tables.find(t => String(t.id) === String(selectedTable))?.table_number ?? null,
+            orderType,
+            deliveryAddress: orderType === "delivery" ? deliveryAddress : null,
+            deliveryFee: orderType === "delivery" ? Number(deliveryFee || 0) : 0,
+            deliveryCustomerName: orderType === "delivery" ? (deliveryCustomerName || customer?.name) : null,
+            takeawayCustomerName: orderType === "takeaway" ? takeawayCustomerName || null : null,
+            employeeName: selectedEmployee ? (employees.find(e => String(e.id) === String(selectedEmployee))?.name ?? null) : null,
+            rentalInfo: isRental && rentalDuration > 0 ? {
+                duration: rentalDuration,
+                unit: rentalUnit === "per_hour" ? "jam" : rentalUnit === "per_day" ? "hari" : "minggu",
+                returnDate: (() => {
+                    const now = new Date();
+                    const ms = rentalUnit === "per_hour" ? rentalDuration * 3600000 : rentalUnit === "per_day" ? rentalDuration * 86400000 : rentalDuration * 604800000;
+                    return new Date(now.getTime() + ms).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+                })(),
+            } : null,
             hospitalityInfo: isHospitality ? {
                 roomNumber: roomNumber || null,
                 guestCount: Number(guestCount) || 1,
@@ -1974,48 +1291,36 @@ export default function useKasir({
                 unitLabel: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_week' ? 'minggu' : 'malam',
                 checkoutDate: (() => {
                     const now = new Date();
-                    const ms = rentalUnit === 'per_hour'
-                        ? (rentalDuration || 1) * 3600000
-                        : rentalUnit === 'per_week'
-                        ? (rentalDuration || 1) * 604800000
-                        : (rentalDuration || 1) * 86400000;
-                    const co = new Date(now.getTime() + ms);
-                    return co.toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+                    const ms = rentalUnit === 'per_hour' ? (rentalDuration || 1) * 3600000 : rentalUnit === 'per_week' ? (rentalDuration || 1) * 604800000 : (rentalDuration || 1) * 86400000;
+                    return new Date(now.getTime() + ms).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
                 })(),
             } : null,
             parkingInfo: isParking ? {
                 plateNumber: ticketEvent || '-',
-                vehicleLabel: ticketSlot === 'motorcycle' ? '🏍️ Motor' :
-                              ticketSlot === 'car'        ? '🚗 Mobil' :
-                              ticketSlot === 'truck'      ? '🚛 Truk' : '🏍️ Motor',
-                ticketNo:    roomNumber || null,
-                entryTime:   new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                vehicleLabel: ticketSlot === 'motorcycle' ? 'Motor' : ticketSlot === 'car' ? 'Mobil' : ticketSlot === 'truck' ? 'Truk' : 'Motor',
+                ticketNo: roomNumber || null,
+                entryTime: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
             } : null,
             sessionInfo: isSession ? {
-                unitName:   roomNumber || null,
+                unitName: roomNumber || null,
                 guestCount: guestCount || 1,
-                startTime:  new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
-                orderType:  pgModalData?.orderType ?? orderType,
+                startTime: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                orderType,
             } : null,
         });
-
-        setPgModalData(null);
         playPaymentSuccess();
         setShowReceipt(true);
-        setHistoryList((prev) => [
-            {
-                id: pgModalData.saleId,
-                sale_no: pgModalData.saleNo,
-                grand_total: pgModalData.grandTotal,
-                status: "completed",
-                sale_date: new Date().toISOString(),
-                customer: customer ?? null,
-                payment_status: "paid",
-                order_type: pgModalData.orderType,
-            },
-            ...prev.slice(0, 19),
-        ]);
         clearCart();
+        setHistoryList(prev => [{
+            id: pgTransaction.saleId,
+            sale_no: pgTransaction.saleNo,
+            grand_total: pgTransaction.grandTotal,
+            status: 'completed',
+            sale_date: new Date().toISOString(),
+            customer: customer ?? null,
+            payment_status: 'paid',
+            order_type: orderType,
+        }, ...prev.slice(0, 19)]);
     };
 
     // helper: original base price (without modifier)
@@ -2039,9 +1344,342 @@ export default function useKasir({
         });
     };
 
-    /* ─────────────────────────────────────────────────────
+    /* â”€â”€ Split Bill handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+    const handleSplitStart = async (params) => {
+        try {
+            const { data } = await axios.post(route("admin.kasir.split.start"), {
+                customer_id: selectedCustomer || null,
+                table_id: selectedTable || null,
+                order_type: orderType,
+                discount_amount: Number(discount),
+                tax_amount: Number(tax),
+                shipping_amount: orderType === "delivery" ? Number(deliveryFee || 0) : 0,
+            rounding_adjustment: roundingAdjustment,
+            rounding_mode: cashRoundingEnabled ? (roundingOverrideMode === "store_default" ? cashRoundingMode : roundingOverrideMode) : null,
+            rounding_nearest: cashRoundingEnabled ? cashRoundingNearest : null,
+            rounding_custom: cashRoundingEnabled && roundingOverrideMode === "custom" && roundingCustomValue !== "" ? Number(roundingCustomValue) : null,
+                delivery_address: orderType === "delivery" ? deliveryAddress : null,
+                customer_name: orderType === "delivery" ? deliveryCustomerName : null,
+                notes: buildComposedNotes(),
+                items: cart.map((c) => ({
+                    product_id: c.productId,
+                    variant_id: c.variantId,
+                    packaging_unit_id: c.packagingUnitId || null,
+                    unit_name: c.packagingUnitName || null,
+                    unit_conversion_qty: c.conversionQty || 1,
+                    quantity: c.qty,
+                    price: Number(product_sell_price(c)),
+                    discount_amount: 0,
+                    modifiers: c.modifiers,
+                    notes: c.note || null,
+                })),
+                split_mode: params.splitMode,
+                payers: params.payers,
+                idempotency_key: crypto.randomUUID(),
+            });
+
+            if (!data.success) throw new Error(data.message);
+
+            return {
+                success: true,
+                sale_id: data.sale_id,
+                sale_no: data.sale_no,
+                grand_total: data.grand_total,
+                split_payers: data.split_payers,
+            };
+        } catch (e) {
+            alert("Gagal memulai split bill: " + (e.response?.data?.message || e.message));
+            return { success: false };
+        }
+    };
+
+    const handleSplitPayOffline = async (params) => {
+        try {
+            // If no sale yet, create it first
+            let saleId = params.saleId;
+            if (!saleId) {
+                const startResult = await handleSplitStart({
+                    splitMode: params.splitMode,
+                    payers: params.payers,
+                });
+                if (!startResult.success) return { success: false };
+                saleId = startResult.sale_id;
+            }
+
+            const { data } = await axios.post(route("admin.kasir.split.pay-offline"), {
+                sale_id: saleId,
+                split_payer_id: params.payerId,
+                method_id: params.methodId,
+                paid_amount: params.paidAmount,
+            });
+
+            if (!data.success) throw new Error(data.message);
+
+            if (data.all_paid && data.receipt) {
+                setReceiptData({
+                    ...data.receipt,
+                    splitReceiptMode: params.splitReceiptMode === "per_payer" ? "per_payer" : "1",
+                });
+                playPaymentSuccess();
+                setShowReceipt(true);
+                setShowPayment(false);
+                clearCart();
+            }
+
+            return {
+                success: true,
+                all_paid: data.all_paid,
+                sale_id: saleId,
+            };
+        } catch (e) {
+            alert("Gagal memproses pembayaran: " + (e.response?.data?.message || e.message));
+            return { success: false };
+        }
+    };
+
+    const handleSplitCreatePg = async (params) => {
+        try {
+            let saleId = params.saleId;
+            if (!saleId) {
+                const startResult = await handleSplitStart({
+                    splitMode: params.splitMode,
+                    payers: params.payers,
+                });
+                if (!startResult.success) return { success: false };
+                saleId = startResult.sale_id;
+            }
+
+            const { data } = await axios.post(route("admin.kasir.split.create-pg"), {
+                sale_id: saleId,
+                split_payer_id: params.payerId,
+                provider: params.provider,
+                payment_type: params.paymentType,
+            });
+
+            if (!data.success) throw new Error(data.message);
+
+            return {
+                success: true,
+                sale_id: saleId,
+                pgTransaction: {
+                    pgTrxId: data.pg_trx_id,
+                    amount: data.amount,
+                    saleId: saleId,
+                    saleNo: null,
+                    change: 0,
+                    grandTotal: data.amount,
+                    paymentType: data.payment_type,
+                    qrCode: data.qr_code,
+                    qrImageUrl: data.qr_image_url,
+                    vaNumber: data.va_number,
+                    vaBank: data.va_bank,
+                    paymentUrl: data.payment_url,
+                    isSplitPayer: true,
+                    splitPayerId: params.payerId,
+                    splitReceiptMode: params.splitReceiptMode,
+                    splitPayers: params.payers,
+                },
+            };
+        } catch (e) {
+            alert("Gagal membuat pembayaran online: " + (e.response?.data?.message || e.message));
+            return { success: false };
+        }
+    };
+
+    const handleResumeSplit = async (saleId) => {
+        try {
+            const { data } = await axios.get(route("admin.kasir.split.show", saleId));
+            if (!data.success) throw new Error(data.message);
+
+            setShowPayment(true);
+            return data;
+        } catch (e) {
+            alert("Gagal memuat split bill: " + (e.response?.data?.message || e.message));
+            return null;
+        }
+    };
+
+    const handleCancelSplit = async (saleId) => {
+        try {
+            const { data } = await axios.post(route("admin.kasir.split.cancel", saleId));
+            if (!data.success) throw new Error(data.message);
+            router.reload({ only: ["todaySales"] });
+            return data;
+        } catch (e) {
+            alert("Gagal membatalkan: " + (e.response?.data?.message || e.message));
+            return null;
+        }
+    };
+
+    /* â”€â”€ New payment flow handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+    const handleStartSale = async () => {
+        try {
+            const { data } = await axios.post(route('admin.kasir.start'), {
+                customer_id: selectedCustomer || null,
+                table_id: selectedTable || null,
+                order_type: orderType,
+                discount_amount: Number(discount),
+                tax_amount: Number(tax),
+                shipping_amount: orderType === 'delivery' ? Number(deliveryFee || 0) : 0,
+                rounding_adjustment: roundingAdjustment,
+                rounding_mode: cashRoundingEnabled ? (roundingOverrideMode === 'store_default' ? cashRoundingMode : roundingOverrideMode) : null,
+                rounding_nearest: cashRoundingEnabled ? cashRoundingNearest : null,
+                rounding_custom: cashRoundingEnabled && roundingOverrideMode === 'custom' && roundingCustomValue !== '' ? Number(roundingCustomValue) : null,
+                delivery_address: orderType === 'delivery' ? deliveryAddress : null,
+                customer_name: orderType === 'delivery' ? deliveryCustomerName : null,
+                notes: buildComposedNotes(),
+                items: cart.map(c => ({
+                    product_id: c.productId,
+                    variant_id: c.variantId,
+                    packaging_unit_id: c.packagingUnitId || null,
+                    unit_name: c.packagingUnitName || null,
+                    unit_conversion_qty: c.conversionQty || 1,
+                    quantity: c.qty,
+                    price: Number(product_sell_price(c)),
+                    discount_amount: 0,
+                    modifiers: c.modifiers,
+                    notes: c.note || null,
+                })),
+                idempotency_key: crypto.randomUUID(),
+            });
+            if (!data.success) throw new Error(data.message);
+            return data;
+        } catch (e) {
+            alert('Gagal memulai transaksi: ' + (e.response?.data?.message || e.message));
+            return { success: false };
+        }
+    };
+
+    const handleFinalizePayment = async (saleId, payments, extras = {}) => {
+        try {
+            const { data } = await axios.post(route('admin.kasir.finalize'), {
+                sale_id: saleId,
+                payments,
+                customer_id: extras.customer_id || null,
+                kasbon_due_date: extras.kasbon_due_date || null,
+                kasbon_note: extras.kasbon_note || null,
+            });
+            if (!data.success) throw new Error(data.message);
+            if (data.is_pg && data.pg_info) {
+                // Actually create the PG transaction (QR/VA) now that the sale exists.
+                const pgResult = await handleStartPg(saleId, data.pg_info.provider, data.pg_info.method);
+                console.log('[PG] handleStartPg result:', pgResult);
+
+                // Even when the initial charge errors out (unknown/failed), the
+                // backend has already reconciled with the gateway and returns a
+                // pg_trx_id + status we can show progress for â€” don't just die here.
+                if (!pgResult?.success && !pgResult?.pg_trx_id) {
+                    return { success: false, message: pgResult?.message || 'Gagal membuat transaksi pembayaran online.' };
+                }
+
+                return {
+                    ...data,
+                    is_pg: true,
+                    pgTransaction: {
+                        pgTrxId: pgResult.pg_trx_id,
+                        amount: data.pg_info.amount,
+                        saleId: saleId,
+                        saleNo: data.sale_no,
+                        change: data.change,
+                        grandTotal: data.grand_total,
+                        paymentType: data.pg_info.method,
+                        qrCode: pgResult.qr_code,
+                        qrImageUrl: pgResult.qr_image_url,
+                        vaNumber: pgResult.va_number,
+                        vaBank: pgResult.va_bank,
+                        paymentUrl: pgResult.payment_url,
+                        initialStatus: pgResult.status ?? 'pending',
+                        canRetry: !!pgResult.can_retry,
+                        payments: payments.map(p => ({
+                            methodName: PG_METHOD_LABELS[p.pg_method]?.label || p.pg_method || 'PG',
+                            amount: Number(p.amount),
+                        })),
+                    },
+                };
+            }
+            const customer = customers.find(c => String(c.id) === String(selectedCustomer));
+            const table = tables.find(t => String(t.id) === String(selectedTable));
+            const methodMap = Object.fromEntries(paymentMethods.map(m => [m.id, m.name]));
+            setReceiptData({
+                saleNo: data.sale_no,
+                items: cart.map(c => ({
+                    name: c.name, variantName: c.variantName, qty: c.qty, price: c.price,
+                    subtotal: c.price * c.qty, promoDiscount: c.promoDiscount ?? 0,
+                    promoName: c.promoName ?? null, modifiers: c.modifiers,
+                })),
+                subtotal, discount: Number(discount), tax: Number(tax),
+                totalPromoDisc, cartPromoDiscount, cartPromoName,
+                grandTotal: data.grand_total, change: data.change,
+                payments: payments.map(p => ({
+                    methodName: methodMap[p.method_id] || '?', amount: Number(p.amount),
+                })),
+                customerName: customer?.name ?? null,
+                tableName: table?.table_number ?? null,
+                orderType,
+            });
+            playPaymentSuccess();
+            setShowPayment(false);
+            setShowReceipt(true);
+            setHistoryList(prev => [{
+                id: saleId, sale_no: data.sale_no, grand_total: data.grand_total,
+                status: 'completed', sale_date: new Date().toISOString(),
+                customer: customer ?? null, payment_status: 'paid', order_type: orderType,
+            }, ...prev.slice(0, 19)]);
+            clearCart();
+            return data;
+        } catch (e) {
+            alert('Gagal memproses pembayaran: ' + (e.response?.data?.message || e.message));
+            return { success: false };
+        }
+    };
+
+    const handleCancelPendingSale = async (saleId) => {
+        try {
+            await axios.post(route('admin.kasir.cancel-pending', saleId));
+            return { success: true };
+        } catch (e) {
+            console.error('Failed to cancel pending sale:', e);
+            return { success: false };
+        }
+    };
+
+    const handleStartPg = async (saleId, provider, paymentType) => {
+        try {
+            const { data } = await axios.post(route('admin.payment-gateway.create-transaction'), {
+                sale_id: saleId, provider, payment_type: paymentType,
+            });
+            console.log('[PG] create-transaction response:', data);
+            return data;
+        } catch (e) {
+            // 422 responses from the backend carry status/can_retry/pg_trx_id â€”
+            // preserve them so the UI can offer a retry instead of a dead end.
+            if (e.response?.data) {
+                return { success: false, ...e.response.data };
+            }
+            const msg = e.message || 'Gagal membuat transaksi pembayaran online.';
+            return { success: false, message: msg };
+        }
+    };
+
+    const handleRetryPg = async (pgTrxId) => {
+        try {
+            const { data } = await axios.post(route('admin.payment-gateway.retry'), {
+                pg_trx_id: pgTrxId,
+            });
+            return data;
+        } catch (e) {
+            if (e.response?.data) {
+                return { success: false, ...e.response.data };
+            }
+            return { success: false, message: e.message || 'Gagal mencoba ulang pembayaran.' };
+        }
+    };
+
+    /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
        Return everything
-    ───────────────────────────────────────────────────── */
+    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     return {
         /* constants / formatters */
         fmt,
@@ -2193,8 +1831,6 @@ export default function useKasir({
         sidebarWidth,
         setSidebarWidth,
         startSidebarResize,
-        pgModalData,
-        setPgModalData,
         stockAlert,
         setStockAlert,
 
@@ -2216,6 +1852,12 @@ export default function useKasir({
         roundedGrandTotal,
         roundingAdjustment,
         cashRoundingEnabled,
+        cashRoundingNearest,
+        cashRoundingMode,
+        roundingOverrideMode,
+        setRoundingOverrideMode,
+        roundingCustomValue,
+        setRoundingCustomValue,
         missingRequiredField,
 
         /* handlers */
@@ -2233,9 +1875,18 @@ export default function useKasir({
         playBeep,
         handleOrderTypeChange,
         handlePrintHistory,
-        handleConfirmPayment,
         handlePgSuccess,
         handleFreeTable,
+        handleSplitStart,
+        handleSplitPayOffline,
+        handleSplitCreatePg,
+        handleResumeSplit,
+        handleCancelSplit,
+        handleStartSale,
+        handleFinalizePayment,
+        handleCancelPendingSale,
+        handleStartPg,
+        handleRetryPg,
         product_sell_price,
         findBestPromoForItem,
         findBestCartPromo,

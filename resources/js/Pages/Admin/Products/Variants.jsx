@@ -5,6 +5,17 @@ import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import Button from "@/Components/ui/Button";
 import { Plus } from "lucide-react";
 
+const PAGE_TITLE = {
+    retail: "Produk",
+    fnb: "Menu & Produk",
+    service: "Layanan & Produk",
+    rental: "Item Sewa",
+    ticket: "Tiket & Paket",
+    hospitality: "Kamar & Layanan",
+    parking: "Tarif Parkir",
+    session: "Paket Sesi",
+};
+
 const inputCls =
     "block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20";
 
@@ -552,13 +563,14 @@ const fmt = (n) =>
         maximumFractionDigits: 0,
     }).format(n ?? 0);
 
-export default function Variants({ product }) {
+export default function Variants({ product, storeType = "retail" }) {
     const { flash } = usePage().props;
     const [showForm, setShowForm] = useState(false);
     const [editVariant, setEditVariant] = useState(null);
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
+    const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
     const variants = product.variants || [];
 
     const confirmDelete = () => {
@@ -579,47 +591,52 @@ export default function Variants({ product }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href={route("admin.products.show", product.id)}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                            aria-label="Kembali"
-                        >
-                            <svg
-                                className="h-5 w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.8}
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M15.75 19.5L8.25 12l7.5-7.5"
-                                />
-                            </svg>
-                        </Link>
-                        <div>
-                            <h2 className="text-lg font-semibold text-foreground">
-                                Varian Produk
-                            </h2>
-                        </div>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Manajemen {pageTitle}
                     </div>
-                    <Button
-                        onClick={() => {
-                            setEditVariant(null);
-                            setShowForm(true);
-                        }}
-                        icon={Plus}
-                    >
-                        <span className="hidden sm:inline">Tambah Varian</span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
+                    <div className="text-[11px] text-muted-foreground">
+                        Varian
+                    </div>
                 </div>
             }
         >
             <Head title={`Varian - ${product.name}`} />
+
+            {/* Hero */}
+            <section className="mb-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                Varian
+                            </span>
+                            <span className="text-muted-foreground">·</span>
+                            <span className="truncate max-w-[14rem]">{product.name}</span>
+                            {product.sku && (
+                                <>
+                                    <span className="text-muted-foreground">·</span>
+                                    <span className="font-mono">SKU: {product.sku}</span>
+                                </>
+                            )}
+                            <span className="text-muted-foreground">·</span>
+                            <span>{variants.length} varian</span>
+                        </div>
+                        <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
+                            Kelola{" "}
+                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                                varian
+                            </span>{" "}
+                            produk
+                        </h1>
+                        <p className="mt-2 max-w-xl text-xs text-muted-foreground">
+                            Atur opsi ukuran, warna, atau tipe lain beserta harga, SKU, dan
+                            kemasan per varian.
+                        </p>
+                    </div>
+                </div>
+            </section>
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">

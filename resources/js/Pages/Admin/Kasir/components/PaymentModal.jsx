@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { fmt, PG_METHOD_LABELS, findPgPaymentMethod } from "./helpers";
 
 /* ── uid kecil untuk split payers ── */
@@ -9,8 +9,15 @@ export default function PaymentModal({
     grandTotal,
     roundedGrandTotal,
     roundingAdjustment = 0,
+    cashRoundingEnabled = false,
+    cashRoundingNearest = 100,
+    cashRoundingMode = "nearest",
+    roundingOverrideMode = "store_default",
+    setRoundingOverrideMode,
+    roundingCustomValue = "",
+    setRoundingCustomValue,
     paymentMethods,
-    pgMethods,
+    pgMethods = [],
     onConfirm,
     onClose,
     submitting,
@@ -18,6 +25,11 @@ export default function PaymentModal({
     customers = [],
     onSelectCustomer,
     cartItems = [],
+    // Split bill callbacks
+    onSplitStart,
+    onSplitPayOffline,
+    onSplitCreatePg,
+    resumeData = null,
 }) {
     const displayTotal = roundedGrandTotal ?? grandTotal;
 
@@ -61,6 +73,43 @@ export default function PaymentModal({
     });
 
     const [payers, setPayers] = useState([]);
+
+    // Split bill new state
+    const [splitSaleId, setSplitSaleId] = useState(null);
+    const [splitStarting, setSplitStarting] = useState(false);
+    const [imageModalMethod, setImageModalMethod] = useState(null);
+    // Track pay mode per payer: { [payerId]: 'offline' | 'online' }
+    const [payerPayModes, setPayerPayModes] = useState({});
+    // Track which payer is currently processing PG
+    const [activePgPayer, setActivePgPayer] = useState(null);
+
+    // Initialize from resume data
+    useEffect(() => {
+        if (resumeData && resumeData.payers) {
+            setMode("split");
+            setSplitStep(4);
+            setSplitSaleId(resumeData.sale_id);
+            setPayers(
+                resumeData.payers.map((p) => ({
+                    _id: p.id,
+                    name: p.name,
+                    customer_id: p.customer_id,
+                    customerQuery: "",
+                    showCustomerSearch: false,
+                    method_id: p.payment_method_id || offlineMethods[0]?.id || "",
+                    assignments: [],
+                    subtotal: p.subtotal,
+                    discount: p.discount,
+                    tax: p.tax,
+                    service: 0,
+                    total: p.total,
+                    paid_amount: p.paid_amount || "",
+                    paid: p.status === "paid",
+                    pgLoading: false,
+                })),
+            );
+        }
+    }, [resumeData]);
 
     // Total unit assignable (qty dipecah per unit)
     const totalUnits = useMemo(
@@ -167,6 +216,9 @@ export default function PaymentModal({
         setSplitStep(1);
         setSplitMode("item");
         setPayers([]);
+        setSplitSaleId(null);
+        setPayerPayModes({});
+        setActivePgPayer(null);
         setMode("split");
     };
 
@@ -255,6 +307,9 @@ export default function PaymentModal({
         ]);
         setSplitStep(1);
         setPayers([]);
+        setSplitSaleId(null);
+        setPayerPayModes({});
+        setActivePgPayer(null);
         setMode(null);
     };
 
@@ -296,7 +351,7 @@ export default function PaymentModal({
     const cashMethod = paymentMethods.find((m) => m.type === "cash");
     const quickCash = cashMethod
         ? [
-              grandTotal,
+              displayTotal,
               Math.ceil(displayTotal / 10000) * 10000,
               Math.ceil(displayTotal / 50000) * 50000,
           ].filter((v, i, a) => a.indexOf(v) === i)
@@ -563,6 +618,49 @@ export default function PaymentModal({
                                     </div>
                                 )}
 
+                            {/* Rounding override — only for cash payments */}
+                            {cashRoundingEnabled && payments.length === 1 && cashMethod && payments[0].method_id === cashMethod.id && (
+                                <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Pembulatan</p>
+                                    <div className="flex gap-1.5 flex-wrap">
+                                        {[
+                                            { v: "store_default", l: `Default (${cashRoundingMode === "up" ? "↑" : cashRoundingMode === "down" ? "↓" : "↕"})` },
+                                            { v: "down", l: `Ke Bawah ${fmt(Math.floor(grandTotal / cashRoundingNearest) * cashRoundingNearest)}` },
+                                            { v: "up", l: `Ke Atas ${fmt(Math.ceil(grandTotal / cashRoundingNearest) * cashRoundingNearest)}` },
+                                            { v: "custom", l: "Custom" },
+                                        ].map((opt) => (
+                                            <button
+                                                key={opt.v}
+                                                type="button"
+                                                onClick={() => setRoundingOverrideMode(opt.v)}
+                                                className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition ${
+                                                    roundingOverrideMode === opt.v
+                                                        ? "bg-violet-100 text-violet-700 border border-violet-300"
+                                                        : "bg-card text-muted-foreground border border-border hover:border-violet-300"
+                                                }`}
+                                            >
+                                                {opt.l}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {roundingOverrideMode === "custom" && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-muted-foreground">Rp</span>
+                                            <input
+                                                type="number"
+                                                value={roundingCustomValue}
+                                                onChange={(e) => setRoundingCustomValue(e.target.value)}
+                                                placeholder={String(displayTotal)}
+                                                className="flex-1 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs focus:border-violet-400 focus:outline-none"
+                                            />
+                                            {roundingCustomValue !== "" && Math.abs(Number(roundingCustomValue) - grandTotal) > cashRoundingNearest && (
+                                                <span className="text-[10px] text-destructive">Maks ±{fmt(cashRoundingNearest)}</span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Payment rows */}
                             {payments.map((p, i) => (
                                 <div
@@ -590,6 +688,19 @@ export default function PaymentModal({
                                                 </option>
                                             ))}
                                         </select>
+                                        {(() => {
+                                            const selMethod = offlineMethods.find((m) => String(m.id) === String(p.method_id));
+                                            return selMethod?.image ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setImageModalMethod(selMethod)}
+                                                    className="shrink-0 rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                                                    title="Lihat gambar QR"
+                                                >
+                                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z" /></svg>
+                                                </button>
+                                            ) : null;
+                                        })()}
                                         {payments.length > 1 && (
                                             <button
                                                 type="button"
@@ -932,7 +1043,7 @@ export default function PaymentModal({
                                             </p>
                                             <p className="text-[11px] text-muted-foreground">
                                                 Hutang {customer.name} akan bertambah menjadi{" "}
-                                                <strong>{fmt((customer.debt_balance ?? 0) + displayTotal)}</strong>
+                                                <strong>{fmt(Number(customer.debt_balance ?? 0) + Number(displayTotal))}</strong>
                                             </p>
                                         </div>
                                     )}
@@ -1055,16 +1166,26 @@ export default function PaymentModal({
                         </div>
 
                         {/* ── STEP 1: Pilih Mode ── */}
-                        {splitStep === 1 && (
+                        {splitStep === 1 && (() => {
+                            const uniqueItemCount = new Set(cartItems.map((i) => i.cartId)).size;
+                            const canSplitPerItem = totalUnits > 1 || uniqueItemCount > 1;
+                            return (
                             <div className="flex-1 overflow-y-auto min-h-0 px-5 py-6 space-y-4">
                                 <p className="text-center text-sm font-semibold text-foreground">Bagaimana cara membagi bill?</p>
                                 <div className="grid grid-cols-2 gap-3">
                                     <button type="button"
+                                        disabled={!canSplitPerItem}
                                         onClick={() => { setSplitMode("item"); setSplitStep(2); }}
-                                        className="group flex flex-col items-center gap-2 rounded-2xl border-2 border-border bg-card p-5 transition hover:border-violet-400 hover:bg-violet-50">
+                                        className={`group flex flex-col items-center gap-2 rounded-2xl border-2 p-5 transition ${
+                                            canSplitPerItem
+                                                ? 'border-border bg-card hover:border-violet-400 hover:bg-violet-50 cursor-pointer'
+                                                : 'border-border/50 bg-muted/30 opacity-50 cursor-not-allowed'
+                                        }`}>
                                         <span className="text-3xl">🧾</span>
-                                        <p className="text-sm font-bold text-foreground group-hover:text-violet-600">Per Item</p>
-                                        <p className="text-[11px] text-muted-foreground text-center">Bayar sesuai menu yang dipilih</p>
+                                        <p className={`text-sm font-bold ${canSplitPerItem ? 'text-foreground group-hover:text-violet-600' : 'text-muted-foreground'}`}>Per Item</p>
+                                        <p className="text-[11px] text-muted-foreground text-center">
+                                            {canSplitPerItem ? 'Bayar sesuai menu yang dipilih' : 'Butuh >1 item atau >1 jenis'}
+                                        </p>
                                     </button>
                                     <button type="button"
                                         onClick={() => { setSplitMode("equal"); setSplitStep(2); }}
@@ -1078,7 +1199,8 @@ export default function PaymentModal({
                                     Total transaksi: <span className="font-bold text-foreground">{fmt(displayTotal)}</span>
                                 </p>
                             </div>
-                        )}
+                            );
+                        })()}
 
                         {/* ── STEP 2: Jumlah Orang + Nama ── */}
                         {splitStep === 2 && (
@@ -1208,9 +1330,10 @@ export default function PaymentModal({
                             </div>
                         )}
 
-                        {/* ── STEP 4: Bayar + Struk ── */}
+                        {/* ── STEP 4: Bayar Gantian ── */}
                         {splitStep === 4 && (
                             <div className="flex-1 overflow-y-auto min-h-0 px-5 py-4 space-y-3">
+                                {/* Struk mode */}
                                 <div className="rounded-2xl border border-border bg-muted/30 p-3.5 space-y-2">
                                     <p className="text-[12px] font-semibold text-foreground">Struk</p>
                                     {[["per_payer", `Struk per orang (${payers.length} struk)`], ["1", "1 struk total"]].map(([v, l]) => (
@@ -1224,15 +1347,21 @@ export default function PaymentModal({
                                     ))}
                                 </div>
 
+                                {/* Payer cards */}
                                 {payers.map((payer, i) => {
+                                    const payMode = payerPayModes[payer._id] || "offline";
+                                    const isPaid = payer.paid;
                                     const selectedMethod = offlineMethods.find((m) => String(m.id) === String(payer.method_id));
                                     const isCash = selectedMethod?.type === "cash";
+                                    const hasImage = !!selectedMethod?.image;
                                     const paidAmt = Number(payer.paid_amount) || 0;
                                     const payerChange = isCash ? Math.max(0, paidAmt - payer.total) : 0;
                                     const itemCount = payer.assignments?.length ?? 0;
+
                                     return (
                                         <div key={payer._id}
-                                            className={`rounded-2xl border-2 p-4 space-y-3 transition ${payer.paid ? "border-success/30 bg-success/5" : "border-border bg-card"}`}>
+                                            className={`rounded-2xl border-2 p-4 space-y-3 transition ${isPaid ? "border-success/30 bg-success/5" : "border-border bg-card"}`}>
+                                            {/* Header */}
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <p className="text-sm font-bold text-foreground">{payer.name || `Orang ${i + 1}`}</p>
@@ -1240,12 +1369,12 @@ export default function PaymentModal({
                                                         {splitMode === "item" ? `${itemCount} item · ` : ""}Tagihan {fmt(payer.total)}
                                                     </p>
                                                 </div>
-                                                <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                                                    <input type="checkbox" checked={payer.paid}
-                                                        onChange={(e) => updatePayer(payer._id, { paid: e.target.checked })}
-                                                        className="h-4 w-4 rounded border-border accent-success" />
-                                                    <span className={`text-[12px] font-semibold ${payer.paid ? "text-success" : "text-muted-foreground"}`}>Sudah Bayar</span>
-                                                </label>
+                                                {isPaid ? (
+                                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-[12px] font-bold text-success">
+                                                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                                                        Lunas
+                                                    </span>
+                                                ) : null}
                                             </div>
 
                                             {splitMode === "item" && (payer.discount > 0 || payer.tax > 0) && (
@@ -1255,38 +1384,131 @@ export default function PaymentModal({
                                                 </div>
                                             )}
 
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <select
-                                                    value={payer.method_id}
-                                                    onChange={(e) => updatePayer(payer._id, { method_id: Number(e.target.value) })}
-                                                    className="rounded-xl border border-border bg-background px-3 py-2 text-[13px] outline-none focus:border-violet-400">
-                                                    {offlineMethods.map((m) => (
-                                                        <option key={m.id} value={m.id}>{m.name}</option>
-                                                    ))}
-                                                </select>
-                                                {isCash ? (
-                                                    <input type="number" min={0}
-                                                        placeholder={String(payer.total)}
-                                                        value={payer.paid_amount}
-                                                        onChange={(e) => updatePayer(payer._id, { paid_amount: e.target.value })}
-                                                        className="rounded-xl border border-border bg-background px-3 py-2 text-[13px] outline-none focus:border-violet-400" />
-                                                ) : (
-                                                    <div className="flex items-center rounded-xl bg-muted px-3 py-2 text-[13px] font-semibold text-muted-foreground">
-                                                        {fmt(payer.total)}
-                                                    </div>
-                                                )}
-                                            </div>
+                                            {!isPaid && (
+                                                <>
+                                                    {/* Toggle Offline/Online */}
+                                                    {pgMethods?.length > 0 && (
+                                                        <div className="inline-flex rounded-lg bg-muted p-0.5">
+                                                            <button type="button"
+                                                                onClick={() => setPayerPayModes((prev) => ({ ...prev, [payer._id]: "offline" }))}
+                                                                className={`rounded-md px-3 py-1 text-[11px] font-semibold transition ${payMode === "offline" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+                                                                Offline
+                                                            </button>
+                                                            <button type="button"
+                                                                onClick={() => setPayerPayModes((prev) => ({ ...prev, [payer._id]: "online" }))}
+                                                                className={`rounded-md px-3 py-1 text-[11px] font-semibold transition ${payMode === "online" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+                                                                Online
+                                                            </button>
+                                                        </div>
+                                                    )}
 
-                                            {isCash && payerChange > 0 && (
-                                                <div className="flex justify-between rounded-lg bg-success/10 px-3 py-1.5">
-                                                    <span className="text-[11px] text-success">Kembalian</span>
-                                                    <span className="text-[11px] font-bold text-success">{fmt(payerChange)}</span>
-                                                </div>
+                                                    {/* Method selector */}
+                                                    {payMode === "offline" ? (
+                                                        <div className="space-y-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <select
+                                                                    value={payer.method_id}
+                                                                    onChange={(e) => updatePayer(payer._id, { method_id: Number(e.target.value) })}
+                                                                    className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-[13px] outline-none focus:border-violet-400">
+                                                                    {offlineMethods.map((m) => (
+                                                                        <option key={m.id} value={m.id}>{m.name}</option>
+                                                                    ))}
+                                                                </select>
+                                                                {hasImage && (
+                                                                    <button type="button"
+                                                                        onClick={() => setImageModalMethod(selectedMethod)}
+                                                                        className="shrink-0 rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                                                                        title="Lihat gambar QR">
+                                                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z" /></svg>
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                            {isCash && (
+                                                                <div className="flex gap-2 items-center">
+                                                                    <div className="relative flex-1">
+                                                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground/60">Rp</span>
+                                                                        <input type="number" min={0}
+                                                                            placeholder={String(payer.total)}
+                                                                            value={payer.paid_amount}
+                                                                            onChange={(e) => updatePayer(payer._id, { paid_amount: e.target.value })}
+                                                                            className="block w-full rounded-xl border border-border bg-background pl-9 pr-3 py-2 text-[13px] outline-none focus:border-violet-400" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {isCash && payerChange > 0 && (
+                                                                <div className="flex justify-between rounded-lg bg-success/10 px-3 py-1.5">
+                                                                    <span className="text-[11px] text-success">Kembalian</span>
+                                                                    <span className="text-[11px] font-bold text-success">{fmt(payerChange)}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-[12px] text-primary">
+                                                            Pembayaran online — akan dibuka popup QR/VA setelah klik Bayar
+                                                        </div>
+                                                    )}
+
+                                                    {/* Bayar button */}
+                                                    <button type="button"
+                                                        disabled={payer.pgLoading || (payMode === "offline" && isCash && Number(payer.paid_amount || 0) < payer.total)}
+                                                        onClick={async () => {
+                                                            if (payMode === "offline") {
+                                                                const result = await onSplitPayOffline?.({
+                                                                    saleId: splitSaleId,
+                                                                    payerId: payer._id,
+                                                                    methodId: payer.method_id,
+                                                                    paidAmount: isCash ? Number(payer.paid_amount) || payer.total : payer.total,
+                                                                    splitMode,
+                                                                    payers: payers.map((p) => ({
+                                                                        name: p.name,
+                                                                        customer_id: p.customer_id,
+                                                                        assignments: p.assignments,
+                                                                    })),
+                                                                    items: cartItems,
+                                                                    displayTotal,
+                                                                    splitReceiptMode,
+                                                                });
+                                                                if (result?.success) {
+                                                                    updatePayer(payer._id, { paid: true });
+                                                                    if (result.all_paid && result.receipt) {
+                                                                        // All done — parent will handle receipt display
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                // Online (PG)
+                                                                updatePayer(payer._id, { pgLoading: true });
+                                                                const result = await onSplitCreatePg?.({
+                                                                    saleId: splitSaleId,
+                                                                    payerId: payer._id,
+                                                                    provider: pgMethods[0]?.provider,
+                                                                    paymentType: pgMethods[0]?.payment_type,
+                                                                    splitMode,
+                                                                    payers: payers.map((p) => ({
+                                                                        name: p.name,
+                                                                        customer_id: p.customer_id,
+                                                                        assignments: p.assignments,
+                                                                    })),
+                                                                    items: cartItems,
+                                                                    displayTotal,
+                                                                    splitReceiptMode,
+                                                                });
+                                                                if (result?.success) {
+                                                                    setActivePgPayer(payer._id);
+                                                                } else {
+                                                                    updatePayer(payer._id, { pgLoading: false });
+                                                                }
+                                                            }
+                                                        }}
+                                                        className="w-full rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-2.5 text-[13px] font-bold text-white shadow-md shadow-violet-500/20 transition hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                                                        {payer.pgLoading ? "Memproses..." : `Bayar ${fmt(payer.total)}`}
+                                                    </button>
+                                                </>
                                             )}
                                         </div>
                                     );
                                 })}
 
+                                {/* Progress */}
                                 <div className="flex justify-between text-[12px] px-1">
                                     <span className="text-muted-foreground">Terbayar</span>
                                     <span className="font-semibold text-foreground">
@@ -1298,11 +1520,10 @@ export default function PaymentModal({
 
                         {/* ── Footer navigasi wizard ── */}
                         <div className="shrink-0 border-t border-border px-5 py-4 flex gap-2">
-                            {splitStep > 1 && (
+                            {splitStep > 1 && splitStep < 4 && (
                                 <button type="button"
                                     onClick={() => {
                                         if (splitStep === 3) setSplitStep(2);
-                                        else if (splitStep === 4) setSplitStep(splitMode === "item" ? 3 : 2);
                                         else setSplitStep((s) => s - 1);
                                     }}
                                     className="rounded-xl border border-border px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted transition">
@@ -1337,25 +1558,9 @@ export default function PaymentModal({
 
                             {splitStep === 4 && (
                                 <button type="button"
-                                    disabled={!splitAllPaid || submitting}
-                                    onClick={() => {
-                                        const splitPayments = payers.map((p) => ({
-                                            method_id: p.method_id,
-                                            amount: p.total,
-                                            reference_no: "",
-                                            is_pg: false,
-                                            pg_provider: "",
-                                            pg_method: "",
-                                            payer_name: p.name || null,
-                                            payer_customer_id: p.customer_id || null,
-                                            paid_amount: p.paid_amount || p.total,
-                                            change_amount: Math.max(0, (Number(p.paid_amount) || Number(p.total)) - Number(p.total)),
-                                            is_split: true,
-                                        }));
-                                        onConfirm(splitPayments, 0, { splitReceipt: splitReceiptMode === "per_payer", payers });
-                                    }}
-                                    className="flex-1 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    {submitting ? "Memproses..." : splitAllPaid ? `Proses Split Bill — ${payers.length} Orang` : "Centang semua sudah bayar"}
+                                    onClick={onClose}
+                                    className="flex-1 rounded-xl border border-border py-3 text-sm font-semibold text-muted-foreground hover:bg-muted transition">
+                                    {payers.every((p) => p.paid) ? "Tutup" : "Tutup (lanjutkan nanti)"}
                                 </button>
                             )}
                         </div>
@@ -1557,6 +1762,40 @@ export default function PaymentModal({
                     )}
                 </div>
             </div>
+
+            {/* Image modal for payment method QR/gambar */}
+            {imageModalMethod && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div onClick={() => setImageModalMethod(null)} className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+                    <div className="relative w-full max-w-sm rounded-2xl bg-card shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                            <div>
+                                <h3 className="font-semibold text-foreground">{imageModalMethod.name}</h3>
+                                <p className="text-xs text-muted-foreground">Tunjukkan gambar ini ke pelanggan</p>
+                            </div>
+                            <button onClick={() => setImageModalMethod(null)} className="text-muted-foreground hover:text-foreground">
+                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="p-5 flex flex-col items-center gap-4">
+                            <img
+                                src={`/storage/${imageModalMethod.image}`}
+                                alt={imageModalMethod.name}
+                                className="max-h-80 rounded-xl object-contain"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setImageModalMethod(null)}
+                                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3 text-sm font-bold text-white shadow-lg transition hover:from-emerald-600 hover:to-teal-700"
+                            >
+                                Selesai
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pembayaran — SIMKASIR Retail POS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f7f8fa; --panel:#ffffff; --border:#e5e7eb; --border-strong:#d1d5db;
+    --fg:#0f172a; --muted:#64748b; --muted-2:#94a3b8;
+    --primary:#4f46e5; --primary-600:#4338ca; --primary-50:#eef2ff;
+    --success:#16a34a; --success-50:#f0fdf4;
+    --warning:#d97706; --warning-50:#fffbeb;
+    --danger:#dc2626; --danger-50:#fef2f2;
+  }
+  html,body{font-family:'Inter',ui-sans-serif,system-ui,sans-serif;background:var(--bg);color:var(--fg);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-weight:500;border-radius:.5rem;padding:.5rem .875rem;transition:all .15s;font-size:.875rem;border:1px solid transparent;cursor:pointer;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-600);}
+  .btn-primary:disabled{background:#c7c9d1;cursor:not-allowed;}
+  .btn-outline{background:#fff;border-color:var(--border-strong);color:var(--fg);}
+  .btn-outline:hover{background:#f8fafc;}
+  .btn-ghost{background:transparent;color:var(--fg);}
+  .btn-ghost:hover{background:#f1f5f9;}
+  .btn-success{background:var(--success);color:#fff;}
+  .btn-success:hover{filter:brightness(.95);}
+  .btn-lg{padding:.875rem 1.25rem;font-size:1rem;font-weight:600;border-radius:.625rem;}
+  .input{width:100%;border:1px solid var(--border-strong);border-radius:.5rem;padding:.625rem .75rem;font-size:.875rem;background:#fff;outline:none;transition:.15s;}
+  .input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.15);}
+  .input-lg{padding:.875rem 1rem;font-size:1.125rem;font-weight:600;}
+  .chip{display:inline-flex;align-items:center;gap:.375rem;padding:.25rem .5rem;border-radius:.375rem;font-size:.75rem;font-weight:500;}
+  .divider{height:1px;background:var(--border);}
+  .scroll-thin::-webkit-scrollbar{width:8px;height:8px;}
+  .scroll-thin::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px;}
+  .scroll-thin::-webkit-scrollbar-track{background:transparent;}
+  .segbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem .5rem;font-weight:500;font-size:.875rem;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;transition:.15s;}
+  .segbtn:hover{color:var(--fg);}
+  .segbtn.active{color:var(--primary);background:var(--primary-50);border-color:var(--primary);z-index:1;position:relative;}
+  .paybtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.375rem;padding:.75rem .5rem;border:1px solid var(--border);border-radius:.5rem;background:#fff;cursor:pointer;transition:.15s;font-size:.8125rem;font-weight:500;color:var(--fg);}
+  .paybtn:hover{border-color:var(--primary);background:#fafbff;}
+  .paybtn.active{border-color:var(--primary);background:var(--primary-50);color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary);}
+  .paybtn i{width:22px;height:22px;}
+  .quick{padding:.625rem;border:1px solid var(--border);border-radius:.5rem;background:#fff;font-weight:500;font-size:.875rem;cursor:pointer;transition:.15s;}
+  .quick:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-50);}
+  .selectcard{border:1px solid var(--border);border-radius:.5rem;padding:.875rem;cursor:pointer;transition:.15s;background:#fff;}
+  .selectcard:hover{border-color:var(--primary);}
+  .selectcard.active{border-color:var(--primary);background:var(--primary-50);box-shadow:inset 0 0 0 1px var(--primary);}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:1rem;}
+  .modal{background:#fff;border-radius:.75rem;max-width:520px;width:100%;max-height:90vh;overflow:auto;}
+  .modal-lg{max-width:720px;}
+  .fade-in{animation:fadeIn .15s ease-out;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--warning);animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  [x-hidden]{display:none !important;}
+  .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;}
+  .receipt{font-family:'Courier New',ui-monospace,monospace;font-size:12px;line-height:1.5;color:#000;background:#fff;padding:16px;width:302px;}
+  .receipt hr{border:none;border-top:1px dashed #000;margin:6px 0;}
+  .receipt .row{display:flex;justify-content:space-between;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="bg-white border-b border-[color:var(--border)]">
+  <div class="max-w-[1600px] mx-auto px-5 h-14 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <button class="btn btn-ghost -ml-2" onclick="alert('Kembali ke keranjang')">
+        <i data-lucide="arrow-left"></i> Kembali
+      </button>
+      <div class="h-6 w-px bg-[color:var(--border)]"></div>
+      <div class="flex items-baseline gap-2">
+        <h1 class="text-base font-semibold">Pembayaran</h1>
+        <span class="text-sm text-[color:var(--muted)]">TRX-20260723-00128</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-5 text-sm">
+      <div class="flex items-center gap-2"><i data-lucide="user" class="w-4 h-4 text-[color:var(--muted)]"></i><span class="font-medium">Hanif</span><span class="chip bg-[color:var(--success-50)] text-[color:var(--success)]">Shift Pagi</span></div>
+      <div class="flex items-center gap-2 text-[color:var(--muted)]"><i data-lucide="clock" class="w-4 h-4"></i><span id="clock">10:42</span></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="max-w-[1600px] mx-auto px-5 pb-3 flex items-center gap-3">
+    <div class="inline-flex rounded-lg overflow-hidden border border-[color:var(--border)]" role="tablist">
+      <button class="segbtn active" data-maintab="langsung"><i data-lucide="wallet" class="w-4 h-4"></i>Langsung / Manual</button>
+      <button class="segbtn" data-maintab="kasbon"><i data-lucide="notebook-tabs" class="w-4 h-4"></i>Hutang / Kasbon</button>
+      <button class="segbtn" data-maintab="gateway"><i data-lucide="credit-card" class="w-4 h-4"></i>Payment Gateway</button>
+    </div>
+    <div class="ml-auto">
+      <button id="btnSplit" class="btn btn-outline"><i data-lucide="split" class="w-4 h-4"></i>Pisah Pembayaran</button>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN LAYOUT -->
+<main class="max-w-[1600px] mx-auto px-5 py-4">
+  <div id="normalMode" class="grid grid-cols-12 gap-4">
+
+    <!-- LEFT PANEL -->
+    <section class="col-span-12 lg:col-span-7 bg-white border border-[color:var(--border)] rounded-lg flex flex-col" style="min-height:calc(100vh - 160px);">
+      <div class="p-4 border-b border-[color:var(--border)] flex items-center justify-between">
+        <div>
+          <h2 class="font-semibold">Detail Pesanan</h2>
+          <p class="text-xs text-[color:var(--muted)] mt-0.5">TRX-20260723-00128 · <span id="itemCount">13</span> item · Pelanggan: Umum</p>
+        </div>
+        <span class="chip bg-slate-100 text-slate-700"><i data-lucide="shopping-bag" class="w-3 h-3"></i>Retail</span>
+      </div>
+      <div class="flex-1 overflow-auto scroll-thin px-4" style="max-height:44vh;">
+        <table class="w-full text-sm">
+          <thead class="text-xs text-[color:var(--muted)] uppercase tracking-wide">
+            <tr class="border-b border-[color:var(--border)]"><th class="text-left py-2 font-medium">Produk</th><th class="text-center py-2 font-medium w-16">Qty</th><th class="text-right py-2 font-medium w-24">Harga</th><th class="text-right py-2 font-medium w-24">Total</th></tr>
+          </thead>
+          <tbody id="productRows"></tbody>
+        </table>
+      </div>
+      <div class="border-t border-[color:var(--border)] p-4 space-y-1.5 text-sm">
+        <div class="flex justify-between"><span class="text-[color:var(--muted)]">Subtotal</span><span>Rp98.500</span></div>
+        <div class="flex justify-between"><span class="text-[color:var(--muted)]">Diskon Produk</span><span class="text-[color:var(--success)]">-Rp3.000</span></div>
+        <div class="flex justify-between"><span class="text-[color:var(--muted)]">Diskon Transaksi</span><span class="text-[color:var(--success)]">-Rp2.500</span></div>
+        <div class="flex justify-between"><span class="text-[color:var(--muted)]">Pajak</span><span>Rp5.000</span></div>
+        <div class="flex justify-between"><span class="text-[color:var(--muted)]">Biaya Lain</span><span>Rp2.000</span></div>
+        <div class="divider my-2"></div>
+        <div class="flex items-baseline justify-between">
+          <span class="text-sm font-medium text-[color:var(--muted)]">TOTAL</span>
+          <span class="text-3xl font-bold tracking-tight">Rp100.000</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL -->
+    <aside class="col-span-12 lg:col-span-5 bg-white border border-[color:var(--border)] rounded-lg flex flex-col" style="min-height:calc(100vh - 160px);">
+      <div id="rightPanel" class="flex-1 flex flex-col"></div>
+    </aside>
+  </div>
+
+  <!-- SPLIT MODE (hidden by default) -->
+  <div id="splitMode" x-hidden></div>
+</main>
+
+<div id="modalRoot"></div>
+
+<script>
+/* ============ STATE ============ */
+const state = {
+  mainTab: 'langsung',     // langsung | kasbon | gateway
+  total: 100000,
+  method: null,            // for langsung
+  cashReceived: 0,
+  manualConfirmed: false,
+  // kasbon
+  customer: null,
+  kasbonType: null,        // full | partial
+  kasbonPayNow: 0,
+  kasbonSubMode: null,     // langsung | gateway (for partial)
+  kasbonSubMethod: null,
+  // gateway
+  gateway: null,
+  gwMethod: null,
+  gwGenerated: false,
+  gwPaid: false,
+  // split
+  splitMode: false,
+  splitBy: 'orang',        // orang | item | nominal
+  people: [],
+};
+
+const products = [
+  {name:'Indomie Goreng',qty:3,price:3500},
+  {name:'Aqua Mineral 600ml',qty:2,price:4000},
+  {name:'Ultra Milk Coklat 250ml',qty:2,price:7000},
+  {name:'Chitato Sapi Panggang',qty:1,price:12500},
+  {name:'Teh Botol Sosro',qty:2,price:5000},
+  {name:'Rinso Cair 800ml',qty:1,price:24500},
+  {name:'Tissue Paseo',qty:2,price:9500},
+];
+
+const customers = [
+  {id:1,name:'Budi Santoso',phone:'081234567890',debt:350000,limit:1000000},
+  {id:2,name:'Siti Aminah',phone:'081298765432',debt:125000,limit:500000},
+  {id:3,name:'Rizky Pratama',phone:'081377889900',debt:0,limit:500000},
+];
+
+const gateways = [
+  {id:'midtrans',name:'Midtrans',active:true,methods:['QRIS','GoPay','ShopeePay','BCA VA','Mandiri VA','BNI VA','Permata VA']},
+  {id:'xendit',name:'Xendit',active:true,methods:['QRIS','OVO','DANA','BCA VA','BRI VA']},
+  {id:'tripay',name:'Tripay',active:true,methods:['QRIS','BCA VA','Mandiri VA','Alfamart']},
+];
+
+const methodIcons = {'Tunai':'banknote','QRIS':'qr-code','Transfer BCA':'landmark','Transfer Mandiri':'landmark','GoPay':'smartphone','ShopeePay':'smartphone','DANA':'smartphone','OVO':'smartphone','BCA VA':'landmark','Mandiri VA':'landmark','BNI VA':'landmark','Permata VA':'landmark','BRI VA':'landmark','Alfamart':'store'};
+
+/* ============ UTILS ============ */
+const fmt = n => 'Rp'+Math.max(0,Math.round(n)).toLocaleString('id-ID');
+const el = (h)=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild;};
+function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
+function tick(){ const d=new Date(); document.getElementById('clock').textContent = d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); }
+setInterval(tick,10000); tick();
+
+/* ============ RENDER PRODUCTS ============ */
+function renderProducts(){
+  const tb = document.getElementById('productRows');
+  tb.innerHTML = products.map(p=>`
+    <tr class="border-b border-[color:var(--border)] last:border-0">
+      <td class="py-2.5"><div class="font-medium">${p.name}</div></td>
+      <td class="py-2.5 text-center text-[color:var(--muted)]">${p.qty}</td>
+      <td class="py-2.5 text-right text-[color:var(--muted)]">${fmt(p.price)}</td>
+      <td class="py-2.5 text-right font-medium">${fmt(p.qty*p.price)}</td>
+    </tr>`).join('');
+}
+renderProducts();
+document.getElementById('itemCount').textContent = products.reduce((a,b)=>a+b.qty,0);
+
+/* ============ TABS ============ */
+document.querySelectorAll('[data-maintab]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('[data-maintab]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    state.mainTab = b.dataset.maintab;
+    resetFlow();
+    renderRight();
+  });
+});
+
+document.getElementById('btnSplit').addEventListener('click',()=>{
+  state.splitMode = true;
+  state.people = [
+    {id:1,name:'Orang 1',amount:0,method:null,paid:false,cashReceived:0,customer:null,gateway:null,gwMethod:null},
+    {id:2,name:'Orang 2',amount:0,method:null,paid:false,cashReceived:0,customer:null,gateway:null,gwMethod:null},
+  ];
+  document.getElementById('normalMode').setAttribute('x-hidden','');
+  document.getElementById('splitMode').removeAttribute('x-hidden');
+  renderSplit();
+});
+
+function resetFlow(){
+  state.method=null; state.cashReceived=0; state.manualConfirmed=false;
+  state.customer=null; state.kasbonType=null; state.kasbonPayNow=0; state.kasbonSubMode=null; state.kasbonSubMethod=null;
+  state.gateway=null; state.gwMethod=null; state.gwGenerated=false; state.gwPaid=false;
+}
+
+/* ============ RIGHT PANEL RENDERERS ============ */
+function renderRight(){
+  const root = document.getElementById('rightPanel');
+  root.innerHTML='';
+  if(state.mainTab==='langsung') root.appendChild(viewLangsung());
+  else if(state.mainTab==='kasbon') root.appendChild(viewKasbon());
+  else root.appendChild(viewGateway());
+  refreshIcons();
+}
+
+/* --- LANGSUNG --- */
+function viewLangsung(){
+  const methods = ['Tunai','QRIS','Transfer BCA','Transfer Mandiri','GoPay','ShopeePay','DANA','OVO'];
+  const wrap = el(`<div class="flex flex-col h-full">
+    <div class="p-4 border-b border-[color:var(--border)]"><h3 class="font-semibold">Pilih Cara Bayar</h3><p class="text-xs text-[color:var(--muted)] mt-0.5">Total tagihan <span class="font-semibold text-[color:var(--fg)]">${fmt(state.total)}</span></p></div>
+    <div class="p-4 grid grid-cols-4 gap-2" id="methodGrid"></div>
+    <div class="flex-1 overflow-auto scroll-thin px-4 pb-4" id="methodBody"></div>
+  </div>`);
+  const grid = wrap.querySelector('#methodGrid');
+  methods.forEach(m=>{
+    const b = el(`<button class="paybtn ${state.method===m?'active':''}"><i data-lucide="${methodIcons[m]}"></i><span>${m}</span></button>`);
+    b.addEventListener('click',()=>{ state.method=m; state.cashReceived=0; state.manualConfirmed=false; renderRight(); });
+    grid.appendChild(b);
+  });
+  const body = wrap.querySelector('#methodBody');
+  if(state.method==='Tunai') body.appendChild(viewCash(state.total, (v)=>{state.cashReceived=v;}, ()=>state.cashReceived, ()=>openSuccess('Tunai')));
+  else if(state.method==='QRIS') body.appendChild(viewQRIS(state.total, ()=>openSuccess('QRIS')));
+  else if(state.method) body.appendChild(viewManualTransfer(state.method, state.total, ()=>openSuccess(state.method)));
+  else body.appendChild(el(`<div class="text-center text-sm text-[color:var(--muted)] py-10"><i data-lucide="mouse-pointer-click" class="w-6 h-6 mx-auto mb-2"></i>Pilih salah satu metode pembayaran di atas.</div>`));
+  return wrap;
+}
+
+function viewCash(amount, setCash, getCash, onPay){
+  const w = el(`<div class="flex flex-col gap-4 pt-2">
+    <div class="flex items-baseline justify-between p-3 bg-slate-50 rounded-lg border border-[color:var(--border)]">
+      <span class="text-sm text-[color:var(--muted)]">Total Tagihan</span>
+      <span class="text-xl font-bold">${fmt(amount)}</span>
+    </div>
+    <div>
+      <label class="text-xs font-medium text-[color:var(--muted)] uppercase tracking-wide">Uang Diterima</label>
+      <input id="cashInput" type="text" inputmode="numeric" class="input input-lg mt-1.5" placeholder="Rp0" />
+    </div>
+    <div class="grid grid-cols-4 gap-2">
+      <button class="quick" data-q="pas">Uang Pas</button>
+      <button class="quick" data-q="100000">Rp100.000</button>
+      <button class="quick" data-q="150000">Rp150.000</button>
+      <button class="quick" data-q="200000">Rp200.000</button>
+    </div>
+    <div id="cashSummary"></div>
+    <div id="cashWarn"></div>
+    <div class="mt-auto pt-2">
+      <button id="payBtn" class="btn btn-primary btn-lg w-full" disabled>Bayar ${fmt(amount)}</button>
+    </div>
+  </div>`);
+  const inp = w.querySelector('#cashInput');
+  const update = ()=>{
+    const cash = getCash();
+    inp.value = cash?fmt(cash):'';
+    const change = cash-amount;
+    w.querySelector('#cashSummary').innerHTML = cash>0?`
+      <div class="rounded-lg border border-[color:var(--border)] p-3 space-y-1.5 text-sm">
+        <div class="flex justify-between"><span class="text-[color:var(--muted)]">Dibayar</span><span class="font-medium">${fmt(cash)}</span></div>
+        <div class="divider"></div>
+        <div class="flex justify-between items-baseline"><span class="text-[color:var(--muted)]">Kembalian</span><span class="text-2xl font-bold ${change>=0?'text-[color:var(--success)]':'text-[color:var(--danger)]'}">${fmt(Math.max(0,change))}</span></div>
+      </div>`:'';
+    const warn = w.querySelector('#cashWarn');
+    if(cash>0 && cash<amount) warn.innerHTML = `<div class="text-xs text-[color:var(--warning)] bg-[color:var(--warning-50)] border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2"><i data-lucide="alert-circle" class="w-4 h-4"></i>Uang diterima masih kurang ${fmt(amount-cash)}</div>`;
+    else warn.innerHTML='';
+    w.querySelector('#payBtn').disabled = cash<amount;
+    refreshIcons();
+  };
+  inp.addEventListener('input',e=>{ const n=parseInt(e.target.value.replace(/\D/g,''))||0; setCash(n); update();});
+  w.querySelectorAll('[data-q]').forEach(b=>b.addEventListener('click',()=>{
+    const v = b.dataset.q==='pas'?amount:parseInt(b.dataset.q); setCash(v); update();
+  }));
+  w.querySelector('#payBtn').addEventListener('click',onPay);
+  setTimeout(update,0);
+  return w;
+}
+
+function viewQRIS(amount, onPay){
+  const w = el(`<div class="flex flex-col gap-4 pt-2">
+    <div class="flex items-baseline justify-between p-3 bg-slate-50 rounded-lg border border-[color:var(--border)]">
+      <span class="text-sm text-[color:var(--muted)]">Total Pembayaran</span>
+      <span class="text-xl font-bold">${fmt(amount)}</span>
+    </div>
+    <button id="showQr" class="border border-dashed border-[color:var(--border-strong)] rounded-lg p-6 flex flex-col items-center gap-2 hover:border-[color:var(--primary)] hover:bg-[color:var(--primary-50)] transition">
+      <i data-lucide="qr-code" class="w-10 h-10 text-[color:var(--muted)]"></i>
+      <span class="font-medium">Tampilkan QRIS</span>
+      <span class="text-xs text-[color:var(--muted)]">Klik untuk menampilkan QR ke pelanggan</span>
+    </button>
+    <label class="flex items-start gap-3 p-3 border border-[color:var(--border)] rounded-lg cursor-pointer">
+      <input id="qrConfirm" type="checkbox" class="mt-0.5 accent-indigo-600" />
+      <div><div class="text-sm font-medium">Pembayaran sudah diterima</div><div class="text-xs text-[color:var(--muted)]">Centang setelah QRIS berhasil di-scan dan status masuk di aplikasi merchant</div></div>
+    </label>
+    <div class="mt-auto pt-2">
+      <button id="confirmBtn" class="btn btn-primary btn-lg w-full" disabled>Konfirmasi Pembayaran</button>
+    </div>
+  </div>`);
+  w.querySelector('#showQr').addEventListener('click',()=>openQrisModal(amount));
+  w.querySelector('#qrConfirm').addEventListener('change',e=>{ w.querySelector('#confirmBtn').disabled = !e.target.checked; });
+  w.querySelector('#confirmBtn').addEventListener('click',onPay);
+  return w;
+}
+
+function viewManualTransfer(method, amount, onPay){
+  const info = {
+    'Transfer BCA':{label:'Bank BCA',acc:'1234567890',name:'PT SIMKASIR INDONESIA'},
+    'Transfer Mandiri':{label:'Bank Mandiri',acc:'1400012345678',name:'PT SIMKASIR INDONESIA'},
+    'GoPay':{label:'GoPay',acc:'081211112222',name:'SIMKASIR RETAIL'},
+    'ShopeePay':{label:'ShopeePay',acc:'081233334444',name:'SIMKASIR RETAIL'},
+    'DANA':{label:'DANA',acc:'081255556666',name:'SIMKASIR RETAIL'},
+    'OVO':{label:'OVO',acc:'081277778888',name:'SIMKASIR RETAIL'},
+  }[method];
+  const w = el(`<div class="flex flex-col gap-4 pt-2">
+    <div class="flex items-baseline justify-between p-3 bg-slate-50 rounded-lg border border-[color:var(--border)]">
+      <span class="text-sm text-[color:var(--muted)]">Total Pembayaran</span>
+      <span class="text-xl font-bold">${fmt(amount)}</span>
+    </div>
+    <div class="border border-[color:var(--border)] rounded-lg p-4 space-y-3">
+      <div class="flex items-center gap-2 text-sm text-[color:var(--muted)]"><i data-lucide="${methodIcons[method]||'landmark'}" class="w-4 h-4"></i>${info.label}</div>
+      <div>
+        <div class="text-2xl font-bold tracking-wider" id="accNo">${info.acc}</div>
+        <div class="text-sm text-[color:var(--muted)] mt-0.5">a.n. ${info.name}</div>
+      </div>
+      <button id="copyBtn" class="btn btn-outline w-full"><i data-lucide="copy" class="w-4 h-4"></i>Salin Nomor</button>
+    </div>
+    <label class="flex items-start gap-3 p-3 border border-[color:var(--border)] rounded-lg cursor-pointer">
+      <input id="cf" type="checkbox" class="mt-0.5 accent-indigo-600" />
+      <div><div class="text-sm font-medium">Pembayaran sudah diterima</div><div class="text-xs text-[color:var(--muted)]">Verifikasi mutasi masuk sebelum konfirmasi</div></div>
+    </label>
+    <div class="mt-auto pt-2">
+      <button id="cbtn" class="btn btn-primary btn-lg w-full" disabled>Konfirmasi Pembayaran</button>
+    </div>
+  </div>`);
+  w.querySelector('#copyBtn').addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(info.acc); toast('Nomor rekening disalin');});
+  w.querySelector('#cf').addEventListener('change',e=>{ w.querySelector('#cbtn').disabled=!e.target.checked; });
+  w.querySelector('#cbtn').addEventListener('click',onPay);
+  return w;
+}
+
+/* --- KASBON --- */
+function viewKasbon(){
+  const w = el(`<div class="flex flex-col h-full">
+    <div class="p-4 border-b border-[color:var(--border)]">
+      <h3 class="font-semibold flex items-center gap-2"><i data-lucide="notebook-tabs" class="w-4 h-4"></i>Hutang / Kasbon</h3>
+      <p class="text-xs text-[color:var(--muted)] mt-0.5">Total transaksi <span class="font-semibold text-[color:var(--fg)]">${fmt(state.total)}</span></p>
+    </div>
+    <div class="flex-1 overflow-auto scroll-thin p-4" id="kasbonBody"></div>
+  </div>`);
+  const body = w.querySelector('#kasbonBody');
+  if(!state.customer) body.appendChild(viewCustomerPicker());
+  else body.appendChild(viewKasbonAfterCustomer());
+  return w;
+}
+
+function viewCustomerPicker(){
+  const w = el(`<div class="space-y-4">
+    <div class="p-3 bg-[color:var(--warning-50)] border border-amber-200 rounded-lg text-xs text-[color:var(--warning)] flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4"></i>Pilih pelanggan terlebih dahulu untuk melanjutkan transaksi kasbon</div>
+    <div>
+      <label class="text-xs font-medium text-[color:var(--muted)] uppercase tracking-wide">Pelanggan Kasbon</label>
+      <div class="relative mt-1.5">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-[color:var(--muted)]"></i>
+        <input id="custSearch" class="input pl-9" placeholder="Cari nama / nomor HP pelanggan..." />
+      </div>
+    </div>
+    <div class="space-y-2" id="custList"></div>
+    <button id="btnNewCust" class="btn btn-outline w-full"><i data-lucide="user-plus" class="w-4 h-4"></i>Daftarkan Pelanggan Baru</button>
+  </div>`);
+  const renderList = (q='')=>{
+    const list = customers.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())||c.phone.includes(q));
+    w.querySelector('#custList').innerHTML = list.map(c=>`
+      <div class="selectcard flex items-center justify-between" data-cid="${c.id}">
+        <div><div class="font-medium text-sm">${c.name}</div><div class="text-xs text-[color:var(--muted)]">${c.phone}</div></div>
+        <div class="text-right"><div class="text-xs text-[color:var(--muted)]">Hutang saat ini</div><div class="font-medium text-sm text-[color:var(--danger)]">${fmt(c.debt)}</div></div>
+      </div>`).join('') || `<div class="text-sm text-[color:var(--muted)] text-center py-6">Tidak ada pelanggan ditemukan</div>`;
+    w.querySelectorAll('[data-cid]').forEach(x=>x.addEventListener('click',()=>{
+      state.customer = customers.find(c=>c.id==x.dataset.cid); renderRight();
+    }));
+  };
+  w.querySelector('#custSearch').addEventListener('input',e=>renderList(e.target.value));
+  w.querySelector('#btnNewCust').addEventListener('click',openNewCustomerModal);
+  setTimeout(()=>renderList(),0);
+  return w;
+}
+
+function viewKasbonAfterCustomer(){
+  const c = state.customer;
+  const w = el(`<div class="space-y-4">
+    <div class="border border-[color:var(--border)] rounded-lg p-3">
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="font-semibold">${c.name}</div>
+          <div class="text-xs text-[color:var(--muted)]">${c.phone}</div>
+        </div>
+        <button id="changeCust" class="text-xs text-[color:var(--primary)] font-medium hover:underline">Ganti Pelanggan</button>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mt-3 text-xs">
+        <div><div class="text-[color:var(--muted)]">Hutang Sebelumnya</div><div class="font-semibold text-sm text-[color:var(--danger)]">${fmt(c.debt)}</div></div>
+        <div><div class="text-[color:var(--muted)]">Limit Kasbon</div><div class="font-semibold text-sm">${fmt(c.limit)}</div></div>
+        <div><div class="text-[color:var(--muted)]">Sisa Limit</div><div class="font-semibold text-sm text-[color:var(--success)]">${fmt(c.limit-c.debt)}</div></div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div class="selectcard ${state.kasbonType==='full'?'active':''}" data-kt="full">
+        <div class="flex items-center gap-2 font-medium"><i data-lucide="notebook-pen" class="w-4 h-4"></i>Hutang Full</div>
+        <div class="text-xs text-[color:var(--muted)] mt-1">Seluruh ${fmt(state.total)} masuk kasbon</div>
+      </div>
+      <div class="selectcard ${state.kasbonType==='partial'?'active':''}" data-kt="partial">
+        <div class="flex items-center gap-2 font-medium"><i data-lucide="scale" class="w-4 h-4"></i>Bayar Sebagian</div>
+        <div class="text-xs text-[color:var(--muted)] mt-1">Bayar sebagian, sisa jadi kasbon</div>
+      </div>
+    </div>
+    <div id="kasbonDetail"></div>
+  </div>`);
+  w.querySelector('#changeCust').addEventListener('click',()=>{state.customer=null;renderRight();});
+  w.querySelectorAll('[data-kt]').forEach(x=>x.addEventListener('click',()=>{state.kasbonType=x.dataset.kt; state.kasbonPayNow=0; state.kasbonSubMode=null; state.kasbonSubMethod=null; renderRight();}));
+  const d = w.querySelector('#kasbonDetail');
+  if(state.kasbonType==='full') d.appendChild(viewKasbonFull());
+  else if(state.kasbonType==='partial') d.appendChild(viewKasbonPartial());
+  return w;
+}
+
+function viewKasbonFull(){
+  const c = state.customer;
+  const w = el(`<div class="space-y-3">
+    <div class="border border-[color:var(--border)] rounded-lg p-3 space-y-1.5 text-sm">
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Total Transaksi</span><span>${fmt(state.total)}</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Dibayar Sekarang</span><span>Rp0</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Masuk Kasbon</span><span class="font-medium">${fmt(state.total)}</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Hutang Sebelumnya</span><span>${fmt(c.debt)}</span></div>
+      <div class="divider my-1"></div>
+      <div class="flex justify-between items-baseline"><span class="font-medium">Total Hutang Setelah Transaksi</span><span class="text-xl font-bold text-[color:var(--danger)]">${fmt(state.total+c.debt)}</span></div>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="text-xs font-medium text-[color:var(--muted)]">Jatuh Tempo (opsional)</label><input type="date" class="input mt-1"/></div>
+      <div><label class="text-xs font-medium text-[color:var(--muted)]">Catatan Kasbon</label><input class="input mt-1" placeholder="Catatan..."/></div>
+    </div>
+    <button class="btn btn-primary btn-lg w-full" id="saveDebt">Simpan Sebagai Hutang ${fmt(state.total)}</button>
+  </div>`);
+  w.querySelector('#saveDebt').addEventListener('click',()=>openSuccess('Kasbon Full'));
+  return w;
+}
+
+function viewKasbonPartial(){
+  const c = state.customer;
+  const pay = state.kasbonPayNow;
+  const debt = state.total - pay;
+  const w = el(`<div class="space-y-3">
+    <div>
+      <label class="text-xs font-medium text-[color:var(--muted)] uppercase tracking-wide">Bayar Sekarang</label>
+      <input id="payNow" type="text" inputmode="numeric" class="input input-lg mt-1.5" placeholder="Rp0" value="${pay?fmt(pay):''}"/>
+    </div>
+    <div id="warnPartial"></div>
+    <div class="border border-[color:var(--border)] rounded-lg p-3 space-y-1.5 text-sm">
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Total</span><span>${fmt(state.total)}</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Dibayar Sekarang</span><span class="text-[color:var(--success)]">${fmt(pay)}</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Sisa Menjadi Hutang</span><span class="font-medium">${fmt(debt)}</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Hutang Sebelumnya</span><span>${fmt(c.debt)}</span></div>
+      <div class="divider my-1"></div>
+      <div class="flex justify-between items-baseline"><span class="font-medium">Total Hutang Baru</span><span class="text-lg font-bold text-[color:var(--danger)]">${fmt(debt+c.debt)}</span></div>
+    </div>
+    <div id="subModeArea"></div>
+  </div>`);
+  const inp = w.querySelector('#payNow');
+  inp.addEventListener('input',e=>{
+    const n = parseInt(e.target.value.replace(/\D/g,''))||0;
+    state.kasbonPayNow = n; state.kasbonSubMode=null; state.kasbonSubMethod=null;
+    renderRight();
+  });
+  const warn = w.querySelector('#warnPartial');
+  if(pay===0) warn.innerHTML = `<div class="text-xs text-[color:var(--warning)] bg-[color:var(--warning-50)] border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2"><i data-lucide="alert-circle" class="w-4 h-4"></i>Masukkan nominal pembayaran</div>`;
+  else if(pay>state.total) warn.innerHTML = `<div class="text-xs text-[color:var(--danger)] bg-[color:var(--danger-50)] border border-red-200 rounded-lg px-3 py-2 flex items-center gap-2"><i data-lucide="x-circle" class="w-4 h-4"></i>Nominal tidak boleh melebihi total transaksi</div>`;
+
+  if(pay>0 && pay<=state.total){
+    const sm = w.querySelector('#subModeArea');
+    sm.appendChild(el(`<div><div class="text-xs font-medium text-[color:var(--muted)] uppercase tracking-wide mb-2">Cara Membayar ${fmt(pay)}</div>
+      <div class="grid grid-cols-2 gap-2">
+        <div class="selectcard ${state.kasbonSubMode==='langsung'?'active':''}" data-sm="langsung"><div class="flex items-center gap-2 font-medium"><i data-lucide="wallet" class="w-4 h-4"></i>Langsung / Manual</div></div>
+        <div class="selectcard ${state.kasbonSubMode==='gateway'?'active':''}" data-sm="gateway"><div class="flex items-center gap-2 font-medium"><i data-lucide="credit-card" class="w-4 h-4"></i>Payment Gateway</div></div>
+      </div>
+      <div id="subDetail" class="mt-3"></div>
+    </div>`));
+    sm.querySelectorAll('[data-sm]').forEach(x=>x.addEventListener('click',()=>{state.kasbonSubMode=x.dataset.sm; state.kasbonSubMethod=null; renderRight();}));
+    const dd = sm.querySelector('#subDetail');
+    if(state.kasbonSubMode==='langsung') dd.appendChild(viewKasbonPartialLangsung());
+    if(state.kasbonSubMode==='gateway') dd.appendChild(viewKasbonPartialGateway());
+  }
+  return w;
+}
+
+function viewKasbonPartialLangsung(){
+  const methods = ['Tunai','QRIS','Transfer BCA','Transfer Mandiri','GoPay','ShopeePay','DANA','OVO'];
+  const w = el(`<div class="space-y-3"><div class="grid grid-cols-4 gap-2" id="ml"></div><div id="mb"></div></div>`);
+  const ml = w.querySelector('#ml');
+  methods.forEach(m=>{
+    const b = el(`<button class="paybtn ${state.kasbonSubMethod===m?'active':''}"><i data-lucide="${methodIcons[m]}"></i><span>${m}</span></button>`);
+    b.addEventListener('click',()=>{state.kasbonSubMethod=m; renderRight();});
+    ml.appendChild(b);
+  });
+  const mb = w.querySelector('#mb');
+  const debt = state.total-state.kasbonPayNow;
+  if(state.kasbonSubMethod==='Tunai'){
+    mb.appendChild(viewCash(state.kasbonPayNow,(v)=>{state.cashReceived=v;},()=>state.cashReceived,()=>openSuccess(`Kasbon Sebagian · Tunai`, {debtNow:debt,paidNow:state.kasbonPayNow})));
+    const btn = mb.querySelector('#payBtn'); if(btn) btn.textContent = `Bayar ${fmt(state.kasbonPayNow)} & Kasbon ${fmt(debt)}`;
+  } else if(state.kasbonSubMethod==='QRIS'){
+    mb.appendChild(viewQRIS(state.kasbonPayNow,()=>openSuccess('Kasbon Sebagian · QRIS',{debtNow:debt,paidNow:state.kasbonPayNow})));
+  } else if(state.kasbonSubMethod){
+    mb.appendChild(viewManualTransfer(state.kasbonSubMethod,state.kasbonPayNow,()=>openSuccess(`Kasbon Sebagian · ${state.kasbonSubMethod}`,{debtNow:debt,paidNow:state.kasbonPayNow})));
+  }
+  return w;
+}
+
+function viewKasbonPartialGateway(){
+  return renderGatewayFlow(state.kasbonPayNow,'Kasbon Sebagian · Gateway',{debtNow:state.total-state.kasbonPayNow,paidNow:state.kasbonPayNow});
+}
+
+/* --- GATEWAY --- */
+function viewGateway(){
+  const w = el(`<div class="flex flex-col h-full">
+    <div class="p-4 border-b border-[color:var(--border)]">
+      <h3 class="font-semibold">Pilih Payment Gateway</h3>
+      <p class="text-xs text-[color:var(--muted)] mt-0.5">Total <span class="font-semibold text-[color:var(--fg)]">${fmt(state.total)}</span></p>
+    </div>
+    <div class="flex-1 overflow-auto scroll-thin p-4" id="gwBody"></div>
+  </div>`);
+  w.querySelector('#gwBody').appendChild(renderGatewayFlow(state.total,'Payment Gateway'));
+  return w;
+}
+
+function renderGatewayFlow(amount, successLabel, extra){
+  const w = el(`<div class="space-y-3"></div>`);
+  const gwList = el(`<div class="space-y-2"></div>`);
+  gateways.filter(g=>g.active).forEach(g=>{
+    const c = el(`<div class="selectcard flex items-center justify-between ${state.gateway===g.id?'active':''}" data-gw="${g.id}">
+      <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-md bg-slate-100 flex items-center justify-center"><i data-lucide="credit-card" class="w-4 h-4"></i></div><div><div class="font-medium text-sm">${g.name}</div><div class="text-xs text-[color:var(--muted)]">${g.methods.length} metode tersedia</div></div></div>
+      <span class="chip bg-[color:var(--success-50)] text-[color:var(--success)]">Aktif</span>
+    </div>`);
+    c.addEventListener('click',()=>{state.gateway=g.id; state.gwMethod=null; state.gwGenerated=false; state.gwPaid=false; renderRight();});
+    gwList.appendChild(c);
+  });
+  w.appendChild(gwList);
+
+  if(state.gateway){
+    const g = gateways.find(x=>x.id===state.gateway);
+    const mArea = el(`<div><div class="text-xs font-medium text-[color:var(--muted)] uppercase tracking-wide mt-2 mb-2">Metode ${g.name}</div><div class="grid grid-cols-3 gap-2" id="gmg"></div></div>`);
+    g.methods.forEach(m=>{
+      const b = el(`<button class="paybtn ${state.gwMethod===m?'active':''}"><i data-lucide="${methodIcons[m]||'credit-card'}"></i><span class="text-xs">${m}</span></button>`);
+      b.addEventListener('click',()=>{state.gwMethod=m; state.gwGenerated=false; state.gwPaid=false; renderRight();});
+      mArea.querySelector('#gmg').appendChild(b);
+    });
+    w.appendChild(mArea);
+
+    if(state.gwMethod && !state.gwGenerated){
+      const btn = el(`<button class="btn btn-primary btn-lg w-full">Buat Pembayaran ${fmt(amount)}</button>`);
+      btn.addEventListener('click',()=>{state.gwGenerated=true; renderRight();});
+      w.appendChild(btn);
+    }
+
+    if(state.gwGenerated){
+      const isVA = state.gwMethod.includes('VA');
+      const st = el(`<div class="border border-[color:var(--border)] rounded-lg p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2"><span class="pulse-dot"></span><span class="text-sm font-medium text-[color:var(--warning)]">Menunggu Pembayaran</span></div>
+          <div class="text-xs text-[color:var(--muted)]">Expired dalam <span class="kbd font-medium text-[color:var(--fg)]">14:32</span></div>
+        </div>
+        ${isVA?`
+          <div class="text-xs text-[color:var(--muted)]">${state.gwMethod}</div>
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-xl font-bold tracking-wider">88081234567890</div>
+            <button class="btn btn-outline" onclick="navigator.clipboard&&navigator.clipboard.writeText('88081234567890');toast('Nomor VA disalin')"><i data-lucide="copy" class="w-4 h-4"></i>Salin</button>
+          </div>
+        `:`
+          <div class="flex justify-center py-2"><div class="w-40 h-40 bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22white%22/><g fill=%22black%22>${Array.from({length:120}).map(()=>`<rect x=%22${Math.floor(Math.random()*95)}%22 y=%22${Math.floor(Math.random()*95)}%22 width=%225%22 height=%225%22/>`).join('')}</g></svg>')] bg-contain border border-[color:var(--border)] rounded"></div></div>
+        `}
+        <div class="divider"></div>
+        <div class="flex justify-between text-sm"><span class="text-[color:var(--muted)]">Total</span><span class="font-semibold">${fmt(amount)}</span></div>
+      </div>`);
+      w.appendChild(st);
+      const sim = el(`<button class="btn btn-success btn-lg w-full"><i data-lucide="check-circle" class="w-4 h-4"></i>Simulasikan Pembayaran Berhasil</button>`);
+      sim.addEventListener('click',()=>openSuccess(successLabel+' · '+state.gwMethod, extra));
+      w.appendChild(sim);
+    }
+  }
+  return w;
+}
+
+/* ============ MODALS ============ */
+function openModal(node){ const r=document.getElementById('modalRoot'); r.innerHTML=''; r.appendChild(node); refreshIcons(); }
+function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
+
+function openQrisModal(amount){
+  const m = el(`<div class="modal-backdrop fade-in"><div class="modal p-6">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-semibold">Pembayaran QRIS</h3><button onclick="closeModal()" class="btn btn-ghost -mr-2"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+    <div class="border border-[color:var(--border)] rounded-lg p-4 text-center">
+      <div class="text-sm font-medium">SIMKASIR Retail</div>
+      <div class="text-xs text-[color:var(--muted)]">NMID: ID10012345678</div>
+      <div class="flex justify-center my-3">
+        <div class="w-56 h-56 bg-white border border-[color:var(--border)] p-2">
+          <div class="w-full h-full" style="background-image:linear-gradient(45deg,#000 25%,transparent 25%,transparent 75%,#000 75%),linear-gradient(45deg,#000 25%,transparent 25%,transparent 75%,#000 75%);background-size:12px 12px;background-position:0 0,6px 6px;"></div>
+        </div>
+      </div>
+      <div class="text-2xl font-bold">${fmt(amount)}</div>
+      <div class="text-xs text-[color:var(--muted)] mt-2">Scan QRIS menggunakan aplikasi pembayaran pelanggan</div>
+    </div>
+    <button class="btn btn-outline w-full mt-4" onclick="closeModal()">Tutup</button>
+  </div></div>`);
+  openModal(m);
+}
+
+function openNewCustomerModal(){
+  const m = el(`<div class="modal-backdrop fade-in"><div class="modal p-6">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-semibold">Daftarkan Pelanggan Baru</h3><button onclick="closeModal()" class="btn btn-ghost -mr-2"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+    <div class="space-y-3">
+      <div><label class="text-xs font-medium text-[color:var(--muted)]">Nama Pelanggan *</label><input id="nc_name" class="input mt-1"/></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs font-medium text-[color:var(--muted)]">Nomor HP *</label><input id="nc_phone" class="input mt-1"/></div>
+        <div><label class="text-xs font-medium text-[color:var(--muted)]">Email</label><input class="input mt-1"/></div>
+      </div>
+      <div><label class="text-xs font-medium text-[color:var(--muted)]">Alamat</label><input class="input mt-1"/></div>
+      <div><label class="text-xs font-medium text-[color:var(--muted)]">Catatan</label><textarea class="input mt-1" rows="2"></textarea></div>
+    </div>
+    <div class="flex gap-2 mt-5"><button class="btn btn-outline flex-1" onclick="closeModal()">Batal</button><button id="saveCust" class="btn btn-primary flex-1">Simpan & Pilih Pelanggan</button></div>
+  </div></div>`);
+  openModal(m);
+  m.querySelector('#saveCust').addEventListener('click',()=>{
+    const name = m.querySelector('#nc_name').value||'Pelanggan Baru';
+    const phone = m.querySelector('#nc_phone').value||'08000000000';
+    const c = {id:Date.now(),name,phone,debt:0,limit:500000};
+    customers.push(c); state.customer=c; closeModal(); renderRight();
+  });
+}
+
+function openSuccess(methodLabel, extra){
+  const now = new Date();
+  const time = now.toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const cash = state.cashReceived||0;
+  const paid = extra?.paidNow!=null ? extra.paidNow : (methodLabel.startsWith('Kasbon Full')?0:state.total);
+  const change = methodLabel.includes('Tunai') && cash>paid ? cash-paid : 0;
+  const debtNow = extra?.debtNow!=null?extra.debtNow:(methodLabel.startsWith('Kasbon Full')?state.total:0);
+
+  const m = el(`<div class="modal-backdrop fade-in"><div class="modal modal-lg p-8">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 rounded-full bg-[color:var(--success-50)] flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="check" class="w-8 h-8 text-[color:var(--success)]"></i>
+      </div>
+      <h2 class="text-2xl font-bold">Pembayaran Berhasil</h2>
+      <p class="text-sm text-[color:var(--muted)] mt-1">TRX-20260723-00128</p>
+    </div>
+    <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm border-y border-[color:var(--border)] py-4 mb-5">
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Total</span><span class="font-semibold">${fmt(state.total)}</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Metode</span><span class="font-semibold">${methodLabel}</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Dibayar</span><span class="font-semibold">${fmt(paid)}</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Waktu</span><span class="font-semibold">${time}</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Kembalian</span><span class="font-semibold">${fmt(change)}</span></div>
+      ${debtNow>0?`<div class="flex justify-between"><span class="text-[color:var(--muted)]">Kasbon</span><span class="font-semibold text-[color:var(--danger)]">${fmt(debtNow)}</span></div>`:''}
+    </div>
+    <div class="grid grid-cols-4 gap-2">
+      <button class="btn btn-outline" onclick="openReceipt(${JSON.stringify({methodLabel,paid,change,debtNow}).replace(/"/g,'&quot;')})"><i data-lucide="eye" class="w-4 h-4"></i>Lihat Struk</button>
+      <button class="btn btn-outline" onclick="openReceipt(${JSON.stringify({methodLabel,paid,change,debtNow}).replace(/"/g,'&quot;')})"><i data-lucide="printer" class="w-4 h-4"></i>Cetak Struk</button>
+      <button class="btn btn-outline" onclick="toast('Struk dikirim ke pelanggan')"><i data-lucide="send" class="w-4 h-4"></i>Kirim Struk</button>
+      <button class="btn btn-primary" onclick="location.reload()"><i data-lucide="plus" class="w-4 h-4"></i>Transaksi Baru</button>
+    </div>
+  </div></div>`);
+  openModal(m);
+}
+
+function openReceipt(info){
+  const isKasbon = info.methodLabel.toLowerCase().includes('kasbon');
+  const isFull = info.methodLabel.includes('Full');
+  const c = state.customer;
+  const rows = products.map(p=>`<div class="row"><span>${p.name}</span></div><div class="row"><span>&nbsp;&nbsp;${p.qty} x ${p.price.toLocaleString('id-ID')}</span><span>${(p.qty*p.price).toLocaleString('id-ID')}</span></div>`).join('');
+  const m = el(`<div class="modal-backdrop fade-in"><div class="modal p-6">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-semibold">Preview Struk</h3><button onclick="closeModal()" class="btn btn-ghost -mr-2"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+    <div class="flex justify-center bg-slate-100 p-4 rounded-lg">
+      <div class="receipt">
+        <div style="text-align:center">
+          <div style="font-weight:bold">SIMKASIR RETAIL</div>
+          <div>Jl. Contoh No. 123</div>
+          <div>Telp. 021-1234567</div>
+        </div>
+        <hr>
+        <div class="row"><span>TRX</span><span>20260723-00128</span></div>
+        <div class="row"><span>Kasir</span><span>Hanif</span></div>
+        <div class="row"><span>Tgl</span><span>23/07/2026 10:42</span></div>
+        <hr>
+        ${rows}
+        <hr>
+        <div class="row"><span>Subtotal</span><span>98.500</span></div>
+        <div class="row"><span>Diskon</span><span>-5.500</span></div>
+        <div class="row"><span>Pajak</span><span>5.000</span></div>
+        <div class="row"><span>Biaya</span><span>2.000</span></div>
+        <hr>
+        <div class="row" style="font-weight:bold;font-size:14px"><span>TOTAL</span><span>100.000</span></div>
+        <hr>
+        ${isKasbon?`
+          <div style="text-align:center;font-weight:bold">PEMBAYARAN: KASBON</div>
+          <div class="row"><span>Pelanggan</span><span>${c?c.name:'-'}</span></div>
+          <div class="row"><span>Total Transaksi</span><span>100.000</span></div>
+          <div class="row"><span>Dibayar Sekarang</span><span>${(info.paid||0).toLocaleString('id-ID')}</span></div>
+          <div class="row"><span>${isFull?'Kasbon':'Kasbon Transaksi Ini'}</span><span>${(info.debtNow||0).toLocaleString('id-ID')}</span></div>
+          <div class="row"><span>Hutang Sebelumnya</span><span>${(c?c.debt:0).toLocaleString('id-ID')}</span></div>
+          <hr>
+          <div class="row" style="font-weight:bold"><span>TOTAL HUTANG</span><span>${((info.debtNow||0)+(c?c.debt:0)).toLocaleString('id-ID')}</span></div>
+        `:`
+          <div class="row"><span>${info.methodLabel}</span><span>${(info.paid||0).toLocaleString('id-ID')}</span></div>
+          ${info.change>0?`<div class="row"><span>Kembali</span><span>${info.change.toLocaleString('id-ID')}</span></div>`:''}
+        `}
+        <hr>
+        <div style="text-align:center">Terima kasih<br>Barang dibeli tidak dapat dikembalikan</div>
+      </div>
+    </div>
+    <div class="flex gap-2 mt-4"><button class="btn btn-outline flex-1" onclick="closeModal()">Tutup</button><button class="btn btn-primary flex-1" onclick="window.print()"><i data-lucide="printer" class="w-4 h-4"></i>Cetak</button></div>
+  </div></div>`);
+  openModal(m);
+}
+
+/* ============ TOAST ============ */
+function toast(msg){
+  const t = el(`<div class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-4 py-2 rounded-lg shadow-lg z-[60] fade-in">${msg}</div>`);
+  document.body.appendChild(t); setTimeout(()=>t.remove(),1800);
+}
+
+/* ============ SPLIT MODE ============ */
+function renderSplit(){
+  const root = document.getElementById('splitMode');
+  root.innerHTML='';
+  const wrap = el(`<div class="grid grid-cols-12 gap-4">
+    <section class="col-span-12 lg:col-span-7 bg-white border border-[color:var(--border)] rounded-lg flex flex-col" style="min-height:calc(100vh - 160px);">
+      <div class="p-4 border-b border-[color:var(--border)] flex items-center justify-between">
+        <div>
+          <h2 class="font-semibold flex items-center gap-2"><i data-lucide="split" class="w-4 h-4"></i>Pisah Pembayaran</h2>
+          <p class="text-xs text-[color:var(--muted)] mt-0.5">Bagi transaksi ${fmt(state.total)} ke beberapa pembayaran</p>
+        </div>
+        <button class="btn btn-ghost text-sm" id="exitSplit"><i data-lucide="x" class="w-4 h-4"></i>Batalkan Pisah</button>
+      </div>
+      <div class="p-4 border-b border-[color:var(--border)]">
+        <div class="inline-flex rounded-lg overflow-hidden border border-[color:var(--border)] w-full">
+          <button class="segbtn ${state.splitBy==='orang'?'active':''}" data-sb="orang"><i data-lucide="users" class="w-4 h-4"></i>Per Orang</button>
+          <button class="segbtn ${state.splitBy==='item'?'active':''}" data-sb="item"><i data-lucide="list-checks" class="w-4 h-4"></i>Per Item</button>
+          <button class="segbtn ${state.splitBy==='nominal'?'active':''}" data-sb="nominal"><i data-lucide="calculator" class="w-4 h-4"></i>Nominal</button>
+        </div>
+      </div>
+      <div class="flex-1 overflow-auto scroll-thin p-4" id="splitLeft"></div>
+    </section>
+    <aside class="col-span-12 lg:col-span-5 bg-white border border-[color:var(--border)] rounded-lg flex flex-col" style="min-height:calc(100vh - 160px);">
+      <div class="p-4 border-b border-[color:var(--border)]"><h3 class="font-semibold">Pembayaran Per Orang</h3><p class="text-xs text-[color:var(--muted)] mt-0.5">Setiap orang dapat metode berbeda</p></div>
+      <div class="flex-1 overflow-auto scroll-thin p-4 space-y-3" id="splitRight"></div>
+      <div class="p-4 border-t border-[color:var(--border)]" id="splitFooter"></div>
+    </aside>
+  </div>`);
+  root.appendChild(wrap);
+  wrap.querySelector('#exitSplit').addEventListener('click',()=>{
+    state.splitMode=false; document.getElementById('splitMode').setAttribute('x-hidden','');
+    document.getElementById('normalMode').removeAttribute('x-hidden');
+  });
+  wrap.querySelectorAll('[data-sb]').forEach(b=>b.addEventListener('click',()=>{state.splitBy=b.dataset.sb; renderSplit();}));
+  renderSplitLeft(wrap.querySelector('#splitLeft'));
+  renderSplitRight(wrap.querySelector('#splitRight'), wrap.querySelector('#splitFooter'));
+  refreshIcons();
+}
+
+function totalAllocated(){ return state.people.reduce((a,p)=>a+(p.amount||0),0); }
+
+function renderSplitLeft(root){
+  root.innerHTML='';
+  if(state.splitBy==='orang'){
+    // even split with editable names
+    const eq = Math.round(state.total/state.people.length);
+    state.people.forEach((p,i)=>{ if(!p.amount||p._autoOrang) {p.amount = i===state.people.length-1?state.total-eq*(state.people.length-1):eq; p._autoOrang=true;}});
+    root.appendChild(el(`<div class="text-xs text-[color:var(--muted)] mb-3">Nama dapat diedit. Nominal dibagi rata otomatis.</div>`));
+    state.people.forEach((p)=>{
+      const row = el(`<div class="flex items-center gap-2 mb-2">
+        <input class="input flex-1" value="${p.name}" data-nm="${p.id}"/>
+        <div class="text-right font-semibold w-32">${fmt(p.amount)}</div>
+      </div>`);
+      row.querySelector('input').addEventListener('input',e=>{p.name=e.target.value;});
+      root.appendChild(row);
+    });
+  }
+  if(state.splitBy==='item'){
+    root.appendChild(el(`<div class="text-xs text-[color:var(--muted)] mb-3">Pilih orang untuk setiap item.</div>`));
+    products.forEach((p,i)=>{
+      p._assignee = p._assignee || state.people[0].id;
+      const row = el(`<div class="flex items-center gap-2 py-2 border-b border-[color:var(--border)]">
+        <div class="flex-1"><div class="text-sm font-medium">${p.name}</div><div class="text-xs text-[color:var(--muted)]">${p.qty} × ${fmt(p.price)} = ${fmt(p.qty*p.price)}</div></div>
+        <select class="input w-40" data-idx="${i}">${state.people.map(x=>`<option value="${x.id}" ${p._assignee==x.id?'selected':''}>${x.name}</option>`).join('')}</select>
+      </div>`);
+      row.querySelector('select').addEventListener('change',e=>{p._assignee=parseInt(e.target.value); recalcItemAmounts(); renderSplit();});
+      root.appendChild(row);
+    });
+    recalcItemAmounts();
+  }
+  if(state.splitBy==='nominal'){
+    root.appendChild(el(`<div class="text-xs text-[color:var(--muted)] mb-3">Isi nominal setiap orang. Total harus sama dengan ${fmt(state.total)}.</div>`));
+    state.people.forEach(p=>{
+      p._autoOrang=false;
+      const row = el(`<div class="flex items-center gap-2 mb-2">
+        <input class="input flex-1" value="${p.name}" data-nm="${p.id}"/>
+        <input class="input w-40 text-right font-semibold" type="text" inputmode="numeric" value="${p.amount?fmt(p.amount):''}" placeholder="Rp0" data-am="${p.id}"/>
+      </div>`);
+      row.querySelector('[data-nm]').addEventListener('input',e=>p.name=e.target.value);
+      row.querySelector('[data-am]').addEventListener('input',e=>{p.amount=parseInt(e.target.value.replace(/\D/g,''))||0; renderSplit();});
+      root.appendChild(row);
+    });
+    const alloc = totalAllocated();
+    const remain = state.total-alloc;
+    root.appendChild(el(`<div class="mt-3 border border-[color:var(--border)] rounded-lg p-3 text-sm space-y-1">
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Sudah Dialokasikan</span><span class="font-medium">${fmt(alloc)}</span></div>
+      <div class="flex justify-between"><span class="text-[color:var(--muted)]">Sisa</span><span class="font-medium ${remain===0?'text-[color:var(--success)]':'text-[color:var(--warning)]'}">${fmt(remain)}</span></div>
+      ${remain!==0?`<div class="text-xs text-[color:var(--warning)] flex items-center gap-1 mt-1"><i data-lucide="alert-circle" class="w-3 h-3"></i>Masih ada ${fmt(Math.abs(remain))} yang belum ${remain>0?'dialokasikan':'terlalu banyak'}</div>`:''}
+    </div>`));
+  }
+  const foot = el(`<div class="mt-4 flex items-center justify-between">
+    <button class="btn btn-outline" id="addPerson"><i data-lucide="user-plus" class="w-4 h-4"></i>Tambah Orang</button>
+    <div class="text-sm">Total: <span class="font-bold">${fmt(state.total)}</span></div>
+  </div>`);
+  foot.querySelector('#addPerson').addEventListener('click',()=>{
+    const id = Date.now();
+    state.people.push({id,name:`Orang ${state.people.length+1}`,amount:0,method:null,paid:false,cashReceived:0,customer:null,gateway:null,gwMethod:null,_autoOrang:true});
+    if(state.splitBy==='orang') state.people.forEach(p=>p._autoOrang=true);
+    renderSplit();
+  });
+  root.appendChild(foot);
+  refreshIcons();
+}
+
+function recalcItemAmounts(){
+  state.people.forEach(p=>p.amount=0);
+  products.forEach(p=>{
+    const person = state.people.find(x=>x.id===p._assignee);
+    if(person) person.amount += p.qty*p.price;
+  });
+}
+
+function renderSplitRight(root, footer){
+  root.innerHTML='';
+  const alloc = totalAllocated();
+  const canProceed = alloc===state.total;
+  state.people.forEach(p=>{
+    const card = el(`<div class="border border-[color:var(--border)] rounded-lg p-3">
+      <div class="flex items-center justify-between">
+        <div><div class="font-medium">${p.name}</div><div class="text-xs text-[color:var(--muted)]">Bagian: <span class="font-semibold text-[color:var(--fg)]">${fmt(p.amount)}</span></div></div>
+        ${p.paid?`<span class="chip bg-[color:var(--success-50)] text-[color:var(--success)]"><i data-lucide="check" class="w-3 h-3"></i>Lunas</span>`:`<span class="chip bg-slate-100 text-slate-600">Belum Dibayar</span>`}
+      </div>
+      <div class="mt-3">
+        <select class="input" data-pm="${p.id}" ${p.amount===0?'disabled':''}>
+          <option value="">Pilih metode...</option>
+          <option ${p.method==='Tunai'?'selected':''}>Tunai</option>
+          <option ${p.method==='QRIS'?'selected':''}>QRIS</option>
+          <option ${p.method==='Transfer BCA'?'selected':''}>Transfer BCA</option>
+          <option ${p.method==='GoPay'?'selected':''}>GoPay</option>
+          ${state.mainTab==='kasbon'?`<option ${p.method==='Kasbon'?'selected':''}>Kasbon</option>`:''}
+          ${state.mainTab==='gateway'?`<option ${p.method==='Midtrans-QRIS'?'selected':''}>Midtrans · QRIS</option><option ${p.method==='Xendit-BCA VA'?'selected':''}>Xendit · BCA VA</option>`:''}
+        </select>
+      </div>
+      <div class="mt-2" data-detail="${p.id}"></div>
+    </div>`);
+    const sel = card.querySelector(`[data-pm="${p.id}"]`);
+    sel.addEventListener('change',e=>{p.method=e.target.value; p.paid=false; p.cashReceived=0; renderSplitRight(root,footer);});
+    const dd = card.querySelector(`[data-detail="${p.id}"]`);
+    if(p.method==='Tunai'){
+      const d = el(`<div class="space-y-2">
+        <input type="text" inputmode="numeric" class="input" placeholder="Uang diterima" value="${p.cashReceived?fmt(p.cashReceived):''}"/>
+        ${p.cashReceived>=p.amount?`<div class="text-xs">Kembali: <span class="font-semibold text-[color:var(--success)]">${fmt(p.cashReceived-p.amount)}</span></div>`:p.cashReceived>0?`<div class="text-xs text-[color:var(--warning)]">Kurang ${fmt(p.amount-p.cashReceived)}</div>`:''}
+        <button class="btn btn-primary w-full" ${p.cashReceived<p.amount?'disabled':''}>Bayar ${p.name}</button>
+      </div>`);
+      d.querySelector('input').addEventListener('input',e=>{p.cashReceived=parseInt(e.target.value.replace(/\D/g,''))||0; renderSplitRight(root,footer);});
+      d.querySelector('button').addEventListener('click',()=>{p.paid=true; renderSplitRight(root,footer);});
+      dd.appendChild(d);
+    } else if(p.method==='Kasbon'){
+      const d = el(`<div class="space-y-2">
+        <select class="input"><option value="">Pilih pelanggan...</option>${customers.map(c=>`<option value="${c.id}" ${p.customer==c.id?'selected':''}>${c.name}</option>`).join('')}</select>
+        ${!p.customer?`<div class="text-xs text-[color:var(--warning)] flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i>Pelanggan wajib dipilih</div>`:''}
+        <button class="btn btn-primary w-full" ${!p.customer?'disabled':''}>Simpan Kasbon ${fmt(p.amount)}</button>
+      </div>`);
+      d.querySelector('select').addEventListener('change',e=>{p.customer=parseInt(e.target.value)||null; renderSplitRight(root,footer);});
+      d.querySelector('button').addEventListener('click',()=>{if(p.customer){p.paid=true; renderSplitRight(root,footer);}});
+      dd.appendChild(d);
+    } else if(p.method && p.method.includes('·')){
+      const d = el(`<div class="space-y-2">
+        <div class="flex items-center gap-2 text-xs"><span class="pulse-dot"></span><span class="text-[color:var(--warning)] font-medium">Menunggu Pembayaran</span></div>
+        <button class="btn btn-success w-full"><i data-lucide="check-circle" class="w-4 h-4"></i>Simulasikan Berhasil</button>
+      </div>`);
+      d.querySelector('button').addEventListener('click',()=>{p.paid=true; renderSplitRight(root,footer);});
+      dd.appendChild(d);
+    } else if(p.method){
+      const d = el(`<button class="btn btn-primary w-full">Konfirmasi Pembayaran ${fmt(p.amount)}</button>`);
+      d.addEventListener('click',()=>{p.paid=true; renderSplitRight(root,footer);});
+      dd.appendChild(d);
+    }
+    root.appendChild(card);
+  });
+  const paidCount = state.people.filter(p=>p.paid).length;
+  const allPaid = paidCount===state.people.length && canProceed;
+  footer.innerHTML='';
+  const f = el(`<div class="space-y-3">
+    ${!canProceed?`<div class="text-xs text-[color:var(--warning)] bg-[color:var(--warning-50)] border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2"><i data-lucide="alert-circle" class="w-4 h-4"></i>Masih ada ${fmt(Math.abs(state.total-alloc))} yang belum dialokasikan</div>`:''}
+    <div class="flex items-center justify-between text-sm"><span class="text-[color:var(--muted)]">${paidCount} dari ${state.people.length} pembayaran selesai</span><span class="font-semibold">${fmt(state.total)}</span></div>
+    <button class="btn btn-primary btn-lg w-full" id="finishSplit" ${!allPaid?'disabled':''}>Selesaikan Transaksi</button>
+  </div>`);
+  f.querySelector('#finishSplit').addEventListener('click',openSplitReceiptChoice);
+  footer.appendChild(f);
+  refreshIcons();
+}
+
+function openSplitReceiptChoice(){
+  const m = el(`<div class="modal-backdrop fade-in"><div class="modal p-6">
+    <div class="text-center mb-5">
+      <div class="w-14 h-14 rounded-full bg-[color:var(--success-50)] flex items-center justify-center mx-auto mb-3"><i data-lucide="check" class="w-7 h-7 text-[color:var(--success)]"></i></div>
+      <h2 class="text-xl font-bold">Pembayaran Berhasil</h2>
+      <p class="text-sm text-[color:var(--muted)]">Semua bagian sudah lunas</p>
+    </div>
+    <div class="text-xs font-medium text-[color:var(--muted)] uppercase mb-2">Pilihan Struk</div>
+    <div class="grid grid-cols-2 gap-2 mb-4">
+      <button class="selectcard text-left" id="one"><div class="font-medium flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4"></i>Satu Struk Gabungan</div><div class="text-xs text-[color:var(--muted)] mt-1">Tampilkan seluruh transaksi + breakdown</div></button>
+      <button class="selectcard text-left" id="each"><div class="font-medium flex items-center gap-2"><i data-lucide="files" class="w-4 h-4"></i>Struk Masing-Masing</div><div class="text-xs text-[color:var(--muted)] mt-1">Satu struk per orang</div></button>
+    </div>
+    <button class="btn btn-outline w-full" onclick="location.reload()">Transaksi Baru</button>
+  </div></div>`);
+  openModal(m);
+  m.querySelector('#one').addEventListener('click',()=>openSplitReceiptCombined());
+  m.querySelector('#each').addEventListener('click',()=>openSplitReceiptEach());
+}
+
+function openSplitReceiptCombined(){
+  const rows = products.map(p=>`<div class="row"><span>${p.name}</span></div><div class="row"><span>&nbsp;&nbsp;${p.qty} x ${p.price.toLocaleString('id-ID')}</span><span>${(p.qty*p.price).toLocaleString('id-ID')}</span></div>`).join('');
+  const br = state.people.map(p=>`<div class="row"><span>${p.name} (${p.method||'-'})</span><span>${p.amount.toLocaleString('id-ID')}</span></div>`).join('');
+  const m = el(`<div class="modal-backdrop fade-in"><div class="modal p-6">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-semibold">Struk Gabungan</h3><button onclick="closeModal()" class="btn btn-ghost -mr-2"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+    <div class="flex justify-center bg-slate-100 p-4 rounded-lg">
+      <div class="receipt">
+        <div style="text-align:center;font-weight:bold">SIMKASIR RETAIL</div>
+        <hr>
+        <div class="row"><span>TRX</span><span>20260723-00128</span></div>
+        <div class="row"><span>Kasir</span><span>Hanif</span></div>
+        <hr>${rows}<hr>
+        <div class="row" style="font-weight:bold"><span>TOTAL</span><span>100.000</span></div>
+        <hr>
+        <div style="text-align:center;font-weight:bold">PEMBAYARAN</div>
+        ${br}
+        <hr>
+        <div style="text-align:center">Terima kasih</div>
+      </div>
+    </div>
+    <div class="flex gap-2 mt-4"><button class="btn btn-outline flex-1" onclick="closeModal()">Tutup</button><button class="btn btn-primary flex-1"><i data-lucide="printer" class="w-4 h-4"></i>Cetak</button></div>
+  </div></div>`);
+  openModal(m);
+}
+
+function openSplitReceiptEach(){
+  const receipts = state.people.map((p,i)=>`
+    <div class="receipt">
+      <div style="text-align:center;font-weight:bold">SIMKASIR RETAIL</div>
+      <div style="text-align:center;font-size:10px">Struk ${i+1}/${state.people.length} — ${p.name}</div>
+      <hr>
+      <div class="row"><span>TRX</span><span>20260723-00128</span></div>
+      <div class="row"><span>Metode</span><span>${p.method||'-'}</span></div>
+      <hr>
+      <div class="row" style="font-weight:bold"><span>DIBAYAR</span><span>${p.amount.toLocaleString('id-ID')}</span></div>
+      <hr>
+      <div style="text-align:center">Terima kasih</div>
+    </div>`).join('');
+  const m = el(`<div class="modal-backdrop fade-in"><div class="modal modal-lg p-6">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-semibold">Struk Masing-Masing</h3><button onclick="closeModal()" class="btn btn-ghost -mr-2"><i data-lucide="x" class="w-4 h-4"></i></button></div>
+    <div class="flex gap-4 justify-center flex-wrap bg-slate-100 p-4 rounded-lg">${receipts}</div>
+    <div class="flex gap-2 mt-4"><button class="btn btn-outline flex-1" onclick="closeModal()">Tutup</button><button class="btn btn-primary flex-1"><i data-lucide="printer" class="w-4 h-4"></i>Cetak Semua</button></div>
+  </div></div>`);
+  openModal(m);
+}
+
+/* ============ INIT ============ */
+renderRight();
+refreshIcons();
+</script>
+</body>
+</html>

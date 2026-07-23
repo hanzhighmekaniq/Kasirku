@@ -2,6 +2,17 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\DevSeeder\BranchSeeder;
+use Database\Seeders\DevSeeder\FeatureDetailSeeder;
+use Database\Seeders\DevSeeder\FeatureSeeder;
+use Database\Seeders\DevSeeder\PaymentGatewaySeeder;
+use Database\Seeders\DevSeeder\PaymentMethodSeeder;
+use Database\Seeders\DevSeeder\PermissionSeeder;
+use Database\Seeders\DevSeeder\PlanSeeder;
+use Database\Seeders\DevSeeder\RoleSeeder;
+use Database\Seeders\DevSeeder\StoreSeeder;
+use Database\Seeders\DevSeeder\StoreTypeSeeder;
+use Database\Seeders\DevSeeder\UserSeeder;
 use Illuminate\Database\Seeder;
 
 /**
@@ -19,18 +30,19 @@ class DevSeeder extends Seeder
     {
         $this->call([
             // ── Sistem ─────────────────────────────────────────────
-            \Database\Seeders\DevSeeder\StoreTypeSeeder::class,
-            \Database\Seeders\DevSeeder\FeatureSeeder::class,
-            \Database\Seeders\DevSeeder\FeatureDetailSeeder::class,
-            \Database\Seeders\DevSeeder\PlanSeeder::class,
-            \Database\Seeders\DevSeeder\PermissionSeeder::class,
+            StoreTypeSeeder::class,
+            FeatureSeeder::class,
+            FeatureDetailSeeder::class,
+            PlanSeeder::class,
+            PermissionSeeder::class,
 
             // ── Struktur ───────────────────────────────────────────
-            \Database\Seeders\DevSeeder\StoreSeeder::class,
-            \Database\Seeders\DevSeeder\BranchSeeder::class,
-            \Database\Seeders\DevSeeder\UserSeeder::class,
-            \Database\Seeders\DevSeeder\RoleSeeder::class,
-            \Database\Seeders\DevSeeder\PaymentMethodSeeder::class,
+            StoreSeeder::class,
+            BranchSeeder::class,
+            UserSeeder::class,
+            RoleSeeder::class,
+            PaymentMethodSeeder::class,
+            PaymentGatewaySeeder::class,
         ]);
     }
 }

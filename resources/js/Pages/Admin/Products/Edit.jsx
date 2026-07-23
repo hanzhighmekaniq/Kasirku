@@ -8,7 +8,6 @@ import Button from "@/Components/ui/Button";
 import CurrencyInput from "@/Components/ui/CurrencyInput";
 import {
     BarChart3,
-    ChevronLeft,
     ClipboardList,
     DollarSign,
     ExternalLink,
@@ -50,6 +49,17 @@ const RELEVANT_TYPES = {
 
 const NO_STOCK_TYPES = ["service", "time_based"];
 
+const PAGE_TITLE = {
+    retail: "Produk",
+    fnb: "Menu & Produk",
+    service: "Layanan & Produk",
+    rental: "Item Sewa",
+    ticket: "Tiket & Paket",
+    hospitality: "Kamar & Layanan",
+    parking: "Tarif Parkir",
+    session: "Paket Sesi",
+};
+
 export default function Edit({
     product,
     categories,
@@ -64,6 +74,8 @@ export default function Edit({
 
     const { storeTypeFeatures = [] } = usePage().props;
     const has = (f) => storeTypeFeatures.includes(f);
+
+    const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
 
     const availableTypes = RELEVANT_TYPES[storeType] ?? ["finished_goods"];
     const feat = {
@@ -185,52 +197,49 @@ export default function Edit({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href={route("admin.products.index")}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                            aria-label="Kembali"
-                        >
-                            <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
-                        </Link>
-                        <div className="leading-tight">
-                            <div className="text-sm font-semibold text-foreground">
-                                Edit Produk
-                            </div>
-                            <div className="text-[11px] text-muted-foreground">
-                                {product.name}{" "}
-                                <span className="text-muted-foreground ml-1">
-                                    SKU: {product.sku}
-                                </span>
-                            </div>
-                        </div>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Manajemen {pageTitle}
                     </div>
-                    <nav className="hidden md:flex items-center text-xs text-muted-foreground gap-2">
-                        <Link
-                            href={route("admin.products.index")}
-                            className="hover:text-foreground"
-                        >
-                            Produk
-                        </Link>
-                        <span className="h-1.5 w-1.5 rounded-full bg-muted" />
-                        <span className="text-foreground font-medium">
-                            Edit Produk
-                        </span>
-                    </nav>
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href={route("admin.products.index")}
-                            className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
-                        >
-                            <X className="h-4 w-4" />
-                            <span className="hidden sm:inline">Batal</span>
-                        </Link>
+                    <div className="text-[11px] text-muted-foreground">
+                        Edit
                     </div>
                 </div>
             }
         >
             <Head title={`Edit: ${product.name}`} />
+
+            {/* Hero */}
+            <section className="mb-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                Edit {pageTitle.toLowerCase()}
+                            </span>
+                            <span className="text-muted-foreground">·</span>
+                            <span>{productTypes[data.type] ?? data.type}</span>
+                            {product.sku && (
+                                <>
+                                    <span className="text-muted-foreground">·</span>
+                                    <span className="font-mono">SKU: {product.sku}</span>
+                                </>
+                            )}
+                        </div>
+                        <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
+                            Perbarui{" "}
+                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                                {product.name}
+                            </span>
+                        </h1>
+                        <p className="mt-2 max-w-xl text-xs text-muted-foreground">
+                            Ubah identitas, harga, kemasan, stok, dan pengaturan. Ringkasan di kanan
+                            mengikuti perubahan yang kamu buat.
+                        </p>
+                    </div>
+                </div>
+            </section>
 
             <form id="productForm" onSubmit={submit}>
                 <div className="grid grid-cols-1 gap-6 pb-16 lg:grid-cols-12">

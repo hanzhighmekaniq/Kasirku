@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\FinalizesSaleStock;
 use App\Http\Controllers\Concerns\HasStoreScope;
 use App\Http\Controllers\Controller;
 use App\Models\CafeTable;
@@ -12,6 +13,7 @@ use App\Models\CustomerDebtLog;
 use App\Models\Employee;
 use App\Models\EmployeeCommission;
 use App\Models\PaymentMethod;
+use App\Models\PlatformPaymentGateway;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\Promotion;
@@ -20,7 +22,7 @@ use App\Models\SaleItem;
 use App\Models\SalePayment;
 use App\Models\StockMovement;
 use App\Models\Store;
-use App\Models\StorePaymentGateway;
+use App\Services\CashRoundingService;
 use App\Services\PromotionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -30,7 +32,7 @@ use Inertia\Inertia;
 
 class KasirController extends Controller
 {
-    use HasStoreScope;
+    use FinalizesSaleStock, HasStoreScope;
 
     public function index()
     {
@@ -121,7 +123,7 @@ class KasirController extends Controller
             ->when(! $store->hasFeature('debt'), fn ($q) => $q->where('type', '!=', 'debt'))
             ->orderBy('sort_order')
             ->orderBy('type')
-            ->get(['id', 'code', 'name', 'type', 'provider']);
+            ->get(['id', 'code', 'name', 'type', 'provider', 'image', 'account_number', 'account_name']);
 
         // Active promotions with their associated products
         // Gate check: skip if promo feature is disabled for this store
@@ -209,7 +211,7 @@ class KasirController extends Controller
         $todaySales = Sale::where('store_id', $storeId)
             ->where('branch_id', $branchId)
             ->whereDate('sale_date', Carbon::today())
-            ->with(['customer:id,name', 'payments.paymentMethod:id,name'])
+            ->with(['customer:id,name', 'payments.paymentMethod:id,name', 'splitPayers:id,sale_id,status'])
             ->orderByDesc('sale_date')
             ->limit(20)
             ->get([
@@ -222,6 +224,8 @@ class KasirController extends Controller
                 'sale_date',
                 'customer_id',
                 'status',
+                'split_status',
+                'is_split_stale',
             ]);
 
         // Check for active shift
@@ -252,7 +256,7 @@ class KasirController extends Controller
             'session' => 'Admin/Kasir/modes/SessionKasir',
         ];
 
-        $page = $modePages[$storeTypeCode] ?? 'Admin/Kasir/Kasir';
+        $page = $modePages[$storeTypeCode] ?? 'Admin/Kasir/modes/RetailKasir';
 
         return Inertia::render($page, [
             'products' => $products,
@@ -272,12 +276,13 @@ class KasirController extends Controller
         ]);
     }
 
-    /** Ambil daftar metode PG aktif per toko, dengan label user-friendly */
+    /**
+     * Ambil daftar metode PG aktif dari config platform (dikelola developer),
+     * dengan label user-friendly. Semua store memakai akun PG yang sama.
+     */
     private function getActivePgMethods(int $storeId): array
     {
-        $gateways = StorePaymentGateway::where('store_id', $storeId)
-            ->where('is_active', true)
-            ->get();
+        $gateways = PlatformPaymentGateway::where('is_active', true)->get();
 
         $methods = [];
         foreach ($gateways as $gw) {
@@ -390,6 +395,9 @@ class KasirController extends Controller
             'delivery_address' => 'required_if:order_type,delivery|nullable|string|max:500',
             'shipping_amount' => 'nullable|numeric|min:0',
             'rounding_adjustment' => 'nullable|numeric',
+            'rounding_mode' => 'nullable|in:nearest,up,down,custom',
+            'rounding_nearest' => 'nullable|integer|min:1',
+            'rounding_custom' => 'nullable|numeric',
             'customer_name' => 'nullable|string|max:200',
             // ── Mode-specific fields ──────────────────────────────────────
             // Rental
@@ -495,14 +503,43 @@ class KasirController extends Controller
                 $cartPromoId = $cartPromoResult['promotion']->id;
             }
 
-            $roundingAdjustment = (float) ($validated['rounding_adjustment'] ?? 0);
-            $grandTotal =
-                $subtotal -
-                $discount -
-                $cartPromoDiscount +
-                $tax +
-                ($validated['shipping_amount'] ?? 0) +
-                $roundingAdjustment;
+            // ── Grand total sebelum rounding ──
+            $grandTotal = $subtotal - $discount - $cartPromoDiscount + $tax
+                + ($validated['shipping_amount'] ?? 0);
+
+            // ── Rounding: recalculate server-side (trust CashRoundingService, not client) ──
+            $roundingService = app(CashRoundingService::class);
+            $roundingMode = $validated['rounding_mode'] ?? 'nearest';
+            $roundingNearest = (int) ($validated['rounding_nearest'] ?? 100);
+            $roundingCustom = $validated['rounding_custom'] ?? null;
+
+            // Find the cash payment method to check if rounding applies
+            $cashMethodIds = PaymentMethod::where('store_id', $storeId)
+                ->where('type', 'cash')
+                ->pluck('id')
+                ->toArray();
+            $hasCashPayment = collect($validated['payments'])->contains(
+                fn ($p) => in_array($p['method_id'], $cashMethodIds),
+            );
+
+            if ($hasCashPayment) {
+                $roundingResult = $roundingService->calculateForPayment(
+                    $grandTotal,
+                    'cash',
+                    $roundingNearest,
+                    $roundingMode,
+                    $roundingCustom,
+                );
+                $roundingAdjustment = $roundingResult['adjustment'];
+                $roundingMode = $roundingResult['mode'];
+                $roundingNearest = $roundingResult['nearest'];
+                $grandTotal = $roundingResult['rounded'];
+            } else {
+                $roundingAdjustment = 0;
+                $roundingMode = null;
+                $roundingNearest = null;
+            }
+
             $paidTotal = collect($validated['payments'])->sum('amount');
             $change = max(0, $paidTotal - $grandTotal);
 
@@ -539,6 +576,8 @@ class KasirController extends Controller
                 'tax_amount' => $tax,
                 'shipping_amount' => $validated['shipping_amount'] ?? 0,
                 'rounding_adjustment' => $roundingAdjustment,
+                'rounding_mode' => $roundingMode,
+                'rounding_nearest' => $roundingNearest,
                 'delivery_address' => $validated['delivery_address'] ?? null,
                 'customer_name' => $validated['customer_name'] ?? null,
                 'grand_total' => $grandTotal,
@@ -991,5 +1030,393 @@ class KasirController extends Controller
                 422,
             );
         }
+    }
+
+    /**
+     * Phase 1 — pre-create a pending Sale (no stock deduction, no payment).
+     * Called when the full-screen payment view opens.
+     */
+    public function start(Request $request)
+    {
+        $validated = $request->validate([
+            'idempotency_key' => 'nullable|string|max:100',
+            'customer_id' => 'nullable|exists:customers,id',
+            'table_id' => 'nullable|integer',
+            'order_type' => 'required|string|max:30',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'tax_amount' => 'nullable|numeric|min:0',
+            'shipping_amount' => 'nullable|numeric|min:0',
+            'rounding_adjustment' => 'nullable|numeric',
+            'rounding_mode' => 'nullable|in:nearest,up,down,custom',
+            'rounding_nearest' => 'nullable|integer|min:1',
+            'rounding_custom' => 'nullable|numeric',
+            'delivery_address' => 'required_if:order_type,delivery|nullable|string|max:500',
+            'customer_name' => 'nullable|string|max:200',
+            'notes' => 'nullable|string|max:500',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|integer',
+            'items.*.variant_id' => 'nullable|integer',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.discount_amount' => 'nullable|numeric|min:0',
+            'items.*.modifiers' => 'nullable|array',
+            'items.*.notes' => 'nullable|string|max:255',
+            'items.*.packaging_unit_id' => 'nullable|integer',
+            'items.*.unit_name' => 'nullable|string|max:50',
+            'items.*.unit_conversion_qty' => 'nullable|integer|min:1',
+            'rental_duration' => 'nullable|integer|min:1',
+            'rental_unit' => 'nullable|in:per_hour,per_day,per_week',
+            'ticket_event' => 'nullable|string|max:200',
+            'ticket_slot' => 'nullable|string|max:100',
+            'room_number' => 'nullable|string|max:50',
+            'guest_count' => 'nullable|integer|min:1',
+            'employee_id' => 'nullable|exists:employees,id',
+        ]);
+
+        if (! empty($validated['idempotency_key'])) {
+            $existing = Sale::where('idempotency_key', $validated['idempotency_key'])
+                ->where('store_id', session('current_store_id'))
+                ->first();
+            if ($existing) {
+                return response()->json([
+                    'success' => true,
+                    'sale_id' => $existing->id,
+                    'sale_no' => $existing->sale_no,
+                    'grand_total' => (float) $existing->grand_total,
+                ]);
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            $user = $request->user();
+            $storeId = session('current_store_id');
+            $branchId = session('branch_id');
+            $store = Store::with('storeType')->find($storeId);
+            $storeTypeCode = $store?->getRelation('storeType')?->code ?? 'retail';
+            $store?->load(['planModel.features', 'storeFeatures.feature']);
+            $now = now();
+
+            $prefix = 'SL-'.$now->format('Ymd').'-';
+            $last = Sale::where('sale_no', 'like', $prefix.'%')
+                ->orderByDesc('sale_no')
+                ->first();
+            $seq = $last ? (int) substr($last->sale_no, -3) + 1 : 1;
+            $saleNo = $prefix.str_pad($seq, 3, '0', STR_PAD_LEFT);
+
+            $items = $validated['items'];
+
+            $customerTier = null;
+            if (! empty($validated['customer_id'])) {
+                $customerTier = Customer::find($validated['customer_id'])?->tier;
+            }
+            $promoEnabled = $store->hasFeature('promo');
+            $promoService = new PromotionService;
+            if ($promoEnabled) {
+                $items = $promoService->applyPromosToCart($items, $customerTier);
+            }
+
+            $subtotal = 0;
+            foreach ($items as $item) {
+                $disc = ($item['discount_amount'] ?? 0) + ($item['promo_discount'] ?? 0);
+                $modExtra = collect($item['modifiers'] ?? [])->sum('price_addition');
+                $subtotal += $item['quantity'] * ($item['price'] + $modExtra) - $disc;
+            }
+
+            $discount = $validated['discount_amount'] ?? 0;
+            $tax = $validated['tax_amount'] ?? 0;
+            $cartPromoResult = $promoEnabled ? $promoService->findBestCartPromo($subtotal, $customerTier) : null;
+            $cartPromoDiscount = $cartPromoResult ? $cartPromoResult['discount'] : 0;
+            $cartPromoId = $cartPromoResult ? $cartPromoResult['promotion']->id : null;
+
+            $preRoundingTotal = $subtotal - $discount - $cartPromoDiscount + $tax + ($validated['shipping_amount'] ?? 0);
+
+            // Rounding — only if store feature enabled AND has cash payment in the (future) payment
+            // We defer the full rounding check to finalize(), but pre-calculate from frontend hints
+            $roundingService = app(CashRoundingService::class);
+            $roundingMode = $validated['rounding_mode'] ?? null;
+            $roundingNearest = (int) ($validated['rounding_nearest'] ?? 0);
+            $roundingCustom = $validated['rounding_custom'] ?? null;
+            $roundingAdjustment = (float) ($validated['rounding_adjustment'] ?? 0);
+            $grandTotal = $preRoundingTotal + $roundingAdjustment;
+
+            // Pre-validate stock
+            $this->validateStockForItems($items, $storeId);
+
+            $sale = Sale::create([
+                'store_id' => $storeId,
+                'branch_id' => $branchId,
+                'table_id' => $validated['table_id'] ?? null,
+                'customer_id' => $validated['customer_id'] ?? null,
+                'user_id' => $user->id,
+                'cashier_shift_id' => $this->getActiveShiftId($storeId, $user->id),
+                'sale_no' => $saleNo,
+                'sale_date' => $now,
+                'pos_mode' => $storeTypeCode,
+                'order_type' => $validated['order_type'],
+                'subtotal' => $subtotal,
+                'discount_amount' => $discount + $cartPromoDiscount,
+                'tax_amount' => $tax,
+                'shipping_amount' => $validated['shipping_amount'] ?? 0,
+                'rounding_adjustment' => $roundingAdjustment,
+                'rounding_mode' => $roundingMode,
+                'rounding_nearest' => $roundingNearest,
+                'grand_total' => $grandTotal,
+                'paid_amount' => 0,
+                'change_amount' => 0,
+                'status' => 'pending',
+                'payment_status' => 'unpaid',
+                'delivery_address' => $validated['delivery_address'] ?? null,
+                'customer_name' => $validated['customer_name'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'idempotency_key' => $validated['idempotency_key'] ?? null,
+                'extra_data' => $this->buildExtraData($validated, $storeTypeCode),
+            ]);
+
+            if (! empty($validated['employee_id'])) {
+                $sale->update(['employee_id' => $validated['employee_id']]);
+            }
+
+            // Create SaleItems (no stock deduction)
+            $this->createSaleItems($sale, $items, $storeId);
+
+            // Mark table occupied
+            if (! empty($validated['table_id'])) {
+                CafeTable::where('id', $validated['table_id'])
+                    ->where('store_id', $storeId)
+                    ->update(['status' => 'occupied']);
+            }
+
+            // Increment promo used_count
+            $promoIds = collect($items)->pluck('promotion_id')->filter()->unique();
+            if ($cartPromoId) {
+                $promoIds->push($cartPromoId);
+            }
+            if ($promoIds->isNotEmpty()) {
+                Promotion::whereIn('id', $promoIds)->increment('used_count');
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'sale_id' => $sale->id,
+                'sale_no' => $saleNo,
+                'grand_total' => $grandTotal,
+                'subtotal' => $subtotal,
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json(
+                ['success' => false, 'message' => $e->getMessage()],
+                422,
+            );
+        }
+    }
+
+    /**
+     * Phase 2 — finalize a pending sale with payment info.
+     * Deducts stock, creates SalePayments, processes debt, computes commission.
+     */
+    public function finalize(Request $request)
+    {
+        $validated = $request->validate([
+            'sale_id' => 'required|exists:sales,id',
+            'payments' => 'required|array|min:1',
+            'payments.*.method_id' => 'required|exists:payment_methods,id',
+            'payments.*.amount' => 'required|numeric|min:0.01',
+            'payments.*.is_pg' => 'nullable|boolean',
+            'payments.*.pg_provider' => 'nullable|string',
+            'payments.*.pg_method' => 'nullable|string',
+            'payments.*.payer_name' => 'nullable|string',
+            'payments.*.payer_customer_id' => 'nullable|exists:customers,id',
+            'payments.*.paid_amount' => 'nullable|numeric',
+            'payments.*.change_amount' => 'nullable|numeric',
+            'payments.*.is_split' => 'nullable|boolean',
+            // Kasbon fields
+            'customer_id' => 'nullable|exists:customers,id',
+            'kasbon_due_date' => 'nullable|date',
+            'kasbon_note' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $user = $request->user();
+            $storeId = session('current_store_id');
+            $branchId = session('branch_id');
+            $sale = Sale::findOrFail($validated['sale_id']);
+            abort_if($sale->store_id !== $storeId, 403);
+            abort_if($sale->status !== 'pending', 422, 'Transaksi sudah selesai atau dibatalkan.');
+
+            $hasPgPayment = collect($validated['payments'])->contains('is_pg', true);
+            $paidTotal = collect($validated['payments'])->sum('amount');
+            $grandTotal = (float) $sale->grand_total;
+
+            if (! $hasPgPayment) {
+                $change = max(0, $paidTotal - $grandTotal);
+
+                // Deduct stock
+                $items = $sale->items()->with('product')->get()->toArray();
+                $this->deductStockForSale($sale, $items, $storeId, $branchId, $sale->sale_no);
+            } else {
+                $change = 0;
+            }
+
+            // Create SalePayments
+            $debtTotal = 0;
+            foreach ($validated['payments'] as $pay) {
+                if (empty($pay['is_pg'])) {
+                    SalePayment::create([
+                        'sale_id' => $sale->id,
+                        'payment_method_id' => $pay['method_id'],
+                        'paid_at' => now(),
+                        'amount' => $pay['amount'],
+                        'reference_no' => $pay['reference_no'] ?? null,
+                        'payer_name' => $pay['payer_name'] ?? null,
+                        'payer_customer_id' => $pay['payer_customer_id'] ?? null,
+                        'paid_amount' => $pay['paid_amount'] ?? null,
+                        'change_amount' => $pay['change_amount'] ?? null,
+                        'is_split' => ! empty($pay['is_split']),
+                    ]);
+
+                    $method = PaymentMethod::find($pay['method_id']);
+                    if ($method && $method->type === 'debt') {
+                        $debtTotal += $pay['amount'];
+                    }
+                }
+            }
+
+            // Process debt
+            if ($debtTotal > 0) {
+                if (! $user->can('debt.create')) {
+                    throw new \Exception('Anda tidak memiliki izin untuk menerima pembayaran hutang.');
+                }
+                // Use customer_id from request if provided (kasbon flow), fallback to sale's customer_id
+                $customerId = $validated['customer_id'] ?? $sale->customer_id;
+                $customer = Customer::find($customerId);
+                if (! $customer) {
+                    throw new \Exception('Pilih pelanggan terlebih dahulu untuk pembayaran hutang.');
+                }
+                // Also update sale's customer_id if kasbon customer differs
+                if ($customerId != $sale->customer_id) {
+                    $sale->update(['customer_id' => $customerId]);
+                }
+                $newDebt = (float) $customer->debt_balance + $debtTotal;
+                if ($customer->credit_limit > 0 && $newDebt > $customer->credit_limit) {
+                    throw new \Exception(
+                        'Hutang melebihi limit. Limit: Rp'.number_format($customer->credit_limit).
+                        ', Hutang saat ini: Rp'.number_format($customer->debt_balance).
+                        ', Ditambah: Rp'.number_format($debtTotal),
+                    );
+                }
+
+                $kasbonDueDate = $validated['kasbon_due_date'] ?? null;
+                $kasbonNote = $validated['kasbon_note'] ?? "Hutang dari penjualan #{$sale->sale_no}";
+
+                CustomerDebtLog::create([
+                    'customer_id' => $customer->id,
+                    'store_id' => $storeId,
+                    'sale_id' => $sale->id,
+                    'type' => 'add',
+                    'amount' => $debtTotal,
+                    'balance_after' => $newDebt,
+                    'due_date' => $kasbonDueDate,
+                    'notes' => $kasbonNote,
+                    'created_by' => $user->id,
+                ]);
+                $customer->update(['debt_balance' => $newDebt]);
+            }
+
+            $paymentStatus = $hasPgPayment
+                ? 'pending'
+                : ($paidTotal <= 0 ? 'unpaid' : ($paidTotal < $grandTotal ? 'partial' : 'paid'));
+            $saleStatus = $hasPgPayment ? 'pending' : 'completed';
+
+            $sale->update([
+                'status' => $saleStatus,
+                'payment_status' => $paymentStatus,
+                'paid_amount' => $paidTotal,
+                'change_amount' => $change,
+            ]);
+
+            // Commission
+            if (! empty($sale->employee_id)) {
+                $employee = Employee::find($sale->employee_id);
+                if ($employee && $employee->commission_value > 0) {
+                    $baseAmount = (float) $grandTotal;
+                    $commissionAmount = match ($employee->commission_type) {
+                        'percent' => round($baseAmount * ($employee->commission_value / 100), 2),
+                        'flat' => min($employee->commission_value, $baseAmount),
+                        default => 0,
+                    };
+                    if ($commissionAmount > 0) {
+                        EmployeeCommission::create([
+                            'employee_id' => $employee->id,
+                            'store_id' => $storeId,
+                            'sale_id' => $sale->id,
+                            'type' => $employee->commission_type ?? 'percent',
+                            'commission_rate' => $employee->commission_value,
+                            'base_amount' => $baseAmount,
+                            'commission_amount' => $commissionAmount,
+                            'status' => 'pending',
+                            'commission_date' => now()->toDateString(),
+                            'notes' => "Auto dari POS transaksi {$sale->sale_no}",
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            // Build PG info
+            $pgInfo = null;
+            if ($hasPgPayment) {
+                $pgPayment = collect($validated['payments'])->firstWhere('is_pg', true);
+                $pgInfo = [
+                    'provider' => $pgPayment['pg_provider'],
+                    'method' => $pgPayment['pg_method'],
+                    'amount' => $pgPayment['amount'],
+                    'sale_id' => $sale->id,
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'sale_no' => $sale->sale_no,
+                'sale_id' => $sale->id,
+                'change' => $change,
+                'grand_total' => $grandTotal,
+                'is_pg' => $hasPgPayment,
+                'pg_info' => $pgInfo,
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json(
+                ['success' => false, 'message' => $e->getMessage()],
+                422,
+            );
+        }
+    }
+
+    /**
+     * Cancel a pending sale — only if no payments have been made.
+     */
+    public function cancelPending(Request $request, Sale $sale)
+    {
+        $storeId = session('current_store_id');
+        abort_if($sale->store_id !== $storeId, 403);
+        abort_if($sale->status !== 'pending', 422, 'Transaksi sudah selesai atau dibatalkan.');
+
+        if ($sale->table_id) {
+            CafeTable::where('id', $sale->table_id)
+                ->where('store_id', $storeId)
+                ->update(['status' => 'available']);
+        }
+
+        $sale->delete(); // cascade deletes items
+
+        return response()->json(['success' => true, 'message' => 'Transaksi dibatalkan.']);
     }
 }

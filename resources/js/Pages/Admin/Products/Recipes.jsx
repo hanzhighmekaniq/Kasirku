@@ -3,7 +3,6 @@ import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import {
     CheckCircle,
-    ChevronLeft,
     Info,
     Plus,
     Trash2,
@@ -34,6 +33,17 @@ const UNIT_OPTS = [
     "lembar",
     "buah",
 ];
+
+const PAGE_TITLE = {
+    retail: "Produk",
+    fnb: "Menu & Produk",
+    service: "Layanan & Produk",
+    rental: "Item Sewa",
+    ticket: "Tiket & Paket",
+    hospitality: "Kamar & Layanan",
+    parking: "Tarif Parkir",
+    session: "Paket Sesi",
+};
 
 function inputCls(err) {
     return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
@@ -112,9 +122,16 @@ function IngredientRow({ recipe, onDelete, deleting }) {
     );
 }
 
-export default function Recipes({ product, recipes, rawMaterials }) {
+export default function Recipes({
+    product,
+    recipes,
+    rawMaterials,
+    storeType = "retail",
+}) {
     const { flash } = usePage().props;
     const [deleting, setDeleting] = useState(null);
+
+    const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
 
     const { data, setData, post, processing, errors, reset } = useForm({
         raw_material_id: "",
@@ -177,26 +194,50 @@ export default function Recipes({ product, recipes, rawMaterials }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route("admin.products.show", product.id)}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted"
-                        aria-label="Kembali"
-                    >
-                        <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
-                    </Link>
-                    <div className="min-w-0">
-                        <h2 className="text-lg font-semibold text-foreground truncate">
-                            Resep — {product.name}
-                        </h2>
-                        <p className="text-xs text-muted-foreground">
-                            SKU: {product.sku}
-                        </p>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Manajemen {pageTitle}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Resep
                     </div>
                 </div>
             }
         >
             <Head title={`Resep — ${product.name}`} />
+
+            {/* Hero */}
+            <section className="mb-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                Resep
+                            </span>
+                            <span className="text-muted-foreground">·</span>
+                            <span className="truncate max-w-[14rem]">{product.name}</span>
+                            {product.sku && (
+                                <>
+                                    <span className="text-muted-foreground">·</span>
+                                    <span className="font-mono">SKU: {product.sku}</span>
+                                </>
+                            )}
+                        </div>
+                        <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
+                            Kelola{" "}
+                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                                resep bahan
+                            </span>{" "}
+                            produk
+                        </h1>
+                        <p className="mt-2 max-w-xl text-xs text-muted-foreground">
+                            Atur komposisi bahan baku, hitung HPP otomatis, dan pantau margin
+                            dari resep per 1 produk.
+                        </p>
+                    </div>
+                </div>
+            </section>
 
             {/* Flash */}
             {flash?.success && (

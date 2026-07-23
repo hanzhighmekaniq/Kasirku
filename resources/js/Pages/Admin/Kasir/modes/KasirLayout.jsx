@@ -26,13 +26,12 @@ import {
 } from "lucide-react";
 
 import { useStoreModules } from "@/Hooks/useStoreModules";
-import PGPaymentModal from "@/Pages/Admin/PGPaymentModal";
 import BarcodeScanner from "@/Components/BarcodeScanner";
 
 import ModifierModal from "../components/ModifierModal";
 import VariantModal from "../components/legacy/VariantModal";
 import UnitModal from "../components/legacy/UnitModal";
-import PaymentModal from "../components/PaymentModal";
+import PaymentView from "../components/PaymentView";
 import ReceiptModal from "../components/ReceiptModal";
 import HistoryPanel from "../components/HistoryPanel";
 import CartRow from "../components/CartRow";
@@ -1496,19 +1495,12 @@ export default function KasirLayout({
                 />
             )}
             {k.showPayment && (
-                <PaymentModal
-                    grandTotal={k.grandTotal}
-                    roundedGrandTotal={k.roundedGrandTotal}
-                    roundingAdjustment={k.roundingAdjustment}
+                <PaymentView
+                    k={k}
                     paymentMethods={paymentMethods}
                     pgMethods={pgMethods}
-                    onConfirm={k.handleConfirmPayment}
-                    onClose={() => k.setShowPayment(false)}
-                    submitting={k.submitting}
-                    selectedCustomer={k.selectedCustomer}
-                    customers={k.customers}
-                    onSelectCustomer={k.setSelectedCustomer}
-                    cartItems={k.cart}
+                    storeName={storeName}
+                    receiptFooter={receiptFooter}
                 />
             )}
             {k.showReceipt && k.receiptData && (
@@ -1525,22 +1517,8 @@ export default function KasirLayout({
                     sales={k.historyList}
                     onClose={() => k.setShowHistory(false)}
                     onPrint={k.handlePrintHistory}
-                />
-            )}
-            {k.pgModalData && (
-                <PGPaymentModal
-                    pgData={{
-                        pg_trx_id: k.pgModalData.pgTrxId,
-                        payment_type: k.pgModalData.paymentType,
-                        qr_code: k.pgModalData.qrCode,
-                        qr_image_url: k.pgModalData.qrImageUrl,
-                        va_number: k.pgModalData.vaNumber,
-                        va_bank: k.pgModalData.vaBank,
-                        payment_url: k.pgModalData.paymentUrl,
-                    }}
-                    amount={k.pgModalData.amount}
-                    onSuccess={k.handlePgSuccess}
-                    onClose={() => k.setPgModalData(null)}
+                    onResumeSplit={k.handleResumeSplit}
+                    onCancelSplit={k.handleCancelSplit}
                 />
             )}
             <BarcodeScanner

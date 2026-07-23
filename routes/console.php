@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Check pending PG transactions every 30 seconds
 Schedule::command('pg:check-pending')->everyThirtySeconds();
+
+// Auto-expire stale split bills every 5 minutes
+Schedule::command('split:check-expired')->everyFiveMinutes();

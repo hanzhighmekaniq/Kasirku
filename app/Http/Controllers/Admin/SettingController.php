@@ -87,6 +87,7 @@ class SettingController extends Controller
                     'description' => $feature->description,
                     'category' => $feature->category,
                     'is_enabled' => $override ? $override->is_enabled : true,
+                    'settings' => $override?->settings,
                 ];
             })->values();
 

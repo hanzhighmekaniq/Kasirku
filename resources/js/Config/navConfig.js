@@ -576,6 +576,18 @@ export function buildNavGroups(modules) {
         );
         add(
             items,
+            (PaymentGw?.val || PaymentGw?.lock) && can("setting.view"),
+            PaymentGw?.val && can("setting.view"),
+            {
+                key: "wallet",
+                name: "Wallet",
+                href: r("admin.wallet.index"),
+                icon: "wallet",
+                current: "admin.wallet.*",
+            },
+        );
+        add(
+            items,
             (hasPaymentMethod || lockedPaymentMethod) && can("setting.edit"),
             hasPaymentMethod && can("setting.edit"),
             {

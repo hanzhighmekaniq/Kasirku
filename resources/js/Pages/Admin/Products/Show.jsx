@@ -2,8 +2,6 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
-import QuickStockModal from "./QuickStockModal";
-import { ChevronLeft } from "lucide-react";
 
 /* ── helpers ─────────────────────────────────────────── */
 const fmt = (n) =>
@@ -66,6 +64,17 @@ const EXPIRY_META = {
         cls: "bg-destructive/10 text-destructive border border-destructive/20",
         dot: "bg-destructive/100",
     },
+};
+
+const PAGE_TITLE = {
+    retail: "Produk",
+    fnb: "Menu & Produk",
+    service: "Layanan & Produk",
+    rental: "Item Sewa",
+    ticket: "Tiket & Paket",
+    hospitality: "Kamar & Layanan",
+    parking: "Tarif Parkir",
+    session: "Paket Sesi",
 };
 
 /* ── batch expiry status helper ─────────────────────── */
@@ -394,12 +403,14 @@ export default function Show({
     profitRp,
     stockMovements = [],
     bucketMargins = [],
+    storeType = "retail",
 }) {
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
-    const [stockModal, setStockModal] = useState(null);
     const [activeTab, setActiveTab] = useState("stock");
     const [alertDismissed, setAlertDismissed] = useState(false);
+
+    const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
 
     const typeMeta = TYPE_META[product.type] ?? {
         label: product.type,
@@ -442,106 +453,12 @@ export default function Show({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href={route("admin.products.index")}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                            aria-label="Kembali"
-                        >
-                            <ChevronLeft
-                                className="h-5 w-5"
-                                strokeWidth={1.8}
-                            />
-                        </Link>
-                        <div className="leading-tight">
-                            <div className="text-sm font-semibold text-foreground">
-                                Retail POS
-                            </div>
-                            <div className="text-[11px] text-muted-foreground">
-                                Detail Produk
-                            </div>
-                        </div>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Manajemen {pageTitle}
                     </div>
-                    <nav className="hidden md:flex items-center text-xs text-muted-foreground gap-2">
-                        <Link
-                            href={route("admin.products.index")}
-                            className="hover:text-foreground"
-                        >
-                            Produk
-                        </Link>
-                        <span className="h-1.5 w-1.5 rounded-full bg-muted" />
-                        <span className="text-foreground font-medium">
-                            Detail
-                        </span>
-                    </nav>
-                    <div className="flex items-center gap-2">
-                        {product.track_stock && (
-                            <>
-                                <button
-                                    onClick={() => {
-                                        if (product.supplier) {
-                                            router.visit(
-                                                route(
-                                                    "admin.purchases.create",
-                                                ) +
-                                                    "?product_id=" +
-                                                    product.id +
-                                                    "&supplier_id=" +
-                                                    product.supplier_id,
-                                            );
-                                        } else {
-                                            setStockModal({
-                                                product,
-                                                type: "in",
-                                            });
-                                        }
-                                    }}
-                                    className="inline-flex items-center gap-1.5 rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success transition hover:bg-success/20"
-                                >
-                                    <svg
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="currentColor"
-                                    >
-                                        <path d="M12 4.5v15m7.5-7.5h-15" />
-                                    </svg>
-                                    <span className="hidden sm:inline">
-                                        Stok
-                                    </span>
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        setStockModal({ product, type: "out" })
-                                    }
-                                    className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/20"
-                                >
-                                    <svg
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="currentColor"
-                                    >
-                                        <path d="M5 12h14" />
-                                    </svg>
-                                </button>
-                            </>
-                        )}
-                        <Link
-                            href={route("admin.products.edit", product.id)}
-                            className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 shadow-sm transition"
-                        >
-                            Edit Produk
-                        </Link>
-                        <button
-                            onClick={() => setDeleteOpen(true)}
-                            className="px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition"
-                        >
-                            Hapus
-                        </button>
+                    <div className="text-[11px] text-muted-foreground">
+                        Detail
                     </div>
                 </div>
             }
@@ -705,6 +622,21 @@ export default function Show({
                                     </span>
                                 </>
                             )}
+                        </div>
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                            <Link
+                                href={route("admin.products.edit", product.id)}
+                                className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                            >
+                                Edit
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={() => setDeleteOpen(true)}
+                                className="inline-flex items-center rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+                            >
+                                Hapus
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1248,56 +1180,6 @@ export default function Show({
                 )}
             </div>
 
-            {/* ── Mobile FAB ── */}
-            <div className="lg:hidden fixed bottom-6 right-6 flex flex-col gap-3 z-40">
-                {product.track_stock && (
-                    <button
-                        onClick={() => {
-                            if (product.supplier) {
-                                router.visit(
-                                    route("admin.purchases.create") +
-                                        "?product_id=" +
-                                        product.id +
-                                        "&supplier_id=" +
-                                        product.supplier_id,
-                                );
-                            } else {
-                                setStockModal({ product, type: "in" });
-                            }
-                        }}
-                        className="w-14 h-14 rounded-full bg-primary shadow-lg flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition"
-                    >
-                        <svg
-                            className="w-6 h-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                    </button>
-                )}
-                <button
-                    onClick={() => setDeleteOpen(true)}
-                    className="w-14 h-14 rounded-full bg-card border border-border shadow-lg flex items-center justify-center text-destructive hover:bg-destructive/10 transition"
-                >
-                    <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.7}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                        />
-                    </svg>
-                </button>
-            </div>
-
             <ConfirmDeleteModal
                 open={deleteOpen}
                 title="Hapus produk?"
@@ -1306,15 +1188,6 @@ export default function Show({
                 onConfirm={handleDelete}
                 onClose={() => !deleting && setDeleteOpen(false)}
             />
-
-            {stockModal && (
-                <QuickStockModal
-                    product={stockModal.product}
-                    type={stockModal.type}
-                    onClose={() => setStockModal(null)}
-                    onSuccess={() => setStockModal(null)}
-                />
-            )}
         </AuthenticatedLayout>
     );
 }

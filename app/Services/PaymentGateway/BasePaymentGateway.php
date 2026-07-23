@@ -3,31 +3,37 @@
 namespace App\Services\PaymentGateway;
 
 use App\Models\PaymentGatewayTransaction;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 abstract class BasePaymentGateway implements PaymentGatewayInterface
 {
     protected string $provider;
+
     protected string $serverKey;
+
     protected string $clientKey;
+
     protected string $merchantId;
+
     protected string $environment; // sandbox | production
-    protected array  $enabledMethods;
+
+    protected array $enabledMethods;
 
     public function __construct(array $config)
     {
-        $this->provider       = $config['provider'];
-        $this->serverKey      = $config['server_key']      ?? '';
-        $this->clientKey      = $config['client_key']      ?? '';
-        $this->merchantId     = $config['merchant_id']     ?? '';
-        $this->environment    = $config['environment']     ?? 'sandbox';
+        $this->provider = $config['provider'];
+        $this->serverKey = $config['server_key'] ?? '';
+        $this->clientKey = $config['client_key'] ?? '';
+        $this->merchantId = $config['merchant_id'] ?? '';
+        $this->environment = $config['environment'] ?? 'sandbox';
         $this->enabledMethods = $config['enabled_methods'] ?? [];
     }
 
     // ── HTTP helpers ───────────────────────────────
 
-    protected function http(): \Illuminate\Http\Client\PendingRequest
+    protected function http(): PendingRequest
     {
         return Http::withBasicAuth($this->serverKey, '')
             ->acceptJson()
@@ -43,6 +49,7 @@ abstract class BasePaymentGateway implements PaymentGatewayInterface
     }
 
     abstract protected function sandboxBaseUrl(): string;
+
     abstract protected function productionBaseUrl(): string;
 
     // ── Persistence helpers ────────────────────────
@@ -52,11 +59,11 @@ abstract class BasePaymentGateway implements PaymentGatewayInterface
         return PaymentGatewayTransaction::updateOrCreate(
             ['external_id' => $externalId],
             [
-                'sale_id'      => $saleId,
-                'provider'     => $this->provider,
+                'sale_id' => $saleId,
+                'provider' => $this->provider,
                 'payment_type' => $paymentType,
-                'status'       => $status,
-                'amount'       => $amount,
+                'status' => $status,
+                'amount' => $amount,
                 'raw_response' => $raw,
             ]
         );
@@ -65,14 +72,10 @@ abstract class BasePaymentGateway implements PaymentGatewayInterface
     protected function mapStatus(string $providerStatus): string
     {
         return match (strtolower($providerStatus)) {
-            'capture', 'settlement', 'paid', 'success'
-                => 'paid',
-            'pending', 'authorize'
-                => 'pending',
-            'deny', 'cancel', 'failure', 'failed'
-                => 'failed',
-            'expire', 'expired'
-                => 'expired',
+            'capture', 'settlement', 'paid', 'success' => 'paid',
+            'pending', 'authorize' => 'pending',
+            'deny', 'cancel', 'failure', 'failed' => 'failed',
+            'expire', 'expired' => 'expired',
             default => 'pending',
         };
     }
@@ -80,5 +83,20 @@ abstract class BasePaymentGateway implements PaymentGatewayInterface
     protected function log(string $level, string $message, array $context = []): void
     {
         Log::channel('daily')->{$level}("[{$this->provider}] {$message}", $context);
+    }
+
+    /**
+     * Structured logging for gateway charge attempts/errors. Never pass
+     * server_key/client_key or other credentials in $context — only
+     * order/transaction identifiers, HTTP status, timing, and error
+     * codes/messages.
+     */
+    protected function logGatewayEvent(string $level, string $event, array $context = []): void
+    {
+        Log::channel('daily')->{$level}("[PG:{$this->provider}] {$event}", array_merge($context, [
+            'provider' => $this->provider,
+            'environment' => $this->environment,
+            'timestamp' => now()->toISOString(),
+        ]));
     }
 }

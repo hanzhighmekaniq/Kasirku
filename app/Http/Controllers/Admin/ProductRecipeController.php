@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductRecipe;
+use App\Models\Store;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,31 +16,33 @@ class ProductRecipeController extends Controller
      */
     public function index(Product $product)
     {
-        $storeId = session("current_store_id");
+        $storeId = session('current_store_id');
+        $store = Store::with('storeType')->find($storeId);
 
         $product->load([
-            "recipes.rawMaterial:id,name,sku,unit,base_unit,cost_price,type",
+            'recipes.rawMaterial:id,name,sku,unit,base_unit,cost_price,type',
         ]);
 
         // Bahan baku yang bisa dipilih
         $rawMaterials = Product::forStore($storeId)
-            ->where("type", "raw_material")
-            ->where("is_active", true)
-            ->orderBy("name")
-            ->get(["id", "name", "sku", "unit", "base_unit", "cost_price"]);
+            ->where('type', 'raw_material')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'sku', 'unit', 'base_unit', 'cost_price']);
 
-        return Inertia::render("Admin/Products/Recipes", [
-            "product" => $product->only(
-                "id",
-                "name",
-                "sku",
-                "type",
-                "sell_price",
-                "cost_price",
-                "image",
+        return Inertia::render('Admin/Products/Recipes', [
+            'product' => $product->only(
+                'id',
+                'name',
+                'sku',
+                'type',
+                'sell_price',
+                'cost_price',
+                'image',
             ),
-            "recipes" => $product->recipes,
-            "rawMaterials" => $rawMaterials,
+            'recipes' => $product->recipes,
+            'rawMaterials' => $rawMaterials,
+            'storeType' => $store?->getRelation('storeType')?->code ?? 'retail',
         ]);
     }
 
@@ -49,38 +52,38 @@ class ProductRecipeController extends Controller
     public function store(Request $request, Product $product)
     {
         $validated = $request->validate([
-            "raw_material_id" => [
-                "required",
-                "exists:products,id",
+            'raw_material_id' => [
+                'required',
+                'exists:products,id',
                 // tidak boleh sama dengan produk itu sendiri
                 function ($attr, $val, $fail) use ($product) {
                     if ((int) $val === $product->id) {
                         $fail(
-                            "Bahan baku tidak boleh sama dengan produk itu sendiri.",
+                            'Bahan baku tidak boleh sama dengan produk itu sendiri.',
                         );
                     }
                 },
             ],
-            "quantity" => "required|numeric|min:0.0001",
-            "unit" => "required|string|max:30",
-            "is_nullable" => "boolean",
-            "notes" => "nullable|string|max:500",
+            'quantity' => 'required|numeric|min:0.0001',
+            'unit' => 'required|string|max:30',
+            'is_nullable' => 'boolean',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $recipe = ProductRecipe::updateOrCreate(
             [
-                "product_id" => $product->id,
-                "raw_material_id" => $validated["raw_material_id"],
+                'product_id' => $product->id,
+                'raw_material_id' => $validated['raw_material_id'],
             ],
             [
-                "quantity" => $validated["quantity"],
-                "unit" => $validated["unit"],
-                "is_nullable" => $validated["is_nullable"] ?? false,
-                "notes" => $validated["notes"] ?? null,
+                'quantity' => $validated['quantity'],
+                'unit' => $validated['unit'],
+                'is_nullable' => $validated['is_nullable'] ?? false,
+                'notes' => $validated['notes'] ?? null,
             ],
         );
 
-        return back()->with("success", "Bahan berhasil disimpan.");
+        return back()->with('success', 'Bahan berhasil disimpan.');
     }
 
     /**
@@ -90,6 +93,7 @@ class ProductRecipeController extends Controller
     {
         abort_if($recipe->product_id !== $product->id, 403);
         $recipe->delete();
-        return back()->with("success", "Bahan dihapus dari resep.");
+
+        return back()->with('success', 'Bahan dihapus dari resep.');
     }
 }

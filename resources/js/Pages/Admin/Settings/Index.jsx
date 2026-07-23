@@ -103,19 +103,45 @@ function FeatureToggle({ feature, onToggle }) {
 
             {/* Sub-settings for cash_rounding */}
             {feature.code === "cash_rounding" && feature.is_enabled && (
-                <div className="mt-3 flex items-center gap-3 border-t border-border pt-3">
-                    <label className="text-xs text-muted-foreground">Bulatkan ke:</label>
-                    <select
-                        value={subSettings.cash_rounding_nearest ?? 100}
-                        onChange={(e) => handleSubSettingChange("cash_rounding_nearest", Number(e.target.value))}
-                        disabled={loading}
-                        className="rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring/20"
-                    >
-                        <option value={50}>Rp50</option>
-                        <option value={100}>Rp100</option>
-                        <option value={500}>Rp500</option>
-                        <option value={1000}>Rp1.000</option>
-                    </select>
+                <div className="mt-3 space-y-3 border-t border-border pt-3">
+                    <div className="flex items-center gap-3">
+                        <label className="text-xs text-muted-foreground">Bulatkan ke:</label>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-muted-foreground">Rp</span>
+                            <input
+                                type="number"
+                                min={1}
+                                value={subSettings.cash_rounding_nearest ?? 100}
+                                onChange={(e) => handleSubSettingChange("cash_rounding_nearest", Math.max(1, Number(e.target.value) || 1))}
+                                disabled={loading}
+                                className="w-20 rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring/20"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <label className="text-xs text-muted-foreground">Mode:</label>
+                        <div className="inline-flex rounded-lg bg-muted p-0.5">
+                            {[
+                                { v: "nearest", l: "Terdekat" },
+                                { v: "down", l: "Ke Bawah" },
+                                { v: "up", l: "Ke Atas" },
+                            ].map((opt) => (
+                                <button
+                                    key={opt.v}
+                                    type="button"
+                                    onClick={() => handleSubSettingChange("cash_rounding_mode", opt.v)}
+                                    disabled={loading}
+                                    className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+                                        (subSettings.cash_rounding_mode ?? "nearest") === opt.v
+                                            ? "bg-card text-foreground shadow-sm"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                >
+                                    {opt.l}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

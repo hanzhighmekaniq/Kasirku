@@ -2,7 +2,21 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import axios from "axios";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+    Banknote,
+    Check,
+    CreditCard,
+    FileClock,
+    GripVertical,
+    Inbox,
+    Info,
+    Lock,
+    Pencil,
+    Plus,
+    Search,
+    Smartphone,
+    Trash2,
+} from "lucide-react";
 import Button from "@/Components/ui/Button";
 import {
     DndContext,
@@ -23,14 +37,14 @@ import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 /* ── constants ───────────────────────────────────────── */
 const TYPE_META = {
-    cash: { label: "Tunai", color: "bg-success/10 text-success", dot: "bg-success/100" },
-    digital: { label: "Digital / QRIS", color: "bg-primary-50 text-primary-700", dot: "bg-primary-500" },
-    card: { label: "Kartu", color: "bg-violet-50 text-violet-700", dot: "bg-violet-500" },
-    credit: { label: "Kredit / Tempo", color: "bg-amber-50 text-amber-700", dot: "bg-amber-500" },
+    cash: { label: "Tunai", icon: Banknote, color: "bg-success/10 text-success", dot: "bg-success/100" },
+    digital: { label: "Digital / QRIS", icon: Smartphone, color: "bg-primary-50 text-primary-700", dot: "bg-primary-500" },
+    card: { label: "Kartu", icon: CreditCard, color: "bg-violet-50 text-violet-700", dot: "bg-violet-500" },
+    credit: { label: "Kredit / Tempo", icon: FileClock, color: "bg-amber-50 text-amber-700", dot: "bg-amber-500" },
 };
 
 function TypeBadge({ type }) {
-    const meta = TYPE_META[type] ?? { label: type, color: "bg-muted text-muted-foreground", dot: "bg-slate-400" };
+    const meta = TYPE_META[type] ?? { label: type, icon: CreditCard, color: "bg-muted text-muted-foreground", dot: "bg-slate-400" };
     return (
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.color}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
@@ -49,15 +63,10 @@ function DragHandle({ listeners, attributes }) {
             title="Drag untuk mengubah urutan"
             tabIndex={-1}
         >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
-            </svg>
+            <GripVertical className="h-4 w-4" strokeWidth={1.8} />
         </button>
     );
 }
-
-/* ── Type badge ──────────────────────────────────────── */
-
 
 /* ── Status badge ────────────────────────────────────── */
 function StatusBadge({ active }) {
@@ -99,9 +108,27 @@ function PaymentMethodRow({ method, idx, toggling, onToggle, onDelete, isDragOve
             </span>
 
             {/* Info */}
-            <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-foreground">{method.name}</p>
-                <p className="truncate font-mono text-xs text-muted-foreground">{method.code}</p>
+            <div className="min-w-0 flex-1 flex items-center gap-2">
+                {method.image ? (
+                    <img
+                        src={`/storage/${method.image}`}
+                        alt={method.name}
+                        className="h-8 w-8 shrink-0 rounded-lg object-cover border border-border"
+                    />
+                ) : (
+                    (() => {
+                        const Icon = (TYPE_META[method.type] ?? TYPE_META.card).icon;
+                        return (
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                                <Icon className="h-4 w-4" strokeWidth={1.8} />
+                            </span>
+                        );
+                    })()
+                )}
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">{method.name}</p>
+                    <p className="truncate font-mono text-xs text-muted-foreground">{method.code}</p>
+                </div>
             </div>
 
             {/* Type + Provider (desktop) */}
@@ -124,13 +151,22 @@ function PaymentMethodRow({ method, idx, toggling, onToggle, onDelete, isDragOve
                 >
                     <Pencil className="h-4 w-4" strokeWidth={1.8} />
                 </Link>
-                <button
-                    onClick={() => onDelete(method)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-                    title="Hapus"
-                >
-                    <Trash2 className="h-4 w-4" strokeWidth={1.8} />
-                </button>
+                {method.type === "cash" || method.type === "debt" ? (
+                    <span
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/40"
+                        title={`${method.type === "cash" ? "Tunai" : "Hutang/Kasbon"} wajib, tidak bisa dihapus`}
+                    >
+                        <Lock className="h-3.5 w-3.5" strokeWidth={1.8} />
+                    </span>
+                ) : (
+                    <button
+                        onClick={() => onDelete(method)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                        title="Hapus"
+                    >
+                        <Trash2 className="h-4 w-4" strokeWidth={1.8} />
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -243,9 +279,7 @@ export default function Index({ paymentMethods: initialMethods }) {
                         )}
                         {saved && !saving && (
                             <span className="flex items-center gap-1.5 rounded-xl bg-success/10 px-3 py-2 text-xs font-medium text-success">
-                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                                </svg>
+                                <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                                 Tersimpan
                             </span>
                         )}
@@ -314,9 +348,7 @@ export default function Index({ paymentMethods: initialMethods }) {
                 {sorted.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                            <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                            </svg>
+                            <Inbox className="h-7 w-7 text-muted-foreground" strokeWidth={1.6} />
                         </div>
                         <p className="mt-4 text-sm font-medium text-muted-foreground">
                             {search ? "Metode tidak ditemukan" : "Belum ada metode pembayaran"}
@@ -369,9 +401,7 @@ export default function Index({ paymentMethods: initialMethods }) {
 
                         {/* Footer hint */}
                         <div className="flex items-center gap-2 border-t border-border bg-muted/40 px-5 py-3">
-                            <svg className="h-3.5 w-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
-                            </svg>
+                            <Info className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                             <p className="text-[11px] text-muted-foreground">
                                 Tarik baris untuk mengubah urutan tampilan metode. Perubahan disimpan otomatis.
                             </p>

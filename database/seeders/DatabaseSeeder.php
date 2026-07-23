@@ -27,6 +27,7 @@ use Database\Seeders\DatabaseSeeder\FnbSaleSeeder;
 use Database\Seeders\DatabaseSeeder\FnbSupplierSeeder;
 use Database\Seeders\DatabaseSeeder\FnbUserSeeder;
 use Database\Seeders\DatabaseSeeder\FnbWasteSeeder;
+use Database\Seeders\DatabaseSeeder\PaymentGatewaySeeder;
 use Database\Seeders\DatabaseSeeder\PaymentMethodSeeder;
 use Database\Seeders\DatabaseSeeder\PermissionSeeder;
 use Database\Seeders\DatabaseSeeder\PlanSeeder;
@@ -70,6 +71,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             RoleSeeder::class,
             PaymentMethodSeeder::class,
+            PaymentGatewaySeeder::class,
 
             // ── Data Operasional Retail (STORE001) ─────────────────
             EmployeeSeeder::class,

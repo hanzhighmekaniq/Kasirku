@@ -2,7 +2,7 @@
 
 namespace App\Services\PaymentGateway;
 
-use App\Models\StorePaymentGateway;
+use App\Models\PlatformPaymentGateway;
 use Illuminate\Support\Facades\Cache;
 
 class PaymentGatewayFactory
@@ -16,10 +16,13 @@ class PaymentGatewayFactory
     ];
 
     /**
-     * Buat instance gateway berdasarkan provider + store_id.
+     * Buat instance gateway berdasarkan provider.
+     * Config diambil dari akun PG platform (bukan per-store) — semua
+     * pembayaran masuk ke rekening developer, lalu di-credit ke wallet
+     * store masing-masing.
      * Config di-cache 10 menit agar tidak query DB setiap request.
      */
-    public static function make(string $provider, int $storeId): PaymentGatewayInterface
+    public static function make(string $provider): PaymentGatewayInterface
     {
         $class = self::$map[$provider] ?? null;
         if (! $class) {
@@ -27,16 +30,15 @@ class PaymentGatewayFactory
         }
 
         $config = Cache::remember(
-            "pg_config:{$storeId}:{$provider}",
+            "platform_pg_config:{$provider}",
             600,
-            fn () => StorePaymentGateway::where('store_id', $storeId)
-                ->where('provider', $provider)
+            fn () => PlatformPaymentGateway::where('provider', $provider)
                 ->where('is_active', true)
                 ->first()
         );
 
         if (! $config) {
-            throw new \RuntimeException("Payment gateway '{$provider}' not configured or inactive for store {$storeId}.");
+            throw new \RuntimeException("Payment gateway '{$provider}' not configured or inactive.");
         }
 
         return new $class([
@@ -52,9 +54,9 @@ class PaymentGatewayFactory
     /**
      * Flush cache saat config diupdate.
      */
-    public static function flushCache(int $storeId, string $provider): void
+    public static function flushCache(string $provider): void
     {
-        Cache::forget("pg_config:{$storeId}:{$provider}");
+        Cache::forget("platform_pg_config:{$provider}");
     }
 
     /**

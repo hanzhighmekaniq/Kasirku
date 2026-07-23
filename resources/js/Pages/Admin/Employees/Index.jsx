@@ -7,9 +7,9 @@ import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 const STATUS_STYLES = {
-    active: "bg-emerald-100 text-success",
+    active: "bg-success/10 text-success",
     inactive: "bg-muted text-muted-foreground",
-    terminated: "bg-red-100 text-destructive",
+    terminated: "bg-destructive/10 text-destructive",
 };
 
 const STATUS_LABELS = {
@@ -19,42 +19,77 @@ const STATUS_LABELS = {
 };
 
 const ROLE_STYLES = {
-    admin: "bg-emerald-100 text-success",
-    kasir: "bg-blue-100 text-blue-700",
-    developer: "bg-purple-100 text-purple-700",
+    admin: "bg-success/10 text-success",
+    kasir: "bg-primary/10 text-primary",
+    developer: "bg-violet-50 text-violet-700",
+    supervisor: "bg-amber-50 text-amber-700",
+    gudang: "bg-sky-50 text-sky-700",
 };
 
 const ROLE_LABELS = {
     admin: "Admin",
     kasir: "Kasir",
     developer: "Developer",
+    supervisor: "Supervisor",
+    gudang: "Gudang",
 };
 
+const PAGE_LABEL = {
+    retail: "Karyawan",
+    fnb: "Karyawan",
+    service: "Terapis / Staf",
+    rental: "Staf",
+    ticket: "Staf & Operator",
+    hospitality: "Staf Hotel",
+    parking: "Petugas Parkir",
+    session: "Operator",
+};
+
+const ADD_LABEL = {
+    service: "Tambah Terapis",
+    hospitality: "Tambah Staf",
+    parking: "Tambah Petugas",
+    session: "Tambah Operator",
+};
+
+function SummaryCard({ label, value, color = "slate", icon }) {
+    const bgColors = {
+        blue: "bg-primary/10 text-primary",
+        emerald: "bg-success/10 text-success",
+        amber: "bg-warning/10 text-warning",
+        slate: "bg-muted text-muted-foreground",
+    };
+
+    return (
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-xs font-medium text-muted-foreground sm:text-sm">
+                        {label}
+                    </p>
+                    <p className="mt-1 text-2xl font-bold text-foreground sm:text-3xl">
+                        {value}
+                    </p>
+                </div>
+                <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${bgColors[color] ?? bgColors.slate}`}
+                >
+                    {icon}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Index({ employees, storeType = "retail" }) {
-    const { flash, storeTypeFeatures = [] } = usePage().props;
+    const { flash, storeTypeFeatures = [], currentBranch = null } =
+        usePage().props;
     const has = (f) => storeTypeFeatures.includes(f);
     const [search, setSearch] = useState("");
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [statusFilter, setStatusFilter] = useState("");
 
-    // Label per store type
-    const PAGE_LABEL = {
-        retail: "Karyawan",
-        fnb: "Karyawan",
-        service: "Terapis / Staf",
-        rental: "Staf",
-        ticket: "Staf & Operator",
-        hospitality: "Staf Hotel",
-        parking: "Petugas Parkir",
-        session: "Operator",
-    };
-    const ADD_LABEL = {
-        service: "Tambah Terapis",
-        hospitality: "Tambah Staf",
-        parking: "Tambah Petugas",
-        session: "Tambah Operator",
-    };
     const pageLabel = PAGE_LABEL[storeType] ?? "Karyawan";
     const addLabel = ADD_LABEL[storeType] ?? "Tambah Karyawan";
     const showCommission = has("commission");
@@ -85,9 +120,20 @@ export default function Index({ employees, storeType = "retail" }) {
         return result;
     }, [employees, search, statusFilter]);
 
-    const activeCount = employees.filter(
-        (emp) => emp.status === "active",
-    ).length;
+    const stats = useMemo(() => {
+        const active = employees.filter((e) => e.status === "active").length;
+        const withAccount = employees.filter((e) => e.user).length;
+        const inactive = employees.filter(
+            (e) => e.status === "inactive" || e.status === "terminated",
+        ).length;
+
+        return {
+            total: employees.length,
+            active,
+            withAccount,
+            inactive,
+        };
+    }, [employees]);
 
     const confirmDelete = () => {
         if (!target) return;
@@ -104,14 +150,13 @@ export default function Index({ employees, storeType = "retail" }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">
-                        {pageLabel}
-                    </h2>
-                    <Button as={Link} href={route("admin.employees.create")} icon={Plus}>
-                        <span className="hidden sm:inline">{addLabel}</span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Manajemen {pageLabel}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Daftar
+                    </div>
                 </div>
             }
         >
@@ -128,35 +173,135 @@ export default function Index({ employees, storeType = "retail" }) {
                 </div>
             )}
 
-            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-border border-l-4 border-l-primary-400 bg-card p-4 shadow-sm">
-                    <p className="text-xs font-medium text-muted-foreground">
-                        Total {pageLabel}
-                    </p>
-                    <p className="mt-1 text-xl font-bold text-foreground">
-                        {employees.length}
-                    </p>
+            {/* Hero */}
+            <section className="mb-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                Tim
+                            </span>
+                            <span className="text-muted-foreground">·</span>
+                            <span>{pageLabel}</span>
+                            {currentBranch && (
+                                <>
+                                    <span className="text-muted-foreground">
+                                        ·
+                                    </span>
+                                    <span>{currentBranch.name}</span>
+                                </>
+                            )}
+                        </div>
+                        <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
+                            Kelola{" "}
+                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                                {pageLabel.toLowerCase()}
+                            </span>{" "}
+                            tokomu
+                        </h1>
+                        <p className="mt-2 max-w-xl text-xs text-muted-foreground">
+                            Cari, filter, dan atur data staf, cabang, jabatan,
+                            akun login, serta status dari satu tempat. Pantau
+                            ringkasan aktif & akun di bawah.
+                        </p>
+                    </div>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-sky-400 bg-card p-4 shadow-sm">
-                    <p className="text-xs font-medium text-muted-foreground">
-                        Ada Akun Login
-                    </p>
-                    <p className="mt-1 text-xl font-bold text-foreground">
-                        {employees.filter((e) => e.user).length}
-                    </p>
-                </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
-                    <p className="text-xs font-medium text-muted-foreground">Aktif</p>
-                    <p className="mt-1 text-xl font-bold text-foreground">
-                        {activeCount}
-                    </p>
-                </div>
+            </section>
+
+            {/* Stats */}
+            <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                <SummaryCard
+                    label={`Total ${pageLabel}`}
+                    value={stats.total}
+                    color="blue"
+                    icon={
+                        <svg
+                            className="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    }
+                />
+                <SummaryCard
+                    label="Aktif"
+                    value={stats.active}
+                    color="emerald"
+                    icon={
+                        <svg
+                            className="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                    }
+                />
+                <SummaryCard
+                    label="Ada Akun Login"
+                    value={stats.withAccount}
+                    color="amber"
+                    icon={
+                        <svg
+                            className="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <rect
+                                width="18"
+                                height="11"
+                                x="3"
+                                y="11"
+                                rx="2"
+                                ry="2"
+                            />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                    }
+                />
+                <SummaryCard
+                    label="Nonaktif"
+                    value={stats.inactive}
+                    color="slate"
+                    icon={
+                        <svg
+                            className="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="m4.9 4.9 14.2 14.2" />
+                        </svg>
+                    }
+                />
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            {/* Table card */}
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                 <div className="border-b border-border p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <div className="relative flex-1">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="relative w-full sm:max-w-xs">
                             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
                                 <svg
                                     className="h-4 w-4"
@@ -180,11 +325,17 @@ export default function Index({ employees, storeType = "retail" }) {
                                 className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             <Dropdown>
                                 <Dropdown.Trigger>
                                     <button className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
-                                        <span className={statusFilter ? "text-foreground" : "text-muted-foreground"}>
+                                        <span
+                                            className={
+                                                statusFilter
+                                                    ? "text-foreground"
+                                                    : "text-muted-foreground"
+                                            }
+                                        >
                                             {statusFilter
                                                 ? STATUS_LABELS[statusFilter]
                                                 : "Semua Status"}
@@ -215,47 +366,39 @@ export default function Index({ employees, storeType = "retail" }) {
                                     >
                                         Semua Status
                                     </button>
-                                    <button
-                                        onClick={() =>
-                                            setStatusFilter("active")
-                                        }
-                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                            statusFilter === "active"
-                                                ? "bg-primary-50 font-medium text-primary-600"
-                                                : "text-muted-foreground hover:bg-muted"
-                                        }`}
-                                    >
-                                        Aktif
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            setStatusFilter("inactive")
-                                        }
-                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                            statusFilter === "inactive"
-                                                ? "bg-primary-50 font-medium text-primary-600"
-                                                : "text-muted-foreground hover:bg-muted"
-                                        }`}
-                                    >
-                                        Nonaktif
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            setStatusFilter("terminated")
-                                        }
-                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                            statusFilter === "terminated"
-                                                ? "bg-primary-50 font-medium text-primary-600"
-                                                : "text-muted-foreground hover:bg-muted"
-                                        }`}
-                                    >
-                                        Berhenti
-                                    </button>
+                                    {Object.entries(STATUS_LABELS).map(
+                                        ([value, label]) => (
+                                            <button
+                                                key={value}
+                                                onClick={() =>
+                                                    setStatusFilter(value)
+                                                }
+                                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
+                                                    statusFilter === value
+                                                        ? "bg-primary-50 font-medium text-primary-600"
+                                                        : "text-muted-foreground hover:bg-muted"
+                                                }`}
+                                            >
+                                                {label}
+                                            </button>
+                                        ),
+                                    )}
                                 </Dropdown.Content>
                             </Dropdown>
+                            <Button
+                                as={Link}
+                                href={route("admin.employees.create")}
+                                icon={Plus}
+                                className="shrink-0"
+                            >
+                                <span className="hidden sm:inline">
+                                    {addLabel}
+                                </span>
+                                <span className="sm:hidden">Tambah</span>
+                            </Button>
                         </div>
                     </div>
-                    <div className="pt-4 flex items-center justify-between">
+                    <div className="flex items-center pt-3">
                         <p className="text-xs text-muted-foreground">
                             Menampilkan{" "}
                             <span className="font-semibold text-foreground">
@@ -288,18 +431,23 @@ export default function Index({ employees, storeType = "retail" }) {
                             </svg>
                         </div>
                         <h3 className="mt-4 text-base font-semibold text-foreground">
-                            {search
-                                ? "Karyawan tidak ditemukan"
-                                : "Belum ada karyawan"}
+                            {search || statusFilter
+                                ? `${pageLabel} tidak ditemukan`
+                                : `Belum ada ${pageLabel.toLowerCase()}`}
                         </h3>
                         <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                            {search
-                                ? "Coba kata kunci lain."
-                                : "Tambahkan karyawan untuk mengelola akses dan cabang."}
+                            {search || statusFilter
+                                ? "Coba kata kunci atau filter lain."
+                                : `Tambahkan ${pageLabel.toLowerCase()} untuk mengelola akses dan cabang.`}
                         </p>
-                        {!search && (
-                            <Button as={Link} href={route("admin.employees.create")} icon={Plus} className="mt-5">
-                                Tambah Karyawan
+                        {!search && !statusFilter && (
+                            <Button
+                                as={Link}
+                                href={route("admin.employees.create")}
+                                icon={Plus}
+                                className="mt-5"
+                            >
+                                {addLabel}
                             </Button>
                         )}
                     </div>
@@ -314,10 +462,10 @@ export default function Index({ employees, storeType = "retail" }) {
 
             <ConfirmDeleteModal
                 open={!!target}
-                title="Hapus karyawan?"
+                title={`Hapus ${pageLabel.toLowerCase()}?`}
                 description={
                     target
-                        ? `Data karyawan "${target.name}" dan akun login terkait akan dihapus.`
+                        ? `Data "${target.name}" dan akun login terkait akan dihapus.`
                         : ""
                 }
                 processing={deleting}
@@ -330,7 +478,7 @@ export default function Index({ employees, storeType = "retail" }) {
 
 function EmployeeBadge({ name }) {
     return (
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10 text-sm font-bold text-primary-600">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/10 text-sm font-bold text-primary">
             {name.charAt(0).toUpperCase()}
         </span>
     );
@@ -369,7 +517,7 @@ function RowActions({ employee, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <Link
                 href={route("admin.employees.edit", employee.id)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                 title="Edit"
             >
                 <svg
@@ -478,7 +626,7 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                                                 {emp.commission_value}%
                                             </span>
                                         ) : (
-                                            <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
+                                            <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
                                                 Rp{" "}
                                                 {Number(
                                                     emp.commission_value,

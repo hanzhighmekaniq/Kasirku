@@ -15,9 +15,9 @@ const COMMISSION_OPTIONS = [
 ];
 
 function inputCls(hasError) {
-    return `mt-1 block w-full rounded-xl border shadow-sm text-sm transition focus:ring-2 ${
+    return `mt-1.5 block w-full rounded-xl border text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
         hasError
-            ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+            ? "border-destructive/40 focus:border-destructive focus:ring-destructive/20"
             : "border-border focus:border-ring focus:ring-ring/20"
     }`;
 }
@@ -26,11 +26,41 @@ function Field({ label, hint, error, required, children }) {
     return (
         <div>
             <label className="block text-sm font-medium text-foreground">
-                {label} {required && <span className="text-destructive">*</span>}
+                {label}{" "}
+                {required && <span className="text-destructive">*</span>}
             </label>
             {children}
-            {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+            {hint && !error && (
+                <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+            )}
             {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+        </div>
+    );
+}
+
+function SectionCard({ step, title, subtitle, children }) {
+    return (
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="border-b border-border bg-muted/40 px-5 py-4 sm:px-6">
+                <div className="flex items-start gap-3">
+                    {step != null && (
+                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
+                            {step}
+                        </span>
+                    )}
+                    <div className="min-w-0">
+                        <h3 className="text-sm font-semibold text-foreground sm:text-base">
+                            {title}
+                        </h3>
+                        {subtitle && (
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                {subtitle}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+            <div className="p-5 sm:p-6">{children}</div>
         </div>
     );
 }
@@ -62,15 +92,18 @@ export default function EmployeeForm({
         parking: "cth. Petugas Loket, Security",
         session: "cth. Operator, Admin",
     };
-    const positionPlaceholder = POSITION_HINT[storeType] ?? "cth. Kasir, Manager Shift";
+    const positionPlaceholder =
+        POSITION_HINT[storeType] ?? "cth. Kasir, Manager Shift";
+
+    let step = 1;
 
     return (
         <form onSubmit={onSubmit} className="space-y-5">
-            {/* Info Dasar */}
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="mb-4 text-sm font-semibold text-foreground">
-                    Informasi Dasar
-                </h3>
+            <SectionCard
+                step={step++}
+                title="Informasi Dasar"
+                subtitle="Identitas karyawan yang tampil di POS, shift, dan laporan"
+            >
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field
                         label="Kode Karyawan"
@@ -166,95 +199,98 @@ export default function EmployeeForm({
                         error={errors.status}
                     />
                 </div>
-            </div>
+            </SectionCard>
 
-            {/* Komisi — hanya untuk store type dengan feature commission */}
             {showCommission && (
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="mb-4 text-sm font-semibold text-foreground">
-                    Komisi
-                </h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Select
-                        label="Tipe Komisi"
-                        options={COMMISSION_OPTIONS}
-                        value={data.commission_type}
-                        onChange={(v) => setData("commission_type", v)}
-                        placeholder="Pilih Tipe"
-                        error={errors.commission_type}
-                    />
+                <SectionCard
+                    step={step++}
+                    title="Komisi"
+                    subtitle="Atur skema komisi per transaksi bila tersedia di tipe toko ini"
+                >
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <Select
+                            label="Tipe Komisi"
+                            options={COMMISSION_OPTIONS}
+                            value={data.commission_type}
+                            onChange={(v) => setData("commission_type", v)}
+                            placeholder="Pilih Tipe"
+                            error={errors.commission_type}
+                        />
 
-                    {data.commission_type !== "none" && (
-                        <Field
-                            label={
-                                data.commission_type === "percent"
-                                    ? "Persentase (%)"
-                                    : "Nominal (Rp)"
-                            }
-                            error={errors.commission_value}
-                        >
-                            <div className="relative">
-                                {data.commission_type === "flat" && (
-                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
-                                        Rp
-                                    </span>
+                        {data.commission_type !== "none" && (
+                            <Field
+                                label={
+                                    data.commission_type === "percent"
+                                        ? "Persentase (%)"
+                                        : "Nominal (Rp)"
+                                }
+                                error={errors.commission_value}
+                            >
+                                <div className="relative">
+                                    {data.commission_type === "flat" && (
+                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
+                                            Rp
+                                        </span>
+                                    )}
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step={
+                                            data.commission_type === "percent"
+                                                ? "0.1"
+                                                : "1000"
+                                        }
+                                        max={
+                                            data.commission_type === "percent"
+                                                ? "100"
+                                                : undefined
+                                        }
+                                        value={data.commission_value}
+                                        onChange={(e) =>
+                                            setData(
+                                                "commission_value",
+                                                e.target.value,
+                                            )
+                                        }
+                                        placeholder={
+                                            data.commission_type === "percent"
+                                                ? "contoh: 15"
+                                                : "contoh: 50000"
+                                        }
+                                        className={`${inputCls(!!errors.commission_value)} ${data.commission_type === "flat" ? "pl-10" : ""}`}
+                                    />
+                                    {data.commission_type === "percent" && (
+                                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                                            %
+                                        </span>
+                                    )}
+                                </div>
+                                {!errors.commission_value && (
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        {data.commission_type === "percent"
+                                            ? "Komisi dihitung dari total transaksi."
+                                            : "Komisi tetap per transaksi."}
+                                    </p>
                                 )}
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step={
-                                        data.commission_type === "percent"
-                                            ? "0.1"
-                                            : "1000"
-                                    }
-                                    max={
-                                        data.commission_type === "percent"
-                                            ? "100"
-                                            : undefined
-                                    }
-                                    value={data.commission_value}
-                                    onChange={(e) =>
-                                        setData(
-                                            "commission_value",
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder={
-                                        data.commission_type === "percent"
-                                            ? "contoh: 15"
-                                            : "contoh: 50000"
-                                    }
-                                    className={`${inputCls(!!errors.commission_value)} ${data.commission_type === "flat" ? "pl-10" : ""}`}
-                                />
-                                {data.commission_type === "percent" && (
-                                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
-                                        %
-                                    </span>
-                                )}
-                            </div>
-                            {!errors.commission_value && (
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                    {data.commission_type === "percent"
-                                        ? "Komisi dihitung dari total transaksi."
-                                        : "Komisi tetap per transaksi."}
-                                </p>
-                            )}
-                        </Field>
-                    )}
-                </div>
-            </div>
+                            </Field>
+                        )}
+                    </div>
+                </SectionCard>
             )}
 
-            {/* Akun Login */}
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <label className="flex items-start gap-3 cursor-pointer">
+            <SectionCard
+                step={step++}
+                title="Akun Login"
+                subtitle="Opsional — aktifkan jika karyawan perlu masuk dashboard atau POS"
+            >
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-muted/30 p-4 transition hover:bg-muted/50">
                     <input
                         type="checkbox"
                         checked={data.create_account}
                         onChange={(e) =>
                             setData("create_account", e.target.checked)
                         }
-                        className="mt-0.5 h-4 w-4 rounded border-border text-primary-600 shadow-sm focus:ring-primary-500"
+                        className="mt-0.5 h-4 w-4 rounded border-border text-primary shadow-sm focus:ring-primary"
                     />
                     <span>
                         <span className="block text-sm font-medium text-foreground">
@@ -270,63 +306,77 @@ export default function EmployeeForm({
                 {showAccountFields && (
                     <div className="mt-5 space-y-5 border-t border-border pt-5">
                         <div>
-                            <span className="block text-sm font-medium text-foreground mb-2">
+                            <span className="mb-2 block text-sm font-medium text-foreground">
                                 Role Akun{" "}
                                 <span className="text-destructive">*</span>
                             </span>
-                            <div className="flex flex-wrap gap-3">
+                            <div className="flex flex-wrap gap-2">
                                 {assignableRoles.length > 0
-                                    ? assignableRoles.map((r) => (
-                                          <label
-                                              key={r.name}
-                                              className="flex items-center gap-2 cursor-pointer"
-                                          >
-                                              <input
-                                                  type="radio"
-                                                  name="role"
-                                                  value={r.name}
-                                                  checked={data.role === r.name}
-                                                  onChange={(e) =>
-                                                      setData(
-                                                          "role",
-                                                          e.target.value,
-                                                      )
-                                                  }
-                                                  className="rounded-full border-border text-primary-600 shadow-sm focus:ring-primary-500"
-                                              />
-                                              <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
-                                                  {r.name}
-                                              </span>
-                                          </label>
-                                      ))
+                                    ? assignableRoles.map((r) => {
+                                          const active = data.role === r.name;
+                                          return (
+                                              <label
+                                                  key={r.name}
+                                                  className={`inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
+                                                      active
+                                                          ? "border-primary bg-primary/10 text-primary"
+                                                          : "border-border bg-card text-muted-foreground hover:bg-muted"
+                                                  }`}
+                                              >
+                                                  <input
+                                                      type="radio"
+                                                      name="role"
+                                                      value={r.name}
+                                                      checked={active}
+                                                      onChange={(e) =>
+                                                          setData(
+                                                              "role",
+                                                              e.target.value,
+                                                          )
+                                                      }
+                                                      className="sr-only"
+                                                  />
+                                                  <span className="font-medium capitalize">
+                                                      {r.name}
+                                                  </span>
+                                              </label>
+                                          );
+                                      })
                                     : [
                                           ["admin", "Admin"],
                                           ["kasir", "Kasir"],
                                           ["supervisor", "Supervisor"],
                                           ["gudang", "Gudang"],
-                                      ].map(([v, l]) => (
-                                          <label
-                                              key={v}
-                                              className="flex items-center gap-2 cursor-pointer"
-                                          >
-                                              <input
-                                                  type="radio"
-                                                  name="role"
-                                                  value={v}
-                                                  checked={data.role === v}
-                                                  onChange={(e) =>
-                                                      setData(
-                                                          "role",
-                                                          e.target.value,
-                                                      )
-                                                  }
-                                                  className="rounded-full border-border text-primary-600 shadow-sm focus:ring-primary-500"
-                                              />
-                                              <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
-                                                  {l}
-                                              </span>
-                                          </label>
-                                      ))}
+                                      ].map(([v, l]) => {
+                                          const active = data.role === v;
+                                          return (
+                                              <label
+                                                  key={v}
+                                                  className={`inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
+                                                      active
+                                                          ? "border-primary bg-primary/10 text-primary"
+                                                          : "border-border bg-card text-muted-foreground hover:bg-muted"
+                                                  }`}
+                                              >
+                                                  <input
+                                                      type="radio"
+                                                      name="role"
+                                                      value={v}
+                                                      checked={active}
+                                                      onChange={(e) =>
+                                                          setData(
+                                                              "role",
+                                                              e.target.value,
+                                                          )
+                                                      }
+                                                      className="sr-only"
+                                                  />
+                                                  <span className="font-medium">
+                                                      {l}
+                                                  </span>
+                                              </label>
+                                          );
+                                      })}
                             </div>
                             {errors.role && (
                                 <p className="mt-1 text-xs text-destructive">
@@ -380,9 +430,8 @@ export default function EmployeeForm({
                         </div>
                     </div>
                 )}
-            </div>
+            </SectionCard>
 
-            {/* Buttons */}
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <Link
                     href={cancelHref}

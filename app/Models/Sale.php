@@ -16,9 +16,9 @@ class Sale extends Model
         'sale_no', 'sale_date',
         'pos_mode', 'order_type',
         'subtotal', 'discount_amount', 'tax_amount', 'shipping_amount',
-        'rounding_adjustment',
+        'rounding_adjustment', 'rounding_mode', 'rounding_nearest',
         'grand_total', 'paid_amount', 'change_amount',
-        'status', 'payment_status',
+        'status', 'payment_status', 'split_status', 'is_split_stale',
         'customer_name', 'customer_phone',
         // FnB
         'table_id', 'queue_number', 'kitchen_status', 'kitchen_printed_at',
@@ -60,6 +60,7 @@ class Sale extends Model
             'tax_amount' => 'decimal:2',
             'shipping_amount' => 'decimal:2',
             'rounding_adjustment' => 'decimal:2',
+            'rounding_nearest' => 'integer',
             'grand_total' => 'decimal:2',
             'paid_amount' => 'decimal:2',
             'change_amount' => 'decimal:2',
@@ -69,6 +70,7 @@ class Sale extends Model
             'overdue_charge' => 'decimal:2',
             'weight_kg' => 'decimal:3',
             'rate_per_hour' => 'decimal:2',
+            'is_split_stale' => 'boolean',
             'extra_data' => 'array',
         ];
     }
@@ -128,6 +130,11 @@ class Sale extends Model
     public function pgTransactions(): HasMany
     {
         return $this->hasMany(PaymentGatewayTransaction::class);
+    }
+
+    public function splitPayers(): HasMany
+    {
+        return $this->hasMany(SaleSplitPayer::class)->orderBy('sort_order');
     }
 
     public function commissions(): HasMany

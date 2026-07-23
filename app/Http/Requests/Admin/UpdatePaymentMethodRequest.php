@@ -14,49 +14,51 @@ class UpdatePaymentMethodRequest extends FormRequest
 
     public function rules(): array
     {
-        $id = $this->route("payment_method")->id;
+        $id = $this->route('payment_method')->id;
 
         return [
-            "code" => [
-                "required",
-                "string",
-                "max:50",
-                Rule::unique("payment_methods", "code")
+            'code' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('payment_methods', 'code')
                     ->where(
-                        fn($q) => $q->where(
-                            "store_id",
-                            session("current_store_id"),
+                        fn ($q) => $q->where(
+                            'store_id',
+                            session('current_store_id'),
                         ),
                     )
                     ->ignore($id),
             ],
-            "name" => ["required", "string", "max:255"],
-            "type" => [
-                "required",
-                "string",
-                Rule::in(["cash", "digital", "card", "credit"]),
+            'name' => ['required', 'string', 'max:255'],
+            'type' => [
+                'required',
+                'string',
+                Rule::in(['cash', 'digital', 'card', 'credit']),
             ],
-            "provider" => ["nullable", "string", "max:100"],
-            "is_active" => ["boolean"],
+            'provider' => ['nullable', 'string', 'max:100'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_image' => ['boolean'],
+            'is_active' => ['boolean'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            "code.required" => "Kode wajib diisi.",
-            "code.unique" => "Kode ini sudah digunakan.",
-            "name.required" => "Nama wajib diisi.",
-            "type.required" => "Tipe wajib dipilih.",
-            "type.in" => "Tipe tidak valid.",
+            'code.required' => 'Kode wajib diisi.',
+            'code.unique' => 'Kode ini sudah digunakan.',
+            'name.required' => 'Nama wajib diisi.',
+            'type.required' => 'Tipe wajib dipilih.',
+            'type.in' => 'Tipe tidak valid.',
         ];
     }
 
     public function prepareForValidation(): void
     {
         $this->merge([
-            "code" => strtoupper($this->code ?? ""),
-            "is_active" => $this->boolean("is_active", true),
+            'code' => strtoupper($this->code ?? ''),
+            'is_active' => $this->boolean('is_active', true),
         ]);
     }
 }

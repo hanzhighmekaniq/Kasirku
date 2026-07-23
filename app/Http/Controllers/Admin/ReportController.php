@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\Purchase;
 use App\Models\Sale;
+use App\Models\SaleSplitPayer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -77,6 +78,13 @@ class ReportController extends Controller
         $totalExpenses = (float) Expense::where($expenseScope)->sum('amount');
         $totalTransactions = Sale::where($saleScope)->count();
         $profit = $totalSales - $totalPurchases - $totalExpenses;
+
+        // ── Rounding total ────────────────────────────────────
+        $totalRoundingSales = (float) Sale::where($saleScope)->sum('rounding_adjustment');
+        $totalRoundingPayers = (float) SaleSplitPayer::whereHas('sale', $saleScope)
+            ->where('status', 'paid')
+            ->sum('rounding_adjustment');
+        $totalRounding = $totalRoundingSales + $totalRoundingPayers;
 
         // ── Daily breakdown ─────────────────────────────────
         $dailyBreakdown = Sale::where($saleScope)
@@ -179,6 +187,7 @@ class ReportController extends Controller
                 'total_expenses' => $totalExpenses,
                 'profit' => $profit,
                 'total_transactions' => $totalTransactions,
+                'total_rounding' => $totalRounding,
             ],
             'dailyBreakdown' => $dailyBreakdown,
             'topProducts' => $topProducts,

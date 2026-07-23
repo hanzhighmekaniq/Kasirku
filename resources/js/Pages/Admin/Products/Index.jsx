@@ -7,6 +7,7 @@ import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import QuickStockModal from "@/Pages/Admin/Products/QuickStockModal";
 import TreePicker from "@/Components/TreePicker";
 import Select from "@/Components/ui/Select";
+import { useStoreModules } from "@/Hooks/useStoreModules";
 
 const TYPE_LABEL = {
     finished_goods: {
@@ -456,6 +457,10 @@ export default function Index({
 }) {
     const { storeTypeFeatures = [] } = usePage().props;
     const has = (f) => storeTypeFeatures.includes(f);
+    const { can } = useStoreModules();
+    const canCreate = can("product.create");
+    const canEdit = can("product.edit");
+    const canDelete = can("product.delete");
     const [search, setSearch] = useState(filters?.search ?? "");
     const [filterType, setFilterType] = useState(filters?.type ?? "");
     const [filterCategory, setFilterCategory] = useState(
@@ -578,28 +583,51 @@ export default function Index({
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between">
-                    <div>
-                        <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
-                            Manajemen {pageTitle}
-                        </h2>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            Kelola produk, variant, satuan, dan harga grosir
-                            {currentBranch && (
-                                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-                                    </svg>
-                                    {currentBranch.name}
-                                </span>
-                            )}
-                        </p>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Manajemen {pageTitle}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Katalog
                     </div>
                 </div>
             }
         >
-            <Head title={`Manajemen ${pageTitle}`} />
+            <Head title={`Katalog ${pageTitle}`} />
+
+            {/* Hero */}
+            <section className="mb-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                Katalog
+                            </span>
+                            <span className="text-muted-foreground">·</span>
+                            <span>{pageTitle}</span>
+                            {currentBranch && (
+                                <>
+                                    <span className="text-muted-foreground">·</span>
+                                    <span>{currentBranch.name}</span>
+                                </>
+                            )}
+                        </div>
+                        <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
+                            Kelola{" "}
+                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                                katalog {pageTitle.toLowerCase()}
+                            </span>{" "}
+                            tokomu
+                        </h1>
+                        <p className="mt-2 max-w-xl text-xs text-muted-foreground">
+                            Cari, filter, dan atur stok, varian, harga, serta
+                            status dari satu tempat. Pantau stok menipis dan item
+                            nonaktif lewat ringkasan di bawah.
+                        </p>
+                    </div>
+                </div>
+            </section>
 
             {/* Stats */}
             <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -797,15 +825,17 @@ export default function Index({
                                         Reset
                                     </button>
                                 )}
-                                <Link
-                                    href={route("admin.products.create")}
-                                    className="hidden lg:inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                                >
-                                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                                        <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                                    </svg>
-                                    Tambah {pageTitle}
-                                </Link>
+                                {canCreate && (
+                                    <Link
+                                        href={route("admin.products.create")}
+                                        className="hidden lg:inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                                    >
+                                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                                            <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                                        </svg>
+                                        Tambah {pageTitle}
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -846,7 +876,7 @@ export default function Index({
                                 ? "Coba kata kunci atau filter lain."
                                 : `Mulai dengan menambahkan ${pageTitle.toLowerCase()} pertama.`}
                         </p>
-                        {!hasFilters && (
+                        {!hasFilters && canCreate && (
                             <Link
                                 href={route("admin.products.create")}
                                 className="mt-5 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
@@ -1144,9 +1174,10 @@ export default function Index({
                                                                     </svg>
                                                                 </button>
                                                             )}
-                                                            {["retail", "fnb"].includes(
-                                                                storeType,
-                                                            ) && (
+                                                            {canEdit &&
+                                                                ["retail", "fnb"].includes(
+                                                                    storeType,
+                                                                ) && (
                                                                 <Link
                                                                     href={route(
                                                                         "admin.products.variants.index",
@@ -1172,8 +1203,9 @@ export default function Index({
                                                                     </svg>
                                                                 </Link>
                                                             )}
-                                                            {storeType ===
-                                                                "fnb" &&
+                                                            {canEdit &&
+                                                                storeType ===
+                                                                    "fnb" &&
                                                                 product.type !==
                                                                     "raw_material" && (
                                                                     <Link
@@ -1216,55 +1248,59 @@ export default function Index({
                                                                     }
                                                                 />
                                                             </Link>
-                                                            <Link
-                                                                href={route(
-                                                                    "admin.products.edit",
-                                                                    product.id,
-                                                                )}
-                                                                className="rounded p-1.5 text-card-foreground transition hover:bg-warning/5 hover:text-warning"
-                                                                title="Edit"
-                                                            >
-                                                                <svg
-                                                                    className="h-4 w-4"
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    strokeWidth={
-                                                                        1.7
-                                                                    }
-                                                                    stroke="currentColor"
+                                                            {canEdit && (
+                                                                <Link
+                                                                    href={route(
+                                                                        "admin.products.edit",
+                                                                        product.id,
+                                                                    )}
+                                                                    className="rounded p-1.5 text-card-foreground transition hover:bg-warning/5 hover:text-warning"
+                                                                    title="Edit"
                                                                 >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z"
-                                                                    />
-                                                                </svg>
-                                                            </Link>
-                                                            <button
-                                                                onClick={() =>
-                                                                    setTarget(
-                                                                        product,
-                                                                    )
-                                                                }
-                                                                className="rounded p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-                                                                title="Hapus"
-                                                            >
-                                                                <svg
-                                                                    className="h-4 w-4"
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    strokeWidth={
-                                                                        1.7
+                                                                    <svg
+                                                                        className="h-4 w-4"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        strokeWidth={
+                                                                            1.7
+                                                                        }
+                                                                        stroke="currentColor"
+                                                                    >
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z"
+                                                                        />
+                                                                    </svg>
+                                                                </Link>
+                                                            )}
+                                                            {canDelete && (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        setTarget(
+                                                                            product,
+                                                                        )
                                                                     }
-                                                                    stroke="currentColor"
+                                                                    className="rounded p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                                                                    title="Hapus"
                                                                 >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
-                                                                    />
-                                                                </svg>
-                                                            </button>
+                                                                    <svg
+                                                                        className="h-4 w-4"
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        strokeWidth={
+                                                                            1.7
+                                                                        }
+                                                                        stroke="currentColor"
+                                                                    >
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
+                                                                        />
+                                                                    </svg>
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -1415,23 +1451,27 @@ export default function Index({
                                                                 Stok
                                                             </button>
                                                         )}
-                                                    <Link
-                                                        href={route(
-                                                            "admin.products.edit",
-                                                            product.id,
-                                                        )}
-                                                        className="text-warning"
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                    <button
-                                                        onClick={() =>
-                                                            setTarget(product)
-                                                        }
-                                                        className="text-destructive"
-                                                    >
-                                                        Hapus
-                                                    </button>
+                                                    {canEdit && (
+                                                        <Link
+                                                            href={route(
+                                                                "admin.products.edit",
+                                                                product.id,
+                                                            )}
+                                                            className="text-warning"
+                                                        >
+                                                            Edit
+                                                        </Link>
+                                                    )}
+                                                    {canDelete && (
+                                                        <button
+                                                            onClick={() =>
+                                                                setTarget(product)
+                                                            }
+                                                            className="text-destructive"
+                                                        >
+                                                            Hapus
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1484,13 +1524,15 @@ export default function Index({
             )}
 
             {/* FAB Create — mobile/tablet only */}
-            <Button
-                as={Link}
-                href={route("admin.products.create")}
-                icon={Plus}
-                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl lg:hidden"
-                title={`Tambah ${pageTitle}`}
-            />
+            {canCreate && (
+                <Button
+                    as={Link}
+                    href={route("admin.products.create")}
+                    icon={Plus}
+                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl lg:hidden"
+                    title={`Tambah ${pageTitle}`}
+                />
+            )}
 
             {/* Confirm Delete Modal */}
             <ConfirmDeleteModal

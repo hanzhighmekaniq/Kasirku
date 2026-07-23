@@ -33,6 +33,7 @@ import {
     User,
     Users,
     UtensilsCrossed,
+    Wallet,
     Zap,
 } from "lucide-react";
 
@@ -72,6 +73,8 @@ const ICONS = {
     shield: CheckCircle,
     log: FileText,
     theme: Palette,
+    wallet: Wallet,
+    paymentGw: CreditCard,
 };
 
 const GROUP_ICONS = {
