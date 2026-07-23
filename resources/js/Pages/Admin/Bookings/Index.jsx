@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, Search, X } from 'lucide-react';
@@ -151,18 +152,27 @@ export default function Index({ bookings, filters, customers, employees }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">Booking / Reservasi</h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Booking / Reservasi"
+                breadcrumbs={["Admin", "Booking"]}
+                heading={
+                    <>
+                        Kelola{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            booking
+                        </span>{" "}
+                        pelanggan
+                    </>
+                }
+                description="Atur reservasi, jam kedatangan, dan status booking pelanggan."
+                action={
                     <Button onClick={openCreate} icon={Plus}>
                         <span className="hidden sm:inline">Tambah Booking</span>
                         <span className="sm:hidden">Tambah</span>
                     </Button>
-                </div>
-            }
-        >
-            <Head title="Booking / Reservasi" />
+                }
+            />
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}

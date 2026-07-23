@@ -1,7 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
+import PageTabs from "@/Components/PageTabs";
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { ChevronDown, Eye, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, Eye, Plus, Trash2, ClipboardList, Undo2 } from 'lucide-react';
 import Dropdown from '@/Components/Dropdown';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import Button from "@/Components/ui/Button";
@@ -67,10 +69,20 @@ export default function Index({ saleReturns }) {
     }, [saleReturns]);
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">Retur Penjualan</h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Retur Penjualan"
+                breadcrumbs={["Admin", "Retur Penjualan"]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Retur Penjualan
+                        </span>
+                    </>
+                }
+                description="Catat dan pantau retur penjualan dari pelanggan."
+                action={
                     <Button
                         as={Link}
                         href={route('admin.sale-returns.create')}
@@ -79,10 +91,25 @@ export default function Index({ saleReturns }) {
                         <span className="hidden sm:inline">Buat Retur</span>
                         <span className="sm:hidden">Retur</span>
                     </Button>
-                </div>
-            }
-        >
-            <Head title="Retur Penjualan" />
+                }
+            />
+
+            <PageTabs
+                tabs={[
+                    {
+                        name: "Riwayat Penjualan",
+                        href: route("admin.sales.index"),
+                        active: route().current("admin.sales.index"),
+                        icon: <ClipboardList className="h-4 w-4" />,
+                    },
+                    {
+                        name: "Retur Penjualan",
+                        href: route("admin.sale-returns.index"),
+                        active: route().current("admin.sale-returns.index"),
+                        icon: <Undo2 className="h-4 w-4" />,
+                    }
+                ]}
+            />
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">

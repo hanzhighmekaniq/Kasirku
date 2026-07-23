@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 
@@ -158,95 +159,49 @@ export default function Show({
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <Link
-                            href={route("admin.cashier-shifts.index")}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-                        >
-                            <svg
-                                className="h-5 w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-                                />
-                            </svg>
-                        </Link>
-                        <div className="min-w-0 flex-1">
-                            <h2 className="truncate font-mono text-base font-semibold text-foreground">
-                                {shift.shift_no}
-                            </h2>
-                            <p className="truncate text-xs text-muted-foreground">
-                                Kasir: {shift.user?.name ?? "-"}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Prev/Next navigation */}
+        <AuthenticatedLayout>
+            <PageHeader
+                title={`Shift ${shift.shift_no}`}
+                breadcrumbs={["Admin", "Shift", shift.shift_no]}
+                heading={
+                    <>
+                        Detail{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Shift
+                        </span>
+                    </>
+                }
+                description={`Kasir: ${shift.user?.name ?? "-"}`}
+                backUrl={route("admin.cashier-shifts.index")}
+                action={
                     <div className="flex items-center gap-1 sm:ml-auto">
                         {prevShift && (
                             <Link
-                                href={route(
-                                    "admin.cashier-shifts.show",
-                                    prevShift.id,
-                                )}
+                                href={route("admin.cashier-shifts.show", prevShift.id)}
                                 className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                                 title={prevShift.shift_no}
                             >
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M15.75 19.5L8.25 12l7.5-7.5"
-                                    />
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                                 </svg>
                                 Sebelumnya
                             </Link>
                         )}
                         {nextShift && (
                             <Link
-                                href={route(
-                                    "admin.cashier-shifts.show",
-                                    nextShift.id,
-                                )}
+                                href={route("admin.cashier-shifts.show", nextShift.id)}
                                 className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                                 title={nextShift.shift_no}
                             >
                                 Berikutnya
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                                    />
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                 </svg>
                             </Link>
                         )}
                     </div>
-                </div>
-            }
-        >
-            <Head title={`Shift ${shift.shift_no}`} />
+                }
+            />
             <div className="space-y-4">
                 {/* Banner tutup shift */}
                 {isOpen && canClose && (

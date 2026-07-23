@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 
@@ -59,40 +60,21 @@ export default function Show({ purchase, storeType = "retail" }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route("admin.purchases.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.8}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M15.75 19.5L8.25 12l7.5-7.5"
-                            />
-                        </svg>
-                    </Link>
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">
-                            {purchase.purchase_no}
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                            Detail {pageTitle}
-                        </p>
-                    </div>
-                </div>
-            }
-        >
-            <Head title={`${pageTitle} ${purchase.purchase_no}`} />
+        <AuthenticatedLayout>
+            <PageHeader
+                title={`${pageTitle} ${purchase.purchase_no}`}
+                breadcrumbs={["Admin", pageTitle, purchase.purchase_no]}
+                heading={
+                    <>
+                        Detail{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {pageTitle}
+                        </span>
+                    </>
+                }
+                description="Lihat rincian pembelian, produk, dan status pembayaran."
+                backUrl={route("admin.purchases.index")}
+            />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, useForm, usePage } from "@inertiajs/react";
 import EmployeeForm from "./EmployeeForm";
 
@@ -45,55 +46,21 @@ export default function Edit({
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="leading-tight">
-                    <div className="text-sm font-semibold text-foreground">
-                        Manajemen {pageLabel}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                        Edit
-                    </div>
-                </div>
-            }
-        >
-            <Head title={`Edit ${pageLabel}`} />
-
-            {/* Hero */}
-            <section className="mb-6">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div>
-                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                Edit {pageLabel.toLowerCase()}
-                            </span>
-                            <span className="text-muted-foreground">·</span>
-                            <span className="font-mono">
-                                {employee.employee_code}
-                            </span>
-                            {currentBranch && (
-                                <>
-                                    <span className="text-muted-foreground">
-                                        ·
-                                    </span>
-                                    <span>{currentBranch.name}</span>
-                                </>
-                            )}
-                        </div>
-                        <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
-                            Perbarui{" "}
-                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                                {employee.name}
-                            </span>
-                        </h1>
-                        <p className="mt-2 max-w-xl text-xs text-muted-foreground">
-                            Ubah identitas, cabang, jabatan, status, dan akun
-                            login. Perubahan langsung mempengaruhi akses POS.
-                        </p>
-                    </div>
-                </div>
-            </section>
+        <AuthenticatedLayout>
+            <PageHeader
+                title={`Edit ${pageLabel}`}
+                breadcrumbs={["Admin", "Karyawan", "Edit"]}
+                heading={
+                    <>
+                        Perbarui{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {employee.name}
+                        </span>
+                    </>
+                }
+                description="Ubah identitas, cabang, jabatan, status, dan akun login. Perubahan langsung mempengaruhi akses POS."
+                backUrl={route("admin.employees.index")}
+            />
 
             <div className="mx-auto max-w-3xl pb-10">
                 <EmployeeForm

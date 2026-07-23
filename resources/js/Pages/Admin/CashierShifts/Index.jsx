@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import { ChevronDown, Plus } from "lucide-react";
@@ -90,22 +91,28 @@ export default function Index({
     const list = shifts?.data ?? [];
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">
-                        {pageLabel}
-                    </h2>
-                    {canOpen && (
+        <AuthenticatedLayout>
+            <PageHeader
+                title={pageLabel}
+                breadcrumbs={["Admin", "Shift"]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {pageLabel}
+                        </span>
+                    </>
+                }
+                description="Pantau, buka, dan tutup shift kasir atau layanan."
+                action={
+                    canOpen && (
                         <Button as={Link} href={route("admin.cashier-shifts.create")} icon={Plus}>
                             <span className="hidden sm:inline">Buka Shift</span>
                             <span className="sm:hidden">Buka</span>
                         </Button>
-                    )}
-                </div>
-            }
-        >
-            <Head title={pageLabel} />
+                    )
+                }
+            />
 
             <div className="space-y-4">
                 {activeShift && (

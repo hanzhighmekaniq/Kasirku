@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm } from '@inertiajs/react';
 import BranchForm from './BranchForm';
 
@@ -17,23 +18,21 @@ export default function Edit({ branch }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('admin.branches.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                        </svg>
-                    </Link>
-                    <h2 className="text-lg font-semibold text-foreground">Edit Outlet / Cabang</h2>
-                </div>
-            }
-        >
-            <Head title="Edit Outlet / Cabang" />
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Edit Cabang"
+                breadcrumbs={["Admin", "Cabang", "Edit"]}
+                heading={
+                    <>
+                        Edit{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Cabang
+                        </span>
+                    </>
+                }
+                description={`Perbarui detail cabang "${branch.name}".`}
+                backUrl={route("admin.branches.index")}
+            />
 
             <div className="mx-auto max-w-2xl">
                 <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">

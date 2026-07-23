@@ -1,7 +1,9 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
+import PageTabs from "@/Components/PageTabs";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, Plus, ShoppingBag, Undo2 } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
@@ -52,12 +54,20 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">
-                        {pageTitle}
-                    </h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title={pageTitle}
+                breadcrumbs={["Admin", pageTitle]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {pageTitle}
+                        </span>
+                    </>
+                }
+                description="Catat pembelian stok dari supplier, pantau status pembayaran, dan penerimaan barang."
+                action={
                     <Button
                         as={Link}
                         href={route("admin.purchases.create")}
@@ -68,10 +78,25 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                         </span>
                         <span className="sm:hidden">Tambah</span>
                     </Button>
-                </div>
-            }
-        >
-            <Head title={pageTitle} />
+                }
+            />
+
+            <PageTabs
+                tabs={[
+                    {
+                        name: "Riwayat Pembelian",
+                        href: route("admin.purchases.index"),
+                        active: route().current("admin.purchases.index"),
+                        icon: <ShoppingBag className="h-4 w-4" />,
+                    },
+                    {
+                        name: "Retur Pembelian",
+                        href: route("admin.purchase-returns.index"),
+                        active: route().current("admin.purchase-returns.index"),
+                        icon: <Undo2 className="h-4 w-4" />,
+                    }
+                ]}
+            />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">

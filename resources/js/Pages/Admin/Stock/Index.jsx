@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
+import StockTabs from "@/Components/StockTabs";
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Clock, RotateCcw, ShieldCheck, Boxes, ChevronDown, X, Search } from 'lucide-react';
@@ -88,10 +90,20 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
         new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0);
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">{PAGE_TITLE}</h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title={PAGE_TITLE}
+                breadcrumbs={["Admin", PAGE_TITLE]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Stok
+                        </span>
+                    </>
+                }
+                description={`Pantau ketersediaan, nilai inventaris, dan pergerakan stok ${ITEM_LABEL.toLowerCase()} Anda.`}
+                action={
                     <Link
                         href={route('admin.stock.movements')}
                         className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
@@ -99,9 +111,11 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                         <Clock className="h-4 w-4" strokeWidth={1.8} />
                         Riwayat Pergerakan
                     </Link>
-                </div>
-            }
-        >
+                }
+            />
+
+            <StockTabs />
+
             <Head title={PAGE_TITLE} />
 
             {flash?.success && (

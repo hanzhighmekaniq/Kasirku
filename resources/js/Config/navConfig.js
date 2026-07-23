@@ -293,6 +293,13 @@ export function buildNavGroups(modules) {
             badge: "FnB",
             badgeColor: "orange",
         });
+        add(items, Stock?.val || Stock?.lock, Stock?.val, {
+            key: "stock",
+            name: "Manajemen Stok",
+            href: r("admin.stock.index"),
+            icon: "stock",
+            current: ["admin.stock.*", "admin.product-batches.*", "admin.stock-adjustments.*", "admin.stock-opnames.*", "admin.stock-transfers.*", "admin.wastes.*"],
+        });
         add(items, hasCustomer || lockedCustomer, hasCustomer, {
             key: "customers",
             name: "Pelanggan",
@@ -316,10 +323,10 @@ export function buildNavGroups(modules) {
         });
         add(items, hasEmployee || lockedEmployee, hasEmployee, {
             key: "employees",
-            name: "Karyawan",
+            name: "Karyawan & Akses",
             href: r("admin.employees.index"),
-            icon: "employee",
-            current: "admin.employees.*",
+            icon: "users",
+            current: ["admin.employees.*", "admin.roles.*", "admin.store-users.*"],
         });
         add(items, Commission?.val || Commission?.lock, Commission?.val, {
             key: "employee-commissions",
@@ -361,20 +368,7 @@ export function buildNavGroups(modules) {
             icon: "purchase",
             current: "admin.purchases.*",
         });
-        add(items, PurchReturn?.val || PurchReturn?.lock, PurchReturn?.val, {
-            key: "purchase-returns",
-            name: "Retur Pembelian",
-            href: r("admin.purchase-returns.index"),
-            icon: "retur",
-            current: "admin.purchase-returns.*",
-        });
-        add(items, hasSaleReturn || lockedSaleReturn, hasSaleReturn, {
-            key: "sale-returns",
-            name: "Retur Penjualan",
-            href: r("admin.sale-returns.index"),
-            icon: "retur",
-            current: "admin.sale-returns.*",
-        });
+
         add(items, hasPromo || lockedPromo, hasPromo, {
             key: "promotions",
             name: "Promo & Diskon",
@@ -398,95 +392,6 @@ export function buildNavGroups(modules) {
             });
     }
 
-    // ── INVENTARIS ────────────────────────────────────────────────────────────
-    if (Stock?.val || Stock?.lock) {
-        const items = [];
-        add(items, Stock?.val || Stock?.lock, Stock?.val, {
-            key: "stock",
-            name: "Stok",
-            href: r("admin.stock.index"),
-            icon: "stock",
-            current: "admin.stock.*",
-        });
-        add(items, Batch?.val || Batch?.lock, Batch?.val, {
-            key: "product-batches",
-            name: "Batch / Expired",
-            href: r("admin.product-batches.index"),
-            icon: "batch",
-            current: "admin.product-batches.*",
-        });
-        add(
-            items,
-            (Adjust?.val || Adjust?.lock) && can("stock.adjustment"),
-            Adjust?.val && can("stock.adjustment"),
-            {
-                key: "stock-adjustments",
-                name: "Penyesuaian Stok",
-                href: r("admin.stock-adjustments.index"),
-                icon: "adjustment",
-                current: "admin.stock-adjustments.*",
-            },
-        );
-        add(
-            items,
-            (Opname?.val || Opname?.lock) && can("stock.opname"),
-            Opname?.val && can("stock.opname"),
-            {
-                key: "stock-opnames",
-                name: "Opname Stok",
-                href: r("admin.stock-opnames.index"),
-                icon: "opname",
-                current: "admin.stock-opnames.*",
-            },
-        );
-        add(
-            items,
-            (Transfer?.val || Transfer?.lock) && can("stock.transfer"),
-            Transfer?.val && can("stock.transfer"),
-            {
-                key: "stock-transfers",
-                name: "Transfer Stok",
-                href: r("admin.stock-transfers.index"),
-                icon: "transfer",
-                current: "admin.stock-transfers.*",
-            },
-        );
-        add(
-            items,
-            (Waste?.val || Waste?.lock) && can("stock.waste"),
-            Waste?.val && can("stock.waste"),
-            {
-                key: "wastes",
-                name: "Waste / Pemborosan",
-                href: r("admin.wastes.index"),
-                icon: "waste",
-                current: "admin.wastes.*",
-                badge: "FnB",
-                badgeColor: "orange",
-            },
-        );
-        add(
-            items,
-            (Recipe?.val || Recipe?.lock) && can("product.edit"),
-            Recipe?.val && can("product.edit"),
-            {
-                key: "recipes",
-                name: "Resep Bahan Baku",
-                href: r("admin.products.index"),
-                icon: "recipe",
-                current: "admin.products.*",
-                badge: "FnB",
-                badgeColor: "orange",
-            },
-        );
-        groups.push({
-            key: "inventory",
-            label: "Inventaris",
-            icon: "archiveBox",
-            items: sortByLockState(items), // Sort: NORMAL di atas, LOCKED di bawah
-        });
-    }
-
     // ── KEUANGAN ──────────────────────────────────────────────────────────────
     {
         const items = [];
@@ -498,70 +403,11 @@ export function buildNavGroups(modules) {
                 key: "reports",
                 name: "Laporan",
                 href: r("admin.reports.index"),
-                icon: "report",
-                current: "admin.reports",
+                icon: "reportSales",
+                current: "admin.reports.*",
             },
         );
-        add(
-            items,
-            (Report?.val || Report?.lock) && can("report.purchase"),
-            Report?.val && can("report.purchase"),
-            {
-                key: "report-purchases",
-                name: "Laporan Pembelian",
-                href: r("admin.reports.purchases"),
-                icon: "report",
-                current: "admin.reports.purchases",
-            },
-        );
-        add(
-            items,
-            (Report?.val || Report?.lock) && can("report.stock"),
-            Report?.val && can("report.stock"),
-            {
-                key: "report-stock",
-                name: "Laporan Stok",
-                href: r("admin.reports.stock"),
-                icon: "report",
-                current: "admin.reports.stock",
-            },
-        );
-        add(
-            items,
-            (Report?.val || Report?.lock) && can("report.expense"),
-            Report?.val && can("report.expense"),
-            {
-                key: "report-expenses",
-                name: "Laporan Pengeluaran",
-                href: r("admin.reports.expenses"),
-                icon: "report",
-                current: "admin.reports.expenses",
-            },
-        );
-        add(
-            items,
-            (Report?.val || Report?.lock) && can("report.shift"),
-            Report?.val && can("report.shift"),
-            {
-                key: "report-shifts",
-                name: "Laporan Shift",
-                href: r("admin.reports.shifts"),
-                icon: "report",
-                current: "admin.reports.shifts",
-            },
-        );
-        add(
-            items,
-            (Report?.val || Report?.lock) && can("report.commission"),
-            Report?.val && can("report.commission"),
-            {
-                key: "report-commissions",
-                name: "Laporan Komisi",
-                href: r("admin.reports.commissions"),
-                icon: "report",
-                current: "admin.reports.commissions",
-            },
-        );
+
         add(
             items,
             (PaymentGw?.val || PaymentGw?.lock) && can("setting.edit"),
@@ -634,30 +480,8 @@ export function buildNavGroups(modules) {
                 current: "admin.settings.*",
             },
         );
-        add(
-            items,
-            (hasUserManagement || lockedUserManagement) && can("setting.edit"),
-            hasUserManagement && can("setting.edit"),
-            {
-                key: "store-users",
-                name: "Pengguna & Akses",
-                href: r("admin.store-users.index"),
-                icon: "users",
-                current: "admin.store-users.*",
-            },
-        );
-        add(
-            items,
-            (hasRoleManagement || lockedRoleManagement) && can("setting.edit"),
-            hasRoleManagement && can("setting.edit"),
-            {
-                key: "roles",
-                name: "Role & Permission",
-                href: r("admin.roles.index"),
-                icon: "shield",
-                current: "admin.roles.*",
-            },
-        );
+
+
         add(
             items,
             (hasActivityLog || lockedActivityLog) && can("setting.view"),

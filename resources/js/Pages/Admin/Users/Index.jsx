@@ -1,4 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
+import EmployeeTabs from "@/Components/EmployeeTabs";
 import { Head, router, useForm, usePage } from "@inertiajs/react";
 import { useRef, useState, useEffect } from "react";
 import {
@@ -225,22 +227,20 @@ export default function Index({
     }, {});
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
-                            <Users className="h-5 w-5" strokeWidth={1.8} />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-foreground">
-                                Pengguna & Akses
-                            </h2>
-                            <p className="text-xs text-muted-foreground">
-                                Kelola siapa yang bisa mengakses toko ini
-                            </p>
-                        </div>
-                    </div>
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Pengguna Aplikasi"
+                breadcrumbs={["Admin", "Pengguna Aplikasi"]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Pengguna Aplikasi
+                        </span>
+                    </>
+                }
+                description="Kelola siapa yang bisa mengakses toko ini dan menetapkan roles."
+                action={
                     <Button
                         onClick={() => setShowInvite(true)}
                         disabled={!canInvite}
@@ -248,18 +248,18 @@ export default function Index({
                         title={
                             !canInvite
                                 ? `Batas ${planInfo?.max_users} user paket ${planInfo?.label} tercapai`
-                                : ""
+                                : undefined
                         }
                     >
-                        <span className="hidden sm:inline">
-                            Undang Pengguna
-                        </span>
+                        <span className="hidden sm:inline">Undang User</span>
                         <span className="sm:hidden">Undang</span>
                     </Button>
-                </div>
-            }
-        >
-            <Head title="Pengguna & Akses" />
+                }
+            />
+
+            <EmployeeTabs />
+
+            <Head title="Pengguna Aplikasi" />
 
             {/* Flash */}
             {flash?.success && (

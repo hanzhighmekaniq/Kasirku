@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
@@ -56,18 +57,27 @@ export default function Index({ cafeTables, branches }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">Meja Cafe</h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Meja Cafe"
+                breadcrumbs={["Admin", "Meja"]}
+                heading={
+                    <>
+                        Kelola{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            meja
+                        </span>{" "}
+                        cafe
+                    </>
+                }
+                description="Atur meja cafe, kapasitas, dan status reservasi."
+                action={
                     <Button as={Link} href={route('admin.cafe-tables.create')} icon={Plus}>
                         <span className="hidden sm:inline">Tambah Meja</span>
                         <span className="sm:hidden">Tambah</span>
                     </Button>
-                </div>
-            }
-        >
-            <Head title="Meja Cafe" />
+                }
+            />
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}

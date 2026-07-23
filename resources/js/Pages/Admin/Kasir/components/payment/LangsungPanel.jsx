@@ -10,6 +10,9 @@ export default function LangsungPanel({
     paymentMethods,
     displayTotal,
     grandTotal,
+    subtotal = 0,
+    discount = 0,
+    tax = 0,
     roundingAdjustment,
     cashRoundingEnabled,
     cashRoundingNearest,
@@ -18,6 +21,7 @@ export default function LangsungPanel({
     setRoundingOverrideMode,
     roundingCustomValue,
     setRoundingCustomValue,
+    isFinalizing = false,
     onPay,
 }) {
     const methods = paymentMethods.filter(m => m.type !== 'debt');
@@ -41,11 +45,11 @@ export default function LangsungPanel({
     const hasAccount = !!(selectedMethod?.account_number);
 
     const canPay = useMemo(() => {
-        if (!selectedMethod) return false;
+        if (isFinalizing || !selectedMethod) return false;
         if (isCash) return cashReceived >= displayTotal;
         if (hasImage && !showQr) return false; // must show QR first
         return manualConfirmed;
-    }, [selectedMethod, isCash, cashReceived, displayTotal, hasImage, showQr, manualConfirmed]);
+    }, [isFinalizing, selectedMethod, isCash, cashReceived, displayTotal, hasImage, showQr, manualConfirmed]);
 
     const handlePay = () => {
         if (!canPay || !selectedMethod) return;
@@ -78,8 +82,8 @@ export default function LangsungPanel({
                             onClick={() => handleSelect(m)}
                             className={`flex flex-col items-center gap-1 rounded-xl border p-2.5 transition text-xs font-medium ${
                                 selectedMethod?.id === m.id
-                                    ? 'border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/30'
-                                    : 'border-border bg-white text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                                    ? 'border-primary bg-primary/10 text-primary shadow-xs ring-1 ring-primary/30 font-bold'
+                                    : 'border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/30'
                             }`}
                         >
                             <Icon2 size={20} strokeWidth={1.8} />
@@ -114,8 +118,8 @@ export default function LangsungPanel({
                                             onClick={() => setRoundingOverrideMode(opt.v)}
                                             className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
                                                 roundingOverrideMode === opt.v
-                                                    ? 'bg-primary/10 text-primary border border-primary/30'
-                                                    : 'bg-white text-muted-foreground border border-border hover:border-primary/30'
+                                                    ? 'bg-primary/10 text-primary border border-primary/30 font-semibold'
+                                                    : 'bg-card text-muted-foreground border border-border hover:border-primary/30'
                                             }`}
                                         >
                                             {opt.l}
@@ -130,18 +134,27 @@ export default function LangsungPanel({
                                             value={roundingCustomValue}
                                             onChange={(e) => setRoundingCustomValue(e.target.value)}
                                             placeholder={String(displayTotal)}
-                                            className="flex-1 rounded-lg border border-border bg-white px-2 py-1 text-xs focus:border-primary focus:outline-none"
+                                            className="flex-1 rounded-lg border border-border bg-background text-foreground px-2 py-1 text-xs focus:border-primary focus:outline-none"
                                         />
                                     </div>
                                 )}
                             </div>
                         )}
-                        <div className="flex items-baseline justify-between rounded-lg border border-border bg-muted/30 p-3">
-                            <span className="text-sm text-muted-foreground">Total Tagihan</span>
-                            <span className="text-xl font-bold">{fmt(displayTotal)}</span>
+                        <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-1">
+                            <div className="flex items-baseline justify-between">
+                                <span className="text-sm font-medium text-muted-foreground">Total Tagihan</span>
+                                <span className="text-xl font-bold text-foreground">{fmt(displayTotal)}</span>
+                            </div>
+                            {(subtotal > 0 || discount > 0 || tax > 0) && (
+                                <div className="flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border/50 pt-1.5 flex-wrap">
+                                    {subtotal > 0 && <span>Subtotal: {fmt(subtotal)}</span>}
+                                    {discount > 0 && <span className="text-destructive">• Diskon: -{fmt(discount)}</span>}
+                                    {tax > 0 && <span>• Pajak: +{fmt(tax)}</span>}
+                                </div>
+                            )}
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Uang Diterima</label>
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Uang Diterima</label>
                             <input
                                 type="text"
                                 inputMode="numeric"
@@ -151,7 +164,7 @@ export default function LangsungPanel({
                                     setCashReceived(n);
                                 }}
                                 placeholder="Rp0"
-                                className="mt-1.5 block w-full rounded-lg border border-border bg-white px-3 py-3 text-lg font-semibold focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                className="mt-1.5 block w-full rounded-xl border border-border bg-background text-foreground px-3.5 py-3 text-lg font-bold focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                             />
                         </div>
                         <div className="grid grid-cols-4 gap-2">
@@ -161,10 +174,10 @@ export default function LangsungPanel({
                                     <button
                                         key={v}
                                         onClick={() => setCashReceived(v)}
-                                        className={`rounded-lg border px-2 py-2 text-sm font-medium transition ${
+                                        className={`rounded-xl border px-2 py-2 text-xs sm:text-sm font-semibold transition ${
                                             cashReceived === v
-                                                ? 'border-primary bg-primary/10 text-primary'
-                                                : 'border-border bg-white hover:border-primary/40 hover:text-primary'
+                                                ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30'
+                                                : 'border-border bg-card text-foreground hover:border-primary/40 hover:text-primary'
                                         }`}
                                     >
                                         {fmt(v)}
@@ -194,10 +207,11 @@ export default function LangsungPanel({
 
                         <button
                             onClick={handlePay}
-                            disabled={!canPay}
-                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={!canPay || isFinalizing}
+                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Bayar {fmt(displayTotal)}
+                            {isFinalizing && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                            {isFinalizing ? 'Memproses...' : `Bayar ${fmt(displayTotal)}`}
                         </button>
                     </div>
                 ) : hasImage ? (
@@ -240,10 +254,11 @@ export default function LangsungPanel({
                         </label>
                         <button
                             onClick={handlePay}
-                            disabled={!canPay}
-                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={!canPay || isFinalizing}
+                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Konfirmasi Pembayaran
+                            {isFinalizing && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                            {isFinalizing ? 'Memproses...' : 'Konfirmasi Pembayaran'}
                         </button>
                     </div>
                 ) : hasAccount ? (
@@ -268,7 +283,7 @@ export default function LangsungPanel({
                                 onClick={() => {
                                     if (navigator.clipboard) navigator.clipboard.writeText(selectedMethod.account_number);
                                 }}
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-2 text-sm font-medium transition hover:bg-muted"
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card text-foreground px-4 py-2 text-sm font-medium transition hover:bg-muted"
                             >
                                 <Copy size={14} strokeWidth={2} />
                                 Salin Nomor
@@ -288,10 +303,11 @@ export default function LangsungPanel({
                         </label>
                         <button
                             onClick={handlePay}
-                            disabled={!canPay}
-                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={!canPay || isFinalizing}
+                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-md transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Konfirmasi Pembayaran
+                            {isFinalizing && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                            {isFinalizing ? 'Memproses...' : 'Konfirmasi Pembayaran'}
                         </button>
                     </div>
                 ) : null}

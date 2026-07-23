@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import Field from "@/Components/ui/Field";
@@ -99,40 +100,21 @@ export default function Create({ sales }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route("admin.sale-returns.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.8}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-                            />
-                        </svg>
-                    </Link>
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">
-                            Buat Retur Penjualan
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                            Pilih penjualan yang akan diretur
-                        </p>
-                    </div>
-                </div>
-            }
-        >
-            <Head title="Buat Retur Penjualan" />
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Buat Retur Penjualan"
+                breadcrumbs={["Admin", "Retur Penjualan", "Buat"]}
+                heading={
+                    <>
+                        Buat{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Retur Penjualan
+                        </span>
+                    </>
+                }
+                description="Pilih penjualan yang akan diretur."
+                backUrl={route("admin.sale-returns.index")}
+            />
 
             <form onSubmit={submit} className="space-y-5">
                 {/* Info Card */}

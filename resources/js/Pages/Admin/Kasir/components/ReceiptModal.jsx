@@ -1,14 +1,23 @@
 import * as ReactDOM from "react-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fmt, fmtShort } from "./helpers";
 
 export default function ReceiptModal({
     receipt,
     storeName,
     footer,
+    autoPrint = false,
     onClose,
     onNewTransaction,
 }) {
+    useEffect(() => {
+        if (autoPrint) {
+            const timer = setTimeout(() => {
+                window.print();
+            }, 200);
+            return () => clearTimeout(timer);
+        }
+    }, [autoPrint]);
     // Split receipt state — jika ada splitPayers, user bisa ganti halaman struk
     const hasSplit = receipt.splitPayers && receipt.splitPayers.length > 0 && receipt.splitReceiptMode === "per_payer";
     const [splitPage, setSplitPage] = useState(0); // 0 = total, 1+ = per payer index

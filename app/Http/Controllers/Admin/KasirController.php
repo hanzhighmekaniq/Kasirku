@@ -12,6 +12,7 @@ use App\Models\Customer;
 use App\Models\CustomerDebtLog;
 use App\Models\Employee;
 use App\Models\EmployeeCommission;
+use App\Models\PaymentGatewayTransaction;
 use App\Models\PaymentMethod;
 use App\Models\PlatformPaymentGateway;
 use App\Models\Product;
@@ -234,6 +235,27 @@ class KasirController extends Controller
             ->where('status', 'open')
             ->first();
 
+        // Query active pending sale & PG transaction for page refresh recovery
+        $pendingSale = null;
+        $pendingPgTransaction = null;
+
+        if ($user) {
+            $pendingSale = Sale::with(['items.product:id,name'])
+                ->where('store_id', $storeId)
+                ->where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->orderByDesc('id')
+                ->first();
+
+            if ($pendingSale) {
+                $pendingPgTransaction = PaymentGatewayTransaction::where('sale_id', $pendingSale->id)
+                    ->whereNull('sale_split_payer_id')
+                    ->whereIn('status', ['initiating', 'pending', 'unknown', 'checking'])
+                    ->latest('id')
+                    ->first();
+            }
+        }
+
         // NOTE: order type per store type SEKARANG hanya bersumber dari
         // resources/js/Pages/Admin/Kasir/config/posModes.js (frontend).
         // StoreType::order_types di database tidak dipakai untuk render POS —
@@ -273,6 +295,41 @@ class KasirController extends Controller
             'pgMethods' => $this->getActivePgMethods($storeId),
             'activeShift' => $activeShift,
             'employees' => $employees,
+            'pendingSale' => $pendingSale ? [
+                'sale_id' => $pendingSale->id,
+                'sale_no' => $pendingSale->sale_no,
+                'grand_total' => (float) $pendingSale->grand_total,
+                'items' => $pendingSale->items->map(fn ($i) => [
+                    'productId' => $i->product_id,
+                    'variantId' => $i->variant_id,
+                    'quantity' => (float) $i->quantity,
+                    'price' => (float) $i->price,
+                    'name' => $i->product?->name ?? 'Item',
+                ])->toArray(),
+            ] : null,
+            'pendingPgTransaction' => $pendingPgTransaction ? [
+                'pg_trx_id' => $pendingPgTransaction->id,
+                'payment_type' => $pendingPgTransaction->payment_type,
+                'status' => $pendingPgTransaction->status,
+                'amount' => (float) $pendingPgTransaction->amount,
+                'can_retry' => $pendingPgTransaction->isRetryable(),
+                'qr_code' => $pendingPgTransaction->raw_response['qr_code']
+                    ?? $pendingPgTransaction->raw_response['qr_string']
+                    ?? null,
+                'qr_image_url' => $pendingPgTransaction->raw_response['qr_image_url']
+                    ?? $pendingPgTransaction->raw_response['qr_url']
+                    ?? null,
+                'va_number' => $pendingPgTransaction->raw_response['va_numbers'][0]['va_number']
+                    ?? $pendingPgTransaction->raw_response['permata_va_number']
+                    ?? $pendingPgTransaction->raw_response['va_number']
+                    ?? null,
+                'va_bank' => $pendingPgTransaction->raw_response['va_numbers'][0]['bank']
+                    ?? $pendingPgTransaction->raw_response['bank']
+                    ?? null,
+                'payment_url' => $pendingPgTransaction->raw_response['actions'][0]['url']
+                    ?? $pendingPgTransaction->raw_response['payment_url']
+                    ?? null,
+            ] : null,
         ]);
     }
 
@@ -1247,7 +1304,19 @@ class KasirController extends Controller
             $branchId = session('branch_id');
             $sale = Sale::findOrFail($validated['sale_id']);
             abort_if($sale->store_id !== $storeId, 403);
-            abort_if($sale->status !== 'pending', 422, 'Transaksi sudah selesai atau dibatalkan.');
+
+            if ($sale->status === 'completed') {
+                return response()->json([
+                    'success' => true,
+                    'sale_no' => $sale->sale_no,
+                    'sale_id' => $sale->id,
+                    'change' => (float) $sale->change_amount,
+                    'grand_total' => (float) $sale->grand_total,
+                    'is_pg' => false,
+                    'message' => 'Transaksi sudah selesai.',
+                ]);
+            }
+            abort_if(! in_array($sale->status, ['pending']), 422, 'Transaksi tidak dapat diproses.');
 
             $hasPgPayment = collect($validated['payments'])->contains('is_pg', true);
             $paidTotal = collect($validated['payments'])->sum('amount');
@@ -1402,12 +1471,17 @@ class KasirController extends Controller
 
     /**
      * Cancel a pending sale — only if no payments have been made.
+     * Idempotent: already-completed sales are silently skipped.
      */
     public function cancelPending(Request $request, Sale $sale)
     {
         $storeId = session('current_store_id');
         abort_if($sale->store_id !== $storeId, 403);
-        abort_if($sale->status !== 'pending', 422, 'Transaksi sudah selesai atau dibatalkan.');
+
+        // Already completed or voided — nothing to cancel, return success.
+        if ($sale->status !== 'pending') {
+            return response()->json(['success' => true, 'message' => 'Transaksi sudah selesai.']);
+        }
 
         if ($sale->table_id) {
             CafeTable::where('id', $sale->table_id)

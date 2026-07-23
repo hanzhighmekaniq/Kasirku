@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
+import ReportTabs from "@/Components/ReportTabs";
 import { Head, Link, usePage } from '@inertiajs/react';
 import SummaryCards from './components/SummaryCards';
 
@@ -6,13 +8,24 @@ export default function Stock({ summary, lowStock = [], byCategory = [] }) {
     const { flash } = usePage().props;
 
     return (
-        <AuthenticatedLayout header={<h2 className="text-lg font-semibold text-foreground">Laporan Stok</h2>}>
-            <Head title="Laporan Stok" />
-            {flash?.success && <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>}
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Laporan Stok"
+                breadcrumbs={["Admin", "Laporan", "Stok"]}
+                heading={
+                    <>
+                        Laporan{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Stok
+                        </span>
+                    </>
+                }
+                description="Analisis performa stok, barang menipis, dan ringkasan persediaan."
+            />
 
-            <div className="mb-5 flex items-center justify-end">
-                <Link href={route('admin.reports.index')} className="text-sm font-medium text-primary-600 hover:underline">← Ringkasan</Link>
-            </div>
+            <ReportTabs />
+
+            {flash?.success && <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>}
 
             <SummaryCards items={[
                 { label: 'Total Produk', value: summary?.total_products ?? 0 },

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { useMemo, useRef, useState } from "react";
 import Field from "@/Components/ui/Field";
@@ -203,40 +204,21 @@ export default function Edit({
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route("admin.purchases.show", purchase.id)}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted"
-                        aria-label="Kembali"
-                    >
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.8}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M15.75 19.5L8.25 12l7.5-7.5"
-                            />
-                        </svg>
-                    </Link>
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">
-                            Edit Pembelian
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                            {purchase.purchase_no}
-                        </p>
-                    </div>
-                </div>
-            }
-        >
-            <Head title={`Edit ${purchase.purchase_no}`} />
+        <AuthenticatedLayout>
+            <PageHeader
+                title={`Edit ${purchase.purchase_no}`}
+                breadcrumbs={["Admin", "Pembelian", purchase.purchase_no]}
+                heading={
+                    <>
+                        Edit{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Pembelian
+                        </span>
+                    </>
+                }
+                description="Ubah data pembelian stok dari supplier."
+                backUrl={route("admin.purchases.show", purchase.id)}
+            />
 
             {flash?.error && (
                 <div className="mb-4 flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">

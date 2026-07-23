@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
+import StockTabs from "@/Components/StockTabs";
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { Boxes, ChevronDown, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
@@ -116,17 +118,29 @@ export default function Index({ batches, products, filters }) {
     }), [batches]);
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">Batch / Expiry Produk</h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Batch / Expiry Produk"
+                breadcrumbs={["Admin", "Stok", "Batch & Expiry"]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Batch & Expiry
+                        </span>
+                    </>
+                }
+                description="Pantau tanggal kadaluarsa dan kelola batch produk Anda."
+                action={
                     <Button as={Link} href={route('admin.product-batches.create')} icon={Plus}>
                         <span className="hidden sm:inline">Tambah Batch</span>
                         <span className="sm:hidden">Tambah</span>
                     </Button>
-                </div>
-            }
-        >
+                }
+            />
+
+            <StockTabs />
+
             <Head title="Batch / Expiry Produk" />
 
             {/* Stats */}

@@ -1,4 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
+import StockTabs from "@/Components/StockTabs";
+import Button from "@/Components/ui/Button";
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeft, Eye, Plus, Search, Trash2 } from 'lucide-react';
@@ -39,30 +42,33 @@ export default function Index({ adjustments, stats }) {
     const fmtDate = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href={route('admin.stock.index')}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-                            aria-label="Kembali"
-                        >
-                            <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
-                        </Link>
-                        <h2 className="text-lg font-semibold text-slate-800">Penyesuaian Stok</h2>
-                    </div>
-                    <Link
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Penyesuaian Stok"
+                breadcrumbs={["Admin", "Stok", "Penyesuaian Stok"]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Penyesuaian Stok
+                        </span>
+                    </>
+                }
+                description="Perbaiki stok fisik dan sistem agar tetap akurat."
+                action={
+                    <Button
+                        as={Link}
                         href={route('admin.stock-adjustments.create')}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700"
+                        icon={Plus}
                     >
-                        <Plus className="h-4 w-4" strokeWidth={2} />
                         <span className="hidden sm:inline">Buat Penyesuaian</span>
                         <span className="sm:hidden">Tambah</span>
-                    </Link>
-                </div>
-            }
-        >
+                    </Button>
+                }
+            />
+
+            <StockTabs />
+
             <Head title="Penyesuaian Stok" />
 
             {flash?.success && (

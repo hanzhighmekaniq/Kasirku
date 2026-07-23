@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
@@ -52,26 +53,24 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('admin.purchase-returns.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                        </svg>
-                    </Link>
+        <AuthenticatedLayout>
+            <PageHeader
+                title={`${pageTitle} ${purchaseReturn.return_no}`}
+                breadcrumbs={["Admin", pageTitle, purchaseReturn.return_no]}
+                heading={
                     <div className="flex items-center gap-3">
-                        <h2 className="text-lg font-semibold text-foreground">Detail {pageTitle}</h2>
+                        <h2>
+                            Detail{" "}
+                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                                {pageTitle}
+                            </span>
+                        </h2>
                         <StatusBadge status={purchaseReturn.status} />
                     </div>
-                </div>
-            }
-        >
-            <Head title={`${pageTitle} ${purchaseReturn.return_no}`} />
+                }
+                description="Lihat rincian retur pembelian, produk, dan status."
+                backUrl={route("admin.purchase-returns.index")}
+            />
 
             <div className="mx-auto max-w-3xl space-y-6">
                 {/* Header Card */}

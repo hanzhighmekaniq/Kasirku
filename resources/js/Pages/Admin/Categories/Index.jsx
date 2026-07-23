@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import { Plus } from "lucide-react";
@@ -44,7 +45,20 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                 </div>
             }
         >
-            <Head title="Kategori" />
+            <PageHeader
+                title="Katalog Kategori"
+                breadcrumbs={["Katalog", "Kategori"]}
+                heading={
+                    <>
+                        Kelola{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            katalog kategori
+                        </span>{" "}
+                        tokomu
+                    </>
+                }
+                description="Cari, filter, dan atur kategori produk dari satu tempat."
+            />
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
@@ -62,7 +76,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari kategori..."
-                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-10 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl border border-border bg-card text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary-500 py-2.5 pl-9 pr-10"
                             />
                             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
                                 <svg
@@ -190,13 +204,12 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                                         key={i}
                                         href={link.url || "#"}
                                         preserveScroll
-                                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                                            link.active
+                                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${link.active
                                                 ? "bg-primary text-primary-foreground shadow-sm"
                                                 : link.url
-                                                  ? "text-muted-foreground hover:bg-muted"
-                                                  : "cursor-not-allowed text-muted-foreground/50"
-                                        }`}
+                                                    ? "text-muted-foreground hover:bg-muted"
+                                                    : "cursor-not-allowed text-muted-foreground/50"
+                                            }`}
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
                                         }}
@@ -503,11 +516,10 @@ function CategoryTree({ categories, onDelete }) {
                                     {cat.path || cat.name}
                                 </p>
                                 <span
-                                    className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                        cat._depth === 0
+                                    className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${cat._depth === 0
                                             ? "bg-primary-100 text-primary-700"
                                             : "bg-muted text-muted-foreground"
-                                    }`}
+                                        }`}
                                 >
                                     {cat.total_products} produk
                                 </span>
@@ -602,11 +614,10 @@ function CategoryRow({ cat, depth = 0, isExpanded, onToggle, onDelete }) {
             </td>
             <td className="px-4 py-3 text-center">
                 <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        depth === 0
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${depth === 0
                             ? "bg-primary-100 text-primary-700"
                             : "bg-muted text-muted-foreground"
-                    }`}
+                        }`}
                 >
                     {cat.total_products}
                 </span>

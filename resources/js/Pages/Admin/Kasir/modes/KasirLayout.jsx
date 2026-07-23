@@ -1,5 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import * as ReactDOM from "react-dom";
 import {
@@ -232,6 +233,47 @@ export default function KasirLayout({
                     variant="subtle"
                     onClick={() => setIsFullscreen(!isFullscreen)}
                 />
+            </div>
+        </div>
+    );
+
+    const paymentHeader = (
+        <div className="flex items-center gap-3">
+            <button
+                type="button"
+                onClick={async () => {
+                    if (k.resumeSaleId && !k.receiptData) {
+                        await k.handleCancelPendingSale(k.resumeSaleId);
+                    }
+
+                    k.setShowPayment(false);
+                }}
+                aria-label="Kembali"
+                title="Kembali"
+                className="
+                inline-flex size-9 shrink-0 items-center justify-center
+                rounded-lg border border-border
+                text-muted-foreground
+                transition-colors
+                hover:bg-muted hover:text-foreground
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+            "
+            >
+                <ArrowLeft className="size-4" strokeWidth={2} />
+            </button>
+
+            <div className="h-5 w-px bg-border" />
+
+            <div className="flex items-baseline gap-2">
+                <h2 className="text-base font-semibold text-foreground">
+                    Pembayaran
+                </h2>
+
+                {k.resumeSaleNo && (
+                    <span className="font-mono text-xs text-muted-foreground">
+                        {k.resumeSaleNo}
+                    </span>
+                )}
             </div>
         </div>
     );
@@ -1250,8 +1292,8 @@ export default function KasirLayout({
                                     type="button"
                                     onClick={() => setShowInfoModal(true)}
                                     className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition ${hasDeliveryInfo
-                                            ? "bg-muted text-foreground hover:bg-muted/80"
-                                            : "border border-dashed border-warning text-warning hover:bg-warning/5"
+                                        ? "bg-muted text-foreground hover:bg-muted/80"
+                                        : "border border-dashed border-warning text-warning hover:bg-warning/5"
                                         }`}
                                 >
                                     <Truck size={12} />
@@ -1303,8 +1345,8 @@ export default function KasirLayout({
                                 type="button"
                                 onClick={() => setShowNoteModal(true)}
                                 className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-1 text-[11px] font-medium transition ${noteActive
-                                        ? "border-success/30 bg-success/10 text-success"
-                                        : "border-border bg-muted text-foreground hover:bg-muted/80"
+                                    ? "border-success/30 bg-success/10 text-success"
+                                    : "border-border bg-muted text-foreground hover:bg-muted/80"
                                     }`}
                             >
                                 <MessageSquare size={12} />
@@ -1320,8 +1362,8 @@ export default function KasirLayout({
                                 type="button"
                                 onClick={() => setShowAdjustModal(true)}
                                 className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-1 text-[11px] font-medium transition ${adjustActive
-                                        ? "border-success/30 bg-success/10 text-success"
-                                        : "border-border bg-muted text-foreground hover:bg-muted/80"
+                                    ? "border-success/30 bg-success/10 text-success"
+                                    : "border-border bg-muted text-foreground hover:bg-muted/80"
                                     }`}
                             >
                                 <Tag size={12} />
@@ -1494,15 +1536,6 @@ export default function KasirLayout({
                     onClose={() => k.setUnitTarget(null)}
                 />
             )}
-            {k.showPayment && (
-                <PaymentView
-                    k={k}
-                    paymentMethods={paymentMethods}
-                    pgMethods={pgMethods}
-                    storeName={storeName}
-                    receiptFooter={receiptFooter}
-                />
-            )}
             {k.showReceipt && k.receiptData && (
                 <ReceiptModal
                     receipt={k.receiptData}
@@ -1538,23 +1571,30 @@ export default function KasirLayout({
         </>
     );
 
+    const renderPaymentView = () => (
+        <PaymentView
+            k={k}
+            paymentMethods={paymentMethods}
+            pgMethods={pgMethods}
+            storeName={storeName}
+            receiptFooter={receiptFooter}
+            initialSaleId={k.resumeSaleId}
+            initialSaleNo={k.resumeSaleNo}
+            initialPgTransaction={k.initialPgTransaction}
+        />
+    );
+
     if (isFullscreen) {
-        // z-40 (di bawah lapisan modal z-50). Modal baru (Shift/Customer/
-        // Diskon/Pajak/Info) memakai headlessui Dialog yang di-portal ke
-        // document.body pada z-50 — jadi kalau kontainer fullscreen berada di
-        // z-[100], modal tersembunyi di belakangnya. Menurunkan ke z-40 membuat
-        // semua modal tampil konsisten seperti mode non-fullscreen. Aman karena
-        // AuthenticatedLayout tidak dirender saat fullscreen.
         return (
             <div className="fixed inset-0 z-40 flex flex-col overflow-x-hidden bg-background p-3">
-                {posContent("h-full")}
+                {k.showPayment ? renderPaymentView() : posContent("h-full")}
             </div>
         );
     }
 
     return (
-        <AuthenticatedLayout header={headerContent} noPadding>
-            {posContent("h-[calc(100vh-56px)]")}
+        <AuthenticatedLayout header={k.showPayment ? paymentHeader : headerContent} noPadding>
+            {k.showPayment ? renderPaymentView() : posContent("h-[calc(100vh-56px)]")}
         </AuthenticatedLayout>
     );
 }

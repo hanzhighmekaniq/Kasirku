@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, useForm } from "@inertiajs/react";
 import CategoryForm from "./CategoryForm";
 
@@ -28,7 +29,21 @@ export default function Create({ parentCategories = [] }) {
                 </div>
             }
         >
-            <Head title="Tambah Kategori" />
+            <PageHeader
+                title="Katalog Kategori - Tambah"
+                breadcrumbs={["Katalog", "Kategori", "Tambah"]}
+                heading={
+                    <>
+                        Tambah{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            kategori
+                        </span>{" "}
+                        baru
+                    </>
+                }
+                description="Buat kategori baru untuk mengelompokkan produk kamu."
+                backUrl={route("admin.categories.index")}
+            />
 
             <div className="mx-auto max-w-2xl">
                 <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">

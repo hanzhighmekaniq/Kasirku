@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import Button from "@/Components/ui/Button";
@@ -73,16 +74,21 @@ export default function Index({
     const list = commissions.data ?? [];
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-base font-semibold text-foreground">
-                        Rekap Komisi Karyawan
-                    </h2>
-                </div>
-            }
-        >
-            <Head title="Rekap Komisi" />
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Rekap Komisi"
+                breadcrumbs={["Admin", "Komisi"]}
+                heading={
+                    <>
+                        Rekap{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Komisi
+                        </span>{" "}
+                        Karyawan
+                    </>
+                }
+                description="Pantau dan kelola pencairan komisi karyawan."
+            />
 
             <div className="space-y-5">
                 {flash?.success && (

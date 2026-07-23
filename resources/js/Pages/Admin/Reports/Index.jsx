@@ -1,4 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
+import ReportTabs from "@/Components/ReportTabs";
 import { Head, router, usePage } from "@inertiajs/react";
 import { useState, useMemo } from "react";
 import Button from "@/Components/ui/Button";
@@ -116,16 +118,22 @@ export default function Index({
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center justify-between gap-3 w-full">
-                    <h2 className="text-lg font-bold text-foreground">
-                        Laporan
-                    </h2>
-                </div>
-            }
-        >
-            <Head title="Laporan" />
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Laporan Penjualan"
+                breadcrumbs={["Admin", "Laporan", "Penjualan"]}
+                heading={
+                    <>
+                        Laporan{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Penjualan
+                        </span>
+                    </>
+                }
+                description="Analisis performa penjualan, tren pendapatan, dan ringkasan transaksi."
+            />
+
+            <ReportTabs />
 
             <div className="space-y-5">
                 {/* ── Filters ──────────────────────────────── */}

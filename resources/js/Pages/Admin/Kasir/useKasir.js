@@ -84,6 +84,8 @@ export default function useKasir({
     posMode,
     employees = [],
     storeFeatureSettings = {},
+    pendingSale = null,
+    pendingPgTransaction = null,
 }) {
     /* â”€â”€ mode detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     const activeMode = normalizePosMode(posMode || storeType);
@@ -243,9 +245,51 @@ export default function useKasir({
     // Retail-only: modal adaptif tunggal (variant â†’ unit â†’ qty â†’ notes)
     // menggantikan VariantModal + UnitModal untuk mode retail.
     const [retailProductTarget, setRetailProductTarget] = useState(null);
-    const [showPayment, setShowPayment] = useState(false);
+    const [showPayment, setShowPayment] = useState(!!pendingSale);
+    const [resumeSaleId, setResumeSaleId] = useState(pendingSale?.sale_id || null);
+    const [resumeSaleNo, setResumeSaleNo] = useState(pendingSale?.sale_no || null);
+
+    const initialPgTransaction = useMemo(() => {
+        if (!pendingPgTransaction) return null;
+        return {
+            pgTrxId: pendingPgTransaction.pg_trx_id,
+            amount: pendingPgTransaction.amount,
+            saleId: pendingSale?.sale_id || null,
+            saleNo: pendingSale?.sale_no || null,
+            change: 0,
+            grandTotal: pendingSale?.grand_total || pendingPgTransaction.amount,
+            paymentType: pendingPgTransaction.payment_type,
+            qrCode: pendingPgTransaction.qr_code,
+            qrImageUrl: pendingPgTransaction.qr_image_url,
+            vaNumber: pendingPgTransaction.va_number,
+            vaBank: pendingPgTransaction.va_bank,
+            paymentUrl: pendingPgTransaction.payment_url,
+            initialStatus: pendingPgTransaction.status ?? 'pending',
+            canRetry: !!pendingPgTransaction.can_retry,
+        };
+    }, [pendingPgTransaction, pendingSale]);
+
+    // Restore cart from pending sale items on mount
+    useEffect(() => {
+        if (pendingSale?.items?.length) {
+            const restoredCart = pendingSale.items.map((item, i) => ({
+                cartId: i + 1,
+                key: `${item.productId}-${item.variantId || 0}-0-[]`,
+                productId: item.productId,
+                variantId: item.variantId || null,
+                name: item.name,
+                price: item.price,
+                qty: item.quantity,
+                modifiers: [],
+                note: '',
+            }));
+            setCart(restoredCart);
+            cartIdSeqRef.current = restoredCart.length;
+        }
+    }, [pendingSale]);
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState(null);
+    const [successData, setSuccessData] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
     const [historyPrintLoading, setHistoryPrintLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -1308,9 +1352,7 @@ export default function useKasir({
                 orderType,
             } : null,
         });
-        playPaymentSuccess();
-        setShowReceipt(true);
-        clearCart();
+        // Update history
         setHistoryList(prev => [{
             id: pgTransaction.saleId,
             sale_no: pgTransaction.saleNo,
@@ -1599,36 +1641,94 @@ export default function useKasir({
                     },
                 };
             }
+            const buildReceiptData = (saleInfo) => {
+                const customer = customers.find(c => String(c.id) === String(selectedCustomer));
+                const table = tables.find(t => String(t.id) === String(selectedTable));
+                const employee = employees?.find(e => String(e.id) === String(selectedEmployee));
+                const methodMap = Object.fromEntries(paymentMethods.map(m => [m.id, m.name]));
+
+                const rawPayments = saleInfo.payments || payments || [];
+                const formattedPayments = rawPayments.length > 0
+                    ? rawPayments.map(p => ({
+                        methodName: methodMap[p.method_id] || p.methodName || '?',
+                        amount: Number(p.amount),
+                    }))
+                    : [{
+                        methodName: saleInfo.paymentMethodLabel || 'Pembayaran',
+                        amount: Number(saleInfo.grand_total ?? grandTotal),
+                    }];
+
+                return {
+                    saleNo: saleInfo.sale_no || saleNo || '-',
+                    items: cart.map(c => ({
+                        name: c.name,
+                        variantName: c.variantName,
+                        qty: c.qty,
+                        price: c.price,
+                        subtotal: c.price * c.qty,
+                        promoDiscount: c.promoDiscount ?? 0,
+                        promoName: c.promoName ?? null,
+                        modifiers: c.modifiers,
+                    })),
+                    subtotal,
+                    discount: Number(discount || 0),
+                    tax: Number(tax || 0),
+                    totalPromoDisc: totalPromoDisc || 0,
+                    cartPromoDiscount: cartPromoDiscount || 0,
+                    cartPromoName: cartPromoName || null,
+                    grandTotal: saleInfo.grand_total ?? grandTotal,
+                    change: saleInfo.change ?? 0,
+                    payments: formattedPayments,
+                    customerName: customer?.name ?? null,
+                    customerPhone: customer?.phone ?? null,
+                    tableName: table?.table_number ?? null,
+                    orderType,
+                    rentalInfo: isRental && rentalDuration > 0 ? {
+                        duration: rentalDuration,
+                        unit: rentalUnit === "per_hour" ? "jam" : rentalUnit === "per_day" ? "hari" : "minggu",
+                        returnDate: (() => {
+                            const now = new Date();
+                            const ms = rentalUnit === "per_hour" ? rentalDuration * 3600000 : rentalUnit === "per_day" ? rentalDuration * 86400000 : rentalDuration * 604800000;
+                            return new Date(now.getTime() + ms).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+                        })(),
+                    } : null,
+                    hospitalityInfo: isHospitality ? {
+                        roomNumber: roomNumber || null,
+                        guestCount: Number(guestCount) || 1,
+                        duration: rentalDuration || 1,
+                        unitLabel: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_week' ? 'minggu' : 'malam',
+                        checkoutDate: (() => {
+                            const now = new Date();
+                            const ms = rentalUnit === 'per_hour' ? (rentalDuration || 1) * 3600000 : rentalUnit === 'per_week' ? (rentalDuration || 1) * 604800000 : (rentalDuration || 1) * 86400000;
+                            return new Date(now.getTime() + ms).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+                        })(),
+                    } : null,
+                    parkingInfo: isParking ? {
+                        plateNumber: ticketEvent || '-',
+                        vehicleLabel: ticketSlot === 'motorcycle' ? 'Motor' : ticketSlot === 'car' ? 'Mobil' : ticketSlot === 'truck' ? 'Truk' : 'Motor',
+                        ticketNo: roomNumber || null,
+                        entryTime: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                    } : null,
+                    sessionInfo: isSession ? {
+                        unitName: roomNumber || null,
+                        guestCount: guestCount || 1,
+                        startTime: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+                    } : null,
+                    deliveryAddress: orderType === "delivery" ? deliveryAddress : null,
+                    employeeName: employee?.name ?? null,
+                };
+            };
+
+            // Return data only — UI state (setSuccessData, clearCart, dll)
+            // di-handle oleh PaymentView.jsx, bukan di sini.
+            const builtReceipt = buildReceiptData({ ...data, payments });
             const customer = customers.find(c => String(c.id) === String(selectedCustomer));
-            const table = tables.find(t => String(t.id) === String(selectedTable));
-            const methodMap = Object.fromEntries(paymentMethods.map(m => [m.id, m.name]));
-            setReceiptData({
-                saleNo: data.sale_no,
-                items: cart.map(c => ({
-                    name: c.name, variantName: c.variantName, qty: c.qty, price: c.price,
-                    subtotal: c.price * c.qty, promoDiscount: c.promoDiscount ?? 0,
-                    promoName: c.promoName ?? null, modifiers: c.modifiers,
-                })),
-                subtotal, discount: Number(discount), tax: Number(tax),
-                totalPromoDisc, cartPromoDiscount, cartPromoName,
-                grandTotal: data.grand_total, change: data.change,
-                payments: payments.map(p => ({
-                    methodName: methodMap[p.method_id] || '?', amount: Number(p.amount),
-                })),
-                customerName: customer?.name ?? null,
-                tableName: table?.table_number ?? null,
-                orderType,
-            });
-            playPaymentSuccess();
-            setShowPayment(false);
-            setShowReceipt(true);
             setHistoryList(prev => [{
                 id: saleId, sale_no: data.sale_no, grand_total: data.grand_total,
                 status: 'completed', sale_date: new Date().toISOString(),
                 customer: customer ?? null, payment_status: 'paid', order_type: orderType,
             }, ...prev.slice(0, 19)]);
-            clearCart();
-            return data;
+            return { ...data, receipt: builtReceipt };
         } catch (e) {
             alert('Gagal memproses pembayaran: ' + (e.response?.data?.message || e.message));
             return { success: false };
@@ -1645,10 +1745,87 @@ export default function useKasir({
         }
     };
 
-    const handleStartPg = async (saleId, provider, paymentType) => {
+    const buildWhatsAppMessage = (receipt, sName = storeName) => {
+        if (!receipt) return '';
+        const lines = [
+            `*${sName}*`,
+            `No. Struk: ${receipt.saleNo || '-'}`,
+            `Tanggal: ${new Date().toLocaleDateString('id-ID')} ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`,
+        ];
+
+        if (receipt.customerName) lines.push(`Pelanggan: ${receipt.customerName}`);
+        if (receipt.tableName) lines.push(`Meja: ${receipt.tableName}`);
+        lines.push('--------------------------------');
+
+        (receipt.items || []).forEach(it => {
+            const variantStr = it.variantName ? ` (${it.variantName})` : '';
+            lines.push(`${it.name}${variantStr}`);
+            lines.push(`  ${it.qty}x @ Rp${Number(it.price).toLocaleString('id-ID')} = Rp${Number(it.subtotal).toLocaleString('id-ID')}`);
+        });
+
+        lines.push('--------------------------------');
+        lines.push(`Subtotal: Rp${Number(receipt.subtotal || 0).toLocaleString('id-ID')}`);
+        if (receipt.discount > 0) lines.push(`Diskon: -Rp${Number(receipt.discount).toLocaleString('id-ID')}`);
+        if (receipt.tax > 0) lines.push(`Pajak: +Rp${Number(receipt.tax).toLocaleString('id-ID')}`);
+        lines.push(`*TOTAL: Rp${Number(receipt.grandTotal || 0).toLocaleString('id-ID')}*`);
+
+        if (receipt.payments && receipt.payments.length > 0) {
+            receipt.payments.forEach(p => {
+                lines.push(`Bayar (${p.methodName}): Rp${Number(p.amount).toLocaleString('id-ID')}`);
+            });
+        }
+        if (receipt.change > 0) {
+            lines.push(`Kembalian: Rp${Number(receipt.change).toLocaleString('id-ID')}`);
+        }
+
+        lines.push('--------------------------------');
+        lines.push('Terima kasih telah berbelanja!');
+        return lines.join('\n');
+    };
+
+    const sendWhatsApp = (receipt, sName = storeName) => {
+        const msg = buildWhatsAppMessage(receipt, sName);
+        const customerObj = customers.find(c => String(c.id) === String(selectedCustomer));
+        const rawPhone = receipt?.customerPhone || customerObj?.phone;
+        const cleanPhone = rawPhone ? String(rawPhone).replace(/\D/g, '') : '';
+
+        if (cleanPhone) {
+            const formattedPhone = cleanPhone.startsWith('0')
+                ? '62' + cleanPhone.slice(1)
+                : cleanPhone;
+            window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+        } else {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(msg);
+                alert('Nomor WhatsApp pelanggan tidak tersedia. Teks struk telah disalin ke clipboard!');
+            } else {
+                alert('Nomor WhatsApp pelanggan tidak tersedia.');
+            }
+        }
+    };
+
+    const handleNewTransaction = () => {
+        clearCart();
+        setDiscount(0);
+        setTax(0);
+        setNotes('');
+        setSelectedCustomer(null);
+        setSelectedTable(null);
+        setDeliveryAddress('');
+        setSelectedEmployee(null);
+        setShowPayment(false);
+        setShowReceipt(false);
+        setReceiptData(null);
+        setSuccessData(null);
+    };
+
+    const handleStartPg = async (saleId, provider, paymentType, customAmount = null) => {
         try {
             const { data } = await axios.post(route('admin.payment-gateway.create-transaction'), {
-                sale_id: saleId, provider, payment_type: paymentType,
+                sale_id: saleId,
+                provider,
+                payment_type: paymentType,
+                amount: customAmount || undefined,
             });
             console.log('[PG] create-transaction response:', data);
             return data;
@@ -1814,10 +1991,15 @@ export default function useKasir({
         setRetailProductTarget,
         showPayment,
         setShowPayment,
+        resumeSaleId,
+        resumeSaleNo,
+        initialPgTransaction,
         showReceipt,
         setShowReceipt,
         receiptData,
         setReceiptData,
+        successData,
+        setSuccessData,
         showHistory,
         setShowHistory,
         historyPrintLoading,
@@ -1859,6 +2041,37 @@ export default function useKasir({
         roundingCustomValue,
         setRoundingCustomValue,
         missingRequiredField,
+        rentalInfo: isRental && rentalDuration > 0 ? {
+            duration: rentalDuration,
+            unit: rentalUnit === "per_hour" ? "jam" : rentalUnit === "per_day" ? "hari" : "minggu",
+            returnDate: (() => {
+                const now = new Date();
+                const ms = rentalUnit === "per_hour" ? rentalDuration * 3600000 : rentalUnit === "per_day" ? rentalDuration * 86400000 : rentalDuration * 604800000;
+                return new Date(now.getTime() + ms).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+            })(),
+        } : null,
+        hospitalityInfo: isHospitality ? {
+            roomNumber: roomNumber || null,
+            guestCount: Number(guestCount) || 1,
+            duration: rentalDuration || 1,
+            unitLabel: rentalUnit === 'per_hour' ? 'jam' : rentalUnit === 'per_week' ? 'minggu' : 'malam',
+            checkoutDate: (() => {
+                const now = new Date();
+                const ms = rentalUnit === 'per_hour' ? (rentalDuration || 1) * 3600000 : rentalUnit === 'per_week' ? (rentalDuration || 1) * 604800000 : (rentalDuration || 1) * 86400000;
+                return new Date(now.getTime() + ms).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+            })(),
+        } : null,
+        parkingInfo: isParking ? {
+            plateNumber: ticketEvent || '-',
+            vehicleLabel: ticketSlot === 'motorcycle' ? 'Motor' : ticketSlot === 'car' ? 'Mobil' : ticketSlot === 'truck' ? 'Truk' : 'Motor',
+            ticketNo: roomNumber || null,
+            entryTime: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+        } : null,
+        sessionInfo: isSession ? {
+            unitName: roomNumber || null,
+            guestCount: guestCount || 1,
+            startTime: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }),
+        } : null,
 
         /* handlers */
         addToCart,
@@ -1887,6 +2100,9 @@ export default function useKasir({
         handleCancelPendingSale,
         handleStartPg,
         handleRetryPg,
+        buildWhatsAppMessage,
+        sendWhatsApp,
+        handleNewTransaction,
         product_sell_price,
         findBestPromoForItem,
         findBestCartPromo,

@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
+import ReportTabs from "@/Components/ReportTabs";
 import { Head, Link, usePage } from '@inertiajs/react';
 import DateRangeFilter from './components/DateRangeFilter';
 import SummaryCards from './components/SummaryCards';
@@ -10,13 +12,27 @@ export default function Purchases({ from, to, summary, dailyTrend = [], bySuppli
     const { flash } = usePage().props;
 
     return (
-        <AuthenticatedLayout header={<h2 className="text-lg font-semibold text-foreground">Laporan Pembelian</h2>}>
-            <Head title="Laporan Pembelian" />
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Laporan Pembelian"
+                breadcrumbs={["Admin", "Laporan", "Pembelian"]}
+                heading={
+                    <>
+                        Laporan{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Pembelian
+                        </span>
+                    </>
+                }
+                description="Analisis performa pembelian, pengeluaran ke supplier, dan ringkasan transaksi."
+            />
+
+            <ReportTabs />
+
             {flash?.success && <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>}
 
             <div className="mb-5 flex items-center justify-between">
                 <DateRangeFilter from={from} to={to} routeName="admin.reports.purchases" />
-                <Link href={route('admin.reports.index')} className="text-sm font-medium text-primary-600 hover:underline">← Ringkasan</Link>
             </div>
 
             <SummaryCards items={[

@@ -1,4 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
+import EmployeeTabs from "@/Components/EmployeeTabs";
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -245,11 +247,23 @@ export default function Index({ roles, permissions }) {
     };
 
     return (
-        <AuthenticatedLayout header={
-            <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-foreground">Role & Permission</span>
-            </div>
-        }>
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Role & Permission"
+                breadcrumbs={["Admin", "Role & Permission"]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Role & Hak Akses
+                        </span>
+                    </>
+                }
+                description="Atur peran dan batasan hak akses tiap pengguna di tokomu."
+            />
+
+            <EmployeeTabs />
+
             <Head title="Role & Permission" />
 
             {flash?.success && (

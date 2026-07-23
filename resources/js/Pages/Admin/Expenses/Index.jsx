@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import { Plus, Search, Eye, Trash2, Settings } from "lucide-react";
@@ -80,12 +81,20 @@ export default function Index({ expenses }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">
-                        Pengeluaran
-                    </h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Pengeluaran"
+                breadcrumbs={["Admin", "Pengeluaran"]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Pengeluaran
+                        </span>
+                    </>
+                }
+                description="Catat dan pantau pengeluaran toko seperti operasional, gaji, dan lainnya."
+                action={
                     <div className="flex items-center gap-2">
                         <Link
                             href={route("admin.expense-categories.index")}
@@ -101,10 +110,8 @@ export default function Index({ expenses }) {
                             <span className="sm:hidden">Tambah</span>
                         </Button>
                     </div>
-                </div>
-            }
-        >
-            <Head title="Pengeluaran" />
+                }
+            />
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">

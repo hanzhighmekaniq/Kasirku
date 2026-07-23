@@ -1,4 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
+import EmployeeTabs from "@/Components/EmployeeTabs";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
@@ -148,19 +150,31 @@ export default function Index({ employees, storeType = "retail" }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="leading-tight">
-                    <div className="text-sm font-semibold text-foreground">
-                        Manajemen {pageLabel}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                        Daftar
-                    </div>
-                </div>
-            }
-        >
-            <Head title={pageLabel} />
+        <AuthenticatedLayout>
+            <PageHeader
+                title={pageLabel}
+                breadcrumbs={["Admin", "Karyawan"]}
+                heading={
+                    <>
+                        Kelola{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {pageLabel.toLowerCase()}
+                        </span>{" "}
+                        tokomu
+                    </>
+                }
+                description="Cari, filter, dan atur data staf, cabang, jabatan, akun login, serta status dari satu tempat. Pantau ringkasan aktif & akun di bawah."
+                action={
+                    <Button as={Link} href={route("admin.employees.create")} icon={Plus}>
+                        <span className="hidden sm:inline">
+                            {ADD_LABEL[storeType] ?? "Tambah Karyawan"}
+                        </span>
+                        <span className="sm:hidden">Tambah</span>
+                    </Button>
+                }
+            />
+
+            <EmployeeTabs />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
@@ -172,42 +186,6 @@ export default function Index({ employees, storeType = "retail" }) {
                     {flash.error}
                 </div>
             )}
-
-            {/* Hero */}
-            <section className="mb-6">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div>
-                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                Tim
-                            </span>
-                            <span className="text-muted-foreground">·</span>
-                            <span>{pageLabel}</span>
-                            {currentBranch && (
-                                <>
-                                    <span className="text-muted-foreground">
-                                        ·
-                                    </span>
-                                    <span>{currentBranch.name}</span>
-                                </>
-                            )}
-                        </div>
-                        <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
-                            Kelola{" "}
-                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                                {pageLabel.toLowerCase()}
-                            </span>{" "}
-                            tokomu
-                        </h1>
-                        <p className="mt-2 max-w-xl text-xs text-muted-foreground">
-                            Cari, filter, dan atur data staf, cabang, jabatan,
-                            akun login, serta status dari satu tempat. Pantau
-                            ringkasan aktif & akun di bawah.
-                        </p>
-                    </div>
-                </div>
-            </section>
 
             {/* Stats */}
             <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

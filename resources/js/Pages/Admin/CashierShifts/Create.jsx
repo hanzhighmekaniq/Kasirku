@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm } from "@inertiajs/react";
 
 export default function Create({ branchName, suggestedShiftNo, storeType = "retail" }) {
@@ -25,41 +26,21 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route("admin.cashier-shifts.index")}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-                    >
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-                            />
-                        </svg>
-                    </Link>
-                    <div>
-                        <h2 className="text-base font-semibold text-foreground">
-                            Buka {pageLabel}
-                        </h2>
-                        {branchName && (
-                            <p className="text-xs text-muted-foreground">
-                                {branchName}
-                            </p>
-                        )}
-                    </div>
-                </div>
-            }
-        >
-            <Head title={`Buka ${pageLabel}`} />
+        <AuthenticatedLayout>
+            <PageHeader
+                title={`Buka ${pageLabel}`}
+                breadcrumbs={["Admin", "Shift", "Buka"]}
+                heading={
+                    <>
+                        Buka{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {pageLabel}
+                        </span>
+                    </>
+                }
+                description={branchName || "Masukkan kas awal untuk membuka shift."}
+                backUrl={route("admin.cashier-shifts.index")}
+            />
 
             <div className="mx-auto max-w-lg">
                 <form

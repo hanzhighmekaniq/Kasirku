@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, useForm, usePage } from "@inertiajs/react";
 import EmployeeForm from "./EmployeeForm";
 
@@ -45,54 +46,22 @@ export default function Create({
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="leading-tight">
-                    <div className="text-sm font-semibold text-foreground">
-                        Manajemen {pageLabel}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                        Tambah
-                    </div>
-                </div>
-            }
-        >
-            <Head title={`Tambah ${pageLabel}`} />
-
-            {/* Hero */}
-            <section className="mb-6">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div>
-                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                {pageLabel} baru
-                            </span>
-                            <span className="text-muted-foreground">·</span>
-                            <span>Tim</span>
-                            {currentBranch && (
-                                <>
-                                    <span className="text-muted-foreground">
-                                        ·
-                                    </span>
-                                    <span>{currentBranch.name}</span>
-                                </>
-                            )}
-                        </div>
-                        <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
-                            Tambah{" "}
-                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                                {pageLabel.toLowerCase()} baru
-                            </span>{" "}
-                            ke tim
-                        </h1>
-                        <p className="mt-2 max-w-xl text-xs text-muted-foreground">
-                            Lengkapi identitas, cabang, jabatan, dan opsi akun
-                            login. Data ini dipakai di POS, shift, dan laporan.
-                        </p>
-                    </div>
-                </div>
-            </section>
+        <AuthenticatedLayout>
+            <PageHeader
+                title={`Tambah ${pageLabel}`}
+                breadcrumbs={["Admin", "Karyawan", "Tambah"]}
+                heading={
+                    <>
+                        Tambah{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {pageLabel.toLowerCase()} baru
+                        </span>{" "}
+                        ke tim
+                    </>
+                }
+                description="Lengkapi identitas, cabang, jabatan, dan opsi akun login. Data ini dipakai di POS, shift, dan laporan."
+                backUrl={route("admin.employees.index")}
+            />
 
             <div className="mx-auto max-w-3xl pb-10">
                 <EmployeeForm

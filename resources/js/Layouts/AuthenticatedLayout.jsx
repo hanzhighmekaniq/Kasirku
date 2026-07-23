@@ -161,7 +161,9 @@ function Badge({ label, color = "indigo" }) {
 
 /* ─── Nav item ───────────────────────────────────────────────── */
 function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
-    const active = route().current(item.current);
+    const active = Array.isArray(item.current) 
+        ? item.current.some(c => route().current(c)) 
+        : route().current(item.current);
     const locked = item.locked;
 
     // ── Reorder mode: unlocked items jadi draggable ──
@@ -281,7 +283,9 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
 
 /* ─── Nav group ──────────────────────────────────────────────── */
 function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
-    const hasActive = group.items.some((i) => route().current(i.current));
+    const hasActive = group.items.some((i) => 
+        Array.isArray(i.current) ? i.current.some(c => route().current(c)) : route().current(i.current)
+    );
     const [open, setOpen] = useState(() => {
         if (hasActive) return true;
         try {

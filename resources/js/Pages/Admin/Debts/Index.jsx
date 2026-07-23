@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import Button from "@/Components/ui/Button";
@@ -37,12 +38,21 @@ export default function Index({ customers }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-lg font-semibold text-foreground">Hutang / Kasbon</h2>
-            }
-        >
-            <Head title="Hutang / Kasbon" />
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Hutang / Kasbon"
+                breadcrumbs={["Admin", "Kasbon"]}
+                heading={
+                    <>
+                        Kelola{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Hutang
+                        </span>{" "}
+                        Pelanggan
+                    </>
+                }
+                description="Pantau dan catat pembayaran hutang / kasbon pelanggan."
+            />
 
             {flash?.success && (
                 <div className="mb-5 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success">{flash.success}</div>

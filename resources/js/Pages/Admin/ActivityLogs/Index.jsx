@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, router } from "@inertiajs/react";
 import { useState, useRef, useEffect } from "react";
 import { Activity, Calendar, ChevronDown, Check, Filter, RotateCcw, Search } from "lucide-react";
@@ -174,34 +175,19 @@ export default function Index({
     }));
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                            <Activity className="h-5 w-5" strokeWidth={1.8} />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-foreground">Log Aktivitas</h2>
-                            <div className="flex items-center gap-2">
-                                <p className="text-xs text-muted-foreground">
-                                    {logs.total} entri
-                                </p>
-                                {currentBranch && (
-                                    <>
-                                        <span className="text-muted-foreground">•</span>
-                                        <p className="text-xs text-muted-foreground">
-                                            {currentBranch.name}
-                                        </p>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-        >
-            <Head title="Log Aktivitas" />
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Log Aktivitas"
+                breadcrumbs={["Admin", "Log Aktivitas"]}
+                heading={
+                    <>
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Log Aktivitas
+                        </span>
+                    </>
+                }
+                description={`${logs.total} entri ${currentBranch ? `• ${currentBranch.name}` : ""}`}
+            />
 
             <div className="space-y-5">
                 {/* ── Filters ── */}

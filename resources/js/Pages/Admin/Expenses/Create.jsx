@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, Plus, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -118,21 +119,21 @@ export default function Create({ categories: initialCategories }) {
         : '';
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('admin.expenses.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
-                    </Link>
-                    <h2 className="text-lg font-semibold text-foreground">Catat Pengeluaran</h2>
-                </div>
-            }
-        >
-            <Head title="Catat Pengeluaran" />
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Catat Pengeluaran"
+                breadcrumbs={["Admin", "Pengeluaran", "Catat"]}
+                heading={
+                    <>
+                        Catat{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Pengeluaran
+                        </span>
+                    </>
+                }
+                description="Isi informasi pengeluaran yang akan dicatat."
+                backUrl={route("admin.expenses.index")}
+            />
 
             <div className="mx-auto max-w-2xl">
                 <SectionCard title="Detail Pengeluaran" subtitle="Isi informasi pengeluaran yang akan dicatat.">

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
@@ -40,12 +41,21 @@ export default function Index({ branches }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">
-                        Outlet / Cabang
-                    </h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Outlet / Cabang"
+                breadcrumbs={["Admin", "Cabang"]}
+                heading={
+                    <>
+                        Kelola{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            cabang
+                        </span>{" "}
+                        toko
+                    </>
+                }
+                description="Atur outlet dan cabang toko untuk manajemen terpusat."
+                action={
                     <Button
                         as={Link}
                         href={route("admin.branches.create")}
@@ -54,10 +64,8 @@ export default function Index({ branches }) {
                         <span className="hidden sm:inline">Tambah Cabang</span>
                         <span className="sm:hidden">Tambah</span>
                     </Button>
-                </div>
-            }
-        >
-            <Head title="Outlet / Cabang" />
+                }
+            />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">

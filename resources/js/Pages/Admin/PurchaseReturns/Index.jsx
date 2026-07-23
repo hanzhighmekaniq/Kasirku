@@ -1,7 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
+import PageTabs from "@/Components/PageTabs";
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { ChevronDown, Eye, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, Eye, Plus, Trash2, ShoppingBag, Undo2 } from 'lucide-react';
 import Button from "@/Components/ui/Button";
 import Dropdown from '@/Components/Dropdown';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
@@ -74,10 +76,20 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
     }, [purchaseReturns]);
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">{pageTitle}</h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title={pageTitle}
+                breadcrumbs={["Admin", pageTitle]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {pageTitle}
+                        </span>
+                    </>
+                }
+                description="Catat dan pantau retur pembelian stok atau bahan baku ke supplier."
+                action={
                     <Button
                         as={Link}
                         href={route('admin.purchase-returns.create')}
@@ -86,10 +98,25 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                         <span className="hidden sm:inline">Buat Retur</span>
                         <span className="sm:hidden">Retur</span>
                     </Button>
-                </div>
-            }
-        >
-            <Head title={pageTitle} />
+                }
+            />
+
+            <PageTabs
+                tabs={[
+                    {
+                        name: "Riwayat Pembelian",
+                        href: route("admin.purchases.index"),
+                        active: route().current("admin.purchases.index"),
+                        icon: <ShoppingBag className="h-4 w-4" />,
+                    },
+                    {
+                        name: "Retur Pembelian",
+                        href: route("admin.purchase-returns.index"),
+                        active: route().current("admin.purchase-returns.index"),
+                        icon: <Undo2 className="h-4 w-4" />,
+                    }
+                ]}
+            />
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">

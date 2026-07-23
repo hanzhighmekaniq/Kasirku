@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
 
@@ -80,51 +81,34 @@ export default function Show({ saleReturn }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route("admin.sale-returns.index")}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.8}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-                            />
-                        </svg>
-                    </Link>
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">
-                            {saleReturn.return_no}
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                            Detail Retur Penjualan
-                        </p>
-                    </div>
-                    <div className="ml-auto flex items-center gap-2">
+        <AuthenticatedLayout>
+            <PageHeader
+                title={`Retur ${saleReturn.return_no}`}
+                breadcrumbs={["Admin", "Retur Penjualan", saleReturn.return_no]}
+                heading={
+                    <>
+                        Detail{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Retur Penjualan
+                        </span>
+                    </>
+                }
+                description="Lihat rincian retur penjualan."
+                backUrl={route("admin.sale-returns.index")}
+                action={
+                    <div className="flex items-center gap-2">
                         {saleReturn.status === "completed" && (
                             <button
                                 onClick={() => setConfirmingCancel(true)}
-                                className="rounded-lg border border-amber-200 bg-card px-3 py-1 text-xs font-medium text-amber-600 transition hover:bg-amber-50"
+                                className="rounded-lg border border-amber-200 bg-card px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-50"
                             >
                                 Batalkan Retur
                             </button>
                         )}
                         <StatusBadge status={saleReturn.status} />
                     </div>
-                </div>
-            }
-        >
-            <Head title={`Retur ${saleReturn.return_no}`} />
+                }
+            />
 
             <div className="space-y-5">
                 {/* Info Card */}

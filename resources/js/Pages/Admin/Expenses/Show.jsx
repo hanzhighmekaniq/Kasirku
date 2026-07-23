@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeft, Check, X, AlertTriangle } from 'lucide-react';
@@ -51,21 +52,21 @@ export default function Show({ expense }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('admin.expenses.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
-                    </Link>
-                    <h2 className="text-lg font-semibold text-foreground">Detail Pengeluaran</h2>
-                </div>
-            }
-        >
-            <Head title={`Pengeluaran - ${expense.expense_no}`} />
+        <AuthenticatedLayout>
+            <PageHeader
+                title={`Pengeluaran - ${expense.expense_no}`}
+                breadcrumbs={["Admin", "Pengeluaran", expense.expense_no]}
+                heading={
+                    <>
+                        Detail{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Pengeluaran
+                        </span>
+                    </>
+                }
+                description="Lihat rincian dan ubah status pengeluaran."
+                backUrl={route("admin.expenses.index")}
+            />
 
             <div className="mx-auto max-w-3xl space-y-6">
                 {/* Header Card */}

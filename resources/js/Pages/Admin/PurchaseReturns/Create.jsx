@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import Button from "@/Components/ui/Button";
@@ -257,23 +258,21 @@ export default function Create({ purchases, storeType = 'retail' }) {
         }`;
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('admin.purchase-returns.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                        </svg>
-                    </Link>
-                    <h2 className="text-lg font-semibold text-foreground">Buat {pageTitle}</h2>
-                </div>
-            }
-        >
-            <Head title={`Buat ${pageTitle}`} />
+        <AuthenticatedLayout>
+            <PageHeader
+                title={`Buat ${pageTitle}`}
+                breadcrumbs={["Admin", pageTitle, "Buat"]}
+                heading={
+                    <>
+                        Buat{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {pageTitle}
+                        </span>
+                    </>
+                }
+                description="Pilih pembelian asal dan isi data retur."
+                backUrl={route("admin.purchase-returns.index")}
+            />
 
             <form onSubmit={submit} className="mx-auto max-w-3xl space-y-6">
                 {/* Header Info */}

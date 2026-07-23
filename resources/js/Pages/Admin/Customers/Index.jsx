@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
@@ -46,22 +47,28 @@ export default function Index({ customers, storeType = "retail" }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">
-                        Pelanggan
-                    </h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Pelanggan"
+                breadcrumbs={["Admin", "Pelanggan"]}
+                heading={
+                    <>
+                        Kelola Data{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Pelanggan
+                        </span>
+                    </>
+                }
+                description="Manajemen data pelanggan, riwayat transaksi, dan poin loyalitas."
+                action={
                     <Button as={Link} href={route("admin.customers.create")} icon={Plus}>
                         <span className="hidden sm:inline">
                             Tambah Pelanggan
                         </span>
                         <span className="sm:hidden">Tambah</span>
                     </Button>
-                </div>
-            }
-        >
-            <Head title="Pelanggan" />
+                }
+            />
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}

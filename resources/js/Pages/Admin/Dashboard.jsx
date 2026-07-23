@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import {
     AreaChart,
@@ -499,21 +500,20 @@ export default function Dashboard({
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-bold text-[rgb(var(--color-text-primary))]">
-                        {isKasir ? "Dashboard Kasir" : "Dashboard"}
-                    </h2>
-                    {currentStore && (
-                        <span className="hidden max-w-xs truncate rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface-secondary))] px-3 py-1.5 text-xs font-medium text-[rgb(var(--color-text-secondary))] sm:inline">
+        <AuthenticatedLayout>
+            <PageHeader
+                title={isKasir ? "Dashboard Kasir" : "Dashboard"}
+                breadcrumbs={isKasir ? ["Kasir", "Dashboard"] : ["Admin", "Dashboard"]}
+                heading={
+                    <>
+                        {isKasir ? "Dashboard " : "Dashboard "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
                             {storeLabel}
                         </span>
-                    )}
-                </div>
-            }
-        >
-            <Head title="Dashboard" />
+                    </>
+                }
+                description="Ringkasan aktivitas, penjualan, dan metrik penting hari ini."
+            />
 
             <div className="space-y-5">
                 {/* Shift banner (kasir) */}

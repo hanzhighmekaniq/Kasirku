@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import BarcodeScanner from "@/Components/BarcodeScanner";
@@ -207,39 +208,24 @@ export default function Edit({
                 </div>
             }
         >
-            <Head title={`Edit: ${product.name}`} />
-
-            {/* Hero */}
-            <section className="mb-6">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div>
-                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                Edit {pageTitle.toLowerCase()}
-                            </span>
-                            <span className="text-muted-foreground">·</span>
-                            <span>{productTypes[data.type] ?? data.type}</span>
-                            {product.sku && (
-                                <>
-                                    <span className="text-muted-foreground">·</span>
-                                    <span className="font-mono">SKU: {product.sku}</span>
-                                </>
-                            )}
-                        </div>
-                        <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
-                            Perbarui{" "}
-                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                                {product.name}
-                            </span>
-                        </h1>
-                        <p className="mt-2 max-w-xl text-xs text-muted-foreground">
-                            Ubah identitas, harga, kemasan, stok, dan pengaturan. Ringkasan di kanan
-                            mengikuti perubahan yang kamu buat.
-                        </p>
-                    </div>
-                </div>
-            </section>
+            <PageHeader
+                title={`Edit: ${product.name}`}
+                breadcrumbs={[
+                    `Edit ${pageTitle.toLowerCase()}`,
+                    productTypes[data.type] ?? data.type,
+                    ...(product.sku ? [`SKU: ${product.sku}`] : [])
+                ]}
+                heading={
+                    <>
+                        Perbarui{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {product.name}
+                        </span>
+                    </>
+                }
+                description="Ubah identitas, harga, kemasan, stok, dan pengaturan. Ringkasan di kanan mengikuti perubahan yang kamu buat."
+                backUrl={route("admin.products.index")}
+            />
 
             <form id="productForm" onSubmit={submit}>
                 <div className="grid grid-cols-1 gap-6 pb-16 lg:grid-cols-12">

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, useForm } from "@inertiajs/react";
 import CategoryForm from "./CategoryForm";
 
@@ -26,7 +27,20 @@ export default function Edit({ category, parentCategories = [] }) {
                 </div>
             }
         >
-            <Head title="Edit Kategori" />
+            <PageHeader
+                title="Katalog Kategori - Edit"
+                breadcrumbs={["Katalog", "Kategori", "Edit"]}
+                heading={
+                    <>
+                        Edit{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            kategori
+                        </span>
+                    </>
+                }
+                description={`Perbarui detail kategori "${category.name}".`}
+                backUrl={route("admin.categories.index")}
+            />
 
             <div className="mx-auto max-w-2xl">
                 <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">

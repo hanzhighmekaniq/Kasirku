@@ -72,6 +72,7 @@ class PaymentGatewayController extends Controller
             'sale_id' => 'required|exists:sales,id',
             'provider' => 'required|string',
             'payment_type' => 'required|string',
+            'amount' => 'nullable|numeric|min:1',
         ]);
 
         $sale = Sale::with('items.product', 'customer')->findOrFail($validated['sale_id']);
@@ -113,6 +114,8 @@ class PaymentGatewayController extends Controller
             return $this->attemptCharge($failedTrx, $sale);
         }
 
+        $chargeAmount = ! empty($validated['amount']) ? (float) $validated['amount'] : (float) $sale->grand_total;
+
         $pgTrx = PaymentGatewayTransaction::create([
             'sale_id' => $sale->id,
             'provider' => $validated['provider'],
@@ -121,7 +124,7 @@ class PaymentGatewayController extends Controller
             'attempt_no' => 1,
             'payment_type' => $validated['payment_type'],
             'status' => 'initiating',
-            'amount' => $sale->grand_total,
+            'amount' => $chargeAmount,
         ]);
 
         return $this->attemptCharge($pgTrx, $sale);

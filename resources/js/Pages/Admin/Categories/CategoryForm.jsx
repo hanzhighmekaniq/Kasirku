@@ -2,7 +2,7 @@ import { Link } from "@inertiajs/react";
 import TreePicker from "@/Components/TreePicker";
 
 const inp = (err) =>
-    `mt-1.5 block w-full rounded-xl border text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
+    `mt-1.5 block w-full rounded-xl border bg-background text-foreground text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
         err
             ? "border-red-300 focus:border-red-400 focus:ring-red-100"
             : "border-border focus:border-ring focus:ring-ring/20"
@@ -92,7 +92,7 @@ export default function CategoryForm({
                 <button
                     type="submit"
                     disabled={processing}
-                    className="rounded-xl bg-primary-600 px-6 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+                    className="rounded-xl bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                 >
                     {processing ? "Menyimpan..." : submitLabel}
                 </button>

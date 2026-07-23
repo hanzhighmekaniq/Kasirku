@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import Button from "@/Components/ui/Button";
@@ -140,17 +141,21 @@ export default function Create({ products, customers, paymentMethods, tables, st
     const selectedProductObj = products.find((p) => p.id === Number(selectedProduct));
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center gap-3">
-                    <Link href={route('admin.sales.index')} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label="Kembali">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-                    </Link>
-                    <h2 className="text-lg font-semibold text-foreground">Transaksi Penjualan</h2>
-                </div>
-            }
-        >
-            <Head title="Transaksi Penjualan" />
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Transaksi Penjualan"
+                breadcrumbs={["Admin", "Penjualan", "Transaksi"]}
+                heading={
+                    <>
+                        Buat{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Transaksi
+                        </span>
+                    </>
+                }
+                description="Catat transaksi penjualan baru."
+                backUrl={route("admin.sales.index")}
+            />
 
             {flash?.error && (
                 <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>

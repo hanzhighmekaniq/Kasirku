@@ -1,4 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
+import StockTabs from "@/Components/StockTabs";
+import Button from "@/Components/ui/Button";
+import { Plus } from "lucide-react";
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -43,22 +47,33 @@ export default function Index({ wastes, stats }) {
     }, 0);
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Link href={route('admin.stock.index')} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Kembali">
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-                        </Link>
-                        <h2 className="text-lg font-semibold text-slate-800">Catat Waste</h2>
-                    </div>
-                    <Link href={route('admin.wastes.create')} className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                        Catat Waste
-                    </Link>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Catat Waste"
+                breadcrumbs={["Admin", "Stok", "Waste"]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Waste / Pemborosan
+                        </span>
+                    </>
+                }
+                description="Catat barang rusak, tumpah, atau kedaluwarsa."
+                action={
+                    <Button
+                        as={Link}
+                        href={route('admin.wastes.create')}
+                        icon={Plus}
+                    >
+                        <span className="hidden sm:inline">Catat Waste</span>
+                        <span className="sm:hidden">Tambah</span>
+                    </Button>
+                }
+            />
+
+            <StockTabs />
+
             <Head title="Catat Waste" />
 
             {flash?.success && (

@@ -1,5 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, router } from "@inertiajs/react";
+import PageHeader from "@/Components/PageHeader";
+import { Head, Link, usePage, router } from "@inertiajs/react";
 import { useState } from "react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
@@ -14,10 +15,10 @@ const fmt = (n) =>
 const fmtDate = (d) =>
     d
         ? new Date(d).toLocaleDateString("id-ID", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-          })
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        })
         : "—";
 
 const MOVEMENT_LABEL = {
@@ -441,12 +442,12 @@ export default function Show({
         { id: "variants", label: "Varian", count: product.variants?.length },
         ...(bucketMargins.length > 1
             ? [
-                  {
-                      id: "margins",
-                      label: "Margin per Bucket",
-                      count: bucketMargins.length,
-                  },
-              ]
+                {
+                    id: "margins",
+                    label: "Margin per Bucket",
+                    count: bucketMargins.length,
+                },
+            ]
             : []),
     ];
 
@@ -463,7 +464,24 @@ export default function Show({
                 </div>
             }
         >
-            <Head title={`Detail — ${product.name}`} />
+            <PageHeader
+                title={`Detail — ${product.name}`}
+                breadcrumbs={[
+                    `Detail ${pageTitle.toLowerCase()}`,
+                    productTypes[product.type] ?? product.type,
+                    ...(product.sku ? [`SKU: ${product.sku}`] : [])
+                ]}
+                heading={
+                    <>
+                        Detail{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {product.name}
+                        </span>
+                    </>
+                }
+                description="Lihat statistik, riwayat stok, resep, dan informasi detail terkait produk ini."
+                backUrl={route("admin.products.index")}
+            />
 
             {/* ── Low Stock Alert ── */}
             {isLowStock && !alertDismissed && (
@@ -761,11 +779,10 @@ export default function Show({
                                     <button
                                         key={t.id}
                                         onClick={() => setActiveTab(t.id)}
-                                        className={`px-4 py-2 text-sm font-medium rounded-lg border transition whitespace-nowrap ${
-                                            activeTab === t.id
+                                        className={`px-4 py-2 text-sm font-medium rounded-lg border transition whitespace-nowrap ${activeTab === t.id
                                                 ? "text-primary border-primary/30 bg-primary/10"
                                                 : "text-muted-foreground border-transparent hover:bg-muted"
-                                        }`}
+                                            }`}
                                     >
                                         {t.label}
                                         {t.count !== undefined && (
@@ -891,6 +908,87 @@ export default function Show({
                             )}
                         </dl>
                     </section>
+                    {/* Riwayat Stok */}
+                {product.track_stock && stockMovements.length > 0 && (
+                    <section className="lg:col-span-3 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+                        <div className="flex items-center justify-between border-b border-border bg-muted/50 px-6 py-4">
+                            <div>
+                                <h3 className="text-sm font-semibold text-foreground">
+                                    Riwayat Stok
+                                </h3>
+                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                    10 mutasi terakhir
+                                </p>
+                            </div>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                        <th className="px-5 py-3">
+                                            Tanggal
+                                        </th>
+                                        <th className="px-5 py-3">Tipe</th>
+                                        <th className="px-5 py-3 text-right">
+                                            Qty
+                                        </th>
+                                        <th className="px-5 py-3 text-right hidden sm:table-cell">
+                                            Harga
+                                        </th>
+                                        <th className="px-5 py-3 hidden sm:table-cell">
+                                            Ref
+                                        </th>
+                                        <th className="px-5 py-3 hidden md:table-cell">
+                                            Keterangan
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {stockMovements.map((m, i) => {
+                                        const isIn =
+                                            m.movement_type?.includes("_in") ||
+                                            m.movement_type ===
+                                            "adjustment_in";
+                                        return (
+                                            <tr
+                                                key={i}
+                                                className="transition hover:bg-muted/50"
+                                            >
+                                                <td className="px-5 py-3 text-muted-foreground whitespace-nowrap">
+                                                    {fmtDate(m.moved_at)}
+                                                </td>
+                                                <td className="px-5 py-3">
+                                                    <span
+                                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${isIn ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
+                                                    >
+                                                        {isIn ? "+" : "-"}
+                                                        {movementLabel(
+                                                            m.movement_type,
+                                                        )}
+                                                    </span>
+                                                </td>
+                                                <td className="px-5 py-3 text-right font-medium text-foreground">
+                                                    {m.quantity} {product.unit}
+                                                </td>
+                                                <td className="px-5 py-3 text-right text-muted-foreground hidden sm:table-cell">
+                                                    {m.unit_cost > 0
+                                                        ? fmt(m.unit_cost)
+                                                        : "-"}
+                                                </td>
+                                                <td className="px-5 py-3 text-xs text-muted-foreground hidden sm:table-cell">
+                                                    {m.reference_no ?? "-"}
+                                                </td>
+                                                <td className="px-5 py-3 text-xs text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
+                                                    {m.notes ?? "-"}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                )}
                 </div>
 
                 {/* Right / Sidebar */}
@@ -1062,7 +1160,7 @@ export default function Show({
                                 Ringkasan
                             </span>
                         </div>
-                        <p className="text-sm text-primary-foreground/60 leading-relaxed">
+                        <p className="text-sm text-primary-foreground leading-relaxed">
                             Produk performa{" "}
                             <span
                                 className={`font-semibold ${margin >= 30 ? "text-success" : margin >= 15 ? "text-warning" : "text-destructive/60"}`}
@@ -1070,8 +1168,8 @@ export default function Show({
                                 {margin >= 30
                                     ? "baik"
                                     : margin >= 15
-                                      ? "cukup"
-                                      : "rendah"}
+                                        ? "cukup"
+                                        : "rendah"}
                             </span>{" "}
                             dengan margin {margin}%.
                             {batchStats.expiring_soon > 0 && (
@@ -1097,87 +1195,7 @@ export default function Show({
                     </section>
                 </aside>
 
-                {/* Riwayat Stok */}
-                {product.track_stock && stockMovements.length > 0 && (
-                    <section className="lg:col-span-3 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-                        <div className="flex items-center justify-between border-b border-border bg-muted/50 px-6 py-4">
-                            <div>
-                                <h3 className="text-sm font-semibold text-foreground">
-                                    Riwayat Stok
-                                </h3>
-                                <p className="mt-0.5 text-xs text-muted-foreground">
-                                    10 mutasi terakhir
-                                </p>
-                            </div>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        <th className="px-5 py-3">
-                                            Tanggal
-                                        </th>
-                                        <th className="px-5 py-3">Tipe</th>
-                                        <th className="px-5 py-3 text-right">
-                                            Qty
-                                        </th>
-                                        <th className="px-5 py-3 text-right hidden sm:table-cell">
-                                            Harga
-                                        </th>
-                                        <th className="px-5 py-3 hidden sm:table-cell">
-                                            Ref
-                                        </th>
-                                        <th className="px-5 py-3 hidden md:table-cell">
-                                            Keterangan
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                    {stockMovements.map((m, i) => {
-                                        const isIn =
-                                            m.movement_type?.includes("_in") ||
-                                            m.movement_type ===
-                                                "adjustment_in";
-                                        return (
-                                            <tr
-                                                key={i}
-                                                className="transition hover:bg-muted/50"
-                                            >
-                                                <td className="px-5 py-3 text-muted-foreground whitespace-nowrap">
-                                                    {fmtDate(m.moved_at)}
-                                                </td>
-                                                <td className="px-5 py-3">
-                                                    <span
-                                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${isIn ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
-                                                    >
-                                                        {isIn ? "+" : "-"}
-                                                        {movementLabel(
-                                                            m.movement_type,
-                                                        )}
-                                                    </span>
-                                                </td>
-                                                <td className="px-5 py-3 text-right font-medium text-foreground">
-                                                    {m.quantity} {product.unit}
-                                                </td>
-                                                <td className="px-5 py-3 text-right text-muted-foreground hidden sm:table-cell">
-                                                    {m.unit_cost > 0
-                                                        ? fmt(m.unit_cost)
-                                                        : "-"}
-                                                </td>
-                                                <td className="px-5 py-3 text-xs text-muted-foreground hidden sm:table-cell">
-                                                    {m.reference_no ?? "-"}
-                                                </td>
-                                                <td className="px-5 py-3 text-xs text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
-                                                    {m.notes ?? "-"}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-                )}
+                
             </div>
 
             <ConfirmDeleteModal

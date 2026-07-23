@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { Plus, Search, Pencil, Trash2, FolderOpen } from 'lucide-react';
@@ -52,18 +53,27 @@ export default function Index({ categories }) {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">Kategori Pengeluaran</h2>
+        <AuthenticatedLayout>
+            <PageHeader
+                title="Kategori Pengeluaran"
+                breadcrumbs={["Admin", "Kategori Pengeluaran"]}
+                heading={
+                    <>
+                        Kelola{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Kategori
+                        </span>{" "}
+                        Pengeluaran
+                    </>
+                }
+                description="Kelola kategori pengeluaran dan lihat total pengeluaran per kategori."
+                action={
                     <Button onClick={openCreate} icon={Plus}>
                         <span className="hidden sm:inline">Tambah Kategori</span>
                         <span className="sm:hidden">Tambah</span>
                     </Button>
-                </div>
-            }
-        >
-            <Head title="Kategori Pengeluaran" />
+                }
+            />
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}

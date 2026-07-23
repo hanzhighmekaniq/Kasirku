@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import Button from "@/Components/ui/Button";
@@ -128,8 +129,8 @@ function StockBadge({ product }) {
         );
     }
     return (
-            <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
-                Cukup
+        <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
+            Cukup
         </span>
     );
 }
@@ -573,12 +574,12 @@ export default function Index({
         storeType === "session" || storeType === "parking"
             ? "Tarif"
             : storeType === "rental"
-              ? "Tarif Sewa"
-              : storeType === "service"
-                ? "Tarif Jasa"
-                : storeType === "hospitality" || storeType === "ticket"
-                  ? "Tarif"
-                  : "Harga Jual";
+                ? "Tarif Sewa"
+                : storeType === "service"
+                    ? "Tarif Jasa"
+                    : storeType === "hospitality" || storeType === "ticket"
+                        ? "Tarif"
+                        : "Harga Jual";
 
     return (
         <AuthenticatedLayout
@@ -593,41 +594,23 @@ export default function Index({
                 </div>
             }
         >
-            <Head title={`Katalog ${pageTitle}`} />
-
-            {/* Hero */}
-            <section className="mb-6">
-                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div>
-                        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                                Katalog
-                            </span>
-                            <span className="text-muted-foreground">·</span>
-                            <span>{pageTitle}</span>
-                            {currentBranch && (
-                                <>
-                                    <span className="text-muted-foreground">·</span>
-                                    <span>{currentBranch.name}</span>
-                                </>
-                            )}
-                        </div>
-                        <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
-                            Kelola{" "}
-                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                                katalog {pageTitle.toLowerCase()}
-                            </span>{" "}
-                            tokomu
-                        </h1>
-                        <p className="mt-2 max-w-xl text-xs text-muted-foreground">
-                            Cari, filter, dan atur stok, varian, harga, serta
-                            status dari satu tempat. Pantau stok menipis dan item
-                            nonaktif lewat ringkasan di bawah.
-                        </p>
-                    </div>
-                </div>
-            </section>
+            <PageHeader
+                title={`Katalog ${pageTitle}`}
+                breadcrumbs={[
+                    pageTitle,
+                    ...(currentBranch ? [currentBranch.name] : [])
+                ]}
+                heading={
+                    <>
+                        Kelola{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            katalog {pageTitle.toLowerCase()}
+                        </span>{" "}
+                        tokomu
+                    </>
+                }
+                description="Cari, filter, dan atur stok, varian, harga, serta status dari satu tempat. Pantau stok menipis dan item nonaktif lewat ringkasan di bawah."
+            />
 
             {/* Stats */}
             <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -739,17 +722,16 @@ export default function Index({
                                         }
                                     }}
                                     placeholder="Cari nama, SKU, atau barcode..."
-                                    className="w-full rounded-lg border border-[rgb(var(--color-input-border))] bg-[rgb(var(--color-input-background))] py-2.5 pl-10 pr-3 text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-primary-500"
+                                    className="w-full py-2.5 pl-10 pr-3 rounded-lg border border-border bg-card  text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary-500"
                                 />
                             </div>
                             {/* Filter toggle — mobile only */}
                             <button
                                 onClick={() => setShowFilter(!showFilter)}
-                                className={`inline-flex items-center justify-center rounded-lg border px-3 transition lg:hidden ${
-                                    showFilter || hasFilters
-                                        ? "border-primary/30 bg-primary/10 text-primary"
-                                        : "border-border text-card-foreground hover:bg-muted"
-                                }`}
+                                className={`inline-flex items-center justify-center rounded-lg border px-3 transition lg:hidden ${showFilter || hasFilters
+                                    ? "border-primary/30 bg-primary/10 text-primary"
+                                    : "border-border text-card-foreground hover:bg-muted"
+                                    }`}
                             >
                                 <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                                     <path strokeLinecap="round" d="M3 4h18M3 10h12M3 16h6" />
@@ -902,7 +884,7 @@ export default function Index({
                         {/* Desktop table */}
                         <div className="hidden overflow-x-auto lg:block">
                             <table className="w-full text-sm">
-                                 <thead className="bg-[rgb(var(--color-table-header))] text-xs uppercase tracking-wide text-card-foreground">
+                                <thead className="bg-[rgb(var(--color-table-header))] text-xs uppercase tracking-wide text-card-foreground">
                                     <tr>
                                         <th
                                             className="cursor-pointer select-none px-4 py-3 text-left font-semibold transition hover:text-foreground"
@@ -1042,10 +1024,10 @@ export default function Index({
                                                     <td className="px-4 py-3 text-card-foreground">
                                                         {product.category
                                                             ?.name ?? (
-                                                            <span className="text-xs italic text-muted-foreground">
-                                                                &mdash;
-                                                            </span>
-                                                        )}
+                                                                <span className="text-xs italic text-muted-foreground">
+                                                                    &mdash;
+                                                                </span>
+                                                            )}
                                                     </td>
                                                     {showMargin && (
                                                         <td className="px-4 py-3 text-right">
@@ -1071,75 +1053,75 @@ export default function Index({
                                                             />
                                                             {product.track_stock && (
                                                                 <div className="mt-1 flex items-center justify-center gap-1">
-                                                                        <button
-                                                                            onClick={(
-                                                                                e,
-                                                                            ) => {
-                                                                                e.stopPropagation();
-                                                                                setStockModal(
-                                                                                    {
-                                                                                        product,
-                                                                                        type: "in",
-                                                                                    },
-                                                                                );
-                                                                            }}
-                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-border bg-card px-2 text-xs font-medium text-card-foreground shadow-sm transition hover:bg-muted"
-                                                                            title="Stok Manual"
-                                                                        >
-                                                                            <svg
-                                                                                className="h-3 w-3"
-                                                                                fill="none"
-                                                                                viewBox="0 0 24 24"
-                                                                                strokeWidth={
-                                                                                    2
-                                                                                }
-                                                                                stroke="currentColor"
-                                                                            >
-                                                                                <path
-                                                                                    strokeLinecap="round"
-                                                                                    strokeLinejoin="round"
-                                                                                    d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
-                                                                                />
-                                                                            </svg>
-                                                                        </button>
-                                                                        <Link
-                                                                            href={
-                                                                                route(
-                                                                                    "admin.purchases.create",
-                                                                                ) +
-                                                                                "?product_id=" +
-                                                                                product.id +
-                                                                                (product.supplier_id
-                                                                                    ? "&supplier_id=" +
-                                                                                      product.supplier_id
-                                                                                    : "")
+                                                                    <button
+                                                                        onClick={(
+                                                                            e,
+                                                                        ) => {
+                                                                            e.stopPropagation();
+                                                                            setStockModal(
+                                                                                {
+                                                                                    product,
+                                                                                    type: "in",
+                                                                                },
+                                                                            );
+                                                                        }}
+                                                                        className="inline-flex h-6 items-center gap-1 rounded border border-border bg-card px-2 text-xs font-medium text-card-foreground shadow-sm transition hover:bg-muted"
+                                                                        title="Stok Manual"
+                                                                    >
+                                                                        <svg
+                                                                            className="h-3 w-3"
+                                                                            fill="none"
+                                                                            viewBox="0 0 24 24"
+                                                                            strokeWidth={
+                                                                                2
                                                                             }
-                                                                            onClick={(
-                                                                                e,
-                                                                            ) =>
-                                                                                e.stopPropagation()
-                                                                            }
-                                                                            className="inline-flex h-6 items-center gap-1 rounded border border-primary/20 bg-primary/10 px-2 text-xs font-medium text-primary shadow-sm transition hover:bg-primary/20"
-                                                                            title="Beli dari Supplier"
+                                                                            stroke="currentColor"
                                                                         >
-                                                                            <svg
-                                                                                className="h-3 w-3"
-                                                                                fill="none"
-                                                                                viewBox="0 0 24 24"
-                                                                                strokeWidth={
-                                                                                    2
-                                                                                }
-                                                                                stroke="currentColor"
-                                                                            >
-                                                                                <path
-                                                                                    strokeLinecap="round"
-                                                                                    strokeLinejoin="round"
-                                                                                    d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 003 3h4.5a3 3 0 003-3H18a1.5 1.5 0 001.5-1.5V6.75A1.5 1.5 0 0018 5.25H6.54m1.34 9l-1.06-4m0 0L5.25 3m1.63 7.25h11.24"
-                                                                                />
-                                                                            </svg>
-                                                                        </Link>
-                                                                    </div>
-                                                                )}
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"
+                                                                            />
+                                                                        </svg>
+                                                                    </button>
+                                                                    <Link
+                                                                        href={
+                                                                            route(
+                                                                                "admin.purchases.create",
+                                                                            ) +
+                                                                            "?product_id=" +
+                                                                            product.id +
+                                                                            (product.supplier_id
+                                                                                ? "&supplier_id=" +
+                                                                                product.supplier_id
+                                                                                : "")
+                                                                        }
+                                                                        onClick={(
+                                                                            e,
+                                                                        ) =>
+                                                                            e.stopPropagation()
+                                                                        }
+                                                                        className="inline-flex h-6 items-center gap-1 rounded border border-primary/20 bg-primary/10 px-2 text-xs font-medium text-primary shadow-sm transition hover:bg-primary/20"
+                                                                        title="Beli dari Supplier"
+                                                                    >
+                                                                        <svg
+                                                                            className="h-3 w-3"
+                                                                            fill="none"
+                                                                            viewBox="0 0 24 24"
+                                                                            strokeWidth={
+                                                                                2
+                                                                            }
+                                                                            stroke="currentColor"
+                                                                        >
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 003 3h4.5a3 3 0 003-3H18a1.5 1.5 0 001.5-1.5V6.75A1.5 1.5 0 0018 5.25H6.54m1.34 9l-1.06-4m0 0L5.25 3m1.63 7.25h11.24"
+                                                                            />
+                                                                        </svg>
+                                                                    </Link>
+                                                                </div>
+                                                            )}
                                                         </td>
                                                     )}
                                                     <td className="px-4 py-3 text-center">
@@ -1178,36 +1160,36 @@ export default function Index({
                                                                 ["retail", "fnb"].includes(
                                                                     storeType,
                                                                 ) && (
-                                                                <Link
-                                                                    href={route(
-                                                                        "admin.products.variants.index",
-                                                                        product.id,
-                                                                    )}
-                                                                    className="rounded p-1.5 text-card-foreground transition hover:bg-warning/5 hover:text-warning"
-                                                                    title="Kelola Varian"
-                                                                >
-                                                                    <svg
-                                                                        className="h-4 w-4"
-                                                                        fill="none"
-                                                                        viewBox="0 0 24 24"
-                                                                        strokeWidth={
-                                                                            1.7
-                                                                        }
-                                                                        stroke="currentColor"
+                                                                    <Link
+                                                                        href={route(
+                                                                            "admin.products.variants.index",
+                                                                            product.id,
+                                                                        )}
+                                                                        className="rounded p-1.5 text-card-foreground transition hover:bg-warning/5 hover:text-warning"
+                                                                        title="Kelola Varian"
                                                                     >
-                                                                        <path
-                                                                            strokeLinecap="round"
-                                                                            strokeLinejoin="round"
-                                                                            d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"
-                                                                        />
-                                                                    </svg>
-                                                                </Link>
-                                                            )}
+                                                                        <svg
+                                                                            className="h-4 w-4"
+                                                                            fill="none"
+                                                                            viewBox="0 0 24 24"
+                                                                            strokeWidth={
+                                                                                1.7
+                                                                            }
+                                                                            stroke="currentColor"
+                                                                        >
+                                                                            <path
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"
+                                                                            />
+                                                                        </svg>
+                                                                    </Link>
+                                                                )}
                                                             {canEdit &&
                                                                 storeType ===
-                                                                    "fnb" &&
+                                                                "fnb" &&
                                                                 product.type !==
-                                                                    "raw_material" && (
+                                                                "raw_material" && (
                                                                     <Link
                                                                         href={route(
                                                                             "admin.products.recipes.index",
@@ -1318,7 +1300,7 @@ export default function Index({
                                                             }
                                                             className="p-0"
                                                         >
-                                                             <DetailRow
+                                                            <DetailRow
                                                                 product={product}
                                                                 onStockModal={setStockModal}
                                                             />
@@ -1432,8 +1414,20 @@ export default function Index({
                                                         >
                                                             {isExp
                                                                 ? "Sembunyikan"
-                                                                : "Detail"}
+                                                                : "Lihat"}
                                                         </button>
+                                                    )}
+                                                    {canEdit && (
+                                                        <Link
+                                                            href={route(
+                                                                "admin.products.show",
+                                                                product.id,
+                                                            )}
+                                                            className="rounded p-1.5 text-card-foreground transition hover:bg-primary/10 hover:text-primary"
+                                                            title="Lihat Detail"
+                                                        >
+                                                            Detail
+                                                        </Link>
                                                     )}
                                                     {showStock &&
                                                         product.track_stock && (
@@ -1507,13 +1501,12 @@ export default function Index({
                                         });
                                     }
                                 }}
-                                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                                    link.active
-                                        ? "bg-primary text-primary-foreground"
-                                        : link.url
-                                          ? "border border-border text-card-foreground hover:bg-muted"
-                                          : "cursor-default text-muted-foreground"
-                                }`}
+                                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${link.active
+                                    ? "bg-primary text-primary-foreground"
+                                    : link.url
+                                        ? "border border-border text-card-foreground hover:bg-muted"
+                                        : "cursor-default text-muted-foreground"
+                                    }`}
                                 dangerouslySetInnerHTML={{
                                     __html: link.label,
                                 }}

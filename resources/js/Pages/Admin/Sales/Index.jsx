@@ -1,9 +1,11 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
+import PageTabs from "@/Components/PageTabs";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import * as ReactDOM from "react-dom";
 import axios from "axios";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, X, ClipboardList, Undo2 } from "lucide-react";
 import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import Button from "@/Components/ui/Button";
@@ -357,16 +359,37 @@ export default function Index({
     const fmtRp = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-lg font-semibold text-foreground">
-                        {pageTitle}
-                    </h2>
-                </div>
-            }
-        >
-            <Head title="Penjualan" />
+        <AuthenticatedLayout>
+            <PageHeader
+                title={pageTitle}
+                breadcrumbs={["Admin", pageTitle]}
+                heading={
+                    <>
+                        Manajemen{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {pageTitle}
+                        </span>
+                    </>
+                }
+                description={`Lihat riwayat dan rincian transaksi ${pageTitle.toLowerCase()}.`}
+            />
+
+            <PageTabs
+                tabs={[
+                    {
+                        name: "Riwayat Penjualan",
+                        href: route("admin.sales.index"),
+                        active: route().current("admin.sales.index"),
+                        icon: <ClipboardList className="h-4 w-4" />,
+                    },
+                    {
+                        name: "Retur Penjualan",
+                        href: route("admin.sale-returns.index"),
+                        active: route().current("admin.sale-returns.index"),
+                        icon: <Undo2 className="h-4 w-4" />,
+                    }
+                ]}
+            />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
