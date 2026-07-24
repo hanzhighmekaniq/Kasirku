@@ -25,7 +25,7 @@ export default function Tooltip({ label, side = "top", children, className = "" 
     }[side];
 
     return (
-        <span className={`group/tt relative inline-flex ${className}`}>
+        <span className={`group/tt relative inline-flex mr-1 ${className}`}>
             {children}
             <span
                 role="tooltip"

@@ -159,77 +159,12 @@ export default function KasirLayout({
 
     const headerRightContent = (
         <div className="flex items-center gap-1.5">
-            {showShiftUI && activeShift && (
-                <Tooltip label={canViewShift ? "Detail / Tutup Shift" : "Shift Aktif"}>
-                    <Link
-                        href={
-                            canViewShift
-                                ? route("admin.cashier-shifts.show", activeShift.id)
-                                : "#"
-                        }
-                        className={`
-            relative flex items-center justify-center
-            h-9 w-9 sm:h-auto sm:w-auto
-            sm:gap-2 sm:px-2 sm:py-1
-            rounded-lg bg-muted border border-border
-            transition
-            ${canViewShift
-                                ? " cursor-pointer"
-                                : "cursor-default"
-                            }
-        `}
-                        onClick={canViewShift ? undefined : (e) => e.preventDefault()}
-                    >
-                        <Clock size={17} className="shrink-0" />
-
-                        {/* Indikator shift aktif — mobile */}
-                        <span
-                            className="
-                sm:hidden
-                absolute -top-0.5 -right-0.5
-                h-2.5 w-2.5
-                rounded-full
-                bg-emerald-500
-                border-2 border-background
-            "
-                        />
-
-                        {/* Desktop */}
-                        <div className="hidden sm:block leading-tight">
-                            <div className="text-[14px] font-semibold text-foreground">
-                                Shift Aktif
-                            </div>
-
-                            <div className="text-[10px] text-muted-foreground">
-                                {activeShift.shift_no}
-                            </div>
-                        </div>
-                    </Link>
-                </Tooltip>
-            )}
-            {heldCount > 0 && (
-                <div className="relative hidden md:block">
-                    <Tooltip label="Transaksi Ditahan">
-                        <button
-                            type="button"
-                            onClick={() => setShowHeldModal(true)}
-                            aria-label="Transaksi Ditahan"
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        >
-                            <Layers size={17} strokeWidth={2} />
-                        </button>
-                    </Tooltip>
-                    <span className="absolute -right-1 -bottom-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] font-bold text-white shadow-sm">
-                        {heldCount}
-                    </span>
-                </div>
-            )}
-            <TipButton
-                label="Riwayat Transaksi"
-                icon={History}
-                variant="subtle"
-                onClick={() => k.setShowHistory(true)}
-            />
+            {/* 
+                Sesuai permintaan: di mode normal (tidak fullscreen),
+                sembunyikan Shift, Ditahan, dan Riwayat.
+                Hanya tampilkan tombol Fullscreen.
+            */}
+            
             <TipButton
                 label={isFullscreen ? "Keluar Fullscreen (Esc)" : "Fullscreen (F11)"}
                 icon={isFullscreen ? Minimize2 : Maximize2}
@@ -270,12 +205,6 @@ export default function KasirLayout({
                 <h2 className="text-base font-semibold text-foreground">
                     Pembayaran
                 </h2>
-
-                {k.resumeSaleNo && (
-                    <span className="font-mono text-xs text-muted-foreground">
-                        {k.resumeSaleNo}
-                    </span>
-                )}
             </div>
         </div>
     );
@@ -779,6 +708,7 @@ export default function KasirLayout({
                 {/* Resize handle — sisi kiri sidebar, dengan grip icon supaya jelas bisa digeser */}
                 <div
                     onMouseDown={k.startSidebarResize}
+                    onTouchStart={k.startSidebarResize}
                     className="group absolute inset-y-0 -left-2 z-50 flex w-4 cursor-col-resize items-center justify-center"
                     title="Geser untuk mengubah lebar keranjang"
                 >
@@ -1147,9 +1077,7 @@ export default function KasirLayout({
                                     <CreditCard size={18} />
                                     <span>
                                         Bayar
-                                        {k.cart.length > 0
-                                            ? ` • ${k.fmt(k.roundedGrandTotal ?? k.grandTotal)}`
-                                            : ""}
+                                            
                                     </span>
                                 </>
                             )}
@@ -1437,7 +1365,7 @@ export default function KasirLayout({
                             {k.submitting ? "Memproses..." : tableGate ? `Pilih ${k.tableLabel} dulu` : k.missingRequiredField ? k.missingRequiredField : (
                                 <>
                                     <CreditCard size={18} />
-                                    <span>Bayar{k.cart.length > 0 ? ` • ${k.fmt(k.roundedGrandTotal ?? k.grandTotal)}` : ""}</span>
+                                    <span>Bayawdwaar</span>
                                 </>
                             )}
                         </button>
@@ -1584,6 +1512,8 @@ export default function KasirLayout({
             initialSaleId={k.resumeSaleId}
             initialSaleNo={k.resumeSaleNo}
             initialPgTransaction={k.initialPgTransaction}
+            isFullscreen={isFullscreen}
+            setIsFullscreen={setIsFullscreen}
         />
     );
 

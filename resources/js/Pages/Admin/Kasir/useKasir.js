@@ -312,7 +312,8 @@ export default function useKasir({
     useEffect(() => {
         const onMouseMove = (e) => {
             if (!sidebarResizing.current) return;
-            const newWidth = window.innerWidth - e.clientX;
+            const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+            const newWidth = window.innerWidth - clientX;
             setSidebarWidth(Math.min(Math.max(newWidth, 280), 600));
         };
         const onMouseUp = () => {
@@ -321,10 +322,14 @@ export default function useKasir({
             document.body.style.userSelect = "";
         };
         window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("touchmove", onMouseMove, { passive: true });
         window.addEventListener("mouseup", onMouseUp);
+        window.addEventListener("touchend", onMouseUp);
         return () => {
             window.removeEventListener("mousemove", onMouseMove);
+            window.removeEventListener("touchmove", onMouseMove);
             window.removeEventListener("mouseup", onMouseUp);
+            window.removeEventListener("touchend", onMouseUp);
         };
     }, []);
 

@@ -6,6 +6,7 @@ import {
     ChevronUp,
     Clock,
     CreditCard,
+    Minimize2,
     NotebookTabs,
     ShoppingBag,
     Split,
@@ -35,6 +36,8 @@ export default function PaymentView({
     initialSaleId = null,
     initialSaleNo = null,
     initialPgTransaction = null,
+    isFullscreen = false,
+    setIsFullscreen = () => { },
 }) {
     const {
         cart, grandTotal, roundedGrandTotal, roundingAdjustment,
@@ -328,125 +331,89 @@ export default function PaymentView({
     }
 
     const tabs = [
-        { key: 'langsung', label: 'Langsung / Manual', icon: Wallet },
-        { key: 'kasbon', label: 'Hutang / Kasbon', icon: NotebookTabs },
-        { key: 'gateway', label: 'Payment Gateway', icon: CreditCard },
+        { key: 'langsung', desktopLabel: 'Langsung / Manual', mobileLabel: 'Langsung', icon: Wallet },
+        { key: 'kasbon', desktopLabel: 'Hutang / Kasbon', mobileLabel: 'Hutang', icon: NotebookTabs },
+        { key: 'gateway', desktopLabel: 'Payment Gateway', mobileLabel: 'Online', icon: CreditCard },
     ];
 
     const totalItems = cart.reduce((s, it) => s + Number(it.qty || 1), 0);
 
     return (
-        <div className="flex flex-1 flex-col bg-background min-h-screen w-full">
+        <div className="flex h-full min-h-0 w-full flex-1 flex-col bg-background">
             <Head title="Pembayaran" />
-            {/* RESPONSIVE HEADER */}
-            <div className="shrink-0 border-b border-border bg-card px-3 sm:px-5 py-2.5 sm:py-3 shadow-xs">
-                <div className="mx-auto flex flex-wrap max-w-[1600px] items-center justify-between gap-2.5">
 
+            {/* =========================================================
+            MOBILE — FLOATING EXIT FULLSCREEN
+        ========================================================== */}
+            {isFullscreen && (
+                <button
+                    type="button"
+                    onClick={() => setIsFullscreen(false)}
+                    className="fixed right-3 top-3 z-50 flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground shadow-md transition hover:bg-accent hover:text-accent-foreground lg:hidden"
+                    title="Keluar Fullscreen"
+                >
+                    <Minimize2 size={16} strokeWidth={2.2} />
+                </button>
+            )}
 
-                    {/* Mode Tabs */}
-                    <div className="flex-1 overflow-x-auto no-scrollbar py-0.5">
-                        <div className="inline-flex rounded-xl p-1 bg-muted/60 border border-border/60" role="tablist">
-                            {tabs.map(tab => {
-                                const active = mainTab === tab.key;
-                                const Icon = tab.icon;
-                                return (
-                                    <button
-                                        key={tab.key}
-                                        type="button"
-                                        onClick={() => !splitMode && setMainTab(tab.key)}
-                                        className={`flex items-center gap-1.5 sm:gap-2 rounded-lg px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all ${active
-                                            ? 'bg-card text-primary shadow-xs font-bold'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                            } ${!splitMode ? '' : 'opacity-50 cursor-not-allowed'}`}
-                                    >
-                                        <Icon size={16} strokeWidth={2.2} />
-                                        <span className="whitespace-nowrap">{tab.label}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                        {isStarting && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                                <span className="hidden md:inline">Memproses...</span>
-                            </span>
-                        )}
-
-                        <button
-                            type="button"
-                            onClick={() => setSplitMode(!splitMode)}
-                            className={`inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${splitMode
-                                ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
-                                : 'border-border bg-background text-foreground hover:bg-muted'
-                                }`}
-                        >
-                            <Split size={15} strokeWidth={2.2} />
-                            <span className="hidden sm:inline">{splitMode ? 'Tutup Pisah' : 'Pisah Pembayaran'}</span>
-                            <span className="sm:hidden">{splitMode ? 'Batal' : 'Pisah'}</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* MOBILE ORDER ACCORDION TOGGLE (< lg) */}
-            <div className="lg:hidden shrink-0 border-b border-border bg-card/60 px-4 py-2.5">
+            {/* =========================================================
+            MOBILE — ORDER ACCORDION
+        ========================================================== */}
+            <div className="shrink-0 border-b border-border bg-card/60 px-3 py-2.5 lg:hidden">
                 <button
                     type="button"
                     onClick={() => setShowMobileOrder(!showMobileOrder)}
-                    className="flex w-full items-center justify-between rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-foreground shadow-xs transition hover:bg-muted"
+                    className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs font-semibold text-foreground shadow-xs transition hover:bg-muted sm:text-sm"
                 >
-                    <div className="flex items-center gap-2">
-                        <ShoppingBag size={17} className="text-primary" />
-                        <span>Detail Pesanan ({totalItems} item)</span>
+                    <div className="flex min-w-0 items-center gap-2">
+                        <ShoppingBag
+                            size={17}
+                            className="shrink-0 text-primary"
+                        />
+
+                        <div className="min-w-0 text-left">
+                            <div className="truncate">
+                                Detail Pesanan ({totalItems} item)
+                            </div>
+
+                            {saleNo && (
+                                <div className="mt-0.5 truncate font-mono text-[10px] leading-none text-muted-foreground/80">
+                                    {saleNo}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="font-bold text-primary">{fmt(displayTotal)}</span>
-                        {showMobileOrder ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+
+                    <div className="flex shrink-0 items-center gap-2">
+                        <span className="font-bold text-primary">
+                            {fmt(displayTotal)}
+                        </span>
+
+                        {showMobileOrder ? (
+                            <ChevronUp size={16} />
+                        ) : (
+                            <ChevronDown size={16} />
+                        )}
                     </div>
                 </button>
-            </div>
 
-            {/* MAIN CONTENT GRID */}
-            <main className="flex-1 p-3 sm:p-5">
-                <div className="mx-auto flex max-w-[1600px] flex-col gap-4 lg:flex-row lg:items-start">
+                {/* MOBILE ORDER DETAIL */}
+                {showMobileOrder && (
+                    <div className="mt-2 overflow-hidden rounded-xl border border-border bg-card">
 
-                    {/* LEFT — Order Detail Card */}
-                    <section
-                        className={`
-                w-full
-                lg:w-7/12
-                shrink-0
-                flex-col
-                overflow-hidden
-                rounded-2xl
-                border border-border
-                bg-card
-                shadow-xs
-
-                lg:sticky
-                lg:top-4
-                lg:self-start
-                lg:max-h-[calc(100vh-2rem)]
-
-                ${showMobileOrder ? "flex" : "hidden lg:flex"}
-            `}
-                    >
-                        {/* Detail Header */}
-                        <div className="shrink-0 space-y-1 border-b border-border bg-muted/20 px-4 py-3 sm:px-5">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-sm font-bold text-foreground sm:text-base">
+                        {/* Detail */}
+                        <div className="space-y-1 border-b border-border bg-muted/20 px-3 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="text-sm font-bold text-foreground">
                                     Detail Pesanan
-                                </h2>
+                                </span>
 
-                                <span className="rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-primary">
+                                <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                                     {k.orderType || "retail"}
                                 </span>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
                                 <span className="font-mono font-semibold text-foreground">
                                     {saleNo}
                                 </span>
@@ -458,8 +425,7 @@ export default function PaymentView({
                                         • Pelanggan:{" "}
                                         <strong className="text-foreground">
                                             {k.selectedCustomerObj.name}
-                                        </strong>{" "}
-                                        ({k.selectedCustomerObj.phone || "Tanpa No HP"})
+                                        </strong>
                                     </span>
                                 )}
 
@@ -468,25 +434,6 @@ export default function PaymentView({
                                         • Meja:{" "}
                                         <strong className="text-foreground">
                                             {k.selectedTableObj.table_number}
-                                        </strong>
-                                    </span>
-                                )}
-
-                                {k.takeawayCustomerName && (
-                                    <span>
-                                        • Pengambilan:{" "}
-                                        <strong className="text-foreground">
-                                            {k.takeawayCustomerName}
-                                        </strong>{" "}
-                                        {k.pickupTime ? `(${k.pickupTime})` : ""}
-                                    </span>
-                                )}
-
-                                {k.deliveryAddress && (
-                                    <span>
-                                        • Alamat:{" "}
-                                        <strong className="text-foreground">
-                                            {k.deliveryAddress}
                                         </strong>
                                     </span>
                                 )}
@@ -502,101 +449,78 @@ export default function PaymentView({
                             </div>
 
                             {k.notes && (
-                                <p className="mt-1 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-800">
-                                    Catatan Pesanan: {k.notes}
+                                <p className="mt-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1.5 text-[11px] font-medium text-amber-800 dark:text-amber-400">
+                                    Catatan: {k.notes}
                                 </p>
                             )}
                         </div>
 
-                        {/* Order Items Table */}
-                        <div className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-5">
-                            <table className="w-full text-xs sm:text-sm">
-                                <thead className="sticky top-0 z-10 border-b border-border bg-card text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                                    <tr>
-                                        <th className="py-2.5 text-left">
-                                            Produk
-                                        </th>
+                        {/* MOBILE ITEMS */}
+                        <div className="max-h-[35dvh] overflow-y-auto">
+                            {cart.map((item) => (
+                                <div
+                                    key={item.cartId}
+                                    className="flex gap-3 border-b border-border/50 px-3 py-2.5 last:border-0"
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <div className="truncate text-xs font-semibold text-foreground">
+                                            {item.name}
+                                        </div>
 
-                                        <th className="w-12 py-2.5 text-center sm:w-16">
-                                            Qty
-                                        </th>
+                                        {item.variantName && (
+                                            <div className="truncate text-[11px] text-muted-foreground">
+                                                {item.variantName}
+                                            </div>
+                                        )}
 
-                                        <th className="w-20 py-2.5 text-right sm:w-24">
-                                            Harga
-                                        </th>
-
-                                        <th className="w-20 py-2.5 text-right sm:w-24">
-                                            Total
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {cart.map((item) => (
-                                        <tr
-                                            key={item.cartId}
-                                            className="align-top border-b border-border/50 last:border-0"
-                                        >
-                                            <td className="py-2.5 pr-2">
-                                                <div className="font-semibold text-foreground">
-                                                    {item.name}
-                                                </div>
-
-                                                {item.variantName && (
-                                                    <div className="text-xs text-muted-foreground">
-                                                        {item.variantName}
-                                                    </div>
-                                                )}
-
-                                                {item.modifiers &&
-                                                    item.modifiers.length > 0 && (
-                                                        <div className="pl-2 text-[11px] text-muted-foreground/80">
-                                                            {item.modifiers
-                                                                .map(
-                                                                    (m) =>
-                                                                        `+ ${m.name} (${fmt(
-                                                                            m.price_addition || 0
-                                                                        )})`
-                                                                )
-                                                                .join(", ")}
+                                        {item.modifiers?.length > 0 && (
+                                            <div className="mt-1 text-[10px] leading-4 text-muted-foreground">
+                                                {item.modifiers.map(
+                                                    (modifier, index) => (
+                                                        <div key={index}>
+                                                            + {modifier.name} (
+                                                            {fmt(
+                                                                modifier.price_addition ||
+                                                                0
+                                                            )}
+                                                            )
                                                         </div>
-                                                    )}
-
-                                                {item.note && (
-                                                    <div className="pl-2 text-[11px] font-medium text-amber-600 dark:text-amber-400">
-                                                        Catatan: {item.note}
-                                                    </div>
+                                                    )
                                                 )}
+                                            </div>
+                                        )}
 
-                                                {(item.promoDiscount ?? 0) > 0 && (
-                                                    <div className="pl-2 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                                                        Promo {item.promoName || ""}: -
-                                                        {fmt(item.promoDiscount)}
-                                                    </div>
-                                                )}
-                                            </td>
+                                        {item.note && (
+                                            <div className="mt-1 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                                                Catatan: {item.note}
+                                            </div>
+                                        )}
 
-                                            <td className="py-2.5 text-center font-semibold text-muted-foreground">
-                                                {item.qty}
-                                            </td>
+                                        {(item.promoDiscount ?? 0) > 0 && (
+                                            <div className="mt-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                                                Promo {item.promoName || ""}: -
+                                                {fmt(item.promoDiscount)}
+                                            </div>
+                                        )}
+                                    </div>
 
-                                            <td className="py-2.5 text-right text-muted-foreground">
-                                                {fmt(item.price)}
-                                            </td>
+                                    <div className="shrink-0 text-right">
+                                        <div className="text-[11px] text-muted-foreground">
+                                            {item.qty} × {fmt(item.price)}
+                                        </div>
 
-                                            <td className="py-2.5 text-right font-bold text-foreground">
-                                                {fmt(item.price * item.qty)}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                        <div className="mt-0.5 text-xs font-bold text-foreground">
+                                            {fmt(item.price * item.qty)}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
-                        {/* Order Summary Footer */}
-                        <div className="shrink-0 space-y-1.5 border-t border-border bg-muted/20 px-4 py-3 text-xs sm:px-5 sm:text-sm">
+                        {/* MOBILE SUMMARY */}
+                        <div className="space-y-1.5 border-t border-border bg-muted/20 px-3 py-3 text-xs">
                             <div className="flex justify-between text-muted-foreground">
-                                <span>Subtotal Produk</span>
+                                <span>Subtotal</span>
 
                                 <span className="font-medium text-foreground">
                                     {fmt(
@@ -608,7 +532,7 @@ export default function PaymentView({
 
                             {(k.totalPromoDisc ?? 0) > 0 && (
                                 <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-                                    <span>Diskon Promo Produk</span>
+                                    <span>Promo Produk</span>
                                     <span>-{fmt(k.totalPromoDisc)}</span>
                                 </div>
                             )}
@@ -619,7 +543,9 @@ export default function PaymentView({
                                         {k.cartPromoName || "Promo Keranjang"}
                                     </span>
 
-                                    <span>-{fmt(k.cartPromoDiscount)}</span>
+                                    <span>
+                                        -{fmt(k.cartPromoDiscount)}
+                                    </span>
                                 </div>
                             )}
 
@@ -638,91 +564,599 @@ export default function PaymentView({
                             )}
 
                             {roundingAdjustment !== 0 && (
-                                <div className="flex justify-between text-xs">
-                                    <span className="text-muted-foreground">
-                                        Pembulatan
-                                    </span>
+                                <div className="flex justify-between text-muted-foreground">
+                                    <span>Pembulatan</span>
 
-                                    <span className="text-emerald-600 dark:text-emerald-400">
+                                    <span>
                                         {roundingAdjustment > 0 ? "+" : ""}
                                         {fmt(roundingAdjustment)}
                                     </span>
                                 </div>
                             )}
 
-                            <div className="flex items-baseline justify-between border-t border-border pt-2">
-                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground sm:text-sm">
-                                    TOTAL TAGIHAN
+                            <div className="flex items-center justify-between border-t border-border pt-2">
+                                <span className="font-bold uppercase tracking-wider text-muted-foreground">
+                                    Total
                                 </span>
 
-                                <span className="text-2xl font-extrabold tracking-tight text-primary sm:text-3xl">
+                                <span className="text-lg font-extrabold text-primary">
                                     {fmt(displayTotal)}
                                 </span>
                             </div>
                         </div>
-                    </section>
+                    </div>
+                )}
+            </div>
 
-                    {/* RIGHT — Dynamic Payment Panel */}
-                    <aside className="flex min-h-[460px] w-full flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xs lg:min-h-0 lg:w-5/12">
-                        {splitMode ? (
-                            <SplitView
-                                k={k}
-                                paymentMethods={paymentMethods}
-                                pgMethods={pgMethods}
-                                saleId={saleId}
-                                saleNo={saleNo}
-                                displayTotal={displayTotal}
-                                onDone={handleSplitDone}
-                            />
-                        ) : mainTab === "langsung" ? (
-                            <LangsungPanel
-                                paymentMethods={paymentMethods}
-                                displayTotal={displayTotal}
-                                grandTotal={grandTotal}
-                                subtotal={k.subtotal}
-                                discount={Number(k.discount || 0)}
-                                tax={Number(k.tax || 0)}
-                                roundingAdjustment={roundingAdjustment}
-                                cashRoundingEnabled={cashRoundingEnabled}
-                                cashRoundingNearest={cashRoundingNearest}
-                                cashRoundingMode={cashRoundingMode}
-                                roundingOverrideMode={roundingOverrideMode}
-                                setRoundingOverrideMode={setRoundingOverrideMode}
-                                roundingCustomValue={roundingCustomValue}
-                                setRoundingCustomValue={setRoundingCustomValue}
-                                isFinalizing={isFinalizing}
-                                onPay={(payments) =>
-                                    handleMethodPay(payments, "Langsung")
-                                }
-                            />
-                        ) : mainTab === "kasbon" ? (
-                            <KasbonPanel
-                                paymentMethods={paymentMethods}
-                                pgMethods={pgMethods}
-                                displayTotal={displayTotal}
-                                grandTotal={grandTotal}
-                                subtotal={k.subtotal}
-                                discount={Number(k.discount || 0)}
-                                tax={Number(k.tax || 0)}
-                                selectedCustomer={selectedCustomer}
-                                customers={customers}
-                                onSelectCustomer={setSelectedCustomer}
-                                isFinalizing={isFinalizing}
-                                onPay={handleKasbon}
-                                onPayPg={handleKasbonPg}
-                                onBack={() => setMainTab("langsung")}
-                            />
-                        ) : (
-                            <GatewayPanel
-                                pgMethods={pgMethods}
-                                displayTotal={displayTotal}
-                                onPay={handleGateway}
-                                pgTransaction={activePgTrx}
-                                onPgSuccess={onGatewayPaid}
-                                onRetryPg={handleRetryPg}
-                            />
+            {/* =========================================================
+            MOBILE — PAYMENT CONTROLS
+        ========================================================== */}
+            <div className="shrink-0 border-b border-border bg-card px-3 py-2 lg:hidden">
+                <div className="flex flex-col gap-2">
+
+                    {/* Split */}
+                    <div className="flex items-center gap-2">
+                        {isStarting && (
+                            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            </span>
                         )}
-                    </aside>
+
+                        <button
+                            type="button"
+                            onClick={() => setSplitMode(!splitMode)}
+                            className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${splitMode
+                                    ? "border-primary bg-primary/10 text-primary shadow-xs"
+                                    : "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+                                }`}
+                        >
+                            <Split
+                                size={15}
+                                strokeWidth={2.2}
+                                className="shrink-0"
+                            />
+
+                            <span>
+                                {splitMode ? "Batal Pisah" : "Pisah Pembayaran"}
+                            </span>
+                        </button>
+                    </div>
+
+                    {/* Tabs */}
+                    <div className="no-scrollbar w-full overflow-x-auto">
+                        <div
+                            className="grid min-w-max grid-cols-3 rounded-xl border border-border bg-muted/60 p-1 sm:min-w-0"
+                            role="tablist"
+                        >
+                            {tabs.map((tab) => {
+                                const active = mainTab === tab.key;
+                                const Icon = tab.icon;
+
+                                return (
+                                    <button
+                                        key={tab.key}
+                                        type="button"
+                                        onClick={() =>
+                                            !splitMode && setMainTab(tab.key)
+                                        }
+                                        className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-all ${active
+                                                ? "bg-card text-primary shadow-xs"
+                                                : "text-muted-foreground hover:text-foreground"
+                                            } ${splitMode
+                                                ? "cursor-not-allowed opacity-50"
+                                                : ""
+                                            }`}
+                                    >
+                                        <Icon
+                                            size={15}
+                                            strokeWidth={2.2}
+                                            className="shrink-0"
+                                        />
+
+                                        <span>{tab.mobileLabel}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* =========================================================
+            DESKTOP — FULLSCREEN EXIT
+        ========================================================== */}
+            {isFullscreen && (
+                <div className="hidden shrink-0 justify-end px-4 pt-3 lg:flex">
+                    <button
+                        type="button"
+                        onClick={() => setIsFullscreen(false)}
+                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-background text-foreground shadow-sm transition hover:bg-accent hover:text-accent-foreground"
+                        title="Keluar Fullscreen"
+                    >
+                        <Minimize2 size={15} strokeWidth={2.2} />
+                    </button>
+                </div>
+            )}
+
+            {/* =========================================================
+            MAIN CONTENT
+        ========================================================== */}
+            <main className="min-h-0 flex-1 overflow-y-auto">
+
+                {/* MOBILE + DESKTOP CONTAINER */}
+                <div className="mx-auto w-full max-w-[1920px] p-3 sm:p-4">
+
+                    <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-12 lg:gap-4">
+
+                        {/* =================================================
+                        LEFT — DESKTOP ONLY
+
+                        5 / 12 columns
+                        Sticky
+                        Independent height
+                    ================================================== */}
+                        <div className="hidden lg:sticky lg:top-4 lg:col-span-5 lg:flex lg:max-h-[calc(100dvh-2rem)] lg:min-h-0 lg:flex-col lg:overflow-hidden lg:rounded-xl lg:border lg:border-border lg:bg-card xl:col-span-5">
+
+                            {/* DESKTOP CONTROLS */}
+                            <div className="shrink-0 border-b border-border px-4 py-2.5">
+                                <div className="flex items-center justify-between gap-3">
+
+                                    {/* Split */}
+                                    <div className="flex shrink-0 items-center gap-2">
+                                        {isStarting && (
+                                            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                                <span className="hidden xl:inline">
+                                                    Memproses...
+                                                </span>
+                                            </span>
+                                        )}
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setSplitMode(!splitMode)
+                                            }
+                                            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${splitMode
+                                                    ? "border-primary bg-primary/10 text-primary shadow-xs"
+                                                    : "border-border bg-background text-foreground hover:bg-accent hover:text-accent-foreground"
+                                                }`}
+                                        >
+                                            <Split
+                                                size={14}
+                                                strokeWidth={2.2}
+                                                className="shrink-0"
+                                            />
+
+                                            <span className="whitespace-nowrap">
+                                                {splitMode
+                                                    ? "Tutup Pisah"
+                                                    : "Pisah Pembayaran"}
+                                            </span>
+                                        </button>
+                                    </div>
+
+                                    {/* Tabs */}
+                                    <div className="no-scrollbar min-w-0 overflow-x-auto">
+                                        <div
+                                            className="inline-flex rounded-xl border border-border bg-muted/60 p-1"
+                                            role="tablist"
+                                        >
+                                            {tabs.map((tab) => {
+                                                const active =
+                                                    mainTab === tab.key;
+                                                const Icon = tab.icon;
+
+                                                return (
+                                                    <button
+                                                        key={tab.key}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            !splitMode &&
+                                                            setMainTab(tab.key)
+                                                        }
+                                                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all xl:px-3 ${active
+                                                                ? "bg-card text-primary shadow-xs"
+                                                                : "text-muted-foreground hover:text-foreground"
+                                                            } ${splitMode
+                                                                ? "cursor-not-allowed opacity-50"
+                                                                : ""
+                                                            }`}
+                                                    >
+                                                        <Icon
+                                                            size={14}
+                                                            strokeWidth={2.2}
+                                                            className="shrink-0"
+                                                        />
+
+                                                        <span>
+                                                            {tab.desktopLabel}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* DETAIL HEADER */}
+                            <div className="shrink-0 space-y-1 border-b border-border bg-muted/20 px-4 py-3 xl:px-5">
+                                <div className="flex items-center justify-between gap-3">
+                                    <h2 className="text-sm font-bold text-foreground xl:text-base">
+                                        Detail Pesanan
+                                    </h2>
+
+                                    <span className="shrink-0 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-primary">
+                                        {k.orderType || "retail"}
+                                    </span>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                                    <span className="font-mono font-semibold text-foreground">
+                                        {saleNo}
+                                    </span>
+
+                                    <span>• {totalItems} item</span>
+
+                                    {k.selectedCustomerObj && (
+                                        <span>
+                                            • Pelanggan:{" "}
+                                            <strong className="text-foreground">
+                                                {k.selectedCustomerObj.name}
+                                            </strong>{" "}
+                                            (
+                                            {k.selectedCustomerObj.phone ||
+                                                "Tanpa No HP"}
+                                            )
+                                        </span>
+                                    )}
+
+                                    {k.selectedTableObj && (
+                                        <span>
+                                            • Meja:{" "}
+                                            <strong className="text-foreground">
+                                                {
+                                                    k.selectedTableObj
+                                                        .table_number
+                                                }
+                                            </strong>
+                                        </span>
+                                    )}
+
+                                    {k.takeawayCustomerName && (
+                                        <span>
+                                            • Pengambilan:{" "}
+                                            <strong className="text-foreground">
+                                                {k.takeawayCustomerName}
+                                            </strong>{" "}
+                                            {k.pickupTime
+                                                ? `(${k.pickupTime})`
+                                                : ""}
+                                        </span>
+                                    )}
+
+                                    {k.deliveryAddress && (
+                                        <span>
+                                            • Alamat:{" "}
+                                            <strong className="text-foreground">
+                                                {k.deliveryAddress}
+                                            </strong>
+                                        </span>
+                                    )}
+
+                                    {k.selectedEmployeeObj && (
+                                        <span>
+                                            • Kasir:{" "}
+                                            <strong className="text-foreground">
+                                                {k.selectedEmployeeObj.name}
+                                            </strong>
+                                        </span>
+                                    )}
+                                </div>
+
+                                {k.notes && (
+                                    <p className="mt-1 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-800 dark:text-amber-400">
+                                        Catatan Pesanan: {k.notes}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* =================================================
+                            PRODUCT TABLE
+
+                            THIS AREA SCROLLS
+                        ================================================== */}
+                            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                                <table className="w-full table-fixed text-xs xl:text-sm">
+                                    <thead className="sticky top-0 z-10 border-b border-border bg-card shadow-sm">
+                                        <tr className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                                            <th className="w-auto px-4 py-2.5 text-left xl:px-5">
+                                                Produk
+                                            </th>
+
+                                            <th className="w-14 px-2 py-2.5 text-center xl:w-16">
+                                                Qty
+                                            </th>
+
+                                            <th className="w-24 px-2 py-2.5 text-right xl:w-28">
+                                                Harga
+                                            </th>
+
+                                            <th className="w-24 py-2.5 pl-2 pr-4 text-right xl:w-28 xl:pr-5">
+                                                Total
+                                            </th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {cart.map((item) => (
+                                            <tr
+                                                key={item.cartId}
+                                                className="border-b border-border/50 align-top transition-colors last:border-0 hover:bg-muted/20"
+                                            >
+                                                {/* Product */}
+                                                <td className="px-4 py-3 xl:px-5">
+                                                    <div className="min-w-0">
+                                                        <div className="truncate font-semibold text-foreground">
+                                                            {item.name}
+                                                        </div>
+
+                                                        {item.variantName && (
+                                                            <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                                                                {
+                                                                    item.variantName
+                                                                }
+                                                            </div>
+                                                        )}
+
+                                                        {item.modifiers?.length >
+                                                            0 && (
+                                                                <div className="mt-1 space-y-0.5 text-[11px] leading-4 text-muted-foreground/80">
+                                                                    {item.modifiers.map(
+                                                                        (
+                                                                            modifier,
+                                                                            index
+                                                                        ) => (
+                                                                            <div
+                                                                                key={
+                                                                                    index
+                                                                                }
+                                                                            >
+                                                                                +{" "}
+                                                                                {
+                                                                                    modifier.name
+                                                                                }{" "}
+                                                                                (
+                                                                                {fmt(
+                                                                                    modifier.price_addition ||
+                                                                                    0
+                                                                                )}
+                                                                                )
+                                                                            </div>
+                                                                        )
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                        {item.note && (
+                                                            <div className="mt-1 text-[11px] font-medium leading-4 text-amber-600 dark:text-amber-400">
+                                                                Catatan:{" "}
+                                                                {item.note}
+                                                            </div>
+                                                        )}
+
+                                                        {(item.promoDiscount ??
+                                                            0) > 0 && (
+                                                                <div className="mt-1 text-[11px] font-medium leading-4 text-emerald-600 dark:text-emerald-400">
+                                                                    Promo{" "}
+                                                                    {item.promoName ||
+                                                                        ""}
+                                                                    : -
+                                                                    {fmt(
+                                                                        item.promoDiscount
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                    </div>
+                                                </td>
+
+                                                {/* Qty */}
+                                                <td className="px-2 py-3 text-center font-semibold text-muted-foreground">
+                                                    {item.qty}
+                                                </td>
+
+                                                {/* Price */}
+                                                <td className="whitespace-nowrap px-2 py-3 text-right text-muted-foreground">
+                                                    {fmt(item.price)}
+                                                </td>
+
+                                                {/* Total */}
+                                                <td className="whitespace-nowrap py-3 pl-2 pr-4 text-right font-bold text-foreground xl:pr-5">
+                                                    {fmt(
+                                                        item.price * item.qty
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* =================================================
+                            SUMMARY — ALWAYS BOTTOM
+                        ================================================== */}
+                            <div className="shrink-0 space-y-1.5 border-t border-border bg-muted/20 px-4 py-3 text-xs xl:px-5 xl:text-sm">
+
+                                <div className="flex justify-between gap-4 text-muted-foreground">
+                                    <span>Subtotal Produk</span>
+
+                                    <span className="shrink-0 font-medium text-foreground">
+                                        {fmt(
+                                            k.subtotal ||
+                                            grandTotal -
+                                            roundingAdjustment
+                                        )}
+                                    </span>
+                                </div>
+
+                                {(k.totalPromoDisc ?? 0) > 0 && (
+                                    <div className="flex justify-between gap-4 text-emerald-600 dark:text-emerald-400">
+                                        <span>Diskon Promo Produk</span>
+
+                                        <span className="shrink-0">
+                                            -{fmt(k.totalPromoDisc)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {(k.cartPromoDiscount ?? 0) > 0 && (
+                                    <div className="flex justify-between gap-4 text-emerald-600 dark:text-emerald-400">
+                                        <span>
+                                            {k.cartPromoName ||
+                                                "Promo Keranjang"}
+                                        </span>
+
+                                        <span className="shrink-0">
+                                            -{fmt(k.cartPromoDiscount)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {Number(k.discount ?? 0) > 0 && (
+                                    <div className="flex justify-between gap-4 text-destructive">
+                                        <span>Diskon Manual</span>
+
+                                        <span className="shrink-0">
+                                            -{fmt(k.discount)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {Number(k.tax ?? 0) > 0 && (
+                                    <div className="flex justify-between gap-4 text-muted-foreground">
+                                        <span>Pajak</span>
+
+                                        <span className="shrink-0">
+                                            +{fmt(k.tax)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {roundingAdjustment !== 0 && (
+                                    <div className="flex justify-between gap-4 text-muted-foreground">
+                                        <span>Pembulatan</span>
+
+                                        <span className="shrink-0">
+                                            {roundingAdjustment > 0
+                                                ? "+"
+                                                : ""}
+                                            {fmt(roundingAdjustment)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div className="flex items-end justify-between gap-4 border-t border-border pt-2.5">
+                                    <span className="pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground xl:text-sm">
+                                        Total Tagihan
+                                    </span>
+
+                                    <span className="shrink-0 text-2xl font-extrabold leading-none tracking-tight text-primary xl:text-3xl">
+                                        {fmt(displayTotal)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* =================================================
+                        RIGHT — PAYMENT
+
+                        Mobile  : 12/12
+                        Desktop : 7/12
+
+                        RIGHT CAN GROW NATURALLY.
+                        LEFT DOES NOT FOLLOW ITS HEIGHT.
+                    ================================================== */}
+                        <div className="col-span-1 min-w-0 overflow-hidden rounded-xl border border-border bg-card lg:col-span-7">
+                            {splitMode ? (
+                                <SplitView
+                                    k={k}
+                                    paymentMethods={paymentMethods}
+                                    pgMethods={pgMethods}
+                                    saleId={saleId}
+                                    saleNo={saleNo}
+                                    displayTotal={displayTotal}
+                                    onDone={handleSplitDone}
+                                />
+                            ) : mainTab === "langsung" ? (
+                                <LangsungPanel
+                                    paymentMethods={paymentMethods}
+                                    displayTotal={displayTotal}
+                                    grandTotal={grandTotal}
+                                    subtotal={k.subtotal}
+                                    discount={Number(k.discount || 0)}
+                                    tax={Number(k.tax || 0)}
+                                    roundingAdjustment={roundingAdjustment}
+                                    cashRoundingEnabled={
+                                        cashRoundingEnabled
+                                    }
+                                    cashRoundingNearest={
+                                        cashRoundingNearest
+                                    }
+                                    cashRoundingMode={cashRoundingMode}
+                                    roundingOverrideMode={
+                                        roundingOverrideMode
+                                    }
+                                    setRoundingOverrideMode={
+                                        setRoundingOverrideMode
+                                    }
+                                    roundingCustomValue={
+                                        roundingCustomValue
+                                    }
+                                    setRoundingCustomValue={
+                                        setRoundingCustomValue
+                                    }
+                                    isFinalizing={isFinalizing}
+                                    onPay={(payments) =>
+                                        handleMethodPay(
+                                            payments,
+                                            "Langsung"
+                                        )
+                                    }
+                                />
+                            ) : mainTab === "kasbon" ? (
+                                <KasbonPanel
+                                    paymentMethods={paymentMethods}
+                                    pgMethods={pgMethods}
+                                    displayTotal={displayTotal}
+                                    grandTotal={grandTotal}
+                                    subtotal={k.subtotal}
+                                    discount={Number(k.discount || 0)}
+                                    tax={Number(k.tax || 0)}
+                                    selectedCustomer={selectedCustomer}
+                                    customers={customers}
+                                    onSelectCustomer={
+                                        setSelectedCustomer
+                                    }
+                                    isFinalizing={isFinalizing}
+                                    onPay={handleKasbon}
+                                    onPayPg={handleKasbonPg}
+                                    onBack={() =>
+                                        setMainTab("langsung")
+                                    }
+                                />
+                            ) : (
+                                <GatewayPanel
+                                    pgMethods={pgMethods}
+                                    displayTotal={displayTotal}
+                                    onPay={handleGateway}
+                                    pgTransaction={activePgTrx}
+                                    onPgSuccess={onGatewayPaid}
+                                    onRetryPg={handleRetryPg}
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>

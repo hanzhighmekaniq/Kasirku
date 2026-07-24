@@ -1154,9 +1154,9 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                     </div>
 
                     {/* Right side */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center">
                         {headerRight && (
-                            <div className="flex items-center gap-1.5 border-r border-border/50 pr-2 mr-1">
+                            <div className="flex items-center">
                                 {headerRight}
                             </div>
                         )}
