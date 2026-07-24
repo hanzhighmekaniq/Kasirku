@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     ChevronDown,
@@ -17,7 +17,6 @@ import LangsungPanel from './payment/LangsungPanel';
 import KasbonPanel from './payment/KasbonPanel';
 import GatewayPanel from './payment/GatewayPanel';
 import SplitView from './payment/SplitView';
-import SuccessScreen from './payment/SuccessScreen';
 import { fmt, findPgPaymentMethod } from './helpers';
 import { playPaymentSuccess } from '@/Hooks/useSound';
 
@@ -70,10 +69,11 @@ export default function PaymentView({
     useEffect(() => {
         if (!showPayment) return;
         if (k.successData || successData) return;
-        if (saleId) return; // SKIP: sale already exists from refresh restore
+        if (saleId) return; // SALE ALREADY EXISTS —skip auto-startSale
+        if (k.resumeSaleId) return; // Sudah dari payment route → sale sudah ada via redirect
         if (!cart || cart.length === 0) return;
         startSale();
-    }, [showPayment, k.successData, successData, cart, saleId]);
+    }, [showPayment, k.successData, successData, cart, saleId, k.resumeSaleId]);
 
     const startSale = async () => {
         setIsStarting(true);
@@ -156,7 +156,8 @@ export default function PaymentView({
                     deliveryAddress: k.deliveryAddress ?? null,
                     employeeName: k.selectedEmployeeObj?.name ?? null,
                 };
-                setSuccessData({
+                // Save success data to sessionStorage (survives Inertia navigation)
+                const successPayload = {
                     methodLabel,
                     grandTotal: displayTotal,
                     paid: payments.reduce((s, p) => s + Number(p.amount), 0),
@@ -182,8 +183,10 @@ export default function PaymentView({
                     sessionInfo: builtReceipt.sessionInfo,
                     deliveryAddress: builtReceipt.deliveryAddress,
                     employeeName: builtReceipt.employeeName,
-                });
+                };
+                window.sessionStorage.setItem('pos_success', JSON.stringify(successPayload));
                 playPaymentSuccess();
+                router.visit(route('admin.kasir.index'));
             }
             return result;
         } finally {
@@ -286,10 +289,52 @@ export default function PaymentView({
             parkingInfo: k.parkingInfo ?? null,
             sessionInfo: k.sessionInfo ?? null,
             deliveryAddress: k.deliveryAddress ?? null,
-            employeeName: k.selectedEmployeeObj?.name ?? null,
+                employeeName: k.selectedEmployeeObj?.name ?? null,
         });
         playPaymentSuccess();
         setActivePgTrx(null);
+        if (k.setShowPayment) k.setShowPayment(false);
+        const pgPayload = {
+            methodLabel: `PG · ${pg?.paymentType}`,
+            grandTotal: displayTotal,
+            paid: pg?.amount ?? displayTotal,
+            change: 0,
+            debtNow: 0,
+            saleNo,
+            receipt: null,
+            items: (k.cart || []).map(c => ({
+                name: c.name,
+                variantName: c.variantName,
+                qty: c.qty,
+                price: c.price,
+                subtotal: c.price * c.qty,
+                promoDiscount: c.promoDiscount ?? 0,
+                promoName: c.promoName ?? null,
+                modifiers: c.modifiers,
+            })),
+            subtotal: k.subtotal ?? displayTotal,
+            discount: Number(k.discount ?? 0),
+            tax: Number(k.tax ?? 0),
+            totalPromoDisc: k.totalPromoDisc ?? 0,
+            cartPromoDiscount: k.cartPromoDiscount ?? 0,
+            cartPromoName: k.cartPromoName ?? null,
+            payments: [{
+                methodName: `Online PG (${pg?.paymentType || 'Gateway'})`,
+                amount: Number(pg?.amount ?? displayTotal),
+            }],
+            customerName: k.selectedCustomerObj?.name ?? null,
+            customerPhone: k.selectedCustomerObj?.phone ?? null,
+            tableName: k.selectedTableObj?.table_number ?? null,
+            orderType: k.orderType ?? 'retail',
+            rentalInfo: k.rentalInfo ?? null,
+            hospitalityInfo: k.hospitalityInfo ?? null,
+            parkingInfo: k.parkingInfo ?? null,
+            sessionInfo: k.sessionInfo ?? null,
+            deliveryAddress: k.deliveryAddress ?? null,
+            employeeName: k.selectedEmployeeObj?.name ?? null,
+        };
+        window.sessionStorage.setItem('pos_success', JSON.stringify(pgPayload));
+        router.visit(route('admin.kasir.index'));
     }, [activePgTrx, displayTotal, saleNo, onPgPaidFromKasir, k]);
 
     const handleSplitDone = useCallback((data) => {
@@ -303,31 +348,7 @@ export default function PaymentView({
     const activeSuccessData = k.successData || successData;
 
     if (activeSuccessData) {
-        return (
-            <SuccessScreen
-                data={activeSuccessData}
-                storeName={storeName || 'Toko'}
-                receiptFooter={receiptFooter}
-                onNewTransaction={() => {
-                    setSuccessData(null);
-                    setActivePgTrx(null);
-                    setSaleId(null);
-                    setSaleNo(null);
-                    if (k.clearCart) k.clearCart();
-                    setShowPayment(false);
-                }}
-                onSendWa={(receipt) => {
-                    if (k.sendWhatsApp) {
-                        k.sendWhatsApp(receipt, storeName || 'Toko');
-                    }
-                }}
-                onClose={() => {
-                    setShowPayment(false);
-                    setSuccessData(null);
-                    if (k.setSuccessData) k.setSuccessData(null);
-                }}
-            />
-        );
+        return null;
     }
 
     const tabs = [

@@ -33,6 +33,7 @@ import ModifierModal from "../components/ModifierModal";
 import VariantModal from "../components/legacy/VariantModal";
 import UnitModal from "../components/legacy/UnitModal";
 import PaymentView from "../components/PaymentView";
+import SuccessScreen from "../components/payment/SuccessScreen";
 import ReceiptModal from "../components/ReceiptModal";
 import HistoryPanel from "../components/HistoryPanel";
 import CartRow from "../components/CartRow";
@@ -1053,30 +1054,30 @@ export default function KasirLayout({
                         </button>
                         <button
                             type="button"
-                            disabled={
-                                k.submitting ||
-                                k.cart.length === 0 ||
-                                k.missingRequiredField ||
-                                tableGate ||
-                                blockedByShift ||
-                                (!activeShift && canOpenShift)
-                            }
-                            onClick={() => k.setShowPayment(true)}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-success py-3.5 text-[15px] font-bold tracking-tight text-white shadow-sm shadow-success/20 transition hover:bg-success/90 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                            {k.submitting ? (
-                                "Memproses..."
-                            ) : tableGate ? (
-                                `Pilih ${k.tableLabel} dulu`
-                            ) : k.missingRequiredField ? (
-                                k.missingRequiredField
-                            ) : (!activeShift && canOpenShift) ? (
-                                "Buka Shift Dulu"
-                            ) : (
-                                <>
-                                    <CreditCard size={18} />
-                                    <span>
-                                        Bayar
+                    disabled={
+                                 k.submitting ||
+                                 k.cart.length === 0 ||
+                                 k.missingRequiredField ||
+                                 tableGate ||
+                                 blockedByShift ||
+                                 (!activeShift && canOpenShift)
+                             }
+                             onClick={() => k.handleStartAndNavigateToPayment()}
+                             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-success py-3.5 text-[15px] font-bold tracking-tight text-white shadow-sm shadow-success/20 transition hover:bg-success/90 disabled:cursor-not-allowed disabled:opacity-40"
+                         >
+                             {k.submitting ? (
+                                 "Memproses..."
+                             ) : tableGate ? (
+                                 `Pilih ${k.tableLabel} dulu`
+                             ) : k.missingRequiredField ? (
+                                 k.missingRequiredField
+                             ) : (!activeShift && canOpenShift) ? (
+                                 "Buka Shift Dulu"
+                             ) : (
+                                 <>
+                                     <CreditCard size={18} />
+                                     <span>
+                                         Bayar
                                             
                                     </span>
                                 </>
@@ -1359,7 +1360,7 @@ export default function KasirLayout({
                         <button
                             type="button"
                             disabled={k.cart.length === 0 || k.submitting || !!k.missingRequiredField || tableGate || blockedByShift}
-                            onClick={() => k.setShowPayment(true)}
+                            onClick={() => k.handleStartAndNavigateToPayment()}
                             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-success py-3.5 text-[15px] font-bold tracking-tight text-white shadow-sm shadow-success/20 transition hover:bg-success/90 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             {k.submitting ? "Memproses..." : tableGate ? `Pilih ${k.tableLabel} dulu` : k.missingRequiredField ? k.missingRequiredField : (
@@ -1521,6 +1522,24 @@ export default function KasirLayout({
         return (
             <div className="fixed inset-0 z-40 flex flex-col overflow-x-hidden bg-background p-3">
                 {k.showPayment ? renderPaymentView() : posContent("h-full")}
+                {k.successData && (
+                    <SuccessScreen
+                        data={k.successData}
+                        storeName={storeName || 'Toko'}
+                        receiptFooter={receiptFooter}
+                        onNewTransaction={() => {
+                            k.clearCart();
+                            k.setSuccessData(null);
+                            router.visit(route('admin.kasir.index'));
+                        }}
+                        onSendWa={(receipt) => {
+                            if (k.sendWhatsApp) k.sendWhatsApp(receipt, storeName || 'Toko');
+                        }}
+                        onClose={() => {
+                            k.setSuccessData(null);
+                        }}
+                    />
+                )}
             </div>
         );
     }
@@ -1532,6 +1551,24 @@ export default function KasirLayout({
             noPadding
         >
             {k.showPayment ? renderPaymentView() : posContent("h-[calc(100vh-56px)]")}
+            {k.successData && (
+                <SuccessScreen
+                    data={k.successData}
+                    storeName={storeName || 'Toko'}
+                    receiptFooter={receiptFooter}
+                    onNewTransaction={() => {
+                        k.clearCart();
+                        k.setSuccessData(null);
+                        router.visit(route('admin.kasir.index'));
+                    }}
+                    onSendWa={(receipt) => {
+                        if (k.sendWhatsApp) k.sendWhatsApp(receipt, storeName || 'Toko');
+                    }}
+                    onClose={() => {
+                        k.setSuccessData(null);
+                    }}
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

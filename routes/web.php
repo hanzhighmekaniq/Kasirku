@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\ExpenseCategoryController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\KasirController;
+use App\Http\Controllers\Admin\KasirPaymentController;
 use App\Http\Controllers\Admin\KitchenController;
 use App\Http\Controllers\Admin\MasterDataController;
 use App\Http\Controllers\Admin\MembershipController;
@@ -325,6 +326,14 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 ])->name('payment-gateway.retry');
             });
         });
+
+        // ─────────────────────────────────────────────────────────────────
+        // PAYMENT URL ROUTE — deep link untuk pending sale payment
+        // ─────────────────────────────────────────────────────────────────
+        Route::get('/kasir/payment/{saleNo}', [
+            KasirPaymentController::class,
+            'show',
+        ])->name('kasir.payment.show');
 
         // ─────────────────────────────────────────────────────────────────
         // SHIFT

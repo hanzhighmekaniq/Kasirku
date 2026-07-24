@@ -86,6 +86,7 @@ export default function useKasir({
     storeFeatureSettings = {},
     pendingSale = null,
     pendingPgTransaction = null,
+    _success = null,
 }) {
     /* â”€â”€ mode detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     const activeMode = normalizePosMode(posMode || storeType);
@@ -123,6 +124,26 @@ export default function useKasir({
 
     // â”€â”€ Transaksi ditahan (Hold / Park) â€” disimpan di localStorage saja â”€â”€
     const HELD_KEY = `pos:held:${storeName || "default"}`;
+
+    // Detect apakah _success data ada (dari router.visit dengan data)
+    const successDataFromRedirect = null;
+
+    // Baca success data dari sessionStorage (survive Inertia navigation)
+    const [successFromSession, setSuccessFromSession] = useState(() => {
+        try {
+            const raw = window.sessionStorage.getItem('pos_success');
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    });
+
+    useEffect(() => {
+        if (successFromSession) {
+            setSuccessData(successFromSession);
+            window.sessionStorage.removeItem('pos_success');
+        }
+    }, [successFromSession]);
     const [heldTransactions, setHeldTransactions] = useState(() => {
         try {
             return JSON.parse(localStorage.getItem(HELD_KEY) || "[]");
@@ -245,7 +266,6 @@ export default function useKasir({
     // Retail-only: modal adaptif tunggal (variant â†’ unit â†’ qty â†’ notes)
     // menggantikan VariantModal + UnitModal untuk mode retail.
     const [retailProductTarget, setRetailProductTarget] = useState(null);
-    const [showPayment, setShowPayment] = useState(!!pendingSale);
     const [resumeSaleId, setResumeSaleId] = useState(pendingSale?.sale_id || null);
     const [resumeSaleNo, setResumeSaleNo] = useState(pendingSale?.sale_no || null);
 
@@ -269,6 +289,13 @@ export default function useKasir({
         };
     }, [pendingPgTransaction, pendingSale]);
 
+    // Detect apakah user datang dari URL payment route (bukan klik tombol "Bayar")
+    const isFromPaymentRoute = !!pendingSale?.sale_id && !!pendingPgTransaction;
+
+    const [showPayment, setShowPayment] = useState(
+        isFromPaymentRoute ? true : !!pendingSale,
+    );
+
     // Restore cart from pending sale items on mount
     useEffect(() => {
         if (pendingSale?.items?.length) {
@@ -287,6 +314,22 @@ export default function useKasir({
             cartIdSeqRef.current = restoredCart.length;
         }
     }, [pendingSale]);
+
+    // Auto-tampilkan PaymentView jika user navigasi dari URL payment route
+    useEffect(() => {
+        if (isFromPaymentRoute && pendingSale?.sale_id) {
+            setShowPayment(true);
+        }
+    }, [isFromPaymentRoute, pendingSale]);
+
+    // Auto-show successData di parent state
+    useEffect(() => {
+        if (successDataFromRedirect) {
+            setSuccessData(successDataFromRedirect);
+            setAutoShowPayment(false);
+        }
+    }, [successDataFromRedirect]);
+
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState(null);
     const [successData, setSuccessData] = useState(null);
@@ -1561,6 +1604,47 @@ export default function useKasir({
 
     /* â”€â”€ New payment flow handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
+    const handleStartAndNavigateToPayment = async () => {
+        try {
+            const { data } = await axios.post(route('admin.kasir.start'), {
+                customer_id: selectedCustomer || null,
+                table_id: selectedTable || null,
+                order_type: orderType,
+                discount_amount: Number(discount),
+                tax_amount: Number(tax),
+                shipping_amount: orderType === 'delivery' ? Number(deliveryFee || 0) : 0,
+                rounding_adjustment: roundingAdjustment,
+                rounding_mode: cashRoundingEnabled ? (roundingOverrideMode === 'store_default' ? cashRoundingMode : roundingOverrideMode) : null,
+                rounding_nearest: cashRoundingEnabled ? cashRoundingNearest : null,
+                rounding_custom: cashRoundingEnabled && roundingOverrideMode === 'custom' && roundingCustomValue !== '' ? Number(roundingCustomValue) : null,
+                delivery_address: orderType === 'delivery' ? deliveryAddress : null,
+                customer_name: orderType === 'delivery' ? deliveryCustomerName : null,
+                notes: buildComposedNotes(),
+                items: cart.map(c => ({
+                    product_id: c.productId,
+                    variant_id: c.variantId,
+                    packaging_unit_id: c.packagingUnitId || null,
+                    unit_name: c.packagingUnitName || null,
+                    unit_conversion_qty: c.conversionQty || 1,
+                    quantity: c.qty,
+                    price: Number(product_sell_price(c)),
+                    discount_amount: 0,
+                    modifiers: c.modifiers,
+                    notes: c.note || null,
+                })),
+                idempotency_key: crypto.randomUUID(),
+            });
+            if (!data.success) throw new Error(data.message);
+            setResumeSaleId(data.sale_id);
+            setResumeSaleNo(data.sale_no);
+            router.visit(route('admin.kasir.payment.show', { saleNo: data.sale_no }));
+            return data;
+        } catch (e) {
+            alert('Gagal memulai transaksi: ' + (e.response?.data?.message || e.message));
+            return { success: false };
+        }
+    };
+
     const handleStartSale = async () => {
         try {
             const { data } = await axios.post(route('admin.kasir.start'), {
@@ -1822,6 +1906,11 @@ export default function useKasir({
         setShowReceipt(false);
         setReceiptData(null);
         setSuccessData(null);
+    };
+    // Handler untuk tombol Transaksi Baru dari SuccessScreen di KasirLayout
+    const handleClearAndNavigate = () => {
+        handleNewTransaction();
+        router.visit(route('admin.kasir.index'));
     };
 
     const handleStartPg = async (saleId, provider, paymentType, customAmount = null) => {
@@ -2101,6 +2190,7 @@ export default function useKasir({
         handleResumeSplit,
         handleCancelSplit,
         handleStartSale,
+        handleStartAndNavigateToPayment,
         handleFinalizePayment,
         handleCancelPendingSale,
         handleStartPg,
@@ -2108,6 +2198,7 @@ export default function useKasir({
         buildWhatsAppMessage,
         sendWhatsApp,
         handleNewTransaction,
+        handleClearAndNavigate,
         product_sell_price,
         findBestPromoForItem,
         findBestCartPromo,
