@@ -117,7 +117,7 @@ Cocok untuk: border card, tabel, divider, sidebar, modal, dropdown, dan containe
 
 ---
 
-## Input
+##   
 
 **Input**  
 Class: `border-input`  

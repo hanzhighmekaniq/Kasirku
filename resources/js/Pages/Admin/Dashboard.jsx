@@ -1,5 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
+import Dropdown from "@/Components/Dropdown";
+import { NavIcons } from "@/Components/NavIcons";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import {
     AreaChart,
@@ -15,6 +17,8 @@ import {
 } from "recharts";
 import { useState, useCallback } from "react";
 import { useTheme } from "@/Theme/ThemeProvider";
+// lucide-react imports removed as we are now using NavIcons
+
 
 /* ── formatters ─────────────────────────────────────── */
 const fmt = (n) =>
@@ -35,7 +39,6 @@ const monthStart = () => {
     return d.toISOString().slice(0, 10);
 };
 
-/* ── trend badge ────────────────────────────────────── */
 function TrendBadge({ value, suffix = "%" }) {
     if (value === undefined || value === null) return null;
     const isUp = value > 0;
@@ -43,24 +46,15 @@ function TrendBadge({ value, suffix = "%" }) {
     const isFlat = value === 0;
     return (
         <span
-            className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                isUp
-                    ? "bg-emerald-100 text-success"
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide ${isUp
+                    ? "bg-success/10 text-success"
                     : isDown
-                      ? "bg-red-100 text-destructive"
-                      : "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))]"
-            }`}
+                        ? "bg-destructive/10 text-destructive"
+                        : "bg-muted text-muted-foreground"
+                }`}
         >
-            {isUp && (
-                <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-                </svg>
-            )}
-            {isDown && (
-                <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 4.5l15 15m0 0V8.25m0 11.25H8.25" />
-                </svg>
-            )}
+            {isUp && <NavIcons name="trendingUp" className="h-3 w-3" strokeWidth={3} />}
+            {isDown && <NavIcons name="trendingDown" className="h-3 w-3" strokeWidth={3} />}
             {isFlat ? "—" : `${Math.abs(value)}${suffix}`}
         </span>
     );
@@ -76,15 +70,11 @@ function ReportBtn({ label = "Lihat Laporan", dateRange, branchIds }) {
     return (
         <Link
             href={route("admin.reports.index", params)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-3 py-1.5 text-xs font-medium text-[rgb(var(--color-text-secondary))] shadow-sm transition hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm transition-all hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
         >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-            </svg>
+            <NavIcons name="fileText" className="h-3.5 w-3.5" />
             {label}
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
+            <NavIcons name="chevronRight" className="h-3.5 w-3.5" />
         </Link>
     );
 }
@@ -92,7 +82,7 @@ function ReportBtn({ label = "Lihat Laporan", dateRange, branchIds }) {
 /* ── primitives ─────────────────────────────────────── */
 function Card({ children, className = "" }) {
     return (
-        <div className={`overflow-hidden rounded-2xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] shadow-sm ${className}`}>
+        <div className={`overflow-hidden rounded-2xl border border-border bg-card shadow-sm ${className}`}>
             {children}
         </div>
     );
@@ -100,10 +90,10 @@ function Card({ children, className = "" }) {
 
 function SectionHeader({ title, subtitle, action }) {
     return (
-        <div className="flex items-center justify-between border-b border-[rgb(var(--color-divider))] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-border/50 bg-base px-5 py-4">
             <div>
-                <h3 className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">{title}</h3>
-                {subtitle && <p className="mt-0.5 text-xs text-[rgb(var(--color-text-muted))]">{subtitle}</p>}
+                <h3 className="text-sm font-bold text-foreground">{title}</h3>
+                {subtitle && <p className="mt-0.5 text-xs font-medium text-muted-foreground">{subtitle}</p>}
             </div>
             {action}
         </div>
@@ -111,17 +101,17 @@ function SectionHeader({ title, subtitle, action }) {
 }
 
 /* ── stat card dengan trend indicator ───────────────── */
-function StatCard({ label, value, sub, icon, accent = "bg-[rgb(var(--color-surface-secondary))] text-[rgb(var(--color-text-secondary))]", trend }) {
+function StatCard({ label, value, sub, icon, accent = "bg-muted text-muted-foreground", trend }) {
     return (
-        <Card>
+        <Card className="hover:border-primary/30 transition-colors duration-300">
             <div className="p-5">
                 <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[rgb(var(--color-text-muted))]">{label}</p>
-                    <span className={`flex h-9 w-9 items-center justify-center rounded-xl text-lg ${accent}`}>{icon}</span>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+                    <span className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg ${accent}`}>{icon}</span>
                 </div>
-                <p className="mt-3 text-2xl font-bold tracking-tight text-[rgb(var(--color-text-primary))]">{value}</p>
-                <div className="mt-1 flex items-center gap-2">
-                    {sub && <p className="text-xs text-[rgb(var(--color-text-muted))]">{sub}</p>}
+                <p className="mt-4 text-2xl font-extrabold tracking-tight text-foreground">{value}</p>
+                <div className="mt-2 flex items-center gap-2">
+                    {sub && <p className="text-xs font-medium text-muted-foreground">{sub}</p>}
                     <TrendBadge value={trend} />
                 </div>
             </div>
@@ -142,28 +132,33 @@ function HeroRevenueCard({ todaySales, todayCount, aov, salesTrend, countTrend, 
         session: "Sesi Hari Ini",
     };
     return (
-        <div className="rounded-2xl border border-primary-200 bg-[rgb(var(--color-card))] p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card to-primary/5 p-6 shadow-sm">
+            <div className="absolute -right-0 -bottom-0  text-primary/10 pointer-events-none">
+                <NavIcons name="wallet" className="h-24 w-24" />
+            </div>
+            <div className="relative z-10 flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold uppercase text-[rgb(var(--color-cardForeground))] tracking-wider text-primary-600">
+                    <p className="text-xs font-bold uppercase tracking-wider text-primary">
                         {GREETING[storeType] ?? "Penjualan Hari Ini"}
                     </p>
-                    <p className="mt-2 text-4xl font-bold tracking-tight text-[rgb(var(--color-text-primary))]">
+                    <p className="mt-2 text-4xl font-extrabold tracking-tight text-foreground">
                         {fmt(todaySales)}
                     </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-sm text-[rgb(var(--color-text-secondary))]">{fmtNum(todayCount)} transaksi</span>
+                    <div className="mt-4 flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-muted-foreground">{fmtNum(todayCount)} transaksi</span>
                             <TrendBadge value={countTrend} />
                         </div>
-                        <span className="text-[rgb(var(--color-text-muted))]">·</span>
-                        <div className="flex items-center gap-1.5">
-                            <span className="text-sm text-[rgb(var(--color-text-secondary))]">AOV {fmt(aov)}</span>
+                        <span className="text-border">|</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-muted-foreground">AOV {fmt(aov)}</span>
                             <TrendBadge value={aovTrend} />
                         </div>
                     </div>
                 </div>
-                <TrendBadge value={salesTrend} suffix="%" />
+                <div className="shrink-0">
+                    <TrendBadge value={salesTrend} suffix="%" />
+                </div>
             </div>
         </div>
     );
@@ -173,8 +168,11 @@ function HeroRevenueCard({ todaySales, todayCount, aov, salesTrend, countTrend, 
 function HourlyChart({ data }) {
     if (!data?.length) {
         return (
-            <div className="flex h-32 items-center justify-center px-5 pb-4 text-sm text-[rgb(var(--color-text-muted))]">
-                Belum ada transaksi hari ini
+            <div className="flex h-32 items-center justify-center px-5 pb-4 text-sm font-medium text-muted-foreground">
+                <div className="flex flex-col items-center gap-2">
+                    <NavIcons name="clock" className="h-6 w-6 text-muted-foreground/50" />
+                    Belum ada transaksi hari ini
+                </div>
             </div>
         );
     }
@@ -185,20 +183,20 @@ function HourlyChart({ data }) {
     });
 
     return (
-        <div className="flex h-28 items-end gap-0.5 overflow-x-auto px-5 pb-3 pt-4">
+        <div className="flex h-32 items-end gap-1 overflow-x-auto px-5 pb-3 pt-4">
             {hours.map((h) => {
                 const pct = Math.max(h.total > 0 ? 4 : 0, Math.round((h.total / max) * 100));
                 return (
                     <div key={h.hour} className="group relative flex flex-1 flex-col items-center" style={{ minWidth: "8px" }}>
                         <div
-                            className={`w-full rounded-t transition-all duration-200 ${h.total > 0 ? "bg-primary-500 group-hover:bg-primary-600" : "bg-[rgb(var(--color-surface-secondary))]"}`}
+                            className={`w-full rounded-t-sm transition-all duration-300 ${h.total > 0 ? "bg-primary hover:bg-primary/80" : "bg-muted"}`}
                             style={{ height: `${pct}%` }}
                         />
                         {h.total > 0 && (
-                            <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-max -translate-x-1/2 rounded-lg border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] px-3 py-2 text-xs shadow-lg group-hover:block">
-                                <p className="font-semibold text-[rgb(var(--color-text-primary))]">{h.hour.toString().padStart(2, "0")}:00</p>
-                                <p className="text-primary-600">{fmt(h.total)}</p>
-                                <p className="text-[rgb(var(--color-text-muted))]">{h.count} transaksi</p>
+                            <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-max -translate-x-1/2 rounded-xl border border-border bg-card/95 backdrop-blur-sm px-4 py-3 text-xs shadow-xl group-hover:block animate-in fade-in zoom-in-95 duration-200">
+                                <p className="font-bold text-foreground mb-1">{h.hour.toString().padStart(2, "0")}:00</p>
+                                <p className="font-extrabold text-primary text-base leading-none">{fmt(h.total)}</p>
+                                <p className="text-muted-foreground mt-1 font-medium">{h.count} transaksi</p>
                             </div>
                         )}
                     </div>
@@ -210,21 +208,26 @@ function HourlyChart({ data }) {
 
 /* ── recent sales ───────────────────────────────────── */
 function RecentSales({ data }) {
-    if (!data?.length) return <p className="px-5 py-8 text-center text-sm text-[rgb(var(--color-text-muted))]">Belum ada transaksi</p>;
+    if (!data?.length) return (
+        <div className="flex h-40 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+            <NavIcons name="clipboardList" className="h-8 w-8 text-muted-foreground/50" />
+            <p className="font-medium">Belum ada transaksi terbaru</p>
+        </div>
+    );
     return (
-        <div className="divide-y divide-[rgb(var(--color-divider))]">
+        <div className="divide-y divide-border/50">
             {data.map((s) => (
-                <div key={s.id} className="flex items-center justify-between px-5 py-3">
+                <div key={s.id} className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors">
                     <div className="min-w-0 flex-1">
-                        <p className="font-mono text-xs font-semibold text-primary-600">{s.sale_no}</p>
-                        <p className="text-xs text-[rgb(var(--color-text-muted))]">
+                        <p className="font-mono text-sm font-bold text-primary">{s.sale_no}</p>
+                        <p className="text-xs font-medium text-muted-foreground mt-0.5">
                             {s.user?.name ?? "—"} ·{" "}
                             {new Date(s.sale_date).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                         </p>
                     </div>
                     <div className="ml-4 text-right">
-                        <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">{fmt(s.grand_total)}</p>
-                        <span className={`text-xs ${s.payment_status === "paid" ? "text-emerald-600" : "text-[rgb(var(--color-text-muted))]"}`}>
+                        <p className="text-base font-bold text-foreground">{fmt(s.grand_total)}</p>
+                        <span className={`inline-flex px-2 py-0.5 mt-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${s.payment_status === "paid" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
                             {s.payment_status === "paid" ? "Lunas" : "Pending"}
                         </span>
                     </div>
@@ -236,19 +239,24 @@ function RecentSales({ data }) {
 
 /* ── top products ───────────────────────────────────── */
 function TopToday({ data }) {
-    if (!data?.length) return <p className="px-5 py-8 text-center text-sm text-[rgb(var(--color-text-muted))]">Belum ada penjualan hari ini</p>;
+    if (!data?.length) return (
+        <div className="flex h-40 flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+            <NavIcons name="package" className="h-8 w-8 text-muted-foreground/50" />
+            <p className="font-medium">Belum ada penjualan hari ini</p>
+        </div>
+    );
     const max = Math.max(...data.map((d) => d.revenue), 1);
     return (
-        <div className="space-y-3 px-5 py-4">
+        <div className="space-y-4 px-5 py-5">
             {data.map((p, i) => (
                 <div key={i}>
-                    <div className="mb-1 flex items-center justify-between">
-                        <span className="truncate text-sm text-[rgb(var(--color-text-secondary))]">{p.name}</span>
-                        <span className="ml-2 text-xs font-semibold text-[rgb(var(--color-text-secondary))]">{fmtNum(p.qty)} pcs</span>
+                    <div className="mb-1.5 flex items-center justify-between">
+                        <span className="truncate text-sm font-semibold text-foreground">{p.name}</span>
+                        <span className="ml-2 text-xs font-bold text-muted-foreground">{fmtNum(p.qty)} pcs</span>
                     </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgb(var(--color-surface-secondary))]">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                         <div
-                            className="h-full rounded-full bg-primary-500"
+                            className="h-full rounded-full bg-primary"
                             style={{ width: `${Math.max(4, Math.round((p.revenue / max) * 100))}%` }}
                         />
                     </div>
@@ -265,19 +273,19 @@ function BranchBreakdown({ data }) {
     return (
         <Card>
             <SectionHeader title="Penjualan per Cabang" subtitle="Hari ini" action={<ReportBtn dateRange={{ start: today(), end: today() }} />} />
-            <div className="divide-y divide-[rgb(var(--color-divider))]">
+            <div className="divide-y divide-border/50">
                 {data.map((b) => (
-                    <div key={b.id} className="flex items-center gap-4 px-5 py-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[rgb(var(--color-surface-secondary))] text-xs font-bold text-[rgb(var(--color-text-secondary))]">
-                            {b.code?.charAt(0) ?? b.name.charAt(0)}
+                    <div key={b.id} className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-bold text-primary">
+                            <NavIcons name="store" className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-[rgb(var(--color-text-primary))]">{b.name}</p>
-                            <p className="text-xs text-[rgb(var(--color-text-muted))]">{b.today_count} transaksi hari ini</p>
+                            <p className="truncate text-sm font-semibold text-foreground">{b.name}</p>
+                            <p className="text-xs font-medium text-muted-foreground">{b.today_count} transaksi hari ini</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">{fmt(b.today_sales)}</p>
-                            <p className="text-xs text-[rgb(var(--color-text-muted))]">{totalToday > 0 ? Math.round((b.today_sales / totalToday) * 100) : 0}% dari total</p>
+                            <p className="text-sm font-bold text-foreground">{fmt(b.today_sales)}</p>
+                            <p className="text-xs font-medium text-muted-foreground">{totalToday > 0 ? Math.round((b.today_sales / totalToday) * 100) : 0}% dari total</p>
                         </div>
                     </div>
                 ))}
@@ -292,19 +300,21 @@ function StoreOverview({ data, allStoreTypes = [] }) {
     return (
         <Card>
             <SectionHeader title="Overview Semua Toko" subtitle="Penjualan hari ini" action={<ReportBtn dateRange={{ start: today(), end: today() }} />} />
-            <div className="divide-y divide-[rgb(var(--color-divider))]">
+            <div className="divide-y divide-border/50">
                 {data.map((s) => {
                     const tm = allStoreTypes.find((t) => t.code === s.store_type) ?? {};
                     return (
-                        <div key={s.id} className="flex items-center gap-4 px-5 py-3.5">
-                            <span className="text-xl shrink-0">{tm.icon ?? "🏬"}</span>
+                        <div key={s.id} className="flex items-center gap-4 px-5 py-4 hover:bg-muted/30 transition-colors">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+                                <NavIcons name="store" className="h-5 w-5" />
+                            </span>
                             <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-[rgb(var(--color-text-primary))]">{s.name}</p>
-                                <p className="text-xs text-[rgb(var(--color-text-muted))]">{tm.label ?? s.store_type} · {s.today_count} transaksi hari ini</p>
+                                <p className="truncate text-sm font-bold text-foreground">{s.name}</p>
+                                <p className="text-xs font-medium text-muted-foreground mt-0.5">{tm.label ?? s.store_type} · {s.today_count} transaksi</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-sm font-bold text-[rgb(var(--color-text-primary))]">{fmt(s.today_sales)}</p>
-                                <p className="text-xs text-[rgb(var(--color-text-muted))]">Bulan: {fmt(s.month_sales)}</p>
+                                <p className="text-sm font-bold text-foreground">{fmt(s.today_sales)}</p>
+                                <p className="text-xs font-medium text-muted-foreground mt-0.5">Bulan: {fmt(s.month_sales)}</p>
                             </div>
                         </div>
                     );
@@ -500,10 +510,20 @@ export default function Dashboard({
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Penjualan per Cabang
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Halaman
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={isKasir ? "Dashboard Kasir" : "Dashboard"}
-                breadcrumbs={isKasir ? ["Kasir", "Dashboard"] : ["Admin", "Dashboard"]}
+                breadcrumbs={isKasir ? ["Kasir", "Dashboard"] : ["Admin", "Beranda", "Dashboard"]}
                 heading={
                     <>
                         {isKasir ? "Dashboard " : "Dashboard "}
@@ -519,83 +539,103 @@ export default function Dashboard({
                 {/* Shift banner (kasir) */}
                 {isKasir &&
                     (!activeShift ? (
-                        <div className="flex items-center justify-between rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-[rgb(var(--color-card))] px-5 py-4 shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500">
-                                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                                    </svg>
+                        <div className="flex items-center justify-between rounded-2xl border border-warning/20 bg-gradient-to-r from-warning/10 to-card px-5 py-4 shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning/20 text-warning">
+                                    <NavIcons name="clock" className="h-6 w-6" strokeWidth={2.5} />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-semibold text-amber-800">Belum Ada Shift Aktif</p>
-                                    <p className="text-xs text-amber-600">Buka shift sebelum mulai transaksi.</p>
+                                    <p className="text-base font-bold text-foreground">Belum Ada Shift Aktif</p>
+                                    <p className="text-sm font-medium text-muted-foreground mt-0.5">Buka shift sebelum mulai transaksi.</p>
                                 </div>
                             </div>
                             <Link
                                 href={route("admin.cashier-shifts.create")}
-                                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-amber-500/30 transition hover:from-amber-600 hover:to-orange-600"
+                                className="inline-flex items-center gap-2 rounded-xl bg-warning px-5 py-2.5 text-sm font-bold text-warning-foreground shadow-md transition-all hover:bg-warning/90 hover:shadow-lg hover:shadow-warning/20 active:scale-[0.98]"
                             >
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Buka Shift
+                                <NavIcons name="checkCircle" className="h-4 w-4" strokeWidth={2.5} />
+                                Buka Shift Sekarang
                             </Link>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-between rounded-2xl border border-success/20 bg-gradient-to-r from-emerald-50 to-[rgb(var(--color-card))] px-5 py-4 shadow-sm">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/100">
-                                    <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                        <div className="flex items-center justify-between rounded-2xl border border-success/20 bg-gradient-to-r from-success/10 to-card px-5 py-4 shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/20 text-success">
+                                    <NavIcons name="checkCircle2" className="h-6 w-6" strokeWidth={2.5} />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-semibold text-emerald-800">Shift Aktif: {activeShift.shift_no}</p>
-                                    <p className="text-xs text-emerald-600">
-                                        Kas awal: {fmt(activeShift.opening_cash)} · Dibuka{" "}
+                                    <p className="text-base font-bold text-foreground">Shift Aktif: {activeShift.shift_no}</p>
+                                    <p className="text-sm font-medium text-muted-foreground mt-0.5">
+                                        Kas awal: <span className="text-foreground">{fmt(activeShift.opening_cash)}</span> <span className="mx-1.5">&bull;</span> Dibuka pada{" "}
                                         {new Date(activeShift.opened_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                                     </p>
                                 </div>
                             </div>
                             <Link
                                 href={route("admin.cashier-shifts.show", activeShift.id)}
-                                className="rounded-lg border border-success/20 bg-[rgb(var(--color-card))] px-3 py-1.5 text-xs font-medium text-success transition hover:bg-success/10"
+                                className="rounded-xl border border-success/30 bg-card px-4 py-2.5 text-sm font-bold text-success transition-all hover:bg-success/10 active:scale-[0.98]"
                             >
-                                Lihat Shift
+                                Lihat Detail Shift
                             </Link>
                         </div>
                     ))}
 
                 {/* Branch filter (admin) */}
                 {!isKasir && branches.length > 1 && (
-                    <div className="flex flex-wrap items-center gap-1.5">
-                        {branches.map((b) => (
-                            <label
-                                key={b.id}
-                                className={`inline-flex cursor-pointer select-none items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
-                                    pendingBranchIds.includes(b.id)
-                                        ? "border-primary-400 bg-primary-50 text-primary-700"
-                                        : "border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] text-[rgb(var(--color-text-secondary))] hover:border-primary-300"
-                                }`}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={pendingBranchIds.includes(b.id)}
-                                    onChange={() => togglePending(b.id)}
-                                    className="h-3.5 w-3.5 rounded border-[rgb(var(--color-border))] text-primary-600 focus:ring-primary-500"
-                                />
-                                {b.name}
-                            </label>
-                        ))}
-                        <button
-                            onClick={applyBranchFilter}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-primary/90"
-                        >
-                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                            </svg>
-                            Terapkan
-                        </button>
+                    <div className="flex items-center gap-2">
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <button className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3.5 py-2.5 text-xs font-semibold text-foreground shadow-sm transition-all hover:border-primary/40 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/20 active:scale-[0.98]">
+                                    <NavIcons name="filter" className="h-4 w-4" />
+                                    Filter Cabang
+                                    {pendingBranchIds.length > 0 && (
+                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                                            {pendingBranchIds.length}
+                                        </span>
+                                    )}
+                                </button>
+                            </Dropdown.Trigger>
+                            <Dropdown.Content align="left" width="64" contentClasses="p-3 bg-card border-border shadow-xl">
+                                <div onClick={(e) => e.stopPropagation()} className="flex flex-col gap-3">
+                                    <div className="px-1">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pilih Cabang</p>
+                                    </div>
+                                    <div className="max-h-60 space-y-1.5 overflow-y-auto pr-1">
+                                        {branches.map((b) => {
+                                            const isSelected = pendingBranchIds.includes(b.id);
+                                            return (
+                                                <label
+                                                    key={b.id}
+                                                    className={`flex cursor-pointer select-none items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${isSelected
+                                                            ? "border-primary bg-primary/10 text-primary shadow-sm"
+                                                            : "border-border bg-card text-foreground hover:bg-muted"
+                                                        }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => togglePending(b.id)}
+                                                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"
+                                                    />
+                                                    <span>{b.name}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                    <button
+                                        onClick={(e) => {
+                                            applyBranchFilter();
+                                            // Biarkan tertutup alami bila dibutuhkan
+                                        }}
+                                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow"
+                                    >
+                                        <NavIcons name="checkCircle" className="h-4 w-4" />
+                                        Terapkan Filter
+                                    </button>
+                                </div>
+                            </Dropdown.Content>
+                        </Dropdown>
+
                         <div className="ml-auto">
                             <ReportBtn label="Buka Laporan" />
                         </div>
@@ -604,10 +644,15 @@ export default function Dashboard({
 
                 {/* Report shortcut (single branch) */}
                 {!isKasir && branches.length <= 1 && (
-                    <div className="flex items-center justify-between rounded-2xl border border-[rgb(var(--color-border))] bg-gradient-to-r from-primary-50/60 to-[rgb(var(--color-card))] px-5 py-3 shadow-sm">
-                        <div>
-                            <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">Laporan & Analitik</p>
-                            <p className="text-xs text-[rgb(var(--color-text-muted))]">Lihat tren penjualan, laba, dan lainnya</p>
+                    <div className="flex items-center justify-between rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 to-card px-5 py-4 shadow-sm">
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary">
+                                <NavIcons name="barChart3" className="h-5 w-5" strokeWidth={2.5} />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-foreground">Laporan & Analitik</p>
+                                <p className="text-xs font-medium text-muted-foreground mt-0.5">Lihat tren penjualan, laba, dan performa bisnis secara detail.</p>
+                            </div>
                         </div>
                         <ReportBtn label="Buka Laporan" />
                     </div>
@@ -630,7 +675,7 @@ export default function Dashboard({
                         label="Revenue Hari Ini"
                         value={fmt(stats.today_sales)}
                         sub={`${fmtNum(stats.today_count)} transaksi`}
-                        icon="💰"
+                        icon={<NavIcons name="wallet" className="h-5 w-5" />}
                         accent="bg-success/10 text-emerald-600"
                         trend={stats.today_sales_trend}
                     />
@@ -638,15 +683,15 @@ export default function Dashboard({
                         label="Rata-rata per Transaksi"
                         value={fmt(stats.aov_today)}
                         sub="Avg Order Value"
-                        icon="📊"
-                        accent="bg-primary-50 text-primary-600"
+                        icon={<NavIcons name="barChart3" className="h-5 w-5" />}
+                        accent="bg-primary/10 text-primary"
                         trend={stats.aov_trend}
                     />
                     <StatCard
                         label="Laba Hari Ini"
                         value={fmt(stats.today_profit)}
                         sub="Revenue - Pembelian - Pengeluaran"
-                        icon="💵"
+                        icon={<NavIcons name="banknote" className="h-5 w-5" />}
                         accent={stats.today_profit >= 0 ? "bg-success/10 text-emerald-600" : "bg-destructive/10 text-destructive"}
                         trend={stats.today_profit_trend}
                     />
@@ -654,8 +699,8 @@ export default function Dashboard({
                         label="Bulan Ini"
                         value={fmt(stats.month_sales)}
                         sub={`${fmtNum(stats.month_count)} transaksi`}
-                        icon="📈"
-                        accent="bg-violet-50 text-violet-600"
+                        icon={<NavIcons name="trendingUp" className="h-5 w-5" />}
+                        accent="bg-violet-500/10 text-violet-600"
                     />
                 </div>
 
@@ -666,38 +711,38 @@ export default function Dashboard({
                             label="Stok Menipis"
                             value={`${fmtNum(stats.low_stock)} item`}
                             sub={stats.low_stock > 0 ? "Perlu segera restok" : "Stok aman"}
-                            icon={stats.low_stock > 0 ? "⚠️" : "✅"}
-                            accent={stats.low_stock > 0 ? "bg-amber-50 text-amber-600" : "bg-success/10 text-emerald-500"}
+                            icon={stats.low_stock > 0 ? <NavIcons name="badgeAlert" className="h-5 w-5" /> : <NavIcons name="checkCircle" className="h-5 w-5" />}
+                            accent={stats.low_stock > 0 ? "bg-warning/10 text-warning" : "bg-success/10 text-emerald-500"}
                         />
                     ) : (
                         <StatCard
                             label="Shift Hari Ini"
                             value={fmtNum(stats.today_shifts)}
                             sub={`${fmtNum(stats.open_shifts)} sedang buka`}
-                            icon="🕐"
-                            accent="bg-amber-50 text-amber-600"
+                            icon={<NavIcons name="clock" className="h-5 w-5" />}
+                            accent="bg-warning/10 text-warning"
                         />
                     )}
                     <StatCard
                         label="Pembelian Hari Ini"
                         value={fmt(stats.today_purchases)}
                         sub="Dari supplier"
-                        icon="🛒"
-                        accent="bg-primary-50 text-primary-600"
+                        icon={<NavIcons name="shoppingCart" className="h-5 w-5" />}
+                        accent="bg-primary/10 text-primary"
                     />
                     <StatCard
                         label="Pengeluaran Hari Ini"
                         value={fmt(stats.today_expenses)}
                         sub="Biaya operasional"
-                        icon="💸"
-                        accent="bg-amber-50 text-amber-600"
+                        icon={<NavIcons name="creditCard" className="h-5 w-5" />}
+                        accent="bg-warning/10 text-warning"
                     />
                     <StatCard
                         label={hasStock ? "Total Produk" : "Total Item/Layanan"}
                         value={fmtNum(stats.total_products)}
                         sub="Aktif"
-                        icon="📦"
-                        accent="bg-violet-50 text-violet-600"
+                        icon={<NavIcons name="package" className="h-5 w-5" />}
+                        accent="bg-violet-500/10 text-violet-600"
                     />
                 </div>
 
@@ -777,30 +822,34 @@ export default function Dashboard({
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                         <Link
                             href={route("admin.kasir.index")}
-                            className="flex flex-col items-center gap-2 rounded-2xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] p-5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50/50"
+                            className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-md active:scale-[0.98]"
                         >
-                            <span className="text-3xl">
-                                {storeType === "fnb" ? "🍽️" : storeType === "service" ? "✂️" : storeType === "rental" ? "🔑" : storeType === "ticket" ? "🎟️" : storeType === "hospitality" ? "🛏️" : storeType === "parking" ? "🅿️" : storeType === "session" ? "🎮" : "🛒"}
+                            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-110 group-hover:bg-primary/20">
+                                {storeType === "fnb" ? <NavIcons name="utensils" className="h-7 w-7" /> : storeType === "service" ? <NavIcons name="scissors" className="h-7 w-7" /> : storeType === "rental" ? <NavIcons name="key" className="h-7 w-7" /> : storeType === "ticket" ? <NavIcons name="ticket" className="h-7 w-7" /> : storeType === "hospitality" ? <NavIcons name="bed" className="h-7 w-7" /> : storeType === "parking" ? <NavIcons name="car" className="h-7 w-7" /> : storeType === "session" ? <NavIcons name="gamepad2" className="h-7 w-7" /> : <NavIcons name="shoppingCart" className="h-7 w-7" />}
                             </span>
-                            <span className="text-sm font-semibold text-[rgb(var(--color-text-secondary))]">
+                            <span className="text-sm font-bold text-foreground">
                                 {storeType === "fnb" ? "Buka Kasir" : storeType === "service" ? "Mulai Layanan" : storeType === "rental" ? "Buka Sewa" : storeType === "ticket" ? "Jual Tiket" : storeType === "parking" ? "Parkir Masuk" : storeType === "session" ? "Mulai Sesi" : "Buka Kasir"}
                             </span>
                         </Link>
                         <Link
                             href={route("admin.sales.index")}
-                            className="flex flex-col items-center gap-2 rounded-2xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] p-5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50/50"
+                            className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-md active:scale-[0.98]"
                         >
-                            <span className="text-3xl">📋</span>
-                            <span className="text-sm font-semibold text-[rgb(var(--color-text-secondary))]">
+                            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-110 group-hover:bg-primary/20">
+                                <NavIcons name="clipboardList" className="h-7 w-7" />
+                            </span>
+                            <span className="text-sm font-bold text-foreground">
                                 {storeType === "rental" ? "Riwayat Sewa" : storeType === "service" ? "Riwayat Layanan" : "Riwayat Transaksi"}
                             </span>
                         </Link>
                         <Link
                             href={route("admin.customers.index")}
-                            className="flex flex-col items-center gap-2 rounded-2xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))] p-5 text-center shadow-sm transition hover:border-primary-300 hover:bg-primary-50/50"
+                            className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-6 text-center shadow-sm transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-md active:scale-[0.98]"
                         >
-                            <span className="text-3xl">👥</span>
-                            <span className="text-sm font-semibold text-[rgb(var(--color-text-secondary))]">
+                            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform group-hover:scale-110 group-hover:bg-primary/20">
+                                <NavIcons name="users" className="h-7 w-7" />
+                            </span>
+                            <span className="text-sm font-bold text-foreground">
                                 {storeType === "service" ? "Data Pelanggan" : "Pelanggan"}
                             </span>
                         </Link>

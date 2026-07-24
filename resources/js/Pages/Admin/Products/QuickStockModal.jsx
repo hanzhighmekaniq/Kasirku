@@ -92,71 +92,77 @@ export default function QuickStockModal({ product, type, variant: initialVariant
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
             <div
                 onClick={() => !processing && onClose?.()}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
             />
-            <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-2xl">
-                <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-base font-semibold text-foreground">
-                        Atur Stok
-                    </h3>
+            <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-xl sm:my-8 animate-in fade-in zoom-in-95 duration-200">
+                <div className="mb-6 flex flex-row items-center justify-between">
+                    <div className="space-y-1">
+                        <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                            Atur Stok Cepat
+                        </h3>
+                        <p className="text-sm text-muted-foreground">Sesuaikan stok dengan cepat.</p>
+                    </div>
                     <button
                         onClick={onClose}
                         disabled={processing}
-                        className="rounded-lg p-1 text-muted-foreground transition hover:bg-muted hover:text-card-foreground disabled:opacity-60"
+                        className="rounded-full bg-muted/50 p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
                     >
-                        <X className="h-5 w-5" />
+                        <X className="h-4 w-4" />
                     </button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-5">
                     {/* Info: pencatatan manual — tanpa supplier */}
-                    <div className="rounded-xl border border-warning/10 bg-warning/5 px-3 py-2.5 text-xs text-warning">
-                        <p className="font-medium">
-                            📋 Pencatatan Manual (Tanpa Supplier)
-                        </p>
-                        <p className="mt-0.5 leading-relaxed text-warning">
-                            Stok dicatat langsung tanpa melalui supplier. Untuk
-                            pembelian dari supplier, gunakan tombol{" "}
-                            <strong>Beli Stok</strong> di daftar produk.
-                        </p>
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
+                        <div className="flex items-start gap-3">
+                            <span className="text-lg leading-none">💡</span>
+                            <div>
+                                <p className="font-semibold">Pencatatan Manual</p>
+                                <p className="mt-1 leading-relaxed text-primary/80 text-xs">
+                                    Stok ini tidak melalui supplier. Untuk
+                                    pembelian dari supplier, gunakan tombol{" "}
+                                    <strong className="font-semibold">Beli Stok</strong>.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Toggle: Stok Masuk / Stok Keluar */}
-                    <div className="flex rounded-xl bg-muted p-1">
+                    <div className="flex rounded-xl bg-muted/50 p-1 border border-border/50">
                         <button
                             type="button"
                             onClick={() => handleTypeChange("in")}
-                            className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
+                            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all duration-200 ${
                                 isIn
-                                    ? "bg-card text-success shadow-sm"
-                                    : "text-muted-foreground hover:text-card-foreground"
+                                    ? "bg-card text-success shadow-sm ring-1 ring-border/50"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                             }`}
                         >
-                            ➕ Stok Masuk
+                            <span className="text-base leading-none">➕</span> Masuk
                         </button>
                         <button
                             type="button"
                             onClick={() => handleTypeChange("out")}
-                            className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
+                            className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all duration-200 ${
                                 !isIn
-                                    ? "bg-card text-destructive shadow-sm"
-                                    : "text-muted-foreground hover:text-card-foreground"
+                                    ? "bg-card text-destructive shadow-sm ring-1 ring-border/50"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                             }`}
                         >
-                            ➖ Stok Keluar
+                            <span className="text-base leading-none">➖</span> Keluar
                         </button>
                     </div>
 
                     {/* Variant Selector — hanya jika product punya variant */}
                     {hasVariants && !initialVariant && (
-                        <div>
-                            <label className="mb-1.5 block text-sm font-medium text-card-foreground">
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-foreground">
                                 Pilih Variant
                             </label>
-                            <div className="space-y-1.5">
+                            <div className="space-y-2">
                                 {variants.map((v) => (
                                     <button
                                         key={v.id}
@@ -165,23 +171,26 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                             setSelectedVariant(v);
                                             setCostPrice(v.cost_price || "");
                                         }}
-                                        className={`w-full flex items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm transition ${
+                                        className={`w-full group flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition-all duration-200 ${
                                             selectedVariant?.id === v.id
-                                                ? "border-primary/30 bg-primary/10 ring-2 ring-primary/20"
-                                                : "border-border hover:bg-muted"
+                                                ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-sm"
+                                                : "border-border bg-card hover:border-primary/40 hover:bg-muted/50"
                                         }`}
                                     >
-                                        <div>
-                                            <span className="font-medium text-foreground">
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className={`font-semibold ${selectedVariant?.id === v.id ? "text-primary" : "text-foreground group-hover:text-primary transition-colors"}`}>
                                                 {v.name}
                                             </span>
-                                            <span className="ml-2 text-xs text-muted-foreground font-mono">
+                                            <span className="text-xs text-muted-foreground font-mono">
                                                 {v.sku}
                                             </span>
                                         </div>
-                                        <span className="text-xs font-semibold text-card-foreground">
-                                            Stok: {v.stock ?? 0}
-                                        </span>
+                                        <div className="flex flex-col items-end gap-0.5">
+                                            <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Stok</span>
+                                            <span className={`font-bold ${selectedVariant?.id === v.id ? "text-primary" : "text-foreground"}`}>
+                                                {v.stock ?? 0}
+                                            </span>
+                                        </div>
                                     </button>
                                 ))}
                             </div>
@@ -191,41 +200,41 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                     {/* Produk / Variant Info */}
                     {(!hasVariants || selectedVariant || initialVariant) && (
                         <>
-                            <div>
-                                <p className="text-xs font-medium text-muted-foreground">
-                                    {selectedVariant ? "Variant" : "Produk"}
-                                </p>
-                                <p className="mt-0.5 text-sm font-medium text-foreground">
-                                    {activeName}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    SKU: {activeSku} &middot; {activeUnit}
-                                </p>
-                            </div>
-
-                            {/* Stok Saat Ini */}
-                            <div>
-                                <p className="text-xs font-medium text-muted-foreground">
-                                    Stok Saat Ini
-                                </p>
-                                <p
-                                    className={`mt-0.5 text-xl font-bold ${
-                                        product.track_stock &&
-                                        activeStock <= (product.stock_minimum || 0)
-                                            ? "text-destructive"
-                                            : "text-foreground"
-                                    }`}
-                                >
-                                    {product.track_stock
-                                        ? `${activeStock} ${activeUnit}`
-                                        : "Tidak dilacak"}
-                                </p>
+                            <div className="flex items-start justify-between rounded-xl border border-border bg-base px-4 py-3">
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                        {selectedVariant ? "Variant" : "Produk"}
+                                    </p>
+                                    <p className="mt-1 text-sm font-semibold text-foreground">
+                                        {activeName}
+                                    </p>
+                                    <p className="mt-0.5 text-xs text-muted-foreground font-mono">
+                                        {activeSku} <span className="mx-1">&bull;</span> {activeUnit}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                        Stok Saat Ini
+                                    </p>
+                                    <p
+                                        className={`mt-1 text-lg font-bold leading-none ${
+                                            product.track_stock &&
+                                            activeStock <= (product.stock_minimum || 0)
+                                                ? "text-destructive"
+                                                : "text-foreground"
+                                        }`}
+                                    >
+                                        {product.track_stock
+                                            ? `${activeStock}`
+                                            : "N/A"}
+                                    </p>
+                                </div>
                             </div>
 
                             {/* Qty */}
-                            <div>
-                                <label className="mb-1.5 block text-sm font-medium text-card-foreground">
-                                    Qty ({activeUnit})
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-foreground">
+                                    Jumlah <span className="font-normal text-muted-foreground">({activeUnit})</span>
                                 </label>
                                 <input
                                     type="number"
@@ -234,39 +243,38 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     placeholder="0"
                                     min="0.0001"
                                     step="any"
-                                    className={`w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 ${
+                                    className={`w-full rounded-xl border py-3 px-4 text-base font-semibold shadow-sm transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 ${
                                         isLargeQty
-                                            ? "border-warning bg-warning/5"
+                                            ? "border-warning bg-warning/5 text-warning"
                                             : "border-border bg-card text-foreground"
                                     }`}
                                     autoFocus
                                 />
                                 {isLargeQty && (
-                                    <p className="mt-1 text-xs font-medium text-warning">
-                                        ⚠️ Jumlah besar ({qtyNum.toLocaleString("id-ID")}{" "}
-                                        {activeUnit}). Pastikan angka sudah benar
-                                        sebelum simpan.
+                                    <p className="flex items-start gap-1.5 text-xs font-medium text-warning mt-2">
+                                        <span>⚠️</span>
+                                        <span>Jumlah sangat besar ({qtyNum.toLocaleString("id-ID")} {activeUnit}). Pastikan sudah benar.</span>
                                     </p>
                                 )}
                                 {!isIn && qty && Number(qty) > activeStock && (
-                                    <p className="mt-1 text-xs text-destructive">
-                                        ⚠️ Qty melebihi stok saat ini (
-                                        {activeStock} {activeUnit})
+                                    <p className="flex items-start gap-1.5 text-xs font-medium text-destructive mt-2">
+                                        <span>⚠️</span>
+                                        <span>Jumlah melebihi stok saat ini ({activeStock} {activeUnit}).</span>
                                     </p>
                                 )}
                             </div>
 
                             {/* Harga Modal — hanya saat Stok Masuk */}
                             {isIn && (
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-medium text-card-foreground">
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-foreground">
                                         Harga Modal / Unit{" "}
                                         <span className="font-normal text-muted-foreground">
                                             (opsional)
                                         </span>
                                     </label>
                                     <div className="relative">
-                                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
+                                        <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-sm font-medium text-muted-foreground">
                                             Rp
                                         </span>
                                         <input
@@ -278,19 +286,15 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                             placeholder={activeCostPrice || "0"}
                                             min="0"
                                             step="any"
-                                            className="w-full rounded-xl border border-border bg-card py-2.5 pl-10 pr-3.5 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                            className="w-full rounded-xl border border-border bg-card py-2.5 pl-12 pr-4 text-sm font-medium text-foreground shadow-sm transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
                                         />
                                     </div>
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        Harga produksi per unit. Kalau diisi, harga
-                                        modal produk akan diperbarui.
-                                    </p>
                                 </div>
                             )}
 
                             {/* Alasan */}
-                            <div>
-                                <label className="mb-1.5 block text-sm font-medium text-card-foreground">
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-foreground">
                                     Alasan
                                 </label>
                                 <SearchableSelect
@@ -303,8 +307,8 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                             </div>
 
                             {/* Catatan */}
-                            <div>
-                                <label className="mb-1.5 block text-sm font-medium text-card-foreground">
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-foreground">
                                     Catatan{" "}
                                     <span className="font-normal text-muted-foreground">
                                         (opsional)
@@ -314,25 +318,25 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     type="text"
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
-                                    placeholder="misal: produksi batch #45"
-                                    className="w-full rounded-xl border border-border bg-card py-2.5 px-3.5 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                    placeholder="Tulis catatan di sini..."
+                                    className="w-full rounded-xl border border-border bg-card py-2.5 px-4 text-sm font-medium text-foreground shadow-sm transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
                                 />
                             </div>
                         </>
                     )}
 
                     {error && (
-                        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
                             {error}
                         </div>
                     )}
                 </div>
 
-                <div className="mt-6 flex justify-end gap-2">
+                <div className="mt-8 flex items-center justify-end gap-3 pt-6 border-t border-border/50">
                     <button
                         onClick={onClose}
                         disabled={processing}
-                        className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-card-foreground transition hover:bg-muted disabled:opacity-60"
+                        className="rounded-xl bg-transparent px-5 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60"
                     >
                         Batal
                     </button>
@@ -345,13 +349,13 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                             (hasVariants && !initialVariant && !selectedVariant) ||
                             (!isIn && Number(qty) > activeStock)
                         }
-                        className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-md transition disabled:opacity-60 ${
+                        className={`rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100 ${
                             isIn
-                                ? "bg-success shadow-success/30 hover:bg-success/90"
-                                : "bg-destructive shadow-destructive/30 hover:bg-destructive/90"
+                                ? "bg-success shadow-success/20 hover:bg-success/90 hover:shadow-success/40"
+                                : "bg-destructive shadow-destructive/20 hover:bg-destructive/90 hover:shadow-destructive/40"
                         }`}
                     >
-                        {processing ? "Menyimpan..." : "Simpan"}
+                        {processing ? "Menyimpan..." : (isIn ? "Simpan Stok Masuk" : "Simpan Stok Keluar")}
                     </button>
                 </div>
             </div>

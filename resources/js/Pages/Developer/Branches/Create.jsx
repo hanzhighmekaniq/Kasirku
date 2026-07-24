@@ -50,7 +50,7 @@ export default function Create({ stores = [] }) {
                             onChange={(e) =>
                                 setData("store_id", e.target.value)
                             }
-                            className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                            className="mt-1.5 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                         >
                             <option value="">Pilih toko...</option>
                             {stores.map((s) => (

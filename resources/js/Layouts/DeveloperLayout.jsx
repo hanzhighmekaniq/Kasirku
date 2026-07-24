@@ -184,7 +184,7 @@ export default function DeveloperLayout({ header, children }) {
     return (
         <div className="min-h-screen bg-background text-foreground">
             {/* Desktop sidebar */}
-            <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] overflow-hidden lg:block">
+            <aside className="fixed inset-y-0 left-0 z-30 hidden w-[240px] overflow-hidden lg:block">
                 <Sidebar />
             </aside>
 
@@ -197,14 +197,14 @@ export default function DeveloperLayout({ header, children }) {
                     className={`absolute inset-0 bg-black/20 backdrop-blur-[2px] transition-opacity ${mobileOpen ? "opacity-100" : "opacity-0"}`}
                 />
                 <aside
-                    className={`absolute inset-y-0 left-0 w-[220px] overflow-hidden shadow-xl transition-transform ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+                    className={`absolute inset-y-0 left-0 w-[240px] overflow-hidden shadow-xl transition-transform ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
                 >
                     <Sidebar />
                 </aside>
             </div>
 
             {/* Main */}
-            <div className="flex min-h-screen flex-col lg:pl-[220px]">
+            <div className="flex min-h-screen flex-col lg:pl-[240px]">
                 {/* Topbar */}
                 <header className="sticky top-0 z-20 flex h-[57px] items-center justify-between border-b border-border bg-card px-4 sm:px-5">
                     <div className="flex min-w-0 items-center gap-3">

@@ -293,7 +293,7 @@ export default function Index({ stores, selectedStore, roles, allPermissions }) 
                         <select
                             value={selectedStore?.id ?? ""}
                             onChange={(e) => handleStoreChange(e.target.value)}
-                            className="block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 sm:max-w-md"
+                            className="block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20 sm:max-w-md"
                         >
                             <option value="">— Pilih Toko —</option>
                             {stores.map((s) => (

@@ -18,7 +18,20 @@ export default function Edit({ branch }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.branches.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Cabang
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Edit
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Edit Cabang"
                 breadcrumbs={["Admin", "Cabang", "Edit"]}
@@ -31,7 +44,7 @@ export default function Edit({ branch }) {
                     </>
                 }
                 description={`Perbarui detail cabang "${branch.name}".`}
-                backUrl={route("admin.branches.index")}
+                
             />
 
             <div className="mx-auto max-w-2xl">

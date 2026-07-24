@@ -47,7 +47,17 @@ export default function Index({ wastes, stats }) {
     }, 0);
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Stok
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Waste
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Catat Waste"
                 breadcrumbs={["Admin", "Stok", "Waste"]}
@@ -94,7 +104,7 @@ export default function Index({ wastes, stats }) {
                     <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
                     <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari no. waste..." className="w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
                 </div>
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200">
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20">
                     <option value="">Semua Status</option>
                     <option value="draft">Draft</option>
                     <option value="approved">Disetujui</option>

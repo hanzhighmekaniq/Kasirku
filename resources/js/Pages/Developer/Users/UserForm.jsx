@@ -156,7 +156,7 @@ export default function UserForm({
                                             <p className="text-xs text-slate-400">{s.code} · {tm.label}</p>
                                         </div>
                                         <select value={currentRole} onChange={e => setStoreRole(s.id, e.target.value)}
-                                            className={`rounded-lg border px-2 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary-200 ${currentRole ? 'border-primary-300 bg-white text-primary-700' : 'border-slate-200 bg-white text-slate-500'}`}>
+                                            className={`rounded-lg border px-2 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-ring/20 ${currentRole ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card text-muted-foreground'}`}>
                                             <option value="">— Tidak assign —</option>
                                             {STORE_ROLES.map(r => (
                                                 <option key={r.value} value={r.value}>{r.label}</option>

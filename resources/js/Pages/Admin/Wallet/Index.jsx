@@ -24,7 +24,17 @@ export default function Index({ wallet, transactions }) {
     const { flash } = usePage().props;
 
     return (
-        <AuthenticatedLayout header="Wallet">
+        <AuthenticatedLayout header="Wallet"
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Wallet
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Halaman
+                    </div>
+                </div>
+            }>
             <Head title="Wallet" />
 
             {flash?.success && (

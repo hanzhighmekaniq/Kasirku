@@ -8,7 +8,17 @@ export default function Stock({ summary, lowStock = [], byCategory = [] }) {
     const { flash } = usePage().props;
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Laporan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Stok
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Laporan Stok"
                 breadcrumbs={["Admin", "Laporan", "Stok"]}

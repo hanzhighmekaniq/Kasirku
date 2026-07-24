@@ -269,7 +269,20 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.sales.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        pageTitle
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        sale.sale_no
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`${pageTitle} ${sale.sale_no}`}
                 breadcrumbs={["Admin", pageTitle, sale.sale_no]}
@@ -282,7 +295,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                     </>
                 }
                 description={`Lihat rincian transaksi ${pageTitle.toLowerCase()}.`}
-                backUrl={route("admin.sales.index")}
+                
             />
 
             {flash?.success && (

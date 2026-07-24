@@ -34,25 +34,6 @@ export default function PageHeader({
             <section className="mb-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div className="flex items-start gap-3">
-                        {/* Back Button */}
-                        {backUrl && (
-                            <button
-                                type="button"
-                                onClick={handleBackClick}
-                                aria-label="Kembali"
-                                title="Kembali"
-                                className="
-                                    mt-1 inline-flex size-9 shrink-0 items-center justify-center
-                                    rounded-lg border border-border bg-card
-                                    text-muted-foreground shadow-sm
-                                    transition-colors
-                                    hover:bg-muted hover:text-foreground
-                                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-                                "
-                            >
-                                <ArrowLeft className="size-4" strokeWidth={2} />
-                            </button>
-                        )}
                         <div>
                             {/* Breadcrumbs */}
                             {breadcrumbs && breadcrumbs.length > 0 && (

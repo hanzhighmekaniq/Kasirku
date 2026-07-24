@@ -37,6 +37,19 @@ import {
     Users,
     UtensilsCrossed,
     Wallet,
+    BadgeAlert,
+    Bed,
+    Car,
+    CheckCircle2,
+    ChevronRight,
+    Filter,
+    Gamepad2,
+    Key,
+    Scissors,
+    Store,
+    Ticket,
+    TrendingDown,
+    Utensils,
     Zap,
 } from "lucide-react";
 
@@ -84,6 +97,29 @@ const ICONS = {
     theme: Palette,
     wallet: Wallet,
     paymentGw: CreditCard,
+    trendingUp: TrendingUp,
+    trendingDown: TrendingDown,
+    fileText: FileText,
+    chevronRight: ChevronRight,
+    store: Store,
+    clock: Clock,
+    checkCircle2: CheckCircle2,
+    barChart3: BarChart3,
+    banknote: Banknote,
+    badgeAlert: BadgeAlert,
+    checkCircle: CheckCircle,
+    shoppingCart: ShoppingCart,
+    creditCard: CreditCard,
+    utensils: Utensils,
+    scissors: Scissors,
+    key: Key,
+    ticket: Ticket,
+    bed: Bed,
+    car: Car,
+    gamepad2: Gamepad2,
+    clipboardList: ClipboardList,
+    filter: Filter,
+    package: Package,
 };
 
 const GROUP_ICONS = {
@@ -96,9 +132,9 @@ const GROUP_ICONS = {
     cog: Cog,
 };
 
-export function NavIcons({ name, className = "h-4 w-4" }) {
+export function NavIcons({ name, className = "h-4 w-4", strokeWidth = 1.7 }) {
     const Icon = ICONS[name] ?? ICONS.product;
-    return <Icon className={className} strokeWidth={1.7} />;
+    return <Icon className={className} strokeWidth={strokeWidth} />;
 }
 
 export function GroupIcons({ name, className = "h-4 w-4" }) {

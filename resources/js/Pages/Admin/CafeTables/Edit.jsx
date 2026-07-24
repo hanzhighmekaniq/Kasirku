@@ -18,7 +18,20 @@ export default function Edit({ cafeTable, branches }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.cafe-tables.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Meja
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Edit
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`Edit Meja ${cafeTable.table_number}`}
                 breadcrumbs={["Admin", "Meja", "Edit"]}
@@ -31,7 +44,7 @@ export default function Edit({ cafeTable, branches }) {
                     </>
                 }
                 description={`Edit meja ${cafeTable.table_number}`}
-                backUrl={route("admin.cafe-tables.index")}
+                
             />
 
             <div className="mx-auto max-w-2xl">

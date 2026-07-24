@@ -44,7 +44,7 @@ export default function ShiftModal({ show, onClose, suggestedShiftNo }) {
             if (data?.success === false) {
                 throw new Error(data.message || "Gagal membuka shift.");
             }
-            router.reload({ only: ["activeShift"] });
+            router.reload({ only: ["activeShift"], preserveState: true, preserveScroll: true });
             reset();
             onClose();
         } catch (e) {
@@ -84,7 +84,7 @@ export default function ShiftModal({ show, onClose, suggestedShiftNo }) {
                         type="button"
                         onClick={submit}
                         disabled={submitting}
-                        className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-xl bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold  shadow-sm transition hover:bg-secondary-foreground disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {submitting ? "Membuka..." : "Buka Shift"}
                     </button>

@@ -42,7 +42,17 @@ export default function Index({ adjustments, stats }) {
     const fmtDate = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Stok
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Penyesuaian Stok
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Penyesuaian Stok"
                 breadcrumbs={["Admin", "Stok", "Penyesuaian Stok"]}

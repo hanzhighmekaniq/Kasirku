@@ -12,7 +12,17 @@ export default function Expenses({ from, to, summary, dailyTrend = [], byCategor
     const { flash } = usePage().props;
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Laporan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Pengeluaran
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Laporan Pengeluaran"
                 breadcrumbs={["Admin", "Laporan", "Pengeluaran"]}

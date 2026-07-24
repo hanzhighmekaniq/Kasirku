@@ -108,7 +108,7 @@ export default function RentalKasir(props) {
                         </div>
                         <div className="mt-3 flex items-baseline justify-between">
                             <div className="text-[15px] font-semibold tabular-nums">{k.fmt(item.p)}<span className="text-[10.5px] text-muted-foreground font-normal">{item.unit}</span></div>
-                            <button onClick={() => k.addToCart({ id: `rent-${i}`, name: item.n, sell_price: item.p, track_stock: false })} className="h-8 px-3 rounded-lg bg-primary text-white text-[11.5px] font-medium shadow-sm">Add</button>
+                            <button onClick={() => k.addToCart({ id: `rent-${i}`, name: item.n, sell_price: item.p, track_stock: false })} className="h-8 px-3 rounded-lg bg-primary text-foreground text-[11.5px] font-medium shadow-sm">Add</button>
                         </div>
                     </div>
                 ))}

@@ -992,6 +992,10 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 SettingController::class,
                 'updateFeatures',
             ])->name('settings.features.update');
+            Route::put('/settings/branches/{branch}', [
+                SettingController::class,
+                'updateBranch',
+            ])->name('settings.branch.update');
 
         });
         Route::middleware([

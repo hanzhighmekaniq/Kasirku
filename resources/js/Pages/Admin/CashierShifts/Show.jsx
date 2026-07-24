@@ -159,7 +159,20 @@ export default function Show({
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.cashier-shifts.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Shift
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        shift.shift_no
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`Shift ${shift.shift_no}`}
                 breadcrumbs={["Admin", "Shift", shift.shift_no]}
@@ -172,7 +185,7 @@ export default function Show({
                     </>
                 }
                 description={`Kasir: ${shift.user?.name ?? "-"}`}
-                backUrl={route("admin.cashier-shifts.index")}
+                
                 action={
                     <div className="flex items-center gap-1 sm:ml-auto">
                         {prevShift && (

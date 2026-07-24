@@ -12,7 +12,17 @@ export default function Purchases({ from, to, summary, dailyTrend = [], bySuppli
     const { flash } = usePage().props;
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Laporan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Pembelian
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Laporan Pembelian"
                 breadcrumbs={["Admin", "Laporan", "Pembelian"]}

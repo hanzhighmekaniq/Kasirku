@@ -18,7 +18,20 @@ export default function Create({ branches }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.cafe-tables.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Meja
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Tambah
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Tambah Meja Cafe"
                 breadcrumbs={["Admin", "Meja", "Tambah"]}
@@ -31,7 +44,7 @@ export default function Create({ branches }) {
                     </>
                 }
                 description="Isi informasi meja yang akan ditambahkan."
-                backUrl={route("admin.cafe-tables.index")}
+                
             />
 
             <div className="mx-auto max-w-2xl">

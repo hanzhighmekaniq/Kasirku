@@ -18,7 +18,17 @@ export default function Commissions({ from, to, summary, byEmployee = [], commis
     const { flash } = usePage().props;
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Laporan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Komisi
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Laporan Komisi"
                 breadcrumbs={["Admin", "Laporan", "Komisi"]}

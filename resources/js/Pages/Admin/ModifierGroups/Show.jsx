@@ -5,7 +5,7 @@ import { Plus } from 'lucide-react';
 import Button from '@/Components/ui/Button';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
-const inputCls = 'block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20';
+const inputCls = 'block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20';
 
 const SELECTION_LABEL = {
     single: { label: 'Pilih 1', bg: 'bg-blue-100', text: 'text-blue-700' },

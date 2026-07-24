@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { Head } from '@inertiajs/react';
 import {
     ArrowLeft,
     ChevronDown,
@@ -335,11 +336,12 @@ export default function PaymentView({
     const totalItems = cart.reduce((s, it) => s + Number(it.qty || 1), 0);
 
     return (
-        <div className="flex flex-1 flex-col overflow-y-auto lg:overflow-hidden bg-background min-h-screen lg:min-h-0">
+        <div className="flex flex-1 flex-col bg-background min-h-screen w-full">
+            <Head title="Pembayaran" />
             {/* RESPONSIVE HEADER */}
             <div className="shrink-0 border-b border-border bg-card px-3 sm:px-5 py-2.5 sm:py-3 shadow-xs">
                 <div className="mx-auto flex flex-wrap max-w-[1600px] items-center justify-between gap-2.5">
-                   
+
 
                     {/* Mode Tabs */}
                     <div className="flex-1 overflow-x-auto no-scrollbar py-0.5">
@@ -352,10 +354,9 @@ export default function PaymentView({
                                         key={tab.key}
                                         type="button"
                                         onClick={() => !splitMode && setMainTab(tab.key)}
-                                        className={`flex items-center gap-1.5 sm:gap-2 rounded-lg px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
-                                            active
-                                                ? 'bg-card text-primary shadow-xs font-bold'
-                                                : 'text-muted-foreground hover:text-foreground'
+                                        className={`flex items-center gap-1.5 sm:gap-2 rounded-lg px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold transition-all ${active
+                                            ? 'bg-card text-primary shadow-xs font-bold'
+                                            : 'text-muted-foreground hover:text-foreground'
                                             } ${!splitMode ? '' : 'opacity-50 cursor-not-allowed'}`}
                                     >
                                         <Icon size={16} strokeWidth={2.2} />
@@ -377,10 +378,9 @@ export default function PaymentView({
                         <button
                             type="button"
                             onClick={() => setSplitMode(!splitMode)}
-                            className={`inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${
-                                splitMode
-                                    ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
-                                    : 'border-border bg-background text-foreground hover:bg-muted'
+                            className={`inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition ${splitMode
+                                ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                                : 'border-border bg-background text-foreground hover:bg-muted'
                                 }`}
                         >
                             <Split size={15} strokeWidth={2.2} />
@@ -410,84 +410,183 @@ export default function PaymentView({
             </div>
 
             {/* MAIN CONTENT GRID */}
-            <main className="flex-1 overflow-y-auto lg:overflow-hidden p-3 sm:p-5">
-                <div className="mx-auto flex flex-col lg:flex-row h-full max-w-[1600px] gap-4">
+            <main className="flex-1 p-3 sm:p-5">
+                <div className="mx-auto flex max-w-[1600px] flex-col gap-4 lg:flex-row lg:items-start">
+
                     {/* LEFT — Order Detail Card */}
-                    <section className={`w-full lg:w-7/12 shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xs ${
-                        showMobileOrder ? 'flex' : 'hidden lg:flex'
-                    }`}>
+                    <section
+                        className={`
+                w-full
+                lg:w-7/12
+                shrink-0
+                flex-col
+                overflow-hidden
+                rounded-2xl
+                border border-border
+                bg-card
+                shadow-xs
+
+                lg:sticky
+                lg:top-4
+                lg:self-start
+                lg:max-h-[calc(100vh-2rem)]
+
+                ${showMobileOrder ? "flex" : "hidden lg:flex"}
+            `}
+                    >
                         {/* Detail Header */}
-                        <div className="shrink-0 border-b border-border px-4 sm:px-5 py-3 space-y-1 bg-muted/20">
+                        <div className="shrink-0 space-y-1 border-b border-border bg-muted/20 px-4 py-3 sm:px-5">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-sm sm:text-base font-bold text-foreground">Detail Pesanan</h2>
-                                <span className="rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold text-primary uppercase tracking-wider">
-                                    {k.orderType || 'retail'}
+                                <h2 className="text-sm font-bold text-foreground sm:text-base">
+                                    Detail Pesanan
+                                </h2>
+
+                                <span className="rounded-full bg-primary/10 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-primary">
+                                    {k.orderType || "retail"}
                                 </span>
                             </div>
-                            <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <span className="font-mono font-semibold text-foreground">{saleNo}</span>
+
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                                <span className="font-mono font-semibold text-foreground">
+                                    {saleNo}
+                                </span>
+
                                 <span>• {totalItems} item</span>
+
                                 {k.selectedCustomerObj && (
-                                    <span>• Pelanggan: <strong className="text-foreground">{k.selectedCustomerObj.name}</strong> ({k.selectedCustomerObj.phone || 'Tanpa No HP'})</span>
+                                    <span>
+                                        • Pelanggan:{" "}
+                                        <strong className="text-foreground">
+                                            {k.selectedCustomerObj.name}
+                                        </strong>{" "}
+                                        ({k.selectedCustomerObj.phone || "Tanpa No HP"})
+                                    </span>
                                 )}
+
                                 {k.selectedTableObj && (
-                                    <span>• Meja: <strong className="text-foreground">{k.selectedTableObj.table_number}</strong></span>
+                                    <span>
+                                        • Meja:{" "}
+                                        <strong className="text-foreground">
+                                            {k.selectedTableObj.table_number}
+                                        </strong>
+                                    </span>
                                 )}
+
                                 {k.takeawayCustomerName && (
-                                    <span>• Pengambilan: <strong className="text-foreground">{k.takeawayCustomerName}</strong> {k.pickupTime ? `(${k.pickupTime})` : ''}</span>
+                                    <span>
+                                        • Pengambilan:{" "}
+                                        <strong className="text-foreground">
+                                            {k.takeawayCustomerName}
+                                        </strong>{" "}
+                                        {k.pickupTime ? `(${k.pickupTime})` : ""}
+                                    </span>
                                 )}
+
                                 {k.deliveryAddress && (
-                                    <span>• Alamat: <strong className="text-foreground">{k.deliveryAddress}</strong></span>
+                                    <span>
+                                        • Alamat:{" "}
+                                        <strong className="text-foreground">
+                                            {k.deliveryAddress}
+                                        </strong>
+                                    </span>
                                 )}
+
                                 {k.selectedEmployeeObj && (
-                                    <span>• Kasir: <strong className="text-foreground">{k.selectedEmployeeObj.name}</strong></span>
+                                    <span>
+                                        • Kasir:{" "}
+                                        <strong className="text-foreground">
+                                            {k.selectedEmployeeObj.name}
+                                        </strong>
+                                    </span>
                                 )}
                             </div>
+
                             {k.notes && (
-                                <p className="text-xs text-amber-800 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20 font-medium mt-1">
+                                <p className="mt-1 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-800">
                                     Catatan Pesanan: {k.notes}
                                 </p>
                             )}
                         </div>
 
                         {/* Order Items Table */}
-                        <div className="flex-1 overflow-y-auto px-4 sm:px-5 max-h-[300px] lg:max-h-none">
+                        <div className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-5">
                             <table className="w-full text-xs sm:text-sm">
-                                <thead className="sticky top-0 bg-card text-[11px] uppercase tracking-wider text-muted-foreground z-10 border-b border-border font-bold">
+                                <thead className="sticky top-0 z-10 border-b border-border bg-card text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                                     <tr>
-                                        <th className="py-2.5 text-left">Produk</th>
-                                        <th className="py-2.5 text-center w-12 sm:w-16">Qty</th>
-                                        <th className="py-2.5 text-right w-20 sm:w-24">Harga</th>
-                                        <th className="py-2.5 text-right w-20 sm:w-24">Total</th>
+                                        <th className="py-2.5 text-left">
+                                            Produk
+                                        </th>
+
+                                        <th className="w-12 py-2.5 text-center sm:w-16">
+                                            Qty
+                                        </th>
+
+                                        <th className="w-20 py-2.5 text-right sm:w-24">
+                                            Harga
+                                        </th>
+
+                                        <th className="w-20 py-2.5 text-right sm:w-24">
+                                            Total
+                                        </th>
                                     </tr>
                                 </thead>
+
                                 <tbody>
                                     {cart.map((item) => (
-                                        <tr key={item.cartId} className="border-b border-border/50 last:border-0 align-top">
+                                        <tr
+                                            key={item.cartId}
+                                            className="align-top border-b border-border/50 last:border-0"
+                                        >
                                             <td className="py-2.5 pr-2">
-                                                <div className="font-semibold text-foreground">{item.name}</div>
+                                                <div className="font-semibold text-foreground">
+                                                    {item.name}
+                                                </div>
+
                                                 {item.variantName && (
-                                                    <div className="text-xs text-muted-foreground">{item.variantName}</div>
-                                                )}
-                                                {item.modifiers && item.modifiers.length > 0 && (
-                                                    <div className="text-[11px] text-muted-foreground/80 pl-2">
-                                                        {item.modifiers.map(m => `+ ${m.name} (${fmt(m.price_addition || 0)})`).join(', ')}
+                                                    <div className="text-xs text-muted-foreground">
+                                                        {item.variantName}
                                                     </div>
                                                 )}
+
+                                                {item.modifiers &&
+                                                    item.modifiers.length > 0 && (
+                                                        <div className="pl-2 text-[11px] text-muted-foreground/80">
+                                                            {item.modifiers
+                                                                .map(
+                                                                    (m) =>
+                                                                        `+ ${m.name} (${fmt(
+                                                                            m.price_addition || 0
+                                                                        )})`
+                                                                )
+                                                                .join(", ")}
+                                                        </div>
+                                                    )}
+
                                                 {item.note && (
-                                                    <div className="text-[11px] text-amber-600 dark:text-amber-400 font-medium pl-2">
+                                                    <div className="pl-2 text-[11px] font-medium text-amber-600 dark:text-amber-400">
                                                         Catatan: {item.note}
                                                     </div>
                                                 )}
+
                                                 {(item.promoDiscount ?? 0) > 0 && (
-                                                    <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium pl-2">
-                                                        Promo {item.promoName || ''}: -{fmt(item.promoDiscount)}
+                                                    <div className="pl-2 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                                                        Promo {item.promoName || ""}: -
+                                                        {fmt(item.promoDiscount)}
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="py-2.5 text-center text-muted-foreground font-semibold">{item.qty}</td>
-                                            <td className="py-2.5 text-right text-muted-foreground">{fmt(item.price)}</td>
-                                            <td className="py-2.5 text-right font-bold text-foreground">{fmt(item.price * item.qty)}</td>
+
+                                            <td className="py-2.5 text-center font-semibold text-muted-foreground">
+                                                {item.qty}
+                                            </td>
+
+                                            <td className="py-2.5 text-right text-muted-foreground">
+                                                {fmt(item.price)}
+                                            </td>
+
+                                            <td className="py-2.5 text-right font-bold text-foreground">
+                                                {fmt(item.price * item.qty)}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -495,52 +594,76 @@ export default function PaymentView({
                         </div>
 
                         {/* Order Summary Footer */}
-                        <div className="shrink-0 border-t border-border px-4 sm:px-5 py-3 space-y-1.5 text-xs sm:text-sm bg-muted/20">
+                        <div className="shrink-0 space-y-1.5 border-t border-border bg-muted/20 px-4 py-3 text-xs sm:px-5 sm:text-sm">
                             <div className="flex justify-between text-muted-foreground">
                                 <span>Subtotal Produk</span>
-                                <span className="font-medium text-foreground">{fmt(k.subtotal || (grandTotal - roundingAdjustment))}</span>
+
+                                <span className="font-medium text-foreground">
+                                    {fmt(
+                                        k.subtotal ||
+                                        grandTotal - roundingAdjustment
+                                    )}
+                                </span>
                             </div>
+
                             {(k.totalPromoDisc ?? 0) > 0 && (
                                 <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
                                     <span>Diskon Promo Produk</span>
                                     <span>-{fmt(k.totalPromoDisc)}</span>
                                 </div>
                             )}
+
                             {(k.cartPromoDiscount ?? 0) > 0 && (
                                 <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-                                    <span>{k.cartPromoName || 'Promo Keranjang'}</span>
+                                    <span>
+                                        {k.cartPromoName || "Promo Keranjang"}
+                                    </span>
+
                                     <span>-{fmt(k.cartPromoDiscount)}</span>
                                 </div>
                             )}
+
                             {Number(k.discount ?? 0) > 0 && (
                                 <div className="flex justify-between text-destructive">
                                     <span>Diskon Manual</span>
                                     <span>-{fmt(k.discount)}</span>
                                 </div>
                             )}
+
                             {Number(k.tax ?? 0) > 0 && (
                                 <div className="flex justify-between text-muted-foreground">
                                     <span>Pajak</span>
                                     <span>+{fmt(k.tax)}</span>
                                 </div>
                             )}
+
                             {roundingAdjustment !== 0 && (
                                 <div className="flex justify-between text-xs">
-                                    <span className="text-muted-foreground">Pembulatan</span>
+                                    <span className="text-muted-foreground">
+                                        Pembulatan
+                                    </span>
+
                                     <span className="text-emerald-600 dark:text-emerald-400">
-                                        {roundingAdjustment > 0 ? '+' : ''}{fmt(roundingAdjustment)}
+                                        {roundingAdjustment > 0 ? "+" : ""}
+                                        {fmt(roundingAdjustment)}
                                     </span>
                                 </div>
                             )}
-                            <div className="border-t border-border pt-2 flex items-baseline justify-between">
-                                <span className="text-xs sm:text-sm font-bold text-muted-foreground tracking-wider uppercase">TOTAL TAGIHAN</span>
-                                <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-primary">{fmt(displayTotal)}</span>
+
+                            <div className="flex items-baseline justify-between border-t border-border pt-2">
+                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground sm:text-sm">
+                                    TOTAL TAGIHAN
+                                </span>
+
+                                <span className="text-2xl font-extrabold tracking-tight text-primary sm:text-3xl">
+                                    {fmt(displayTotal)}
+                                </span>
                             </div>
                         </div>
                     </section>
 
                     {/* RIGHT — Dynamic Payment Panel */}
-                    <aside className="w-full lg:w-5/12 flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xs min-h-[460px] lg:min-h-0">
+                    <aside className="flex min-h-[460px] w-full flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xs lg:min-h-0 lg:w-5/12">
                         {splitMode ? (
                             <SplitView
                                 k={k}
@@ -551,7 +674,7 @@ export default function PaymentView({
                                 displayTotal={displayTotal}
                                 onDone={handleSplitDone}
                             />
-                        ) : mainTab === 'langsung' ? (
+                        ) : mainTab === "langsung" ? (
                             <LangsungPanel
                                 paymentMethods={paymentMethods}
                                 displayTotal={displayTotal}
@@ -568,9 +691,11 @@ export default function PaymentView({
                                 roundingCustomValue={roundingCustomValue}
                                 setRoundingCustomValue={setRoundingCustomValue}
                                 isFinalizing={isFinalizing}
-                                onPay={(payments) => handleMethodPay(payments, 'Langsung')}
+                                onPay={(payments) =>
+                                    handleMethodPay(payments, "Langsung")
+                                }
                             />
-                        ) : mainTab === 'kasbon' ? (
+                        ) : mainTab === "kasbon" ? (
                             <KasbonPanel
                                 paymentMethods={paymentMethods}
                                 pgMethods={pgMethods}
@@ -585,7 +710,7 @@ export default function PaymentView({
                                 isFinalizing={isFinalizing}
                                 onPay={handleKasbon}
                                 onPayPg={handleKasbonPg}
-                                onBack={() => setMainTab('langsung')}
+                                onBack={() => setMainTab("langsung")}
                             />
                         ) : (
                             <GatewayPanel

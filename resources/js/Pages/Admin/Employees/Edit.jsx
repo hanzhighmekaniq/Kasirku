@@ -46,7 +46,20 @@ export default function Edit({
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.employees.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Karyawan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Edit
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`Edit ${pageLabel}`}
                 breadcrumbs={["Admin", "Karyawan", "Edit"]}
@@ -59,7 +72,7 @@ export default function Edit({
                     </>
                 }
                 description="Ubah identitas, cabang, jabatan, status, dan akun login. Perubahan langsung mempengaruhi akses POS."
-                backUrl={route("admin.employees.index")}
+                
             />
 
             <div className="mx-auto max-w-3xl pb-10">

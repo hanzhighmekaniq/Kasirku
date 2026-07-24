@@ -100,7 +100,20 @@ export default function Create({ sales }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.sale-returns.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Retur Penjualan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Buat
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Buat Retur Penjualan"
                 breadcrumbs={["Admin", "Retur Penjualan", "Buat"]}
@@ -113,7 +126,7 @@ export default function Create({ sales }) {
                     </>
                 }
                 description="Pilih penjualan yang akan diretur."
-                backUrl={route("admin.sale-returns.index")}
+                
             />
 
             <form onSubmit={submit} className="space-y-5">

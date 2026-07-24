@@ -4,6 +4,7 @@ import { useState } from "react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import Button from "@/Components/ui/Button";
 import { Plus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 const PAGE_TITLE = {
     retail: "Produk",
@@ -517,7 +518,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                         Rp{" "}
                                                         {Math.round(
                                                             pu.sell_price /
-                                                                pu.conversion_qty,
+                                                            pu.conversion_qty,
                                                         ).toLocaleString(
                                                             "id-ID",
                                                         )}{" "}
@@ -591,12 +592,23 @@ export default function Variants({ product, storeType = "retail" }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="leading-tight">
-                    <div className="text-sm font-semibold text-foreground">
-                        Manajemen {pageTitle}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                        Varian
+                <div className="flex items-center gap-3">
+                    {/* Tombol Kembali */}
+                    <Link
+                        href={route("admin.products.index")}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    >
+                        <ArrowLeft size={16} />
+                    </Link>
+
+                    {/* Judul */}
+                    <div className="leading-tight">
+                        <div className="text-sm font-semibold text-foreground">
+                            Manajemen {pageTitle}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                            Varian
+                        </div>
                     </div>
                 </div>
             }
@@ -815,7 +827,7 @@ export default function Variants({ product, storeType = "retail" }) {
                                             </td>
                                             <td className="px-5 py-4 text-center">
                                                 {v.packaging_units?.length >
-                                                0 ? (
+                                                    0 ? (
                                                     <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
                                                         {
                                                             v.packaging_units
@@ -921,38 +933,38 @@ export default function Variants({ product, storeType = "retail" }) {
                                                 </span>
                                                 {Number(v.cost_price || 0) >
                                                     0 && (
-                                                    <span className="text-xs text-muted-foreground">
-                                                        Beli:{" "}
-                                                        {fmt(v.cost_price)}
-                                                    </span>
-                                                )}
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Beli:{" "}
+                                                            {fmt(v.cost_price)}
+                                                        </span>
+                                                    )}
                                             </div>
                                             {(v.price_tiers?.length > 0 ||
                                                 v.packaging_units?.length >
-                                                    0) && (
-                                                <div className="mt-2 flex flex-wrap gap-1.5">
-                                                    {v.price_tiers?.length >
-                                                        0 && (
-                                                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                                                            {
-                                                                v.price_tiers
-                                                                    .length
-                                                            }{" "}
-                                                            grosir
-                                                        </span>
-                                                    )}
-                                                    {v.packaging_units
-                                                        ?.length > 0 && (
-                                                        <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning">
-                                                            {
-                                                                v.packaging_units
-                                                                    .length
-                                                            }{" "}
-                                                            kemasan
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
+                                                0) && (
+                                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                                        {v.price_tiers?.length >
+                                                            0 && (
+                                                                <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                                                    {
+                                                                        v.price_tiers
+                                                                            .length
+                                                                    }{" "}
+                                                                    grosir
+                                                                </span>
+                                                            )}
+                                                        {v.packaging_units
+                                                            ?.length > 0 && (
+                                                                <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning">
+                                                                    {
+                                                                        v.packaging_units
+                                                                            .length
+                                                                    }{" "}
+                                                                    kemasan
+                                                                </span>
+                                                            )}
+                                                    </div>
+                                                )}
                                         </div>
                                     </div>
                                     <div className="mt-3 flex items-center gap-1">

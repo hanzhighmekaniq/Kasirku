@@ -76,7 +76,17 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
     }, [purchaseReturns]);
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        pageTitle
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={pageTitle}
                 breadcrumbs={["Admin", pageTitle]}

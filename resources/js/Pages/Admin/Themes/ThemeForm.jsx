@@ -280,7 +280,7 @@ export default function ThemeForm({
                         <Clipboard size={13} /> Copy
                     </button>
                 </div>
-                <pre className="mt-3 max-h-[220px] overflow-auto rounded-lg bg-muted/70 p-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                <pre className="mt-3 max-h-[240px] overflow-auto rounded-lg bg-muted/70 p-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
                     {cssOutput}
                 </pre>
             </div>

@@ -5,6 +5,7 @@ import { useState } from "react";
 import BarcodeScanner from "@/Components/BarcodeScanner";
 import TreePicker from "@/Components/TreePicker";
 import Select from "@/Components/ui/Select";
+import { ArrowLeft } from "lucide-react";
 import {
     BarChart3,
     ClipboardList,
@@ -134,19 +135,19 @@ export default function Create({
         data.type === "time_based"
             ? "Tarif / Harga"
             : data.type === "service"
-              ? "Tarif Jasa"
-              : data.type === "rental_item"
-                ? "Tarif Sewa"
-                : "Harga Jual";
+                ? "Tarif Jasa"
+                : data.type === "rental_item"
+                    ? "Tarif Sewa"
+                    : "Harga Jual";
 
     const unitOptionsForType =
         data.type === "time_based"
             ? ["jam", "menit", "hari", "malam", "sesi"]
             : data.type === "service"
-              ? ["kunjungan", "sesi", "pcs", "item"]
-              : data.type === "rental_item"
-                ? ["unit", "pcs", "set", "hari"]
-                : UNIT_OPTIONS;
+                ? ["kunjungan", "sesi", "pcs", "item"]
+                : data.type === "rental_item"
+                    ? ["unit", "pcs", "set", "hari"]
+                    : UNIT_OPTIONS;
 
     const handleTypeChange = (newType) => {
         setData("type", newType);
@@ -169,8 +170,8 @@ export default function Create({
         Number(data.cost_price) > 0
             ? (marginRp / Number(data.cost_price)) * 100
             : Number(data.sell_price) > 0
-              ? 100
-              : 0;
+                ? 100
+                : 0;
 
     const autoGenerateSku = () => {
         const slug = (data.name || "PRD")
@@ -191,13 +192,25 @@ export default function Create({
 
     return (
         <AuthenticatedLayout
+
             header={
-                <div className="leading-tight">
-                    <div className="text-sm font-semibold text-foreground">
-                        Manajemen {pageTitle}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                        Tambah
+                <div className="flex items-center gap-3">
+                    {/* Tombol Kembali */}
+                    <Link
+                        href={route("admin.products.index")}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    >
+                        <ArrowLeft size={16} />
+                    </Link>
+
+                    {/* Judul */}
+                    <div className="leading-tight">
+                        <div className="text-sm font-semibold text-foreground">
+                            Manajemen {pageTitle}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                            Tambah
+                        </div>
                     </div>
                 </div>
             }
@@ -215,7 +228,7 @@ export default function Create({
                     </>
                 }
                 description="Lengkapi detail — mulai dari identitas, harga, kemasan, sampai varian. Ringkasan di kanan akan berubah otomatis seiring kamu mengisi."
-                backUrl={route("admin.products.index")}
+
             />
 
             <form id="productForm" onSubmit={submit}>
@@ -286,7 +299,7 @@ export default function Create({
                                             <button
                                                 type="button"
                                                 onClick={() => setShowScanner(true)}
-                                            className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                                                className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
                                             >
                                                 <ScanLine className="h-4 w-4" />
                                                 Scan
@@ -360,267 +373,267 @@ export default function Create({
                             subtitle="Atur harga jual, modal, grosir bertingkat, dan kemasan"
                         >
                             <div className="space-y-5">
-                                    <div className={`grid gap-4 ${feat.costPrice ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1 md:grid-cols-2"}`}>
-                                        <Field label={priceLabel} required error={errors.sell_price}>
+                                <div className={`grid gap-4 ${feat.costPrice ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1 md:grid-cols-2"}`}>
+                                    <Field label={priceLabel} required error={errors.sell_price}>
+                                        <CurrencyInput
+                                            value={data.sell_price}
+                                            onChange={(v) => setData("sell_price", v)}
+                                            error={!!errors.sell_price}
+                                            required
+                                        />
+                                    </Field>
+                                    {feat.costPrice && (
+                                        <Field label="Harga Beli / Modal" error={errors.cost_price}>
                                             <CurrencyInput
-                                                value={data.sell_price}
-                                                onChange={(v) => setData("sell_price", v)}
-                                                error={!!errors.sell_price}
-                                                required
+                                                value={data.cost_price}
+                                                onChange={(v) => setData("cost_price", v)}
+                                                error={!!errors.cost_price}
                                             />
                                         </Field>
-                                        {feat.costPrice && (
-                                            <Field label="Harga Beli / Modal" error={errors.cost_price}>
-                                                <CurrencyInput
-                                                    value={data.cost_price}
-                                                    onChange={(v) => setData("cost_price", v)}
-                                                    error={!!errors.cost_price}
-                                                />
-                                            </Field>
-                                        )}
-                                        {feat.costPrice && (
-                                            <Field label="Margin">
-                                                <div className="flex gap-2">
-                                                    <div className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-destructive/20 bg-destructive/5" : "border-success/20 bg-success/10"}`}>
-                                                        <div className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-destructive" : "text-success"}`}>
-                                                            Rupiah
-                                                        </div>
-                                                        <div className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-destructive" : "text-success"}`}>
-                                                            Rp {marginRp.toLocaleString("id-ID")}
-                                                        </div>
-                                                    </div>
-                                                    <div className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-destructive/20 bg-destructive/5" : "border-success/20 bg-success/10"}`}>
-                                                        <div className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-destructive" : "text-success"}`}>
-                                                            Persen
-                                                        </div>
-                                                        <div className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-destructive" : "text-success"}`}>
-                                                            {marginPct.toFixed(1)}%
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </Field>
-                                        )}
-                                    </div>
-
-                                    {/* MULTI SATUAN */}
-                                    {feat.multiUnit && (
-                                        <div className="rounded-xl border border-warning/20 bg-warning/5 p-4">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/10">
-                                                        <Package className="h-4 w-4 text-warning" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-sm font-semibold text-foreground">Multi Satuan (Kemasan)</div>
-                                                        <div className="text-[11px] text-muted-foreground">
-                                                            cth. Dus berisi 12 {data.unit}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setData("packaging_units", [
-                                                            ...data.packaging_units,
-                                                            { name: "", conversion_qty: "", sell_price: "", barcode: "" },
-                                                        ])
-                                                    }
-                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/10"
-                                                >
-                                                    <Plus className="h-4 w-4" />
-                                                    Tambah kemasan
-                                                </button>
-                                            </div>
-                                            <div className="space-y-2">
-                                                {data.packaging_units.map((pu, i) => (
-                                                    <div key={i} className="grid grid-cols-12 gap-2 items-center rounded-xl bg-card p-2.5 border border-warning/10">
-                                                        <div className="col-span-12 sm:col-span-3">
-                                                            <input
-                                                                type="text"
-                                                                value={pu.name}
-                                                                onChange={(e) => {
-                                                                    const updated = [...data.packaging_units];
-                                                                    updated[i].name = e.target.value;
-                                                                    setData("packaging_units", updated);
-                                                                }}
-                                                                placeholder="Nama (Dus, Box…)"
-                                                                className="block w-full rounded-lg border border-border px-3 py-2 text-xs"
-                                                            />
-                                                        </div>
-                                                        <div className="col-span-6 sm:col-span-2">
-                                                            <div className="relative">
-                                                                <input
-                                                                    type="number"
-                                                                    value={pu.conversion_qty}
-                                                                    onChange={(e) => {
-                                                                        const updated = [...data.packaging_units];
-                                                                        updated[i].conversion_qty = e.target.value;
-                                                                        setData("packaging_units", updated);
-                                                                    }}
-                                                                    min="1"
-                                                                    placeholder="12"
-                                                                    className="block w-full rounded-lg border border-border px-3 py-2 pr-8 text-xs"
-                                                                />
-                                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
-                                                                    {data.unit}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="col-span-6 sm:col-span-3">
-                                                            <div className="relative">
-                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
-                                                                    Rp
-                                                                </span>
-                                                                <input
-                                                                    type="number"
-                                                                    value={pu.sell_price}
-                                                                    onChange={(e) => {
-                                                                        const updated = [...data.packaging_units];
-                                                                        updated[i].sell_price = e.target.value;
-                                                                        setData("packaging_units", updated);
-                                                                    }}
-                                                                    min="0"
-                                                                    placeholder="Harga"
-                                                                    className="block w-full rounded-lg border border-border py-2 pl-7 pr-3 text-xs"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="col-span-10 sm:col-span-3">
-                                                            <input
-                                                                type="text"
-                                                                value={pu.barcode}
-                                                                onChange={(e) => {
-                                                                    const updated = [...data.packaging_units];
-                                                                    updated[i].barcode = e.target.value;
-                                                                    setData("packaging_units", updated);
-                                                                }}
-                                                                placeholder="Barcode (opsional)"
-                                                                className="block w-full rounded-lg border border-border px-3 py-2 text-xs"
-                                                            />
-                                                        </div>
-                                                        <div className="col-span-2 sm:col-span-1 flex items-center justify-end">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    setData("packaging_units", data.packaging_units.filter((_, j) => j !== i))
-                                                                }
-                                                                className="rounded-lg p-1.5 text-destructive transition hover:bg-destructive/10"
-                                                            >
-                                                                <X className="h-4 w-4" />
-                                                            </button>
-                                                        </div>
-                                                        {pu.conversion_qty > 0 && pu.sell_price > 0 && (
-                                                            <div className="col-span-12 text-[11px] text-muted-foreground pl-1">
-                                                                ≈ <span className="font-semibold text-success">
-                                                                    Rp {Math.round(pu.sell_price / pu.conversion_qty).toLocaleString("id-ID")} / {data.unit}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                                {data.packaging_units.length === 0 && (
-                                                    <p className="text-xs text-muted-foreground italic text-center py-4">
-                                                        Belum ada kemasan tambahan.
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
                                     )}
+                                    {feat.costPrice && (
+                                        <Field label="Margin">
+                                            <div className="flex gap-2">
+                                                <div className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-destructive/20 bg-destructive/5" : "border-success/20 bg-success/10"}`}>
+                                                    <div className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-destructive" : "text-success"}`}>
+                                                        Rupiah
+                                                    </div>
+                                                    <div className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-destructive" : "text-success"}`}>
+                                                        Rp {marginRp.toLocaleString("id-ID")}
+                                                    </div>
+                                                </div>
+                                                <div className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-destructive/20 bg-destructive/5" : "border-success/20 bg-success/10"}`}>
+                                                    <div className={`text-[10px] font-semibold uppercase tracking-wider ${marginRp < 0 ? "text-destructive" : "text-success"}`}>
+                                                        Persen
+                                                    </div>
+                                                    <div className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-destructive" : "text-success"}`}>
+                                                        {marginPct.toFixed(1)}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Field>
+                                    )}
+                                </div>
 
-                                    {/* GROSIR TIERS */}
-                                    <div className="rounded-xl border border-border bg-card/50 p-4">
+                                {/* MULTI SATUAN */}
+                                {feat.multiUnit && (
+                                    <div className="rounded-xl border border-warning/20 bg-warning/5 p-4">
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-2">
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                                                    <BarChart3 className="h-4 w-4 text-primary" />
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/10">
+                                                    <Package className="h-4 w-4 text-warning" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-semibold text-foreground">Harga Grosir Bertingkat</div>
-                                                    <div className="text-[11px] text-muted-foreground">Maks 5 tier · beli lebih banyak, harga lebih murah</div>
+                                                    <div className="text-sm font-semibold text-foreground">Multi Satuan (Kemasan)</div>
+                                                    <div className="text-[11px] text-muted-foreground">
+                                                        cth. Dus berisi 12 {data.unit}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            {data.price_tiers.length < 5 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setData("price_tiers", [
-                                                            ...data.price_tiers,
-                                                            { min_qty: "", price: "" },
-                                                        ])
-                                                    }
-                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/10"
-                                                >
-                                                    <Plus className="h-4 w-4" />
-                                                    Tambah tier
-                                                </button>
-                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setData("packaging_units", [
+                                                        ...data.packaging_units,
+                                                        { name: "", conversion_qty: "", sell_price: "", barcode: "" },
+                                                    ])
+                                                }
+                                                className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/10"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                                Tambah kemasan
+                                            </button>
                                         </div>
                                         <div className="space-y-2">
-                                            {data.price_tiers.map((tier, i) => (
-                                                <div key={i} className="grid grid-cols-12 gap-2 items-center rounded-xl bg-card p-2.5 border border-border">
-                                                    <div className="col-span-2 flex items-center justify-center">
-                                                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10">
-                                                            Tier {i + 1}
-                                                        </span>
+                                            {data.packaging_units.map((pu, i) => (
+                                                <div key={i} className="grid grid-cols-12 gap-2 items-center rounded-xl bg-card p-2.5 border border-warning/10">
+                                                    <div className="col-span-12 sm:col-span-3">
+                                                        <input
+                                                            type="text"
+                                                            value={pu.name}
+                                                            onChange={(e) => {
+                                                                const updated = [...data.packaging_units];
+                                                                updated[i].name = e.target.value;
+                                                                setData("packaging_units", updated);
+                                                            }}
+                                                            placeholder="Nama (Dus, Box…)"
+                                                            className="block w-full rounded-lg border border-border px-3 py-2 text-xs"
+                                                        />
                                                     </div>
-                                                    <div className="col-span-5 sm:col-span-4">
-                                                        <label className="text-[10px] font-semibold text-muted-foreground">Min. Qty</label>
+                                                    <div className="col-span-6 sm:col-span-2">
                                                         <div className="relative">
                                                             <input
                                                                 type="number"
-                                                                min="1"
-                                                                value={tier.min_qty}
+                                                                value={pu.conversion_qty}
                                                                 onChange={(e) => {
-                                                                    const updated = [...data.price_tiers];
-                                                                    updated[i].min_qty = Number(e.target.value);
-                                                                    setData("price_tiers", updated);
+                                                                    const updated = [...data.packaging_units];
+                                                                    updated[i].conversion_qty = e.target.value;
+                                                                    setData("packaging_units", updated);
                                                                 }}
-                                                                placeholder="0"
-                                                                className="block w-full rounded-lg border border-border px-3 py-2 pr-10 text-xs"
+                                                                min="1"
+                                                                placeholder="12"
+                                                                className="block w-full rounded-lg border border-border px-3 py-2 pr-8 text-xs"
                                                             />
                                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                                 {data.unit}
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    <div className="col-span-4 sm:col-span-5">
-                                                        <label className="text-[10px] font-semibold text-muted-foreground">Harga per Unit</label>
+                                                    <div className="col-span-6 sm:col-span-3">
                                                         <div className="relative">
                                                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                                 Rp
                                                             </span>
                                                             <input
                                                                 type="number"
-                                                                value={tier.price}
+                                                                value={pu.sell_price}
                                                                 onChange={(e) => {
-                                                                    const updated = [...data.price_tiers];
-                                                                    updated[i].price = e.target.value;
-                                                                    setData("price_tiers", updated);
+                                                                    const updated = [...data.packaging_units];
+                                                                    updated[i].sell_price = e.target.value;
+                                                                    setData("packaging_units", updated);
                                                                 }}
-                                                                placeholder="0"
+                                                                min="0"
+                                                                placeholder="Harga"
                                                                 className="block w-full rounded-lg border border-border py-2 pl-7 pr-3 text-xs"
                                                             />
                                                         </div>
                                                     </div>
-                                                    <div className="col-span-1 flex items-end justify-end">
+                                                    <div className="col-span-10 sm:col-span-3">
+                                                        <input
+                                                            type="text"
+                                                            value={pu.barcode}
+                                                            onChange={(e) => {
+                                                                const updated = [...data.packaging_units];
+                                                                updated[i].barcode = e.target.value;
+                                                                setData("packaging_units", updated);
+                                                            }}
+                                                            placeholder="Barcode (opsional)"
+                                                            className="block w-full rounded-lg border border-border px-3 py-2 text-xs"
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-2 sm:col-span-1 flex items-center justify-end">
                                                         <button
                                                             type="button"
                                                             onClick={() =>
-                                                                setData("price_tiers", data.price_tiers.filter((_, j) => j !== i))
+                                                                setData("packaging_units", data.packaging_units.filter((_, j) => j !== i))
                                                             }
                                                             className="rounded-lg p-1.5 text-destructive transition hover:bg-destructive/10"
                                                         >
                                                             <X className="h-4 w-4" />
                                                         </button>
                                                     </div>
+                                                    {pu.conversion_qty > 0 && pu.sell_price > 0 && (
+                                                        <div className="col-span-12 text-[11px] text-muted-foreground pl-1">
+                                                            ≈ <span className="font-semibold text-success">
+                                                                Rp {Math.round(pu.sell_price / pu.conversion_qty).toLocaleString("id-ID")} / {data.unit}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
-                                            {data.price_tiers.length === 0 && (
+                                            {data.packaging_units.length === 0 && (
                                                 <p className="text-xs text-muted-foreground italic text-center py-4">
-                                                    Belum ada tier grosir.
+                                                    Belum ada kemasan tambahan.
                                                 </p>
                                             )}
                                         </div>
+                                    </div>
+                                )}
+
+                                {/* GROSIR TIERS */}
+                                <div className="rounded-xl border border-border bg-card/50 p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                                                <BarChart3 className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-semibold text-foreground">Harga Grosir Bertingkat</div>
+                                                <div className="text-[11px] text-muted-foreground">Maks 5 tier · beli lebih banyak, harga lebih murah</div>
+                                            </div>
+                                        </div>
+                                        {data.price_tiers.length < 5 && (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setData("price_tiers", [
+                                                        ...data.price_tiers,
+                                                        { min_qty: "", price: "" },
+                                                    ])
+                                                }
+                                                className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary transition hover:bg-primary/10"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                                Tambah tier
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2">
+                                        {data.price_tiers.map((tier, i) => (
+                                            <div key={i} className="grid grid-cols-12 gap-2 items-center rounded-xl bg-card p-2.5 border border-border">
+                                                <div className="col-span-2 flex items-center justify-center">
+                                                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10">
+                                                        Tier {i + 1}
+                                                    </span>
+                                                </div>
+                                                <div className="col-span-5 sm:col-span-4">
+                                                    <label className="text-[10px] font-semibold text-muted-foreground">Min. Qty</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            value={tier.min_qty}
+                                                            onChange={(e) => {
+                                                                const updated = [...data.price_tiers];
+                                                                updated[i].min_qty = Number(e.target.value);
+                                                                setData("price_tiers", updated);
+                                                            }}
+                                                            placeholder="0"
+                                                            className="block w-full rounded-lg border border-border px-3 py-2 pr-10 text-xs"
+                                                        />
+                                                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
+                                                            {data.unit}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="col-span-4 sm:col-span-5">
+                                                    <label className="text-[10px] font-semibold text-muted-foreground">Harga per Unit</label>
+                                                    <div className="relative">
+                                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
+                                                            Rp
+                                                        </span>
+                                                        <input
+                                                            type="number"
+                                                            value={tier.price}
+                                                            onChange={(e) => {
+                                                                const updated = [...data.price_tiers];
+                                                                updated[i].price = e.target.value;
+                                                                setData("price_tiers", updated);
+                                                            }}
+                                                            placeholder="0"
+                                                            className="block w-full rounded-lg border border-border py-2 pl-7 pr-3 text-xs"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="col-span-1 flex items-end justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setData("price_tiers", data.price_tiers.filter((_, j) => j !== i))
+                                                        }
+                                                        className="rounded-lg p-1.5 text-destructive transition hover:bg-destructive/10"
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {data.price_tiers.length === 0 && (
+                                            <p className="text-xs text-muted-foreground italic text-center py-4">
+                                                Belum ada tier grosir.
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </SectionCard>
@@ -1017,16 +1030,14 @@ function ToggleSwitch({ checked, onChange, disabled = false }) {
             aria-checked={checked}
             disabled={disabled}
             onClick={() => onChange(!checked)}
-            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${
-                checked
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${checked
                     ? "bg-gradient-to-r from-primary-500 to-primary-500"
                     : "bg-muted"
-            } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
         >
             <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-card shadow transition duration-200 ${
-                    checked ? "translate-x-5" : "translate-x-0.5"
-                }`}
+                className={`inline-block h-5 w-5 transform rounded-full bg-card shadow transition duration-200 ${checked ? "translate-x-5" : "translate-x-0.5"
+                    }`}
             />
         </button>
     );
@@ -1049,11 +1060,10 @@ function SummaryChip({ label, active, show = true }) {
     if (!show) return null;
     return (
         <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                active
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${active
                     ? "border border-success/10 bg-success/10 text-success"
                     : "border border-border bg-muted text-muted-foreground"
-            }`}
+                }`}
         >
             <span className={`h-1.5 w-1.5 rounded-full ${active ? "bg-success/100" : "bg-muted-foreground"}`} />
             {label}
@@ -1090,7 +1100,6 @@ function SummaryRow({ label, value }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border border-border bg-card py-2.5 px-3.5 text-sm transition outline-none focus:border-ring focus:ring-4 focus:ring-primary-500/10 ${
-        hasError ? "border-destructive focus:border-destructive focus:ring-destructive/20" : ""
-    }`;
+    return `block w-full rounded-xl border border-border bg-card py-2.5 px-3.5 text-sm transition outline-none focus:border-ring focus:ring-4 focus:ring-primary-500/10 ${hasError ? "border-destructive focus:border-destructive focus:ring-destructive/20" : ""
+        }`;
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Store;
 use App\Models\StoreFeature;
 use App\Models\StoreType;
@@ -95,11 +96,18 @@ class SettingController extends Controller
             $store->unsetRelations();
         }
 
+        // Ambil semua cabang toko
+        $branches = $store ? Branch::where('store_id', $store->id)->orderBy('code')->get(['id', 'code', 'name', 'phone', 'address', 'is_active']) : collect();
+        $currentBranchId = session('current_branch_id');
+        $currentBranch = $currentBranchId ? $branches->firstWhere('id', $currentBranchId) : $branches->first();
+
         return Inertia::render('Admin/Settings/Index', [
             'store' => $store,
             'storeUsers' => $storeUsers,
             'storeTypes' => StoreType::active(),
             'storeFeatures' => $storeFeatures,
+            'branches' => $branches,
+            'currentBranch' => $currentBranch,
         ]);
     }
 
@@ -205,5 +213,28 @@ class SettingController extends Controller
         );
 
         return back()->with('success', 'Pengaturan fitur berhasil disimpan.');
+    }
+
+    public function updateBranch(Request $request, Branch $branch)
+    {
+        $storeId = session('current_store_id');
+        /** @var User|null $user */
+        $user = Auth::user();
+        $store = Store::find($storeId) ?? $user?->stores()?->first();
+
+        if (! $store || $branch->store_id !== $store->id) {
+            return back()->with('error', 'Akses ditolak.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:30',
+            'address' => 'nullable|string|max:1000',
+            'is_active' => 'boolean',
+        ]);
+
+        $branch->update($validated);
+
+        return back()->with('success', "Cabang {$branch->name} berhasil diperbarui.");
     }
 }

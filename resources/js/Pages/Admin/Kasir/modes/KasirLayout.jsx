@@ -153,35 +153,38 @@ export default function KasirLayout({
         <div className="flex w-full items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
                 <h2 className="text-lg font-semibold text-foreground">Kasir</h2>
-
             </div>
-            <div className="flex items-center gap-1.5">
-                {showShiftUI && activeShift && (
-                    <Tooltip label={canViewShift ? "Detail / Tutup Shift" : "Shift Aktif"}>
-                        <Link
-                            href={
-                                canViewShift
-                                    ? route("admin.cashier-shifts.show", activeShift.id)
-                                    : "#"
-                            }
-                            className={`
+        </div>
+    );
+
+    const headerRightContent = (
+        <div className="flex items-center gap-1.5">
+            {showShiftUI && activeShift && (
+                <Tooltip label={canViewShift ? "Detail / Tutup Shift" : "Shift Aktif"}>
+                    <Link
+                        href={
+                            canViewShift
+                                ? route("admin.cashier-shifts.show", activeShift.id)
+                                : "#"
+                        }
+                        className={`
             relative flex items-center justify-center
             h-9 w-9 sm:h-auto sm:w-auto
             sm:gap-2 sm:px-2 sm:py-1
             rounded-lg bg-muted border border-border
             transition
             ${canViewShift
-                                    ? " cursor-pointer"
-                                    : "cursor-default"
-                                }
+                                ? " cursor-pointer"
+                                : "cursor-default"
+                            }
         `}
-                            onClick={canViewShift ? undefined : (e) => e.preventDefault()}
-                        >
-                            <Clock size={17} className="shrink-0" />
+                        onClick={canViewShift ? undefined : (e) => e.preventDefault()}
+                    >
+                        <Clock size={17} className="shrink-0" />
 
-                            {/* Indikator shift aktif — mobile */}
-                            <span
-                                className="
+                        {/* Indikator shift aktif — mobile */}
+                        <span
+                            className="
                 sm:hidden
                 absolute -top-0.5 -right-0.5
                 h-2.5 w-2.5
@@ -189,51 +192,50 @@ export default function KasirLayout({
                 bg-emerald-500
                 border-2 border-background
             "
-                            />
+                        />
 
-                            {/* Desktop */}
-                            <div className="hidden sm:block leading-tight">
-                                <div className="text-[14px] font-semibold text-foreground">
-                                    Shift Aktif
-                                </div>
-
-                                <div className="text-[10px] text-muted-foreground">
-                                    {activeShift.shift_no}
-                                </div>
+                        {/* Desktop */}
+                        <div className="hidden sm:block leading-tight">
+                            <div className="text-[14px] font-semibold text-foreground">
+                                Shift Aktif
                             </div>
-                        </Link>
+
+                            <div className="text-[10px] text-muted-foreground">
+                                {activeShift.shift_no}
+                            </div>
+                        </div>
+                    </Link>
+                </Tooltip>
+            )}
+            {heldCount > 0 && (
+                <div className="relative hidden md:block">
+                    <Tooltip label="Transaksi Ditahan">
+                        <button
+                            type="button"
+                            onClick={() => setShowHeldModal(true)}
+                            aria-label="Transaksi Ditahan"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                        >
+                            <Layers size={17} strokeWidth={2} />
+                        </button>
                     </Tooltip>
-                )}
-                {heldCount > 0 && (
-                    <div className="relative hidden md:block">
-                        <Tooltip label="Transaksi Ditahan">
-                            <button
-                                type="button"
-                                onClick={() => setShowHeldModal(true)}
-                                aria-label="Transaksi Ditahan"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                            >
-                                <Layers size={17} strokeWidth={2} />
-                            </button>
-                        </Tooltip>
-                        <span className="absolute -right-1 -bottom-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] font-bold text-white shadow-sm">
-                            {heldCount}
-                        </span>
-                    </div>
-                )}
-                <TipButton
-                    label="Riwayat Transaksi"
-                    icon={History}
-                    variant="subtle"
-                    onClick={() => k.setShowHistory(true)}
-                />
-                <TipButton
-                    label={isFullscreen ? "Keluar Fullscreen (Esc)" : "Fullscreen (F11)"}
-                    icon={isFullscreen ? Minimize2 : Maximize2}
-                    variant="subtle"
-                    onClick={() => setIsFullscreen(!isFullscreen)}
-                />
-            </div>
+                    <span className="absolute -right-1 -bottom-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] font-bold text-white shadow-sm">
+                        {heldCount}
+                    </span>
+                </div>
+            )}
+            <TipButton
+                label="Riwayat Transaksi"
+                icon={History}
+                variant="subtle"
+                onClick={() => k.setShowHistory(true)}
+            />
+            <TipButton
+                label={isFullscreen ? "Keluar Fullscreen (Esc)" : "Fullscreen (F11)"}
+                icon={isFullscreen ? Minimize2 : Maximize2}
+                variant="subtle"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+            />
         </div>
     );
 
@@ -521,7 +523,7 @@ export default function KasirLayout({
             <TipButton
                 label="Scan Barcode (Kamera)"
                 icon={ScanLine}
-                variant="solid"
+                variant="primary"
                 size="md"
                 onClick={() => k.setShowScanner(true)}
             />
@@ -767,7 +769,7 @@ export default function KasirLayout({
 
             {/* RIGHT: cart sidebar — fixed full-height, resizable */}
             <aside
-                className="fixed right-0 z-30 flex flex-col border-l border-border bg-card shadow-xl max-md:hidden"
+                className="fixed right-0 z-30 flex flex-col border-l border-border bg-background shadow-xl max-md:hidden"
                 style={{
                     top: isFullscreen ? "0" : "56px",
                     height: isFullscreen ? "100vh" : "calc(100vh - 56px)",
@@ -877,12 +879,79 @@ export default function KasirLayout({
                 {/* Bottom: aksi cepat + totals + pay (pinned) */}
                 <div className="shrink-0 border-t border-border bg-card px-4 py-2.5 space-y-2.5">
 
-                    {/* ── 1 baris: Pelanggan + Diantar + Info + Meja | Catatan + Diskon ── */}
-                    <div className="flex w-full items-center justify-between gap-2">
+                    {/* ── 2 baris: Pelanggan + Diantar + Info + Meja | Catatan + Diskon ── */}
+                    <div className="flex flex-col w-full gap-2">
 
-                        {/* ── KIRI ── */}
-                        <div className="flex items-center gap-1.5">
+                        {/* ── ATAS KIRI ── */}
+                        <div className="flex flex-wrap items-center justify-start gap-1.5 w-full">
 
+
+
+                            {/* Toggle Diantar */}
+                            <label className={`inline-flex cursor-pointer select-none items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium transition ${isDelivery ? "border-primary/30 bg-primary/5 text-primary" : "border-border bg-card hover:bg-muted text-muted-foreground"}`}>
+                                <input
+                                    type="checkbox"
+                                    checked={isDelivery}
+                                    onChange={(e) =>
+                                        k.handleOrderTypeChange(
+                                            e.target.checked ? "delivery" : "takeaway"
+                                        )
+                                    }
+                                    className="h-3.5 w-3.5 rounded border-border accent-primary"
+                                />
+                                <span>Antar</span>
+                            </label>
+
+                            {/* Info Kirim */}
+                            {isDelivery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowInfoModal(true)}
+                                    className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium transition ${hasDeliveryInfo
+                                        ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/20"
+                                        : "border-warning border-dashed bg-warning/5 text-warning hover:bg-warning/10"
+                                        }`}
+                                >
+                                    <Truck size={13} />
+                                    <span className="max-w-[70px] truncate">
+                                        {hasDeliveryInfo
+                                            ? k.deliveryCustomerName || "Kirim"
+                                            : "Info *"}
+                                    </span>
+                                </button>
+                            )}
+
+                            {/* Meja — FnB */}
+                            {showTableSelector && k.selectedTable && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        k.setSelectedTable("");
+                                        k.setTableSearch("");
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted"
+                                >
+                                    <LayoutGrid size={13} />
+                                    <span>
+                                        {
+                                            tables.find(
+                                                (t) =>
+                                                    String(t.id) === String(k.selectedTable)
+                                            )?.table_number
+                                        }
+                                    </span>
+                                    <X
+                                        size={11}
+                                        strokeWidth={2.5}
+                                        className="text-muted-foreground/50 hover:text-destructive"
+                                    />
+                                </button>
+                            )}
+
+                        </div>
+
+                        {/* ── BAWAH FULL LEBAR── */}
+                        <div className="flex items-center gap-1.5 w-full">
                             {/* Pelanggan */}
                             {selectedCustomerObj ? (
                                 <button
@@ -917,85 +986,16 @@ export default function KasirLayout({
                                     className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted"
                                 >
                                     <UserRound size={12} />
-                                    <span>Tamu</span>
+                                    <span>Pelanggan</span>
                                 </button>
                             )}
 
                             <span className="h-3.5 w-px bg-border" />
-
-                            {/* Toggle Diantar */}
-                            <label className="inline-flex cursor-pointer select-none items-center gap-1">
-                                <input
-                                    type="checkbox"
-                                    checked={isDelivery}
-                                    onChange={(e) =>
-                                        k.handleOrderTypeChange(
-                                            e.target.checked ? "delivery" : "takeaway"
-                                        )
-                                    }
-                                    className="h-3 w-3 rounded border-border accent-primary"
-                                />
-                                <span className="text-[11px] font-medium text-foreground">
-                                    Antar
-                                </span>
-                            </label>
-
-                            {/* Info Kirim */}
-                            {isDelivery && (
-                                <button
-                                    type="button"
-                                    onClick={() => setShowInfoModal(true)}
-                                    className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-1 text-[11px] font-medium transition ${hasDeliveryInfo
-                                        ? "bg-muted text-foreground hover:bg-muted/80"
-                                        : "border border-dashed border-warning text-warning hover:bg-warning/5"
-                                        }`}
-                                >
-                                    <Truck size={12} />
-                                    <span className="max-w-[70px] truncate">
-                                        {hasDeliveryInfo
-                                            ? k.deliveryCustomerName || "Kirim"
-                                            : "Info *"}
-                                    </span>
-                                </button>
-                            )}
-
-                            {/* Meja — FnB */}
-                            {showTableSelector && k.selectedTable && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        k.setSelectedTable("");
-                                        k.setTableSearch("");
-                                    }}
-                                    className="inline-flex items-center gap-1 rounded-lg bg-muted px-1.5 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted/80"
-                                >
-                                    <LayoutGrid size={11} />
-                                    <span>
-                                        {
-                                            tables.find(
-                                                (t) =>
-                                                    String(t.id) === String(k.selectedTable)
-                                            )?.table_number
-                                        }
-                                    </span>
-                                    <X
-                                        size={10}
-                                        strokeWidth={2.5}
-                                        className="text-muted-foreground/50"
-                                    />
-                                </button>
-                            )}
-
-                        </div>
-
-                        {/* ── KANAN ── */}
-                        <div className="flex shrink-0 items-center gap-1.5">
-
                             {/* Catatan */}
                             <button
                                 type="button"
                                 onClick={() => setShowNoteModal(true)}
-                                className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-1 text-[11px] font-medium transition ${noteActive
+                                className={`flex-1 flex justify-center items-center gap-1 rounded-lg border px-1.5 py-1.5 text-[11px] font-medium transition ${noteActive
                                     ? "border-success/30 bg-success/10 text-success"
                                     : "border-border bg-muted text-foreground hover:bg-muted/80"
                                     }`}
@@ -1012,7 +1012,7 @@ export default function KasirLayout({
                             <button
                                 type="button"
                                 onClick={() => setShowAdjustModal(true)}
-                                className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-1 text-[11px] font-medium transition ${adjustActive
+                                className={`flex-1 flex justify-center items-center gap-1 rounded-lg border px-1.5 py-1.5 text-[11px] font-medium transition ${adjustActive
                                     ? "border-success/30 bg-success/10 text-success"
                                     : "border-border bg-muted text-foreground hover:bg-muted/80"
                                     }`}
@@ -1124,11 +1124,12 @@ export default function KasirLayout({
                         <button
                             type="button"
                             disabled={
-                                k.cart.length === 0 ||
                                 k.submitting ||
-                                !!k.missingRequiredField ||
+                                k.cart.length === 0 ||
+                                k.missingRequiredField ||
                                 tableGate ||
-                                blockedByShift
+                                blockedByShift ||
+                                (!activeShift && canOpenShift)
                             }
                             onClick={() => k.setShowPayment(true)}
                             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-success py-3.5 text-[15px] font-bold tracking-tight text-white shadow-sm shadow-success/20 transition hover:bg-success/90 disabled:cursor-not-allowed disabled:opacity-40"
@@ -1139,6 +1140,8 @@ export default function KasirLayout({
                                 `Pilih ${k.tableLabel} dulu`
                             ) : k.missingRequiredField ? (
                                 k.missingRequiredField
+                            ) : (!activeShift && canOpenShift) ? (
+                                "Buka Shift Dulu"
                             ) : (
                                 <>
                                     <CreditCard size={18} />
@@ -1263,7 +1266,7 @@ export default function KasirLayout({
                                     className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-2 py-1 text-[11px] font-medium text-foreground transition hover:bg-muted"
                                 >
                                     <UserRound size={12} />
-                                    <span>Tamu</span>
+                                    <span>Pelanggan</span>
                                 </button>
                             )}
 
@@ -1593,7 +1596,11 @@ export default function KasirLayout({
     }
 
     return (
-        <AuthenticatedLayout header={k.showPayment ? paymentHeader : headerContent} noPadding>
+        <AuthenticatedLayout
+            header={k.showPayment ? paymentHeader : headerContent}
+            headerRight={headerRightContent}
+            noPadding
+        >
             {k.showPayment ? renderPaymentView() : posContent("h-[calc(100vh-56px)]")}
         </AuthenticatedLayout>
     );

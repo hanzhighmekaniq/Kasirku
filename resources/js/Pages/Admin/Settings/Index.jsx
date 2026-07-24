@@ -1,14 +1,14 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, useForm, usePage, router } from "@inertiajs/react";
+import PageHeader from "@/Components/PageHeader";
+import { Head, Link, useForm, usePage, router } from "@inertiajs/react";
 import { useState } from "react";
-import { Upload, X, Store, Receipt, Image, Puzzle, Plus } from "lucide-react";
+import { Upload, X, Store, Receipt, Image, Puzzle, MapPin, Settings } from "lucide-react";
 import Button from "@/Components/ui/Button";
 
 const inp = (err) =>
-    `block w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${
-        err
-            ? "border-red-300 bg-destructive/10/30 focus:ring-red-200"
-            : "border-border bg-card hover:border-border focus:border-ring focus:ring-ring/20"
+    `block w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${err
+        ? "border-red-300 bg-destructive/10/30 focus:ring-red-200"
+        : "border-border bg-card hover:border-border focus:border-ring focus:ring-ring/20"
     }`;
 
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
@@ -16,10 +16,10 @@ const errorClass = "mt-1 text-xs text-destructive";
 
 function Section({ title, subtitle, icon: Icon, children }) {
     return (
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-            <div className="flex items-center gap-3 border-b border-border bg-gradient-to-r from-slate-50/80 to-white px-5 py-3.5">
+        <div className="rounded-2xl border border-border bg-background shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 border-b border-border bg-muted px-5 py-3.5">
                 {Icon && (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
                         <Icon className="h-4 w-4" strokeWidth={1.8} />
                     </div>
                 )}
@@ -56,7 +56,7 @@ function FeatureToggle({ feature, onToggle }) {
                 onFinish: () => {
                     setLoading(false);
                     // Reload untuk sinkronkan sidebar & shared props
-                    router.reload({ only: ['storeFeatures', 'storeFeatureOverrides', 'storeFeatureSettings'] });
+                    router.reload({ only: ['storeFeatures', 'storeFeatureOverrides', 'storeFeatureSettings'], preserveScroll: true });
                 },
             },
         );
@@ -87,16 +87,14 @@ function FeatureToggle({ feature, onToggle }) {
                     type="button"
                     onClick={() => handleToggle()}
                     disabled={loading}
-                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 ${
-                        feature.is_enabled ? "bg-primary-500" : "bg-slate-300"
-                    } ${loading ? "opacity-50" : ""}`}
+                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus:outline-none ${feature.is_enabled ? "bg-primary" : "bg-muted-foreground/30"
+                        } ${loading ? "opacity-50" : ""}`}
                 >
                     <span
-                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-card shadow transition-transform duration-200 ${
-                            feature.is_enabled
-                                ? "translate-x-5.5"
-                                : "translate-x-0.5"
-                        }`}
+                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${feature.is_enabled
+                            ? "translate-x-[22px]"
+                            : "translate-x-0.5"
+                            }`}
                     />
                 </button>
             </div>
@@ -131,11 +129,10 @@ function FeatureToggle({ feature, onToggle }) {
                                     type="button"
                                     onClick={() => handleSubSettingChange("cash_rounding_mode", opt.v)}
                                     disabled={loading}
-                                    className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
-                                        (subSettings.cash_rounding_mode ?? "nearest") === opt.v
-                                            ? "bg-card text-foreground shadow-sm"
-                                            : "text-muted-foreground hover:text-foreground"
-                                    }`}
+                                    className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${(subSettings.cash_rounding_mode ?? "nearest") === opt.v
+                                        ? "bg-card text-foreground shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground"
+                                        }`}
                                 >
                                     {opt.l}
                                 </button>
@@ -148,7 +145,104 @@ function FeatureToggle({ feature, onToggle }) {
     );
 }
 
-export default function Index({ store, storeTypes, storeUsers, storeFeatures }) {
+/* ── BranchEditRow ───────────────────────────────────── */
+function BranchEditRow({ branch, isCurrent }) {
+    const [editing, setEditing] = useState(false);
+    const { data, setData, put, processing, errors, reset } = useForm({
+        name: branch.name,
+        phone: branch.phone ?? "",
+        address: branch.address ?? "",
+        is_active: branch.is_active,
+    });
+
+    const submit = (e) => {
+        e.preventDefault();
+        put(route("admin.settings.branch.update", branch.id), {
+            preserveScroll: true,
+            onSuccess: () => setEditing(false),
+        });
+    };
+
+    if (!editing) {
+        return (
+            <div className={`flex items-center justify-between gap-4 rounded-xl border px-4 py-3 transition ${isCurrent ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/50 hover:bg-muted'}`}>
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">{branch.name}</span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-mono text-muted-foreground">{branch.code}</span>
+                        {isCurrent && (
+                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">Cabang Saat Ini</span>
+                        )}
+                        {!branch.is_active && (
+                            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive">Nonaktif</span>
+                        )}
+                    </div>
+                    {(branch.phone || branch.address) && (
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                            {branch.phone && <span className="mr-2">{branch.phone}</span>}
+                            {branch.address}
+                        </p>
+                    )}
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                >
+                    Edit
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <form onSubmit={submit} className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-4 space-y-3">
+            <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wide text-primary">{branch.code}</span>
+                <button type="button" onClick={() => { reset(); setEditing(false); }} className="text-xs text-muted-foreground hover:text-foreground">
+                    Batal
+                </button>
+            </div>
+            <div>
+                <label className={labelClass}>Nama Cabang *</label>
+                <input value={data.name} onChange={(e) => setData("name", e.target.value)} className={inp(errors.name)} placeholder="Nama cabang" />
+                {errors.name && <p className={errorClass}>{errors.name}</p>}
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                    <label className={labelClass}>No. Telepon</label>
+                    <input value={data.phone} onChange={(e) => setData("phone", e.target.value)} className={inp()} placeholder="08xxx" />
+                </div>
+                <div className="flex items-end gap-2">
+                    <div>
+                        <label className={labelClass}>Status</label>
+                        <div className="mt-1 flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setData("is_active", !data.is_active)}
+                                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus:outline-none ${data.is_active ? "bg-primary" : "bg-muted-foreground/30"
+                                    }`}
+                            >
+                                <span className={`absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${data.is_active ? "translate-x-[22px]" : "translate-x-0.5"
+                                    }`} />
+                            </button>
+                            <span className="text-xs text-muted-foreground">{data.is_active ? "Aktif" : "Nonaktif"}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label className={labelClass}>Alamat</label>
+                <textarea value={data.address} onChange={(e) => setData("address", e.target.value)} rows={2} className={inp()} placeholder="Alamat cabang" />
+            </div>
+            <div className="flex justify-end">
+                <Button type="submit" loading={processing}>Simpan Cabang</Button>
+            </div>
+        </form>
+    );
+}
+
+export default function Index({ store, storeTypes, storeUsers, storeFeatures, branches = [], currentBranch = null }) {
     const { flash } = usePage().props;
     const [activeTab, setActiveTab] = useState("umum");
 
@@ -192,30 +286,35 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
     const currentType = storeTypes.find((st) => st.code === data.store_type);
 
     const tabs = [
-        { id: "umum", label: "Umum", icon: Store },
+        { id: "umum", label: "Umum", icon: Settings },
         { id: "fitur", label: "Fitur Toko", icon: Puzzle },
     ];
 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
-                        <Store className="h-5 w-5" strokeWidth={1.8} />
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Pengaturan Toko
                     </div>
-                    <div>
-                        <h2 className="text-lg font-bold text-foreground">
-                            Pengaturan Toko
-                        </h2>
-                        <p className="text-xs text-muted-foreground">
-                            {store?.name} • {currentType?.label ?? data.store_type}
-                        </p>
+                    <div className="text-[11px] text-muted-foreground">
+                        Atur informasi toko dan pengaturan umum
                     </div>
                 </div>
             }
         >
-            <Head title="Pengaturan Toko" />
-
+            <PageHeader
+                title="Pengaturan Toko"
+                breadcrumbs={["Admin", "Sistem", "Pengaturan Toko"]}
+                heading={
+                    <>
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Pengaturan Toko
+                        </span>
+                    </>
+                }
+                description="Atur informasi toko dan pengaturan umum"
+            />
             {/* Flash messages */}
             {flash?.success && (
                 <div className="mb-5 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success">
@@ -229,17 +328,16 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
             )}
 
             {/* Tabs */}
-            <div className="mb-5 flex gap-1 rounded-xl bg-muted p-1">
+            <div className="mb-4 inline-flex gap-1 rounded-xl bg-background border border-border">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
                         type="button"
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all ${
-                            activeTab === tab.id
-                                ? "bg-card text-primary-600 shadow-sm"
-                                : "text-muted-foreground hover:text-foreground"
-                        }`}
+                        className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all ${activeTab === tab.id
+                            ? "bg-secondary text-secondary-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                            }`}
                     >
                         <tab.icon className="h-4 w-4" strokeWidth={1.8} />
                         {tab.label}
@@ -250,7 +348,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
             {/* Tab: Umum */}
             {activeTab === "umum" && (
                 <form onSubmit={submit}>
-                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-5">
+                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-5 ">
                         {/* ── Kolom Kiri: Form (3/5) ── */}
                         <div className="space-y-5 xl:col-span-3">
                             {/* Informasi Toko */}
@@ -260,8 +358,8 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                 icon={Store}
                             >
                                 {/* Logo Upload */}
-                                <div className="mb-5 flex items-start gap-4">
-                                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted text-3xl">
+                                <div className="mb-5 flex items-start gap-4 ">
+                                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-backgroundtext-3xl">
                                         {logoPreview ? (
                                             <img
                                                 src={logoPreview}
@@ -274,7 +372,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex gap-2">
-                                            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-card px-3.5 py-2 text-xs font-semibold text-muted-foreground shadow-sm ring-1 ring-slate-200 transition hover:bg-muted hover:text-primary-600 hover:ring-primary-300">
+                                            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-card px-3.5 py-2 text-xs font-semibold text-muted-foreground shadow-sm ring-1 ring-border transition hover:ring-foreground hover:text-foreground">
                                                 <Upload className="h-3.5 w-3.5" strokeWidth={2} />
                                                 {logoPreview ? "Ganti" : "Upload Logo"}
                                                 <input
@@ -321,8 +419,9 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                         <input
                                             value={data.code}
                                             onChange={(e) => setData("code", e.target.value.toUpperCase())}
-                                            className={inp(errors.code)}
+                                            className={`${inp(errors.code)} cursor-not-allowed bg-muted text-muted-foreground opacity-60`}
                                             placeholder="STORE001"
+                                            disabled
                                         />
                                         {errors.code && <p className={errorClass}>{errors.code}</p>}
                                     </div>
@@ -413,29 +512,50 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
                                         </div>
 
                                         {/* Toggle Tax Inclusive */}
-                                        <div className="flex items-end pb-0.5">
-                                            <label className="flex cursor-pointer select-none items-center gap-3">
+                                        <div>
+                                            <label className={labelClass}>Harga Sudah Termasuk Pajak</label>
+                                            <div className="mt-3 flex items-center gap-3">
                                                 <button
                                                     type="button"
                                                     onClick={() => setData("tax_inclusive", !data.tax_inclusive)}
-                                                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 ${
-                                                        data.tax_inclusive ? "bg-primary-500" : "bg-slate-300"
-                                                    }`}
+                                                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus:outline-none ${data.tax_inclusive ? "bg-primary" : "bg-muted-foreground/30"
+                                                        }`}
                                                 >
                                                     <span
-                                                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-card shadow transition-transform duration-200 ${
-                                                            data.tax_inclusive ? "translate-x-5.5" : "translate-x-0.5"
-                                                        }`}
+                                                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${data.tax_inclusive ? "translate-x-[22px]" : "translate-x-0.5"
+                                                            }`}
                                                     />
                                                 </button>
-                                                <span className="text-sm font-medium text-foreground">
-                                                    Harga sudah termasuk pajak
+                                                <span className="text-sm text-foreground">
+                                                    {data.tax_inclusive ? "Ya, harga sudah termasuk pajak" : "Tidak, pajak ditambahkan terpisah"}
                                                 </span>
-                                            </label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </Section>
+
+                            {/* Cabang */}
+                            {branches.length > 0 && (
+                                <Section
+                                    title="Cabang Toko"
+                                    subtitle="Kelola nama, telepon, alamat, dan status cabang"
+                                    icon={MapPin}
+                                >
+                                    <div className="space-y-3">
+                                        {branches.map((branch) => (
+                                            <BranchEditRow
+                                                key={branch.id}
+                                                branch={branch}
+                                                isCurrent={currentBranch?.id === branch.id}
+                                            />
+                                        ))}
+                                        <p className="text-xs text-muted-foreground">
+                                            Untuk menambah atau menghapus cabang, silakan hubungi tim developer/support.
+                                        </p>
+                                    </div>
+                                </Section>
+                            )}
 
                             {/* Tombol Simpan */}
                             <div className="flex justify-end">
@@ -450,7 +570,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
 
                         {/* ── Kolom Kanan: Preview Struk (2/5) ── */}
                         <div className="xl:col-span-2">
-                            <div className="sticky top-6 space-y-5">
+                            <div className="sticky top-16 space-y-5">
                                 <Section
                                     title="Preview Struk"
                                     subtitle="Live preview sesuai pengaturan"
@@ -595,14 +715,14 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures }) 
 
             {/* Tab: Fitur Toko */}
             {activeTab === "fitur" && (
-                <div className="max-w-2xl">
+                <div>
                     <Section
                         title="Fitur Toko"
                         subtitle="Aktifkan atau nonaktifkan fitur untuk toko ini"
                         icon={Puzzle}
                     >
                         {storeFeatures && storeFeatures.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                 {storeFeatures.map((feature) => (
                                     <FeatureToggle
                                         key={feature.feature_id}

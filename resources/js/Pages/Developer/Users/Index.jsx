@@ -1,6 +1,7 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState, useRef, useEffect } from "react";
+import SelectDropdown from "@/Components/ui/SelectDropdown";
 
 const STORE_TYPE = {
     retail: { icon: "🏪", color: "bg-blue-50 text-blue-700 ring-blue-100" },
@@ -382,33 +383,12 @@ export default function Index({ users, stores }) {
 
                 {/* Store filter dropdown */}
                 {stores?.length > 0 && (
-                    <div className="relative">
-                        <select
-                            value={filterStore}
-                            onChange={(e) => setFilterStore(e.target.value)}
-                            className="appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-3.5 pr-9 text-sm text-slate-700 shadow-sm transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 cursor-pointer"
-                        >
-                            <option value="">Semua Toko</option>
-                            {stores.map((s) => (
-                                <option key={s.id} value={String(s.id)}>
-                                    {s.name}
-                                </option>
-                            ))}
-                        </select>
-                        <svg
-                            className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={2}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                            />
-                        </svg>
-                    </div>
+                    <SelectDropdown
+                        value={filterStore}
+                        options={stores.map(s => ({ value: String(s.id), label: s.name }))}
+                        onChange={(v) => setFilterStore(v)}
+                        placeholder="Semua Toko"
+                    />
                 )}
             </div>
 

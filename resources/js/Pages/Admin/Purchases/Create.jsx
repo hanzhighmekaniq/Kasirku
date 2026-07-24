@@ -11,10 +11,9 @@ import Button from "@/Components/ui/Button";
 const fmtRp = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
 
 const inputCls = (hasError = false) =>
-    `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
-        hasError
-            ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-border focus:border-ring focus:ring-ring/20"
+    `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${hasError
+        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+        : "border-border focus:border-ring focus:ring-ring/20"
     }`;
 
 /* ── Product combobox ──────────────────────────────── */
@@ -160,11 +159,10 @@ export function ProductCombobox({
                                 onMouseDown={(e) => e.preventDefault()} // prevent blur sebelum pick
                                 onClick={() => pick(p)}
                                 onMouseEnter={() => setIdx(i)}
-                                className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition ${
-                                    i === idx
-                                        ? "bg-primary-50"
-                                        : "hover:bg-muted"
-                                }`}
+                                className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition ${i === idx
+                                    ? "bg-primary-50"
+                                    : "hover:bg-muted"
+                                    }`}
                             >
                                 <div className="min-w-0 flex-1">
                                     <p
@@ -178,11 +176,10 @@ export function ProductCombobox({
                                 </div>
                                 <div className="flex shrink-0 items-center gap-3">
                                     <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                            (p.stock ?? 0) > 0
-                                                ? "bg-success/10 text-success"
-                                                : "bg-destructive/10 text-destructive"
-                                        }`}
+                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${(p.stock ?? 0) > 0
+                                            ? "bg-success/10 text-success"
+                                            : "bg-destructive/10 text-destructive"
+                                            }`}
                                     >
                                         {p.stock ?? 0}{" "}
                                         {p.base_unit || unitLabel}
@@ -267,16 +264,16 @@ export default function Create({
         paid_amount: "",
         items: prefill?.product_id
             ? [
-                  {
-                      product_id: prefill.product_id,
-                      product_name: prefill.product_name,
-                      product_sku: prefill.product_sku,
-                      quantity: 1,
-                      cost_price: prefill.cost_price || 0,
-                      variant_id: prefill.variant_id ?? null,
-                      variant_name: prefill.variant_name ?? null,
-                  },
-              ]
+                {
+                    product_id: prefill.product_id,
+                    product_name: prefill.product_name,
+                    product_sku: prefill.product_sku,
+                    quantity: 1,
+                    cost_price: prefill.cost_price || 0,
+                    variant_id: prefill.variant_id ?? null,
+                    variant_name: prefill.variant_name ?? null,
+                },
+            ]
             : [],
     });
 
@@ -296,8 +293,8 @@ export default function Create({
         paidAmount >= grandTotal && grandTotal > 0
             ? "paid"
             : paidAmount > 0
-              ? "partial"
-              : "unpaid";
+                ? "partial"
+                : "unpaid";
 
     /* ── Pick product from combobox ── */
     const handlePick = (product) => {
@@ -397,7 +394,10 @@ export default function Create({
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+
+
+            backUrl={route("admin.purchases.index")}>
             <PageHeader
                 title="Tambah Pembelian"
                 breadcrumbs={["Admin", "Pembelian", "Tambah"]}
@@ -410,7 +410,7 @@ export default function Create({
                     </>
                 }
                 description="Catat pembelian stok dari supplier, pantau status pembayaran, dan penerimaan barang."
-                backUrl={route("admin.purchases.index")}
+
             />
 
             {flash?.error && (
@@ -653,7 +653,7 @@ export default function Create({
                                                 Subtotal:{" "}
                                                 {fmtRp(
                                                     Number(pendingQty) *
-                                                        Number(pendingPrice),
+                                                    Number(pendingPrice),
                                                 )}
                                             </p>
                                         )}
@@ -790,7 +790,7 @@ export default function Create({
                                                         <td className="px-4 py-3 text-right text-sm font-semibold text-foreground">
                                                             {fmtRp(
                                                                 item.quantity *
-                                                                    item.cost_price,
+                                                                item.cost_price,
                                                             )}
                                                         </td>
                                                         <td className="px-4 py-3 text-center">
@@ -930,13 +930,12 @@ export default function Create({
                                 {/* Payment indicator */}
                                 {grandTotal > 0 && (
                                     <div
-                                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium ${
-                                            paymentStatus === "paid"
-                                                ? "bg-success/10 text-success"
-                                                : paymentStatus === "partial"
-                                                  ? "bg-amber-50 text-amber-700"
-                                                  : "bg-muted text-muted-foreground"
-                                        }`}
+                                        className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium ${paymentStatus === "paid"
+                                            ? "bg-success/10 text-success"
+                                            : paymentStatus === "partial"
+                                                ? "bg-amber-50 text-amber-700"
+                                                : "bg-muted text-muted-foreground"
+                                            }`}
                                     >
                                         {paymentStatus === "paid" && (
                                             <svg
@@ -1083,23 +1082,21 @@ export default function Create({
 
                                 <div className="pt-1">
                                     <span
-                                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wide ${
-                                            paymentStatus === "paid"
-                                                ? "bg-emerald-100 text-success"
-                                                : paymentStatus === "partial"
-                                                  ? "bg-amber-100 text-amber-700"
-                                                  : "bg-muted text-muted-foreground"
-                                        }`}
+                                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wide ${paymentStatus === "paid"
+                                            ? "bg-emerald-100 text-success"
+                                            : paymentStatus === "partial"
+                                                ? "bg-amber-100 text-amber-700"
+                                                : "bg-muted text-muted-foreground"
+                                            }`}
                                     >
                                         <span
-                                            className={`h-1.5 w-1.5 rounded-full ${
-                                                paymentStatus === "paid"
-                                                    ? "bg-success/100"
-                                                    : paymentStatus ===
-                                                        "partial"
-                                                      ? "bg-amber-500"
-                                                      : "bg-slate-400"
-                                            }`}
+                                            className={`h-1.5 w-1.5 rounded-full ${paymentStatus === "paid"
+                                                ? "bg-success/100"
+                                                : paymentStatus ===
+                                                    "partial"
+                                                    ? "bg-amber-500"
+                                                    : "bg-slate-400"
+                                                }`}
                                         />
                                         {paymentStatus === "paid" && "LUNAS"}
                                         {paymentStatus === "partial" &&

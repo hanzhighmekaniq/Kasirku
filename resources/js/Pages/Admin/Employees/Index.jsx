@@ -150,7 +150,17 @@ export default function Index({ employees, storeType = "retail" }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Karyawan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={pageLabel}
                 breadcrumbs={["Admin", "Karyawan"]}

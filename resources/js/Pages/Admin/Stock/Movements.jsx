@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
+import SelectDropdown from "@/Components/ui/SelectDropdown";
 
 const MOVEMENT_TYPES = {
     purchase_in:         { label: 'Pembelian Masuk',        color: 'bg-emerald-100 text-success', icon: 'arrow-down',  desc: 'Stok bertambah karena pembelian dari supplier' },
@@ -196,10 +197,12 @@ export default function Movements({ movements, products }) {
                             </div>
                         )}
                     </div>
-                    <select value={filters.movement_type} onChange={(e) => handleFilter('movement_type', e.target.value)} className="rounded-xl border border-border px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20">
-                        <option value="">Semua Tipe</option>
-                        {Object.entries(MOVEMENT_TYPES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                    </select>
+                    <SelectDropdown
+                        value={filters.movement_type}
+                        options={Object.entries(MOVEMENT_TYPES).map(([k, v]) => ({ value: k, label: v.label }))}
+                        onChange={(v) => handleFilter('movement_type', v)}
+                        placeholder="Semua Tipe"
+                    />
                     <input type="date" value={filters.from_date} onChange={(e) => handleFilter('from_date', e.target.value)} className="rounded-xl border border-border px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
                     <input type="date" value={filters.to_date} onChange={(e) => handleFilter('to_date', e.target.value)} className="rounded-xl border border-border px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
                 </div>
@@ -300,7 +303,7 @@ export default function Movements({ movements, products }) {
                                             <td className="px-6 py-3.5">
                                                 <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{m.reference_no ?? '-'}</span>
                                             </td>
-                                            <td className="max-w-[220px] px-6 py-3.5 text-xs text-muted-foreground" title={m.notes ?? ''}>
+                                            <td className="max-w-[240px] px-6 py-3.5 text-xs text-muted-foreground" title={m.notes ?? ''}>
                                                 <p className="truncate">{m.notes ?? '-'}</p>
                                             </td>
                                         </tr>

@@ -44,7 +44,7 @@ const TYPE_META = {
 };
 
 function TypeBadge({ type }) {
-    const meta = TYPE_META[type] ?? { label: type, icon: CreditCard, color: "bg-muted text-muted-foreground", dot: "bg-slate-400" };
+    const meta = TYPE_META[type] ?? { label: type, icon: CreditCard, color: "bg-muted text-muted-foreground", dot: "bg-muted-foreground" };
     return (
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.color}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
@@ -273,7 +273,7 @@ export default function Index({ paymentMethods: initialMethods }) {
                     <div className="flex items-center gap-2">
                         {saving && (
                             <span className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 text-xs font-medium text-muted-foreground">
-                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                                 Menyimpan...
                             </span>
                         )}
@@ -321,7 +321,7 @@ export default function Index({ paymentMethods: initialMethods }) {
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
                 {/* Toolbar */}
                 <div className="border-b border-border p-4">
                     <div className="relative">
@@ -331,7 +331,7 @@ export default function Index({ paymentMethods: initialMethods }) {
                             placeholder="Cari metode..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-xl border border-border py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className="block w-full rounded-xl border border-border bg-card text-foreground py-2.5 pl-10 pr-4 text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                         />
                     </div>
                     <div className="flex items-center justify-between pt-4">
@@ -360,8 +360,8 @@ export default function Index({ paymentMethods: initialMethods }) {
                 ) : (
                     <>
                         {/* Column header */}
-                        <div className="flex items-center gap-2 sm:gap-3 border-b border-border bg-muted/50 px-3 sm:px-4 py-2.5">
-                            <div className="w-8" />
+                        <div className="flex items-center gap-2 sm:gap-3 border-b border-border bg-background px-3 sm:px-4 py-2.5">
+                            <div className="w-8" /> 
                             <div className="hidden sm:block w-7" />
                             <div className="flex-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Metode</div>
                             <div className="hidden sm:block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tipe</div>

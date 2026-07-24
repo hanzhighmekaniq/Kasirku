@@ -4,6 +4,7 @@ import { Head, router } from "@inertiajs/react";
 import { useState, useRef, useEffect } from "react";
 import { Activity, Calendar, ChevronDown, Check, Filter, RotateCcw, Search } from "lucide-react";
 import Button from "@/Components/ui/Button";
+import SelectDropdown from "@/Components/ui/SelectDropdown";
 
 const LOG_NAME_LABELS = {
     shift: "Shift Kasir",
@@ -27,86 +28,10 @@ const LOG_NAME_COLORS = {
 const fmtDate = (d) =>
     d
         ? new Date(d).toLocaleString("id-ID", {
-              dateStyle: "medium",
-              timeStyle: "medium",
-          })
+            dateStyle: "medium",
+            timeStyle: "medium",
+        })
         : "-";
-
-/* ─── SelectDropdown ──────────────────────────────────── */
-function SelectDropdown({ value, options, onChange, placeholder = "Pilih..." }) {
-    const [open, setOpen] = useState(false);
-    const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
-    const btnRef = useRef(null);
-
-    useEffect(() => {
-        const handler = (e) => {
-            if (btnRef.current && !btnRef.current.contains(e.target)) setOpen(false);
-        };
-        if (open) document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
-    }, [open]);
-
-    const toggle = () => {
-        if (!open && btnRef.current) {
-            const rect = btnRef.current.getBoundingClientRect();
-            setPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-        }
-        setOpen(!open);
-    };
-
-    const selected = options.find((o) => o.value === value);
-
-    return (
-        <>
-            <button
-                ref={btnRef}
-                type="button"
-                onClick={toggle}
-                className="inline-flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition hover:border-ring hover:shadow-sm"
-            >
-                <span className={selected ? "text-foreground" : "text-muted-foreground"}>
-                    {selected?.label ?? placeholder}
-                </span>
-                <ChevronDown
-                    className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
-                    strokeWidth={2}
-                />
-            </button>
-            {open && (
-                <div
-                    className="fixed z-[100] max-h-56 overflow-y-auto rounded-xl border border-border bg-popover shadow-xl ring-1 ring-black/5"
-                    style={{ top: pos.top, left: pos.left, minWidth: pos.width }}
-                >
-                    <button
-                        type="button"
-                        onClick={() => { onChange(""); setOpen(false); }}
-                        className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition hover:bg-muted ${
-                            !value ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"
-                        }`}
-                    >
-                        {placeholder}
-                        {!value && <Check className="ml-auto h-3.5 w-3.5 text-primary" strokeWidth={2.5} />}
-                    </button>
-                    {options.map((opt) => (
-                        <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => { onChange(opt.value); setOpen(false); }}
-                            className={`flex w-full items-center gap-2 px-4 py-2.5 text-sm transition hover:bg-muted ${
-                                value === opt.value ? "bg-primary/10 text-primary font-medium" : "text-foreground"
-                            }`}
-                        >
-                            {opt.label}
-                            {value === opt.value && (
-                                <Check className="ml-auto h-3.5 w-3.5 text-primary" strokeWidth={2.5} />
-                            )}
-                        </button>
-                    ))}
-                </div>
-            )}
-        </>
-    );
-}
 
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
 
@@ -175,10 +100,20 @@ export default function Index({
     }));
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Log Aktivitas
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen Log Aktivitas
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Log Aktivitas"
-                breadcrumbs={["Admin", "Log Aktivitas"]}
+                breadcrumbs={["Admin", "Sistem", "Log Aktivitas"]}
                 heading={
                     <>
                         <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
@@ -191,9 +126,9 @@ export default function Index({
 
             <div className="space-y-5">
                 {/* ── Filters ── */}
-                <div className="rounded-2xl border border-border bg-card shadow-sm">
-                    <div className="flex items-center gap-3 border-b border-border bg-muted/50 px-5 py-3.5">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <div className="rounded-2xl border border-border bg-background shadow-sm">
+                    <div className="rounded-t-2xl flex items-center gap-3 border-b border-border bg-muted px-5 py-3.5">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background">
                             <Filter className="h-4 w-4" strokeWidth={1.8} />
                         </div>
                         <h3 className="text-sm font-semibold text-foreground">Filter</h3>
@@ -261,7 +196,7 @@ export default function Index({
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 sm:ml-auto">
+                            <div className="flex items-center gap-2 ">
                                 <Button onClick={apply} icon={Search} size="lg">
                                     Terapkan
                                 </Button>
@@ -293,7 +228,7 @@ export default function Index({
                                     <th className="px-5 py-3.5">Deskripsi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border bg-background">
                                 {logs.data.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="px-5 py-16 text-center">
@@ -392,13 +327,12 @@ export default function Index({
                                                 replace: true,
                                             })
                                         }
-                                        className={`min-w-[36px] rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
-                                            link.active
-                                                ? "bg-primary text-primary-foreground shadow-sm"
-                                                : link.url
-                                                  ? "text-muted-foreground hover:bg-muted"
-                                                  : "cursor-default text-muted-foreground/50"
-                                        }`}
+                                        className={`min-w-[36px] rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${link.active
+                                            ? "bg-primary text-primary-foreground shadow-sm"
+                                            : link.url
+                                                ? "text-muted-foreground hover:bg-muted"
+                                                : "cursor-default text-muted-foreground/50"
+                                            }`}
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
                                         }}

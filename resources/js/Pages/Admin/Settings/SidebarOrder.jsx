@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head } from "@inertiajs/react";
 import { useState } from "react";
 import { buildNavGroups } from "@/Config/navConfig";
@@ -28,7 +29,7 @@ function DragHandle({ listeners, attributes }) {
         <button
             {...listeners}
             {...attributes}
-            className="flex h-7 w-7 cursor-grab items-center justify-center rounded-lg text-muted-foreground/50 hover:bg-muted hover:text-muted-foreground active:cursor-grabbing transition-colors"
+            className="flex h-7 w-7 cursor-grab items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-muted-foreground active:cursor-grabbing transition-colors"
             title="Drag untuk mengubah urutan"
             tabIndex={-1}
         >
@@ -58,9 +59,8 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
         <tr
             ref={isDragOverlay ? undefined : setNodeRef}
             style={isDragOverlay ? undefined : style}
-            className={`group transition-colors ${
-                isDragging ? "bg-primary-50/30" : "hover:bg-muted/50"
-            } ${isDragOverlay ? "bg-card shadow-xl ring-1 ring-black/10 rounded-lg" : ""}`}
+            className={`group transition-colors ${isDragging ? "bg-primary-" : "hover:bg-muted"
+                } ${isDragOverlay ? "bg-card shadow-xl ring-1 ring-black/10 rounded-lg" : ""}`}
         >
             <td className="px-4 py-3 w-10">
                 <DragHandle listeners={listeners} attributes={attributes} />
@@ -111,9 +111,9 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
 /* ─── Locked Row (non-sortable) ──────────────────────── */
 function LockedFeatureRow({ item }) {
     return (
-        <tr className="bg-muted/30 opacity-50">
+        <tr className="bg-muted opacity-50">
             <td className="px-4 py-3 w-10">
-                <Lock className="h-3.5 w-3.5 text-muted-foreground/50 mx-auto" strokeWidth={1.8} />
+                <Lock className="h-3.5 w-3.5 text-muted-foreground mx-auto" strokeWidth={1.8} />
             </td>
             <td className="px-4 py-3">
                 <div className="flex items-center gap-2.5">
@@ -187,8 +187,8 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
     return (
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             {/* Group Header */}
-            <div className="flex items-center gap-3 border-b border-border bg-gradient-to-r from-slate-50/80 to-white px-5 py-3.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+            <div className="flex items-center gap-3 px-5 py-3.5 text-base bg-muted border-b border-border">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center ">
                     <GroupIcons name={group.icon} className="h-4 w-4" />
                 </div>
                 <div>
@@ -210,7 +210,7 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <tr className="border-b border-border bg-background text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 <th className="w-10 px-4 py-3"></th>
                                 <th className="px-4 py-3">Fitur</th>
                                 <th className="px-4 py-3 hidden sm:table-cell">Urutan</th>
@@ -222,7 +222,7 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
                             items={unlockedItems.map((i) => i.itemKey)}
                             strategy={verticalListSortingStrategy}
                         >
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border bg-background ">
                                 {unlockedItems.map((item, idx) => (
                                     <SortableFeatureRow
                                         key={item.itemKey}
@@ -268,8 +268,8 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
                                     item={activeItem}
                                     idx={unlockedItems.findIndex((i) => i.itemKey === activeItem.itemKey)}
                                     totalUnlocked={unlockedItems.length}
-                                    onMoveUp={() => {}}
-                                    onMoveDown={() => {}}
+                                    onMoveUp={() => { }}
+                                    onMoveDown={() => { }}
                                     isDragOverlay
                                 />
                             </tbody>
@@ -304,26 +304,34 @@ export default function Index() {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
-                            <LayoutList className="h-5 w-5" strokeWidth={1.8} />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-foreground">Urutan Fitur</h2>
-                            <p className="text-xs text-muted-foreground">
-                                Atur urutan tampilan menu di sidebar
-                            </p>
-                        </div>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Urutan  Sidebar
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Atur urutan tampilan menu di sidebar
                     </div>
                 </div>
             }
         >
             <Head title="Urutan Fitur" />
 
+            <PageHeader
+                title="Urutan Sidebar"
+                breadcrumbs={["Admin", "Sistem", "Urutan Sidebar"]}
+                heading={
+                    <>
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Urutan Sidebar
+                        </span>
+                    </>
+                }
+                description="Atur urutan tampilan menu di sidebar dengan drag & drop atau tombol panah."
+            />
+
             <div className="space-y-5">
                 {/* Info */}
-                <div className="rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-700">
+                <div className="rounded-xl border border-border bg-muted px-6 py-3 text-sm text-base">
                     Drag & drop baris untuk mengatur urutan, atau gunakan tombol ↑ ↓. Urutan akan otomatis tersimpan dan diterapkan di sidebar.
                 </div>
 

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { useTheme } from "@/Theme/ThemeProvider";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import {
@@ -356,11 +357,10 @@ function ThemeCard({
 
     return (
         <div
-            className={`group/card relative flex flex-col rounded-xl border bg-card transition-all duration-200 ${
-                active
-                    ? "border-primary/50 shadow-md shadow-primary/5"
-                    : "border-border hover:border-border"
-            }`}
+            className={`group/card relative flex flex-col rounded-xl border bg-card transition-all duration-200 ${active
+                ? "border-primary/50 shadow-md shadow-primary/5"
+                : "border-border hover:border-border"
+                }`}
         >
             {/* Card header */}
             <div className="flex items-start justify-between p-4 pb-0">
@@ -622,37 +622,30 @@ export default function Index({ userThemes = [] }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-                            <Palette
-                                size={18}
-                                className="text-primary"
-                                strokeWidth={1.8}
-                            />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-foreground">
-                                Themes
-                            </h2>
-                            <p className="text-xs text-muted-foreground">
-                                Manage your application's visual themes and
-                                color systems.
-                            </p>
-                        </div>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Manajemen Tema
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href={route("admin.themes.create")}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                        >
-                            <Plus size={14} /> Add Theme
-                        </Link>
+                    <div className="text-[11px] text-muted-foreground">
+                        Tema & Warna
                     </div>
                 </div>
             }
         >
-            <Head title="Themes" />
+            <Head title="Manajemen Tema" />
+
+            <PageHeader
+                title="Manajemen Tema"
+                breadcrumbs={["Admin", "Sistem", "Tema"]}
+                heading={
+                    <>
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Manajemen Tema
+                        </span>
+                    </>
+                }
+                description="Kelola tampilan visual aplikasi dengan tema dan skema warna pilihan."
+            />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">

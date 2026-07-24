@@ -52,7 +52,20 @@ export default function Show({ expense }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.expenses.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Pengeluaran
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        expense.expense_no
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`Pengeluaran - ${expense.expense_no}`}
                 breadcrumbs={["Admin", "Pengeluaran", expense.expense_no]}
@@ -65,7 +78,7 @@ export default function Show({ expense }) {
                     </>
                 }
                 description="Lihat rincian dan ubah status pengeluaran."
-                backUrl={route("admin.expenses.index")}
+                
             />
 
             <div className="mx-auto max-w-3xl space-y-6">

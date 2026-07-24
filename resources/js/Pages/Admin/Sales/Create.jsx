@@ -141,7 +141,20 @@ export default function Create({ products, customers, paymentMethods, tables, st
     const selectedProductObj = products.find((p) => p.id === Number(selectedProduct));
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.sales.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Penjualan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Transaksi
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Transaksi Penjualan"
                 breadcrumbs={["Admin", "Penjualan", "Transaksi"]}
@@ -154,7 +167,7 @@ export default function Create({ products, customers, paymentMethods, tables, st
                     </>
                 }
                 description="Catat transaksi penjualan baru."
-                backUrl={route("admin.sales.index")}
+                
             />
 
             {flash?.error && (
@@ -389,5 +402,5 @@ function Field({ label, required, error, children }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
+    return `block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
 }

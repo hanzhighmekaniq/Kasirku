@@ -53,7 +53,20 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.purchase-returns.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        pageTitle
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        purchaseReturn.return_no
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`${pageTitle} ${purchaseReturn.return_no}`}
                 breadcrumbs={["Admin", pageTitle, purchaseReturn.return_no]}
@@ -69,7 +82,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                     </div>
                 }
                 description="Lihat rincian retur pembelian, produk, dan status."
-                backUrl={route("admin.purchase-returns.index")}
+                
             />
 
             <div className="mx-auto max-w-3xl space-y-6">

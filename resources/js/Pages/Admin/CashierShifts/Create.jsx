@@ -26,7 +26,20 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.cashier-shifts.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Shift
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Buka
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`Buka ${pageLabel}`}
                 breadcrumbs={["Admin", "Shift", "Buka"]}
@@ -39,7 +52,7 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
                     </>
                 }
                 description={branchName || "Masukkan kas awal untuk membuka shift."}
-                backUrl={route("admin.cashier-shifts.index")}
+                
             />
 
             <div className="mx-auto max-w-lg">

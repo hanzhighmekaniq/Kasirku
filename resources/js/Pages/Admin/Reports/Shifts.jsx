@@ -13,7 +13,17 @@ export default function Shifts({ from, to, summary, byCashier = [], shifts = [] 
     const { flash } = usePage().props;
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Laporan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Shift
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Laporan Shift"
                 breadcrumbs={["Admin", "Laporan", "Shift"]}

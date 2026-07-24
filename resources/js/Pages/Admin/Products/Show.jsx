@@ -3,6 +3,7 @@ import PageHeader from "@/Components/PageHeader";
 import { Head, Link, usePage, router } from "@inertiajs/react";
 import { useState } from "react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
+import { ArrowLeft } from "lucide-react";
 
 /* ── helpers ─────────────────────────────────────────── */
 const fmt = (n) =>
@@ -454,12 +455,23 @@ export default function Show({
     return (
         <AuthenticatedLayout
             header={
-                <div className="leading-tight">
-                    <div className="text-sm font-semibold text-foreground">
-                        Manajemen {pageTitle}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                        Detail
+                <div className="flex items-center gap-3">
+                    {/* Tombol Kembali */}
+                    <Link
+                        href={route("admin.products.index")}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    >
+                        <ArrowLeft size={16} />
+                    </Link>
+
+                    {/* Judul */}
+                    <div className="leading-tight">
+                        <div className="text-sm font-semibold text-foreground">
+                            Manajemen {pageTitle}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                            Detail
+                        </div>
                     </div>
                 </div>
             }
@@ -468,7 +480,7 @@ export default function Show({
                 title={`Detail — ${product.name}`}
                 breadcrumbs={[
                     `Detail ${pageTitle.toLowerCase()}`,
-                    productTypes[product.type] ?? product.type,
+                    TYPE_META[product.type]?.label ?? product.type,
                     ...(product.sku ? [`SKU: ${product.sku}`] : [])
                 ]}
                 heading={
@@ -480,7 +492,7 @@ export default function Show({
                     </>
                 }
                 description="Lihat statistik, riwayat stok, resep, dan informasi detail terkait produk ini."
-                backUrl={route("admin.products.index")}
+
             />
 
             {/* ── Low Stock Alert ── */}
@@ -780,8 +792,8 @@ export default function Show({
                                         key={t.id}
                                         onClick={() => setActiveTab(t.id)}
                                         className={`px-4 py-2 text-sm font-medium rounded-lg border transition whitespace-nowrap ${activeTab === t.id
-                                                ? "text-primary border-primary/30 bg-primary/10"
-                                                : "text-muted-foreground border-transparent hover:bg-muted"
+                                            ? "text-primary border-primary/30 bg-primary/10"
+                                            : "text-muted-foreground border-transparent hover:bg-muted"
                                             }`}
                                     >
                                         {t.label}
@@ -909,86 +921,87 @@ export default function Show({
                         </dl>
                     </section>
                     {/* Riwayat Stok */}
-                {product.track_stock && stockMovements.length > 0 && (
-                    <section className="lg:col-span-3 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-                        <div className="flex items-center justify-between border-b border-border bg-muted/50 px-6 py-4">
-                            <div>
-                                <h3 className="text-sm font-semibold text-foreground">
-                                    Riwayat Stok
-                                </h3>
-                                <p className="mt-0.5 text-xs text-muted-foreground">
-                                    10 mutasi terakhir
-                                </p>
+                    {product.track_stock && stockMovements.length > 0 && (
+                        <section className="lg:col-span-3 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+                            <div className="flex items-center justify-between border-b border-border bg-muted/50 px-6 py-4">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-foreground">
+                                        Riwayat Stok
+                                    </h3>
+                                    <p className="mt-0.5 text-xs text-muted-foreground">
+                                        10 mutasi terakhir
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        <th className="px-5 py-3">
-                                            Tanggal
-                                        </th>
-                                        <th className="px-5 py-3">Tipe</th>
-                                        <th className="px-5 py-3 text-right">
-                                            Qty
-                                        </th>
-                                        <th className="px-5 py-3 text-right hidden sm:table-cell">
-                                            Harga
-                                        </th>
-                                        <th className="px-5 py-3 hidden sm:table-cell">
-                                            Ref
-                                        </th>
-                                        <th className="px-5 py-3 hidden md:table-cell">
-                                            Keterangan
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                    {stockMovements.map((m, i) => {
-                                        const isIn =
-                                            m.movement_type?.includes("_in") ||
-                                            m.movement_type ===
-                                            "adjustment_in";
-                                        return (
-                                            <tr
-                                                key={i}
-                                                className="transition hover:bg-muted/50"
-                                            >
-                                                <td className="px-5 py-3 text-muted-foreground whitespace-nowrap">
-                                                    {fmtDate(m.moved_at)}
-                                                </td>
-                                                <td className="px-5 py-3">
-                                                    <span
-                                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${isIn ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
-                                                    >
-                                                        {isIn ? "+" : "-"}
-                                                        {movementLabel(
-                                                            m.movement_type,
-                                                        )}
-                                                    </span>
-                                                </td>
-                                                <td className="px-5 py-3 text-right font-medium text-foreground">
-                                                    {m.quantity} {product.unit}
-                                                </td>
-                                                <td className="px-5 py-3 text-right text-muted-foreground hidden sm:table-cell">
-                                                    {m.unit_cost > 0
-                                                        ? fmt(m.unit_cost)
-                                                        : "-"}
-                                                </td>
-                                                <td className="px-5 py-3 text-xs text-muted-foreground hidden sm:table-cell">
-                                                    {m.reference_no ?? "-"}
-                                                </td>
-                                                <td className="px-5 py-3 text-xs text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
-                                                    {m.notes ?? "-"}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-                )}
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                            <th className="px-5 py-3">
+                                                Tanggal
+                                            </th>
+                                            <th className="px-5 py-3">Tipe</th>
+                                            <th className="px-5 py-3 text-right">
+                                                Qty
+                                            </th>
+                                            <th className="px-5 py-3 text-right hidden sm:table-cell">
+                                                Harga
+                                            </th>
+                                            <th className="px-5 py-3 hidden sm:table-cell">
+                                                Ref
+                                            </th>
+                                            <th className="px-5 py-3 hidden md:table-cell">
+                                                Keterangan
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                        {stockMovements.map((m, i) => {
+                                            const isIn =
+                                                m.movement_type?.includes("_in") ||
+                                                m.movement_type ===
+                                                "adjustment_in";
+                                            return (
+                                                <tr
+                                                    key={i}
+                                                    className="transition hover:bg-muted/50"
+                                                >
+                                                    <td className="px-5 py-3 text-muted-foreground whitespace-nowrap">
+                                                        {fmtDate(m.moved_at)}
+                                                    </td>
+                                                    <td className="px-5 py-3">
+                                                        <span
+                                                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${isIn ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
+                                                        >
+                                                            {isIn ? "+" : "-"}
+                                                            {movementLabel(
+                                                                m.movement_type,
+                                                            )}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-5 py-3 text-right font-medium text-foreground">
+                                                        {m.quantity} {product.unit}
+                                                    </td>
+                                                    <td className="px-5 py-3 text-right text-muted-foreground hidden sm:table-cell">
+                                                        {m.unit_cost > 0
+                                                            ? fmt(m.unit_cost)
+                                                            : "-"}
+                                                    </td>
+                                                    <td className="px-5 py-3 text-xs text-muted-foreground hidden sm:table-cell">
+                                                        {m.reference_no ?? "-"}
+                                                    </td>
+                                                    <td className="px-5 py-3 text-xs text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
+                                                        {m.notes ?? "-"}
+                                                    </td>
+                                                </tr>
+
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    )}
                 </div>
 
                 {/* Right / Sidebar */}
@@ -1195,7 +1208,7 @@ export default function Show({
                     </section>
                 </aside>
 
-                
+
             </div>
 
             <ConfirmDeleteModal

@@ -204,7 +204,20 @@ export default function Edit({
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.purchases.show", purchase.id)}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Pembelian
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        purchase.purchase_no
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`Edit ${purchase.purchase_no}`}
                 breadcrumbs={["Admin", "Pembelian", purchase.purchase_no]}
@@ -217,7 +230,7 @@ export default function Edit({
                     </>
                 }
                 description="Ubah data pembelian stok dari supplier."
-                backUrl={route("admin.purchases.show", purchase.id)}
+                
             />
 
             {flash?.error && (

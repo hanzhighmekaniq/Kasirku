@@ -24,7 +24,20 @@ export default function Create({ storeType = "retail" }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.customers.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Pelanggan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Tambah
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Tambah Pelanggan"
                 breadcrumbs={["Admin", "Pelanggan", "Tambah"]}
@@ -37,7 +50,7 @@ export default function Create({ storeType = "retail" }) {
                     </>
                 }
                 description={subtitle}
-                backUrl={route("admin.customers.index")}
+                
             />
 
             <div className="mx-auto max-w-2xl">

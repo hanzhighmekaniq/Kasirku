@@ -41,7 +41,17 @@ export default function Index({ branches }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Cabang
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Outlet / Cabang"
                 breadcrumbs={["Admin", "Cabang"]}

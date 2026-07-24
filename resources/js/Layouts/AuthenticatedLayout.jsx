@@ -19,6 +19,7 @@ import {
     Settings,
     LogOut,
     User,
+    ArrowLeft,
 } from "lucide-react";
 
 /* ─── Type-mismatch modal ───────────────────────────────────── */
@@ -161,8 +162,8 @@ function Badge({ label, color = "indigo" }) {
 
 /* ─── Nav item ───────────────────────────────────────────────── */
 function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
-    const active = Array.isArray(item.current) 
-        ? item.current.some(c => route().current(c)) 
+    const active = Array.isArray(item.current)
+        ? item.current.some(c => route().current(c))
         : route().current(item.current);
     const locked = item.locked;
 
@@ -283,7 +284,7 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
 
 /* ─── Nav group ──────────────────────────────────────────────── */
 function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
-    const hasActive = group.items.some((i) => 
+    const hasActive = group.items.some((i) =>
         Array.isArray(i.current) ? i.current.some(c => route().current(c)) : route().current(i.current)
     );
     const [open, setOpen] = useState(() => {
@@ -497,7 +498,7 @@ function WorkspaceSwitcher({
             setPos({
                 top: rect.bottom + 6,
                 left: rect.left,
-                width: collapsed ? 260 : rect.width,
+                width: collapsed ? 220 : rect.width,
             });
         }
         setOpen((o) => !o);
@@ -988,7 +989,7 @@ function SidebarContent({
 }
 
 /* ─── Main layout ────────────────────────────────────────────── */
-export default function AuthenticatedLayout({ header, children, noPadding = false }) {
+export default function AuthenticatedLayout({ header, children, noPadding = false, backUrl, headerRight }) {
     const {
         auth,
         currentStore,
@@ -1030,7 +1031,7 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
     };
 
     const onNavigate = () => setSidebarOpen(false);
-    const sidebarW = collapsed ? "w-[70px]" : "w-[280px]";
+    const sidebarW = collapsed ? "w-[70px]" : "w-[240px]";
 
     return (
         <div className="min-h-screen bg-background">
@@ -1082,7 +1083,7 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
 
             {/* Main */}
             <div
-                className={`flex min-h-screen flex-col transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-[70px]" : "lg:pl-[280px]"}`}
+                className={`flex min-h-screen flex-col transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-[70px]" : "lg:pl-[240px]"}`}
             >
                 {/* Topbar */}
                 <header className="sticky top-0 z-20 flex h-[56px] items-center gap-2.5 border-b border-border bg-sidebar backdrop-blur-md px-4 sm:px-6 shadow-sm">
@@ -1128,8 +1129,25 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
 
                     <div className="hidden w-px h-6 bg-border sm:block" />
 
-                    {/* Page title */}
-                    <div className="flex-1 min-w-0">
+                    {/* Page title & Back Button */}
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                        {backUrl && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    if (typeof backUrl === "function") {
+                                        backUrl(e);
+                                    } else if (typeof backUrl === "string") {
+                                        router.visit(backUrl, { preserveScroll: true });
+                                    }
+                                }}
+                                aria-label="Kembali"
+                                title="Kembali"
+                                className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                <ArrowLeft className="size-4" strokeWidth={2} />
+                            </button>
+                        )}
                         <h1 className="text-sm font-semibold text-sidebar-foreground">
                             {header}
                         </h1>
@@ -1137,6 +1155,12 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
 
                     {/* Right side */}
                     <div className="flex items-center gap-2">
+                        {headerRight && (
+                            <div className="flex items-center gap-1.5 border-r border-border/50 pr-2 mr-1">
+                                {headerRight}
+                            </div>
+                        )}
+                        
                         {/* Toko & cabang kini dikelola dari sidebar (WorkspaceSwitcher) */}
                         <OfflineIndicator />
 
@@ -1234,7 +1258,7 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                     </div>
                 )}
 
-                <main className={noPadding ? "flex-1 flex flex-col overflow-hidden bg-background" : "flex-1 p-1 md:p-4 bg-background"}>
+                <main className={noPadding ? "flex-1 flex flex-col overflow-hidden bg-background " : "flex-1 p-4 bg-background"}>
                     {noPadding ? children : (
                         <div className="mx-auto w-full max-w-[1920px]">
                             {children}

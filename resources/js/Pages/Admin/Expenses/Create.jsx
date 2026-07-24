@@ -119,7 +119,20 @@ export default function Create({ categories: initialCategories }) {
         : '';
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.expenses.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Pengeluaran
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Catat
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Catat Pengeluaran"
                 breadcrumbs={["Admin", "Pengeluaran", "Catat"]}
@@ -132,7 +145,7 @@ export default function Create({ categories: initialCategories }) {
                     </>
                 }
                 description="Isi informasi pengeluaran yang akan dicatat."
-                backUrl={route("admin.expenses.index")}
+                
             />
 
             <div className="mx-auto max-w-2xl">

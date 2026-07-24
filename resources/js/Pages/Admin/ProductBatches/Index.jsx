@@ -118,7 +118,17 @@ export default function Index({ batches, products, filters }) {
     }), [batches]);
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Stok
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Batch & Expiry
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Batch / Expiry Produk"
                 breadcrumbs={["Admin", "Stok", "Batch & Expiry"]}

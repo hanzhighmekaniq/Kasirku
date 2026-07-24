@@ -35,7 +35,7 @@ export function buildShadcnTemplate({ primaryHex, accentHex, overrides = {} }) {
     void generateColorScale;
 
     const base = {
-        background: '#F8FAFC',
+        background: '#FFFFFF',
         foreground: '#0F172A',
         card: '#FFFFFF',
         cardForeground: '#0F172A',

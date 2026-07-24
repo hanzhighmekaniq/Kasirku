@@ -60,7 +60,20 @@ export default function Show({ purchase, storeType = "retail" }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.purchases.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        pageTitle
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        purchase.purchase_no
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`${pageTitle} ${purchase.purchase_no}`}
                 breadcrumbs={["Admin", pageTitle, purchase.purchase_no]}
@@ -73,7 +86,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                     </>
                 }
                 description="Lihat rincian pembelian, produk, dan status pembayaran."
-                backUrl={route("admin.purchases.index")}
+                
             />
 
             {flash?.success && (

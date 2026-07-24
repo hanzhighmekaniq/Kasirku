@@ -127,7 +127,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         id="branch_id"
                         value={data.branch_id}
                         onChange={(e) => setData('branch_id', e.target.value)}
-                        className="mt-1.5 block w-full rounded-xl border-border shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                        className="mt-1.5 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                     >
                         <option value="">— Semua Cabang —</option>
                         {branches.map((b) => (

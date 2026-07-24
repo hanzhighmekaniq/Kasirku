@@ -20,11 +20,11 @@ export default function Index({ customers }) {
 
     const filtered = search.trim()
         ? customers.filter(
-              (c) =>
-                  c.name.toLowerCase().includes(search.toLowerCase()) ||
-                  (c.code || "").toLowerCase().includes(search.toLowerCase()) ||
-                  (c.phone || "").includes(search),
-          )
+            (c) =>
+                c.name.toLowerCase().includes(search.toLowerCase()) ||
+                (c.code || "").toLowerCase().includes(search.toLowerCase()) ||
+                (c.phone || "").includes(search),
+        )
         : customers;
 
     const handlePay = () => {
@@ -38,10 +38,20 @@ export default function Index({ customers }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Kasbon
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen Hutang
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Hutang / Kasbon"
-                breadcrumbs={["Admin", "Kasbon"]}
+                breadcrumbs={["Admin", "Keuangan", "Kasbon"]}
                 heading={
                     <>
                         Kelola{" "}
@@ -62,7 +72,7 @@ export default function Index({ customers }) {
             )}
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                <div className="border-b border-border bg-muted/50 px-5 py-3.5">
+                <div className="border-b border-border bg-muted px-5 py-3.5">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold text-foreground">Daftar Pelanggan Berhutang</span>
@@ -98,7 +108,7 @@ export default function Index({ customers }) {
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                <tr className="border-b border-border bg-muted text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                     <th className="px-4 py-3.5">Pelanggan</th>
                                     <th className="px-4 py-3.5">Telepon</th>
                                     <th className="px-4 py-3.5 text-right">Total Hutang</th>
@@ -107,18 +117,26 @@ export default function Index({ customers }) {
                                     <th className="px-4 py-3.5 text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border bg-background">
                                 {filtered.map((c) => (
-                                    <tr key={c.id} className="transition hover:bg-muted/50">
+                                    <tr key={c.id} className="transition hover:bg-muted">
                                         <td className="px-4 py-3.5">
                                             <p className="font-medium text-foreground">{c.name}</p>
                                             {c.code && <p className="text-xs text-muted-foreground">{c.code}</p>}
                                         </td>
                                         <td className="px-4 py-3.5 text-muted-foreground">{c.phone || "—"}</td>
                                         <td className="px-4 py-3.5 text-right">
-                                            <span className="font-semibold text-destructive">{fmt(c.debt_balance)}</span>
+                                            {(c.debt_balance ?? 0) > 0 ? (
+                                                <span className="inline-flex items-center rounded-lg border border-destructive/20 bg-destructive/10 px-2.5 py-1 text-xs font-semibold text-destructive">
+                                                    {fmt(c.debt_balance)}
+                                                </span>
+                                            ) : (
+                                                <span className="text-muted-foreground">
+                                                    {fmt(0)}
+                                                </span>
+                                            )}
                                         </td>
-                                        <td className="px-4 py-3.5 text-right text-muted-foreground">
+                                        <td className="px-4 py-3.5 text-right text-muted-foreground ">
                                             {(c.credit_limit ?? 0) > 0 ? fmt(c.credit_limit) : "—"}
                                         </td>
                                         <td className="px-4 py-3.5 text-right">
@@ -147,8 +165,8 @@ export default function Index({ customers }) {
             {/* Pay Modal */}
             {payModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setPayModal(null)} />
-                    <div className="relative w-full max-w-sm rounded-2xl bg-popover p-6 shadow-2xl">
+                    <div className="absolute inset-0 bg-black backdrop-blur-sm" onClick={() => setPayModal(null)} />
+                    <div className="relative w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl border border-border">
                         <h3 className="text-base font-bold text-foreground">Lunasi Hutang</h3>
                         <p className="mt-1 text-sm text-muted-foreground">
                             {payModal.name} — Sisa hutang: <strong>{fmt(payModal.debt_balance)}</strong>

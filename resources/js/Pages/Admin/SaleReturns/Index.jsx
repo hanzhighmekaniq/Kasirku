@@ -69,7 +69,17 @@ export default function Index({ saleReturns }) {
     }, [saleReturns]);
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Retur Penjualan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Retur Penjualan"
                 breadcrumbs={["Admin", "Retur Penjualan"]}

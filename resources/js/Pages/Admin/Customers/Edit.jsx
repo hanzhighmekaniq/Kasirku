@@ -24,7 +24,20 @@ export default function Edit({ customer, storeType = "retail" }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.customers.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Pelanggan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Edit
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Edit Pelanggan"
                 breadcrumbs={["Admin", "Pelanggan", "Edit"]}
@@ -37,7 +50,7 @@ export default function Edit({ customer, storeType = "retail" }) {
                     </>
                 }
                 description={`Perbarui data pelanggan "${customer.name}".`}
-                backUrl={route("admin.customers.index")}
+                
             />
 
             <div className="mx-auto max-w-2xl">

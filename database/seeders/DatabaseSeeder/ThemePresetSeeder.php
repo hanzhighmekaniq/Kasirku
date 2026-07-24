@@ -45,43 +45,28 @@ class ThemePresetSeeder extends Seeder
     public function run(): void
     {
         $templates = $this->getTemplates();
-        $slugs = array_column($templates, 'slug');
 
-        // Hapus total preset sistem lama yang tidak ada di daftar baru
-        // (ganti total sesuai permintaan — bukan cuma update). Preset lama
-        // (Ocean Blue, dst) punya slug NULL — whereNotIn() MySQL tidak
-        // match baris NULL, jadi kondisinya ditambah eksplisit.
-        ThemePreset::where('is_system', true)
-            ->where(function ($q) use ($slugs) {
-                $q->whereNull('slug')->orWhereNotIn('slug', $slugs);
-            })
-            ->delete();
+        // Hapus semua system presets, lalu insert ulang dalam urutan.
+        // Dengan create() + delete all, ID dijamin berurutan: default = 1,
+        // twitter = 2, dst. HandleInertiaRequests query by ID ASC →
+        // "default" selalu jadi tema pertama untuk user baru.
+        ThemePreset::where('is_system', true)->delete();
 
         foreach ($templates as $template) {
-            ThemePreset::updateOrCreate(
-                ['slug' => $template['slug']],
-                [
-                    'user_id' => null,
-                    'name' => $template['name'],
-                    'description' => $template['description'],
-                    'is_system' => true,
-                    'tokens' => [
-                        'light' => array_merge($template['light'], self::STATUS),
-                        'dark' => array_merge($template['dark'], self::STATUS),
-                    ],
+            ThemePreset::create([
+                'user_id' => null,
+                'slug' => $template['slug'],
+                'name' => $template['name'],
+                'description' => $template['description'],
+                'is_system' => true,
+                'tokens' => [
+                    'light' => array_merge($template['light'], self::STATUS),
+                    'dark' => array_merge($template['dark'], self::STATUS),
                 ],
-            );
+            ]);
         }
 
-        // Preset tema di-cache 1 jam di HandleInertiaRequests (key:
-        // "system-themes"). Kalau tidak di-clear di sini, seeder yang baru
-        // dijalankan tidak akan terlihat efeknya sampai cache expired —
-        // user akan tetap lihat warna LAMA walau DB sudah update.
         Cache::forget('system-themes');
-
-        if (method_exists($this->command, 'info')) {
-            $this->command->info('✅ ' . count($templates) . ' system theme presets created (Violet, Supabase, Vercel, Twitter, Perpetuity, Caffein).');
-        }
     }
 
     /**
@@ -97,6 +82,86 @@ class ThemePresetSeeder extends Seeder
      */
     private function getTemplates(): array
     {
+        $defaultLight = [
+            // Primary
+            'primary' => '#171717',
+            'primaryForeground' => '#fafafa',
+            // Background & Foreground
+            'background' => '#ffffff',
+            'foreground' => '#0a0a0a',
+            // Secondary
+            'secondary' => '#f5f5f5',
+            'secondaryForeground' => '#171717',
+            // Accent
+            'accent' => '#f5f5f5',
+            'accentForeground' => '#171717',
+            // Card
+            'card' => '#ffffff',
+            'cardForeground' => '#0a0a0a',
+            // Popover
+            'popover' => '#ffffff',
+            'popoverForeground' => '#0a0a0a',
+            // Muted
+            'muted' => '#f5f5f5',
+            'mutedForeground' => '#737373',
+            // Destructive
+            'destructive' => '#e7000b',
+            'destructiveForeground' => '#ffffff',
+            // Border & Input
+            'border' => '#e5e5e5',
+            'input' => '#e5e5e5',
+            'ring' => '#a1a1a1',
+            // Chart
+            'chart1' => '#91c5ff',
+            'chart2' => '#3a81f6',
+            'chart3' => '#2563ef',
+            'chart4' => '#1a4eda',
+            'chart5' => '#1f3fad',
+            // Sidebar
+            'sidebar' => '#ffffff',
+            'sidebarForeground' => '#0a0a0a',
+        ];
+
+        $defaultDark = [
+            // Primary
+            'primary' => '#e5e5e5',
+            'primaryForeground' => '#171717',
+            // Background & Foreground
+            'background' => '#0a0a0a',
+            'foreground' => '#fafafa',
+            // Secondary
+            'secondary' => '#262626',
+            'secondaryForeground' => '#fafafa',
+            // Accent
+            'accent' => '#404040',
+            'accentForeground' => '#fafafa',
+            // Card
+            'card' => '#171717',
+            'cardForeground' => '#fafafa',
+            // Popover
+            'popover' => '#262626',
+            'popoverForeground' => '#fafafa',
+            // Muted
+            'muted' => '#262626',
+            'mutedForeground' => '#a1a1a1',
+            // Destructive
+            'destructive' => '#ff6467',
+            'destructiveForeground' => '#fafafa',
+            // Border & Input
+            'border' => '#282828',
+            'input' => '#343434',
+            'ring' => '#737373',
+            // Chart
+            'chart1' => '#91c5ff',
+            'chart2' => '#3a81f6',
+            'chart3' => '#2563ef',
+            'chart4' => '#1a4eda',
+            'chart5' => '#1f3fad',
+            // Sidebar
+            'sidebar' => '#0a0a0a',
+            'sidebarForeground' => '#fafafa',
+        ];
+
         // ── PERPETUITY TERANG (source md line 107-118) — teal kalem di atas putih kehijauan ──
         $perpetuityLight = [
             // Primary
@@ -260,6 +325,13 @@ class ThemePresetSeeder extends Seeder
         ];  // source md: TWITTER GELAP identik dengan TWITTER TERANG
 
         return [
+            [
+                'slug' => 'default',
+                'name' => 'Default',
+                'description' => 'Default theme.',
+                'light' => $defaultLight,
+                'dark' => $defaultDark,
+            ],
             [
                 'slug' => 'twitter',
                 'name' => 'Twitter',

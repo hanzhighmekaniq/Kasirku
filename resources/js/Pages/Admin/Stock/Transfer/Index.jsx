@@ -43,7 +43,17 @@ export default function Index({ transfers, stats }) {
     const fmtDate = (d) => new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Stok
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Transfer Stok
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Transfer Stok"
                 breadcrumbs={["Admin", "Stok", "Transfer Stok"]}

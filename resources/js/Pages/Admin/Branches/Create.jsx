@@ -18,7 +18,20 @@ export default function Create() {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.branches.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Cabang
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Tambah
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Tambah Cabang"
                 breadcrumbs={["Admin", "Cabang", "Tambah"]}
@@ -31,7 +44,7 @@ export default function Create() {
                     </>
                 }
                 description="Buat outlet untuk memisahkan stok, transaksi, dan kasir per lokasi."
-                backUrl={route("admin.branches.index")}
+                
             />
 
             <div className="mx-auto max-w-2xl">

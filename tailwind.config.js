@@ -48,7 +48,7 @@ export default {
         extend: {
             colors: {
                 /* ── shadcn/ui tokens (36 per mode) ── */
-                background: withOpacity('--background', '248 250 252'),
+                background: withOpacity('--background', '255 255 255'),
                 foreground: withOpacity('--foreground', '15 23 42'),
                 card: {
                     DEFAULT: withOpacity('--card', '255 255 255'),

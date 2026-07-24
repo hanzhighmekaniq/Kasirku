@@ -17,7 +17,8 @@ import Tooltip from "./Tooltip";
 const VARIANTS = {
     ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
     subtle: "bg-muted text-muted-foreground hover:bg-muted hover:text-foreground",
-    solid: "bg-primary text-white hover:bg-slate-700",
+    solid: "bg-primary text-white hover:bg-foreground",
+    primary: "bg-primary text-primary-foreground hover:bg-foreground",
     danger: "text-muted-foreground/60 hover:bg-destructive/5 hover:text-destructive",
     success: "text-muted-foreground/60 hover:bg-success/10 hover:text-success",
 };

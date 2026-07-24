@@ -194,15 +194,9 @@ export const CHART_COLOR_KEYS = ['chart1', 'chart2', 'chart3', 'chart4', 'chart5
 
 /** Daftar id template built-in. */
 export const TEMPLATE_IDS = [
-    'ocean-blue',
-    'emerald-green',
-    'sunset-orange',
-    'royal-indigo',
-    'supabase-mint',
-    'midnight-ocean',
-    'forest-night',
-    'ember-night',
-    'cosmic-indigo',
+    'default',
+    'twitter',
+    'perpetuity',
     'custom',
 ];
 

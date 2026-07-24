@@ -12,13 +12,12 @@ function IconBtn({ onClick, title, children, red, amber }) {
             type="button"
             onClick={onClick}
             title={title}
-            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
-                red
-                    ? "text-muted-foreground/60 hover:bg-red-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
-                    : amber
-                      ? "text-muted-foreground/60 hover:bg-amber-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
-                      : "text-muted-foreground/60 hover:bg-indigo-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
-            }`}
+            className={`inline-flex h-6 w-6 items-center justify-center rounded-lg transition-all ${red
+                ? "text-muted-foreground/60 hover:bg-red-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
+                : amber
+                    ? "text-muted-foreground/60 hover:bg-amber-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
+                    : "text-muted-foreground/60 hover:bg-indigo-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
+                }`}
         >
             {children}
         </button>
@@ -32,12 +31,12 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
     const hasPromo = (item.promoDiscount ?? 0) > 0;
 
     return (
-        <div className="group flex items-center gap-2.5 rounded-xl bg-card px-2.5 py-2.5 shadow-sm ring-1 ring-slate-200/70 hover:shadow-md hover:ring-indigo-200 transition-all">
+        <div className="group border border-border flex items-center gap-2.5 rounded-xl bg-card px-2.5 py-2.5 shadow-sm   hover:shadow-md   transition-all">
             {/* Product thumbnail */}
-            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-slate-200/50">
+            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-background border border-border">
                 {productImage ? (
                     <img
-                        src={productImage}
+                        src={productImage.startsWith('http') || productImage.startsWith('/') ? productImage : `/storage/${productImage}`}
                         alt={item.name}
                         className="h-full w-full object-cover"
                     />
@@ -112,21 +111,25 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
             </div>
 
             {/* Quantity controls */}
-            <div className="flex shrink-0 flex-col items-center gap-1.5">
-                <IconBtn onClick={() => onRemove(item.cartId)} title="Hapus" red>
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </IconBtn>
-
-                <div className="flex items-center gap-0.5 rounded-lg bg-muted ring-1 ring-slate-200 p-0.5">
-                    <IconBtn onClick={() => onQty(item.cartId, -1)} title="Kurangi">
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-                        </svg>
+            <div className="flex shrink-0 flex-col items-center gap-1.5 ">
+                <div className="flex items-center gap-0.5 rounded-md bg-muted ring-1 ring-slate-200 p-0.5">
+                    <IconBtn
+                        onClick={() => item.qty <= 1 ? onRemove(item.cartId) : onQty(item.cartId, -1)}
+                        title={item.qty <= 1 ? "Hapus" : "Kurangi"}
+                        red={item.qty <= 1}
+                    >
+                        {item.qty <= 1 ? (
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            </svg>
+                        ) : (
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+                            </svg>
+                        )}
                     </IconBtn>
-                    <div className="flex h-8 min-w-[2.25rem] items-center justify-center rounded-md bg-card px-2 shadow-sm ring-1 ring-slate-200/50">
-                        <span className="text-sm font-extrabold text-foreground">
+                    <div className="flex h-6 min-w-[2rem] items-center justify-center rounded bg-card px-1 shadow-sm ring-1 ring-slate-200/50">
+                        <span className="text-xs font-extrabold text-foreground">
                             {item.qty}
                         </span>
                     </div>

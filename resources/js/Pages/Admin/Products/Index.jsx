@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import Button from "@/Components/ui/Button";
 import { Eye, Plus } from "lucide-react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
@@ -596,17 +596,12 @@ export default function Index({
         >
             <PageHeader
                 title={`Katalog ${pageTitle}`}
-                breadcrumbs={[
-                    pageTitle,
-                    ...(currentBranch ? [currentBranch.name] : [])
-                ]}
+                breadcrumbs={["Admin", "Master Data", "Produk"]}
                 heading={
                     <>
-                        Kelola{" "}
                         <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                            katalog {pageTitle.toLowerCase()}
-                        </span>{" "}
-                        tokomu
+                            Manajemen {pageTitle.toLowerCase()}
+                        </span>
                     </>
                 }
                 description="Cari, filter, dan atur stok, varian, harga, serta status dari satu tempat. Pantau stok menipis dan item nonaktif lewat ringkasan di bawah."
@@ -884,7 +879,7 @@ export default function Index({
                         {/* Desktop table */}
                         <div className="hidden overflow-x-auto lg:block">
                             <table className="w-full text-sm">
-                                <thead className="bg-[rgb(var(--color-table-header))] text-xs uppercase tracking-wide text-card-foreground">
+                                <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                     <tr>
                                         <th
                                             className="cursor-pointer select-none px-4 py-3 text-left font-semibold transition hover:text-foreground"
@@ -949,12 +944,12 @@ export default function Index({
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[rgb(var(--color-divider))]">
+                                <tbody className="divide-y divide-border bg-background">
                                     {list.map((product) => {
                                         const isExp = expanded.has(product.id);
                                         const canExp = hasExpandable(product);
                                         return (
-                                            <>
+                                            <Fragment key={product.id}>
                                                 <tr
                                                     key={product.id}
                                                     className="transition hover:bg-[rgb(var(--color-table-hover))]"
@@ -1307,7 +1302,7 @@ export default function Index({
                                                         </td>
                                                     </tr>
                                                 )}
-                                            </>
+                                            </Fragment>
                                         );
                                     })}
                                 </tbody>

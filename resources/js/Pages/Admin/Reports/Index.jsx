@@ -118,7 +118,17 @@ export default function Index({
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Laporan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Penjualan
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Laporan Penjualan"
                 breadcrumbs={["Admin", "Laporan", "Penjualan"]}

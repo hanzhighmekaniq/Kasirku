@@ -29,7 +29,7 @@ export default function PosModal({
         <Modal show={show} onClose={onClose} maxWidth={maxWidth}>
             <div className="flex items-start gap-3 border-b border-border px-5 py-4">
                 {Icon && (
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                         <Icon size={19} strokeWidth={2} />
                     </div>
                 )}

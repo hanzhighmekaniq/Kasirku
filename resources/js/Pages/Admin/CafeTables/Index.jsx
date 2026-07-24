@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import Button from '@/Components/ui/Button';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
+import SelectDropdown from "@/Components/ui/SelectDropdown";
 
 const STATUS_LABELS = {
     available: 'Tersedia',
@@ -57,7 +58,17 @@ export default function Index({ cafeTables, branches }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Meja
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Meja Cafe"
                 breadcrumbs={["Admin", "Meja"]}
@@ -97,26 +108,22 @@ export default function Index({ cafeTables, branches }) {
                                 className="block w-full rounded-xl border-border pl-9 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
-                        <select
+                        <SelectDropdown
                             value={branchFilter}
-                            onChange={(e) => setBranchFilter(e.target.value)}
-                            className="rounded-xl border border-border px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                        >
-                            <option value="">Semua Cabang</option>
-                            {branches.map((b) => (
-                                <option key={b.id} value={b.id}>{b.name}</option>
-                            ))}
-                        </select>
-                        <select
+                            options={branches.map(b => ({ value: String(b.id), label: b.name }))}
+                            onChange={(v) => setBranchFilter(v)}
+                            placeholder="Semua Cabang"
+                        />
+                        <SelectDropdown
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="rounded-xl border border-border px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                        >
-                            <option value="">Semua Status</option>
-                            <option value="available">Tersedia</option>
-                            <option value="occupied">Terisi</option>
-                            <option value="reserved">Direservasi</option>
-                        </select>
+                            options={[
+                                { value: "available", label: "Tersedia" },
+                                { value: "occupied", label: "Terisi" },
+                                { value: "reserved", label: "Direservasi" },
+                            ]}
+                            onChange={(v) => setStatusFilter(v)}
+                            placeholder="Semua Status"
+                        />
                     </div>
                     <p className="text-sm text-muted-foreground">
                         Total <span className="font-semibold text-foreground">{filtered.length}</span> meja

@@ -341,7 +341,7 @@ function AddOwnerModal({ allUsers, storeId, onClose }) {
                     <select
                         value={selected}
                         onChange={(e) => setSelected(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-700 focus:border-primary-400 focus:bg-white focus:ring-2 focus:ring-primary-100 outline-none transition"
+                        className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground focus:border-ring focus:bg-card focus:ring-2 focus:ring-ring/20 outline-none transition"
                     >
                         <option value="">Pilih user...</option>
                         {allUsers?.map((u) => (

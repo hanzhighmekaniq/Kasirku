@@ -258,7 +258,20 @@ export default function Create({ purchases, storeType = 'retail' }) {
         }`;
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.purchase-returns.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        pageTitle
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Buat
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`Buat ${pageTitle}`}
                 breadcrumbs={["Admin", pageTitle, "Buat"]}
@@ -271,7 +284,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                     </>
                 }
                 description="Pilih pembelian asal dan isi data retur."
-                backUrl={route("admin.purchase-returns.index")}
+                
             />
 
             <form onSubmit={submit} className="mx-auto max-w-3xl space-y-6">

@@ -18,8 +18,11 @@ export default function Create({ parentCategories = [] }) {
 
     return (
         <AuthenticatedLayout
+            
             header={
-                <div className="leading-tight">
+                <div className="leading-tight"
+            
+            backUrl={route("admin.categories.index")}>
                     <div className="text-sm font-semibold text-foreground">
                         Manajemen Kategori
                     </div>
@@ -42,7 +45,7 @@ export default function Create({ parentCategories = [] }) {
                     </>
                 }
                 description="Buat kategori baru untuk mengelompokkan produk kamu."
-                backUrl={route("admin.categories.index")}
+                
             />
 
             <div className="mx-auto max-w-2xl">

@@ -47,7 +47,17 @@ export default function Index({ customers, storeType = "retail" }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Pelanggan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Pelanggan"
                 breadcrumbs={["Admin", "Pelanggan"]}

@@ -46,7 +46,20 @@ export default function Create({
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.employees.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Karyawan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Tambah
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`Tambah ${pageLabel}`}
                 breadcrumbs={["Admin", "Karyawan", "Tambah"]}
@@ -60,7 +73,7 @@ export default function Create({
                     </>
                 }
                 description="Lengkapi identitas, cabang, jabatan, dan opsi akun login. Data ini dipakai di POS, shift, dan laporan."
-                backUrl={route("admin.employees.index")}
+                
             />
 
             <div className="mx-auto max-w-3xl pb-10">

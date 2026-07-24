@@ -81,7 +81,20 @@ export default function Show({ saleReturn }) {
     };
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            
+            header={
+                <div className="leading-tight"
+            
+            backUrl={route("admin.sale-returns.index")}>
+                    <div className="text-sm font-semibold text-foreground">
+                        Retur Penjualan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        saleReturn.return_no
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={`Retur ${saleReturn.return_no}`}
                 breadcrumbs={["Admin", "Retur Penjualan", saleReturn.return_no]}
@@ -94,7 +107,7 @@ export default function Show({ saleReturn }) {
                     </>
                 }
                 description="Lihat rincian retur penjualan."
-                backUrl={route("admin.sale-returns.index")}
+                
                 action={
                     <div className="flex items-center gap-2">
                         {saleReturn.status === "completed" && (

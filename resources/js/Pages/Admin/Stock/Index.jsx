@@ -90,7 +90,17 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
         new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val || 0);
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        PAGE_TITLE
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title={PAGE_TITLE}
                 breadcrumbs={["Admin", PAGE_TITLE]}

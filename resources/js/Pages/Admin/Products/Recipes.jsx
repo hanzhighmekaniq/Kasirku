@@ -46,7 +46,7 @@ const PAGE_TITLE = {
 };
 
 function inputCls(err) {
-    return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
+    return `block w-full rounded-xl border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:ring-2 ${
         err
             ? "border-destructive focus:border-destructive focus:ring-destructive/20"
             : "border-border focus:border-ring focus:ring-ring/20"

@@ -3,6 +3,7 @@ import PageHeader from "@/Components/PageHeader";
 import { Head, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import Button from "@/Components/ui/Button";
+import SelectDropdown from "@/Components/ui/SelectDropdown";
 
 const fmt = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 const fmtDate = (d) =>
@@ -74,7 +75,17 @@ export default function Index({
     const list = commissions.data ?? [];
 
     return (
-        <AuthenticatedLayout>
+        <AuthenticatedLayout
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Komisi
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
+                </div>
+            }>
             <PageHeader
                 title="Rekap Komisi"
                 breadcrumbs={["Admin", "Komisi"]}
@@ -123,38 +134,24 @@ export default function Index({
 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-3">
-                    <select
+                    <SelectDropdown
                         value={filters.status ?? ""}
-                        onChange={(e) =>
-                            applyFilter({
-                                status: e.target.value || undefined,
-                            })
-                        }
-                        className="rounded-xl border-border bg-card text-sm text-foreground shadow-sm focus:border-ring focus:ring-ring/20"
-                    >
-                        <option value="">Semua Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Disetujui</option>
-                        <option value="paid">Dibayar</option>
-                        <option value="cancelled">Dibatalkan</option>
-                    </select>
+                        options={[
+                            { value: "pending", label: "Pending" },
+                            { value: "approved", label: "Disetujui" },
+                            { value: "paid", label: "Dibayar" },
+                            { value: "cancelled", label: "Dibatalkan" },
+                        ]}
+                        onChange={(v) => applyFilter({ status: v || undefined })}
+                        placeholder="Semua Status"
+                    />
 
-                    <select
+                    <SelectDropdown
                         value={filters.employee_id ?? ""}
-                        onChange={(e) =>
-                            applyFilter({
-                                employee_id: e.target.value || undefined,
-                            })
-                        }
-                        className="rounded-xl border-border bg-card text-sm text-foreground shadow-sm focus:border-ring focus:ring-ring/20"
-                    >
-                        <option value="">Semua Karyawan</option>
-                        {employees.map((e) => (
-                            <option key={e.id} value={e.id}>
-                                {e.name}
-                            </option>
-                        ))}
-                    </select>
+                        options={employees.map(e => ({ value: String(e.id), label: e.name }))}
+                        onChange={(v) => applyFilter({ employee_id: v || undefined })}
+                        placeholder="Semua Karyawan"
+                    />
 
                     <input
                         type="date"

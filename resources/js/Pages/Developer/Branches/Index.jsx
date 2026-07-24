@@ -1,6 +1,7 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
+import SelectDropdown from "@/Components/ui/SelectDropdown";
 
 export default function Index({ branches = [], stores = [] }) {
     const { flash } = usePage().props;
@@ -188,32 +189,12 @@ export default function Index({ branches = [], stores = [] }) {
                 </div>
 
                 {/* Store dropdown */}
-                <div className="relative">
-                    <select
-                        value={filterStore}
-                        onChange={(e) => setFilterStore(e.target.value)}
-                        className="appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-3.5 pr-9 text-sm text-slate-700 shadow-sm transition focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 cursor-pointer"
-                    >
-                        {storeOptions.map((t) => (
-                            <option key={t.key} value={t.key}>
-                                {t.label}
-                            </option>
-                        ))}
-                    </select>
-                    <svg
-                        className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                        />
-                    </svg>
-                </div>
+                <SelectDropdown
+                    value={filterStore}
+                    options={storeOptions.map(t => ({ value: t.key, label: t.label }))}
+                    onChange={(v) => setFilterStore(v)}
+                    placeholder="Semua Toko"
+                />
             </div>
 
             {/* Status filter chips */}
