@@ -3,10 +3,12 @@ import PageHeader from "@/Components/PageHeader";
 import StockTabs from "@/Components/StockTabs";
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Clock, RotateCcw, ShieldCheck, Boxes, ChevronDown, X, Search } from 'lucide-react';
+import { Clock, RotateCcw, ShieldCheck, Boxes, ChevronDown, X, Search, ArrowRightLeft, Trash2 } from 'lucide-react';
+import { useStoreModules } from '@/Hooks/useStoreModules';
 
 export default function Index({ stocks, stats, storeType = 'retail' }) {
     const { flash } = usePage().props;
+    const { needsAdjustment, needsOpname, needsTransfer, needsWaste } = useStoreModules();
     const [search, setSearch] = useState('');
     const [selectedProductId, setSelectedProductId] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -157,30 +159,62 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
             </div>
 
             {/* Sub-navigation */}
-            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Link href={route('admin.stock-adjustments.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary-200 hover:shadow-md">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition group-hover:bg-primary-100">
-                            <RotateCcw className="h-5 w-5" strokeWidth={1.8} />
-                        </div>
-                        <div>
-                            <p className="text-sm font-semibold text-foreground">Penyesuaian Stok</p>
-                            <p className="text-xs text-muted-foreground">Koreksi selisih stok sistem vs aktual</p>
-                        </div>
-                    </div>
-                </Link>
-                <Link href={route('admin.stock-opnames.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-violet-200 hover:shadow-md">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 transition group-hover:bg-violet-100">
-                            <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />
-                        </div>
-                        <div>
-                            <p className="text-sm font-semibold text-foreground">Opname Stok</p>
-                            <p className="text-xs text-muted-foreground">Hitung fisik dan selisih stok</p>
-                        </div>
-                    </div>
-                </Link>
-            </div>
+            {(needsAdjustment || needsOpname || needsTransfer || needsWaste) && (
+                <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {needsAdjustment && (
+                        <Link href={route('admin.stock-adjustments.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary-200 hover:shadow-md">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition group-hover:bg-primary-100">
+                                    <RotateCcw className="h-5 w-5" strokeWidth={1.8} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-foreground">Penyesuaian</p>
+                                    <p className="text-xs text-muted-foreground">Koreksi selisih stok</p>
+                                </div>
+                            </div>
+                        </Link>
+                    )}
+                    {needsOpname && (
+                        <Link href={route('admin.stock-opnames.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-violet-200 hover:shadow-md">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 transition group-hover:bg-violet-100">
+                                    <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-foreground">Opname</p>
+                                    <p className="text-xs text-muted-foreground">Hitung fisik stok</p>
+                                </div>
+                            </div>
+                        </Link>
+                    )}
+                    {needsTransfer && (
+                        <Link href={route('admin.stock-transfers.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-amber-200 hover:shadow-md">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition group-hover:bg-amber-100">
+                                    <ArrowRightLeft className="h-5 w-5" strokeWidth={1.8} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-foreground">Transfer</p>
+                                    <p className="text-xs text-muted-foreground">Pindah antar lokasi</p>
+                                </div>
+                            </div>
+                        </Link>
+                    )}
+                    {needsWaste && (
+                        <Link href={route('admin.wastes.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-red-200 hover:shadow-md">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 transition group-hover:bg-red-100">
+                                    <Trash2 className="h-5 w-5" strokeWidth={1.8} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-foreground">Pembuangan</p>
+                                    <p className="text-xs text-muted-foreground">Stok rusak/kadaluarsa</p>
+                                </div>
+                            </div>
+                        </Link>
+                    )}
+                </div>
+            )}
 
             {/* Table card */}
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">

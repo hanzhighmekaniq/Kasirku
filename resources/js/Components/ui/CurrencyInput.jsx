@@ -61,11 +61,11 @@ export default function CurrencyInput({
                 placeholder={placeholder}
                 disabled={disabled}
                 required={required}
-                className={`block w-full rounded-xl border bg-muted/40 py-2.5 pl-10 pr-3.5 text-sm text-foreground shadow-sm transition focus:outline-none focus:ring-2 ${
+                className={`block w-full rounded-xl border bg-input py-2.5 pl-10 pr-3.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:outline-none focus:ring-2 ${
                     error
-                        ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                        : "border-input focus:border-ring focus:ring-ring/20"
-                } ${disabled ? "cursor-not-allowed bg-muted text-muted-foreground" : ""}`}
+                        ? "border-destructive focus:ring-destructive"
+                        : "border-border focus:ring-ring"
+                } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
             />
         </div>
     );

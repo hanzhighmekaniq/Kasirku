@@ -25,11 +25,9 @@ export default function Edit({ customer, storeType = "retail" }) {
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.customers.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.customers.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Pelanggan
                     </div>

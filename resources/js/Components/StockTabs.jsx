@@ -1,20 +1,21 @@
 import { PackageSearch, Archive, ListTodo, ClipboardCheck, ArrowRightLeft, Trash2 } from 'lucide-react';
 import PageTabs from '@/Components/PageTabs';
 import { usePage } from '@inertiajs/react';
+import { useStoreModules } from '@/Hooks/useStoreModules';
 
 export default function StockTabs() {
     const { auth } = usePage().props;
+    const { needsAdjustment, needsOpname, needsTransfer, needsWaste } = useStoreModules();
 
     // Helper to check permission
     const can = (permission) => auth?.permissions?.includes(permission);
 
-    // Default to show them if permission check not strictly needed, 
-    // but better to hide tabs if not allowed.
+    // Only show tabs if both the user has permission AND the store supports the feature
     const tabs = [
         {
             name: "Manajemen Stok",
             href: route("admin.stock.index"),
-            active: route().current("admin.stock.*"),
+            active: route().current("admin.stock.*") && !route().current("admin.stock-adjustments.*") && !route().current("admin.stock-opnames.*") && !route().current("admin.stock-transfers.*"),
             icon: <PackageSearch className="h-4 w-4" />,
             show: true,
         },
@@ -30,28 +31,28 @@ export default function StockTabs() {
             href: route("admin.stock-adjustments.index"),
             active: route().current("admin.stock-adjustments.*"),
             icon: <ListTodo className="h-4 w-4" />,
-            show: can('stock.adjustment'),
+            show: needsAdjustment && can('stock.adjustment'),
         },
         {
             name: "Opname",
             href: route("admin.stock-opnames.index"),
             active: route().current("admin.stock-opnames.*"),
             icon: <ClipboardCheck className="h-4 w-4" />,
-            show: can('stock.opname'),
+            show: needsOpname && can('stock.opname'),
         },
         {
             name: "Transfer",
             href: route("admin.stock-transfers.index"),
             active: route().current("admin.stock-transfers.*"),
             icon: <ArrowRightLeft className="h-4 w-4" />,
-            show: can('stock.transfer'),
+            show: needsTransfer && can('stock.transfer'),
         },
         {
             name: "Waste",
             href: route("admin.wastes.index"),
             active: route().current("admin.wastes.*"),
             icon: <Trash2 className="h-4 w-4" />,
-            show: can('stock.waste'), // usually fnb only
+            show: needsWaste && can('stock.waste'),
         },
     ].filter(tab => tab.show);
 

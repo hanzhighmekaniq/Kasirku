@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import Button from "@/Components/ui/Button";
+import PageHeader from "@/Components/PageHeader";
 
 export default function Edit({ supplier }) {
     const { flash } = usePage().props;
@@ -21,18 +22,31 @@ export default function Edit({ supplier }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center gap-3">
-                    <Link href={route('admin.suppliers.index')} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label="Kembali">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-                    </Link>
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">Edit Supplier</h2>
-                        <p className="text-sm text-muted-foreground">{supplier.name} <span className="text-xs text-muted-foreground/50">{supplier.code}</span></p>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Supplier
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
                     </div>
                 </div>
             }
         >
             <Head title={`Edit: ${supplier.name}`} />
+            <PageHeader
+                title="Edit Supplier"
+                breadcrumbs={["Admin", "Supplier", "Edit"]}
+                heading={
+                    <>
+                        Edit{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Supplier
+                        </span>
+                    </>
+                }
+                description={`Perbarui data pemasok ${supplier.name}.`}
+                backUrl={route("admin.suppliers.index")}
+            />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
@@ -141,5 +155,5 @@ function InfoRow({ label, value }) {
 }
 
 function inputCls(hasError, extra = '') {
-    return `block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''} ${extra}`;
+    return `block w-full rounded-xl bg-input text-foreground text-sm shadow-sm outline-none transition focus:border-ring focus:ring-2 ${hasError ? 'border-destructive focus:ring-destructive' : 'border-border focus:ring-ring'} ${extra}`;
 }

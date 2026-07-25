@@ -1,6 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import Button from "@/Components/ui/Button";
+import CurrencyInput from '@/Components/ui/CurrencyInput';
+import SearchableSelect from '@/Components/ui/SearchableSelect';
 
 const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n ?? 0);
 
@@ -69,7 +71,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         }}
                         onFocus={() => setDropdownOpen(true)}
                         placeholder="Cari produk (nama / SKU)..."
-                        className={`block w-full rounded-xl py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:ring-2 ${errors.product_id ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-ring focus:ring-ring/20'}`}
+                        className={`block w-full rounded-xl py-2.5 pl-10 pr-4 bg-input border border-border text-sm shadow-sm transition focus:ring-2 ${errors.product_id ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-ring focus:ring-ring/20'}`}
                     />
                     {selectedProduct && (
                         <button type="button" onClick={() => { setData((d) => ({ ...d, product_id: '', _cost_locked: false })); setDropdownSearch(''); setDropdownOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground">
@@ -115,7 +117,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         value={data.batch_no}
                         onChange={(e) => setData('batch_no', e.target.value)}
                         placeholder="cth. BATCH-20260601-001"
-                        className={`mt-1.5 block w-full rounded-xl font-mono text-sm shadow-sm transition focus:ring-2 ${errors.batch_no ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-ring focus:ring-ring/20'}`}
+                        className={`mt-1.5 block w-full rounded-xl bg-input text-foreground font-mono text-sm shadow-sm outline-none transition focus:ring-2 ${errors.batch_no ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-ring focus:ring-ring/20'}`}
                     />
                     <p className="mt-1 text-xs text-muted-foreground">Harus unik per produk.</p>
                     {errors.batch_no && <p className="mt-1 text-sm text-destructive">{errors.batch_no}</p>}
@@ -123,17 +125,15 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
 
                 <div>
                     <label htmlFor="branch_id" className="block text-sm font-medium text-foreground">Cabang</label>
-                    <select
-                        id="branch_id"
-                        value={data.branch_id}
-                        onChange={(e) => setData('branch_id', e.target.value)}
-                        className="mt-1.5 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                    >
-                        <option value="">— Semua Cabang —</option>
-                        {branches.map((b) => (
-                            <option key={b.id} value={b.id}>{b.name}</option>
-                        ))}
-                    </select>
+                    <div className="mt-1.5">
+                        <SearchableSelect
+                            options={branches.map(b => ({ id: b.id, name: b.name }))}
+                            value={data.branch_id}
+                            onChange={(v) => setData('branch_id', v)}
+                            placeholder="— Semua Cabang —"
+                            searchPlaceholder="Cari cabang..."
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -146,7 +146,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         type="date"
                         value={data.purchase_date}
                         onChange={(e) => setData('purchase_date', e.target.value)}
-                        className="mt-1.5 block w-full rounded-xl border-border shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                        className="mt-1.5 block w-full rounded-xl border-border bg-input text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
                     />
                     {errors.purchase_date && <p className="mt-1 text-sm text-destructive">{errors.purchase_date}</p>}
                 </div>
@@ -161,7 +161,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         type="date"
                         value={data.expiry_date}
                         onChange={(e) => setData('expiry_date', e.target.value)}
-                        className="mt-1.5 block w-full rounded-xl border-border shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                        className="mt-1.5 block w-full rounded-xl border-border bg-input text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
                     />
                     <p className="mt-1 text-xs text-muted-foreground">Kosongkan jika produk tidak kadaluarsa.</p>
                     {errors.expiry_date && <p className="mt-1 text-sm text-destructive">{errors.expiry_date}</p>}
@@ -177,10 +177,11 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                     <input
                         id="quantity"
                         type="number"
-                        min="0"
+                        min="1"
+                        placeholder="0"
                         value={data.quantity}
                         onChange={(e) => setData('quantity', e.target.value)}
-                        className={`mt-1.5 block w-full rounded-xl shadow-sm transition focus:ring-2 ${errors.quantity ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-ring focus:ring-ring/20'}`}
+                        className={`mt-1.5 block w-full bg-input border border-border rounded-xl shadow-sm transition focus:ring-2 ${errors.quantity ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-ring focus:ring-ring/20'}`}
                     />
                     {errors.quantity && <p className="mt-1 text-sm text-destructive">{errors.quantity}</p>}
                 </div>
@@ -189,18 +190,12 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                     <label htmlFor="cost_price" className="block text-sm font-medium text-foreground">
                         Harga Pokok <span className="text-destructive">*</span>
                     </label>
-                    <div className="relative mt-1.5">
-                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">Rp</span>
-                        <input
-                            id="cost_price"
-                            type="number"
-                            min="0"
-                            step="100"
-                            value={data.cost_price}
-                            onChange={(e) => setData((d) => ({ ...d, cost_price: e.target.value, _cost_locked: true }))}
-                            className={`block w-full rounded-xl pl-10 shadow-sm transition focus:ring-2 ${errors.cost_price ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-ring focus:ring-ring/20'}`}
-                        />
-                    </div>
+                    <CurrencyInput
+                        value={data.cost_price}
+                        onChange={(v) => setData((d) => ({ ...d, cost_price: v, _cost_locked: true }))}
+                        error={!!errors.cost_price}
+                        className="mt-1.5"
+                    />
                     {data.product_id && (
                         <p className="mt-1 text-xs text-muted-foreground">
                             Harga pokok produk: {fmt(products.find((p) => p.id === Number(data.product_id))?.cost_price)}

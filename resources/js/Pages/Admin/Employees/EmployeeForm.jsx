@@ -15,10 +15,10 @@ const COMMISSION_OPTIONS = [
 ];
 
 function inputCls(hasError) {
-    return `mt-1.5 block w-full rounded-xl border text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
+    return `mt-1.5 block w-full rounded-lg border py-2.5 px-3.5 text-sm bg-card text-card-foreground outline-none transition-all ${
         hasError
-            ? "border-destructive/40 focus:border-destructive focus:ring-destructive/20"
-            : "border-border focus:border-ring focus:ring-ring/20"
+            ? "border-destructive focus:border-destructive focus:ring-3 focus:ring-destructive/20"
+            : "border-border focus:border-ring focus:ring-3 focus:ring-primary/20"
     }`;
 }
 
@@ -290,7 +290,7 @@ export default function EmployeeForm({
                         onChange={(e) =>
                             setData("create_account", e.target.checked)
                         }
-                        className="mt-0.5 h-4 w-4 rounded border-border text-primary shadow-sm focus:ring-primary"
+                        className="mt-0.5 h-4 w-4 rounded border-border text-primary bg-input shadow-sm focus:ring-ring focus:ring-2 focus:ring-offset-0"
                     />
                     <span>
                         <span className="block text-sm font-medium text-foreground">

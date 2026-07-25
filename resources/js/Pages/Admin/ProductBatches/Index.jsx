@@ -141,12 +141,6 @@ export default function Index({ batches, products, filters }) {
                     </>
                 }
                 description="Pantau tanggal kadaluarsa dan kelola batch produk Anda."
-                action={
-                    <Button as={Link} href={route('admin.product-batches.create')} icon={Plus}>
-                        <span className="hidden sm:inline">Tambah Batch</span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
-                }
             />
 
             <StockTabs />
@@ -180,9 +174,9 @@ export default function Index({ batches, products, filters }) {
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
                 {/* Toolbar */}
-                <div className="border-b border-border p-4">
+                <div className="border-b border-border bg-card p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         {/* Product filter — searchable dropdown */}
                         <div className="relative" ref={prodDropdownRef}>
@@ -216,7 +210,7 @@ export default function Index({ batches, products, filters }) {
                                                 value={prodSearch}
                                                 onChange={(e) => setProdSearch(e.target.value)}
                                                 placeholder="Cari nama atau SKU..."
-                                                className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                className="block w-full rounded-lg border border-border bg-input py-2 pl-9 pr-3 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring"
                                             />
                                         </div>
                                     </div>
@@ -269,9 +263,15 @@ export default function Index({ batches, products, filters }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari batch, produk, SKU..."
-                                className="block w-full rounded-xl border border-border py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl border border-border bg-input py-2.5 pl-10 pr-4 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
                             />
                         </div>
+
+                        {/* Add Button */}
+                        <Button as={Link} href={route('admin.product-batches.create')} icon={Plus} className="w-full justify-center sm:w-auto">
+                            <span className="hidden sm:inline">Tambah Batch</span>
+                            <span className="sm:hidden">Tambah</span>
+                        </Button>
                     </div>
                     <div className="flex items-center justify-between pt-4">
                         <p className="text-xs text-muted-foreground">

@@ -65,16 +65,6 @@ export default function Index({ adjustments, stats }) {
                     </>
                 }
                 description="Perbaiki stok fisik dan sistem agar tetap akurat."
-                action={
-                    <Button
-                        as={Link}
-                        href={route('admin.stock-adjustments.create')}
-                        icon={Plus}
-                    >
-                        <span className="hidden sm:inline">Buat Penyesuaian</span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
-                }
             />
 
             <StockTabs />
@@ -127,6 +117,16 @@ export default function Index({ adjustments, stats }) {
                             placeholder="Semua Status"
                             className="min-w-[160px]"
                         />
+                    
+                        <Button
+                            as={Link}
+                            href={route('admin.stock-adjustments.create')}
+                            icon={Plus}
+                            className="w-full justify-center sm:w-auto"
+                        >
+                            <span className="hidden sm:inline">Buat Penyesuaian</span>
+                            <span className="sm:hidden">Tambah</span>
+                        </Button>
                     </div>
                     <div className="flex items-center justify-between pt-4">
                         <p className="text-xs text-slate-500">

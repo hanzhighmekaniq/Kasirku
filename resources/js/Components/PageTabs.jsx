@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 
 export default function PageTabs({ tabs }) {
     return (
-        <div className="mb-6 flex space-x-1 rounded-xl bg-muted/50 p-1 shadow-sm border border-border overflow-x-auto">
+        <div className="mb-6 inline-flex max-w-full space-x-1 rounded-xl bg-muted/50 p-1 shadow-sm border border-border overflow-x-auto no-scrollbar">
             {tabs.map((tab) => {
                 const isActive = tab.active;
                 return (

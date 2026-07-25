@@ -1,14 +1,15 @@
 import { Link, router } from "@inertiajs/react";
 import { useState } from "react";
+import { formatRupiah } from "@/Utils/currency";
 import Button from "@/Components/ui/Button";
 import Field from "@/Components/ui/Field";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 
 const inp = (err) =>
-    `mt-1.5 block w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition focus:ring-2 ${
+    `mt-1.5 block w-full rounded-lg border py-2.5 px-3.5 text-sm bg-card text-card-foreground outline-none transition-all ${
         err
-            ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-border focus:border-ring focus:ring-ring/20"
+            ? "border-destructive focus:border-destructive focus:ring-3 focus:ring-destructive/20"
+            : "border-border focus:border-ring focus:ring-3 focus:ring-primary/20"
     }`;
 
 const genderOptions = [
@@ -156,7 +157,7 @@ export default function CustomerForm({
                             </span>
                             <input
                                 type="text"
-                                value={Number(data.debt_balance ?? 0).toLocaleString("id-ID")}
+                                value={formatRupiah(data.debt_balance, { noPrefix: true })}
                                 disabled
                                 className={`${inp()} pl-9 bg-muted text-muted-foreground`}
                             />

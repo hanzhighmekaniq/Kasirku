@@ -64,10 +64,15 @@ class UserManagementController extends Controller
             ->where("is_active", true)
             ->get(["id", "name"]);
 
+        $unlinkedEmployees = Employee::where("store_id", $store->id)
+            ->whereNull("user_id")
+            ->get(["id", "name", "email", "position", "branch_id"]);
+
         return Inertia::render("Admin/Users/Index", [
             "storeUsers" => $users,
             "roles" => $roles,
             "branches" => $branches,
+            "unlinkedEmployees" => $unlinkedEmployees,
             "canInvite" => $store->canAddUser(),
             "planInfo" => [
                 "plan" => $store->effectivePlanCode(),
@@ -101,6 +106,7 @@ class UserManagementController extends Controller
             "role" => "required|string",
             "branch_id" => "nullable|exists:branches,id",
             "position" => "nullable|string|max:100",
+            "employee_id" => "nullable|exists:employees,id",
         ]);
 
         // Validasi role ada di store ini
@@ -123,26 +129,38 @@ class UserManagementController extends Controller
             // Assign role di konteks store ini
             $user->assignRole($role);
 
-            // Buat employee record jika ada branch / position
-            if (
-                !empty($validated["branch_id"]) ||
-                !empty($validated["position"])
-            ) {
-                Employee::create([
-                    "store_id" => $store->id,
-                    "branch_id" => $validated["branch_id"] ?? null,
-                    "user_id" => $user->id,
-                    "employee_code" =>
-                        "EMP-" .
-                        strtoupper(substr($store->code, 0, 3)) .
-                        "-" .
-                        str_pad($user->id, 4, "0", STR_PAD_LEFT),
-                    "name" => $user->name,
-                    "email" => $user->email,
-                    "position" => $validated["position"] ?? null,
-                    "commission_type" => "none",
-                    "status" => "active",
+            if (!empty($validated["employee_id"])) {
+                // Tautkan ke employee yang sudah ada
+                $employee = Employee::where('store_id', $store->id)->findOrFail($validated['employee_id']);
+                $employee->update([
+                    'user_id' => $user->id,
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'branch_id' => $validated['branch_id'] ?? $employee->branch_id,
+                    'position' => $validated['position'] ?? $employee->position,
                 ]);
+            } else {
+                // Buat employee record baru jika ada branch / position
+                if (
+                    !empty($validated["branch_id"]) ||
+                    !empty($validated["position"])
+                ) {
+                    Employee::create([
+                        "store_id" => $store->id,
+                        "branch_id" => $validated["branch_id"] ?? null,
+                        "user_id" => $user->id,
+                        "employee_code" =>
+                            "EMP-" .
+                            strtoupper(substr($store->code, 0, 3)) .
+                            "-" .
+                            str_pad($user->id, 4, "0", STR_PAD_LEFT),
+                        "name" => $user->name,
+                        "email" => $user->email,
+                        "position" => $validated["position"] ?? null,
+                        "commission_type" => "none",
+                        "status" => "active",
+                    ]);
+                }
             }
         });
 

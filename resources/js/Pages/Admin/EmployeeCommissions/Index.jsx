@@ -133,58 +133,73 @@ export default function Index({
                 </div>
 
                 {/* Filters */}
-                <div className="flex flex-wrap gap-3">
-                    <SelectDropdown
-                        value={filters.status ?? ""}
-                        options={[
-                            { value: "pending", label: "Pending" },
-                            { value: "approved", label: "Disetujui" },
-                            { value: "paid", label: "Dibayar" },
-                            { value: "cancelled", label: "Dibatalkan" },
-                        ]}
-                        onChange={(v) => applyFilter({ status: v || undefined })}
-                        placeholder="Semua Status"
-                    />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
+                    <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:flex sm:flex-nowrap">
+                        <div className="w-full sm:w-48">
+                            <SelectDropdown
+                                value={filters.status ?? ""}
+                                options={[
+                                    { value: "pending", label: "Pending" },
+                                    { value: "approved", label: "Disetujui" },
+                                    { value: "paid", label: "Dibayar" },
+                                    { value: "cancelled", label: "Dibatalkan" },
+                                ]}
+                                onChange={(v) => applyFilter({ status: v || undefined })}
+                                placeholder="Semua Status"
+                            />
+                        </div>
 
-                    <SelectDropdown
-                        value={filters.employee_id ?? ""}
-                        options={employees.map(e => ({ value: String(e.id), label: e.name }))}
-                        onChange={(v) => applyFilter({ employee_id: v || undefined })}
-                        placeholder="Semua Karyawan"
-                    />
+                        <div className="w-full sm:w-48">
+                            <SelectDropdown
+                                value={filters.employee_id ?? ""}
+                                options={employees.map(e => ({ value: String(e.id), label: e.name }))}
+                                onChange={(v) => applyFilter({ employee_id: v || undefined })}
+                                placeholder="Semua Karyawan"
+                            />
+                        </div>
+                    </div>
 
-                    <input
-                        type="date"
-                        value={filters.from ?? ""}
-                        onChange={(e) =>
-                            applyFilter({ from: e.target.value || undefined })
-                        }
-                        className="rounded-xl border-border bg-card text-sm text-foreground shadow-sm focus:border-ring focus:ring-ring/20"
-                    />
-                    <input
-                        type="date"
-                        value={filters.to ?? ""}
-                        onChange={(e) =>
-                            applyFilter({ to: e.target.value || undefined })
-                        }
-                        className="rounded-xl border-border bg-card text-sm text-foreground shadow-sm focus:border-ring focus:ring-ring/20"
-                    />
+                    <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:flex sm:flex-nowrap">
+                        <div className="w-full sm:w-36">
+                            <input
+                                type="date"
+                                value={filters.from ?? ""}
+                                onChange={(e) =>
+                                    applyFilter({ from: e.target.value || undefined })
+                                }
+                                className="w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2"
+                            />
+                        </div>
+                        <div className="w-full sm:w-36">
+                            <input
+                                type="date"
+                                value={filters.to ?? ""}
+                                onChange={(e) =>
+                                    applyFilter({ to: e.target.value || undefined })
+                                }
+                                className="w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2"
+                            />
+                        </div>
+                    </div>
 
                     {(filters.status ||
                         filters.employee_id ||
                         filters.from ||
                         filters.to) && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                                router.get(
-                                    route("admin.employee-commissions.index"),
-                                )
-                            }
-                        >
-                            Reset Filter
-                        </Button>
+                        <div className="w-full sm:w-auto">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full justify-center sm:w-auto"
+                                onClick={() =>
+                                    router.get(
+                                        route("admin.employee-commissions.index"),
+                                    )
+                                }
+                            >
+                                Reset Filter
+                            </Button>
+                        </div>
                     )}
                 </div>
 

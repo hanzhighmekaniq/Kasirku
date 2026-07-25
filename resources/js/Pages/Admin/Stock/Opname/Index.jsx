@@ -66,16 +66,6 @@ export default function Index({ opnames, stats }) {
                     </>
                 }
                 description="Periksa dan cocokkan jumlah fisik stok di gudang dengan sistem."
-                action={
-                    <Button
-                        as={Link}
-                        href={route('admin.stock-opnames.create')}
-                        icon={Plus}
-                    >
-                        <span className="hidden sm:inline">Buat Opname</span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
-                }
             />
 
             <StockTabs />
@@ -88,37 +78,37 @@ export default function Index({ opnames, stats }) {
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-slate-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">Total</p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">{stats.total}</p>
+                <div className="rounded-2xl border border-border border-l-4 border-l-slate-400 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">Total</p>
+                    <p className="mt-1 text-xl font-bold text-foreground">{stats.total}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-amber-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">Draft</p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">{stats.draft}</p>
+                <div className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">Draft</p>
+                    <p className="mt-1 text-xl font-bold text-foreground">{stats.draft}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-emerald-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">Selesai</p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">{stats.completed}</p>
+                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">Selesai</p>
+                    <p className="mt-1 text-xl font-bold text-foreground">{stats.completed}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-red-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">Dibatalkan</p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">{stats.cancelled}</p>
+                <div className="rounded-2xl border border-border border-l-4 border-l-red-400 bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">Dibatalkan</p>
+                    <p className="mt-1 text-xl font-bold text-foreground">{stats.cancelled}</p>
                 </div>
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
                 {/* Toolbar */}
-                <div className="border-b border-slate-100 p-4">
+                <div className="border-b border-border bg-card p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <div className="relative flex-1">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={1.8} />
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.8} />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari no. opname..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                className="block w-full rounded-xl border border-border bg-input py-2.5 pl-10 pr-4 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
                             />
                         </div>
                         <Select
@@ -128,13 +118,23 @@ export default function Index({ opnames, stats }) {
                             placeholder="Semua Status"
                             className="min-w-[160px]"
                         />
+                    
+                        <Button
+                            as={Link}
+                            href={route('admin.stock-opnames.create')}
+                            icon={Plus}
+                            className="w-full justify-center sm:w-auto"
+                        >
+                            <span className="hidden sm:inline">Buat Opname</span>
+                            <span className="sm:hidden">Tambah</span>
+                        </Button>
                     </div>
                     <div className="flex items-center justify-between pt-4">
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                             Menampilkan{' '}
-                            <span className="font-semibold text-slate-700">{filtered.length}</span>{' '}
+                            <span className="font-semibold text-foreground">{filtered.length}</span>{' '}
                             dari{' '}
-                            <span className="font-semibold text-slate-700">{opnames.length}</span>{' '}
+                            <span className="font-semibold text-foreground">{opnames.length}</span>{' '}
                             opname
                         </p>
                     </div>
@@ -144,13 +144,13 @@ export default function Index({ opnames, stats }) {
                 <div className="hidden md:block">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-slate-200">
-                            <thead className="bg-slate-50/60">
+                            <thead className="bg-muted/50">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">No. Opname</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Tanggal</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Oleh</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">Aksi</th>
+                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">No. Opname</th>
+                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tanggal</th>
+                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Oleh</th>
+                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -158,16 +158,16 @@ export default function Index({ opnames, stats }) {
                                     <tr>
                                         <td colSpan={5} className="px-5 py-16 text-center">
                                             <div className="flex flex-col items-center">
-                                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                                                    <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                                    <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                                                     </svg>
                                                 </div>
-                                                <p className="mt-4 text-sm font-medium text-slate-600">
+                                                <p className="mt-4 text-sm font-medium text-foreground">
                                                     {search || statusFilter ? 'Opname tidak ditemukan' : 'Belum ada opname stok'}
                                                 </p>
-                                                <p className="mt-1 text-xs text-slate-400">
+                                                <p className="mt-1 text-xs text-muted-foreground">
                                                     {search || statusFilter ? 'Coba ubah filter atau kata kunci' : 'Buat opname baru untuk hitung fisik stok'}
                                                 </p>
                                             </div>
@@ -175,7 +175,7 @@ export default function Index({ opnames, stats }) {
                                     </tr>
                                 ) : (
                                     filtered.map((o) => (
-                                        <tr key={o.id} className="transition hover:bg-slate-50/50">
+                                        <tr key={o.id} className="transition hover:bg-muted/50">
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <Link
                                                     href={route('admin.stock-opnames.show', o.id)}
@@ -184,8 +184,8 @@ export default function Index({ opnames, stats }) {
                                                     {o.opname_no}
                                                 </Link>
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-500">{fmtDate(o.opname_date)}</td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-500">{o.user?.name ?? '—'}</td>
+                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{fmtDate(o.opname_date)}</td>
+                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{o.user?.name ?? '—'}</td>
                                             <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <StatusBadge status={o.status} />
                                             </td>
@@ -193,7 +193,7 @@ export default function Index({ opnames, stats }) {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Link
                                                         href={route('admin.stock-opnames.show', o.id)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-primary-50 hover:text-primary-600"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
                                                         title="Lihat Detail"
                                                     >
                                                         <Eye className="h-4 w-4" strokeWidth={1.8} />
@@ -201,7 +201,7 @@ export default function Index({ opnames, stats }) {
                                                     {(o.status === 'draft' || o.status === 'cancelled') && (
                                                         <button
                                                             onClick={() => setConfirmDelete(o)}
-                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
                                                             title="Hapus"
                                                         >
                                                             <Trash2 className="h-4 w-4" strokeWidth={1.8} />
@@ -220,23 +220,23 @@ export default function Index({ opnames, stats }) {
                 {/* Mobile Cards */}
                 <div className="space-y-3 p-3 md:hidden">
                     {filtered.length === 0 ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                                <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                        <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                                 </svg>
                             </div>
-                            <p className="mt-4 text-sm font-medium text-slate-600">
+                            <p className="mt-4 text-sm font-medium text-foreground">
                                 {search || statusFilter ? 'Opname tidak ditemukan' : 'Belum ada opname stok'}
                             </p>
-                            <p className="mt-1 text-xs text-slate-400">
+                            <p className="mt-1 text-xs text-muted-foreground">
                                 {search || statusFilter ? 'Coba ubah filter atau kata kunci' : 'Buat opname baru untuk hitung fisik stok'}
                             </p>
                         </div>
                     ) : (
                         filtered.map((o) => (
-                            <div key={o.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <div key={o.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                                 <div className="flex items-start justify-between">
                                     <div className="min-w-0 flex-1">
                                         <Link
@@ -245,24 +245,24 @@ export default function Index({ opnames, stats }) {
                                         >
                                             {o.opname_no}
                                         </Link>
-                                        <p className="mt-0.5 text-xs text-slate-400">{fmtDate(o.opname_date)}</p>
+                                        <p className="mt-0.5 text-xs text-muted-foreground">{fmtDate(o.opname_date)}</p>
                                     </div>
                                     <StatusBadge status={o.status} />
                                 </div>
                                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                                     <div>
-                                        <p className="text-slate-400">Oleh</p>
-                                        <p className="mt-0.5 text-slate-700">{o.user?.name ?? '—'}</p>
+                                        <p className="text-muted-foreground">Oleh</p>
+                                        <p className="mt-0.5 text-foreground">{o.user?.name ?? '—'}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-slate-400">Tanggal</p>
-                                        <p className="mt-0.5 text-slate-700">{fmtDate(o.opname_date)}</p>
+                                        <p className="text-muted-foreground">Tanggal</p>
+                                        <p className="mt-0.5 text-foreground">{fmtDate(o.opname_date)}</p>
                                     </div>
                                 </div>
-                                <div className="mt-3 flex items-center justify-end gap-1 border-t border-slate-100 pt-3">
+                                <div className="mt-3 flex items-center justify-end gap-1 border-t border-border pt-3">
                                     <Link
                                         href={route('admin.stock-opnames.show', o.id)}
-                                        className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-200"
+                                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-slate-200"
                                     >
                                         <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
                                         Lihat
@@ -287,20 +287,20 @@ export default function Index({ opnames, stats }) {
             {confirmDelete && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onMouseDown={() => !processing && setConfirmDelete(null)}>
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
-                    <div className="relative w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+                    <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
                         <div className="flex items-start gap-4">
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100">
                                 <Trash2 className="h-6 w-6 text-red-600" strokeWidth={1.8} />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <h3 className="text-base font-semibold text-slate-900">Hapus Opname?</h3>
-                                <p className="mt-1 text-sm text-slate-500">
+                                <p className="mt-1 text-sm text-muted-foreground">
                                     Opname <strong>{confirmDelete.opname_no}</strong> akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
                                 </p>
                             </div>
                         </div>
                         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                            <button onClick={() => setConfirmDelete(null)} disabled={processing} className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">Batal</button>
+                            <button onClick={() => setConfirmDelete(null)} disabled={processing} className="inline-flex justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60">Batal</button>
                             <button onClick={handleDelete} disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/30 transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-60">
                                 {processing ? 'Menghapus...' : 'Ya, Hapus'}
                             </button>
@@ -313,10 +313,10 @@ export default function Index({ opnames, stats }) {
 }
 
 function StatusBadge({ status }) {
-    const map = { draft: 'bg-slate-100 text-slate-600', in_progress: 'bg-blue-100 text-blue-700', completed: 'bg-emerald-100 text-emerald-700', cancelled: 'bg-red-100 text-red-600' };
+    const map = { draft: 'bg-muted text-foreground', in_progress: 'bg-blue-100 text-blue-700', completed: 'bg-emerald-100 text-emerald-700', cancelled: 'bg-red-100 text-red-600' };
     const label = { draft: 'Draft', in_progress: 'Dikerjakan', completed: 'Selesai', cancelled: 'Dibatalkan' };
     return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? 'bg-slate-100 text-slate-600'}`}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? 'bg-muted text-foreground'}`}>
             {label[status] ?? status}
         </span>
     );

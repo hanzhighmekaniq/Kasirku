@@ -1,4 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CurrencyInput from "@/Components/ui/CurrencyInput";
@@ -78,20 +79,30 @@ export default function Index({ memberships }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <h2 className="text-lg font-semibold text-foreground">
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
                         Membership
-                    </h2>
-                    <Button onClick={openCreate} icon={Plus}>
-                        <span className="hidden sm:inline">
-                            Tambah Membership
-                        </span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
                 </div>
-            }
-        >
+            }>
             <Head title="Membership" />
+            <PageHeader
+                title="Membership"
+                breadcrumbs={["Admin", "Membership"]}
+                heading={
+                    <>
+                        Kelola{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Membership
+                        </span>{" "}
+                        pelanggan
+                    </>
+                }
+                description="Kelola level loyalitas dan program membership pelanggan."
+            />
 
             {/* Flash */}
             {flash?.success && (
@@ -105,32 +116,37 @@ export default function Index({ memberships }) {
                 </div>
             )}
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            {/* Main Content Area */}
+            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
                 {/* Toolbar */}
-                <div className=" border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="relative w-full sm:max-w-xs">
-                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                            <Search className="h-4 w-4" strokeWidth={1.8} />
-                        </span>
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Cari nama, kode..."
-                            className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                        />
+                <div className="flex flex-col gap-4 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between bg-card">
+                    <div className="flex flex-1 flex-col">
+                        <div className="relative w-full sm:max-w-md">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+                                <Search className="h-4 w-4" strokeWidth={1.8} />
+                            </span>
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Cari nama, kode..."
+                                className="block w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            />
+                        </div>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                            Menampilkan{" "}
+                            <span className="font-semibold text-foreground">
+                                {filtered.length}
+                            </span>{" "}
+                            dari{" "}
+                            <span className="font-semibold text-foreground">
+                                {memberships.length}
+                            </span>
+                        </p>
                     </div>
-                    <p className="pt-4 text-xs text-muted-foreground">
-                        Menampilkan{" "}
-                        <span className="font-semibold text-foreground">
-                            {filtered.length}
-                        </span>{" "}
-                        dari{" "}
-                        <span className="font-semibold text-foreground">
-                            {memberships.length}
-                        </span>{" "}
-                        membership
-                    </p>
+                    <Button onClick={openCreate} icon={Plus} className="w-full sm:w-auto">
+                        Tambah Membership
+                    </Button>
                 </div>
 
                 {filtered.length === 0 ? (
@@ -205,6 +221,11 @@ export default function Index({ memberships }) {
 /* ------------------------------------------------------------------ */
 /*  Modal – Create / Edit                                              */
 /* ------------------------------------------------------------------ */
+const inp = (err) =>
+    `mt-1 block w-full rounded-xl border py-2.5 px-3.5 text-sm bg-input border-border text-foreground outline-none shadow-sm transition focus:border-ring focus:ring-2 ${
+        err ? "border-destructive focus:ring-destructive" : "focus:ring-ring"
+    }`;
+
 function MembershipModal({ open, editing, onClose }) {
     const { data, setData, post, patch, processing, errors, reset } = useForm({
         code: "",
@@ -345,7 +366,7 @@ function MembershipModal({ open, editing, onClose }) {
                             value={data.code}
                             onChange={(e) => setData("code", e.target.value)}
                             maxLength={50}
-                            className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className={inp(errors.code)}
                             placeholder="Contoh: GOLD01"
                         />
                         {errors.code && (
@@ -365,7 +386,7 @@ function MembershipModal({ open, editing, onClose }) {
                             value={data.name}
                             onChange={(e) => setData("name", e.target.value)}
                             maxLength={255}
-                            className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className={inp(errors.name)}
                             placeholder="Contoh: Gold Member"
                         />
                         {errors.name && (
@@ -387,7 +408,7 @@ function MembershipModal({ open, editing, onClose }) {
                             }
                             maxLength={500}
                             rows={2}
-                            className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className={inp(errors.description)}
                             placeholder="Deskripsi singkat membership..."
                         />
                         {errors.description && (
@@ -438,7 +459,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 onChange={(e) =>
                                     setData("duration_value", e.target.value)
                                 }
-                                className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className={inp(errors.duration_value)}
                                 placeholder="1"
                             />
                             {errors.duration_value && (
@@ -494,7 +515,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 onChange={(e) =>
                                     setData("discount_percent", e.target.value)
                                 }
-                                className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className={inp(errors.discount_percent)}
                                 placeholder="0"
                             />
                             {errors.discount_percent && (
@@ -521,7 +542,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 onChange={(e) =>
                                     setData("point_multiplier", e.target.value)
                                 }
-                                className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className={inp(errors.point_multiplier)}
                                 placeholder="1"
                             />
                             {errors.point_multiplier && (
@@ -549,7 +570,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 setData("benefits", e.target.value)
                             }
                             rows={3}
-                            className="mt-1 block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className={inp(errors.benefits)}
                             placeholder="Gratis ongkir&#10;Diskon 10%&#10;Priority support"
                         />
                         {errors.benefits && (
@@ -584,7 +605,7 @@ function MembershipModal({ open, editing, onClose }) {
                             onChange={(e) =>
                                 setData("is_active", e.target.checked)
                             }
-                            className="h-4 w-4 rounded border-border text-primary transition focus:ring-2 focus:ring-ring/20"
+                            className="h-4 w-4 rounded border-border text-primary bg-input shadow-sm focus:ring-ring focus:ring-2 focus:ring-offset-0"
                         />
                         <span className="text-sm text-foreground">Aktif</span>
                     </label>
@@ -645,7 +666,7 @@ function RowActions({ item, onEdit, onDelete }) {
             </button>
             <button
                 onClick={() => onDelete(item)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-destructive transition hover:bg-destructive/10"
                 title="Hapus"
             >
                 <Trash2 className="h-4 w-4" strokeWidth={1.7} />

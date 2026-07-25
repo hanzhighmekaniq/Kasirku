@@ -1,8 +1,10 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import { Eye, Plus } from "lucide-react";
+import { Eye, Plus, Search } from "lucide-react";
 import Button from "@/Components/ui/Button";
+import PageHeader from "@/Components/PageHeader";
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 export default function Index({ suppliers, stats }) {
     const { flash } = usePage().props;
@@ -45,19 +47,31 @@ export default function Index({ suppliers, stats }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">
-                            Supplier
-                        </h2>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Supplier
                     </div>
-                    <Button as={Link} href={route("admin.suppliers.create")} icon={Plus}>
-                        Tambah Supplier
-                    </Button>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
                 </div>
             }
         >
             <Head title="Supplier" />
+            <PageHeader
+                title="Supplier"
+                breadcrumbs={["Admin", "Supplier"]}
+                heading={
+                    <>
+                        Kelola{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Supplier
+                        </span>{" "}
+                        toko
+                    </>
+                }
+                description="Manajemen data pemasok barang dan riwayat pembelian."
+            />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
@@ -108,38 +122,24 @@ export default function Index({ suppliers, stats }) {
                 </div>
             </div>
 
-            {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            {/* Main Content Area */}
+            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
                 {/* Toolbar */}
-                <div className="border-b border-border p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <div className="relative flex-1">
+                <div className="flex flex-col gap-4 border-b border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-1 flex-col">
+                        <div className="relative w-full sm:max-w-md">
                             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                    />
-                                </svg>
+                                <Search className="h-4 w-4" strokeWidth={1.8} />
                             </span>
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nama, kode, telepon, email..."
-                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
                             />
                         </div>
-                    </div>
-                    <div className="pt-4 flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">
+                        <p className="mt-2 text-xs text-muted-foreground">
                             Menampilkan{" "}
                             <span className="font-semibold text-foreground">
                                 {filtered.length}
@@ -147,9 +147,17 @@ export default function Index({ suppliers, stats }) {
                             dari{" "}
                             <span className="font-semibold text-foreground">
                                 {suppliers.length}
-                            </span>{" "}
-                            supplier
+                            </span>
                         </p>
+                    </div>
+                    <div className="flex items-center self-start sm:self-auto">
+                        <Button
+                            as={Link}
+                            href={route("admin.suppliers.create")}
+                            icon={Plus}
+                        >
+                            Tambah Supplier
+                        </Button>
                     </div>
                 </div>
 
@@ -304,7 +312,7 @@ export default function Index({ suppliers, stats }) {
                                                     onClick={() =>
                                                         setConfirmDelete(s)
                                                     }
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-destructive transition hover:bg-destructive/10"
                                                     title="Hapus"
                                                 >
                                                     <svg
@@ -332,54 +340,21 @@ export default function Index({ suppliers, stats }) {
             </div>
 
             {/* Confirm delete modal */}
-            {confirmDelete && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
-                    onMouseDown={() => !processing && setConfirmDelete(null)}
-                >
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
-                    <div
-                        className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
-                        onMouseDown={(e) => e.stopPropagation()}
-                    >
-                        <h3 className="text-lg font-semibold text-foreground">
-                            Hapus Supplier?
-                        </h3>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Supplier <strong>{confirmDelete.name}</strong> (
-                            {confirmDelete.code}) akan dihapus permanen.{" "}
-                            {confirmDelete.purchases_count > 0 &&
-                                "Supplier ini memiliki data pembelian."}
-                        </p>
-                        {confirmDelete.purchases_count > 0 && (
-                            <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                                Supplier ini memiliki{" "}
-                                {confirmDelete.purchases_count} pembelian dan
-                                tidak dapat dihapus.
-                            </p>
-                        )}
-                        <div className="mt-6 flex justify-end gap-2">
-                            <button
-                                onClick={() => setConfirmDelete(null)}
-                                disabled={processing}
-                                className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={handleDelete}
-                                disabled={
-                                    processing ||
-                                    confirmDelete.purchases_count > 0
-                                }
-                                className="rounded-xl bg-gradient-to-r from-red-500 to-red-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-red-500/30 transition hover:from-red-600 hover:to-red-700 disabled:opacity-60"
-                            >
-                                {processing ? "Menghapus..." : "Ya, Hapus"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConfirmDeleteModal
+                open={!!confirmDelete}
+                title="Hapus Supplier?"
+                description={
+                    confirmDelete
+                        ? `Supplier "${confirmDelete.name}" beserta riwayatnya akan dihapus permanen.`
+                        : "Tindakan ini tidak dapat dibatalkan."
+                }
+                confirmLabel="Hapus"
+                processing={processing}
+                onConfirm={handleDelete}
+                onClose={() => {
+                    if (!processing) setConfirmDelete(null);
+                }}
+            />
         </AuthenticatedLayout>
     );
 }

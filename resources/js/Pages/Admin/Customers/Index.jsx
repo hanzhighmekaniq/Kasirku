@@ -2,14 +2,15 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
+import { formatRupiah } from "@/Utils/currency";
 import { Plus } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 const TIER_STYLES = {
-    bronze: "bg-amber-100 text-amber-700",
-    silver: "bg-muted text-muted-foreground",
-    gold: "bg-yellow-100 text-yellow-700",
+    bronze: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    silver: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
+    gold: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
 };
 
 export default function Index({ customers, storeType = "retail" }) {
@@ -84,27 +85,22 @@ export default function Index({ customers, storeType = "retail" }) {
                 {/* Toolbar */}
                 <div className="border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="relative w-full sm:max-w-xs">
-                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.8}
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                />
-                            </svg>
-                        </span>
+                        <svg
+                            className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                        >
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.35-4.35" />
+                        </svg>
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari nama, telepon, email..."
-                            className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className="w-full py-2.5 pl-10 pr-3 rounded-lg border border-border bg-card text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary/20 transition-all"
                         />
                     </div>
                     <div className="pt-4 flex items-center ">
@@ -182,7 +178,7 @@ export default function Index({ customers, storeType = "retail" }) {
 
 function CustomerBadge({ name }) {
     return (
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10 text-sm font-bold text-primary-600">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-sm font-bold text-primary">
             {name.charAt(0).toUpperCase()}
         </span>
     );
@@ -193,7 +189,7 @@ function RowActions({ customer, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <Link
                 href={route("admin.customers.edit", customer.id)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                 title="Edit"
             >
                 <svg
@@ -304,7 +300,7 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                 <td className="px-4 py-4 text-right">
                                     {(c.debt_balance ?? 0) > 0 ? (
                                         <span className="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-semibold text-destructive">
-                                            Rp{Number(c.debt_balance).toLocaleString("id-ID")}
+                                            {formatRupiah(c.debt_balance)}
                                         </span>
                                     ) : (
                                         <span className="text-xs text-muted-foreground">—</span>
@@ -362,7 +358,7 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                             "admin.customers.edit",
                                             c.id,
                                         )}
-                                        className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
+                                        className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary transition hover:bg-primary/10"
                                     >
                                         <svg
                                             className="h-3.5 w-3.5"

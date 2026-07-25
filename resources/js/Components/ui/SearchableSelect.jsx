@@ -92,10 +92,10 @@ export default function SearchableSelect({
     };
 
     const baseCls =
-        "block w-full rounded-xl border bg-background text-sm shadow-sm transition focus:ring-2";
+        "block w-full rounded-xl border bg-input text-foreground text-sm shadow-sm transition outline-none focus:ring-2 focus:border-ring";
     const cls = error
-        ? `${baseCls} border-destructive focus:border-destructive focus:ring-destructive/20`
-        : `${baseCls} border-input focus:border-ring focus:ring-ring/20`;
+        ? `${baseCls} border-destructive focus:ring-destructive`
+        : `${baseCls} border-border focus:ring-ring`;
 
     return (
         <div ref={containerRef} className="relative">
@@ -168,7 +168,7 @@ export default function SearchableSelect({
                                 }}
                                 onKeyDown={onKeyDown}
                                 placeholder={searchPlaceholder}
-                                className="w-full rounded-xl border border-input bg-background py-2 pl-10 pr-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                                className="w-full rounded-xl border border-input bg-card py-2 pl-10 pr-3 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                                 autoComplete="off"
                             />
                         </div>

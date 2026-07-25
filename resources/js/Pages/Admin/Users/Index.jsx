@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import EmployeeTabs from "@/Components/EmployeeTabs";
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import { Head, router, useForm, usePage } from "@inertiajs/react";
 import { useRef, useState, useEffect } from "react";
 import {
@@ -147,7 +148,7 @@ function RoleDropdown({ currentRole, roles, onChange }) {
                                     }}
                                     className={`flex w-full items-center gap-2 px-3 py-2 text-xs font-medium transition hover:bg-muted ${
                                         r.name === currentRole
-                                            ? "bg-primary-50/50 text-primary-700"
+                                            ? `${rc.bg} ${rc.text} font-bold`
                                             : "text-muted-foreground"
                                     }`}
                                 >
@@ -157,8 +158,8 @@ function RoleDropdown({ currentRole, roles, onChange }) {
                                     {r.name}
                                     {r.name === currentRole && (
                                         <Check
-                                            className="ml-auto h-3 w-3 text-primary-500"
-                                            strokeWidth={2.5}
+                                            className="ml-auto h-4 w-4"
+                                            strokeWidth={3}
                                         />
                                     )}
                                 </button>
@@ -187,9 +188,11 @@ export default function Index({
     branches,
     canInvite,
     planInfo,
+    unlinkedEmployees,
 }) {
     const { flash } = usePage().props;
     const [showInvite, setShowInvite] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
 
     const inviteForm = useForm({
         name: "",
@@ -198,7 +201,34 @@ export default function Index({
         role: "kasir",
         branch_id: "",
         position: "",
+        employee_id: "",
     });
+
+    const handleEmployeeSelect = (e) => {
+        const empId = e.target.value;
+        if (!empId) {
+            inviteForm.setData(data => ({
+                ...data,
+                employee_id: "",
+                name: "",
+                email: "",
+                branch_id: "",
+                position: ""
+            }));
+            return;
+        }
+        const emp = unlinkedEmployees?.find(emp => emp.id == empId);
+        if (emp) {
+            inviteForm.setData(data => ({
+                ...data,
+                employee_id: emp.id,
+                name: emp.name || "",
+                email: emp.email || "",
+                branch_id: emp.branch_id || "",
+                position: emp.position || "",
+            }));
+        }
+    };
 
     const submitInvite = (e) => {
         e.preventDefault();
@@ -215,8 +245,14 @@ export default function Index({
     };
 
     const revoke = (user) => {
-        if (!confirm(`Cabut akses "${user.name}" dari toko ini?`)) return;
-        router.delete(route("admin.store-users.revoke", user.id));
+        setUserToDelete(user);
+    };
+
+    const confirmRevoke = () => {
+        if (!userToDelete) return;
+        router.delete(route("admin.store-users.revoke", userToDelete.id), {
+            onSuccess: () => setUserToDelete(null),
+        });
     };
 
     const roleCounts = storeUsers.reduce((acc, u) => {
@@ -250,21 +286,6 @@ export default function Index({
                     </>
                 }
                 description="Kelola siapa yang bisa mengakses toko ini dan menetapkan roles."
-                action={
-                    <Button
-                        onClick={() => setShowInvite(true)}
-                        disabled={!canInvite}
-                        icon={UserPlus}
-                        title={
-                            !canInvite
-                                ? `Batas ${planInfo?.max_users} user paket ${planInfo?.label} tercapai`
-                                : undefined
-                        }
-                    >
-                        <span className="hidden sm:inline">Undang User</span>
-                        <span className="sm:hidden">Undang</span>
-                    </Button>
-                }
             />
 
             <EmployeeTabs />
@@ -337,263 +358,125 @@ export default function Index({
                     </div>
                 )}
 
-                {/* ── User Table ── */}
-                <div className="rounded-2xl border border-border bg-card shadow-sm">
-                    {storeUsers.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-                                <Users
-                                    className="h-8 w-8 text-muted-foreground"
-                                    strokeWidth={1.4}
-                                />
-                            </div>
-                            <h3 className="mt-4 text-sm font-semibold text-foreground">
-                                Belum ada pengguna
-                            </h3>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                                Undang pengguna pertama untuk mulai beroperasi
-                            </p>
-                            <Button
-                                onClick={() => setShowInvite(true)}
-                                disabled={!canInvite}
-                                icon={UserPlus}
-                                className="mt-5"
-                            >
-                                Undang Pengguna
-                            </Button>
-                        </div>
-                    ) : (
-                        <>
-                            {/* Desktop Table */}
-                            <div className="hidden md:block overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b border-border bg-muted/60 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            <th className="px-6 py-3.5">
-                                                Pengguna
-                                            </th>
-                                            <th className="px-6 py-3.5">
-                                                Cabang
-                                            </th>
-                                            <th className="px-6 py-3.5">
-                                                Role
-                                            </th>
-                                            <th className="px-6 py-3.5 text-right">
-                                                Aksi
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border">
-                                        {storeUsers.map((u) => {
-                                            const isOwner = (
-                                                u.roles || []
-                                            ).includes("owner");
-                                            return (
-                                                <tr
-                                                    key={u.id}
-                                                    className={`transition hover:bg-muted/60 ${isOwner ? "bg-amber-50/30" : ""}`}
-                                                >
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <span
-                                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ring-1 ${
-                                                                    isOwner
-                                                                        ? "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700 ring-amber-100"
-                                                                        : "bg-gradient-to-br from-primary-100 to-primary-200 text-primary-600 ring-primary-100"
-                                                                }`}
-                                                            >
-                                                                {isOwner
-                                                                    ? "👑"
-                                                                    : u.name
-                                                                          .charAt(
-                                                                              0,
-                                                                          )
-                                                                          .toUpperCase()}
-                                                            </span>
-                                                            <div className="min-w-0">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <p className="truncate font-semibold text-foreground">
-                                                                        {u.name}
-                                                                    </p>
-                                                                    {isOwner && (
-                                                                        <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200">
-                                                                            Owner
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <p className="truncate text-xs text-muted-foreground">
-                                                                    {u.email}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        {u.branch?.name ? (
-                                                            <div className="flex items-center gap-1.5">
-                                                                <Building2
-                                                                    className="h-3.5 w-3.5 text-muted-foreground"
-                                                                    strokeWidth={
-                                                                        1.8
-                                                                    }
-                                                                />
-                                                                <span className="text-sm text-muted-foreground">
-                                                                    {
-                                                                        u.branch
-                                                                            .name
-                                                                    }
-                                                                </span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-sm italic text-muted-foreground">
-                                                                Semua cabang
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 overflow-visible">
-                                                        <div className="flex flex-col gap-1.5">
-                                                            <RoleDropdown
-                                                                currentRole={
-                                                                    u
-                                                                        .roles?.[0] ??
-                                                                    ""
-                                                                }
-                                                                roles={roles}
-                                                                onChange={(
-                                                                    role,
-                                                                ) =>
-                                                                    assignRole(
-                                                                        u.id,
-                                                                        role,
-                                                                    )
-                                                                }
-                                                            />
-                                                            {u.roles?.length >
-                                                                0 && (
-                                                                <div className="flex flex-wrap gap-1">
-                                                                    {u.roles.map(
-                                                                        (r) => (
-                                                                            <RoleBadge
-                                                                                key={
-                                                                                    r
-                                                                                }
-                                                                                role={
-                                                                                    r
-                                                                                }
-                                                                            />
-                                                                        ),
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        {!isOwner && (
-                                                            <button
-                                                                onClick={() =>
-                                                                    revoke(u)
-                                                                }
-                                                                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-destructive transition hover:bg-destructive/10 hover:text-destructive"
-                                                            >
-                                                                <Trash2
-                                                                    className="h-3.5 w-3.5"
-                                                                    strokeWidth={
-                                                                        1.8
-                                                                    }
-                                                                />
-                                                                Cabut
-                                                            </button>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
+                {/* Actions */}
+                <div className="flex justify-end">
+                    <Button
+                        onClick={() => setShowInvite(true)}
+                        disabled={!canInvite}
+                        icon={UserPlus}
+                        title={
+                            !canInvite
+                                ? `Batas ${planInfo?.max_users} user paket ${planInfo?.label} tercapai`
+                                : undefined
+                        }
+                    >
+                        <span className="hidden sm:inline">Undang Pengguna Baru</span>
+                        <span className="sm:hidden">Undang</span>
+                    </Button>
+                </div>
 
-                            {/* Mobile Cards */}
-                            <div className="divide-y divide-border md:hidden">
-                                {storeUsers.map((u) => {
-                                    const isOwner = (u.roles || []).includes(
-                                        "owner",
-                                    );
-                                    return (
-                                        <div
-                                            key={u.id}
-                                            className={`p-4 ${isOwner ? "bg-amber-50/30" : ""}`}
-                                        >
-                                            <div className="flex items-start justify-between gap-3">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <span
-                                                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
-                                                            isOwner
-                                                                ? "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700"
-                                                                : "bg-gradient-to-br from-primary-100 to-primary-200 text-primary-600"
-                                                        }`}
-                                                    >
-                                                        {isOwner
-                                                            ? "👑"
-                                                            : u.name
-                                                                  .charAt(0)
-                                                                  .toUpperCase()}
-                                                    </span>
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <p className="truncate text-sm font-semibold text-foreground">
-                                                                {u.name}
-                                                            </p>
-                                                            {isOwner && (
-                                                                <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200">
-                                                                    Owner
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="truncate text-xs text-muted-foreground">
-                                                            {u.email}
-                                                        </p>
-                                                        <div className="mt-1 flex items-center gap-1.5">
-                                                            <Building2
-                                                                className="h-3 w-3 text-muted-foreground"
-                                                                strokeWidth={
-                                                                    1.8
-                                                                }
-                                                            />
-                                                            <span className="text-xs text-muted-foreground">
-                                                                {u.branch
-                                                                    ?.name ??
-                                                                    "Semua cabang"}
-                                                            </span>
-                                                        </div>
-                                                    </div>
+                {/* ── User Grid ── */}
+                {storeUsers.length === 0 ? (
+                    <div className="rounded-2xl border border-border bg-card shadow-sm flex flex-col items-center justify-center py-16 text-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                            <Users
+                                className="h-8 w-8 text-muted-foreground"
+                                strokeWidth={1.4}
+                            />
+                        </div>
+                        <h3 className="mt-4 text-sm font-semibold text-foreground">
+                            Belum ada pengguna
+                        </h3>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Undang pengguna pertama untuk mulai beroperasi
+                        </p>
+                        <Button
+                            onClick={() => setShowInvite(true)}
+                            disabled={!canInvite}
+                            icon={UserPlus}
+                            className="mt-5"
+                        >
+                            Undang Pengguna
+                        </Button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {storeUsers.map((u) => {
+                            const isOwner = (u.roles || []).includes("owner");
+                            return (
+                                <div
+                                    key={u.id}
+                                    className={`group flex flex-col rounded-2xl border border-border p-5 shadow-sm transition hover:shadow-md ${
+                                        isOwner ? "bg-amber-50/10 border-amber-100" : "bg-card"
+                                    }`}
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <span
+                                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold shadow-sm ring-1 ${
+                                                    isOwner
+                                                        ? "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700 ring-amber-200"
+                                                        : "bg-gradient-to-br from-primary-100 to-primary-200 text-primary-600 ring-primary-100"
+                                                }`}
+                                            >
+                                                {isOwner
+                                                    ? "👑"
+                                                    : u.name.charAt(0).toUpperCase()}
+                                            </span>
+                                            <div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <p className="font-semibold text-foreground">
+                                                        {u.name}
+                                                    </p>
+                                                    {isOwner && (
+                                                        <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200">
+                                                            Owner
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                {!isOwner && (
-                                                    <button
-                                                        onClick={() =>
-                                                            revoke(u)
-                                                        }
-                                                        className="shrink-0 rounded-lg p-1.5 text-red-400 hover:bg-destructive/10 hover:text-destructive"
-                                                        title="Cabut akses"
-                                                    >
-                                                        <Trash2
-                                                            className="h-4 w-4"
-                                                            strokeWidth={1.8}
-                                                        />
-                                                    </button>
-                                                )}
+                                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                                    {u.email}
+                                                </p>
                                             </div>
-                                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        </div>
+                                        {!isOwner && (
+                                            <button
+                                                onClick={() => revoke(u)}
+                                                className="shrink-0 rounded-lg p-2 text-destructive transition hover:bg-destructive/10"
+                                                title="Cabut akses"
+                                            >
+                                                <Trash2
+                                                    className="h-4 w-4"
+                                                    strokeWidth={2}
+                                                />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="mt-5 flex-1">
+                                        <div className="mb-4 flex items-center gap-2">
+                                            <Building2
+                                                className="h-4 w-4 text-muted-foreground"
+                                                strokeWidth={1.8}
+                                            />
+                                            <span className="text-sm font-medium text-muted-foreground">
+                                                {u.branch?.name ?? "Semua cabang"}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-3 rounded-xl bg-muted/40 p-3">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                                Role
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-2">
                                                 <RoleDropdown
-                                                    currentRole={
-                                                        u.roles?.[0] ?? ""
-                                                    }
+                                                    currentRole={u.roles?.[0] ?? ""}
                                                     roles={roles}
                                                     onChange={(role) =>
                                                         assignRole(u.id, role)
                                                     }
                                                 />
-                                                {u.roles?.length > 0 && (
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {u.roles.map((r) => (
+                                                {u.roles?.length > 1 && (
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {u.roles.slice(1).map((r) => (
                                                             <RoleBadge
                                                                 key={r}
                                                                 role={r}
@@ -603,12 +486,12 @@ export default function Index({
                                                 )}
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </>
-                    )}
-                </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* ── Invite Modal ── */}
@@ -646,6 +529,33 @@ export default function Index({
 
                         {/* Modal Body */}
                         <form onSubmit={submitInvite} className="p-6 space-y-4">
+                            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-2">
+                                <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-primary">
+                                    Tautkan Karyawan (Opsional)
+                                </label>
+                                <select
+                                    value={inviteForm.data.employee_id}
+                                    onChange={handleEmployeeSelect}
+                                    className={inp()}
+                                    disabled={!unlinkedEmployees?.length}
+                                >
+                                    <option value="">
+                                        {unlinkedEmployees?.length > 0
+                                            ? "-- Buat Baru (Tidak Ditautkan) --"
+                                            : "-- Tidak ada karyawan tersedia --"}
+                                    </option>
+                                    {unlinkedEmployees?.map(emp => (
+                                        <option key={emp.id} value={emp.id}>
+                                            {emp.name} {emp.position ? `(${emp.position})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="mt-1.5 text-xs text-primary/80">
+                                    {unlinkedEmployees?.length > 0 
+                                        ? "Jika dipilih, data di bawah akan terisi otomatis dan akun baru ini akan ditautkan ke karyawan tersebut."
+                                        : "Semua karyawan di toko ini sudah tertaut dengan akun pengguna."}
+                                </p>
+                            </div>
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div className="sm:col-span-2">
                                     <label className={labelClass}>
@@ -806,6 +716,16 @@ export default function Index({
                     </div>
                 </div>
             )}
+
+            {/* ── Delete Modal ── */}
+            <ConfirmDeleteModal
+                open={userToDelete !== null}
+                title="Cabut Akses Pengguna?"
+                description={`Apakah Anda yakin ingin mencabut akses "${userToDelete?.name}" dari toko ini? Pengguna tersebut tidak akan bisa lagi mengakses data toko Anda.`}
+                confirmLabel="Cabut Akses"
+                onConfirm={confirmRevoke}
+                onClose={() => setUserToDelete(null)}
+            />
         </AuthenticatedLayout>
     );
 }

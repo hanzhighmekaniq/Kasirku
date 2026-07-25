@@ -109,10 +109,10 @@ export default function Create({ products }) {
         <AuthenticatedLayout
             header={
                 <div className="flex items-center gap-3">
-                    <Link href={route('admin.stock-adjustments.index')} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" aria-label="Kembali">
+                    <Link href={route('admin.stock-adjustments.index')} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label="Kembali">
                         <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
-                    <h2 className="text-lg font-semibold text-slate-800">Buat Penyesuaian Stok</h2>
+                    <h2 className="text-lg font-semibold text-foreground">Buat Penyesuaian Stok</h2>
                 </div>
             }
         >
@@ -150,34 +150,34 @@ export default function Create({ products }) {
                                 {/* Add item row */}
                                 <div className="flex items-end gap-3">
                                     <div className="relative flex-1" ref={prodDropdownRef}>
-                                        <label className="mb-1 block text-sm font-medium text-slate-700">Produk</label>
+                                        <label className="mb-1 block text-sm font-medium text-foreground">Produk</label>
                                         <button
                                             type="button"
                                             onClick={() => { setProdDropdownOpen(!prodDropdownOpen); setProdSearch(''); }}
-                                            className="flex w-full items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+                                            className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
                                         >
-                                            <Boxes className="h-4 w-4 shrink-0 text-slate-400" strokeWidth={1.8} />
+                                            <Boxes className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                                             <span className="flex-1 truncate text-left">{selectedProduct ? products.find((p) => p.id === Number(selectedProduct))?.name : 'Pilih Produk'}</span>
-                                            <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition ${prodDropdownOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
+                                            <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition ${prodDropdownOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
                                         </button>
                                         {prodDropdownOpen && (
-                                            <div className="absolute z-50 mt-2 w-full rounded-2xl border border-slate-200 bg-white shadow-xl">
-                                                <div className="border-b border-slate-100 p-3">
+                                            <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border bg-card shadow-xl">
+                                                <div className="border-b border-border p-3">
                                                     <div className="relative">
-                                                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={1.8} />
+                                                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.8} />
                                                         <input
                                                             ref={prodSearchRef}
                                                             type="text"
                                                             value={prodSearch}
                                                             onChange={(e) => setProdSearch(e.target.value)}
                                                             placeholder="Cari nama atau SKU..."
-                                                            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-primary-400 focus:bg-white focus:ring-2 focus:ring-primary-100"
+                                                            className="w-full rounded-lg border border-border bg-muted py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary-400 focus:bg-card focus:ring-2 focus:ring-primary-100"
                                                         />
                                                     </div>
                                                 </div>
                                                 <div className="max-h-72 overflow-y-auto p-1.5">
                                                     {filteredProds.length === 0 ? (
-                                                        <p className="px-3 py-4 text-center text-xs text-slate-400">Tidak ada produk ditemukan.</p>
+                                                        <p className="px-3 py-4 text-center text-xs text-muted-foreground">Tidak ada produk ditemukan.</p>
                                                     ) : (
                                                         filteredProds.map((p) => (
                                                             <button
@@ -185,11 +185,11 @@ export default function Create({ products }) {
                                                                 type="button"
                                                                 onClick={() => { setSelectedProduct(p.id); setProdDropdownOpen(false); setProdSearch(''); }}
                                                                 className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                                    Number(selectedProduct) === p.id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-slate-600 hover:bg-slate-50'
+                                                                    Number(selectedProduct) === p.id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-foreground hover:bg-muted'
                                                                 }`}
                                                             >
                                                                 <span className="block truncate">{p.name}</span>
-                                                                <span className="block truncate text-xs text-slate-400">{p.sku}</span>
+                                                                <span className="block truncate text-xs text-muted-foreground">{p.sku}</span>
                                                             </button>
                                                         ))
                                                     )}
@@ -205,7 +205,7 @@ export default function Create({ products }) {
                                 {errors.items && <p className="text-xs text-red-500">{typeof errors.items === 'string' ? errors.items : 'Minimal 1 item harus ditambahkan'}</p>}
 
                                 {data.items.length === 0 ? (
-                                    <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-8 text-center text-sm text-slate-400">
+                                    <div className="rounded-xl border-2 border-dashed border-border bg-muted/50 py-8 text-center text-sm text-muted-foreground">
                                         Belum ada item. Pilih produk di atas untuk menambahkan.
                                     </div>
                                 ) : (
@@ -213,34 +213,34 @@ export default function Create({ products }) {
                                         {data.items.map((item, idx) => {
                                             const diff = item.actual_qty - item.system_qty;
                                             return (
-                                                <div key={idx} className="rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3">
+                                                <div key={idx} className="rounded-xl border border-border bg-muted/50 px-4 py-3">
                                                     <div className="flex items-center justify-between">
                                                         <div>
-                                                            <p className="text-sm font-medium text-slate-800">{item.product_name}</p>
-                                                            <p className="text-xs text-slate-400">{item.product_sku}</p>
+                                                            <p className="text-sm font-medium text-foreground">{item.product_name}</p>
+                                                            <p className="text-xs text-muted-foreground">{item.product_sku}</p>
                                                         </div>
-                                                        <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500">
+                                                        <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-red-50 hover:text-red-500">
                                                             <Trash2 className="h-4 w-4" strokeWidth={1.8} />
                                                         </button>
                                                     </div>
                                                     <div className="mt-3 grid grid-cols-3 gap-3">
                                                         <div>
-                                                            <label className="mb-1 block text-xs text-slate-500">Stok Sistem</label>
-                                                            <input type="number" value={item.system_qty} onChange={(e) => updateItem(idx, 'system_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-slate-300 px-2 text-center text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+                                                            <label className="mb-1 block text-xs text-muted-foreground">Stok Sistem</label>
+                                                            <input type="number" value={item.system_qty} onChange={(e) => updateItem(idx, 'system_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-border px-2 text-center text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring" />
                                                         </div>
                                                         <div>
-                                                            <label className="mb-1 block text-xs text-slate-500">Stok Aktual</label>
-                                                            <input type="number" value={item.actual_qty} onChange={(e) => updateItem(idx, 'actual_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-slate-300 px-2 text-center text-xs focus:border-primary-500 focus:ring-2 focus:ring-primary-200" />
+                                                            <label className="mb-1 block text-xs text-muted-foreground">Stok Aktual</label>
+                                                            <input type="number" value={item.actual_qty} onChange={(e) => updateItem(idx, 'actual_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-border px-2 text-center text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring" />
                                                         </div>
                                                         <div>
-                                                            <label className="mb-1 block text-xs text-slate-500">Selisih</label>
-                                                            <div className={`flex h-9 w-full items-center justify-center rounded-lg text-xs font-semibold ${diff > 0 ? 'bg-emerald-100 text-emerald-700' : diff < 0 ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'}`}>
+                                                            <label className="mb-1 block text-xs text-muted-foreground">Selisih</label>
+                                                            <div className={`flex h-9 w-full items-center justify-center rounded-lg text-xs font-semibold ${diff > 0 ? 'bg-emerald-100 text-emerald-700' : diff < 0 ? 'bg-red-100 text-red-600' : 'bg-muted text-muted-foreground'}`}>
                                                                 {diff > 0 ? '+' : ''}{diff}
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div className="mt-2 flex items-center justify-between text-xs">
-                                                        <span className="text-slate-400">Modal: {fmtCurrency(item.unit_cost)}/unit</span>
+                                                        <span className="text-muted-foreground">Modal: {fmtCurrency(item.unit_cost)}/unit</span>
                                                         {diff !== 0 && (
                                                             <span className={`font-medium ${diff < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
                                                                 {diff < 0 ? '-' : '+'}{fmtCurrency(Math.abs(diff) * item.unit_cost)}
@@ -260,16 +260,16 @@ export default function Create({ products }) {
                     <div className="space-y-5">
                         <SectionCard title="Ringkasan">
                             <dl className="space-y-2 text-sm">
-                                <div className="flex justify-between"><dt className="text-slate-500">Item</dt><dd className="font-medium text-slate-700">{data.items.length} produk</dd></div>
-                                <div className="my-2 border-t border-slate-100" />
+                                <div className="flex justify-between"><dt className="text-muted-foreground">Item</dt><dd className="font-medium text-foreground">{data.items.length} produk</dd></div>
+                                <div className="my-2 border-t border-border" />
                                 <div className="flex justify-between">
-                                    <dt className="font-semibold text-slate-700">Total Selisih</dt>
-                                    <dd className={`text-lg font-bold ${totalDiff > 0 ? 'text-emerald-600' : totalDiff < 0 ? 'text-red-600' : 'text-slate-500'}`}>
+                                    <dt className="font-semibold text-foreground">Total Selisih</dt>
+                                    <dd className={`text-lg font-bold ${totalDiff > 0 ? 'text-emerald-600' : totalDiff < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
                                         {totalDiff > 0 ? '+' : ''}{totalDiff}
                                     </dd>
                                 </div>
                                 {(totalLoss > 0 || totalGain > 0) && (
-                                    <div className="my-2 border-t border-slate-100" />
+                                    <div className="my-2 border-t border-border" />
                                 )}
                                 {totalLoss > 0 && (
                                     <div className="flex justify-between">
@@ -283,7 +283,7 @@ export default function Create({ products }) {
                                         <dd className="font-semibold text-emerald-600">{fmtCurrency(totalGain)}</dd>
                                     </div>
                                 )}
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-muted-foreground">
                                     {totalDiff > 0 ? 'Stok akan bertambah jika disetujui' : totalDiff < 0 ? 'Stok akan berkurang jika disetujui' : 'Tidak ada selisih'}
                                 </p>
                             </dl>
@@ -293,7 +293,7 @@ export default function Create({ products }) {
                             <button type="submit" disabled={processing || data.items.length === 0} className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60">
                                 {processing ? 'Menyimpan...' : 'Simpan Penyesuaian'}
                             </button>
-                            <Link href={route('admin.stock-adjustments.index')} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                            <Link href={route('admin.stock-adjustments.index')} className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-center text-sm font-medium text-foreground transition hover:bg-muted">
                                 Batal
                             </Link>
                         </div>
@@ -306,10 +306,10 @@ export default function Create({ products }) {
 
 function SectionCard({ title, subtitle, children }) {
     return (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
+        <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+            <div className="border-b border-border bg-muted/50 px-6 py-5">
                 <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-                {subtitle && <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
+                {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
             </div>
             <div className="p-6">{children}</div>
         </div>
@@ -319,7 +319,7 @@ function SectionCard({ title, subtitle, children }) {
 function Field({ label, required, error, children }) {
     return (
         <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-sm font-medium text-foreground">
                 {label} {required && <span className="text-red-500">*</span>}
             </label>
             {children}
@@ -329,5 +329,5 @@ function Field({ label, required, error, children }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border-slate-300 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
+    return `block w-full rounded-xl border-border bg-input text-foreground text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
 }

@@ -1,8 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
 import EmployeeTabs from "@/Components/EmployeeTabs";
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import PageTabs from '@/Components/PageTabs';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
+import Button from '@/Components/ui/Button';
 
 // ── Konstanta ────────────────────────────────────────────────────────────────
 const SYSTEM_ROLE_META = {
@@ -15,13 +18,13 @@ const SYSTEM_ROLE_META = {
 };
 
 const COLOR_MAP = {
-    amber:  'bg-amber-50 text-amber-700 ring-amber-200',
-    blue:   'bg-blue-50 text-blue-700 ring-blue-200',
-    violet: 'bg-violet-50 text-violet-700 ring-violet-200',
-    green:  'bg-success/10 text-success ring-emerald-200',
-    orange: 'bg-orange-50 text-orange-700 ring-orange-200',
-    red:    'bg-red-50 text-red-700 ring-red-200',
-    custom: 'bg-primary-50 text-primary-700 ring-primary-200',
+    amber:  'bg-warning/10 text-warning ring-warning/20',
+    blue:   'bg-primary/10 text-primary ring-primary/20',
+    violet: 'bg-primary/10 text-primary ring-primary/20',
+    green:  'bg-success/10 text-success ring-success/20',
+    orange: 'bg-warning/10 text-warning ring-warning/20',
+    red:    'bg-destructive/10 text-destructive ring-destructive/20',
+    custom: 'bg-muted/50 text-foreground ring-border',
 };
 
 const PERMISSION_GROUPS = {
@@ -83,7 +86,7 @@ function PermModal({ role, onClose, onSave }) {
                     <div>
                         <h3 className="text-base font-bold text-foreground">
                             {isSystem ? 'Lihat Permission —' : 'Atur Permission —'}
-                            <span className="ml-1.5 text-primary-600">{role?.name}</span>
+                            <span className="ml-1.5 text-primary">{role?.name}</span>
                         </h3>
                         {isSystem && (
                             <p className="mt-0.5 text-xs text-muted-foreground">Role sistem — permission tidak bisa diubah. Duplikat untuk membuat versi custom.</p>
@@ -95,44 +98,47 @@ function PermModal({ role, onClose, onSave }) {
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-5">
-                    {Object.entries(PERMISSION_GROUPS).map(([group, perms]) => {
-                        const activeCount = perms.filter(p => selected.has(p)).length;
-                        const allOn = activeCount === perms.length;
-                        return (
-                            <div key={group}>
-                                <div className="mb-2.5 flex items-center gap-2">
-                                    {!isSystem ? (
-                                        <button type="button" onClick={() => toggleGroup(perms)}
-                                            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${allOn ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
-                                            {group}
-                                        </button>
-                                    ) : (
-                                        <span className="rounded-lg bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground">{group}</span>
-                                    )}
-                                    <span className="text-[11px] text-muted-foreground">{activeCount}/{perms.length} aktif</span>
-                                </div>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {perms.map(p => {
-                                        const key = p.split('.')[1];
-                                        const on  = selected.has(p);
-                                        return (
-                                            <button key={p} type="button"
-                                                disabled={isSystem}
-                                                onClick={() => !isSystem && toggle(p)}
-                                                className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
-                                                    on
-                                                        ? 'bg-primary text-primary-foreground shadow-sm'
-                                                        : 'border border-border bg-card text-muted-foreground'
-                                                } ${!isSystem && !on ? 'hover:border-primary-300 hover:text-primary-500' : ''} ${isSystem ? 'cursor-default' : ''}`}>
-                                                {PERM_LABEL[key] ?? key}
+                <div className="flex-1 overflow-y-auto p-6 bg-muted/10">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {Object.entries(PERMISSION_GROUPS).map(([group, perms]) => {
+                            const activeCount = perms.filter(p => selected.has(p)).length;
+                            const allOn = activeCount === perms.length;
+                            return (
+                                <div key={group} className="rounded-xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md">
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-bold text-foreground">{group}</span>
+                                            <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{activeCount}/{perms.length} aktif</span>
+                                        </div>
+                                        {!isSystem && (
+                                            <button type="button" onClick={() => toggleGroup(perms)}
+                                                className={`text-[10px] font-bold uppercase tracking-wider transition ${allOn ? 'text-primary hover:text-primary/80' : 'text-muted-foreground hover:text-foreground'}`}>
+                                                {allOn ? 'Unselect All' : 'Select All'}
                                             </button>
-                                        );
-                                    })}
+                                        )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {perms.map(p => {
+                                            const key = p.split('.')[1];
+                                            const on  = selected.has(p);
+                                            return (
+                                                <button key={p} type="button"
+                                                    disabled={isSystem}
+                                                    onClick={() => !isSystem && toggle(p)}
+                                                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                                                        on
+                                                            ? 'bg-primary text-primary-foreground shadow-sm ring-1 ring-primary'
+                                                            : 'bg-muted/30 text-muted-foreground border border-border'
+                                                    } ${!isSystem && !on ? 'hover:bg-muted hover:text-foreground hover:border-border' : ''} ${!isSystem && on ? 'hover:bg-primary/90' : ''} ${isSystem ? 'cursor-default opacity-90' : ''}`}>
+                                                    {PERM_LABEL[key] ?? key}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Footer */}
@@ -141,10 +147,9 @@ function PermModal({ role, onClose, onSave }) {
                         {isSystem ? 'Tutup' : 'Batal'}
                     </button>
                     {!isSystem && (
-                        <button onClick={() => onSave([...selected])}
-                            className="rounded-xl bg-foreground px-5 py-2 text-sm font-semibold text-white hover:bg-foreground/90">
-                            Simpan Permission
-                        </button>
+                    <Button onClick={() => onSave([...selected])} className="px-5">
+                        Simpan Permission
+                    </Button>
                     )}
                 </div>
             </div>
@@ -167,7 +172,7 @@ function RoleFormModal({ title, form, onClose, onSubmit }) {
                             value={form.data.name}
                             onChange={e => form.setData('name', e.target.value)}
                             placeholder="cth: kasirdapur, operator-shift2, resepsionis"
-                            className="block w-full rounded-xl border border-border px-4 py-2.5 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className="w-full py-2.5 px-3.5 rounded-lg border border-border bg-card text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary/20 transition-all"
                         />
                         {form.errors.name && <p className="mt-1.5 text-xs text-destructive">{form.errors.name}</p>}
                     </div>
@@ -177,7 +182,7 @@ function RoleFormModal({ title, form, onClose, onSubmit }) {
                             value={form.data.description}
                             onChange={e => form.setData('description', e.target.value)}
                             placeholder="Deskripsi singkat fungsi role ini"
-                            className="block w-full rounded-xl border border-border px-4 py-2.5 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className="w-full py-2.5 px-3.5 rounded-lg border border-border bg-card text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary/20 transition-all"
                         />
                     </div>
                     <p className="text-xs text-muted-foreground">Permission bisa diatur setelah role dibuat lewat tombol "Atur Permission".</p>
@@ -186,10 +191,9 @@ function RoleFormModal({ title, form, onClose, onSubmit }) {
                             className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted">
                             Batal
                         </button>
-                        <button type="submit" disabled={form.processing}
-                            className="rounded-xl bg-foreground px-5 py-2 text-sm font-semibold text-white hover:bg-foreground/90 disabled:opacity-50">
-                            {form.processing ? 'Menyimpan...' : 'Simpan'}
-                        </button>
+                        <Button type="submit" loading={form.processing} className="px-5">
+                            Simpan
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -203,6 +207,8 @@ export default function Index({ roles, permissions }) {
     const [permModal,   setPermModal]   = useState(null); // role object
     const [createModal, setCreateModal] = useState(false);
     const [editModal,   setEditModal]   = useState(null); // role object
+    const [deletingRole, setDeletingRole] = useState(null); // role object
+    const [deleting, setDeleting] = useState(false);
 
     const createForm = useForm({ name: '', description: '' });
     const editForm   = useForm({ name: '', description: '' });
@@ -229,8 +235,19 @@ export default function Index({ roles, permissions }) {
     };
 
     const handleDelete = (role) => {
-        if (!confirm(`Hapus role "${role.name}"? User yang memakai role ini akan kehilangan aksesnya.`)) return;
-        router.delete(route('admin.roles.destroy', role.id), { preserveScroll: true });
+        setDeletingRole(role);
+    };
+
+    const confirmDelete = () => {
+        if (!deletingRole) return;
+        setDeleting(true);
+        router.delete(route('admin.roles.destroy', deletingRole.id), {
+            preserveScroll: true,
+            onFinish: () => {
+                setDeleting(false);
+                setDeletingRole(null);
+            }
+        });
     };
 
     const handleSavePerms = (perms) => {
@@ -283,7 +300,7 @@ export default function Index({ roles, permissions }) {
                 </div>
             )}
 
-            <div className="max-w-4xl space-y-8">
+            <div className="w-full max-w-[1920px] space-y-8">
 
                 {/* ── Role Sistem ── */}
                 <section>
@@ -293,7 +310,7 @@ export default function Index({ roles, permissions }) {
                             <p className="text-xs text-muted-foreground mt-0.5">Dibuat otomatis, tidak bisa dihapus. Duplikat untuk membuat versi custom yang bisa dimodifikasi.</p>
                         </div>
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {systemRoles.map(role => {
                             const meta  = SYSTEM_ROLE_META[role.name] ?? { icon: '🔒', color: 'custom' };
                             const clr   = COLOR_MAP[meta.color] ?? COLOR_MAP.custom;
@@ -322,7 +339,7 @@ export default function Index({ roles, permissions }) {
                                             </button>
                                             <button onClick={() => handleDuplicate(role)}
                                                 title="Duplikat sebagai role custom"
-                                                className="flex items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-2.5 py-1.5 text-xs font-semibold text-primary-600 transition hover:bg-primary-100">
+                                                className="flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20">
                                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /></svg>
                                                 Duplikat
                                             </button>
@@ -341,34 +358,32 @@ export default function Index({ roles, permissions }) {
                             <h2 className="text-sm font-bold text-foreground">Role Custom</h2>
                             <p className="text-xs text-muted-foreground mt-0.5">Buat role dengan nama dan permission sesuai kebutuhan bisnis kamu.</p>
                         </div>
-                        <button onClick={() => setCreateModal(true)}
-                            className="flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-white hover:bg-foreground/90 transition-colors">
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        <Button onClick={() => setCreateModal(true)}>
+                            <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                             Buat Role Baru
-                        </button>
+                        </Button>
                     </div>
 
                     {customRoles.length === 0 ? (
                         <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
                             <p className="text-sm font-medium text-muted-foreground">Belum ada role custom</p>
                             <p className="mt-1 text-xs text-muted-foreground">Buat dari nol atau duplikat role sistem di atas sebagai template</p>
-                            <button onClick={() => setCreateModal(true)}
-                                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-white hover:bg-foreground/90">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            <Button onClick={() => setCreateModal(true)} className="mt-4">
+                                <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                                 Buat Role Baru
-                            </button>
+                            </Button>
                         </div>
                     ) : (
-                        <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                             {customRoles.map(role => (
-                                <div key={role.id} className="group rounded-2xl border border-primary-100 bg-card p-5 shadow-sm ring-1 ring-primary-50 transition hover:shadow-md">
+                                <div key={role.id} className="group rounded-2xl border border-primary/20 bg-card p-5 shadow-sm transition hover:shadow-md hover:border-primary/40">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex items-center gap-3">
-                                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-lg">✏️</span>
+                                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-lg">✏️</span>
                                             <div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-bold text-primary-700 ring-1 ring-primary-200">{role.name}</span>
-                                                    <span className="rounded-full bg-primary-50 px-1.5 py-0.5 text-[10px] font-semibold text-primary-500">Custom</span>
+                                                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary ring-1 ring-primary/20">{role.name}</span>
+                                                    <span className="rounded-full bg-primary/5 px-1.5 py-0.5 text-[10px] font-semibold text-primary/70">Custom</span>
                                                 </div>
                                                 <p className="mt-1 text-xs text-muted-foreground">{role.description || 'Tidak ada deskripsi'}</p>
                                             </div>
@@ -435,6 +450,15 @@ export default function Index({ roles, permissions }) {
                     onSubmit={handleEdit}
                 />
             )}
+            
+            <ConfirmDeleteModal
+                open={!!deletingRole}
+                title={`Hapus Role "${deletingRole?.name}"?`}
+                description="User yang memakai role ini akan kehilangan aksesnya. Tindakan ini tidak dapat dibatalkan."
+                processing={deleting}
+                onConfirm={confirmDelete}
+                onClose={() => !deleting && setDeletingRole(null)}
+            />
         </AuthenticatedLayout>
     );
 }

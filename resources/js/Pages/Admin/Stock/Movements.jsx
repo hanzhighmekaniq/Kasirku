@@ -156,14 +156,14 @@ export default function Movements({ movements, products }) {
                                 <div className="border-b border-border p-3">
                                     <div className="relative">
                                         <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                                        <input
-                                            ref={searchInputRef}
-                                            type="text"
-                                            value={dropdownSearch}
-                                            onChange={(e) => setDropdownSearch(e.target.value)}
-                                            placeholder="Cari nama atau SKU..."
-                                            className="w-full rounded-lg border border-border bg-muted py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:bg-card focus:ring-2 focus:ring-ring/20"
-                                        />
+                                            <input
+                                                ref={searchInputRef}
+                                                type="text"
+                                                value={dropdownSearch}
+                                                onChange={(e) => setDropdownSearch(e.target.value)}
+                                                placeholder="Cari nama atau SKU..."
+                                                className="w-full rounded-lg border border-border bg-input py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring"
+                                            />
                                     </div>
                                 </div>
                                 <div className="max-h-72 overflow-y-auto p-1.5">
@@ -203,8 +203,8 @@ export default function Movements({ movements, products }) {
                         onChange={(v) => handleFilter('movement_type', v)}
                         placeholder="Semua Tipe"
                     />
-                    <input type="date" value={filters.from_date} onChange={(e) => handleFilter('from_date', e.target.value)} className="rounded-xl border border-border px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
-                    <input type="date" value={filters.to_date} onChange={(e) => handleFilter('to_date', e.target.value)} className="rounded-xl border border-border px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                    <input type="date" value={filters.from_date} onChange={(e) => handleFilter('from_date', e.target.value)} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring" />
+                    <input type="date" value={filters.to_date} onChange={(e) => handleFilter('to_date', e.target.value)} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring" />
                 </div>
             </div>
 
@@ -237,7 +237,7 @@ export default function Movements({ movements, products }) {
             )}
 
             {/* Movements table */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead>

@@ -3,6 +3,7 @@ import PageHeader from "@/Components/PageHeader";
 import EmployeeTabs from "@/Components/EmployeeTabs";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
+import { formatRupiah } from "@/Utils/currency";
 import { Plus } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import Dropdown from "@/Components/Dropdown";
@@ -174,14 +175,6 @@ export default function Index({ employees, storeType = "retail" }) {
                     </>
                 }
                 description="Cari, filter, dan atur data staf, cabang, jabatan, akun login, serta status dari satu tempat. Pantau ringkasan aktif & akun di bawah."
-                action={
-                    <Button as={Link} href={route("admin.employees.create")} icon={Plus}>
-                        <span className="hidden sm:inline">
-                            {ADD_LABEL[storeType] ?? "Tambah Karyawan"}
-                        </span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
-                }
             />
 
             <EmployeeTabs />
@@ -290,27 +283,22 @@ export default function Index({ employees, storeType = "retail" }) {
                 <div className="border-b border-border p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="relative w-full sm:max-w-xs">
-                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                    />
-                                </svg>
-                            </span>
+                            <svg
+                                className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                            >
+                                <circle cx="11" cy="11" r="8" />
+                                <path d="m21 21-4.35-4.35" />
+                            </svg>
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nama, kode, cabang..."
-                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="w-full py-2.5 pl-10 pr-3 rounded-lg border border-border bg-card text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary/20 transition-all"
                             />
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -346,11 +334,10 @@ export default function Index({ employees, storeType = "retail" }) {
                                 <Dropdown.Content width="48">
                                     <button
                                         onClick={() => setStatusFilter("")}
-                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                            !statusFilter
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${!statusFilter
                                                 ? "bg-primary-50 font-medium text-primary-600"
                                                 : "text-muted-foreground hover:bg-muted"
-                                        }`}
+                                            }`}
                                     >
                                         Semua Status
                                     </button>
@@ -361,11 +348,10 @@ export default function Index({ employees, storeType = "retail" }) {
                                                 onClick={() =>
                                                     setStatusFilter(value)
                                                 }
-                                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                                    statusFilter === value
+                                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === value
                                                         ? "bg-primary-50 font-medium text-primary-600"
                                                         : "text-muted-foreground hover:bg-muted"
-                                                }`}
+                                                    }`}
                                             >
                                                 {label}
                                             </button>
@@ -604,21 +590,18 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                                 {showCommission && (
                                     <td className="px-6 py-4 text-center">
                                         {emp.commission_type === "none" ||
-                                        !emp.commission_type ? (
+                                            !emp.commission_type ? (
                                             <span className="text-xs text-muted-foreground">
                                                 -
                                             </span>
                                         ) : emp.commission_type ===
-                                          "percent" ? (
+                                            "percent" ? (
                                             <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">
                                                 {emp.commission_value}%
                                             </span>
                                         ) : (
                                             <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                                                Rp{" "}
-                                                {Number(
-                                                    emp.commission_value,
-                                                ).toLocaleString("id-ID")}
+                                                {formatRupiah(emp.commission_value)}
                                             </span>
                                         )}
                                     </td>
@@ -681,7 +664,7 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                                         <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">
                                             {emp.commission_type === "percent"
                                                 ? `Komisi ${emp.commission_value}%`
-                                                : `Komisi Rp ${Number(emp.commission_value).toLocaleString("id-ID")}`}
+                                                : `Komisi ${formatRupiah(emp.commission_value)}`}
                                         </span>
                                     )}
                             </div>

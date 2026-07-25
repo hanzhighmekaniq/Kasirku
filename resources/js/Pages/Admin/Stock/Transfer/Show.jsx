@@ -27,14 +27,14 @@ export default function Show({ transfer }) {
                 <div className="flex items-center gap-3">
                     <Link
                         href={route('admin.stock-transfers.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         aria-label="Kembali"
                     >
                         <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-800">{transfer.transfer_no}</h2>
-                        <p className="text-sm text-slate-400">Detail Transfer Stok</p>
+                        <h2 className="text-lg font-semibold text-foreground">{transfer.transfer_no}</h2>
+                        <p className="text-sm text-muted-foreground">Detail Transfer Stok</p>
                     </div>
                 </div>
             }
@@ -59,7 +59,7 @@ export default function Show({ transfer }) {
                         </button>
                         <button
                             onClick={() => setConfirmingStatus('cancelled')}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-white px-3.5 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-card px-3.5 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
                         >
                             <XCircle className="h-4 w-4" strokeWidth={2} />
                             Batalkan
@@ -77,7 +77,7 @@ export default function Show({ transfer }) {
                         </button>
                         <button
                             onClick={() => setConfirmingStatus('cancelled')}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-white px-3.5 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-card px-3.5 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
                         >
                             <XCircle className="h-4 w-4" strokeWidth={2} />
                             Batalkan
@@ -90,9 +90,9 @@ export default function Show({ transfer }) {
                 {/* Main */}
                 <div className="space-y-5 lg:col-span-2">
                     {/* Info */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-sm font-semibold text-slate-800">Informasi Transfer</h3>
+                    <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-sm font-semibold text-foreground">Informasi Transfer</h3>
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -107,30 +107,30 @@ export default function Show({ transfer }) {
                     </div>
 
                     {/* Items */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-sm font-semibold text-slate-800">Item Transfer</h3>
+                    <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-sm font-semibold text-foreground">Item Transfer</h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-slate-200">
-                                <thead className="bg-slate-50/60">
+                                <thead className="bg-muted/50">
                                     <tr>
-                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">#</th>
-                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Produk</th>
-                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Qty</th>
-                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Catatan</th>
+                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
+                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Produk</th>
+                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty</th>
+                                        <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Catatan</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {items.map((item, idx) => (
-                                        <tr key={item.id} className="transition hover:bg-slate-50/50">
-                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm text-slate-400">{idx + 1}</td>
+                                        <tr key={item.id} className="transition hover:bg-muted/50">
+                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm text-muted-foreground">{idx + 1}</td>
                                             <td className="whitespace-nowrap px-5 py-3.5">
-                                                <p className="text-sm font-semibold text-slate-800">{item.product?.name}</p>
-                                                <p className="text-xs text-slate-400">{item.product?.sku}</p>
+                                                <p className="text-sm font-semibold text-foreground">{item.product?.name}</p>
+                                                <p className="text-xs text-muted-foreground">{item.product?.sku}</p>
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm font-semibold text-slate-800">{item.quantity}</td>
-                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm text-slate-400">{item.notes || '—'}</td>
+                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm font-semibold text-foreground">{item.quantity}</td>
+                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm text-muted-foreground">{item.notes || '—'}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -141,28 +141,28 @@ export default function Show({ transfer }) {
 
                 {/* Sidebar */}
                 <div className="space-y-5">
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-sm font-semibold text-slate-800">Ringkasan</h3>
+                    <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-sm font-semibold text-foreground">Ringkasan</h3>
                         </div>
                         <div className="p-6">
                             <dl className="space-y-2.5 text-sm">
                                 <div className="flex justify-between">
-                                    <dt className="text-slate-500">Item</dt>
-                                    <dd className="font-medium text-slate-700">{items.length} produk</dd>
+                                    <dt className="text-muted-foreground">Item</dt>
+                                    <dd className="font-medium text-foreground">{items.length} produk</dd>
                                 </div>
-                                <div className="my-2 border-t border-slate-100" />
+                                <div className="my-2 border-t border-border" />
                                 <div className="flex justify-between">
-                                    <dt className="font-semibold text-slate-700">Total Qty</dt>
-                                    <dd className="text-lg font-bold text-slate-800">{totalItems}</dd>
+                                    <dt className="font-semibold text-foreground">Total Qty</dt>
+                                    <dd className="text-lg font-bold text-foreground">{totalItems}</dd>
                                 </div>
                             </dl>
                         </div>
                     </div>
 
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-sm font-semibold text-slate-800">Status</h3>
+                    <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+                        <div className="border-b border-border bg-muted/50 px-6 py-4">
+                            <h3 className="text-sm font-semibold text-foreground">Status</h3>
                         </div>
                         <div className="p-6">
                             <dl className="space-y-2.5 text-sm">
@@ -181,7 +181,7 @@ export default function Show({ transfer }) {
             {confirmingStatus && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onMouseDown={() => !processing && setConfirmingStatus(null)}>
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
-                    <div className="relative w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+                    <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
                         <div className="flex items-start gap-4">
                             <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${
                                 confirmingStatus === 'received' ? 'bg-emerald-100' :
@@ -199,7 +199,7 @@ export default function Show({ transfer }) {
                                     {confirmingStatus === 'in_transit' ? 'Kirim Transfer?' :
                                      confirmingStatus === 'received' ? 'Terima Transfer?' : 'Batalkan Transfer?'}
                                 </h3>
-                                <p className="mt-1 text-sm text-slate-500">
+                                <p className="mt-1 text-sm text-muted-foreground">
                                     {confirmingStatus === 'in_transit'
                                         ? 'Transfer akan ditandai dalam perjalanan ke cabang tujuan.'
                                         : confirmingStatus === 'received'
@@ -209,7 +209,7 @@ export default function Show({ transfer }) {
                             </div>
                         </div>
                         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                            <button onClick={() => setConfirmingStatus(null)} disabled={processing} className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">Batal</button>
+                            <button onClick={() => setConfirmingStatus(null)} disabled={processing} className="inline-flex justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60">Batal</button>
                             <button
                                 onClick={() => handleStatus(confirmingStatus)}
                                 disabled={processing}
@@ -236,8 +236,8 @@ export default function Show({ transfer }) {
 function InfoRow({ label, value, isRaw }) {
     return (
         <div className="flex items-center justify-between gap-3">
-            <dt className="text-slate-500">{label}</dt>
-            <dd className={`text-right ${isRaw ? '' : 'font-medium text-slate-800'}`}>{value}</dd>
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className={`text-right ${isRaw ? '' : 'font-medium text-foreground'}`}>{value}</dd>
         </div>
     );
 }
@@ -256,7 +256,7 @@ function StatusBadge({ status }) {
         cancelled: 'Dibatalkan',
     };
     return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? 'bg-slate-100 text-slate-600'}`}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? 'bg-muted text-foreground'}`}>
             {label[status] ?? status}
         </span>
     );
