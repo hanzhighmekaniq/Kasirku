@@ -11,14 +11,14 @@ export default function SummaryCards({ items = [] }) {
             {items.map((item, i) => (
                 <div
                     key={i}
-                    className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                    className="rounded-xl border border-border bg-card p-4 shadow-sm"
                 >
-                    <p className="text-xs font-medium text-slate-500">{item.label}</p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">
+                    <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
+                    <p className="mt-1 text-xl font-bold text-foreground">
                         {item.currency ? fmt(item.value) : (item.value ?? 0)}
                     </p>
                     {item.sub && (
-                        <p className="mt-0.5 text-xs text-slate-400">{item.sub}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{item.sub}</p>
                     )}
                 </div>
             ))}

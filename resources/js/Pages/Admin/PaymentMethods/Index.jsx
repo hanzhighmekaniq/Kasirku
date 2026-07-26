@@ -37,10 +37,10 @@ import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 /* ── constants ───────────────────────────────────────── */
 const TYPE_META = {
-    cash: { label: "Tunai", icon: Banknote, color: "bg-success/10 text-success", dot: "bg-success/100" },
-    digital: { label: "Digital / QRIS", icon: Smartphone, color: "bg-primary-50 text-primary-700", dot: "bg-primary-500" },
-    card: { label: "Kartu", icon: CreditCard, color: "bg-violet-50 text-violet-700", dot: "bg-violet-500" },
-    credit: { label: "Kredit / Tempo", icon: FileClock, color: "bg-amber-50 text-amber-700", dot: "bg-amber-500" },
+    cash: { label: "Tunai", icon: Banknote, color: "bg-success/10 text-success", dot: "bg-success" },
+    digital: { label: "Digital / QRIS", icon: Smartphone, color: "bg-primary/10 text-primary", dot: "bg-primary" },
+    card: { label: "Kartu", icon: CreditCard, color: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400", dot: "bg-violet-500" },
+    credit: { label: "Kredit / Tempo", icon: FileClock, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400", dot: "bg-amber-500" },
 };
 
 function TypeBadge({ type }) {
@@ -72,11 +72,11 @@ function DragHandle({ listeners, attributes }) {
 function StatusBadge({ active }) {
     return active ? (
         <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
-            <span className="h-1.5 w-1.5 rounded-full bg-success/100" />Aktif
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />Aktif
         </span>
     ) : (
         <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />Nonaktif
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />Nonaktif
         </span>
     );
 }
@@ -95,15 +95,15 @@ function PaymentMethodRow({ method, idx, toggling, onToggle, onDelete, isDragOve
         <div
             ref={isDragOverlay ? undefined : setNodeRef}
             style={isDragOverlay ? undefined : style}
-            className={`flex items-center gap-2 sm:gap-3 border-b border-border bg-card px-3 sm:px-4 py-3 last:border-0 transition-colors ${
-                isDragging ? "bg-primary-50/30" : "hover:bg-muted/50"
-            } ${isDragOverlay ? "rounded-2xl shadow-xl ring-1 ring-black/10" : ""} ${!method.is_active ? "opacity-60" : ""}`}
+            className={`flex items-center gap-2 sm:gap-3 border-b border-border bg-background px-3 sm:px-4 py-3 last:border-0 transition-colors ${
+                isDragging ? "bg-primary/5" : "hover:bg-muted/50"
+            } ${isDragOverlay ? "rounded-2xl shadow-xl ring-1 ring-border" : ""} ${!method.is_active ? "opacity-60" : ""}`}
         >
             {/* Drag handle */}
             <DragHandle listeners={listeners} attributes={attributes} />
 
             {/* Position */}
-            <span className="hidden sm:inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-xs font-bold text-primary-600">
+            <span className="hidden sm:inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
                 {idx + 1}
             </span>
 
@@ -146,7 +146,7 @@ function PaymentMethodRow({ method, idx, toggling, onToggle, onDelete, isDragOve
             <div className="flex items-center gap-1">
                 <Link
                     href={route("admin.payment-methods.edit", method.id)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                     title="Edit"
                 >
                     <Pencil className="h-4 w-4" strokeWidth={1.8} />
@@ -306,7 +306,7 @@ export default function Index({ paymentMethods: initialMethods }) {
                     <p className="text-xs font-medium text-muted-foreground">Total Metode</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.total}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-success bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Aktif</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.active}</p>
                 </div>
@@ -314,14 +314,14 @@ export default function Index({ paymentMethods: initialMethods }) {
                     <p className="text-xs font-medium text-muted-foreground">Nonaktif</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.inactive}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-primary bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Tipe</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.types}</p>
                 </div>
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
                 <div className="border-b border-border p-4">
                     <div className="relative">
@@ -331,7 +331,7 @@ export default function Index({ paymentMethods: initialMethods }) {
                             placeholder="Cari metode..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-xl border border-border bg-card text-foreground py-2.5 pl-10 pr-4 text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className="block w-full rounded-xl border border-input bg-background text-foreground py-2.5 pl-10 pr-4 text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                         />
                     </div>
                     <div className="flex items-center justify-between pt-4">
@@ -348,7 +348,7 @@ export default function Index({ paymentMethods: initialMethods }) {
                 {sorted.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                            <Inbox className="h-7 w-7 text-muted-foreground" strokeWidth={1.6} />
+                            <Inbox className="h-7 w-7 text-muted-foreground/50" strokeWidth={1.6} />
                         </div>
                         <p className="mt-4 text-sm font-medium text-muted-foreground">
                             {search ? "Metode tidak ditemukan" : "Belum ada metode pembayaran"}
@@ -360,7 +360,7 @@ export default function Index({ paymentMethods: initialMethods }) {
                 ) : (
                     <>
                         {/* Column header */}
-                        <div className="flex items-center gap-2 sm:gap-3 border-b border-border bg-background px-3 sm:px-4 py-2.5">
+                        <div className="flex items-center gap-2 sm:gap-3 border-b border-border bg-muted px-3 sm:px-4 py-2.5">
                             <div className="w-8" /> 
                             <div className="hidden sm:block w-7" />
                             <div className="flex-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Metode</div>
@@ -400,7 +400,7 @@ export default function Index({ paymentMethods: initialMethods }) {
                         </DndContext>
 
                         {/* Footer hint */}
-                        <div className="flex items-center gap-2 border-t border-border bg-muted/40 px-5 py-3">
+                        <div className="flex items-center gap-2 border-t border-border bg-muted/50 px-5 py-3">
                             <Info className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                             <p className="text-[11px] text-muted-foreground">
                                 Tarik baris untuk mengubah urutan tampilan metode. Perubahan disimpan otomatis.

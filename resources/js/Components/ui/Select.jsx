@@ -236,7 +236,7 @@ export default function Select({
                   </div>
 
                   {/* List options */}
-                  <div className="max-h-60 overflow-y-auto overscroll-contain">
+                  <div className="max-h-60 overflow-y-auto overscroll-contain [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       {filtered.length === 0 ? (
                           <Empty />
                       ) : (
@@ -355,7 +355,7 @@ export default function Select({
                                 anchor="bottom start"
                                 className="z-[9999] mt-1 w-[var(--button-width)] overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl focus:outline-none"
                             >
-                                <div className="max-h-60 overflow-y-auto overscroll-contain py-1">
+                                <div className="max-h-60 overflow-y-auto overscroll-contain py-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                                     {options.length === 0 ? (
                                         <Empty />
                                     ) : (
@@ -395,7 +395,9 @@ export default function Select({
                 </Listbox>
             )}
 
-            {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
+            {error && (
+                <p className="mt-1.5 text-xs text-destructive">{error}</p>
+            )}
         </div>
     );
 }

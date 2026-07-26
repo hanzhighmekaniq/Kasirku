@@ -771,26 +771,39 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
         });
 
         // ─────────────────────────────────────────────────────────────────
-        // BOOKING — permission: booking.view
+        // BOOKING — permission: booking.view / create / edit / cancel
+        //
+        // Dulu keempat route ini sama-sama hanya butuh booking.view, jadi
+        // user yang cuma boleh melihat tetap bisa membuat dan menghapus
+        // booking. Nama permission mengikuti PermissionSeeder — penghapusan
+        // memakai booking.cancel, bukan booking.delete.
         // ─────────────────────────────────────────────────────────────────
-        Route::middleware([
-            'feature:booking',
-            'permission:booking.view',
-        ])->group(function () {
-            Route::get('/bookings', [BookingController::class, 'index'])->name(
-                'bookings.index',
-            );
-            Route::post('/bookings', [BookingController::class, 'store'])->name(
-                'bookings.store',
-            );
+        Route::middleware(['feature:booking'])->group(function () {
+            Route::get('/bookings', [BookingController::class, 'index'])
+                ->middleware('permission:booking.view')
+                ->name('bookings.index');
+            // Harus di atas /bookings/{booking}, kalau tidak "create"
+            // ditangkap sebagai ID booking.
+            Route::get('/bookings/create', [BookingController::class, 'create'])
+                ->middleware('permission:booking.create')
+                ->name('bookings.create');
+            Route::post('/bookings', [BookingController::class, 'store'])
+                ->middleware('permission:booking.create')
+                ->name('bookings.store');
+            Route::get('/bookings/{booking}', [BookingController::class, 'show'])
+                ->middleware('permission:booking.view')
+                ->name('bookings.show');
+            Route::get('/bookings/{booking}/edit', [BookingController::class, 'edit'])
+                ->middleware('permission:booking.edit')
+                ->name('bookings.edit');
             Route::patch('/bookings/{booking}', [
                 BookingController::class,
                 'update',
-            ])->name('bookings.update');
+            ])->middleware('permission:booking.edit')->name('bookings.update');
             Route::delete('/bookings/{booking}', [
                 BookingController::class,
                 'destroy',
-            ])->name('bookings.destroy');
+            ])->middleware('permission:booking.cancel')->name('bookings.destroy');
         });
 
         // ─────────────────────────────────────────────────────────────────

@@ -188,16 +188,16 @@ export default function GatewayPanel({
                     {/* Amount */}
                     <div className="text-center">
                         <p className="text-xs text-muted-foreground">Total Pembayaran</p>
-                        <p className="text-2xl font-bold text-primary-700">{fmt(pgTransaction.amount)}</p>
+                        <p className="text-2xl font-bold text-primary">{fmt(pgTransaction.amount)}</p>
                     </div>
 
                     {/* Status */}
                     <div className={`flex items-center justify-center gap-2 rounded-xl py-2 px-3 text-sm font-semibold text-center ${
                         pgStatus === 'paid'    ? 'bg-success/10 text-success' :
                         pgStatus === 'expired' ? 'bg-destructive/10 text-destructive' :
-                        pgStatus === 'failed'  ? (canRetry ? 'bg-amber-50 text-amber-700' : 'bg-destructive/10 text-destructive') :
-                        isAmbiguous            ? 'bg-amber-50 text-amber-700' :
-                                                  'bg-amber-50 text-amber-700'
+                        pgStatus === 'failed'  ? (canRetry ? 'bg-warning/10 text-warning' : 'bg-destructive/10 text-destructive') :
+                        isAmbiguous            ? 'bg-warning/10 text-warning' :
+                                                  'bg-warning/10 text-warning'
                     }`}>
                         {pgStatus === 'paid' && (
                             <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -214,12 +214,12 @@ export default function GatewayPanel({
 
                     {/* Polling error */}
                     {pollError && (
-                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">{pollError}</div>
+                        <div className="rounded-lg border border-warning/20 bg-warning/10 px-3 py-2 text-xs text-warning">{pollError}</div>
                     )}
 
                     {/* Tidak ada data pembayaran — tampilkan pesan yang jelas */}
                     {showQRVA && !hasPaymentData && !pollError && (
-                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs text-amber-700">
+                        <div className="rounded-lg border border-warning/20 bg-warning/10 px-3 py-2 text-center text-xs text-warning">
                             <div className="flex items-center justify-center gap-2">
                                 <svg className="h-3.5 w-3.5 animate-spin shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />

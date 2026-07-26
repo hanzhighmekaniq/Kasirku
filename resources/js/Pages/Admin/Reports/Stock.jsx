@@ -50,19 +50,19 @@ export default function Stock({ summary, lowStock = [], byCategory = [] }) {
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead><tr className="bg-muted text-left text-xs font-semibold text-muted-foreground">
-                                <th className="px-4 py-2.5">Produk</th>
-                                <th className="px-4 py-2.5">SKU</th>
-                                <th className="px-4 py-2.5">Kategori</th>
-                                <th className="px-4 py-2.5 text-right">Stok</th>
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground"><tr>
+                                <th className="px-4 py-2.5 text-left font-semibold">Produk</th>
+                                <th className="px-4 py-2.5 text-left font-semibold">SKU</th>
+                                <th className="px-4 py-2.5 text-left font-semibold">Kategori</th>
+                                <th className="px-4 py-2.5 text-right font-semibold">Stok</th>
                             </tr></thead>
-                            <tbody>{lowStock.length > 0 ? lowStock.map((p) => (
-                                <tr key={p.id} className="border-t border-border">
+                            <tbody className="divide-y divide-border bg-background">{lowStock.length > 0 ? lowStock.map((p) => (
+                                <tr key={p.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                     <td className="px-4 py-2.5 font-medium text-foreground">{p.name}</td>
                                     <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{p.sku || '—'}</td>
                                     <td className="px-4 py-2.5 text-muted-foreground">{p.category}</td>
                                     <td className="px-4 py-2.5 text-right">
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${p.total_stock <= 0 ? 'bg-destructive/10 text-destructive' : 'bg-amber-50 text-amber-700'}`}>
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${p.total_stock <= 0 ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'}`}>
                                             {p.total_stock}
                                         </span>
                                     </td>
@@ -75,7 +75,7 @@ export default function Stock({ summary, lowStock = [], byCategory = [] }) {
                 <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h3 className="mb-4 text-sm font-semibold text-foreground">Per Kategori</h3>
                     {byCategory.length > 0 ? byCategory.map((c, i) => (
-                        <div key={i} className="flex items-center justify-between border-b border-slate-50 py-2 last:border-0">
+                        <div key={i} className="flex items-center justify-between border-b border-border py-2 last:border-0">
                             <span className="text-sm text-foreground">{c.category}</span>
                             <span className="text-sm font-medium text-foreground">{c.total_stock} stok</span>
                         </div>

@@ -59,7 +59,7 @@ export default function Purchases({ from, to, summary, dailyTrend = [], bySuppli
                                 <div key={d.date} className="flex items-center gap-3">
                                     <span className="w-20 text-xs text-muted-foreground">{fmtDate(d.date)}</span>
                                     <div className="flex-1 h-5 rounded-full bg-muted overflow-hidden">
-                                        <div className="h-full rounded-full bg-primary-500" style={{ width: `${Math.min(100, (d.total / Math.max(...dailyTrend.map(x => x.total))) * 100)}%` }} />
+                                        <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, (d.total / Math.max(...dailyTrend.map(x => x.total))) * 100)}%` }} />
                                     </div>
                                     <span className="w-24 text-right text-xs font-medium text-foreground">{fmt(d.total)}</span>
                                 </div>
@@ -85,13 +85,13 @@ export default function Purchases({ from, to, summary, dailyTrend = [], bySuppli
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                        <thead><tr className="bg-muted text-left text-xs font-semibold text-muted-foreground">
-                            <th className="px-4 py-2.5">Tanggal</th>
-                            <th className="px-4 py-2.5">Supplier</th>
-                            <th className="px-4 py-2.5 text-right">Total</th>
+                        <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground"><tr>
+                            <th className="px-4 py-2.5 text-left font-semibold">Tanggal</th>
+                            <th className="px-4 py-2.5 text-left font-semibold">Supplier</th>
+                            <th className="px-4 py-2.5 text-right font-semibold">Total</th>
                         </tr></thead>
-                        <tbody>{purchases.length > 0 ? purchases.map((p) => (
-                            <tr key={p.id} className="border-t border-border">
+                        <tbody className="divide-y divide-border bg-background">{purchases.length > 0 ? purchases.map((p) => (
+                            <tr key={p.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                 <td className="px-4 py-2.5">{fmtDate(p.purchase_date)}</td>
                                 <td className="px-4 py-2.5">{p.supplier?.name || '—'}</td>
                                 <td className="px-4 py-2.5 text-right font-medium">{fmt(p.grand_total)}</td>

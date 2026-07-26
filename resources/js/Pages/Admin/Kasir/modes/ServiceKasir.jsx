@@ -41,14 +41,14 @@ export default function ServiceKasir(props) {
 
     const toneMap = {
         brand: "bg-primary/10 text-primary border border-primary/10",
-        warn: "bg-warning/10 text-warning border border-amber-100",
-        default: "bg-muted text-card-foreground",
+        warn: "bg-warning/10 text-warning border border-warning/20",
+        default: "bg-muted text-foreground",
     };
 
     const hours = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
     const bars = [
-        { n: "Jenna", s: 1, e: 3, label: "A. Chen · Highlights", tone: "bg-indigo-500" },
-        { n: "Marco", s: 2, e: 3, label: "K. Hill · Beard", tone: "bg-rose-500" },
+        { n: "Jenna", s: 1, e: 3, label: "A. Chen · Highlights", tone: "bg-primary" },
+        { n: "Marco", s: 2, e: 3, label: "K. Hill · Beard", tone: "bg-destructive" },
         { n: "Lea", s: 0, e: 2, label: "M. Park · Color", tone: "bg-warning" },
         { n: "Diego", s: 5, e: 6, label: "Break", tone: "bg-slate-300" },
     ];
@@ -77,8 +77,8 @@ export default function ServiceKasir(props) {
                     </div>
                     {bars.map((b, i) => (
                         <div key={i} className="flex items-center gap-3 py-2 border-b border-border last:border-b-0">
-                            <div className="w-16 text-[11.5px] font-medium text-card-foreground">{b.n}</div>
-                            <div className="flex-1 relative h-8 bg-muted/50 rounded-lg">
+                            <div className="w-16 text-[11.5px] font-medium text-foreground">{b.n}</div>
+                            <div className="flex-1 relative h-8 bg-muted rounded-lg">
                                 <div className={`absolute top-1 bottom-1 ${b.tone} rounded-md text-white text-[10.5px] font-medium px-2 flex items-center`} style={{ left: `${(b.s / 10) * 100}%`, width: `${((b.e - b.s) / 10) * 100}%` }}>{b.label}</div>
                             </div>
                         </div>
@@ -94,7 +94,7 @@ export default function ServiceKasir(props) {
                     <div className="space-y-2">
                         {queue.map((q, i) => (
                             <div key={i} className="rounded-xl border border-border p-3 flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 grid place-items-center text-[11px] font-semibold text-card-foreground">{q.n.split(" ").map((x) => x[0]).join("")}</div>
+                                <div className="h-9 w-9 rounded-full bg-muted grid place-items-center text-[11px] font-semibold text-foreground">{q.n.split(" ").map((x) => x[0]).join("")}</div>
                                 <div className="flex-1 min-w-0">
                                     <div className="text-[12.5px] font-semibold truncate">{q.n}</div>
                                     <div className="text-[10.5px] text-muted-foreground truncate">{q.s}</div>
@@ -119,7 +119,7 @@ export default function ServiceKasir(props) {
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <div className={`h-11 w-11 rounded-full bg-gradient-to-br ${s.color} grid place-items-center text-white text-[12px] font-semibold shadow-sm`}>{s.av}</div>
-                                <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${s.busy ? "bg-rose-500" : "bg-success"}`}></span>
+                                <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card ${s.busy ? "bg-destructive" : "bg-success"}`}></span>
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="text-[13px] font-semibold leading-tight">{s.n}</div>
@@ -145,8 +145,8 @@ export default function ServiceKasir(props) {
                 {services.map((s, i) => (
                     <button key={i} onClick={() => k.addToCart({ id: `svc-${i}`, name: s.n, sell_price: s.p, track_stock: false })} className="text-left rounded-2xl bg-card border border-border hover:border-indigo-400 hover:shadow-md transition-all p-4">
                         <div className="flex items-start justify-between">
-                            <div className="h-11 w-11 rounded-xl bg-muted/50 grid place-items-center text-xl">{s.ic}</div>
-                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10.5px] font-medium text-card-foreground">{s.c}</span>
+                            <div className="h-11 w-11 rounded-xl bg-muted grid place-items-center text-xl">{s.ic}</div>
+                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10.5px] font-medium text-foreground">{s.c}</span>
                         </div>
                         <div className="text-[13.5px] font-semibold mt-3 leading-tight">{s.n}</div>
                         <div className="text-[11px] text-muted-foreground mt-1">{s.d}</div>

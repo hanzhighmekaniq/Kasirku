@@ -187,7 +187,7 @@ export default function Create({ categories: initialCategories }) {
                                                             );
                                                             if (cat) setDeleteTarget(cat);
                                                         }}
-                                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground transition hover:border-red-300 hover:bg-destructive/10 hover:text-destructive"
+                                                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground transition hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                                                         title={`Hapus kategori "${selectedCategoryName}"`}
                                                     >
                                                         <Trash2 className="h-4 w-4" strokeWidth={1.7} />
@@ -201,7 +201,7 @@ export default function Create({ categories: initialCategories }) {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowQuickCat(true)}
-                                                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary-600 transition hover:text-primary-700"
+                                                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary transition hover:text-primary"
                                             >
                                                 <Plus className="h-3.5 w-3.5" strokeWidth={2} />
                                                 Tambah Kategori Baru

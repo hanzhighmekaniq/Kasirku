@@ -16,7 +16,7 @@ const fmtDt = (d) =>
         : "-";
 
 const STATUS_CLS = {
-    open: "bg-emerald-100 text-success",
+    open: "bg-success/10 text-success",
     closed: "bg-muted text-muted-foreground",
 };
 const STATUS_LBL = { open: "Berjalan", closed: "Tutup" };
@@ -143,7 +143,7 @@ export default function Index({
                                 "admin.cashier-shifts.show",
                                 activeShift.id,
                             )}
-                            className="rounded-lg border border-emerald-300 bg-card px-3 py-1.5 text-xs font-medium text-success hover:bg-success/10"
+                            className="rounded-lg border border-success/30 bg-card px-3 py-1.5 text-xs font-medium text-success hover:bg-success/10"
                         >
                             Lihat Detail
                         </Link>
@@ -165,7 +165,7 @@ export default function Index({
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Cari no. shift / kasir..."
-                                        className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                        className="block w-full rounded-xl border border-input bg-background py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                                     />
                                 </form>
                             </div>
@@ -179,9 +179,9 @@ export default function Index({
                                     </button>
                                 </Dropdown.Trigger>
                                 <Dropdown.Content width="48">
-                                    <button onClick={() => applyFilter("")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${!status ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Semua</button>
-                                    <button onClick={() => applyFilter("open")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "open" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Berjalan</button>
-                                    <button onClick={() => applyFilter("closed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "closed" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Tutup</button>
+                                    <button onClick={() => applyFilter("")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${!status ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Semua</button>
+                                    <button onClick={() => applyFilter("open")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "open" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Berjalan</button>
+                                    <button onClick={() => applyFilter("closed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${status === "closed" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Tutup</button>
                                 </Dropdown.Content>
                             </Dropdown>
                         </div>
@@ -197,8 +197,8 @@ export default function Index({
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full min-w-[640px] text-left text-sm">
-                            <thead>
-                                <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                <tr>
                                     {[
                                         "No. Shift",
                                         "Kasir",
@@ -211,14 +211,14 @@ export default function Index({
                                     ].map((h, i) => (
                                         <th
                                             key={i}
-                                            className="px-4 py-3 text-xs font-semibold text-muted-foreground"
+                                            className="px-4 py-3 font-semibold"
                                         >
                                             {h}
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border bg-background">
                                 {list.length === 0 ? (
                                     <tr>
                                         <td
@@ -232,7 +232,7 @@ export default function Index({
                                     list.map((shift) => (
                                         <tr
                                             key={shift.id}
-                                            className="hover:bg-muted/50"
+                                            className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                         >
                                             <td className="px-4 py-3 font-mono text-xs font-medium text-foreground">
                                                 {shift.shift_no}
@@ -274,7 +274,7 @@ export default function Index({
                                                             "admin.cashier-shifts.show",
                                                             shift.id,
                                                         )}
-                                                        className="rounded-lg px-2.5 py-1 text-xs font-medium text-primary-600 hover:bg-primary-50"
+                                                        className="rounded-lg px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/10"
                                                     >
                                                         Detail
                                                     </Link>

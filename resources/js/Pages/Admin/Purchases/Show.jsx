@@ -103,7 +103,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                     <>
                         <Link
                             href={route("admin.purchases.edit", purchase.id)}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-primary-300 bg-card px-3.5 py-2 text-sm font-semibold text-primary-600 transition hover:bg-primary-50"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-card px-3.5 py-2 text-sm font-semibold text-primary transition hover:bg-primary/10"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -122,7 +122,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                         </Link>
                         <button
                             onClick={() => setConfirmingStatus("completed")}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3.5 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-500/30 transition hover:from-emerald-600 hover:to-emerald-700"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-success px-3.5 py-2 text-sm font-semibold text-success-foreground shadow-md shadow-success/30 transition hover:bg-success/90"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -141,7 +141,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                         </button>
                         <button
                             onClick={() => setConfirmingStatus("cancelled")}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-card px-3.5 py-2 text-sm font-semibold text-destructive transition hover:bg-destructive/10"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/30 bg-card px-3.5 py-2 text-sm font-semibold text-destructive transition hover:bg-destructive/10"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -204,30 +204,30 @@ export default function Show({ purchase, storeType = "retail" }) {
                         <div className="p-0">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
-                                    <thead>
-                                        <tr className="border-b border-border">
-                                            <th className="px-6 py-3 font-medium text-muted-foreground">
+                                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                        <tr>
+                                            <th className="px-6 py-3 font-semibold">
                                                 #
                                             </th>
-                                            <th className="px-6 py-3 font-medium text-muted-foreground">
+                                            <th className="px-6 py-3 font-semibold">
                                                 {productLabel}
                                             </th>
-                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">
+                                            <th className="px-6 py-3 text-right font-semibold">
                                                 Qty
                                             </th>
-                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">
+                                            <th className="px-6 py-3 text-right font-semibold">
                                                 Harga
                                             </th>
-                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">
+                                            <th className="px-6 py-3 text-right font-semibold">
                                                 Subtotal
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-y divide-border bg-background">
                                         {items.map((item, idx) => (
                                             <tr
                                                 key={item.id}
-                                                className="transition hover:bg-muted/50"
+                                                className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                             >
                                                 <td className="px-6 py-3.5 text-muted-foreground">
                                                     {idx + 1}
@@ -297,7 +297,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                                     <dt className="font-semibold text-foreground">
                                         Grand Total
                                     </dt>
-                                    <dd className="text-lg font-bold text-primary-600">
+                                    <dd className="text-lg font-bold text-primary">
                                         {fmtRp(purchase.grand_total)}
                                     </dd>
                                 </div>
@@ -311,7 +311,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                                         Sisa Bayar
                                     </dt>
                                     <dd
-                                        className={`font-semibold ${Number(purchase.grand_total) - Number(purchase.paid_amount) > 0 ? "text-rose-600" : "text-emerald-600"}`}
+                                        className={`font-semibold ${Number(purchase.grand_total) - Number(purchase.paid_amount) > 0 ? "text-destructive" : "text-success"}`}
                                     >
                                         {fmtRp(
                                             Number(purchase.grand_total) -
@@ -342,7 +342,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                                                 {fmtShort(pay.paid_at)}{" "}
                                                 {fmtTime(pay.paid_at)}
                                             </span>
-                                            <span className="text-sm font-semibold text-emerald-600">
+                                            <span className="text-sm font-semibold text-success">
                                                 {fmtRp(pay.amount)}
                                             </span>
                                         </div>
@@ -415,12 +415,12 @@ export default function Show({ purchase, storeType = "retail" }) {
                     className="fixed inset-0 z-50 flex items-center justify-center p-4"
                     onMouseDown={() => !processing && setConfirmingStatus(null)}
                 >
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity" />
                     <div
-                        className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
+                        className="relative w-full max-w-sm rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-lg font-semibold text-foreground">
+                        <h3 className="text-lg font-semibold text-popover-foreground">
                             {confirmingStatus === "completed"
                                 ? "Selesaikan Pembelian?"
                                 : "Batalkan Pembelian?"}
@@ -441,7 +441,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                             <button
                                 onClick={() => handleStatus(confirmingStatus)}
                                 disabled={processing}
-                                className={`rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md transition disabled:opacity-60 ${confirmingStatus === "completed" ? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-emerald-500/30 hover:from-emerald-600 hover:to-emerald-700" : "bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/30 hover:from-red-600 hover:to-red-700"}`}
+                                className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-md transition disabled:opacity-60 ${confirmingStatus === "completed" ? "bg-success text-success-foreground shadow-success/30 hover:bg-success/90" : "bg-destructive text-destructive-foreground shadow-destructive/30 hover:bg-destructive/90"}`}
                             >
                                 {processing
                                     ? "Memproses..."
@@ -485,8 +485,8 @@ function Row({ label, value, valueCls = "" }) {
 function StatusBadge({ status }) {
     const map = {
         draft: "bg-muted text-muted-foreground",
-        completed: "bg-emerald-100 text-success",
-        cancelled: "bg-red-100 text-destructive",
+        completed: "bg-success/10 text-success",
+        cancelled: "bg-destructive/10 text-destructive",
     };
     const label = {
         draft: "Draft",
@@ -504,9 +504,9 @@ function StatusBadge({ status }) {
 
 function PaymentBadge({ status }) {
     const map = {
-        unpaid: "bg-rose-100 text-rose-600",
-        partial: "bg-amber-100 text-amber-700",
-        paid: "bg-emerald-100 text-success",
+        unpaid: "bg-destructive/10 text-destructive",
+        partial: "bg-warning/10 text-warning",
+        paid: "bg-success/10 text-success",
     };
     const label = { unpaid: "Belum Bayar", partial: "Sebagian", paid: "Lunas" };
     return (

@@ -7,8 +7,8 @@ import Button from "@/Components/ui/Button";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 const STATUS_CONFIG = {
-    draft: { label: "Draft", className: "bg-amber-100 text-amber-700" },
-    posted: { label: "Posted", className: "bg-emerald-100 text-success" },
+    draft: { label: "Draft", className: "bg-warning/10 text-warning" },
+    posted: { label: "Posted", className: "bg-success/10 text-success" },
     cancelled: {
         label: "Dibatalkan",
         className: "bg-muted text-muted-foreground",
@@ -177,17 +177,17 @@ export default function Index({ expenses }) {
                 <div className="hidden md:block">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-border">
-                            <thead className="bg-muted/50">
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">No. Pengeluaran</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tanggal</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kategori</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jumlah</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aksi</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">No. Pengeluaran</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Tanggal</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Kategori</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Jumlah</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Status</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border bg-background">
                                 {filtered.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className="px-5 py-16 text-center">
@@ -209,11 +209,11 @@ export default function Index({ expenses }) {
                                     </tr>
                                 ) : (
                                     filtered.map((exp) => (
-                                        <tr key={exp.id} className="transition hover:bg-muted/50">
+                                        <tr key={exp.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-50 to-violet-50 text-sm">
-                                                        <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-violet-50 dark:to-violet-900/30 text-sm">
+                                                        <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.012-1.244h3.859m-18.75 0V6a2.25 2.25 0 012.25-2.25h15a2.25 2.25 0 012.25 2.25v7.5m-18.75 0H21" />
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v5.25m0 0l2.25-2.25M12 13.5L9.75 11.25" />
                                                         </svg>
@@ -234,7 +234,7 @@ export default function Index({ expenses }) {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Link
                                                         href={route("admin.expenses.show", exp.id)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                         title="Lihat Detail"
                                                     >
                                                         <Eye className="h-4 w-4" strokeWidth={1.8} />
@@ -309,7 +309,7 @@ export default function Index({ expenses }) {
                                     {exp.status === "draft" && (
                                         <button
                                             onClick={() => setTarget(exp)}
-                                            className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-red-100"
+                                            className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/20"
                                         >
                                             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                             Hapus

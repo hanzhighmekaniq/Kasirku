@@ -25,7 +25,7 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
     };
 
     const purchaseStatus = (s) => {
-        const map = { draft: 'bg-muted text-muted-foreground', pending: 'bg-amber-100 text-amber-700', partial: 'bg-blue-100 text-blue-700', paid: 'bg-emerald-100 text-success', cancelled: 'bg-red-100 text-destructive' };
+        const map = { draft: 'bg-muted text-muted-foreground', pending: 'bg-warning/10 text-warning', partial: 'bg-primary/10 text-primary', paid: 'bg-success/10 text-success', cancelled: 'bg-destructive/10 text-destructive' };
         const label = { draft: 'Draft', pending: 'Belum Bayar', partial: 'Bayar Sebagian', paid: 'Lunas', cancelled: 'Dibatalkan' };
         return <span className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[s] ?? 'bg-muted text-muted-foreground'}`}>{label[s] ?? s}</span>;
     };
@@ -48,7 +48,7 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                 breadcrumbs={["Admin", "Supplier", "Detail"]}
                 heading={
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-sm font-bold text-white shadow-sm">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-sm">
                             {supplier.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
@@ -97,8 +97,8 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                             </div>
                             <div className="p-6">
                                 <dl className="space-y-3 text-sm">
-                                    <InfoRow label="Telepon" value={supplier.phone ? <a href={`tel:${supplier.phone}`} className="text-primary-600 hover:text-primary-800 transition">{supplier.phone}</a> : <span className="text-muted-foreground/50">-</span>} />
-                                    <InfoRow label="Email" value={supplier.email ? <a href={`mailto:${supplier.email}`} className="text-primary-600 hover:text-primary-800 transition truncate block max-w-[200px] text-right">{supplier.email}</a> : <span className="text-muted-foreground/50">-</span>} />
+                                    <InfoRow label="Telepon" value={supplier.phone ? <a href={`tel:${supplier.phone}`} className="text-primary hover:text-primary/80 transition">{supplier.phone}</a> : <span className="text-muted-foreground/50">-</span>} />
+                                    <InfoRow label="Email" value={supplier.email ? <a href={`mailto:${supplier.email}`} className="text-primary hover:text-primary/80 transition truncate block max-w-[200px] text-right">{supplier.email}</a> : <span className="text-muted-foreground/50">-</span>} />
                                     <InfoRow label="Kontak Person" value={supplier.contact_person || <span className="text-muted-foreground/50">-</span>} />
                                 </dl>
                             </div>
@@ -116,10 +116,10 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                     {/* Tabs: Purchases / Products */}
                     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                         <div className="flex border-b border-border">
-                            <button onClick={() => setActiveTab('purchases')} className={`flex-1 px-6 py-3.5 text-sm font-medium transition ${activeTab === 'purchases' ? 'border-b-2 border-primary-500 text-primary-600' : 'text-muted-foreground hover:text-foreground'}`}>
+                            <button onClick={() => setActiveTab('purchases')} className={`flex-1 px-6 py-3.5 text-sm font-medium transition ${activeTab === 'purchases' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
                                 Riwayat Pembelian
                             </button>
-                            <button onClick={() => setActiveTab('products')} className={`flex-1 px-6 py-3.5 text-sm font-medium transition ${activeTab === 'products' ? 'border-b-2 border-primary-500 text-primary-600' : 'text-muted-foreground hover:text-foreground'}`}>
+                            <button onClick={() => setActiveTab('products')} className={`flex-1 px-6 py-3.5 text-sm font-medium transition ${activeTab === 'products' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
                                 Produk ({products.length})
                             </button>
                         </div>
@@ -127,22 +127,22 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                         {activeTab === 'purchases' && (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
-                                    <thead>
-                                        <tr className="border-b border-border">
-                                            <th className="px-6 py-3 font-medium text-muted-foreground">No. Pembelian</th>
-                                            <th className="px-6 py-3 font-medium text-muted-foreground">Tanggal</th>
-                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">Total</th>
-                                            <th className="px-6 py-3 text-center font-medium text-muted-foreground">Status</th>
+                                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                        <tr>
+                                            <th className="px-6 py-3 font-semibold">No. Pembelian</th>
+                                            <th className="px-6 py-3 font-semibold">Tanggal</th>
+                                            <th className="px-6 py-3 text-right font-semibold">Total</th>
+                                            <th className="px-6 py-3 text-center font-semibold">Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-y divide-border bg-background">
                                         {recentPurchases.length === 0 ? (
                                             <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-muted-foreground">Belum ada riwayat pembelian.</td></tr>
                                         ) : (
                                             recentPurchases.map((p) => (
-                                                <tr key={p.id} className="transition hover:bg-muted/50">
+                                                <tr key={p.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                                     <td className="px-6 py-3.5">
-                                                        <Link href={route('admin.purchases.show', p.id)} className="font-semibold text-primary-600 hover:text-primary-800">{p.purchase_no}</Link>
+                                                        <Link href={route('admin.purchases.show', p.id)} className="font-semibold text-primary hover:text-primary/80">{p.purchase_no}</Link>
                                                     </td>
                                                     <td className="px-6 py-3.5 text-muted-foreground">{fmtDate(p.purchase_date)}</td>
                                                     <td className="px-6 py-3.5 text-right font-medium text-foreground">{fmtCurrency(p.grand_total)}</td>
@@ -158,25 +158,25 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                         {activeTab === 'products' && (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
-                                    <thead>
-                                        <tr className="border-b border-border">
-                                            <th className="px-6 py-3 font-medium text-muted-foreground">Produk</th>
-                                            <th className="px-6 py-3 font-medium text-muted-foreground">SKU</th>
-                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">Harga Beli</th>
-                                            <th className="px-6 py-3 text-center font-medium text-muted-foreground">Stok</th>
+                                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                        <tr>
+                                            <th className="px-6 py-3 font-semibold">Produk</th>
+                                            <th className="px-6 py-3 font-semibold">SKU</th>
+                                            <th className="px-6 py-3 text-right font-semibold">Harga Beli</th>
+                                            <th className="px-6 py-3 text-center font-semibold">Stok</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-y divide-border bg-background">
                                         {products.length === 0 ? (
                                             <tr><td colSpan={4} className="px-6 py-10 text-center text-sm text-muted-foreground">Tidak ada produk dari supplier ini.</td></tr>
                                         ) : (
                                             products.map((p) => (
-                                                <tr key={p.id} className="transition hover:bg-muted/50">
+                                                <tr key={p.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                                     <td className="px-6 py-3.5 font-medium text-foreground">{p.name}</td>
                                                     <td className="px-6 py-3.5 font-mono text-xs text-muted-foreground">{p.sku}</td>
                                                     <td className="px-6 py-3.5 text-right text-muted-foreground">{fmtCurrency(p.cost_price)}</td>
                                                     <td className="px-6 py-3.5 text-center">
-                                                        <span className={`inline-flex min-w-[28px] justify-center rounded-lg px-2 py-0.5 text-xs font-semibold ${(p.stocks_sum_quantity ?? 0) > 0 ? 'bg-success/10 text-emerald-600' : 'bg-destructive/10 text-destructive'}`}>
+                                                        <span className={`inline-flex min-w-[28px] justify-center rounded-lg px-2 py-0.5 text-xs font-semibold ${(p.stocks_sum_quantity ?? 0) > 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
                                                             {p.stocks_sum_quantity ?? 0}
                                                         </span>
                                                     </td>
@@ -200,8 +200,8 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                             <dl className="space-y-3 text-sm">
                                 <InfoRow label="Kode" value={<span className="rounded-lg bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">{supplier.code}</span>} />
                                 <InfoRow label="Nama" value={supplier.name} />
-                                <InfoRow label="Produk" value={<span className="font-semibold text-blue-600">{supplier.products_count ?? 0}</span>} />
-                                <InfoRow label="Pembelian" value={<span className="font-semibold text-emerald-600">{supplier.purchases_count ?? 0}</span>} />
+                                <InfoRow label="Produk" value={<span className="font-semibold text-primary">{supplier.products_count ?? 0}</span>} />
+                                <InfoRow label="Pembelian" value={<span className="font-semibold text-success">{supplier.purchases_count ?? 0}</span>} />
                                 <div className="my-2 border-t border-border" />
                                 <InfoRow label="Dibuat" value={fmtDate(supplier.created_at)} />
                                 {supplier.updated_at !== supplier.created_at && (
@@ -249,8 +249,8 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
 }
 
 function MiniStat({ title, value, color }) {
-    const colors = { emerald: 'border-success/20 bg-success/10', blue: 'border-blue-200 bg-blue-50', slate: 'border-border bg-card', red: 'border-destructive/20 bg-destructive/10' };
-    const textColors = { emerald: 'text-success', blue: 'text-blue-700', slate: 'text-foreground', red: 'text-destructive' };
+    const colors = { emerald: 'border-success/20 bg-success/10', blue: 'border-primary/20 bg-primary/10', slate: 'border-border bg-card', red: 'border-destructive/20 bg-destructive/10' };
+    const textColors = { emerald: 'text-success', blue: 'text-primary', slate: 'text-foreground', red: 'text-destructive' };
     return (
         <div className={`rounded-2xl border p-4 shadow-sm ${colors[color]}`}>
             <p className="text-xs font-medium text-muted-foreground">{title}</p>

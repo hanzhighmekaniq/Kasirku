@@ -18,9 +18,9 @@ export default function HospitalityKasir(props) {
     }
 
     const stMap = {
-        free: { c: "bg-card border-border text-card-foreground hover:border-slate-900", l: "Vacant" },
-        occupied: { c: "bg-indigo-500 text-white border-primary shadow-sm", l: "Occupied" },
-        dirty: { c: "bg-warning/10 border-warning/10 text-warning", l: "Housekeeping" },
+        free: { c: "bg-card border-border text-foreground hover:border-border", l: "Vacant" },
+        occupied: { c: "bg-primary text-primary-foreground border-primary shadow-sm", l: "Occupied" },
+        dirty: { c: "bg-warning/10 border-warning/30 text-warning", l: "Housekeeping" },
         reserved: { c: "bg-primary text-primary-foreground border-slate-900", l: "Reserved" },
     };
 
@@ -51,8 +51,8 @@ export default function HospitalityKasir(props) {
                         </div>
                         <div className="flex items-center gap-2 text-[11px]">
                             <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-card border border-border"></span>Vacant</span>
-                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-indigo-500"></span>Occupied</span>
-                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-amber-100 border border-warning/10"></span>Housekeeping</span>
+                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-primary"></span>Occupied</span>
+                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-warning/20 border border-warning/30"></span>Housekeeping</span>
                             <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-primary"></span>Reserved</span>
                         </div>
                     </div>
@@ -88,10 +88,10 @@ export default function HospitalityKasir(props) {
                             </div>
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-2 text-[12px]">
-                            <div className="rounded-lg bg-muted/50 p-2.5"><div className="text-[10px] text-muted-foreground uppercase">Check-in</div><div className="font-semibold mt-0.5">Nov 12 · 15:00</div></div>
-                            <div className="rounded-lg bg-muted/50 p-2.5"><div className="text-[10px] text-muted-foreground uppercase">Check-out</div><div className="font-semibold mt-0.5">Nov 15 · 12:00</div></div>
-                            <div className="rounded-lg bg-muted/50 p-2.5"><div className="text-[10px] text-muted-foreground uppercase">Room</div><div className="font-semibold mt-0.5">Deluxe 305</div></div>
-                            <div className="rounded-lg bg-muted/50 p-2.5"><div className="text-[10px] text-muted-foreground uppercase">Guests</div><div className="font-semibold mt-0.5">2 adults</div></div>
+                            <div className="rounded-lg bg-muted p-2.5"><div className="text-[10px] text-muted-foreground uppercase">Check-in</div><div className="font-semibold mt-0.5">Nov 12 · 15:00</div></div>
+                            <div className="rounded-lg bg-muted p-2.5"><div className="text-[10px] text-muted-foreground uppercase">Check-out</div><div className="font-semibold mt-0.5">Nov 15 · 12:00</div></div>
+                            <div className="rounded-lg bg-muted p-2.5"><div className="text-[10px] text-muted-foreground uppercase">Room</div><div className="font-semibold mt-0.5">Deluxe 305</div></div>
+                            <div className="rounded-lg bg-muted p-2.5"><div className="text-[10px] text-muted-foreground uppercase">Guests</div><div className="font-semibold mt-0.5">2 adults</div></div>
                         </div>
                         <div className="mt-3 flex flex-wrap gap-1.5">
                             <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[10.5px] font-medium text-primary border border-primary/10">Late checkout</span>
@@ -133,7 +133,7 @@ export default function HospitalityKasir(props) {
                 {bookings.map((b, i) => (
                     <div key={i} className="flex items-center gap-2 py-1.5">
                         <div className="w-40 text-[11.5px] font-medium">{b.g}</div>
-                        <div className="flex-1 relative h-7 bg-muted/50 rounded-lg">
+                        <div className="flex-1 relative h-7 bg-muted rounded-lg">
                             <div className={`absolute top-1 bottom-1 ${b.tone} rounded-md text-white text-[10.5px] font-medium px-2 flex items-center`} style={{ left: `${(b.s / 7) * 100}%`, width: `${((b.e - b.s) / 7) * 100}%` }}>{b.e - b.s} nights</div>
                         </div>
                     </div>

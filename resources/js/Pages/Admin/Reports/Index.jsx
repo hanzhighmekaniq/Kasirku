@@ -161,15 +161,15 @@ export default function Index({
                                     onClick={() => toggleBranch(b.id)}
                                     className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                                         pendingBranchIds.includes(b.id)
-                                            ? "border-primary-400 bg-primary-50 text-primary-700"
-                                            : "border-border bg-card text-muted-foreground hover:border-border"
+                                            ? "border-primary/20 bg-primary/10 text-primary"
+                                            : "border-border bg-card text-muted-foreground hover:border-primary/40"
                                     }`}
                                 >
                                     <input
                                         type="checkbox"
                                         checked={pendingBranchIds.includes(b.id)}
                                         onChange={() => toggleBranch(b.id)}
-                                        className="h-3.5 w-3.5 rounded border-border text-primary-600 focus:ring-primary-500"
+                                        className="h-3.5 w-3.5 rounded border-input text-primary focus:ring-ring"
                                     />
                                     {b.name}
                                 </button>
@@ -194,7 +194,7 @@ export default function Index({
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full rounded-xl border border-border px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
                             <span className="pb-2 text-muted-foreground">—</span>
@@ -206,7 +206,7 @@ export default function Index({
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="w-full rounded-xl border border-border px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
                         </div>
@@ -218,7 +218,7 @@ export default function Index({
                                     key={p.label}
                                     type="button"
                                     onClick={() => applyPreset(p)}
-                                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-primary-400 hover:text-primary-700"
+                                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-primary"
                                 >
                                     {p.label}
                                 </button>
@@ -350,7 +350,7 @@ export default function Index({
                                                 .trim()}
                                         </span>
                                         <div
-                                            className="w-full rounded-t-md bg-gradient-to-t from-primary-500 to-primary-400 transition-all hover:from-primary-600 hover:to-primary-500"
+                                            className="w-full rounded-t-md bg-primary transition-all hover:bg-primary/90"
                                             style={{
                                                 height: `${(d.total / maxDaily) * 100}%`,
                                                 minHeight:
@@ -384,18 +384,18 @@ export default function Index({
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        <th className="px-5 py-2.5">Produk</th>
-                                        <th className="px-5 py-2.5 text-right">
+                                <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                    <tr>
+                                        <th className="px-5 py-2.5 text-left font-semibold">Produk</th>
+                                        <th className="px-5 py-2.5 text-right font-semibold">
                                             Qty
                                         </th>
-                                        <th className="px-5 py-2.5 text-right">
+                                        <th className="px-5 py-2.5 text-right font-semibold">
                                             Pendapatan
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-y divide-border bg-background">
                                     {topProducts.length === 0 ? (
                                         <tr>
                                             <td
@@ -409,7 +409,7 @@ export default function Index({
                                         topProducts.map((p, i) => (
                                             <tr
                                                 key={i}
-                                                className="transition hover:bg-muted/50"
+                                                className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                             >
                                                 <td className="px-4 sm:px-5 py-3">
                                                     <div className="flex items-center gap-2">
@@ -539,25 +539,25 @@ function SummaryCard({
     highlight = false,
 }) {
     const gradientMap = {
-        emerald: "from-emerald-50 to-emerald-100/40",
-        indigo: "from-primary-50 to-primary-100/40",
-        amber: "from-amber-50 to-amber-100/40",
-        red: "from-red-50 to-red-100/40",
-        violet: "from-violet-50 to-violet-100/40",
+        emerald: "from-success/10 to-success/5",
+        indigo: "from-primary/10 to-primary/5",
+        amber: "from-warning/10 to-warning/5",
+        red: "from-destructive/10 to-destructive/5",
+        violet: "from-violet-500/10 to-violet-500/5",
     };
     const textMap = {
-        emerald: "text-emerald-600",
-        indigo: "text-primary-600",
-        amber: "text-amber-600",
+        emerald: "text-success",
+        indigo: "text-primary",
+        amber: "text-warning",
         red: "text-destructive",
-        violet: "text-violet-600",
+        violet: "text-violet-600 dark:text-violet-400",
     };
     const accentMap = {
-        emerald: "border-emerald-400",
-        indigo: "border-primary-400",
-        amber: "border-amber-400",
-        red: "border-red-400",
-        violet: "border-violet-400",
+        emerald: "border-success/40",
+        indigo: "border-primary/40",
+        amber: "border-warning/40",
+        red: "border-destructive/40",
+        violet: "border-violet-500/40",
     };
 
     const cardBg = highlight ? `bg-gradient-to-br ${gradientMap[color]}` : "bg-card";
@@ -567,7 +567,7 @@ function SummaryCard({
         <div
             className={`rounded-2xl border-l-4 border ${cardBg} ${cardBorder} p-4 shadow-sm transition-all hover:shadow-md`}
         >
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-card shadow-sm ring-1 ring-slate-100">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-card shadow-sm ring-1 ring-border">
                 <svg
                     className={`h-5 w-5 ${textMap[color]}`}
                     fill="none"

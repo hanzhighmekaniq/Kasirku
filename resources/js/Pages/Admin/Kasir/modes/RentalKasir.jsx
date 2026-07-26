@@ -23,9 +23,9 @@ export default function RentalKasir(props) {
     const checklist = ["ID scanned", "Rental contract signed", "Equipment inspected", "Insurance opted-in"];
 
     const toneMap = {
-        success: "bg-success/10 text-success border border-emerald-100",
-        warn: "bg-warning/10 text-warning border border-amber-100",
-        danger: "bg-destructive/5 text-destructive border border-rose-100",
+        success: "bg-success/10 text-success border border-success/20",
+        warn: "bg-warning/10 text-warning border border-warning/20",
+        danger: "bg-destructive/5 text-destructive border border-destructive/20",
     };
 
     const mainContent = (
@@ -77,7 +77,7 @@ export default function RentalKasir(props) {
                         <div className="mt-2 space-y-1.5 text-[12.5px]">
                             {checklist.map((x, i) => (
                                 <div key={i} className="flex items-center gap-2">
-                                    <span className={`h-4 w-4 rounded-md border ${i < 3 ? "bg-success border-emerald-500 text-white grid place-items-center" : "border-slate-300"}`}>{i < 3 ? "✓" : ""}</span>
+                                    <span className={`h-4 w-4 rounded-md border ${i < 3 ? "bg-success border-success/50 text-success-foreground grid place-items-center" : "border-border"}`}>{i < 3 ? "✓" : ""}</span>
                                     {x}
                                 </div>
                             ))}

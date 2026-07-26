@@ -52,7 +52,7 @@ export default function AdjustmentModal({ show, onClose, k }) {
         <button
             type="button"
             onClick={onClick}
-            className={`rounded-lg py-1.5 text-[12px] font-semibold transition ${active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-card-foreground"}`}
+            className={`rounded-lg py-1.5 text-[12px] font-semibold transition ${active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
         >
             {label}
         </button>
@@ -67,7 +67,7 @@ export default function AdjustmentModal({ show, onClose, k }) {
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder="0"
-                className="block w-full rounded-xl border-border bg-muted/50 py-2.5 pr-9 text-sm shadow-sm transition focus:border-slate-400 focus:bg-card focus:ring-2 focus:ring-slate-100"
+                className="block w-full rounded-xl border-input bg-background py-2.5 pr-9 text-sm shadow-sm transition focus:border-ring focus:bg-card focus:ring-2 focus:ring-ring/20"
             />
             <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground/60">
                 %
@@ -106,7 +106,7 @@ export default function AdjustmentModal({ show, onClose, k }) {
                     <button
                         type="button"
                         onClick={apply}
-                        className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700"
+                        className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                     >
                         Terapkan
                     </button>
@@ -134,7 +134,7 @@ export default function AdjustmentModal({ show, onClose, k }) {
                         value={dReason}
                         onChange={(e) => setDReason(e.target.value)}
                         placeholder="Alasan (opsional)"
-                        className="block w-full rounded-xl border-border bg-muted/50 py-2 text-sm shadow-sm transition focus:border-slate-400 focus:bg-card focus:ring-2 focus:ring-slate-100"
+                        className="block w-full rounded-xl border-input bg-background py-2 text-sm shadow-sm transition focus:border-ring focus:bg-card focus:ring-2 focus:ring-ring/20"
                     />
                 </div>
 
@@ -158,7 +158,7 @@ export default function AdjustmentModal({ show, onClose, k }) {
                         value={tName}
                         onChange={(e) => setTName(e.target.value)}
                         placeholder="Nama pajak (mis. PPN)"
-                        className="block w-full rounded-xl border-border bg-muted/50 py-2 text-sm shadow-sm transition focus:border-slate-400 focus:bg-card focus:ring-2 focus:ring-slate-100"
+                        className="block w-full rounded-xl border-input bg-background py-2 text-sm shadow-sm transition focus:border-ring focus:bg-card focus:ring-2 focus:ring-ring/20"
                     />
                 </div>
             </div>
@@ -189,13 +189,13 @@ export default function AdjustmentModal({ show, onClose, k }) {
                 {ongkir > 0 && (
                     <div className="flex items-center justify-between text-muted-foreground">
                         <span>Ongkir</span>
-                        <span className="font-medium tabular-nums text-card-foreground">
+                    <span className="font-medium tabular-nums text-foreground">
                             +{k.fmt(ongkir)}
                         </span>
                     </div>
                 )}
-                <div className="mt-1.5 flex items-baseline justify-between border-t border-dashed border-slate-300 pt-2.5">
-                    <span className="font-bold text-card-foreground">Total</span>
+                <div className="mt-1.5 flex items-baseline justify-between border-t border-dashed border-border pt-2.5">
+                    <span className="font-bold text-foreground">Total</span>
                     <span className="text-xl font-bold tabular-nums text-foreground">
                         {k.fmt(total)}
                     </span>

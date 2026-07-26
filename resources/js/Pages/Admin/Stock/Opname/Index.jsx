@@ -73,31 +73,31 @@ export default function Index({ opnames, stats }) {
             <Head title="Opname Stok" />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{flash.success}</div>
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
             )}
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl border border-border border-l-4 border-l-slate-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-muted-foreground bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Total</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.total}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-warning bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Draft</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.draft}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-success bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Selesai</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.completed}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-red-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-destructive bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Dibatalkan</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.cancelled}</p>
                 </div>
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
                 <div className="border-b border-border bg-card p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -108,7 +108,7 @@ export default function Index({ opnames, stats }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari no. opname..."
-                                className="block w-full rounded-xl border border-border bg-input py-2.5 pl-10 pr-4 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                         <Select
@@ -143,23 +143,23 @@ export default function Index({ opnames, stats }) {
                 {/* Desktop Table */}
                 <div className="hidden md:block">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-200">
-                            <thead className="bg-muted/50">
+                        <table className="min-w-full divide-y divide-border">
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">No. Opname</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tanggal</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Oleh</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aksi</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">No. Opname</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Tanggal</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Oleh</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Status</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-border bg-background">
                                 {filtered.length === 0 ? (
                                     <tr>
                                         <td colSpan={5} className="px-5 py-16 text-center">
                                             <div className="flex flex-col items-center">
                                                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                                    <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                                                    <svg className="h-8 w-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                                                     </svg>
@@ -175,11 +175,11 @@ export default function Index({ opnames, stats }) {
                                     </tr>
                                 ) : (
                                     filtered.map((o) => (
-                                        <tr key={o.id} className="transition hover:bg-muted/50">
+                                        <tr key={o.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <Link
                                                     href={route('admin.stock-opnames.show', o.id)}
-                                                    className="text-sm font-semibold text-primary-600 hover:text-primary-800"
+                                                    className="text-sm font-semibold text-primary hover:text-primary/80"
                                                 >
                                                     {o.opname_no}
                                                 </Link>
@@ -193,7 +193,7 @@ export default function Index({ opnames, stats }) {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Link
                                                         href={route('admin.stock-opnames.show', o.id)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                         title="Lihat Detail"
                                                     >
                                                         <Eye className="h-4 w-4" strokeWidth={1.8} />
@@ -201,7 +201,7 @@ export default function Index({ opnames, stats }) {
                                                     {(o.status === 'draft' || o.status === 'cancelled') && (
                                                         <button
                                                             onClick={() => setConfirmDelete(o)}
-                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                                                             title="Hapus"
                                                         >
                                                             <Trash2 className="h-4 w-4" strokeWidth={1.8} />
@@ -222,7 +222,7 @@ export default function Index({ opnames, stats }) {
                     {filtered.length === 0 ? (
                         <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
                             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                                <svg className="h-8 w-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                                 </svg>
@@ -241,7 +241,7 @@ export default function Index({ opnames, stats }) {
                                     <div className="min-w-0 flex-1">
                                         <Link
                                             href={route('admin.stock-opnames.show', o.id)}
-                                            className="text-sm font-semibold text-primary-600 hover:text-primary-800"
+                                            className="text-sm font-semibold text-primary hover:text-primary/80"
                                         >
                                             {o.opname_no}
                                         </Link>
@@ -262,7 +262,7 @@ export default function Index({ opnames, stats }) {
                                 <div className="mt-3 flex items-center justify-end gap-1 border-t border-border pt-3">
                                     <Link
                                         href={route('admin.stock-opnames.show', o.id)}
-                                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-slate-200"
+                                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent hover:text-accent-foreground"
                                     >
                                         <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
                                         Lihat
@@ -270,7 +270,7 @@ export default function Index({ opnames, stats }) {
                                     {(o.status === 'draft' || o.status === 'cancelled') && (
                                         <button
                                             onClick={() => setConfirmDelete(o)}
-                                            className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100"
+                                            className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/20"
                                         >
                                             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                             Hapus
@@ -286,14 +286,14 @@ export default function Index({ opnames, stats }) {
             {/* Confirm delete modal */}
             {confirmDelete && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onMouseDown={() => !processing && setConfirmDelete(null)}>
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
-                    <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity" />
+                    <div className="relative w-full max-w-sm rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
                         <div className="flex items-start gap-4">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100">
-                                <Trash2 className="h-6 w-6 text-red-600" strokeWidth={1.8} />
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                                <Trash2 className="h-6 w-6 text-destructive" strokeWidth={1.8} />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <h3 className="text-base font-semibold text-slate-900">Hapus Opname?</h3>
+                                <h3 className="text-base font-semibold text-popover-foreground">Hapus Opname?</h3>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     Opname <strong>{confirmDelete.opname_no}</strong> akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
                                 </p>
@@ -301,7 +301,7 @@ export default function Index({ opnames, stats }) {
                         </div>
                         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                             <button onClick={() => setConfirmDelete(null)} disabled={processing} className="inline-flex justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60">Batal</button>
-                            <button onClick={handleDelete} disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/30 transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-60">
+                            <button onClick={handleDelete} disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground shadow-lg shadow-destructive/30 transition hover:bg-destructive/90 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2 disabled:opacity-60">
                                 {processing ? 'Menghapus...' : 'Ya, Hapus'}
                             </button>
                         </div>
@@ -313,10 +313,10 @@ export default function Index({ opnames, stats }) {
 }
 
 function StatusBadge({ status }) {
-    const map = { draft: 'bg-muted text-foreground', in_progress: 'bg-blue-100 text-blue-700', completed: 'bg-emerald-100 text-emerald-700', cancelled: 'bg-red-100 text-red-600' };
+    const map = { draft: 'bg-warning/10 text-warning', in_progress: 'bg-primary/10 text-primary', completed: 'bg-success/10 text-success', cancelled: 'bg-destructive/10 text-destructive' };
     const label = { draft: 'Draft', in_progress: 'Dikerjakan', completed: 'Selesai', cancelled: 'Dibatalkan' };
     return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? 'bg-muted text-foreground'}`}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? 'bg-muted text-muted-foreground'}`}>
             {label[status] ?? status}
         </span>
     );

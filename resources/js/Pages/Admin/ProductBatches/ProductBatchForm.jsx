@@ -71,17 +71,17 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         }}
                         onFocus={() => setDropdownOpen(true)}
                         placeholder="Cari produk (nama / SKU)..."
-                        className={`block w-full rounded-xl py-2.5 pl-10 pr-4 bg-input border border-border text-sm shadow-sm transition focus:ring-2 ${errors.product_id ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-ring focus:ring-ring/20'}`}
+                        className={`block w-full rounded-xl py-2.5 pl-10 pr-4 bg-background border border-input text-foreground text-sm shadow-sm transition focus:ring-2 ${errors.product_id ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-input focus:border-ring focus:ring-ring/20'}`}
                     />
                     {selectedProduct && (
-                        <button type="button" onClick={() => { setData((d) => ({ ...d, product_id: '', _cost_locked: false })); setDropdownSearch(''); setDropdownOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground">
+                        <button type="button" onClick={() => { setData((d) => ({ ...d, product_id: '', _cost_locked: false })); setDropdownSearch(''); setDropdownOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     )}
                 </div>
                 {errors.product_id && <p className="mt-1.5 text-sm text-destructive">{errors.product_id}</p>}
                 {dropdownOpen && (
-                    <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border bg-card shadow-xl">
+                    <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
                         <div className="max-h-72 overflow-y-auto p-1.5">
                             {dropdownProducts.length === 0 ? (
                                 <p className="px-3 py-4 text-center text-xs text-muted-foreground">Tidak ada produk ditemukan.</p>
@@ -117,7 +117,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         value={data.batch_no}
                         onChange={(e) => setData('batch_no', e.target.value)}
                         placeholder="cth. BATCH-20260601-001"
-                        className={`mt-1.5 block w-full rounded-xl bg-input text-foreground font-mono text-sm shadow-sm outline-none transition focus:ring-2 ${errors.batch_no ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-ring focus:ring-ring/20'}`}
+                        className={`mt-1.5 block w-full rounded-xl bg-background text-foreground font-mono text-sm shadow-sm outline-none transition focus:ring-2 ${errors.batch_no ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-input focus:border-ring focus:ring-ring/20'}`}
                     />
                     <p className="mt-1 text-xs text-muted-foreground">Harus unik per produk.</p>
                     {errors.batch_no && <p className="mt-1 text-sm text-destructive">{errors.batch_no}</p>}
@@ -146,7 +146,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         type="date"
                         value={data.purchase_date}
                         onChange={(e) => setData('purchase_date', e.target.value)}
-                        className="mt-1.5 block w-full rounded-xl border-border bg-input text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
+                        className="mt-1.5 block w-full rounded-xl border-input bg-background text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                     />
                     {errors.purchase_date && <p className="mt-1 text-sm text-destructive">{errors.purchase_date}</p>}
                 </div>
@@ -161,7 +161,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         type="date"
                         value={data.expiry_date}
                         onChange={(e) => setData('expiry_date', e.target.value)}
-                        className="mt-1.5 block w-full rounded-xl border-border bg-input text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
+                        className="mt-1.5 block w-full rounded-xl border-input bg-background text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                     />
                     <p className="mt-1 text-xs text-muted-foreground">Kosongkan jika produk tidak kadaluarsa.</p>
                     {errors.expiry_date && <p className="mt-1 text-sm text-destructive">{errors.expiry_date}</p>}
@@ -181,7 +181,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         placeholder="0"
                         value={data.quantity}
                         onChange={(e) => setData('quantity', e.target.value)}
-                        className={`mt-1.5 block w-full bg-input border border-border rounded-xl shadow-sm transition focus:ring-2 ${errors.quantity ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-border focus:border-ring focus:ring-ring/20'}`}
+                        className={`mt-1.5 block w-full bg-background text-foreground border border-input rounded-xl shadow-sm transition focus:ring-2 ${errors.quantity ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-input focus:border-ring focus:ring-ring/20'}`}
                     />
                     {errors.quantity && <p className="mt-1 text-sm text-destructive">{errors.quantity}</p>}
                 </div>

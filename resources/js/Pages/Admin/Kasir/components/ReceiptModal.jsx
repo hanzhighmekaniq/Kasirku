@@ -53,7 +53,7 @@ export default function ReceiptModal({
             <p className="mt-0.5 text-center text-muted-foreground">
                 {receipt.saleNo}
                 {receipt.isOffline && (
-                    <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-warning">
+                    <span className="ml-1.5 rounded-full bg-warning/10 px-1.5 py-0.5 text-[9px] font-semibold text-warning">
                         TMP
                     </span>
                 )}
@@ -67,7 +67,7 @@ export default function ReceiptModal({
                 </p>
             )}
             {receipt.takeawayCustomerName && !receipt.deliveryAddress && (
-                <p className="text-center text-card-foreground font-medium">
+                <p className="text-center text-foreground font-medium">
                     {receipt.takeawayCustomerName}
                 </p>
             )}
@@ -151,7 +151,7 @@ export default function ReceiptModal({
             {receipt.deliveryAddress && (
                 <>
                     {receipt.deliveryCustomerName && (
-                        <p className="text-center text-card-foreground font-medium">
+                        <p className="text-center text-foreground font-medium">
                             {receipt.deliveryCustomerName}
                         </p>
                     )}
@@ -160,12 +160,12 @@ export default function ReceiptModal({
                     </p>
                 </>
             )}
-            <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-border" />
 
             {receipt.items.map((item, i) => (
                 <div key={i} className="mb-1">
                     <div className="flex justify-between">
-                        <span className="text-card-foreground">
+                        <span className="text-foreground">
                             {item.name}
                             {item.variantName ? ` (${item.variantName})` : ""}
                         </span>
@@ -191,7 +191,7 @@ export default function ReceiptModal({
                 </div>
             ))}
 
-            <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-border" />
             <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>{fmt(receipt.subtotal)}</span>
@@ -209,7 +209,7 @@ export default function ReceiptModal({
                 </div>
             )}
             {receipt.discount > 0 && (
-                <div className="flex justify-between text-red-600">
+                <div className="flex justify-between text-destructive">
                     <span>Diskon</span>
                     <span>-{fmt(receipt.discount)}</span>
                 </div>
@@ -247,7 +247,7 @@ export default function ReceiptModal({
                 <>
                     <div className="my-3 border-t border-dashed border-amber-300" />
                     <div className="rounded-xl bg-warning/10 px-3 py-2.5 text-center">
-                        <p className="text-[10px] font-medium text-amber-800">
+                        <p className="text-[10px] font-medium text-warning/80">
                             Transaksi akan dikirim otomatis saat koneksi
                             kembali.
                         </p>
@@ -260,7 +260,7 @@ export default function ReceiptModal({
 
             {footer && (
                 <>
-            <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-border" />
             {/* Split bill summary jika ada */}
             {!splitPayer && receipt.splitPayers && receipt.splitPayers.length > 0 && (
                 <>
@@ -283,30 +283,30 @@ export default function ReceiptModal({
                             </div>
                         );
                     })}
-                    <div className="my-2 border-t border-dashed border-slate-300" />
+                    <div className="my-2 border-t border-dashed border-border" />
                 </>
             )}
             {/* Payer header jika ini struk per orang */}
             {splitPayer && (
                 <>
-                    <p className="text-center text-[11px] font-bold text-violet-700 mb-0.5">
+                    <p className="text-center text-[11px] font-bold text-violet-700 dark:text-violet-400 mb-0.5">
                         Struk untuk: {splitPayer.name || "Tamu"}
                     </p>
                     <p className="text-center text-[10px] text-muted-foreground mb-2">
                         Tagihan: {fmt(splitPayer.amount)}
                         {splitPayer.methodName ? ` · ${splitPayer.methodName}` : ""}
                     </p>
-                    <div className="my-2 border-t border-dashed border-slate-300" />
+                    <div className="my-2 border-t border-dashed border-border" />
                 </>
             )}
-            <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-border" />
                     <p className="whitespace-pre-wrap text-center text-muted-foreground">
                         {footer}
                     </p>
                 </>
             )}
 
-            <div className="my-3 border-t border-dashed border-slate-300" />
+            <div className="my-3 border-t border-dashed border-border" />
             <p className="text-center text-muted-foreground/60">
                 Terima kasih atas kunjungan Anda
             </p>
@@ -386,21 +386,21 @@ export default function ReceiptModal({
                         <button
                             type="button"
                             onClick={onNewTransaction}
-                            className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/30 transition hover:from-indigo-600 hover:to-violet-700"
+                            className="w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90"
                         >
                             Transaksi Baru
                         </button>
                         <button
                             type="button"
                             onClick={() => window.print()}
-                            className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted/50"
+                            className="rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted"
                         >
                             🖨️ Print
                         </button>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="rounded-xl border border-slate-300 px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted/50"
+                            className="rounded-xl border border-border px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted"
                         >
                             Tutup
                         </button>

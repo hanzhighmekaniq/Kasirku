@@ -5,11 +5,11 @@ import { Plus } from 'lucide-react';
 import Button from '@/Components/ui/Button';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
-const inputCls = 'block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20';
+const inputCls = 'block w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20';
 
 const SELECTION_LABEL = {
-    single: { label: 'Pilih 1', bg: 'bg-blue-100', text: 'text-blue-700' },
-    multiple: { label: 'Pilih Banyak', bg: 'bg-violet-100', text: 'text-violet-700' },
+    single: { label: 'Pilih 1', bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400' },
+    multiple: { label: 'Pilih Banyak', bg: 'bg-violet-100 dark:bg-violet-900/30', text: 'text-violet-700 dark:text-violet-400' },
 };
 
 /* ─── Modifier Form Modal ─── */
@@ -37,9 +37,9 @@ function ModifierForm({ group, modifier, onClose, onSaved }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div onClick={onClose} className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-            <div className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl sm:p-7">
-                <h3 className="text-base font-semibold text-foreground">{isEdit ? 'Edit Modifier' : 'Tambah Modifier'}</h3>
+            <div onClick={onClose} className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+            <div className="relative w-full max-w-md rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl sm:p-7">
+                <h3 className="text-base font-semibold text-popover-foreground">{isEdit ? 'Edit Modifier' : 'Tambah Modifier'}</h3>
                 <p className="mt-0.5 text-sm text-muted-foreground">Grup: {group.name}</p>
 
                 <form onSubmit={submit} className="mt-5 space-y-4">
@@ -65,7 +65,7 @@ function ModifierForm({ group, modifier, onClose, onSaved }) {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button type="button" onClick={() => setData('is_active', !data.is_active)} className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${data.is_active ? 'bg-primary-600' : 'bg-slate-200'}`}>
+                        <button type="button" onClick={() => setData('is_active', !data.is_active)} className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${data.is_active ? 'bg-primary' : 'bg-muted'}`}>
                             <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out ${data.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
                         </button>
                         <span className="text-sm font-medium text-foreground">Aktif</span>
@@ -101,8 +101,8 @@ function AttachProductModal({ group, products, onClose }) {
     if (available.length === 0) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div onClick={onClose} className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-                <div className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl text-center">
+                <div onClick={onClose} className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+                <div className="relative w-full max-w-md rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl text-center">
                     <p className="text-sm text-muted-foreground">Semua produk aktif sudah ditambahkan ke grup ini.</p>
                     <button onClick={onClose} className="mt-4 inline-flex justify-center rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted">
                         Tutup
@@ -114,9 +114,9 @@ function AttachProductModal({ group, products, onClose }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div onClick={onClose} className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-            <div className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl">
-                <h3 className="text-base font-semibold text-foreground">Tambah Produk</h3>
+            <div onClick={onClose} className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+            <div className="relative w-full max-w-md rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl">
+                <h3 className="text-base font-semibold text-popover-foreground">Tambah Produk</h3>
                 <p className="mt-0.5 text-sm text-muted-foreground">Hubungkan produk ke grup modifier "{group.name}".</p>
                 <form onSubmit={submit} className="mt-5 space-y-4">
                     <div>
@@ -191,8 +191,8 @@ export default function Show({ group, allProducts }) {
                             <h2 className="text-lg font-semibold text-foreground">{group.name}</h2>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${sel.bg} ${sel.text}`}>{sel.label}</span>
-                                {group.is_required && <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">Wajib</span>}
-                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${group.is_active ? 'bg-emerald-100 text-success' : 'bg-muted text-muted-foreground'}`}>
+                                {group.is_required && <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">Wajib</span>}
+                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${group.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
                                     {group.is_active ? 'Aktif' : 'Nonaktif'}
                                 </span>
                             </div>
@@ -250,11 +250,11 @@ export default function Show({ group, allProducts }) {
                         ) : (
                             <div className="divide-y divide-border">
                                 {modifiers.map((mod) => (
-                                    <div key={mod.id} className="flex items-center justify-between px-6 py-3.5 transition hover:bg-muted/70">
+                                    <div key={mod.id} className="flex items-center justify-between px-6 py-3.5 transition hover:bg-muted/50">
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-2">
                                                 <p className="text-sm font-medium text-foreground">{mod.name}</p>
-                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${mod.is_active ? 'bg-emerald-100 text-success' : 'bg-muted text-muted-foreground'}`}>
+                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${mod.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
                                                     {mod.is_active ? 'Aktif' : 'Nonaktif'}
                                                 </span>
                                             </div>
@@ -266,7 +266,7 @@ export default function Show({ group, allProducts }) {
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <button onClick={() => { setEditModifier(mod); setShowModForm(true); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600" title="Edit">
+                                            <button onClick={() => { setEditModifier(mod); setShowModForm(true); }} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary" title="Edit">
                                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
                                                 </svg>
@@ -294,7 +294,7 @@ export default function Show({ group, allProducts }) {
                             </div>
                             <button
                                 onClick={() => setShowAttach(true)}
-                                className="inline-flex items-center gap-1 rounded-xl bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 transition hover:bg-primary-100"
+                                className="inline-flex items-center gap-1 rounded-xl bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary transition hover:bg-primary/20"
                             >
                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -311,7 +311,7 @@ export default function Show({ group, allProducts }) {
                         ) : (
                             <div className="divide-y divide-border">
                                 {products.map((p) => (
-                                    <div key={p.id} className="flex items-center justify-between px-5 py-3 transition hover:bg-muted/70">
+                                    <div key={p.id} className="flex items-center justify-between px-5 py-3 transition hover:bg-muted/50">
                                         <div className="min-w-0 flex-1">
                                             <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
                                             <p className="text-xs text-muted-foreground">SKU: {p.sku}</p>

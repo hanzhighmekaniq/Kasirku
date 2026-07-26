@@ -95,7 +95,7 @@ export default function Index({ memberships }) {
                 heading={
                     <>
                         Kelola{" "}
-                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                        <span className="text-primary">
                             Membership
                         </span>{" "}
                         pelanggan
@@ -117,7 +117,7 @@ export default function Index({ memberships }) {
             )}
 
             {/* Main Content Area */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
                 <div className="flex flex-col gap-4 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between bg-card">
                     <div className="flex flex-1 flex-col">
@@ -130,7 +130,7 @@ export default function Index({ memberships }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nama, kode..."
-                                className="block w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                         <p className="mt-2 text-xs text-muted-foreground">
@@ -222,8 +222,10 @@ export default function Index({ memberships }) {
 /*  Modal – Create / Edit                                              */
 /* ------------------------------------------------------------------ */
 const inp = (err) =>
-    `mt-1 block w-full rounded-xl border py-2.5 px-3.5 text-sm bg-input border-border text-foreground outline-none shadow-sm transition focus:border-ring focus:ring-2 ${
-        err ? "border-destructive focus:ring-destructive" : "focus:ring-ring"
+    `mt-1 block w-full rounded-xl border py-2.5 px-3.5 text-sm bg-background border-input text-foreground placeholder:text-muted-foreground outline-none shadow-sm transition focus:ring-2 ${
+        err
+            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+            : "focus:border-ring focus:ring-ring/20"
     }`;
 
 function MembershipModal({ open, editing, onClose }) {
@@ -326,7 +328,7 @@ function MembershipModal({ open, editing, onClose }) {
             {/* Backdrop */}
             <div
                 onClick={() => !processing && onClose()}
-                className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-200 ${
+                className={`fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity duration-200 ${
                     show ? "opacity-100" : "opacity-0"
                 }`}
             />
@@ -335,20 +337,20 @@ function MembershipModal({ open, editing, onClose }) {
             <div
                 role="dialog"
                 aria-modal="true"
-                className={`relative z-10 w-full max-w-lg transform rounded-2xl bg-card shadow-2xl transition-all duration-200 ${
+                className={`relative z-10 w-full max-w-lg transform rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl transition-all duration-200 ${
                     show
                         ? "translate-y-0 scale-100 opacity-100"
                         : "translate-y-3 scale-95 opacity-0"
                 }`}
             >
                 <div className="flex items-center justify-between border-b border-border px-4 py-4">
-                    <h3 className="text-base font-semibold text-foreground">
+                    <h3 className="text-base font-semibold text-popover-foreground">
                         {editing ? "Edit Membership" : "Tambah Membership"}
                     </h3>
                     <button
                         onClick={onClose}
                         disabled={processing}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-muted-foreground disabled:opacity-60"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-60"
                     >
                         <X className="h-5 w-5" strokeWidth={1.8} />
                     </button>
@@ -605,7 +607,7 @@ function MembershipModal({ open, editing, onClose }) {
                             onChange={(e) =>
                                 setData("is_active", e.target.checked)
                             }
-                            className="h-4 w-4 rounded border-border text-primary bg-input shadow-sm focus:ring-ring focus:ring-2 focus:ring-offset-0"
+                            className="h-4 w-4 rounded border-input text-primary bg-background shadow-sm focus:ring-ring/20 focus:ring-2 focus:ring-offset-0"
                         />
                         <span className="text-sm text-foreground">Aktif</span>
                     </label>
@@ -681,23 +683,23 @@ function MembershipList({ items, onEdit, onDelete }) {
             {/* Desktop table */}
             <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            <th className="px-4 py-3.5">Kode</th>
-                            <th className="px-4 py-3.5">Nama</th>
-                            <th className="px-4 py-3.5">Durasi</th>
-                            <th className="px-4 py-3.5 text-right">Harga</th>
-                            <th className="px-4 py-3.5 text-center">Diskon</th>
-                            <th className="px-4 py-3.5 text-center">Member</th>
-                            <th className="px-4 py-3.5 text-center">Status</th>
-                            <th className="px-4 py-3.5 text-right">Aksi</th>
+                    <thead className="bg-popover text-left text-xs uppercase tracking-wide text-card-foreground">
+                        <tr>
+                            <th className="px-4 py-3.5 font-semibold">Kode</th>
+                            <th className="px-4 py-3.5 font-semibold">Nama</th>
+                            <th className="px-4 py-3.5 font-semibold">Durasi</th>
+                            <th className="px-4 py-3.5 text-right font-semibold">Harga</th>
+                            <th className="px-4 py-3.5 text-center font-semibold">Diskon</th>
+                            <th className="px-4 py-3.5 text-center font-semibold">Member</th>
+                            <th className="px-4 py-3.5 text-center font-semibold">Status</th>
+                            <th className="px-4 py-3.5 text-right font-semibold">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border bg-background">
                         {items.map((m) => (
                             <tr
                                 key={m.id}
-                                className="transition hover:bg-muted/70"
+                                className="transition hover:bg-[rgb(var(--color-table-hover))]"
                             >
                                 <td className="px-4 py-4">
                                     <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-mono font-semibold text-foreground">

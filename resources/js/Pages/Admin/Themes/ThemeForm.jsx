@@ -142,14 +142,14 @@ export default function ThemeForm({
                             autoFocus
                             onChange={(e) => setData("name", e.target.value)}
                             maxLength={80}
-                            className="mt-1.5 block w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                            className="mt-1.5 block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                             placeholder="e.g. Ocean Blue"
                         />
                         <div className="mt-1.5 text-[11px] text-muted-foreground">
                             Display name shown in the theme list.
                         </div>
                         {errors.name && (
-                            <p className="mt-1 text-sm text-red-500">
+                            <p className="mt-1 text-sm text-destructive">
                                 {errors.name}
                             </p>
                         )}
@@ -168,11 +168,11 @@ export default function ThemeForm({
                                 setData("description", e.target.value)
                             }
                             maxLength={255}
-                            className="mt-1.5 block w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                            className="mt-1.5 block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                             placeholder="A short description of this theme's intent."
                         />
                         {errors.description && (
-                            <p className="mt-1 text-sm text-red-500">
+                            <p className="mt-1 text-sm text-destructive">
                                 {errors.description}
                             </p>
                         )}
@@ -356,7 +356,7 @@ function ColorRow({ tokenKey, value, onChange }) {
                 onChange={handleHexInput}
                 onBlur={handleHexBlur}
                 maxLength={7}
-                className="w-[100px] shrink-0 rounded-md border border-border bg-muted/50 px-2 py-1.5 font-mono text-[11.5px] uppercase text-foreground transition focus:border-ring focus:outline-none"
+                className="w-[100px] shrink-0 rounded-md border border-input bg-background px-2 py-1.5 font-mono text-[11.5px] uppercase text-foreground transition focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
             />
         </div>
     );

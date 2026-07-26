@@ -54,7 +54,7 @@ export default function DateRangeFilter({ from, to, routeName, extraParams = {} 
                 />
                 <button
                     onClick={() => apply(startDate, endDate)}
-                    className="ml-1 rounded-md bg-primary-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-primary-700"
+                    className="ml-1 rounded-md bg-primary px-2.5 py-1 text-xs font-semibold text-white hover:bg-primary/90"
                 >
                     Terapkan
                 </button>

@@ -85,14 +85,14 @@ export default function Expenses({ from, to, summary, dailyTrend = [], byCategor
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                        <thead><tr className="bg-muted text-left text-xs font-semibold text-muted-foreground">
-                            <th className="px-4 py-2.5">Tanggal</th>
-                            <th className="px-4 py-2.5">Kategori</th>
-                            <th className="px-4 py-2.5">Keterangan</th>
-                            <th className="px-4 py-2.5 text-right">Jumlah</th>
+                        <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground"><tr>
+                            <th className="px-4 py-2.5 text-left font-semibold">Tanggal</th>
+                            <th className="px-4 py-2.5 text-left font-semibold">Kategori</th>
+                            <th className="px-4 py-2.5 text-left font-semibold">Keterangan</th>
+                            <th className="px-4 py-2.5 text-right font-semibold">Jumlah</th>
                         </tr></thead>
-                        <tbody>{expenses.length > 0 ? expenses.map((e) => (
-                            <tr key={e.id} className="border-t border-border">
+                        <tbody className="divide-y divide-border bg-background">{expenses.length > 0 ? expenses.map((e) => (
+                            <tr key={e.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                 <td className="px-4 py-2.5">{fmtDate(e.expense_date)}</td>
                                 <td className="px-4 py-2.5">{e.expense_category?.name || '—'}</td>
                                 <td className="px-4 py-2.5 text-muted-foreground">{e.description || '—'}</td>

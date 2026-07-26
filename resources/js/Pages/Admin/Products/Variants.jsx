@@ -18,7 +18,7 @@ const PAGE_TITLE = {
 };
 
 const inputCls =
-    "block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20";
+    "block w-full rounded-xl border-input bg-background text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20";
 
 function VariantForm({ product, variant, onClose, onSaved }) {
     const isEdit = !!variant;
@@ -64,9 +64,9 @@ function VariantForm({ product, variant, onClose, onSaved }) {
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-16">
             <div
                 onClick={onClose}
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+                className="fixed inset-0 bg-background/80 backdrop-blur-sm"
             />
-            <div className="relative w-full max-w-2xl rounded-2xl bg-card p-6 shadow-2xl sm:p-7 mb-10">
+            <div className="relative w-full max-w-2xl rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl sm:p-7 mb-10">
                 <h3 className="text-base font-semibold text-foreground">
                     {isEdit ? "Edit Varian" : "Tambah Varian"}
                 </h3>
@@ -188,7 +188,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                 Margin
                             </label>
                             <div
-                                className={`rounded-xl border px-3 py-2 ${margin < 0 ? "border-destructive/20 bg-destructive/5" : "border-success/20 bg-success/10"}`}
+                                className={`rounded-xl border px-3 py-2 ${margin < 0 ? "border-destructive/20 bg-destructive/10" : "border-success/20 bg-success/10"}`}
                             >
                                 <div
                                     className={`text-sm font-bold ${margin < 0 ? "text-destructive" : "text-success"}`}
@@ -238,7 +238,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                             { min_qty: "", price: "" },
                                         ])
                                     }
-                                    className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
+                                    className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
                                 >
                                     <svg
                                         className="h-3.5 w-3.5"
@@ -264,7 +264,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                         key={i}
                                         className="grid grid-cols-12 gap-2 items-center"
                                     >
-                                        <span className="col-span-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/10 justify-self-start">
+                                        <span className="col-span-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20 justify-self-start">
                                             Tier {i + 1}
                                         </span>
                                         <div className="col-span-4 relative">
@@ -286,7 +286,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="Min qty"
-                                                className="w-full rounded-lg border border-border px-2.5 py-1.5 pr-10 text-xs"
+                                                className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 pr-10 text-xs"
                                             />
                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                 {product.unit}
@@ -314,7 +314,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="Harga"
-                                                className="w-full rounded-lg border border-border py-1.5 pl-8 pr-2 text-xs"
+                                                className="w-full rounded-lg border border-input bg-background py-1.5 pl-8 pr-2 text-xs"
                                             />
                                         </div>
                                         <button
@@ -346,7 +346,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                     </div>
 
                     {/* Multi Satuan / Kemasan */}
-                    <div className="rounded-xl border border-warning/20 bg-warning/5 p-4">
+                    <div className="rounded-xl border border-warning/20 bg-warning/10 p-4">
                         <div className="flex items-center justify-between mb-3">
                             <div>
                                 <div className="text-sm font-semibold text-foreground">
@@ -369,7 +369,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                         },
                                     ])
                                 }
-                                className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10"
+                                className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
                             >
                                 <svg
                                     className="h-3.5 w-3.5"
@@ -412,7 +412,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="Nama (Dus, Box)"
-                                                className="w-full rounded-lg border border-border px-2.5 py-1.5 text-xs"
+                                                className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs"
                                             />
                                         </div>
                                         <div className="col-span-2 relative">
@@ -435,7 +435,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="12"
-                                                className="w-full rounded-lg border border-border px-2.5 py-1.5 pr-8 text-xs"
+                                                className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 pr-8 text-xs"
                                             />
                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                 {product.unit}
@@ -464,7 +464,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="Harga"
-                                                className="w-full rounded-lg border border-border py-1.5 pl-8 pr-2 text-xs"
+                                                className="w-full rounded-lg border border-input bg-background py-1.5 pl-8 pr-2 text-xs"
                                             />
                                         </div>
                                         <div className="col-span-3">
@@ -485,7 +485,7 @@ function VariantForm({ product, variant, onClose, onSaved }) {
                                                     );
                                                 }}
                                                 placeholder="Barcode"
-                                                className="w-full rounded-lg border border-border px-2.5 py-1.5 text-xs"
+                                                className="w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs"
                                             />
                                         </div>
                                         <button
@@ -620,7 +620,7 @@ export default function Variants({ product, storeType = "retail" }) {
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div>
                         <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
                                 <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                                 Varian
                             </span>
@@ -637,7 +637,7 @@ export default function Variants({ product, storeType = "retail" }) {
                         </div>
                         <h1 className="text-lg font-bold tracking-tighter text-foreground sm:text-3xl">
                             Kelola{" "}
-                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            <span className="text-primary">
                                 varian
                             </span>{" "}
                             produk
@@ -671,9 +671,9 @@ export default function Variants({ product, storeType = "retail" }) {
                             className="h-14 w-14 shrink-0 rounded-xl object-cover border border-border"
                         />
                     ) : (
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                             <svg
-                                className="h-7 w-7 text-primary-400"
+                                className="h-7 w-7 text-primary"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
@@ -759,40 +759,40 @@ export default function Variants({ product, storeType = "retail" }) {
                         {/* Desktop table */}
                         <div className="hidden overflow-x-auto md:block">
                             <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        <th className="px-5 py-3.5">
+                                <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                    <tr>
+                                        <th className="px-5 py-3.5 text-left font-semibold">
                                             Nama Varian
                                         </th>
-                                        <th className="px-5 py-3.5">SKU</th>
-                                        <th className="px-5 py-3.5 hidden lg:table-cell">
+                                        <th className="px-5 py-3.5 text-left font-semibold">SKU</th>
+                                        <th className="px-5 py-3.5 text-left font-semibold hidden lg:table-cell">
                                             Barcode
                                         </th>
-                                        <th className="px-5 py-3.5 text-right">
+                                        <th className="px-5 py-3.5 text-right font-semibold">
                                             Harga Beli
                                         </th>
-                                        <th className="px-5 py-3.5 text-right">
+                                        <th className="px-5 py-3.5 text-right font-semibold">
                                             Harga Jual
                                         </th>
-                                        <th className="px-5 py-3.5 text-center">
+                                        <th className="px-5 py-3.5 text-center font-semibold">
                                             Grosir
                                         </th>
-                                        <th className="px-5 py-3.5 text-center">
+                                        <th className="px-5 py-3.5 text-center font-semibold">
                                             Kemasan
                                         </th>
-                                        <th className="px-5 py-3.5 text-center">
+                                        <th className="px-5 py-3.5 text-center font-semibold">
                                             Status
                                         </th>
-                                        <th className="px-5 py-3.5 text-right">
+                                        <th className="px-5 py-3.5 text-right font-semibold">
                                             Aksi
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-y divide-border bg-background">
                                     {variants.map((v) => (
                                         <tr
                                             key={v.id}
-                                            className="transition hover:bg-muted/70"
+                                            className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                         >
                                             <td className="px-5 py-4 font-medium text-foreground">
                                                 {v.name}

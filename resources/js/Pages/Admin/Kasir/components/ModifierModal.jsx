@@ -72,7 +72,7 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-muted-foreground/60 hover:text-card-foreground"
+                        className="text-muted-foreground/60 hover:text-foreground"
                     >
                         <svg
                             className="w-5 h-5"
@@ -150,7 +150,7 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                         </div>
                     ))}
                     <div>
-                        <p className="mb-1 text-sm font-medium text-card-foreground">
+                        <p className="mb-1 text-sm font-medium text-foreground">
                             Catatan Item
                         </p>
                         <input
@@ -158,34 +158,19 @@ export default function ModifierModal({ product, onConfirm, onClose }) {
                             value={itemNote}
                             onChange={(e) => setItemNote(e.target.value)}
                             placeholder="cth. tanpa es, pedas"
-                            className="block w-full text-sm rounded-xl border-slate-300 focus:border-primary focus:ring-2 focus:ring-indigo-200"
+                            className="block w-full text-sm rounded-xl border-input bg-background focus:border-ring focus:ring-2 focus:ring-ring/20"
                         />
                     </div>
                 </div>
                 <div className="px-5 py-4 border-t border-border">
-                    ```jsx
                     <button
                         type="button"
                         disabled={!isValid}
                         onClick={() => onConfirm(buildModifiers(), itemNote)}
-                        className="
-        w-full
-        rounded-lg sm:rounded-lg md:rounded-xl
-        bg-primary
-        px-3 sm:px-4 md:px-5
-        py-1.5 sm:py-2 md:py-2.5
-        text-xs sm:text-sm md:text-sm
-        font-semibold text-white
-        shadow-md sm:shadow-lg
-        shadow-indigo-500/30
-        transition
-        hover:from-indigo-600 hover:to-violet-700
-        disabled:opacity-50
-    "
+                        className="w-full rounded-lg sm:rounded-lg md:rounded-xl bg-primary px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 text-xs sm:text-sm md:text-sm font-semibold text-primary-foreground shadow-md sm:shadow-lg transition disabled:opacity-50"
                     >
                         Tambah ke Keranjang
                     </button>
-                    ```
                 </div>
             </div>
         </div>

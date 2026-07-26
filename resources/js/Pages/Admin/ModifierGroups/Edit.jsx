@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Button from '@/Components/ui/Button';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-const inputCls = 'block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20';
+const inputCls = 'block w-full rounded-xl border-input bg-background text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20';
 
 export default function Edit({ group }) {
     const { data, setData, put, processing, errors } = useForm({
@@ -91,11 +91,11 @@ export default function Edit({ group }) {
                                             onClick={() => setData('selection_type', opt.value)}
                                             className={`flex-1 rounded-xl border-2 p-3 text-left transition ${
                                                 data.selection_type === opt.value
-                                                    ? 'border-primary-500 bg-primary-50'
+                                                    ? 'border-primary bg-primary/10'
                                                     : 'border-border hover:border-border'
                                             }`}
                                         >
-                                            <p className={`text-sm font-medium ${data.selection_type === opt.value ? 'text-primary-700' : 'text-foreground'}`}>{opt.label}</p>
+                                            <p className={`text-sm font-medium ${data.selection_type === opt.value ? 'text-primary' : 'text-foreground'}`}>{opt.label}</p>
                                             <p className="mt-0.5 text-xs text-muted-foreground">{opt.desc}</p>
                                         </button>
                                     ))}
@@ -122,13 +122,13 @@ export default function Edit({ group }) {
                             {/* Toggle row */}
                             <div className="flex flex-wrap items-center gap-6">
                                 <div className="flex items-center gap-3">
-                                    <button type="button" onClick={() => setData('is_required', !data.is_required)} className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${data.is_required ? 'bg-amber-500' : 'bg-slate-200'}`}>
+                                    <button type="button" onClick={() => setData('is_required', !data.is_required)} className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${data.is_required ? 'bg-warning' : 'bg-muted'}`}>
                                         <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out ${data.is_required ? 'translate-x-5' : 'translate-x-0'}`} />
                                     </button>
                                     <span className="text-sm font-medium text-foreground">Wajib Dipilih</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <button type="button" onClick={() => setData('is_active', !data.is_active)} className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${data.is_active ? 'bg-primary-600' : 'bg-slate-200'}`}>
+                                    <button type="button" onClick={() => setData('is_active', !data.is_active)} className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${data.is_active ? 'bg-primary' : 'bg-muted'}`}>
                                         <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out ${data.is_active ? 'translate-x-5' : 'translate-x-0'}`} />
                                     </button>
                                     <span className="text-sm font-medium text-foreground">Aktif</span>

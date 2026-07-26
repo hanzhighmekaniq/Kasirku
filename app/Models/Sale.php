@@ -11,6 +11,16 @@ class Sale extends Model
 {
     use HasFactory;
 
+    /**
+     * Status yang berarti order sudah tidak berjalan lagi. Selama status
+     * sebuah sale TIDAK ada di daftar ini, order dianggap masih aktif —
+     * mejanya tetap terpakai dan tidak boleh dibebaskan otomatis.
+     *
+     * Catatan: 'voided' belum dipakai di kode saat ini, disertakan supaya
+     * penambahan status void nanti tidak diam-diam membuat meja nyangkut.
+     */
+    public const CLOSED_STATUSES = ['completed', 'cancelled', 'voided'];
+
     protected $fillable = [
         'store_id', 'branch_id', 'customer_id', 'user_id', 'cashier_shift_id',
         'sale_no', 'sale_date',

@@ -44,13 +44,13 @@ function TypeMismatchModal({ data, onClose }) {
             {/* Modal */}
             <div className="relative w-full max-w-sm overflow-hidden bg-popover text-popover-foreground shadow-xl rounded-2xl">
                 {/* Top banner */}
-                <div className="px-5 py-4 text-white bg-gradient-to-r from-rose-400 to-pink-500">
+                <div className="px-5 py-4 text-destructive-foreground bg-destructive">
                     <div className="flex items-center gap-3">
                         <span className="flex items-center justify-center w-10 h-10 text-xl shrink-0 rounded-xl bg-white/20">
                             🚫
                         </span>
                         <div>
-                            <p className="text-[11px] font-medium text-rose-100 uppercase tracking-wide">
+                            <p className="text-[11px] font-medium text-destructive-foreground/80 uppercase tracking-wide">
                                 Tipe Toko Tidak Sesuai
                             </p>
                             <h2 className="text-base font-bold leading-tight">
@@ -68,7 +68,7 @@ function TypeMismatchModal({ data, onClose }) {
                             {featureLabel ?? "ini"}
                         </span>{" "}
                         tidak tersedia untuk tipe toko{" "}
-                        <span className="font-semibold text-rose-600">
+                        <span className="font-semibold text-destructive">
                             {currentType?.label ?? "Anda"}
                         </span>
                         .
@@ -109,16 +109,16 @@ function TypeMismatchModal({ data, onClose }) {
 
 /* ─── Store type ─────────────────────────────────────────────── */
 const TYPE_COLOR = {
-    retail: "bg-blue-50 text-blue-600 ring-1 ring-blue-100",
-    fnb: "bg-orange-50 text-orange-600 ring-1 ring-orange-100",
-    service: "bg-violet-50 text-violet-600 ring-1 ring-violet-100",
-    rental: "bg-yellow-50 text-yellow-600 ring-1 ring-yellow-100",
-    ticket: "bg-rose-50 text-rose-600 ring-1 ring-rose-100",
-    hospitality: "bg-amber-50 text-amber-600 ring-1 ring-amber-100",
+    retail: "bg-blue-50 text-blue-600 ring-1 ring-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800",
+    fnb: "bg-orange-50 text-orange-600 ring-1 ring-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:ring-orange-800",
+    service: "bg-violet-50 text-violet-600 ring-1 ring-violet-100 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-800",
+    rental: "bg-yellow-50 text-yellow-600 ring-1 ring-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-800",
+    ticket: "bg-rose-50 text-rose-600 ring-1 ring-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:ring-rose-800",
+    hospitality: "bg-amber-50 text-amber-600 ring-1 ring-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800",
     // backward compat — fallback ke mode baru
-    laundry: "bg-violet-50 text-violet-600 ring-1 ring-violet-100",
-    session: "bg-yellow-50 text-yellow-600 ring-1 ring-yellow-100",
-    parking: "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
+    laundry: "bg-violet-50 text-violet-600 ring-1 ring-violet-100 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-800",
+    session: "bg-yellow-50 text-yellow-600 ring-1 ring-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-800",
+    parking: "bg-slate-100 text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700",
 };
 const TYPE_LABEL = {
     retail: "Retail",
@@ -146,9 +146,9 @@ const TYPE_ICON = {
 /* ─── Badge ─────────────────────────────────────────────────── */
 const BADGE_BG = {
     indigo: "bg-primary/10 text-primary",
-    orange: "bg-orange-50 text-orange-500",
-    violet: "bg-violet-50 text-violet-500",
-    cyan: "bg-cyan-50 text-cyan-500",
+    orange: "bg-orange-50 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400",
+    violet: "bg-violet-50 text-violet-500 dark:bg-violet-900/30 dark:text-violet-400",
+    cyan: "bg-cyan-50 text-cyan-500 dark:bg-cyan-900/30 dark:text-cyan-400",
 };
 function Badge({ label, color = "indigo" }) {
     return (
@@ -272,7 +272,7 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
             title={collapsed ? item.name : undefined}
             className={`group flex items-center gap-2.5 rounded-lg px-1 py-2.5 transition-all
                 ${active
-                    ? "bg-primary text-base-foreground"
+                    ? "bg-primary text-primary-foreground"
                     : "text-foreground hover:bg-accent hover:text-accent-foreground"
                 }
                 ${collapsed ? "justify-center px-0" : ""}`}
@@ -438,7 +438,7 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
                                 {showDivider && (
                                     <div className="flex items-center gap-2 px-3 my-2">
                                         <div className="flex-1 h-px bg-border" />
-                                        <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                                        <span className="text-[9px] font-bold text-warning bg-warning/10 px-2 py-0.5 rounded-full">
                                             🔒 PREMIUM
                                         </span>
                                         <div className="flex-1 h-px bg-border" />
@@ -776,7 +776,7 @@ function SidebarContent({
                 <div className="flex items-center gap-3">
                     <div className="relative flex items-center justify-center w-10 h-10 shadow-lg shrink-0 rounded-xl bg-primary shadow-primary/30">
                         <ApplicationLogo className="w-5 h-5 text-white fill-current" />
-                        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-sidebar bg-emerald-400 ring-2 ring-emerald-100" />
+                        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-sidebar bg-success ring-2 ring-success/20" />
                     </div>
                     <div
                         className={`leading-tight transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0 overflow-hidden ml-0" : "opacity-100 w-auto"}`}
@@ -827,7 +827,7 @@ function SidebarContent({
                                 {isDark ? (
                                     <Moon className="w-4 h-4 text-sidebar-foreground" />
                                 ) : (
-                                    <Sun className="w-4 h-4 text-amber-600" />
+                                    <Sun className="w-4 h-4 text-warning" />
                                 )}
                             </div>
                             <span className="text-sm font-medium text-sidebar-foreground/70">
@@ -963,7 +963,7 @@ function SidebarContent({
                                 <div className="flex items-center justify-center w-10 h-10 text-sm font-bold text-primary-foreground rounded-lg shadow-md bg-primary">
                                     {user?.name?.charAt(0).toUpperCase()}
                                 </div>
-                                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-muted bg-emerald-400" />
+                                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-muted bg-success" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold text-sidebar-foreground truncate">
@@ -975,7 +975,7 @@ function SidebarContent({
                             </div>
                             <button
                                 onClick={() => router.post(route("logout"))}
-                                className="flex items-center justify-center transition-all rounded-lg h-7 w-7 bg-sidebar-foreground/10 text-sidebar-foreground/60 hover:bg-red-500/20 hover:text-red-400"
+                                className="flex items-center justify-center transition-all rounded-lg h-7 w-7 bg-sidebar-foreground/10 text-sidebar-foreground/60 hover:bg-destructive/20 hover:text-destructive"
                                 title="Keluar"
                             >
                                 <LogOut className="h-3.5 w-3.5" />
@@ -1230,8 +1230,8 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                                     as="button"
                                 >
                                     <span className="flex items-center gap-2">
-                                        <LogOut className="h-3.5 w-3.5 text-rose-400" />
-                                        <span className="text-rose-600">
+                                        <LogOut className="h-3.5 w-3.5 text-destructive/70" />
+                                        <span className="text-destructive">
                                             Keluar
                                         </span>
                                     </span>
@@ -1243,17 +1243,17 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
 
                 {/* Flash — pesan sukses/error statis */}
                 {flash?.success && (
-                    <div className="mx-5 mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">
+                    <div className="mx-5 mt-4 rounded-lg border border-success/20 bg-success/10 px-4 py-2.5 text-sm text-success">
                         {flash.success}
                     </div>
                 )}
                 {flash?.error && (
-                    <div className="mx-5 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+                    <div className="mx-5 mt-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2.5 text-sm text-destructive">
                         {flash.error}
                     </div>
                 )}
                 {flash?.warning && (
-                    <div className="mx-5 mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-700">
+                    <div className="mx-5 mt-4 rounded-lg border border-warning/20 bg-warning/10 px-4 py-2.5 text-sm text-warning">
                         {flash.warning}
                     </div>
                 )}

@@ -15,13 +15,13 @@ const fmtDate = (d) =>
 const STATUS_CONFIG = {
     completed: {
         label: "Selesai",
-        color: "bg-emerald-100 text-success",
-        dot: "bg-success/100",
+        color: "bg-success/10 text-success",
+        dot: "bg-success",
     },
     cancelled: {
         label: "Dibatalkan",
         color: "bg-muted text-muted-foreground",
-        dot: "bg-slate-400",
+        dot: "bg-muted-foreground",
     },
 };
 
@@ -113,7 +113,7 @@ export default function Show({ saleReturn }) {
                         {saleReturn.status === "completed" && (
                             <button
                                 onClick={() => setConfirmingCancel(true)}
-                                className="rounded-lg border border-amber-200 bg-card px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-50"
+                                className="rounded-lg border border-warning/20 bg-card px-3 py-1.5 text-xs font-medium text-warning transition hover:bg-warning/10"
                             >
                                 Batalkan Retur
                             </button>
@@ -143,7 +143,7 @@ export default function Show({ saleReturn }) {
                                             "admin.sales.show",
                                             saleReturn.sale.id,
                                         )}
-                                        className="text-sm font-medium text-primary-600 hover:text-primary-800"
+                                        className="text-sm font-medium text-primary hover:text-primary/80"
                                     >
                                         {saleReturn.sale.sale_no}
                                     </Link>
@@ -181,7 +181,7 @@ export default function Show({ saleReturn }) {
                                 <p className="text-xs text-muted-foreground">
                                     Total Retur
                                 </p>
-                                <p className="text-sm font-bold text-primary-600">
+                                <p className="text-sm font-bold text-primary">
                                     {fmtRp(saleReturn.total_amount)}
                                 </p>
                             </div>
@@ -199,8 +199,8 @@ export default function Show({ saleReturn }) {
 
                         {/* Status Info */}
                         {saleReturn.status === "completed" && (
-                            <div className="rounded-xl border border-amber-100 bg-amber-50/50 px-4 py-3">
-                                <p className="text-xs text-amber-700">
+                            <div className="rounded-xl border border-warning/20 bg-warning/10 px-4 py-3">
+                                <p className="text-xs text-warning">
                                     Total retur sebesar{" "}
                                     <span className="font-semibold">
                                         {fmtRp(saleReturn.total_amount)}
@@ -230,27 +230,27 @@ export default function Show({ saleReturn }) {
                     </div>
                     <div className="p-0">
                         <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="border-b border-border bg-muted/50">
-                                    <th className="px-5 py-3 font-medium text-muted-foreground">
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                <tr>
+                                    <th className="px-5 py-3 font-semibold">
                                         Produk
                                     </th>
-                                    <th className="px-5 py-3 text-right font-medium text-muted-foreground">
+                                    <th className="px-5 py-3 text-right font-semibold">
                                         Qty
                                     </th>
-                                    <th className="px-5 py-3 text-right font-medium text-muted-foreground">
+                                    <th className="px-5 py-3 text-right font-semibold">
                                         Harga Satuan
                                     </th>
-                                    <th className="px-5 py-3 text-right font-medium text-muted-foreground">
+                                    <th className="px-5 py-3 text-right font-semibold">
                                         Subtotal
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border bg-background">
                                 {(saleReturn.items ?? []).map((item) => (
                                     <tr
                                         key={item.id}
-                                        className="hover:bg-muted/50"
+                                        className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                     >
                                         <td className="px-5 py-3">
                                             <p className="font-medium text-foreground">
@@ -262,7 +262,7 @@ export default function Show({ saleReturn }) {
                                                 </p>
                                             )}
                                             {item.reason && (
-                                                <p className="mt-0.5 text-xs italic text-amber-600">
+                                                <p className="mt-0.5 text-xs italic text-warning">
                                                     Alasan: {item.reason}
                                                 </p>
                                             )}
@@ -285,7 +285,7 @@ export default function Show({ saleReturn }) {
                                 <span className="text-sm font-semibold text-foreground">
                                     Total Retur
                                 </span>
-                                <span className="text-base font-bold text-primary-600">
+                                <span className="text-base font-bold text-primary">
                                     {fmtRp(saleReturn.total_amount)}
                                 </span>
                             </div>
@@ -297,17 +297,17 @@ export default function Show({ saleReturn }) {
             {/* Cancel Confirmation Modal */}
             {confirmingCancel && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
                     onMouseDown={() =>
                         !processing && setConfirmingCancel(false)
                     }
                 >
                     <div
-                        className="mx-4 w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
+                        className="mx-4 w-full max-w-sm rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
                         <svg
-                            className="mx-auto mb-4 h-12 w-12 text-amber-400"
+                            className="mx-auto mb-4 h-12 w-12 text-warning"
                             fill="none"
                             viewBox="0 0 24 24"
                             strokeWidth={1.5}
@@ -319,7 +319,7 @@ export default function Show({ saleReturn }) {
                                 d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
                             />
                         </svg>
-                        <h3 className="mb-2 text-center text-base font-semibold text-foreground">
+                        <h3 className="mb-2 text-center text-base font-semibold text-popover-foreground">
                             Batalkan Retur?
                         </h3>
                         <p className="mb-5 text-center text-sm text-muted-foreground">
@@ -338,7 +338,7 @@ export default function Show({ saleReturn }) {
                             <button
                                 onClick={handleCancel}
                                 disabled={processing}
-                                className="flex-1 rounded-xl bg-amber-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/30 transition hover:bg-amber-600"
+                                className="flex-1 rounded-xl bg-warning py-2.5 text-sm font-semibold text-warning-foreground shadow-lg shadow-warning/30 transition hover:bg-warning/90"
                             >
                                 {processing
                                     ? "Membatalkan..."

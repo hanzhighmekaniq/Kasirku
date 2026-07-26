@@ -16,7 +16,7 @@ const LOG_NAME_LABELS = {
     system: "Sistem",
 };
 const LOG_NAME_COLORS = {
-    shift: "bg-primary-50 text-primary-700 ring-primary-200",
+    shift: "bg-primary/10 text-primary ring-primary/20",
     sale: "bg-emerald-50 text-emerald-700 ring-emerald-200",
     purchase: "bg-blue-50 text-blue-700 ring-blue-200",
     stock: "bg-amber-50 text-amber-700 ring-amber-200",
@@ -219,13 +219,13 @@ export default function Index({
                 <div className="rounded-2xl border border-border bg-card shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="border-b border-border bg-muted/50 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    <th className="px-5 py-3.5 whitespace-nowrap">Waktu</th>
-                                    <th className="px-5 py-3.5">User</th>
-                                    <th className="px-5 py-3.5">Toko / Cabang</th>
-                                    <th className="px-5 py-3.5">Modul</th>
-                                    <th className="px-5 py-3.5">Deskripsi</th>
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                <tr>
+                                    <th className="px-5 py-3.5 whitespace-nowrap font-semibold">Waktu</th>
+                                    <th className="px-5 py-3.5 font-semibold">User</th>
+                                    <th className="px-5 py-3.5 font-semibold">Toko / Cabang</th>
+                                    <th className="px-5 py-3.5 font-semibold">Modul</th>
+                                    <th className="px-5 py-3.5 font-semibold">Deskripsi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border bg-background">
@@ -249,7 +249,7 @@ export default function Index({
                                     logs.data.map((log) => (
                                         <tr
                                             key={log.id}
-                                            className="transition hover:bg-muted/50"
+                                            className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                         >
                                             {/* Waktu */}
                                             <td className="px-5 py-3.5 text-xs text-muted-foreground whitespace-nowrap">

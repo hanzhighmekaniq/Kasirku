@@ -29,6 +29,43 @@ pest()->extend(TestCase::class)
 
 /*
 |--------------------------------------------------------------------------
+| Pengaman: jangan pernah jalankan test di database non-test
+|--------------------------------------------------------------------------
+|
+| RefreshDatabase menjalankan migrate:fresh pada koneksi yang aktif. Kalau
+| koneksinya menunjuk ke database dev, SELURUH DATA HILANG. Ini sudah pernah
+| terjadi (2026-07-26, database `simkasir` terhapus) karena
+| bootstrap/cache/config.php masih ada — config yang di-cache membuat Laravel
+| melewati env(), sehingga override <env> di phpunit.xml diabaikan total.
+|
+| Guard di bawah membuat kondisi itu gagal berisik (exception) alih-alih
+| merusak data. Jangan dihapus.
+|
+*/
+
+pest()->beforeEach(function () {
+    $connection = config('database.default');
+    $database = config("database.connections.{$connection}.database");
+
+    // sqlite in-memory selalu aman
+    if (in_array($database, [':memory:', ''], true)) {
+        return;
+    }
+
+    if (! str_ends_with((string) $database, '_test')) {
+        throw new RuntimeException(
+            "STOP: test hendak dijalankan di database '{$database}' yang bukan database test.\n"
+            ."RefreshDatabase akan menghapus SEMUA datanya.\n\n"
+            ."Kemungkinan penyebab: config sedang di-cache sehingga override di\n"
+            ."phpunit.xml diabaikan. Perbaiki dengan:\n"
+            ."  php artisan config:clear\n\n"
+            ."Nama database test harus berakhiran '_test' (lihat phpunit.xml)."
+        );
+    }
+})->in('Feature');
+
+/*
+|--------------------------------------------------------------------------
 | Expectations
 |--------------------------------------------------------------------------
 |

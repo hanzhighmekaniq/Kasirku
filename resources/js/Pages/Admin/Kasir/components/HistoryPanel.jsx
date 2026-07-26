@@ -9,9 +9,9 @@ const fmt = (n) =>
 export default function HistoryPanel({ sales, onPrint, onClose, loading, onResumeSplit, onCancelSplit }) {
     const STATUS_CLS = {
         completed: "bg-success/10 text-success",
-        cancelled: "bg-red-50 text-red-600",
+        cancelled: "bg-destructive/10 text-destructive",
         draft: "bg-muted text-muted-foreground",
-        pending: "bg-amber-50 text-amber-700",
+        pending: "bg-warning/10 text-warning",
     };
     return (
         <div className="fixed inset-0 z-40 flex justify-end">
@@ -26,7 +26,7 @@ export default function HistoryPanel({ sales, onPrint, onClose, loading, onResum
                     </h3>
                     <button
                         onClick={onClose}
-                        className="text-muted-foreground/60 hover:text-card-foreground"
+                        className="text-muted-foreground/60 hover:text-foreground"
                     >
                         <svg
                             className="h-5 w-5"
@@ -43,7 +43,7 @@ export default function HistoryPanel({ sales, onPrint, onClose, loading, onResum
                         </svg>
                     </button>
                 </div>
-                <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+                <div className="flex-1 overflow-y-auto divide-y divide-border">
                     {sales.length === 0 ? (
                         <div className="flex flex-col items-center py-12 text-center">
                             <p className="text-sm text-muted-foreground/60">
@@ -71,14 +71,14 @@ export default function HistoryPanel({ sales, onPrint, onClose, loading, onResum
                                                 <>
                                                     <button
                                                         onClick={() => onResumeSplit?.(s.id)}
-                                                        className="hidden group-hover:inline-flex items-center gap-1 rounded-lg bg-violet-100 px-2 py-1 text-[11px] font-bold text-violet-700 transition hover:bg-violet-200"
+                                                        className="hidden group-hover:inline-flex items-center gap-1 rounded-lg bg-violet-100 px-2 py-1 text-[11px] font-bold text-violet-700 transition hover:bg-violet-200 dark:bg-violet-900/30 dark:text-violet-400"
                                                         title="Lanjutkan Split Bill"
                                                     >
                                                         Lanjutkan
                                                     </button>
                                                     <button
                                                         onClick={() => onCancelSplit?.(s.id)}
-                                                        className="hidden group-hover:inline-flex items-center gap-1 rounded-lg bg-red-50 px-2 py-1 text-[11px] font-bold text-red-600 transition hover:bg-red-100"
+                                                        className="hidden group-hover:inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-2 py-1 text-[11px] font-bold text-destructive transition hover:bg-destructive/20"
                                                         title="Batalkan Split Bill"
                                                     >
                                                         Batal
@@ -87,7 +87,7 @@ export default function HistoryPanel({ sales, onPrint, onClose, loading, onResum
                                             ) : (
                                                 <button
                                                     onClick={() => onPrint(s.id)}
-                                                    className="hidden group-hover:flex items-center gap-1 text-xs text-primary font-medium hover:text-primary"
+                                     className="hidden group-hover:flex items-center gap-1 text-xs text-primary font-medium hover:text-primary"
                                                     title="Cetak Struk"
                                                 >
                                                     <svg
@@ -108,8 +108,8 @@ export default function HistoryPanel({ sales, onPrint, onClose, loading, onResum
                                             {isSplitInProgress ? (
                                                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                                                     isSplitStale
-                                                        ? "bg-amber-50 text-amber-700"
-                                                        : "bg-violet-50 text-violet-700"
+                                                        ? "bg-warning/10 text-warning"
+                                                        : "bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"
                                                 }`}>
                                                     {isSplitStale ? "⏰" : "🧾"}
                                                     Split {paidCount}/{totalCount}

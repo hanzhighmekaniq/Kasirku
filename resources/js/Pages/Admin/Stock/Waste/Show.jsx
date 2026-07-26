@@ -48,7 +48,7 @@ export default function Show({ waste }) {
             <Head title={`Waste ${waste.waste_no}`} />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{flash.success}</div>
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
             )}
 
             {/* Status badge + actions */}
@@ -56,11 +56,11 @@ export default function Show({ waste }) {
                 <StatusBadge status={waste.status} />
                 {waste.status === 'draft' && (
                     <>
-                        <button onClick={() => setConfirmingStatus('approved')} className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3.5 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-500/30 transition hover:from-emerald-600 hover:to-emerald-700">
+                        <button onClick={() => setConfirmingStatus('approved')} className="inline-flex items-center gap-1.5 rounded-xl bg-success px-3.5 py-2 text-sm font-semibold text-success-foreground shadow-md shadow-success/30 transition hover:bg-success/90">
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             Setujui
                         </button>
-                        <button onClick={() => setConfirmingStatus('rejected')} className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-card px-3.5 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50">
+                        <button onClick={() => setConfirmingStatus('rejected')} className="inline-flex items-center gap-1.5 rounded-xl border border-destructive bg-card px-3.5 py-2 text-sm font-semibold text-destructive transition hover:bg-destructive/10">
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                             Tolak
                         </button>
@@ -74,7 +74,7 @@ export default function Show({ waste }) {
                     {/* Info */}
                     <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
                         <div className="border-b border-border bg-muted/50 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-900">Informasi Waste</h3>
+                            <h3 className="text-base font-semibold text-foreground">Informasi Waste</h3>
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -87,39 +87,39 @@ export default function Show({ waste }) {
                     </div>
 
                     {/* Items */}
-                    <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                         <div className="border-b border-border bg-muted/50 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-900">Item Waste</h3>
+                            <h3 className="text-base font-semibold text-foreground">Item Waste</h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
-                                <thead>
-                                    <tr className="border-b border-border">
-                                        <th className="px-6 py-3 font-medium text-muted-foreground">#</th>
-                                        <th className="px-6 py-3 font-medium text-muted-foreground">Produk</th>
-                                        <th className="px-6 py-3 text-center font-medium text-muted-foreground">Jumlah</th>
-                                        <th className="px-6 py-3 text-center font-medium text-muted-foreground">Kategori</th>
-                                        <th className="px-6 py-3 text-right font-medium text-muted-foreground">Harga Unit</th>
-                                        <th className="px-6 py-3 text-right font-medium text-muted-foreground">Total</th>
-                                        <th className="px-6 py-3 font-medium text-muted-foreground">Catatan</th>
+                                <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                    <tr>
+                                        <th className="px-6 py-3 font-semibold">#</th>
+                                        <th className="px-6 py-3 font-semibold">Produk</th>
+                                        <th className="px-6 py-3 text-center font-semibold">Jumlah</th>
+                                        <th className="px-6 py-3 text-center font-semibold">Kategori</th>
+                                        <th className="px-6 py-3 text-right font-semibold">Harga Unit</th>
+                                        <th className="px-6 py-3 text-right font-semibold">Total</th>
+                                        <th className="px-6 py-3 font-semibold">Catatan</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-border bg-background">
                                     {items.map((item, idx) => (
-                                        <tr key={item.id} className="transition hover:bg-muted/50">
+                                        <tr key={item.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                             <td className="px-6 py-3.5 text-muted-foreground">{idx + 1}</td>
                                             <td className="px-6 py-3.5">
                                                 <p className="font-medium text-foreground">{item.product?.name}</p>
                                                 <p className="text-xs text-muted-foreground">{item.product?.sku}</p>
                                             </td>
-                                            <td className="px-6 py-3.5 text-center font-medium text-red-600">{item.quantity}</td>
+                                            <td className="px-6 py-3.5 text-center font-medium text-destructive">{item.quantity}</td>
                                             <td className="px-6 py-3.5 text-center">
-                                                <span className="inline-flex rounded-lg bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                                                <span className="inline-flex rounded-lg bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                                                     {categoryLabel[item.waste_category] ?? item.waste_category}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-3.5 text-right text-foreground">{fmtCurrency(item.unit_cost)}</td>
-                                            <td className="px-6 py-3.5 text-right font-medium text-red-600">{fmtCurrency(item.total_cost)}</td>
+                                            <td className="px-6 py-3.5 text-right font-medium text-destructive">{fmtCurrency(item.total_cost)}</td>
                                             <td className="px-6 py-3.5 text-xs text-muted-foreground">{item.notes || '-'}</td>
                                         </tr>
                                     ))}
@@ -133,7 +133,7 @@ export default function Show({ waste }) {
                 <div className="space-y-5">
                     <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
                         <div className="border-b border-border bg-muted/50 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-900">Ringkasan</h3>
+                            <h3 className="text-base font-semibold text-foreground">Ringkasan</h3>
                         </div>
                         <div className="p-6">
                             <dl className="space-y-2.5 text-sm">
@@ -142,10 +142,10 @@ export default function Show({ waste }) {
                                 <div className="my-2 border-t border-border" />
                                 <div className="flex justify-between">
                                     <dt className="font-semibold text-foreground">Total Kerugian</dt>
-                                    <dd className="text-lg font-bold text-red-600">{fmtCurrency(totalCost)}</dd>
+                                    <dd className="text-lg font-bold text-destructive">{fmtCurrency(totalCost)}</dd>
                                 </div>
                                 {waste.status === 'approved' && (
-                                    <p className="text-xs text-emerald-600">Stok telah dikurangi.</p>
+                                    <p className="text-xs text-success">Stok telah dikurangi.</p>
                                 )}
                                 {waste.status === 'draft' && (
                                     <p className="text-xs text-muted-foreground">Stok akan dikurangi saat disetujui.</p>
@@ -156,7 +156,7 @@ export default function Show({ waste }) {
 
                     <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
                         <div className="border-b border-border bg-muted/50 px-6 py-4">
-                            <h3 className="text-base font-semibold text-slate-900">Status</h3>
+                            <h3 className="text-base font-semibold text-foreground">Status</h3>
                         </div>
                         <div className="p-6">
                             <dl className="space-y-2.5 text-sm">
@@ -174,9 +174,9 @@ export default function Show({ waste }) {
             {/* Confirm status modal */}
             {confirmingStatus && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onMouseDown={() => !processing && setConfirmingStatus(null)}>
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
-                    <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
-                        <h3 className="text-lg font-semibold text-slate-900">
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity" />
+                    <div className="relative w-full max-w-sm rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-semibold text-popover-foreground">
                             {confirmingStatus === 'approved' ? 'Setujui Waste?' : 'Tolak Waste?'}
                         </h3>
                         <p className="mt-2 text-sm text-muted-foreground">
@@ -186,7 +186,7 @@ export default function Show({ waste }) {
                         </p>
                         <div className="mt-6 flex justify-end gap-2">
                             <button onClick={() => setConfirmingStatus(null)} disabled={processing} className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted">Batal</button>
-                            <button onClick={() => handleStatus(confirmingStatus)} disabled={processing} className={`rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md transition disabled:opacity-60 ${confirmingStatus === 'approved' ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-emerald-500/30 hover:from-emerald-600 hover:to-emerald-700' : 'bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/30 hover:from-red-600 hover:to-red-700'}`}>
+                            <button onClick={() => handleStatus(confirmingStatus)} disabled={processing} className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-md transition disabled:opacity-60 ${confirmingStatus === 'approved' ? 'bg-success text-success-foreground shadow-success/30 hover:bg-success/90' : 'bg-destructive text-destructive-foreground shadow-destructive/30 hover:bg-destructive/90'}`}>
                                 {processing ? 'Memproses...' : confirmingStatus === 'approved' ? 'Ya, Setujui' : 'Ya, Tolak'}
                             </button>
                         </div>
@@ -207,7 +207,7 @@ function InfoRow({ label, value, isRaw }) {
 }
 
 function StatusBadge({ status }) {
-    const map = { draft: 'bg-muted text-foreground', approved: 'bg-emerald-100 text-emerald-700', rejected: 'bg-red-100 text-red-600' };
+    const map = { draft: 'bg-warning/10 text-warning', approved: 'bg-success/10 text-success', rejected: 'bg-destructive/10 text-destructive' };
     const label = { draft: 'Draft', approved: 'Disetujui', rejected: 'Ditolak' };
-    return <span className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status] ?? 'bg-muted text-foreground'}`}>{label[status] ?? status}</span>;
+    return <span className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-medium ${map[status] ?? 'bg-muted text-muted-foreground'}`}>{label[status] ?? status}</span>;
 }

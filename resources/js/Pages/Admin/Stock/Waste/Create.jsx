@@ -76,7 +76,7 @@ export default function Create({ products }) {
             <Head title="Catat Waste" />
 
             {flash?.error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{flash.error}</div>
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
             )}
 
             <form onSubmit={submit}>
@@ -111,12 +111,12 @@ export default function Create({ products }) {
                                             ))}
                                         </select>
                                     </div>
-                                    <button type="button" onClick={addItem} disabled={!selectedProduct} className="rounded-xl bg-primary-50 px-4 py-2.5 text-sm font-medium text-primary-600 transition hover:bg-primary-100 disabled:opacity-50">
+                                    <button type="button" onClick={addItem} disabled={!selectedProduct} className="rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50">
                                         + Tambah
                                     </button>
                                 </div>
 
-                                {errors.items && <p className="text-xs text-red-500">{typeof errors.items === 'string' ? errors.items : 'Minimal 1 item harus ditambahkan'}</p>}
+                                {errors.items && <p className="text-xs text-destructive">{typeof errors.items === 'string' ? errors.items : 'Minimal 1 item harus ditambahkan'}</p>}
 
                                 {data.items.length === 0 ? (
                                     <div className="rounded-xl border-2 border-dashed border-border bg-muted/50 py-8 text-center text-sm text-muted-foreground">
@@ -131,18 +131,18 @@ export default function Create({ products }) {
                                                         <p className="text-sm font-medium text-foreground">{item.product_name}</p>
                                                         <p className="text-xs text-muted-foreground">{item.product_sku}</p>
                                                     </div>
-                                                    <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-red-50 hover:text-red-500">
+                                                    <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
                                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                                     </button>
                                                 </div>
                                                 <div className="mt-3 grid grid-cols-3 gap-3">
                                                     <div>
                                                         <label className="mb-1 block text-xs text-muted-foreground">Jumlah</label>
-                                                        <input type="number" value={item.quantity} onChange={(e) => updateItem(idx, 'quantity', Number(e.target.value) || 0)} min="1" className="h-9 w-full rounded-lg border border-border px-2 text-center text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring" />
+                                                        <input type="number" value={item.quantity} onChange={(e) => updateItem(idx, 'quantity', Number(e.target.value) || 0)} min="1" className="h-9 w-full rounded-lg border border-input bg-background px-2 text-center text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/20" />
                                                     </div>
                                                     <div>
                                                         <label className="mb-1 block text-xs text-muted-foreground">Kategori</label>
-                                                        <select value={item.waste_category} onChange={(e) => updateItem(idx, 'waste_category', e.target.value)} className="h-9 w-full rounded-lg border border-border px-2 text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring">
+                                                        <select value={item.waste_category} onChange={(e) => updateItem(idx, 'waste_category', e.target.value)} className="h-9 w-full rounded-lg border border-input bg-background px-2 text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/20">
                                                             {WASTE_CATEGORIES.map((c) => (
                                                                 <option key={c.value} value={c.value}>{c.label}</option>
                                                             ))}
@@ -150,7 +150,7 @@ export default function Create({ products }) {
                                                     </div>
                                                     <div>
                                                         <label className="mb-1 block text-xs text-muted-foreground">Catatan</label>
-                                                        <input type="text" value={item.notes} onChange={(e) => updateItem(idx, 'notes', e.target.value)} placeholder="Opsional" className="h-9 w-full rounded-lg border border-border px-2 text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring" />
+                                                        <input type="text" value={item.notes} onChange={(e) => updateItem(idx, 'notes', e.target.value)} placeholder="Opsional" className="h-9 w-full rounded-lg border border-input bg-background px-2 text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/20" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -170,7 +170,7 @@ export default function Create({ products }) {
                                 <div className="my-2 border-t border-border" />
                                 <div className="flex justify-between">
                                     <dt className="font-semibold text-foreground">Estimasi Kerugian</dt>
-                                    <dd className="text-lg font-bold text-red-600">
+                                    <dd className="text-lg font-bold text-destructive">
                                         {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(totalCost)}
                                     </dd>
                                 </div>
@@ -181,7 +181,7 @@ export default function Create({ products }) {
                         </SectionCard>
 
                         <div className="flex flex-col gap-2">
-                            <button type="submit" disabled={processing || data.items.length === 0} className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60">
+                            <button type="submit" disabled={processing || data.items.length === 0} className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:bg-primary/90 disabled:opacity-60">
                                 {processing ? 'Menyimpan...' : 'Simpan Waste'}
                             </button>
                             <Link href={route('admin.wastes.index')} className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-center text-sm font-medium text-foreground transition hover:bg-muted">
@@ -199,7 +199,7 @@ function SectionCard({ title, subtitle, children }) {
     return (
         <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
             <div className="border-b border-border bg-muted/50 px-6 py-5">
-                <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+                <h3 className="text-base font-semibold text-foreground">{title}</h3>
                 {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
             </div>
             <div className="p-6">{children}</div>
@@ -211,14 +211,14 @@ function Field({ label, required, error, children }) {
     return (
         <div>
             <label className="mb-1 block text-sm font-medium text-foreground">
-                {label} {required && <span className="text-red-500">*</span>}
+                {label} {required && <span className="text-destructive">*</span>}
             </label>
             {children}
-            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+            {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
     );
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
+    return `block w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 ${hasError ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`;
 }

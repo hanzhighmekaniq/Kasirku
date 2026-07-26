@@ -4,8 +4,8 @@ import TreePicker from "@/Components/TreePicker";
 const inp = (err) =>
     `mt-1.5 block w-full rounded-xl border bg-background text-foreground text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
         err
-            ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-            : "border-border focus:border-ring focus:ring-ring/20"
+            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+            : "border-input focus:border-ring focus:ring-ring/20"
     }`;
 
 /* ── Main Form ──────────────────────────────────────────── */
@@ -41,15 +41,15 @@ export default function CategoryForm({
 
             {/* Kategori Induk — Tree Picker */}
             {parentCategories.length > 0 && (
-                <div className="rounded-2xl border border-primary-200 bg-primary-50/40 p-4">
+                <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4">
                     <div className="mb-3">
-                        <p className="text-sm font-semibold text-primary-800">
+                        <p className="text-sm font-semibold text-primary/80">
                             📁 Kategori Induk
-                            <span className="ml-1.5 text-xs font-normal text-primary-400">
+                            <span className="ml-1.5 text-xs font-normal text-primary/60">
                                 (opsional)
                             </span>
                         </p>
-                        <p className="mt-0.5 text-xs text-primary-500">
+                        <p className="mt-0.5 text-xs text-primary/80">
                             Kosongkan untuk kategori utama. Pilih untuk membuat
                             sub-kategori di bawah kategori lain.
                         </p>

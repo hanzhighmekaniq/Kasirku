@@ -35,15 +35,15 @@ function StatusBadge({ promo }) {
     if (!promo.is_active) {
         return (
             <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-muted text-muted-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
                 Nonaktif
             </span>
         );
     }
     if (start && start > now) {
         return (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-sky-50 text-sky-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                 Terjadwal
             </span>
         );
@@ -51,14 +51,14 @@ function StatusBadge({ promo }) {
     if (end && end < now) {
         return (
             <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-destructive/10 text-destructive">
-                <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
                 Berakhir
             </span>
         );
     }
     return (
         <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-success/10 text-success">
-            <span className="h-1.5 w-1.5 rounded-full bg-success/100 animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
             Aktif
         </span>
     );
@@ -176,21 +176,21 @@ export default function Show({ promotion }) {
                             <h3 className="mb-4 text-sm font-semibold text-foreground">
                                 Produk Terikat ({promo.products_count ?? promo.products.length})
                             </h3>
-                            <div className="overflow-hidden rounded-xl border border-border">
+                            <div className="overflow-hidden rounded-xl border border-border bg-card">
                                 <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="bg-muted text-left text-xs font-semibold text-muted-foreground">
-                                            <th className="px-4 py-2.5">Nama</th>
-                                            <th className="px-4 py-2.5">SKU</th>
-                                            <th className="px-4 py-2.5 text-right">Harga</th>
+                                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                        <tr>
+                                            <th className="px-4 py-2.5 text-left font-semibold">Nama</th>
+                                            <th className="px-4 py-2.5 text-left font-semibold">SKU</th>
+                                            <th className="px-4 py-2.5 text-right font-semibold">Harga</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="divide-y divide-border bg-background">
                                         {promo.products.map((p) => (
-                                            <tr key={p.id} className="border-t border-border">
+                                            <tr key={p.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                                 <td className="px-4 py-2.5 font-medium text-foreground">{p.name}</td>
                                                 <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{p.sku || '—'}</td>
-                                                <td className="px-4 py-2.5 text-right">{fmt(p.sell_price)}</td>
+                                                <td className="px-4 py-2.5 text-right text-foreground">{fmt(p.sell_price)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -202,7 +202,7 @@ export default function Show({ promotion }) {
                     {/* Free Product (bogo/bundle) */}
                     {promo.free_product && (
                         <div className="rounded-2xl border border-success/20 bg-success/10 p-5">
-                            <h3 className="mb-2 text-sm font-semibold text-emerald-800">Produk Gratis</h3>
+                            <h3 className="mb-2 text-sm font-semibold text-success">Produk Gratis</h3>
                             <p className="text-sm text-success">
                                 {promo.free_product.name} — {fmt(promo.free_product.sell_price)}
                             </p>
@@ -229,7 +229,7 @@ export default function Show({ promotion }) {
                             {promo.max_usage && (
                                 <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                                     <div
-                                        className="h-full rounded-full bg-primary-500 transition-all"
+                                        className="h-full rounded-full bg-primary transition-all"
                                         style={{ width: `${Math.min(100, ((promo.used_count ?? 0) / promo.max_usage) * 100)}%` }}
                                     />
                                 </div>

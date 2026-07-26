@@ -16,9 +16,9 @@ const fmtDate = (d) =>
 
 /* ── Expiry badge ─────────────────────────────────────── */
 const STATUS_META = {
-    active:        { label: 'Aktif',          dot: 'bg-success/100', badge: 'bg-success/10 text-success' },
+    active:        { label: 'Aktif',          dot: 'bg-success', badge: 'bg-success/10 text-success' },
     expiring_soon: { label: 'Hampir Habis',   dot: 'bg-warning',   badge: 'bg-warning/10 text-warning'   },
-    expired:       { label: 'Kadaluarsa',     dot: 'bg-destructive/100',     badge: 'bg-destructive/10 text-destructive'       },
+    expired:       { label: 'Kadaluarsa',     dot: 'bg-destructive',     badge: 'bg-destructive/10 text-destructive'       },
     no_expiry:     { label: 'Tanpa Expired',  dot: 'bg-muted-foreground',   badge: 'bg-muted text-muted-foreground'  },
 };
 
@@ -153,13 +153,13 @@ export default function Index({ batches, products, filters }) {
                     <p className="text-xs font-medium text-muted-foreground">Total Batch</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{counts.total}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-success/40 bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Aktif</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{counts.active}</p>
                 </div>
                 <button
                     onClick={() => { setStatus('expiring_soon'); applyFilter(productId, 'expiring_soon'); }}
-                    className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 text-left shadow-sm transition hover:border-warning/30 hover:shadow-md"
+                    className="rounded-2xl border border-border border-l-4 border-l-warning/40 bg-card p-4 text-left shadow-sm transition hover:border-warning/30 hover:shadow-md"
                 >
                     <p className="text-xs font-medium text-muted-foreground">Hampir Kadaluarsa</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{counts.expiring_soon}</p>
@@ -174,7 +174,7 @@ export default function Index({ batches, products, filters }) {
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
                 <div className="border-b border-border bg-card p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -185,7 +185,7 @@ export default function Index({ batches, products, filters }) {
                                 onClick={() => { setProdDropdownOpen(!prodDropdownOpen); setProdSearch(''); }}
                                 className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium shadow-sm transition ${
                                     selectedProduct
-                                        ? 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/10'
+                                        ? 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/20'
                                         : 'border-border bg-card text-foreground hover:bg-muted'
                                 }`}
                             >
@@ -200,7 +200,7 @@ export default function Index({ batches, products, filters }) {
                                 )}
                             </button>
                             {prodDropdownOpen && (
-                                <div className="absolute z-50 mt-2 w-80 rounded-2xl border border-border bg-card shadow-xl">
+                                <div className="absolute z-50 mt-2 w-80 rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
                                     <div className="border-b border-border p-3">
                                         <div className="relative">
                                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.8} />
@@ -210,7 +210,7 @@ export default function Index({ batches, products, filters }) {
                                                 value={prodSearch}
                                                 onChange={(e) => setProdSearch(e.target.value)}
                                                 placeholder="Cari nama atau SKU..."
-                                                className="block w-full rounded-lg border border-border bg-input py-2 pl-9 pr-3 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring"
+                                                className="block w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                                             />
                                         </div>
                                     </div>
@@ -263,7 +263,7 @@ export default function Index({ batches, products, filters }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari batch, produk, SKU..."
-                                className="block w-full rounded-xl border border-border bg-input py-2.5 pl-10 pr-4 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
 
@@ -288,26 +288,26 @@ export default function Index({ batches, products, filters }) {
                 <div className="hidden md:block">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-border">
-                            <thead className="bg-muted/50">
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Produk</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">No. Batch</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cabang</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Harga Pokok</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tgl Beli</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kadaluarsa</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aksi</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Produk</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">No. Batch</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Cabang</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Qty</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Harga Pokok</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Tgl Beli</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Kadaluarsa</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Status</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border bg-background">
                                 {filtered.length === 0 ? (
                                     <tr>
                                         <td colSpan={9} className="px-5 py-16 text-center">
                                             <div className="flex flex-col items-center">
                                                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                                    <Boxes className="h-8 w-8 text-muted-foreground" strokeWidth={1.4} />
+                                                    <Boxes className="h-8 w-8 text-muted-foreground/50" strokeWidth={1.4} />
                                                 </div>
                                                 <p className="mt-4 text-sm font-medium text-muted-foreground">
                                                     {productId || status ? 'Batch tidak ditemukan' : 'Belum ada batch'}
@@ -320,7 +320,7 @@ export default function Index({ batches, products, filters }) {
                                     </tr>
                                 ) : (
                                     filtered.map((b) => (
-                                        <tr key={b.id} className={`transition hover:bg-muted/50 ${b.expiry_status === 'expired' ? 'bg-destructive/10/40' : ''}`}>
+                                        <tr key={b.id} className={`transition hover:bg-[rgb(var(--color-table-hover))] ${b.expiry_status === 'expired' ? 'bg-destructive/10' : ''}`}>
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <p className="text-sm font-semibold text-foreground">{b.product?.name ?? '—'}</p>
                                                 <p className="text-xs text-muted-foreground">{b.product?.sku}</p>
@@ -372,7 +372,7 @@ export default function Index({ batches, products, filters }) {
                     {filtered.length === 0 ? (
                         <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
                             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                <Boxes className="h-8 w-8 text-muted-foreground" strokeWidth={1.4} />
+                                <Boxes className="h-8 w-8 text-muted-foreground/50" strokeWidth={1.4} />
                             </div>
                             <p className="mt-4 text-sm font-medium text-muted-foreground">
                                 {productId || status ? 'Batch tidak ditemukan' : 'Belum ada batch'}
@@ -383,7 +383,7 @@ export default function Index({ batches, products, filters }) {
                         </div>
                     ) : (
                         filtered.map((b) => (
-                            <div key={b.id} className={`rounded-2xl border border-border bg-card p-4 shadow-sm ${b.expiry_status === 'expired' ? 'border-destructive/20 bg-destructive/10/30' : ''}`}>
+                            <div key={b.id} className={`rounded-2xl border border-border bg-card p-4 shadow-sm ${b.expiry_status === 'expired' ? 'border-destructive/20 bg-destructive/10' : ''}`}>
                                 <div className="flex items-start justify-between">
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-semibold text-foreground">{b.product?.name ?? '—'}</p>
@@ -422,14 +422,14 @@ export default function Index({ batches, products, filters }) {
                                 <div className="mt-3 flex items-center justify-end gap-1 border-t border-border pt-3">
                                     <Link
                                         href={route('admin.product-batches.edit', b.id)}
-                                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted/70"
+                                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
                                     >
                                         <Pencil className="h-3.5 w-3.5" strokeWidth={1.8} />
                                         Edit
                                     </Link>
                                     <button
                                         onClick={() => setTarget(b)}
-                                        className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/10"
+                                        className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/20"
                                     >
                                         <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                         Hapus

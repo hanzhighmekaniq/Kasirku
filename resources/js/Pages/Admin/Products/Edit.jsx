@@ -11,12 +11,14 @@ import { ArrowLeft } from "lucide-react";
 import {
     BarChart3,
     ClipboardList,
+    Clock,
     DollarSign,
     ExternalLink,
     FileText,
     Image,
     Info,
     Package,
+    SlidersHorizontal,
     Plus,
     RefreshCw,
     ScanLine,
@@ -51,6 +53,16 @@ const RELEVANT_TYPES = {
 
 const NO_STOCK_TYPES = ["service", "time_based"];
 
+/* Label khusus FnB — hanya untuk tampilan, value form tetap
+   finished_goods / raw_material / combo */
+const FNB_TYPE_LABELS = {
+    finished_goods: "Menu / Makanan",
+    raw_material: "Bahan Baku",
+    combo: "Paket",
+};
+
+const MODIFIER_TYPES = ["finished_goods", "combo"];
+
 const PAGE_TITLE = {
     retail: "Produk",
     fnb: "Menu & Produk",
@@ -68,6 +80,8 @@ export default function Edit({
     suppliers,
     productTypes = {},
     storeType = "retail",
+    modifierGroups = [],
+    attachedModifierGroupIds = [],
 }) {
     const [imagePreview, setImagePreview] = useState(
         product.image ? `/storage/${product.image}` : null,
@@ -78,20 +92,24 @@ export default function Edit({
     const has = (f) => storeTypeFeatures.includes(f);
 
     const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
+    const isFnb = storeType === "fnb";
+
+    /* Label tipe produk — FnB pakai istilah dapur, lainnya pakai label existing */
+    const typeLabel = (t) =>
+        (isFnb ? FNB_TYPE_LABELS[t] : null) ?? productTypes[t] ?? t;
 
     const availableTypes = RELEVANT_TYPES[storeType] ?? ["finished_goods"];
     const feat = {
         barcode: true,
         costPrice: has("purchase"),
         prepTime: has("kitchen"),
-        isComposable: has("recipe"),
         isSellable: true,
         trackStock: has("stock"),
         supplier: has("supplier"),
         multiUnit: ["retail", "fnb", "rental"].includes(storeType),
     };
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
         _method: "PATCH",
         name: product.name ?? "",
         sku: product.sku ?? "",
@@ -100,12 +118,13 @@ export default function Edit({
         category_id: product.category_id ?? "",
         supplier_id: product.supplier_id ?? "",
         unit: product.unit ?? "pcs",
+        base_unit: product.base_unit ?? "",
+        base_unit_conversion: product.base_unit_conversion ?? "",
         sell_price: product.sell_price ?? "",
         cost_price: product.cost_price ?? "",
         stock_minimum: product.stock_minimum ?? 0,
         track_stock: product.track_stock ?? true,
         is_sellable: product.is_sellable ?? true,
-        is_composable: product.is_composable ?? false,
         preparation_time: product.preparation_time ?? "",
         is_active: product.is_active ?? true,
         sell_base: product.sell_base ?? true,
@@ -135,9 +154,32 @@ export default function Edit({
                 min_qty: t.min_qty,
                 price: t.price,
             })),
+        modifier_group_ids: attachedModifierGroupIds ?? [],
     });
 
     const isNoStock = NO_STOCK_TYPES.includes(data.type);
+
+    /* Gating FnB */
+    const showBaseUnit = isFnb && data.type === "raw_material";
+    const showModifierSection = isFnb && MODIFIER_TYPES.includes(data.type);
+
+    /* Matriks wajib/opsional bahan baku FnB (lihat Planing/PLANNING_create_fnb.md).
+       Attribute `required` di HTML sengaja dibuat mengikuti aturan ini supaya
+       validasi native browser dan validasi backend tidak pernah beda pendapat. */
+    const isFnbRawMaterial = isFnb && data.type === "raw_material";
+    // Bahan baku umumnya tidak dijual langsung — harga jual jadi opsional.
+    const requireSellPrice = !isFnbRawMaterial;
+    // Harga modal dibutuhkan untuk menghitung HPP resep.
+    const requireCostPrice = isFnbRawMaterial;
+
+    const toggleModifierGroup = (id) => {
+        setData(
+            "modifier_group_ids",
+            data.modifier_group_ids.includes(id)
+                ? data.modifier_group_ids.filter((x) => x !== id)
+                : [...data.modifier_group_ids, id],
+        );
+    };
 
     const priceLabel =
         data.type === "time_based"
@@ -164,6 +206,11 @@ export default function Edit({
         } else {
             setData("track_stock", true);
         }
+        /* base_unit hanya relevan untuk bahan baku */
+        if (newType !== "raw_material") {
+            setData("base_unit", "");
+            setData("base_unit_conversion", "");
+        }
     };
 
     const handleImageChange = (e) => {
@@ -189,8 +236,46 @@ export default function Edit({
                 ? 100
                 : 0;
 
+    /* Lapis kedua setelah attribute `required`. Kalau validasi native
+       ter-bypass (browser lama, atau form disubmit lewat JS), field wajib
+       bahan baku FnB tetap ditahan di sini sebelum request dikirim. */
+    const blockIfMissingFnbField = () => {
+        const missing = [
+            isFnbRawMaterial && !String(data.base_unit ?? "").trim()
+                ? "base_unit_input"
+                : null,
+            requireCostPrice && feat.costPrice && !Number(data.cost_price)
+                ? "cost_price_input"
+                : null,
+        ].find(Boolean);
+
+        if (!missing) {
+            return false;
+        }
+
+        const el = document.getElementById(missing);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        el?.reportValidity?.();
+
+        return true;
+    };
+
     const submit = (e) => {
         e.preventDefault();
+
+        if (blockIfMissingFnbField()) {
+            return;
+        }
+
+        /* Backend hanya menyentuh relasi modifier kalau sync_modifier_groups true.
+           Flag ini wajib dikirim setiap kali section Modifier dirender. */
+        transform((payload) => ({
+            ...payload,
+            sync_modifier_groups: showModifierSection,
+            modifier_group_ids: showModifierSection
+                ? payload.modifier_group_ids
+                : [],
+        }));
         post(route("admin.products.update", product.id), {
             forceFormData: true,
         });
@@ -225,7 +310,7 @@ export default function Edit({
                 title={`Edit: ${product.name}`}
                 breadcrumbs={[
                     `Edit ${pageTitle.toLowerCase()}`,
-                    productTypes[data.type] ?? data.type,
+                    typeLabel(data.type),
                     ...(product.sku ? [`SKU: ${product.sku}`] : [])
                 ]}
                 heading={
@@ -278,7 +363,7 @@ export default function Edit({
                                         <Select
                                             options={availableTypes.map((t) => ({
                                                 value: t,
-                                                label: productTypes[t] ?? t,
+                                                label: typeLabel(t),
                                             }))}
                                             value={data.type}
                                             onChange={handleTypeChange}
@@ -402,6 +487,74 @@ export default function Edit({
                                 </div>
                             </div>
 
+                            {/* SATUAN PAKAI — bahan baku FnB */}
+                            {showBaseUnit && (
+                                <div className="mt-5 rounded-xl border border-warning/20 bg-warning/5 p-4">
+                                    <div className="mb-3 flex items-center gap-2">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/10">
+                                            <Package className="h-4 w-4 text-warning" />
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-semibold text-foreground">
+                                                Satuan Pakai di Resep
+                                            </div>
+                                            <div className="text-[11px] text-muted-foreground">
+                                                Satuan beli ({data.unit || "?"}) dikonversi ke
+                                                satuan terkecil saat dipakai di resep
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Field
+                                            label="Satuan Pakai"
+                                            required
+                                            hint="cth. gram, ml, butir"
+                                            error={errors.base_unit}
+                                        >
+                                            <input
+                                                id="base_unit_input"
+                                                type="text"
+                                                value={data.base_unit}
+                                                onChange={(e) =>
+                                                    setData("base_unit", e.target.value)
+                                                }
+                                                placeholder="cth. gram"
+                                                required
+                                                className={inputCls(!!errors.base_unit)}
+                                            />
+                                        </Field>
+                                        <Field
+                                            label="Konversi"
+                                            hint="1 satuan beli = berapa satuan pakai"
+                                            error={errors.base_unit_conversion}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="shrink-0 text-sm text-muted-foreground">
+                                                    1 {data.unit || "?"} =
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    step="any"
+                                                    min="0"
+                                                    value={data.base_unit_conversion}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "base_unit_conversion",
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="1000"
+                                                    className={`${inputCls(!!errors.base_unit_conversion)} flex-1`}
+                                                />
+                                                <span className="shrink-0 text-sm text-muted-foreground">
+                                                    {data.base_unit || "?"}
+                                                </span>
+                                            </div>
+                                        </Field>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Deskripsi */}
                             <div className="mt-5">
                                 <Field
@@ -436,7 +589,7 @@ export default function Edit({
                             subtitle="Atur harga jual, modal, grosir bertingkat, dan kemasan"
                         >
                             {product.is_variant && (
-                                <div className="mb-4 flex items-center justify-between rounded-xl border border-primary/10 bg-primary/10/50 p-4">
+                                <div className="mb-4 flex items-center justify-between rounded-xl border border-primary/10 bg-primary/5 p-4">
                                     <div>
                                         <p className="text-sm font-semibold text-foreground">Jual Produk Dasar</p>
                                         <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -459,7 +612,7 @@ export default function Edit({
                                 >
                                     <Field
                                         label={priceLabel}
-                                        required
+                                        required={requireSellPrice}
                                         error={errors.sell_price}
                                     >
                                         <CurrencyInput
@@ -468,20 +621,23 @@ export default function Edit({
                                                 setData("sell_price", v)
                                             }
                                             error={!!errors.sell_price}
-                                            required
+                                            required={requireSellPrice}
                                         />
                                     </Field>
                                     {feat.costPrice && (
                                         <Field
                                             label="Harga Beli / Modal"
+                                            required={requireCostPrice}
                                             error={errors.cost_price}
                                         >
                                             <CurrencyInput
+                                                id="cost_price_input"
                                                 value={data.cost_price}
                                                 onChange={(v) =>
                                                     setData("cost_price", v)
                                                 }
                                                 error={!!errors.cost_price}
+                                                required={requireCostPrice}
                                             />
                                         </Field>
                                     )}
@@ -908,6 +1064,52 @@ export default function Edit({
                             title="Stok & Pengaturan"
                             subtitle="Kelola inventori dan opsi operasional produk"
                         >
+                            {/* WAKTU SAJI — gate: fitur kitchen */}
+                            {feat.prepTime && (
+                                <div className="mb-5 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                                                <Clock className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-semibold text-foreground">
+                                                    Waktu Saji (menit)
+                                                </div>
+                                                <div className="text-[11px] text-muted-foreground">
+                                                    Estimasi waktu persiapan menu ini di dapur
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="sm:w-44">
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    value={data.preparation_time}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            "preparation_time",
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    min="0"
+                                                    placeholder="0"
+                                                    className={`${inputCls(!!errors.preparation_time)} pr-16`}
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
+                                                    menit
+                                                </span>
+                                            </div>
+                                            {errors.preparation_time && (
+                                                <p className="mt-1 text-xs text-destructive">
+                                                    {errors.preparation_time}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div
                                 className={`grid grid-cols-1 md:grid-cols-2 gap-4 mb-5 ${isNoStock ? "opacity-50 pointer-events-none" : ""}`}
                             >
@@ -939,31 +1141,6 @@ export default function Edit({
                                         mencapai angka ini.
                                     </p>
                                 </Field>
-                                {feat.prepTime && (
-                                    <Field
-                                        label="Waktu Persiapan"
-                                        error={errors.preparation_time}
-                                    >
-                                        <div className="relative">
-                                            <input
-                                                type="number"
-                                                value={data.preparation_time}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "preparation_time",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                min="0"
-                                                placeholder="0"
-                                                className={`${inputCls(!!errors.preparation_time)} pr-16`}
-                                            />
-                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-                                                menit
-                                            </span>
-                                        </div>
-                                    </Field>
-                                )}
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -985,16 +1162,10 @@ export default function Edit({
                                         setData("is_sellable", v)
                                     }
                                 />
-                                {feat.isComposable && (
-                                    <SettingToggle
-                                        label="Produk Komposisi"
-                                        description="Terdiri dari bahan/resep lain"
-                                        checked={data.is_composable}
-                                        onChange={(v) =>
-                                            setData("is_composable", v)
-                                        }
-                                    />
-                                )}
+                                {/* Toggle "Produk Komposisi" dihapus: is_composable
+                                    sekarang dikelola otomatis oleh backend
+                                    (Product::syncIsComposable) berdasarkan ada
+                                    tidaknya resep. */}
                                 <SettingToggle
                                     label="Produk Aktif"
                                     description="Nonaktifkan untuk menyembunyikan sementara"
@@ -1213,6 +1384,49 @@ export default function Edit({
                                     </div>
                                 </SectionCard>
                             )}
+
+                        {/* SECTION: Modifier / Topping — FnB, menu & paket saja */}
+                        {showModifierSection && (
+                            <SectionCard
+                                step={4}
+                                title="Modifier / Topping"
+                                subtitle="Pilihan tambahan untuk menu ini (level gula, ukuran, topping, dll)"
+                                accent="violet"
+                                headerRight={
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-semibold text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">
+                                        <SlidersHorizontal className="h-3.5 w-3.5" />
+                                        {data.modifier_group_ids.length} dipilih
+                                    </span>
+                                }
+                            >
+                                {modifierGroups.length === 0 ? (
+                                    <p className="py-4 text-center text-xs italic text-muted-foreground">
+                                        Belum ada modifier group di toko ini.
+                                    </p>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {modifierGroups.map((mg) => (
+                                            <CheckboxTile
+                                                key={mg.id}
+                                                checked={data.modifier_group_ids.includes(
+                                                    mg.id,
+                                                )}
+                                                onChange={() =>
+                                                    toggleModifierGroup(mg.id)
+                                                }
+                                                label={mg.name}
+                                                description={`${mg.modifiers_count ?? 0} pilihan · ${mg.is_required ? "Wajib" : "Opsional"}`}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                                {errors.modifier_group_ids && (
+                                    <p className="mt-2 text-xs text-destructive">
+                                        {errors.modifier_group_ids}
+                                    </p>
+                                )}
+                            </SectionCard>
+                        )}
                     </div>
 
                     {/* ── Sidebar (sticky) ── */}
@@ -1221,7 +1435,7 @@ export default function Edit({
                         <SectionCard title="Gambar Produk" accent="violet">
                             <div className="space-y-3">
                                 <div
-                                    className="group relative aspect-square w-full overflow-hidden rounded-xl border-2 border-dashed border-border bg-gradient-to-br from-primary-50/30 to-primary/3 transition hover:border-primary-400 hover:bg-primary/10/40 cursor-pointer"
+                                    className="group relative aspect-square w-full overflow-hidden rounded-xl border-2 border-dashed border-border bg-gradient-to-br from-primary/5 to-primary/[0.03] transition hover:border-primary/40 hover:bg-primary/5 cursor-pointer"
                                     onClick={() =>
                                         document
                                             .getElementById("imageInput")
@@ -1236,7 +1450,7 @@ export default function Edit({
                                         />
                                     ) : (
                                         <div className="flex h-full flex-col items-center justify-center p-6">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary/20 mb-2">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary shadow-lg shadow-primary/20 mb-2">
                                                 <Image
                                                     className="h-6 w-6 text-white"
                                                     strokeWidth={1.5}
@@ -1288,18 +1502,32 @@ export default function Edit({
                                 />
                                 <SummaryRow
                                     label="Tipe"
-                                    value={
-                                        productTypes[data.type] ?? data.type
-                                    }
+                                    value={typeLabel(data.type)}
                                 />
                                 <SummaryRow
                                     label="Satuan Dasar"
                                     value={data.unit}
                                 />
+                                {showBaseUnit && (
+                                    <SummaryRow
+                                        label="Satuan Pakai"
+                                        value={
+                                            data.base_unit
+                                                ? `1 ${data.unit} = ${data.base_unit_conversion || "?"} ${data.base_unit}`
+                                                : "—"
+                                        }
+                                    />
+                                )}
                                 {feat.multiUnit && (
                                     <SummaryRow
                                         label="Kemasan Tambahan"
                                         value={`${data.packaging_units.length} kemasan`}
+                                    />
+                                )}
+                                {showModifierSection && (
+                                    <SummaryRow
+                                        label="Modifier"
+                                        value={`${data.modifier_group_ids.length} grup`}
                                     />
                                 )}
                             </dl>
@@ -1318,12 +1546,6 @@ export default function Edit({
                                     active={data.is_active}
                                     label="Aktif"
                                 />
-                                {feat.isComposable && data.is_composable && (
-                                    <SummaryChip
-                                        active={data.is_composable}
-                                        label="Komposisi"
-                                    />
-                                )}
                             </div>
                         </SectionCard>
 
@@ -1361,7 +1583,7 @@ export default function Edit({
                     type="submit"
                     form="productForm"
                     disabled={processing}
-                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-xl shadow-primary-500/40 transition hover:shadow-2xl hover:shadow-primary-500/50 disabled:opacity-60"
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary text-white shadow-xl shadow-primary/40 transition hover:shadow-2xl hover:shadow-primary/50 disabled:opacity-60"
                     title="Simpan Perubahan"
                 >
                     {processing ? (
@@ -1439,7 +1661,7 @@ function SectionCard({
             >
                 <div className="flex items-start gap-3">
                     {step && (
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-primary/10 bg-gradient-to-br from-primary-50 to-primary/5 text-sm font-bold text-primary">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-primary/10 bg-gradient-to-br from-primary/10 to-primary/5 text-sm font-bold text-primary">
                             {String(step).padStart(2, "0")}
                         </span>
                     )}
@@ -1470,7 +1692,7 @@ function ToggleSwitch({ checked, onChange, disabled = false }) {
             disabled={disabled}
             onClick={() => onChange(!checked)}
             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${checked
-                    ? "bg-gradient-to-r from-primary-500 to-primary-500"
+                    ? "bg-gradient-to-r from-primary to-primary"
                     : "bg-muted"
                 } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
         >
@@ -1501,6 +1723,32 @@ function SettingToggle({
     );
 }
 
+function CheckboxTile({ checked, onChange, label, description }) {
+    return (
+        <label
+            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition ${checked
+                    ? "border-violet-300 bg-violet-100/50 dark:border-violet-700 dark:bg-violet-900/20"
+                    : "border-border bg-card hover:border-primary/20"
+                }`}
+        >
+            <input
+                type="checkbox"
+                checked={checked}
+                onChange={onChange}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-border text-primary focus:ring-primary/30"
+            />
+            <span className="min-w-0">
+                <span className="block text-sm font-semibold text-foreground">
+                    {label}
+                </span>
+                <span className="block text-[11px] text-muted-foreground">
+                    {description}
+                </span>
+            </span>
+        </label>
+    );
+}
+
 function SummaryChip({ label, active, show = true }) {
     if (!show) return null;
     return (
@@ -1511,7 +1759,7 @@ function SummaryChip({ label, active, show = true }) {
                 }`}
         >
             <span
-                className={`h-1.5 w-1.5 rounded-full ${active ? "bg-success/100" : "bg-muted"}`}
+                className={`h-1.5 w-1.5 rounded-full ${active ? "bg-success" : "bg-muted"}`}
             />
             {label}
         </span>
@@ -1547,6 +1795,6 @@ function SummaryRow({ label, value }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border border-border bg-card py-2.5 px-3.5 text-sm transition outline-none focus:border-ring focus:ring-4 focus:ring-primary-500/10 ${hasError ? "border-destructive focus:border-destructive focus:ring-destructive/20" : ""
+    return `block w-full rounded-xl border border-border bg-card py-2.5 px-3.5 text-sm transition outline-none focus:border-ring focus:ring-4 focus:ring-ring/10 ${hasError ? "border-destructive focus:border-destructive focus:ring-destructive/20" : ""
         }`;
 }

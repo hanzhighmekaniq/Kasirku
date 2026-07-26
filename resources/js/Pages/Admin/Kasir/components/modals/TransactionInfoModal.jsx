@@ -5,7 +5,7 @@ import Field from "@/Components/ui/Field";
 import CurrencyInput from "@/Components/ui/CurrencyInput";
 
 const inputClass =
-    "block w-full rounded-xl border-border bg-muted/50 py-2.5 text-sm shadow-sm transition focus:border-slate-400 focus:bg-card focus:ring-2 focus:ring-slate-100";
+    "block w-full rounded-xl border-input bg-background py-2.5 text-sm shadow-sm transition focus:border-ring focus:bg-card focus:ring-2 focus:ring-ring/20";
 
 /**
  * TransactionInfoModal — input data tambahan per mode transaksi (Antar /
@@ -90,7 +90,7 @@ export default function TransactionInfoModal({ show, onClose, k }) {
                     <button
                         type="button"
                         onClick={save}
-                        className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700"
+                        className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                     >
                         Simpan
                     </button>

@@ -68,15 +68,15 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
                 <label className="mb-1.5 block text-sm font-medium text-foreground">
                     Pembelian Asal <span className="text-destructive">*</span>
                 </label>
-                <div className="flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50/40 px-4 py-3">
+                <div className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3">
                     <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-primary-700">{selected.purchase_no}</p>
+                        <p className="text-sm font-semibold text-primary">{selected.purchase_no}</p>
                         <p className="text-xs text-muted-foreground">{selected.supplier?.name} &bull; {selected.items_count} item &bull; {formatDate(selected.purchase_date)}</p>
                     </div>
                     <button
                         type="button"
                         onClick={clearSelection}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted/70 hover:text-muted-foreground"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         title="Ganti pembelian"
                     >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -105,13 +105,13 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
                     onFocus={() => setOpen(true)}
                     onKeyDown={onKey}
                     placeholder="Ketik nomor pembelian atau nama supplier…"
-                    className="block w-full rounded-xl border border-border py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                    className="block w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                     autoComplete="off"
                 />
             </div>
 
             {open && (
-                <div className="absolute z-40 mt-1.5 max-h-72 w-full overflow-y-auto rounded-2xl border border-border bg-card shadow-xl">
+                <div className="absolute z-40 mt-1.5 max-h-72 w-full overflow-y-auto rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
                     {filtered.length === 0 ? (
                         <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                             Pembelian tidak ditemukan
@@ -124,11 +124,11 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
                             onClick={() => pick(p)}
                             onMouseEnter={() => setIdx(i)}
                             className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition ${
-                                i === idx ? 'bg-primary-50' : 'hover:bg-muted'
+                                i === idx ? 'bg-primary/10' : 'hover:bg-muted'
                             }`}
                         >
                             <div className="min-w-0 flex-1">
-                                <p className={`truncate font-medium ${i === idx ? 'text-primary-700' : 'text-foreground'}`}>
+                                <p className={`truncate font-medium ${i === idx ? 'text-primary' : 'text-foreground'}`}>
                                     {p.purchase_no}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
@@ -251,10 +251,10 @@ export default function Create({ purchases, storeType = 'retail' }) {
     };
 
     const inputCls = (field) =>
-        `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
+        `block w-full rounded-xl border bg-background text-sm shadow-sm transition focus:ring-2 ${
             errors[field]
-                ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                : 'border-border focus:border-ring focus:ring-ring/20'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive/20'
+                : 'border-input focus:border-ring focus:ring-ring/20'
         }`;
 
     return (
@@ -347,7 +347,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                             </div>
                         ) : loadingItems ? (
                             <div className="flex items-center justify-center py-10">
-                                <svg className="h-6 w-6 animate-spin text-primary-500" fill="none" viewBox="0 0 24 24">
+                                <svg className="h-6 w-6 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                 </svg>
@@ -363,7 +363,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                     <div
                                         key={idx}
                                         className={`rounded-xl border p-4 transition ${
-                                            item.selected ? 'border-primary-300 bg-primary-50/30' : 'border-border hover:border-border'
+                                            item.selected ? 'border-primary/20 bg-primary/10' : 'border-border hover:border-border'
                                         }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -372,7 +372,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                     type="checkbox"
                                                     checked={item.selected}
                                                     onChange={() => toggleItem(idx)}
-                                                    className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
+                                                    className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                                                 />
                                             </div>
                                             <div className="min-w-0 flex-1">
@@ -384,9 +384,9 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                     <div className="text-right">
                                                         <p className="text-sm font-medium text-muted-foreground">Beli: {item.quantity}</p>
                                                         {item.returned_qty > 0 && (
-                                                            <p className="text-xs text-amber-600">Sudah diretur: {item.returned_qty}</p>
+                                                            <p className="text-xs text-warning">Sudah diretur: {item.returned_qty}</p>
                                                         )}
-                                                        <p className={`text-xs font-medium ${item.returnable_qty > 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                                                        <p className={`text-xs font-medium ${item.returnable_qty > 0 ? 'text-success' : 'text-destructive'}`}>
                                                             Sisa bisa diretur: {item.returnable_qty}
                                                         </p>
                                                         <p className="text-xs text-muted-foreground">{formatRupiah(item.cost_price)}/pc</p>
@@ -406,7 +406,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                                 value={item.return_qty || ''}
                                                                 onChange={(e) => updateQty(idx, parseInt(e.target.value) || 0)}
                                                                 disabled={item.returnable_qty <= 0}
-                                                                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:bg-muted disabled:text-muted-foreground"
+                                                                className="mt-1 block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:bg-muted disabled:text-muted-foreground"
                                                             />
                                                             <p className="mt-1 text-xs text-muted-foreground">Maks: {item.returnable_qty}</p>
                                                         </div>
@@ -419,7 +419,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                                 value={item.reason || ''}
                                                                 onChange={(e) => updateReason(idx, e.target.value)}
                                                                 placeholder="Rusak, tidak sesuai, dll."
-                                                                className="mt-1 block w-full rounded-lg border border-border px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                                className="mt-1 block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                             />
                                                         </div>
                                                     </div>
@@ -452,7 +452,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                 <div className="border-t border-border pt-2 mt-2">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-semibold text-foreground">Total Retur</span>
-                                        <span className="text-lg font-bold text-primary-600">{formatRupiah(subtotal)}</span>
+                                        <span className="text-lg font-bold text-primary">{formatRupiah(subtotal)}</span>
                                     </div>
                                 </div>
                             </div>

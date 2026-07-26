@@ -63,10 +63,10 @@ export default function PromotionForm({
     };
 
     const inputCls = (field) =>
-        `block w-full rounded-xl border bg-card px-3 py-2.5 text-sm shadow-sm transition focus:ring-2 ${
+        `block w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:ring-2 ${
             errors[field]
-                ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                : 'border-border focus:border-ring focus:ring-ring/20'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive/20'
+                : 'border-input focus:border-ring focus:ring-ring/20'
         }`;
 
     const showTierPrice = data.type === 'tiered' || data.type === 'member_price';
@@ -110,11 +110,11 @@ export default function PromotionForm({
                             onClick={() => setData('scope', s.value)}
                             className={`rounded-xl border-2 px-4 py-3 text-left transition ${
                                 data.scope === s.value
-                                    ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-200'
+                                    ? 'border-primary bg-primary/10 ring-1 ring-primary/20'
                                     : 'border-border bg-card hover:border-border'
                             }`}
                         >
-                            <p className={`text-sm font-semibold ${data.scope === s.value ? 'text-primary-700' : 'text-foreground'}`}>
+                            <p className={`text-sm font-semibold ${data.scope === s.value ? 'text-primary' : 'text-foreground'}`}>
                                 {s.label}
                             </p>
                             <p className="mt-0.5 text-xs text-muted-foreground">{s.desc}</p>
@@ -342,8 +342,8 @@ export default function PromotionForm({
                     <button
                         type="button"
                         onClick={() => setData('is_active', !data.is_active)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                            data.is_active ? 'bg-primary-600' : 'bg-slate-200'
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                            data.is_active ? 'bg-primary' : 'bg-muted'
                         }`}
                     >
                         <span
@@ -400,16 +400,16 @@ export default function PromotionForm({
                                 {selectedProducts.map((p) => (
                                     <span
                                         key={p.id}
-                                        className="inline-flex items-center gap-1.5 rounded-lg border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700"
+                                        className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
                                     >
                                         <span className="max-w-[120px] truncate">{p.name}</span>
-                                        <span className="text-primary-400">
+                                        <span className="text-primary/70">
                                             Rp {Number(p.sell_price).toLocaleString('id-ID')}
                                         </span>
                                         <button
                                             type="button"
                                             onClick={() => removeProduct(p.id)}
-                                            className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-primary-200 hover:text-primary-800"
+                                            className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-primary/20 hover:text-primary"
                                         >
                                             <X className="h-3 w-3" strokeWidth={2} />
                                         </button>
@@ -423,7 +423,7 @@ export default function PromotionForm({
                         <button
                             type="button"
                             onClick={() => setShowProductPicker(!showProductPicker)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-dashed border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-primary-400 hover:text-primary-600"
+                            className="inline-flex items-center gap-2 rounded-xl border border-dashed border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-primary hover:text-primary"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -439,17 +439,17 @@ export default function PromotionForm({
 
                         {showProductPicker && (
                             <div className="mt-3 overflow-hidden rounded-xl border border-border">
-                                <div className="border-b border-border bg-muted/50 p-3">
+                                <div className="border-b border-border bg-muted p-3">
                                     <input
                                         type="text"
                                         value={productSearch}
                                         onChange={(e) => setProductSearch(e.target.value)}
                                         placeholder="Cari produk..."
-                                        className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                        className="block w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                                         autoFocus
                                     />
                                 </div>
-                                <div className="max-h-60 overflow-y-auto">
+                                <div className="max-h-60 overflow-y-auto bg-background">
                                     {filteredProducts.length === 0 ? (
                                         <div className="px-4 py-6 text-center text-sm text-muted-foreground">
                                             {products.length === 0
@@ -462,7 +462,7 @@ export default function PromotionForm({
                                                 key={p.id}
                                                 type="button"
                                                 onClick={() => addProduct(p.id)}
-                                                className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition hover:bg-primary-50"
+                                                className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition hover:bg-primary/10"
                                             >
                                                 <div>
                                                     <p className="font-medium text-foreground">{p.name}</p>

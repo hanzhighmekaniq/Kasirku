@@ -385,7 +385,7 @@ export default function PaymentModal({
                             <button
                                 type="button"
                                 onClick={goBack}
-                                className="text-muted-foreground/60 hover:text-card-foreground transition"
+                                        className="text-muted-foreground/60 hover:text-foreground transition"
                             >
                                 <svg
                                     className="h-5 w-5"
@@ -416,7 +416,7 @@ export default function PaymentModal({
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-muted-foreground/60 hover:text-card-foreground"
+                        className="text-muted-foreground/60 hover:text-foreground"
                     >
                         <svg
                             className="h-5 w-5"
@@ -466,9 +466,9 @@ export default function PaymentModal({
                         <button
                             type="button"
                             onClick={goOffline}
-                            className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-emerald-400 hover:bg-success/10 hover:shadow-md"
+                            className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-success/40 hover:bg-success/10 hover:shadow-md"
                         >
-                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-2xl transition group-hover:bg-emerald-200">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-success/10 text-2xl transition group-hover:bg-success/20">
                                 💵
                             </div>
                             <div className="flex-1">
@@ -500,7 +500,7 @@ export default function PaymentModal({
                                 onClick={() => setMode("online")}
                                 className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-indigo-400 hover:bg-primary/10 hover:shadow-md"
                             >
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-2xl transition group-hover:bg-indigo-200">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-2xl transition group-hover:bg-primary/20">
                                     🌐
                                 </div>
                                 <div className="flex-1">
@@ -512,7 +512,7 @@ export default function PaymentModal({
                                     </p>
                                 </div>
                                 <svg
-                                    className="h-5 w-5 text-muted-foreground/30 group-hover:text-indigo-500 transition"
+                                    className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary transition"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     strokeWidth={2}
@@ -531,9 +531,9 @@ export default function PaymentModal({
                             <button
                                 type="button"
                                 onClick={goDebt}
-                                className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-amber-400 hover:bg-warning/10 hover:shadow-md"
+                                className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border bg-card p-5 text-left transition hover:border-warning/40 hover:bg-warning/10 hover:shadow-md"
                             >
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-2xl transition group-hover:bg-amber-200">
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-warning/10 text-2xl transition group-hover:bg-warning/20">
                                     📒
                                 </div>
                                 <div className="flex-1">
@@ -610,7 +610,7 @@ export default function PaymentModal({
                                                 onClick={() =>
                                                     update(0, "amount", v)
                                                 }
-                                                className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${Number(payments[0].amount) === v ? "border-emerald-500 bg-success/10 text-success" : "border-border text-muted-foreground hover:border-emerald-300"}`}
+                                                className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${Number(payments[0].amount) === v ? "border-success bg-success/10 text-success" : "border-border text-muted-foreground hover:border-success/30"}`}
                                             >
                                                 {fmt(v)}
                                             </button>
@@ -677,7 +677,7 @@ export default function PaymentModal({
                                                     Number(e.target.value),
                                                 )
                                             }
-                                            className="flex-1 rounded-xl border-slate-300 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                                className="flex-1 rounded-xl border-input text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                         >
                                             {offlineMethods.map((m) => (
                                                 <option key={m.id} value={m.id}>
@@ -705,7 +705,7 @@ export default function PaymentModal({
                                             <button
                                                 type="button"
                                                 onClick={() => remove(i)}
-                                                className="text-red-400 hover:text-red-600"
+                                                className="text-destructive/60 hover:text-destructive"
                                             >
                                                 <svg
                                                     className="h-4 w-4"
@@ -738,7 +738,7 @@ export default function PaymentModal({
                                                         e.target.value,
                                                     )
                                                 }
-                                                className="block w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                                className="block w-full rounded-xl border-input pl-9 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                             />
                                         </div>
                                         {remaining > 0 && (
@@ -755,7 +755,7 @@ export default function PaymentModal({
                                                                 )),
                                                     )
                                                 }
-                                                className="shrink-0 rounded-lg border border-emerald-200 bg-success/10 px-2.5 py-2 text-[11px] font-bold text-success hover:bg-emerald-100 transition"
+                                                className="shrink-0 rounded-lg border border-success/20 bg-success/10 px-2.5 py-2 text-[11px] font-bold text-success hover:bg-success/20 transition"
                                                 title="Isi sisa pembayaran"
                                             >
                                                 Sisa
@@ -769,7 +769,7 @@ export default function PaymentModal({
                                 <button
                                     type="button"
                                     onClick={add}
-                                    className="w-full rounded-xl border border-dashed border-slate-300 py-2 text-xs font-medium text-muted-foreground hover:border-emerald-300 hover:text-success transition"
+                                    className="w-full rounded-xl border border-dashed border-border py-2 text-xs font-medium text-muted-foreground hover:border-success/30 hover:text-success transition"
                                 >
                                     + Tambah metode pembayaran (split)
                                 </button>
@@ -778,7 +778,7 @@ export default function PaymentModal({
 
                         {/* Fixed: Summary */}
                         <div className="shrink-0 border-t border-border px-5 py-3 bg-card">
-                            <div className="rounded-xl bg-muted/50 px-4 py-3 space-y-1 text-sm">
+                            <div className="rounded-xl bg-muted px-4 py-3 space-y-1 text-sm">
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">
                                         Dibayar
@@ -802,7 +802,7 @@ export default function PaymentModal({
                                         <span className="text-muted-foreground">
                                             Kurang
                                         </span>
-                                        <span className="font-bold text-red-600">
+                                        <span className="font-bold text-destructive">
                                             {fmt(remaining)}
                                         </span>
                                     </div>
@@ -841,7 +841,7 @@ export default function PaymentModal({
                                             value={customerQuery}
                                             onChange={(e) => setCustomerQuery(e.target.value)}
                                             placeholder="Cari nama, telepon, atau kode..."
-                                            className="w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                                            className="w-full rounded-xl border-input pl-9 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -858,9 +858,9 @@ export default function PaymentModal({
                                                         key={c.id}
                                                         type="button"
                                                         onClick={() => onSelectCustomer?.(c.id)}
-                                                        className="flex w-full items-center gap-2.5 rounded-xl border border-border px-3 py-2 text-left transition hover:border-amber-300 hover:bg-warning/10"
+                                                        className="flex w-full items-center gap-2.5 rounded-xl border border-border px-3 py-2 text-left transition hover:border-warning/30 hover:bg-warning/10"
                                                     >
-                                                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-muted-foreground">
+                                                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
                                                             {c.name?.charAt(0)?.toUpperCase()}
                                                         </span>
                                                         <div className="min-w-0 flex-1">
@@ -890,8 +890,8 @@ export default function PaymentModal({
                             {/* ── Pelanggan sudah dipilih: tampilkan info + form ── */}
                             {customer && (
                                 <>
-                                    <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-warning/10 px-3 py-2.5">
-                                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-200 text-sm font-bold text-amber-800">
+                                    <div className="flex items-center gap-2.5 rounded-xl border border-warning/20 bg-warning/10 px-3 py-2.5">
+                                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warning/20 text-sm font-bold text-warning">
                                             {customer.name?.charAt(0)?.toUpperCase()}
                                         </span>
                                         <div className="min-w-0 flex-1">
@@ -905,7 +905,7 @@ export default function PaymentModal({
                                         <button
                                             type="button"
                                             onClick={() => onSelectCustomer?.("")}
-                                            className="shrink-0 rounded-full p-1 text-amber-500 hover:bg-amber-200 hover:text-amber-800 transition"
+                                            className="shrink-0 rounded-full p-1 text-warning hover:bg-warning/20 hover:text-warning transition"
                                             title="Ganti pelanggan"
                                         >
                                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -916,7 +916,7 @@ export default function PaymentModal({
 
                                     {/* Detail hutang pelanggan — ringkas tapi lengkap */}
                                     <div className="grid grid-cols-2 gap-2">
-                                        <div className="rounded-xl bg-muted/50 px-3 py-2">
+                                        <div className="rounded-xl bg-muted px-3 py-2">
                                             <p className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
                                                 Hutang saat ini
                                             </p>
@@ -924,19 +924,19 @@ export default function PaymentModal({
                                                 {fmt(customer.debt_balance ?? 0)}
                                             </p>
                                         </div>
-                                        <div className="rounded-xl bg-muted/50 px-3 py-2">
-                                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
-                                                Limit kredit
-                                            </p>
-                                            <p className="mt-0.5 text-sm font-bold text-foreground">
-                                                {customer.credit_limit > 0
-                                                    ? fmt(customer.credit_limit)
-                                                    : "Tanpa limit"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    {customer.credit_limit > 0 && (
-                                        <div className="rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                                        <div className="rounded-xl bg-muted px-3 py-2">
+                                             <p className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
+                                                 Limit kredit
+                                             </p>
+                                             <p className="mt-0.5 text-sm font-bold text-foreground">
+                                                 {customer.credit_limit > 0
+                                                     ? fmt(customer.credit_limit)
+                                                     : "Tanpa limit"}
+                                             </p>
+                                         </div>
+                                     </div>
+                                     {customer.credit_limit > 0 && (
+                                        <div className="rounded-xl bg-primary/10 px-3 py-2 text-xs text-primary">
                                             Sisa limit tersedia:{" "}
                                             <strong>{fmt(availableCredit)}</strong>
                                         </div>
@@ -961,9 +961,9 @@ export default function PaymentModal({
                                                         pg_method: "",
                                                     }]);
                                                 }}
-                                                className="group flex w-full items-center gap-3 rounded-2xl border-2 border-border bg-card p-4 text-left transition hover:border-amber-400 hover:bg-warning/10 hover:shadow-sm"
+                                                className="group flex w-full items-center gap-3 rounded-2xl border-2 border-border bg-card p-4 text-left transition hover:border-warning/40 hover:bg-warning/10 hover:shadow-sm"
                                             >
-                                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-xl transition group-hover:bg-amber-200">
+                                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-warning/10 text-xl transition group-hover:bg-warning/20">
                                                     📒
                                                 </div>
                                                 <div className="flex-1">
@@ -974,7 +974,7 @@ export default function PaymentModal({
                                                         Seluruh {fmt(displayTotal)} dicatat sebagai hutang
                                                     </p>
                                                 </div>
-                                                <svg className="h-5 w-5 text-muted-foreground/30 group-hover:text-amber-500 transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <svg className="h-5 w-5 text-muted-foreground/30 group-hover:text-warning transition" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                                 </svg>
                                             </button>
@@ -1003,9 +1003,9 @@ export default function PaymentModal({
                                                         },
                                                     ]);
                                                 }}
-                                                className="group flex w-full items-center gap-3 rounded-2xl border-2 border-border bg-card p-4 text-left transition hover:border-emerald-400 hover:bg-success/10 hover:shadow-sm"
+                                                className="group flex w-full items-center gap-3 rounded-2xl border-2 border-border bg-card p-4 text-left transition hover:border-success/40 hover:bg-success/10 hover:shadow-sm"
                                             >
-                                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-xl transition group-hover:bg-emerald-200">
+                                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-success/10 text-xl transition group-hover:bg-success/20">
                                                     💵
                                                 </div>
                                                 <div className="flex-1">
@@ -1025,15 +1025,15 @@ export default function PaymentModal({
 
                                     {/* ─── Full Hutang — konfirmasi ringkas ─── */}
                                     {debtSubMode === "full" && (
-                                        <div className="rounded-2xl border border-amber-200 bg-warning/10/50 p-4 space-y-2">
+                                        <div className="rounded-2xl border border-warning/20 bg-warning/10 p-4 space-y-2">
                                             <div className="flex items-center justify-between">
-                                                <p className="text-sm font-semibold text-amber-800">
+                                                <p className="text-sm font-semibold text-warning">
                                                     Seluruhnya dihutang
                                                 </p>
                                                 <button
                                                     type="button"
                                                     onClick={() => setDebtSubMode(null)}
-                                                    className="text-[11px] font-medium text-warning hover:text-amber-800 underline underline-offset-2"
+                                                    className="text-[11px] font-medium text-warning hover:text-warning/80 underline underline-offset-2"
                                                 >
                                                     Ubah
                                                 </button>
@@ -1065,7 +1065,7 @@ export default function PaymentModal({
                                             </div>
 
                                             {/* Baris pertama: bayar tunai/kartu */}
-                                            <div className="space-y-2 rounded-xl border border-emerald-200 bg-success/10/30 p-3">
+                                            <div className="space-y-2 rounded-xl border border-success/20 bg-success/10 p-3">
                                                 <p className="text-[11px] font-semibold uppercase tracking-wider text-success">
                                                     Dibayar sekarang
                                                 </p>
@@ -1073,7 +1073,7 @@ export default function PaymentModal({
                                                     <select
                                                         value={payments[0]?.method_id ?? ""}
                                                         onChange={(e) => update(0, "method_id", Number(e.target.value))}
-                                                        className="flex-1 rounded-xl border-slate-300 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                                className="flex-1 rounded-xl border-input text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                     >
                                                         {offlineMethods.map((m) => (
                                                             <option key={m.id} value={m.id}>{m.name}</option>
@@ -1091,13 +1091,13 @@ export default function PaymentModal({
                                                             update(0, "amount", e.target.value);
                                                             if (payments[1]) update(1, "amount", debtAmt);
                                                         }}
-                                                        className="block w-full rounded-xl border-slate-300 pl-9 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                                className="block w-full rounded-xl border-input pl-9 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                     />
                                                 </div>
                                             </div>
 
                                             {/* Baris kedua: sisa menjadi hutang */}
-                                            <div className="space-y-2 rounded-xl border border-amber-200 bg-warning/10/30 p-3">
+                                            <div className="space-y-2 rounded-xl border border-warning/20 bg-warning/10 p-3">
                                                 <p className="text-[11px] font-semibold uppercase tracking-wider text-warning">
                                                     Dicatat sebagai hutang
                                                 </p>
@@ -1109,18 +1109,16 @@ export default function PaymentModal({
                                     )}
 
                                     {debtExceedsLimit && (
-                                        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                                        <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                                             Hutang melebihi limit kredit. Kurangi jumlah hutang atau tambah pembayaran tunai.
                                         </div>
                                     )}
                                 </>
                             )}
                         </div>
-
-                        {/* Fixed: Summary */}
                         {customer && debtSubMode && (
                             <div className="shrink-0 border-t border-border px-5 py-3 bg-card">
-                                <div className="rounded-xl bg-muted/50 px-4 py-3 space-y-1 text-sm">
+                            <div className="rounded-xl bg-muted px-4 py-3 space-y-1 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Dicatat sebagai hutang</span>
                                         <span className="font-semibold text-warning">{fmt(debtPortion)}</span>
@@ -1134,7 +1132,7 @@ export default function PaymentModal({
                                     {remaining > 0 && (
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Kurang</span>
-                                            <span className="font-bold text-red-600">{fmt(remaining)}</span>
+                                            <span className="font-bold text-destructive">{fmt(remaining)}</span>
                                         </div>
                                     )}
                                     {change > 0 && (
@@ -1590,8 +1588,8 @@ export default function PaymentModal({
                                         onClick={() => selectPgMethod(pg)}
                                         className={`group flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition hover:shadow-md ${
                                             isQris
-                                                ? "col-span-2 border-indigo-200 bg-primary/10/50 hover:border-indigo-400 hover:bg-primary/10"
-                                                : "border-border bg-card hover:border-primary/30 hover:bg-primary/10/30"
+                                                ? "col-span-2 border-primary/20 bg-primary/5 hover:border-primary/40 hover:bg-primary/10"
+                                                : "border-border bg-card hover:border-primary/30 hover:bg-primary/5"
                                         }`}
                                     >
                                         <span className="text-2xl">
@@ -1607,7 +1605,7 @@ export default function PaymentModal({
                                                     : "Pembayaran instan"}
                                             </p>
                                         </div>
-                                        <span className="rounded-lg bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-primary group-hover:bg-indigo-200">
+                                        <span className="rounded-lg bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary group-hover:bg-primary/20">
                                             ONLINE
                                         </span>
                                     </button>
@@ -1635,7 +1633,7 @@ export default function PaymentModal({
                                 </p>
                             </div>
                         </div>
-                        <div className="rounded-xl border border-amber-200 bg-warning/10 px-4 py-3 text-xs text-warning">
+                        <div className="rounded-xl border border-warning/20 bg-warning/10 px-4 py-3 text-xs text-warning">
                             <span className="font-semibold">
                                 Pembayaran Online
                             </span>{" "}
@@ -1644,7 +1642,7 @@ export default function PaymentModal({
                             terpotong.
                         </div>
                         {/* Summary */}
-                        <div className="rounded-xl bg-muted/50 px-4 py-3 space-y-1 text-sm">
+                        <div className="rounded-xl bg-muted px-4 py-3 space-y-1 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Total</span>
                                 <span className="font-semibold text-foreground">
@@ -1662,7 +1660,7 @@ export default function PaymentModal({
                             type="button"
                             disabled={totalPaid < displayTotal || submitting}
                             onClick={() => onConfirm(payments, change)}
-                            className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 transition hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-lg transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {submitting ? (
                                 <span className="inline-flex items-center gap-2">
@@ -1704,7 +1702,7 @@ export default function PaymentModal({
                                 debtPortion <= 0
                             }
                             onClick={() => onConfirm(payments, change)}
-                            className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 py-3 text-sm font-bold text-white shadow-lg shadow-amber-500/30 transition hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full rounded-xl bg-warning py-3 text-sm font-bold text-warning-foreground shadow-lg transition hover:bg-warning/90 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {submitting ? (
                                 <span className="inline-flex items-center gap-2">
@@ -1788,7 +1786,7 @@ export default function PaymentModal({
                             <button
                                 type="button"
                                 onClick={() => setImageModalMethod(null)}
-                                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3 text-sm font-bold text-white shadow-lg transition hover:from-emerald-600 hover:to-teal-700"
+                                className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground shadow-lg transition hover:bg-primary/90"
                             >
                                 Selesai
                             </button>

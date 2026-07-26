@@ -127,23 +127,23 @@ export default function Index({ categories }) {
                         {/* Desktop table */}
                         <div className="hidden overflow-x-auto md:block">
                             <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        <th className="px-6 py-3.5">Nama Kategori</th>
-                                        <th className="px-6 py-3.5">Kode</th>
-                                        <th className="px-6 py-3.5">Deskripsi</th>
-                                        <th className="px-6 py-3.5 text-center">Jumlah Transaksi</th>
-                                        <th className="px-6 py-3.5 text-right">Aksi</th>
+                                <thead className="bg-popover text-left text-xs uppercase tracking-wide text-card-foreground">
+                                    <tr>
+                                        <th className="px-6 py-3.5 font-semibold">Nama Kategori</th>
+                                        <th className="px-6 py-3.5 font-semibold">Kode</th>
+                                        <th className="px-6 py-3.5 font-semibold">Deskripsi</th>
+                                        <th className="px-6 py-3.5 text-center font-semibold">Jumlah Transaksi</th>
+                                        <th className="px-6 py-3.5 text-right font-semibold">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-y divide-border bg-background">
                                     {filtered.map((cat) => (
-                                        <tr key={cat.id} className="transition hover:bg-muted/70">
+                                        <tr key={cat.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                             <td className="px-6 py-4 font-medium text-foreground">{cat.name}</td>
                                             <td className="px-6 py-4 text-xs text-muted-foreground">{cat.code}</td>
                                             <td className="max-w-[250px] truncate px-6 py-4 text-muted-foreground">{cat.description || '—'}</td>
                                             <td className="px-6 py-4 text-center">
-                                                <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700">
+                                                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                                                     {cat.expenses_count ?? 0}
                                                 </span>
                                             </td>
@@ -152,7 +152,7 @@ export default function Index({ categories }) {
                                                     <button
                                                         onClick={() => openEdit(cat)}
                                                         className="inline-flex h-9 w-9
- items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+ items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                         title="Edit"
                                                     >
                                                         <Pencil className="h-4 w-4" strokeWidth={1.7} />
@@ -187,7 +187,7 @@ export default function Index({ categories }) {
                                         <div className="flex shrink-0 items-center gap-1">
                                             <button
                                                 onClick={() => openEdit(cat)}
-                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                             >
                                                 <Pencil className="h-4 w-4" strokeWidth={1.7} />
                                             </button>
@@ -200,7 +200,7 @@ export default function Index({ categories }) {
                                         </div>
                                     </div>
                                     <div className="mt-2 flex items-center gap-2">
-                                        <span className="inline-flex items-center rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700">
+                                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                                             {cat.expenses_count ?? 0} transaksi
                                         </span>
                                     </div>

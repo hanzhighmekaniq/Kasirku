@@ -93,7 +93,7 @@ export default function ShiftModal({ show, onClose, suggestedShiftNo }) {
         >
             <div className="space-y-4">
                 <div>
-                    <label className="mb-1.5 block text-sm font-medium text-card-foreground">
+                    <label className="mb-1.5 block text-sm font-medium text-foreground">
                         Modal Awal / Kas Awal{" "}
                         <span className="text-destructive">*</span>
                     </label>
@@ -108,7 +108,7 @@ export default function ShiftModal({ show, onClose, suggestedShiftNo }) {
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-sm font-medium text-card-foreground">
+                    <label className="mb-1.5 block text-sm font-medium text-foreground">
                         Catatan{" "}
                         <span className="font-normal text-muted-foreground/60">
                             (opsional)
@@ -119,7 +119,7 @@ export default function ShiftModal({ show, onClose, suggestedShiftNo }) {
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
                         placeholder="Contoh: shift pagi, kasir A..."
-                        className="block w-full rounded-xl border-border bg-muted/50 text-sm shadow-sm transition focus:border-slate-400 focus:bg-card focus:ring-2 focus:ring-slate-100"
+                        className="block w-full rounded-xl border-input bg-background text-sm shadow-sm transition focus:border-ring focus:bg-card focus:ring-2 focus:ring-ring/20"
                     />
                 </div>
 

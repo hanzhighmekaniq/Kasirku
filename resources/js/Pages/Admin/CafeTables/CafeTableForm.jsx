@@ -72,8 +72,8 @@ export default function CafeTableForm({ data, setData, errors, processing, onSub
                 <button
                     type="button"
                     onClick={() => setData('is_active', !data.is_active)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                        data.is_active ? 'bg-primary-600' : 'bg-slate-300'
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                        data.is_active ? 'bg-primary' : 'bg-slate-300'
                     }`}
                 >
                     <span

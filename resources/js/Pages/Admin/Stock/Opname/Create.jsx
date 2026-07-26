@@ -83,7 +83,7 @@ export default function Create({ products }) {
             <Head title="Buat Opname Stok" />
 
             {flash?.error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{flash.error}</div>
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
             )}
 
             <form onSubmit={submit}>
@@ -116,15 +116,15 @@ export default function Create({ products }) {
                                             ))}
                                         </select>
                                     </div>
-                                    <button type="button" onClick={addItem} disabled={!selectedProduct} className="rounded-xl bg-primary-50 px-4 py-2.5 text-sm font-medium text-primary-600 transition hover:bg-primary-100 disabled:opacity-50">
+                                    <button type="button" onClick={addItem} disabled={!selectedProduct} className="rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50">
                                         + Tambah
                                     </button>
                                 </div>
 
-                                {errors.items && <p className="text-xs text-red-500">{typeof errors.items === 'string' ? errors.items : 'Minimal 1 item harus ditambahkan'}</p>}
+                                {errors.items && <p className="text-xs text-destructive">{typeof errors.items === 'string' ? errors.items : 'Minimal 1 item harus ditambahkan'}</p>}
 
                                 {data.items.length === 0 ? (
-                                    <div className="rounded-xl border-2 border-dashed border-border bg-muted/50 py-8 text-center text-sm text-muted-foreground">
+                                    <div className="rounded-xl border-2 border-dashed border-border bg-muted/30 py-8 text-center text-sm text-muted-foreground">
                                         Belum ada item. Pilih produk di atas untuk menambahkan.
                                     </div>
                                 ) : (
@@ -138,22 +138,22 @@ export default function Create({ products }) {
                                                             <p className="text-sm font-medium text-foreground">{item.product_name}</p>
                                                             <p className="text-xs text-muted-foreground">{item.product_sku}</p>
                                                         </div>
-                                                        <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-red-50 hover:text-red-500">
+                                                        <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
                                                             <Trash2 className="h-4 w-4" strokeWidth={1.8} />
                                                         </button>
                                                     </div>
                                                     <div className="mt-3 grid grid-cols-3 gap-3">
                                                         <div>
                                                             <label className="mb-1 block text-xs text-muted-foreground">Stok Sistem</label>
-                                                            <input type="number" value={item.system_qty} onChange={(e) => updateItem(idx, 'system_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-border px-2 text-center text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring" />
+                                                            <input type="number" value={item.system_qty} onChange={(e) => updateItem(idx, 'system_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-input bg-background px-2 text-center text-xs text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20" />
                                                         </div>
                                                         <div>
                                                             <label className="mb-1 block text-xs text-muted-foreground">Hitung Fisik</label>
-                                                            <input type="number" value={item.counted_qty} onChange={(e) => updateItem(idx, 'counted_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-border px-2 text-center text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring" />
+                                                            <input type="number" value={item.counted_qty} onChange={(e) => updateItem(idx, 'counted_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-input bg-background px-2 text-center text-xs text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20" />
                                                         </div>
                                                         <div>
                                                             <label className="mb-1 block text-xs text-muted-foreground">Selisih</label>
-                                                            <div className={`flex h-9 w-full items-center justify-center rounded-lg text-xs font-semibold ${diff > 0 ? 'bg-emerald-100 text-emerald-700' : diff < 0 ? 'bg-red-100 text-red-600' : 'bg-muted text-muted-foreground'}`}>
+                                                            <div className={`flex h-9 w-full items-center justify-center rounded-lg text-xs font-semibold ${diff > 0 ? 'bg-success/10 text-success' : diff < 0 ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
                                                                 {diff > 0 ? '+' : ''}{diff}
                                                             </div>
                                                         </div>
@@ -161,7 +161,7 @@ export default function Create({ products }) {
                                                     <div className="mt-2 flex items-center justify-between text-xs">
                                                         <span className="text-muted-foreground">Modal: {fmtCurrency(item.unit_cost)}/unit</span>
                                                         {diff !== 0 && (
-                                                            <span className={`font-medium ${diff < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                                            <span className={`font-medium ${diff < 0 ? 'text-destructive' : 'text-success'}`}>
                                                                 {diff < 0 ? '-' : '+'}{fmtCurrency(Math.abs(diff) * item.unit_cost)}
                                                             </span>
                                                         )}
@@ -183,7 +183,7 @@ export default function Create({ products }) {
                                 <div className="my-2 border-t border-border" />
                                 <div className="flex justify-between">
                                     <dt className="font-semibold text-foreground">Total Selisih</dt>
-                                    <dd className={`text-lg font-bold ${totalDiff > 0 ? 'text-emerald-600' : totalDiff < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
+                                    <dd className={`text-lg font-bold ${totalDiff > 0 ? 'text-success' : totalDiff < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
                                         {totalDiff > 0 ? '+' : ''}{totalDiff}
                                     </dd>
                                 </div>
@@ -192,14 +192,14 @@ export default function Create({ products }) {
                                 )}
                                 {totalLoss > 0 && (
                                     <div className="flex justify-between">
-                                        <dt className="text-red-600">Nilai Kerugian</dt>
-                                        <dd className="font-semibold text-red-600">{fmtCurrency(totalLoss)}</dd>
+                                        <dt className="text-destructive">Nilai Kerugian</dt>
+                                        <dd className="font-semibold text-destructive">{fmtCurrency(totalLoss)}</dd>
                                     </div>
                                 )}
                                 {totalGain > 0 && (
                                     <div className="flex justify-between">
-                                        <dt className="text-emerald-600">Nilai Penambahan</dt>
-                                        <dd className="font-semibold text-emerald-600">{fmtCurrency(totalGain)}</dd>
+                                        <dt className="text-success">Nilai Penambahan</dt>
+                                        <dd className="font-semibold text-success">{fmtCurrency(totalGain)}</dd>
                                     </div>
                                 )}
                                 <p className="text-xs text-muted-foreground">
@@ -209,7 +209,7 @@ export default function Create({ products }) {
                         </SectionCard>
 
                         <div className="flex flex-col gap-2">
-                            <button type="submit" disabled={processing || data.items.length === 0} className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60">
+                            <button type="submit" disabled={processing || data.items.length === 0} className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:bg-primary/90 disabled:opacity-60">
                                 {processing ? 'Menyimpan...' : 'Simpan Opname'}
                             </button>
                             <Link href={route('admin.stock-opnames.index')} className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-center text-sm font-medium text-foreground transition hover:bg-muted">
@@ -225,9 +225,9 @@ export default function Create({ products }) {
 
 function SectionCard({ title, subtitle, children }) {
     return (
-        <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div className="border-b border-border bg-muted/50 px-6 py-5">
-                <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+                <h3 className="text-base font-semibold text-foreground">{title}</h3>
                 {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
             </div>
             <div className="p-6">{children}</div>
@@ -239,14 +239,14 @@ function Field({ label, required, error, children }) {
     return (
         <div>
             <label className="mb-1 block text-sm font-medium text-foreground">
-                {label} {required && <span className="text-red-500">*</span>}
+                {label} {required && <span className="text-destructive">*</span>}
             </label>
             {children}
-            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+            {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
     );
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
+    return `block w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 ${hasError ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`;
 }

@@ -5,10 +5,10 @@ import { Clock, Hash, Phone, Plus, User, X } from 'lucide-react';
 import Button from '@/Components/ui/Button';
 
 const STATUS_META = {
-    waiting: { label: 'Menunggu', color: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    serving: { label: 'Dilayani', color: 'bg-sky-50 text-sky-700 border-sky-200', dot: 'bg-sky-500' },
-    completed: { label: 'Selesai', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    cancelled: { label: 'Batal', color: 'bg-muted text-muted-foreground border-border', dot: 'bg-slate-400' },
+    waiting: { label: 'Menunggu', color: 'bg-warning/10 text-warning border-warning/20', dot: 'bg-warning' },
+    serving: { label: 'Dilayani', color: 'bg-primary/10 text-primary border-primary/20', dot: 'bg-primary' },
+    completed: { label: 'Selesai', color: 'bg-success/10 text-success border-success/20', dot: 'bg-success' },
+    cancelled: { label: 'Batal', color: 'bg-muted text-muted-foreground border-border', dot: 'bg-muted-foreground' },
 };
 
 function formatTime(ts) {
@@ -44,11 +44,11 @@ function AddQueueModal({ open, onClose, processing }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-            <div className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl">
+            <div onClick={onClose} className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+            <div className="relative w-full max-w-md rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl">
                 <div className="mb-5 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-foreground">Tambah Antrian</h3>
-                    <button onClick={onClose} className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground">
+                    <h3 className="text-lg font-semibold text-popover-foreground">Tambah Antrian</h3>
+                    <button onClick={onClose} className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
                         <X size={18} />
                     </button>
                 </div>
@@ -60,7 +60,7 @@ function AddQueueModal({ open, onClose, processing }) {
                             value={form.customer_name}
                             onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
                             maxLength={100}
-                            className="mt-1.5 block w-full rounded-xl border border-border px-3.5 py-2.5 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className="mt-1.5 block w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                             placeholder="Opsional"
                         />
                     </div>
@@ -71,7 +71,7 @@ function AddQueueModal({ open, onClose, processing }) {
                             value={form.customer_phone}
                             onChange={(e) => setForm({ ...form, customer_phone: e.target.value })}
                             maxLength={20}
-                            className="mt-1.5 block w-full rounded-xl border border-border px-3.5 py-2.5 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className="mt-1.5 block w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                             placeholder="Opsional"
                         />
                     </div>
@@ -82,7 +82,7 @@ function AddQueueModal({ open, onClose, processing }) {
                             onChange={(e) => setForm({ ...form, notes: e.target.value })}
                             maxLength={500}
                             rows={2}
-                            className="mt-1.5 block w-full rounded-xl border border-border px-3.5 py-2.5 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className="mt-1.5 block w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                             placeholder="Opsional"
                         />
                     </div>
@@ -140,7 +140,7 @@ function QueueCard({ queue, onStatusChange, onDelete }) {
                 {queue.status === 'waiting' && (
                     <button
                         onClick={() => onStatusChange(queue.id, 'serving')}
-                        className="rounded-lg bg-sky-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-600"
+                        className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
                     >
                         Layani
                     </button>
@@ -148,7 +148,7 @@ function QueueCard({ queue, onStatusChange, onDelete }) {
                 {queue.status === 'serving' && (
                     <button
                         onClick={() => onStatusChange(queue.id, 'completed')}
-                        className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-600"
+                        className="rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground transition hover:bg-success/90"
                     >
                         Selesai
                     </button>
@@ -216,9 +216,9 @@ export default function Index({ queues = [], stats = {} }) {
             {/* Stats */}
             <div className="mb-5 grid grid-cols-3 gap-3">
                 {[
-                    { label: 'Menunggu', value: stats.waiting ?? 0, color: 'text-amber-600 bg-amber-50 border-amber-200' },
-                    { label: 'Dilayani', value: stats.serving ?? 0, color: 'text-sky-600 bg-sky-50 border-sky-200' },
-                    { label: 'Selesai', value: stats.completed ?? 0, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
+                    { label: 'Menunggu', value: stats.waiting ?? 0, color: 'text-warning bg-warning/10 border-warning/20' },
+                    { label: 'Dilayani', value: stats.serving ?? 0, color: 'text-primary bg-primary/10 border-primary/20' },
+                    { label: 'Selesai', value: stats.completed ?? 0, color: 'text-success bg-success/10 border-success/20' },
                 ].map((s) => (
                     <div key={s.label} className={`rounded-xl border p-4 text-center ${s.color}`}>
                         <p className="text-2xl font-bold">{s.value}</p>

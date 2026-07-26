@@ -5,9 +5,9 @@ import { useState } from 'react';
 import { ArrowLeft, Check, X, AlertTriangle } from 'lucide-react';
 
 const STATUS_CONFIG = {
-    draft: { label: 'Draft', className: 'bg-amber-100 text-amber-700', dotColor: 'bg-amber-500' },
-    posted: { label: 'Posted', className: 'bg-emerald-100 text-success', dotColor: 'bg-success/100' },
-    cancelled: { label: 'Dibatalkan', className: 'bg-muted text-muted-foreground', dotColor: 'bg-slate-400' },
+    draft: { label: 'Draft', className: 'bg-warning/10 text-warning', dotColor: 'bg-warning' },
+    posted: { label: 'Posted', className: 'bg-success/10 text-success', dotColor: 'bg-success' },
+    cancelled: { label: 'Dibatalkan', className: 'bg-muted text-muted-foreground', dotColor: 'bg-muted-foreground' },
 };
 
 function StatusBadge({ status, large }) {

@@ -59,17 +59,17 @@ export default function Shifts({ from, to, summary, byCashier = [], shifts = [] 
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead><tr className="bg-muted text-left text-xs font-semibold text-muted-foreground">
-                                <th className="px-4 py-2.5">Tanggal</th>
-                                <th className="px-4 py-2.5">Kasir</th>
-                                <th className="px-4 py-2.5">Cabang</th>
-                                <th className="px-4 py-2.5">Buka</th>
-                                <th className="px-4 py-2.5">Tutup</th>
-                                <th className="px-4 py-2.5 text-right">Kas Awal</th>
-                                <th className="px-4 py-2.5 text-right">Kas Akhir</th>
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground"><tr>
+                                <th className="px-4 py-2.5 text-left font-semibold">Tanggal</th>
+                                <th className="px-4 py-2.5 text-left font-semibold">Kasir</th>
+                                <th className="px-4 py-2.5 text-left font-semibold">Cabang</th>
+                                <th className="px-4 py-2.5 text-left font-semibold">Buka</th>
+                                <th className="px-4 py-2.5 text-left font-semibold">Tutup</th>
+                                <th className="px-4 py-2.5 text-right font-semibold">Kas Awal</th>
+                                <th className="px-4 py-2.5 text-right font-semibold">Kas Akhir</th>
                             </tr></thead>
-                            <tbody>{shifts.length > 0 ? shifts.map((s) => (
-                                <tr key={s.id} className="border-t border-border">
+                            <tbody className="divide-y divide-border bg-background">{shifts.length > 0 ? shifts.map((s) => (
+                                <tr key={s.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                     <td className="px-4 py-2.5">{fmtDate(s.opened_at)}</td>
                                     <td className="px-4 py-2.5 font-medium text-foreground">{s.user_name}</td>
                                     <td className="px-4 py-2.5 text-muted-foreground">{s.branch_name}</td>

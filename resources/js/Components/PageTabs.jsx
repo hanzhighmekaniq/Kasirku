@@ -12,7 +12,7 @@ export default function PageTabs({ tabs }) {
                         className={`
                             flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all whitespace-nowrap
                             ${isActive
-                                ? 'bg-card text-foreground shadow-sm ring-1 ring-border/50'
+                                ? 'bg-muted text-foreground shadow-sm ring-1 ring-border'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                             }
                         `}

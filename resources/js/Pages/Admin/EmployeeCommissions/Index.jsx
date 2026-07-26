@@ -12,10 +12,10 @@ const fmtDate = (d) =>
         : "-";
 
 const STATUS_CLS = {
-    pending: "bg-amber-100 text-amber-700",
-    approved: "bg-blue-100 text-blue-700",
-    paid: "bg-emerald-100 text-emerald-700",
-    cancelled: "bg-slate-100 text-slate-500",
+    pending: "bg-warning/10 text-warning",
+    approved: "bg-info/10 text-info",
+    paid: "bg-success/10 text-success",
+    cancelled: "bg-muted text-muted-foreground",
 };
 const STATUS_LBL = {
     pending: "Pending",
@@ -206,7 +206,7 @@ export default function Index({
                 {/* Desktop Table */}
                 <div className="hidden overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:block">
                     <table className="w-full text-left text-sm">
-                        <thead className="border-b border-border bg-muted/50">
+                        <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                             <tr>
                                 {[
                                     "Karyawan",
@@ -219,14 +219,14 @@ export default function Index({
                                 ].map((h) => (
                                     <th
                                         key={h}
-                                        className="px-5 py-3 text-xs font-semibold text-muted-foreground"
+                                        className="px-5 py-3 font-semibold"
                                     >
                                         {h}
                                     </th>
                                 ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-border bg-background  ">
                             {list.length === 0 ? (
                                 <tr>
                                     <td
@@ -240,7 +240,7 @@ export default function Index({
                                 list.map((c) => (
                                     <tr
                                         key={c.id}
-                                        className="hover:bg-muted/50"
+                                        className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                     >
                                         <td className="px-5 py-3">
                                             <p className="font-medium text-foreground">

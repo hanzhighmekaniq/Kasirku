@@ -18,8 +18,8 @@ const METHOD_LABELS = {
 
 function inputCls(err = false) {
     return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
-        err ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-            : 'border-border focus:border-ring focus:ring-ring/20'}`;
+        err ? 'border-destructive bg-background focus:border-destructive focus:ring-destructive/20'
+            : 'border-input bg-background focus:border-ring focus:ring-ring/20'}`;
 }
 
 function ProviderCard({ provider, config, onSave }) {
@@ -77,7 +77,7 @@ function ProviderCard({ provider, config, onSave }) {
                             onClick={() => setData('environment', env)}
                             className={`flex-1 rounded-xl border py-2 text-xs font-semibold capitalize transition ${
                                 data.environment === env
-                                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                                    ? 'border-primary bg-primary/10 text-primary'
                                     : 'border-border text-muted-foreground hover:bg-muted'
                             }`}
                         >
@@ -91,7 +91,7 @@ function ProviderCard({ provider, config, onSave }) {
                     <div>
                         <label className="mb-1 block text-sm font-medium text-foreground">
                             Server Key
-                            {config?.has_server_key && <span className="ml-2 text-xs text-emerald-600">✓ Sudah diset</span>}
+                            {config?.has_server_key && <span className="ml-2 text-xs text-success">✓ Sudah diset</span>}
                         </label>
                         <input
                             type="password"
@@ -105,7 +105,7 @@ function ProviderCard({ provider, config, onSave }) {
                     <div>
                         <label className="mb-1 block text-sm font-medium text-foreground">
                             Client Key
-                            {config?.has_client_key && <span className="ml-2 text-xs text-emerald-600">✓ Sudah diset</span>}
+                            {config?.has_client_key && <span className="ml-2 text-xs text-success">✓ Sudah diset</span>}
                         </label>
                         <input
                             type="password"
@@ -140,7 +140,7 @@ function ProviderCard({ provider, config, onSave }) {
                                     type="button"
                                     onClick={() => toggleMethod(m)}
                                     className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
-                                        active ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-border text-muted-foreground hover:bg-muted'
+                                        active ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:bg-muted'
                                     }`}
                                 >
                                     {meta.icon} {meta.label}
@@ -178,12 +178,12 @@ export default function PaymentGatewaySettings({ providers, configs }) {
                 </div>
             )}
 
-            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-3">
-                <svg className="mt-0.5 h-5 w-5 shrink-0 text-primary-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3">
+                <svg className="mt-0.5 h-5 w-5 shrink-0 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                 </svg>
-                <p className="text-xs text-primary-700">
-                    API keys dienkripsi sebelum disimpan. Webhook URL kamu: <code className="font-mono bg-primary-100 px-1 rounded">/webhooks/midtrans</code>
+                <p className="text-xs text-primary">
+                    API keys dienkripsi sebelum disimpan. Webhook URL kamu: <code className="font-mono bg-primary/20 px-1 rounded">/webhooks/midtrans</code>
                 </p>
             </div>
 

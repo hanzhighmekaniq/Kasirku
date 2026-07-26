@@ -6,8 +6,8 @@ import Button from '@/Components/ui/Button';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 const SELECTION_LABEL = {
-    single: { label: 'Pilih 1', bg: 'bg-blue-100', text: 'text-blue-700' },
-    multiple: { label: 'Pilih Banyak', bg: 'bg-violet-100', text: 'text-violet-700' },
+    single: { label: 'Pilih 1', bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400' },
+    multiple: { label: 'Pilih Banyak', bg: 'bg-violet-100 dark:bg-violet-900/30', text: 'text-violet-700 dark:text-violet-400' },
 };
 
 export default function Index({ groups }) {
@@ -70,7 +70,7 @@ export default function Index({ groups }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari grup modifier..."
-                            className="block w-full rounded-xl border-border pl-9 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className="block w-full rounded-xl border-input bg-background pl-9 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                         />
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -103,25 +103,25 @@ export default function Index({ groups }) {
                         {/* Desktop table */}
                         <div className="hidden overflow-x-auto md:block">
                             <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        <th className="px-5 py-3.5">Nama Grup</th>
-                                        <th className="px-5 py-3.5 hidden lg:table-cell">Deskripsi</th>
-                                        <th className="px-5 py-3.5 text-center">Tipe Pilihan</th>
-                                        <th className="px-5 py-3.5 text-center">Wajib</th>
-                                        <th className="px-5 py-3.5 text-center">Max Pilihan</th>
-                                        <th className="px-5 py-3.5 text-center">Modifier</th>
-                                        <th className="px-5 py-3.5 text-center">Status</th>
-                                        <th className="px-5 py-3.5 text-right">Aksi</th>
+                                <thead className="bg-popover text-left text-xs uppercase tracking-wide text-card-foreground">
+                                    <tr>
+                                        <th className="px-5 py-3.5 font-semibold">Nama Grup</th>
+                                        <th className="px-5 py-3.5 hidden lg:table-cell font-semibold">Deskripsi</th>
+                                        <th className="px-5 py-3.5 text-center font-semibold">Tipe Pilihan</th>
+                                        <th className="px-5 py-3.5 text-center font-semibold">Wajib</th>
+                                        <th className="px-5 py-3.5 text-center font-semibold">Max Pilihan</th>
+                                        <th className="px-5 py-3.5 text-center font-semibold">Modifier</th>
+                                        <th className="px-5 py-3.5 text-center font-semibold">Status</th>
+                                        <th className="px-5 py-3.5 text-right font-semibold">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-y divide-border bg-background">
                                     {filtered.map((group) => {
                                         const sel = SELECTION_LABEL[group.selection_type] || SELECTION_LABEL.single;
                                         return (
-                                            <tr key={group.id} className="transition hover:bg-muted/70">
+                                            <tr key={group.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                                 <td className="px-5 py-4">
-                                                    <Link href={route('admin.modifier-groups.show', group.id)} className="font-medium text-primary-600 hover:text-primary-800 hover:underline">
+                                                    <Link href={route('admin.modifier-groups.show', group.id)} className="font-medium text-primary hover:text-primary/80 hover:underline">
                                                         {group.name}
                                                     </Link>
                                                 </td>
@@ -135,7 +135,7 @@ export default function Index({ groups }) {
                                                 </td>
                                                 <td className="px-5 py-4 text-center">
                                                     {group.is_required ? (
-                                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">Wajib</span>
+                                                        <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">Wajib</span>
                                                     ) : (
                                                         <span className="text-xs text-muted-foreground">Opsional</span>
                                                     )}
@@ -149,13 +149,13 @@ export default function Index({ groups }) {
                                                     </span>
                                                 </td>
                                                 <td className="px-5 py-4 text-center">
-                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${group.is_active ? 'bg-emerald-100 text-success' : 'bg-muted text-muted-foreground'}`}>
+                                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${group.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
                                                         {group.is_active ? 'Aktif' : 'Nonaktif'}
                                                     </span>
                                                 </td>
                                                 <td className="px-5 py-4">
                                                     <div className="flex items-center justify-end gap-1">
-                                                        <Link href={route('admin.modifier-groups.edit', group.id)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600" title="Edit">
+                                                        <Link href={route('admin.modifier-groups.edit', group.id)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary" title="Edit">
                                                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
                                                             </svg>
@@ -182,22 +182,22 @@ export default function Index({ groups }) {
                                     <div key={group.id} className="p-4">
                                         <div className="flex items-start justify-between">
                                             <div className="min-w-0 flex-1">
-                                                <Link href={route('admin.modifier-groups.show', group.id)} className="font-medium text-primary-600 hover:text-primary-800 hover:underline">
+                                                <Link href={route('admin.modifier-groups.show', group.id)} className="font-medium text-primary hover:text-primary/80 hover:underline">
                                                     {group.name}
                                                 </Link>
                                                 {group.description && <p className="mt-0.5 text-xs text-muted-foreground truncate">{group.description}</p>}
                                                 <div className="mt-2 flex flex-wrap items-center gap-2">
                                                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${sel.bg} ${sel.text}`}>{sel.label}</span>
-                                                    {group.is_required && <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">Wajib</span>}
+                                                    {group.is_required && <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">Wajib</span>}
                                                     <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">{group.modifiers_count} item</span>
-                                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${group.is_active ? 'bg-emerald-100 text-success' : 'bg-muted text-muted-foreground'}`}>
+                                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${group.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}`}>
                                                         {group.is_active ? 'Aktif' : 'Nonaktif'}
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="mt-3 flex items-center gap-1">
-                                            <Link href={route('admin.modifier-groups.show', group.id)} className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50">
+                                            <Link href={route('admin.modifier-groups.show', group.id)} className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary transition hover:bg-primary/10">
                                                 Kelola
                                             </Link>
                                             <Link href={route('admin.modifier-groups.edit', group.id)} className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-muted-foreground transition hover:bg-muted">

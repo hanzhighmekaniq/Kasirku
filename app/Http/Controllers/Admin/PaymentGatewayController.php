@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\FinalizesSaleStock;
+use App\Http\Controllers\Concerns\ManagesTableStatus;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentGatewayTransaction;
@@ -26,7 +27,7 @@ use Inertia\Inertia;
 
 class PaymentGatewayController extends Controller
 {
-    use FinalizesSaleStock;
+    use FinalizesSaleStock, ManagesTableStatus;
 
     /** Ambil store_id dari session. */
     private function getStoreId(): int
@@ -698,6 +699,18 @@ class PaymentGatewayController extends Controller
                 'change_amount' => 0,
             ]);
 
+            // Order FnB yang dibayar lewat gateway harus tetap masuk antrian
+            // dapur. Kalau order dibuat sebelum perbaikan ini (atau lewat
+            // jalur lain yang melewatkannya), kitchen_status masih null dan
+            // ordernya tidak akan pernah muncul di Kitchen Display.
+            if ($sale->pos_mode === 'fnb' && is_null($sale->kitchen_status)) {
+                $sale->update(['kitchen_status' => 'pending']);
+            }
+
+            // Pembayaran tuntas — meja dibebaskan kalau tidak ada order lain
+            // yang masih berjalan di sana.
+            $this->syncTableStatus($sale->table_id, $sale->store_id);
+
             $this->creditStoreWallet($sale, $pgTrx, (float) $pgTrx->amount);
         });
     }
@@ -770,6 +783,13 @@ class PaymentGatewayController extends Controller
                     'paid_amount' => $paidTotal,
                     'change_amount' => $changeTotal,
                 ]);
+
+                if ($sale->pos_mode === 'fnb' && is_null($sale->kitchen_status)) {
+                    $sale->update(['kitchen_status' => 'pending']);
+                }
+
+                // Semua pembayar sudah lunas — meja boleh dibebaskan.
+                $this->syncTableStatus($sale->table_id, $sale->store_id);
             }
         });
     }

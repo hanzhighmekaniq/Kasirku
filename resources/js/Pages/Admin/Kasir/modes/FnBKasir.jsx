@@ -1,5 +1,4 @@
-﻿import { useState, useRef } from "react";
-import useKasir from "../useKasir";
+﻿import useKasir from "../useKasir";
 import ProductCard from "../components/ProductCard";
 import KasirLayout from "./KasirLayout";
 import {
@@ -32,9 +31,9 @@ function productBadge(p) {
     const label = p.badge || (p.is_featured ? "Best Seller" : null);
     if (!label) return null;
     const cls =
-        label === "Best Seller" ? "bg-amber-100 text-amber-700" :
-        label === "Promo"       ? "bg-rose-100 text-rose-700" :
-                                  "bg-sky-100 text-sky-700";
+        label === "Best Seller" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+        label === "Promo"       ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" :
+                                  "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400";
     return (
         <span className={`absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold ${cls}`}>
             {label}
@@ -89,11 +88,11 @@ function MenuCard({ product, onClick }) {
 
             {/* Info */}
             <div className="p-2.5">
-                <p className="line-clamp-2 min-h-[34px] text-[13px] font-semibold leading-snug text-card-foreground">
+                <p className="line-clamp-2 min-h-[34px] text-[13px] font-semibold leading-snug text-foreground">
                     {product.name}
                 </p>
                 <div className="mt-1 flex items-center justify-between">
-                    <span className="text-sm font-bold text-card-foreground">
+                    <span className="text-sm font-bold text-foreground">
                         Rp {Number(product.sell_price ?? 0).toLocaleString("id-ID")}
                     </span>
                     <span className={`text-[10px] font-medium ${isOut ? "text-destructive" : isLow ? "text-amber-600" : "text-success"}`}>
@@ -107,9 +106,7 @@ function MenuCard({ product, onClick }) {
 
 export default function FnBKasir(props) {
     const k = useKasir(props);
-    const { categories, tables = [] } = props;
-
-    const [deliveryPlatform, setDeliveryPlatform] = useState("GoFood");
+    const { categories, tables = [], kitchenQueue = [] } = props;
 
     const orderTypes = [
         { v: "dine_in",  l: "Dine In",   icon: <UtensilsCrossed size={14} /> },
@@ -121,22 +118,30 @@ export default function FnBKasir(props) {
 
     /* Table status */
     const tStyle = {
-        available: { cls: "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 cursor-pointer", label: "Tersedia" },
-        occupied:  { cls: "border-red-200   bg-red-50   text-red-700   opacity-70 cursor-not-allowed",             label: "Terisi"   },
-        reserved:  { cls: "border-amber-200 bg-amber-50 text-amber-700 opacity-70 cursor-not-allowed",             label: "Reserved" },
+        available: { cls: "border-success/40 bg-success/10 text-success hover:bg-success/20 cursor-pointer", label: "Tersedia" },
+        occupied:  { cls: "border-destructive/20 bg-destructive/10 text-destructive opacity-70 cursor-not-allowed", label: "Terisi" },
+        // Reserved tetap bisa diklik — tamu yang punya reservasi justru perlu
+        // dilayani di meja itu, jadi kasir harus bisa memilihnya.
+        reserved:  { cls: "border-warning/40 bg-warning/10 text-warning hover:bg-warning/20 cursor-pointer", label: "Reserved" },
     };
 
-    /* Kitchen queue placeholder */
-    const kitchenQueue = [
-        { table: "A-01", status: "Cooking", items: "Cafe Latte ×2",         time: "4:32", tone: "warn"    },
-        { table: "B-02", status: "New",     items: "Cappuccino ×1",          time: "0:12", tone: "brand"   },
-        { table: "TA-19",status: "Ready",   items: "Kopi Susu Gula Aren ×3", time: "—",    tone: "success" },
-        { table: "O-01", status: "Cooking", items: "Roti Bakar Keju ×2",     time: "6:04", tone: "warn"    },
-    ];
-    const toneCls = {
-        warn:    "bg-warning/10 text-warning border border-warning/20",
-        brand:   "bg-primary/10 text-primary border border-primary/20",
-        success: "bg-success/10 text-success border border-success/20",
+    /* Kitchen status — kosakata sama dengan Kitchen Display (KitchenController) */
+    const kitchenStatusStyle = {
+        pending: { label: "Baru",    cls: "bg-primary/10 text-primary border border-primary/20" },
+        cooking: { label: "Dimasak", cls: "bg-warning/10 text-warning border border-warning/20" },
+        ready:   { label: "Siap",    cls: "bg-success/10 text-success border border-success/20" },
+        served:  { label: "Diantar", cls: "bg-muted text-muted-foreground border border-border" },
+    };
+    const kitchenStatusOf = (status) =>
+        kitchenStatusStyle[status] ?? {
+            label: status || "—",
+            cls: "bg-muted text-muted-foreground border border-border",
+        };
+    const elapsedLabel = (minutes) => {
+        if (minutes === null || minutes === undefined) return "—";
+        if (minutes < 1) return "baru saja";
+        if (minutes < 60) return `${minutes} mnt`;
+        return `${Math.floor(minutes / 60)} jam ${minutes % 60} mnt`;
     };
 
     const selectedCustomerObj = k.customers?.find(
@@ -153,21 +158,66 @@ export default function FnBKasir(props) {
 
             {/* Delivery extra fields */}
             {k.orderType === "delivery" && (
-                <div className="grid grid-cols-2 gap-2">
-                    <input
-                        type="text"
-                        placeholder="Nama pelanggan"
-                        value={k.deliveryCustomerName ?? ""}
-                        onChange={(e) => k.setDeliveryCustomerName?.(e.target.value)}
-                        className="rounded-xl border border-border bg-background px-3 py-2 text-[13px] outline-none placeholder:text-muted-foreground/50 focus:border-primary"
-                    />
-                    <input
-                        type="text"
-                        placeholder="No. order platform"
-                        value={k.deliveryOrderNo ?? ""}
-                        onChange={(e) => k.setDeliveryOrderNo?.(e.target.value)}
-                        className="rounded-xl border border-border bg-background px-3 py-2 text-[13px] outline-none placeholder:text-muted-foreground/50 focus:border-primary"
-                    />
+                <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        {deliveryPlatforms.map((p) => (
+                            <button
+                                key={p}
+                                type="button"
+                                onClick={() => k.setDeliveryPlatform(p)}
+                                className={`shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-medium transition
+                                    ${k.deliveryPlatform === p
+                                        ? "border-primary bg-primary text-primary-foreground"
+                                        : "border-border bg-card text-muted-foreground hover:border-primary/40"}`}
+                            >
+                                {p}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <input
+                            type="text"
+                            placeholder="Nama pelanggan"
+                            value={k.deliveryCustomerName ?? ""}
+                            onChange={(e) => k.setDeliveryCustomerName?.(e.target.value)}
+                            className="rounded-xl border border-border bg-background px-3 py-2 text-[13px] outline-none placeholder:text-muted-foreground/50 focus:border-primary"
+                        />
+                        <input
+                            type="text"
+                            placeholder="No. order platform"
+                            value={k.deliveryOrderNo ?? ""}
+                            onChange={(e) => k.setDeliveryOrderNo?.(e.target.value)}
+                            className="rounded-xl border border-border bg-background px-3 py-2 text-[13px] outline-none placeholder:text-muted-foreground/50 focus:border-primary"
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Jumlah tamu — hanya relevan untuk dine-in */}
+            {k.orderType === "dine_in" && (
+                <div className="flex items-center justify-between rounded-xl border border-border bg-background px-3 py-2">
+                    <label className="text-[13px] font-medium text-foreground">Jumlah Tamu</label>
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => k.setGuestCount(Math.max(1, Number(k.guestCount || 1) - 1))}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-foreground transition hover:bg-muted"
+                            aria-label="Kurangi jumlah tamu"
+                        >
+                            −
+                        </button>
+                        <span className="w-7 text-center text-[13px] font-semibold text-foreground">
+                            {k.guestCount || 1}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => k.setGuestCount(Number(k.guestCount || 1) + 1)}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-foreground transition hover:bg-muted"
+                            aria-label="Tambah jumlah tamu"
+                        >
+                            +
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -241,7 +291,7 @@ export default function FnBKasir(props) {
                 <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
                     <div className="mb-3 flex items-end justify-between">
                         <div>
-                            <p className="text-[15px] font-semibold text-card-foreground">Floor Map</p>
+                            <p className="text-[15px] font-semibold text-foreground">Floor Map</p>
                             <p className="mt-0.5 text-[11.5px] text-muted-foreground">
                                 {tables.length} meja terdaftar
                             </p>
@@ -270,27 +320,61 @@ export default function FnBKasir(props) {
                                 const st = t.status || "available";
                                 const s  = tStyle[st] || tStyle.available;
                                 const isSelected = String(k.selectedTable) === String(t.id);
+                                const active = t.active_sale;
+                                const booking = t.upcoming_booking;
+                                /* Hanya meja yang sedang memegang order yang tidak bisa
+                                   dipilih. Meja 'reserved' HARUS tetap bisa dipilih —
+                                   kalau tidak, kasir justru tidak bisa melayani tamu
+                                   yang punya reservasi di meja itu. */
+                                const isTaken = st === "occupied" || !!active;
+                                const tooltip = active
+                                    ? `${active.sale_no} — ${kitchenStatusOf(active.kitchen_status).label}`
+                                    : booking
+                                        ? `Reservasi ${booking.time} — ${booking.customer_name}`
+                                        : undefined;
                                 return (
                                     <button
                                         key={t.id}
                                         type="button"
-                                        disabled={st !== "available"}
+                                        disabled={isTaken}
                                         onClick={() => {
-                                            if (st === "available") {
-                                                k.setSelectedTable(t.id);
-                                                if (k.orderType !== "dine_in") k.handleOrderTypeChange("dine_in");
-                                            }
+                                            if (isTaken) return;
+                                            k.setSelectedTable(t.id);
+                                            if (k.orderType !== "dine_in") k.handleOrderTypeChange("dine_in");
+                                            if (booking?.guest_count) k.setGuestCount(booking.guest_count);
                                         }}
+                                        title={tooltip}
                                         className={`relative aspect-square rounded-xl border-2 p-2 transition-all flex flex-col items-center justify-between
-                                            ${s.cls}
+                                            ${isTaken ? tStyle.occupied.cls : booking ? tStyle.reserved.cls : s.cls}
+                                            ${!isTaken ? "cursor-pointer" : ""}
                                             ${isSelected ? "ring-2 ring-primary ring-offset-1" : ""}`}
                                     >
                                         {isSelected && (
                                             <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-success" />
                                         )}
-                                        <span className="text-[9.5px] font-medium uppercase tracking-wider opacity-60">Table</span>
+                                        <span className="text-[9.5px] font-medium uppercase tracking-wider opacity-60">
+                                            {t.capacity ? `${t.capacity} org` : "Table"}
+                                        </span>
                                         <span className="text-[20px] font-bold leading-none tracking-tight">{t.table_number}</span>
-                                        <span className="text-[9.5px] font-medium opacity-75">{s.label}</span>
+                                        {active ? (
+                                            <span className="flex w-full flex-col items-center gap-0.5 overflow-hidden">
+                                                <span className="w-full truncate text-center text-[9px] font-semibold opacity-80">
+                                                    {active.sale_no}
+                                                </span>
+                                                <span className={`rounded px-1.5 py-px text-[8.5px] font-bold ${kitchenStatusOf(active.kitchen_status).cls}`}>
+                                                    {kitchenStatusOf(active.kitchen_status).label}
+                                                </span>
+                                            </span>
+                                        ) : booking ? (
+                                            <span className="flex w-full flex-col items-center overflow-hidden leading-tight">
+                                                <span className="text-[10px] font-bold">{booking.time}</span>
+                                                <span className="w-full truncate text-center text-[8.5px] opacity-80">
+                                                    {booking.customer_name}
+                                                </span>
+                                            </span>
+                                        ) : (
+                                            <span className="text-[9.5px] font-medium opacity-75">{s.label}</span>
+                                        )}
                                     </button>
                                 );
                             })}
@@ -302,23 +386,32 @@ export default function FnBKasir(props) {
                 <div className="rounded-2xl border border-border bg-card p-4 shadow-sm flex flex-col">
                     <div className="mb-3 flex items-end justify-between">
                         <div>
-                            <p className="text-[15px] font-semibold text-card-foreground">Kitchen Queue</p>
+                            <p className="text-[15px] font-semibold text-foreground">Kitchen Queue</p>
                             <p className="mt-0.5 text-[11.5px] text-muted-foreground">{kitchenQueue.length} tiket</p>
                         </div>
                     </div>
                     <div className="flex-1 space-y-2 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                        {kitchenQueue.map((item, i) => (
-                            <div key={i} className="rounded-xl border border-border bg-card p-3">
-                                <div className="mb-1 flex items-center justify-between">
-                                    <span className="text-[12px] font-semibold text-card-foreground">{item.table}</span>
-                                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10.5px] font-semibold ${toneCls[item.tone]}`}>
-                                        {item.status}
-                                    </span>
-                                </div>
-                                <p className="text-[12px] text-card-foreground">{item.items}</p>
-                                <p className="mt-1 text-[10.5px] text-muted-foreground">Elapsed {item.time}</p>
+                        {kitchenQueue.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-8 text-center text-muted-foreground">
+                                <Clock size={24} className="mb-2 opacity-30" />
+                                <p className="text-[12px] font-medium">Belum ada antrian</p>
                             </div>
-                        ))}
+                        ) : (
+                            kitchenQueue.map((item) => (
+                                <div key={item.id} className="rounded-xl border border-border bg-card p-3">
+                                    <div className="mb-1 flex items-center justify-between gap-2">
+                                        <span className="truncate text-[12px] font-semibold text-foreground">{item.table}</span>
+                                        <span className={`inline-flex shrink-0 items-center rounded-md px-2 py-0.5 text-[10.5px] font-semibold ${kitchenStatusOf(item.status).cls}`}>
+                                            {kitchenStatusOf(item.status).label}
+                                        </span>
+                                    </div>
+                                    <p className="text-[12px] text-foreground">{item.items || "—"}</p>
+                                    <p className="mt-1 text-[10.5px] text-muted-foreground">
+                                        {item.sale_no} • {elapsedLabel(item.minutes)}
+                                    </p>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

@@ -170,7 +170,7 @@ export default function KasbonPanel({
                 {/* ── STEP 1: Customer Picker (if none selected) ── */}
                 {!customer ? (
                     <div className="space-y-3">
-                        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/20 px-3.5 py-2.5 text-xs text-amber-800 dark:text-amber-300">
+                        <div className="flex items-center gap-2 rounded-xl border border-warning/20 bg-warning/10 dark:border-warning/30 dark:bg-warning/10 px-3.5 py-2.5 text-xs text-warning dark:text-warning">
                             <AlertTriangle size={15} className="shrink-0" />
                             Pilih pelanggan terlebih dahulu untuk memproses transaksi kasbon.
                         </div>

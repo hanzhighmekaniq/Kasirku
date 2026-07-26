@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductModifierGroup;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\Supplier;
@@ -13,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -46,7 +48,9 @@ class ProductController extends Controller
                 'variants.priceTiers',
                 'packagingUnits' => fn ($q) => $q->whereNull('variant_id'),
                 'priceTiers' => fn ($q) => $q->whereNull('variant_id'),
-            ]);
+            ])
+            // Untuk badge FnB "Resep" & "Modifier" di Index
+            ->withCount(['recipes', 'modifierGroups']);
 
         // Server-side search
         if ($request->filled('search')) {
@@ -180,6 +184,14 @@ class ProductController extends Controller
                 ->orderBy('expiry_date')
                 ->orderByDesc('purchase_date')
                 ->limit(10),
+            // --- FnB ---
+            // Tab "Resep" (finished_goods / combo)
+            'recipes.rawMaterial:id,name,sku,unit,base_unit,base_unit_conversion,cost_price',
+            // Tab "Modifier" (finished_goods / combo)
+            'modifierGroups' => fn ($q) => $q->orderBy('sort_order'),
+            'modifierGroups.modifiers',
+            // Tab "Dipakai di Resep" (raw_material)
+            'usedInRecipes.product:id,name,sku,type',
         ]);
 
         $totalStock =
@@ -239,7 +251,31 @@ class ProductController extends Controller
             'stockMovements' => $stockMovements,
             'bucketMargins' => $this->buildBucketMargins($product),
             'storeType' => $store?->getRelation('storeType')?->code ?? 'retail',
+            // FnB: total HPP dari resep, dihitung dengan konversi satuan
+            'recipeHpp' => $this->calculateRecipeHpp($product),
         ]);
+    }
+
+    /**
+     * Total HPP satu produk jadi berdasarkan resepnya.
+     * Modal tiap bahan dihitung per satuan pakai (base_unit) supaya
+     * qty resep (mis. 150 gram) dikalikan modal yang benar.
+     */
+    private function calculateRecipeHpp(Product $product): float
+    {
+        if (! $product->relationLoaded('recipes')) {
+            return 0.0;
+        }
+
+        return (float) $product->recipes->reduce(function ($carry, $recipe) {
+            $material = $recipe->rawMaterial;
+
+            if (! $material) {
+                return $carry;
+            }
+
+            return $carry + $material->costPerBaseUnit() * (float) $recipe->quantity;
+        }, 0.0);
     }
 
     /**
@@ -364,7 +400,64 @@ class ProductController extends Controller
             'productTypes' => self::PRODUCT_TYPES,
             'storeType' => $store?->getRelation('storeType')?->code ?? 'retail',
             'generatedSku' => Product::generateSku($storeId),
+            'modifierGroups' => $this->modifierGroupOptions($storeId),
         ]);
+    }
+
+    /**
+     * Pilihan modifier group untuk form produk (FnB).
+     */
+    /**
+     * Kode store type toko yang sedang aktif (retail, fnb, service, …).
+     * Dipakai untuk aturan validasi yang hanya berlaku di mode tertentu.
+     */
+    private function currentStoreTypeCode(): string
+    {
+        return Store::with('storeType')
+            ->find(session('current_store_id'))
+            ?->getRelation('storeType')
+            ?->code ?? 'retail';
+    }
+
+    /**
+     * Aturan wajib yang hanya berlaku untuk kombinasi store type + tipe
+     * produk tertentu, jadi tidak bisa ditaruh di rule array biasa.
+     *
+     * Bahan baku FnB wajib punya Satuan Pakai: tanpa itu konversi HPP resep
+     * jatuh ke cost_price mentah tanpa konversi satuan, dan hasilnya salah.
+     * Di store type lain field ini memang tidak dirender, jadi tidak dipaksa.
+     *
+     * @throws ValidationException
+     */
+    private function validateFnbProductRules(array $validated): void
+    {
+        if ($this->currentStoreTypeCode() !== 'fnb') {
+            return;
+        }
+
+        if (($validated['type'] ?? null) !== 'raw_material') {
+            return;
+        }
+
+        if (trim((string) ($validated['base_unit'] ?? '')) === '') {
+            throw ValidationException::withMessages([
+                'base_unit' => 'Satuan Pakai wajib diisi untuk Bahan Baku.',
+            ]);
+        }
+    }
+
+    private function modifierGroupOptions(?int $storeId)
+    {
+        if (! $storeId) {
+            return collect();
+        }
+
+        return ProductModifierGroup::forStore($storeId)
+            ->where('is_active', true)
+            ->withCount('modifiers')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'is_required', 'selection_type']);
     }
 
     public function store(Request $request)
@@ -378,6 +471,8 @@ class ProductController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'unit' => 'nullable|string|max:30',
+            'base_unit' => 'nullable|string|max:30',
+            'base_unit_conversion' => 'nullable|numeric|min:0.0001',
             'sell_price' => 'nullable|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'price_per_hour' => 'nullable|numeric|min:0',
@@ -385,11 +480,13 @@ class ProductController extends Controller
             'stock_minimum' => 'nullable|integer|min:0',
             'track_stock' => 'boolean',
             'is_sellable' => 'boolean',
-            'is_composable' => 'boolean',
             'preparation_time' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
             'sell_base' => 'boolean',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'modifier_group_ids' => 'nullable|array',
+            'modifier_group_ids.*' => 'exists:product_modifier_groups,id',
+            'sync_modifier_groups' => 'boolean',
             'capacity' => 'nullable|integer|min:1',
             'max_guests' => 'nullable|integer|min:1',
             'valid_duration_minutes' => 'nullable|integer|min:0',
@@ -405,12 +502,16 @@ class ProductController extends Controller
             'price_tiers.*.price' => 'required|numeric|min:0',
         ]);
 
+        $this->validateFnbProductRules($validated);
+
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
         }
 
-        DB::transaction(function () use ($validated, $imagePath) {
+        $syncModifiers = $request->boolean('sync_modifier_groups');
+
+        DB::transaction(function () use ($validated, $imagePath, $syncModifiers) {
             $product = Product::create([
                 'store_id' => session('current_store_id'),
                 'name' => $validated['name'],
@@ -421,6 +522,11 @@ class ProductController extends Controller
                 'category_id' => $validated['category_id'] ?? null,
                 'supplier_id' => $validated['supplier_id'] ?? null,
                 'unit' => $validated['unit'] ?? 'pcs',
+                // Kolom NOT NULL DEFAULT 'pcs'. Default kolom tidak menolong
+                // saat null dikirim eksplisit — MySQL tetap menolak — jadi
+                // fallback-nya di sini, sama seperti pola field 'unit' di atas.
+                'base_unit' => $validated['base_unit'] ?? 'pcs',
+                'base_unit_conversion' => $validated['base_unit_conversion'] ?? null,
                 'is_variant' => false,
                 'sell_price' => $validated['sell_price'] ?? 0,
                 'cost_price' => $validated['cost_price'] ?? 0,
@@ -429,7 +535,8 @@ class ProductController extends Controller
                 'stock_minimum' => $validated['stock_minimum'] ?? 0,
                 'track_stock' => $validated['track_stock'] ?? true,
                 'is_sellable' => $validated['is_sellable'] ?? true,
-                'is_composable' => $validated['is_composable'] ?? false,
+                // is_composable TIDAK diset dari request — dikelola otomatis
+                // oleh Product::syncIsComposable() berdasarkan ada tidaknya resep.
                 'preparation_time' => $validated['preparation_time'] ?? null,
                 'is_active' => $validated['is_active'] ?? true,
                 'sell_base' => $validated['sell_base'] ?? true,
@@ -455,6 +562,15 @@ class ProductController extends Controller
                     'min_qty' => $tier['min_qty'],
                     'price' => $tier['price'],
                 ]);
+            }
+
+            // FnB: modifier / topping groups.
+            // Hanya disentuh kalau form memang merender section Modifier
+            // (flag sync_modifier_groups). Tanpa guard ini, update produk
+            // dari store non-FnB akan melepas semua group yang sudah attached,
+            // karena array kosong hilang saat request dikirim sebagai multipart.
+            if ($syncModifiers) {
+                $product->modifierGroups()->sync($validated['modifier_group_ids'] ?? []);
             }
         });
 
@@ -505,6 +621,11 @@ class ProductController extends Controller
                 ->get(),
             'productTypes' => self::PRODUCT_TYPES,
             'storeType' => $store?->getRelation('storeType')?->code ?? 'retail',
+            'modifierGroups' => $this->modifierGroupOptions($storeId),
+            // ID modifier group yang sudah attached — untuk prefill checkbox
+            'attachedModifierGroupIds' => $product
+                ->modifierGroups()
+                ->pluck('product_modifier_groups.id'),
         ]);
     }
 
@@ -520,6 +641,8 @@ class ProductController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'unit' => 'nullable|string|max:30',
+            'base_unit' => 'nullable|string|max:30',
+            'base_unit_conversion' => 'nullable|numeric|min:0.0001',
             'sell_price' => 'nullable|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'price_per_hour' => 'nullable|numeric|min:0',
@@ -527,12 +650,14 @@ class ProductController extends Controller
             'stock_minimum' => 'nullable|integer|min:0',
             'track_stock' => 'boolean',
             'is_sellable' => 'boolean',
-            'is_composable' => 'boolean',
             'preparation_time' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
             'sell_base' => 'boolean',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'remove_image' => 'boolean',
+            'modifier_group_ids' => 'nullable|array',
+            'modifier_group_ids.*' => 'exists:product_modifier_groups,id',
+            'sync_modifier_groups' => 'boolean',
             'capacity' => 'nullable|integer|min:1',
             'max_guests' => 'nullable|integer|min:1',
             'valid_duration_minutes' => 'nullable|integer|min:0',
@@ -547,6 +672,8 @@ class ProductController extends Controller
             'price_tiers.*.min_qty' => 'required|integer|min:1',
             'price_tiers.*.price' => 'required|numeric|min:0',
         ]);
+
+        $this->validateFnbProductRules($validated);
 
         // Handle gambar
         $imagePath = $product->image;
@@ -565,7 +692,9 @@ class ProductController extends Controller
             $imagePath = $request->file('image')->store('products', 'public');
         }
 
-        DB::transaction(function () use ($validated, $imagePath, $product) {
+        $syncModifiers = $request->boolean('sync_modifier_groups');
+
+        DB::transaction(function () use ($validated, $imagePath, $product, $syncModifiers) {
             $product->update([
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
@@ -575,6 +704,11 @@ class ProductController extends Controller
                 'category_id' => $validated['category_id'] ?? null,
                 'supplier_id' => $validated['supplier_id'] ?? null,
                 'unit' => $validated['unit'] ?? 'pcs',
+                // Kolom NOT NULL DEFAULT 'pcs'. Default kolom tidak menolong
+                // saat null dikirim eksplisit — MySQL tetap menolak — jadi
+                // fallback-nya di sini, sama seperti pola field 'unit' di atas.
+                'base_unit' => $validated['base_unit'] ?? 'pcs',
+                'base_unit_conversion' => $validated['base_unit_conversion'] ?? null,
                 'sell_price' => $validated['sell_price'] ?? 0,
                 'cost_price' => $validated['cost_price'] ?? 0,
                 'price_per_hour' => $validated['price_per_hour'] ?? null,
@@ -582,7 +716,8 @@ class ProductController extends Controller
                 'stock_minimum' => $validated['stock_minimum'] ?? 0,
                 'track_stock' => $validated['track_stock'] ?? true,
                 'is_sellable' => $validated['is_sellable'] ?? true,
-                'is_composable' => $validated['is_composable'] ?? false,
+                // is_composable TIDAK diset dari request — dikelola otomatis
+                // oleh Product::syncIsComposable() berdasarkan ada tidaknya resep.
                 'preparation_time' => $validated['preparation_time'] ?? null,
                 'is_active' => $validated['is_active'] ?? true,
                 'sell_base' => $validated['sell_base'] ?? true,
@@ -612,6 +747,15 @@ class ProductController extends Controller
                     'min_qty' => $tier['min_qty'],
                     'price' => $tier['price'],
                 ]);
+            }
+
+            // FnB: modifier / topping groups.
+            // Hanya disentuh kalau form memang merender section Modifier
+            // (flag sync_modifier_groups). Tanpa guard ini, update produk
+            // dari store non-FnB akan melepas semua group yang sudah attached,
+            // karena array kosong hilang saat request dikirim sebagai multipart.
+            if ($syncModifiers) {
+                $product->modifierGroups()->sync($validated['modifier_group_ids'] ?? []);
             }
         });
 

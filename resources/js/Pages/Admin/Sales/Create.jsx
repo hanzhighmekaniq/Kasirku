@@ -242,7 +242,7 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                         </div>
                                     </div>
                                     <div className="col-span-3 sm:col-span-2">
-                                        <button type="button" onClick={addItem} disabled={!selectedProduct} className="w-full rounded-xl bg-primary-50 px-3 py-2.5 text-sm font-medium text-primary-600 transition hover:bg-primary-100 disabled:opacity-50">
+                                        <button type="button" onClick={addItem} disabled={!selectedProduct} className="w-full rounded-xl bg-primary/10 px-3 py-2.5 text-sm font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50">
                                             + Tambah
                                         </button>
                                     </div>
@@ -264,9 +264,9 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                                     <p className="text-xs text-muted-foreground">{item.product_sku} {item.stock !== undefined && `• Stok: ${item.stock}`}</p>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <input type="number" value={item.quantity} onChange={(e) => updateItemField(idx, 'quantity', e.target.value)} min="1" className="h-8 w-16 rounded-lg border border-border px-2 text-center text-xs focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                    <input type="number" value={item.quantity} onChange={(e) => updateItemField(idx, 'quantity', e.target.value)} min="1" className="h-8 w-16 rounded-lg border border-input bg-background px-2 text-center text-xs text-foreground focus:border-ring focus:ring-2 focus:ring-ring/20" />
                                                     <span className="text-xs text-muted-foreground">×</span>
-                                                    <input type="number" value={item.price} onChange={(e) => updateItemField(idx, 'price', e.target.value)} min="0" className="h-8 w-24 rounded-lg border border-border px-2 text-right text-xs focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                    <input type="number" value={item.price} onChange={(e) => updateItemField(idx, 'price', e.target.value)} min="0" className="h-8 w-24 rounded-lg border border-input bg-background px-2 text-right text-xs text-foreground focus:border-ring focus:ring-2 focus:ring-ring/20" />
                                                     <span className="w-24 text-right text-xs font-medium text-foreground">Rp {((item.quantity * item.price) - (item.discount_amount || 0)).toLocaleString('id-ID')}</span>
                                                 </div>
                                                 <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
@@ -345,7 +345,7 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                 <div className="my-2 border-t border-border" />
                                 <div className="flex justify-between">
                                     <dt className="font-semibold text-foreground">Grand Total</dt>
-                                    <dd className="text-lg font-bold text-primary-600">Rp {grandTotal.toLocaleString('id-ID')}</dd>
+                                    <dd className="text-lg font-bold text-primary">Rp {grandTotal.toLocaleString('id-ID')}</dd>
                                 </div>
                                 <div className="my-2 border-t border-border" />
                                 <div className="flex justify-between">
@@ -355,7 +355,7 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                 {changeAmount > 0 && (
                                     <div className="flex justify-between">
                                         <dt className="font-medium text-muted-foreground">Kembalian</dt>
-                                        <dd className="font-semibold text-emerald-600">Rp {changeAmount.toLocaleString('id-ID')}</dd>
+                                        <dd className="font-semibold text-success">Rp {changeAmount.toLocaleString('id-ID')}</dd>
                                     </div>
                                 )}
                             </dl>
@@ -402,5 +402,5 @@ function Field({ label, required, error, children }) {
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20 ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
+    return `block w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20 ${hasError ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`;
 }

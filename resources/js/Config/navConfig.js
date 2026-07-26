@@ -352,7 +352,7 @@ export function buildNavGroups(modules) {
             name: "Penjualan",
             href: r("admin.sales.index"),
             icon: "sales",
-            current: "admin.sales.*",
+            current: ["admin.sales.*", "admin.sale-returns.*"],
         });
         add(items, hasShift || lockedShift, hasShift, {
             key: "shifts",
@@ -366,7 +366,7 @@ export function buildNavGroups(modules) {
             name: "Pembelian",
             href: r("admin.purchases.index"),
             icon: "purchase",
-            current: "admin.purchases.*",
+            current: ["admin.purchases.*", "admin.purchase-returns.*"],
         });
 
         add(items, hasPromo || lockedPromo, hasPromo, {

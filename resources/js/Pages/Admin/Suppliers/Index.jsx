@@ -123,7 +123,7 @@ export default function Index({ suppliers, stats }) {
             </div>
 
             {/* Main Content Area */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
                 <div className="flex flex-col gap-4 border-b border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-1 flex-col">
@@ -192,33 +192,33 @@ export default function Index({ suppliers, stats }) {
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="border-b border-border bg-muted/50">
-                                    <th className="px-6 py-3.5 font-medium text-muted-foreground">
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                <tr>
+                                    <th className="px-6 py-3.5 font-semibold">
                                         Supplier
                                     </th>
-                                    <th className="px-6 py-3.5 font-medium text-muted-foreground">
+                                    <th className="px-6 py-3.5 font-semibold">
                                         Kontak
                                     </th>
-                                    <th className="px-6 py-3.5 font-medium text-muted-foreground">
+                                    <th className="px-6 py-3.5 font-semibold">
                                         Telepon
                                     </th>
-                                    <th className="px-6 py-3.5 text-center font-medium text-muted-foreground">
+                                    <th className="px-6 py-3.5 text-center font-semibold">
                                         Produk
                                     </th>
-                                    <th className="px-6 py-3.5 text-center font-medium text-muted-foreground">
+                                    <th className="px-6 py-3.5 text-center font-semibold">
                                         Pembelian
                                     </th>
-                                    <th className="px-6 py-3.5 text-right font-medium text-muted-foreground">
+                                    <th className="px-6 py-3.5 text-right font-semibold">
                                         Aksi
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border bg-background">
                                 {filtered.map((s) => (
                                     <tr
                                         key={s.id}
-                                        className="transition hover:bg-muted/50"
+                                        className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                     >
                                         <td className="px-6 py-3.5">
                                             <Link
@@ -228,13 +228,13 @@ export default function Index({ suppliers, stats }) {
                                                 )}
                                                 className="flex items-center gap-3"
                                             >
-                                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-600 text-xs font-bold text-white shadow-sm">
+                                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary text-xs font-bold text-white shadow-sm">
                                                     {s.name
                                                         .charAt(0)
                                                         .toUpperCase()}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="font-semibold text-foreground hover:text-primary-600 transition">
+                                                    <p className="font-semibold text-foreground hover:text-primary transition">
                                                         {s.name}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
@@ -254,7 +254,7 @@ export default function Index({ suppliers, stats }) {
                                             {s.phone ? (
                                                 <a
                                                     href={`tel:${s.phone}`}
-                                                    className="hover:text-primary-600 transition"
+                                                    className="hover:text-primary transition"
                                                 >
                                                     {s.phone}
                                                 </a>
@@ -291,7 +291,7 @@ export default function Index({ suppliers, stats }) {
                                                         "admin.suppliers.edit",
                                                         s.id,
                                                     )}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                     title="Edit"
                                                 >
                                                     <svg

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\FinalizesSaleStock;
 use App\Http\Controllers\Concerns\HasStoreScope;
+use App\Http\Controllers\Concerns\ManagesTableStatus;
 use App\Http\Controllers\Controller;
 use App\Models\CafeTable;
 use App\Models\CashierShift;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\DB;
 
 class SplitBillController extends Controller
 {
-    use FinalizesSaleStock, HasStoreScope;
+    use FinalizesSaleStock, HasStoreScope, ManagesTableStatus;
 
     /**
      * Start a split bill: create Sale (pending) + SaleItems + SaleSplitPayers.
@@ -551,12 +552,8 @@ class SplitBillController extends Controller
                     ->where('status', 'pending')
                     ->update(['status' => 'void']);
 
-                // Release table
-                if ($sale->table_id) {
-                    CafeTable::where('id', $sale->table_id)
-                        ->where('store_id', $storeId)
-                        ->update(['status' => 'available']);
-                }
+                // Release table — hanya kalau tidak ada order lain di meja itu
+                $this->syncTableStatus($sale->table_id, $storeId);
 
                 DB::commit();
 
@@ -577,13 +574,12 @@ class SplitBillController extends Controller
         // No payers paid: hard delete
         DB::beginTransaction();
         try {
-            if ($sale->table_id) {
-                CafeTable::where('id', $sale->table_id)
-                    ->where('store_id', $storeId)
-                    ->update(['status' => 'available']);
-            }
+            $tableId = $sale->table_id;
 
             $sale->delete(); // cascade deletes split_payers + items
+
+            // Setelah sale hilang, baru status meja dihitung ulang.
+            $this->syncTableStatus($tableId, $storeId);
 
             DB::commit();
 
@@ -627,6 +623,9 @@ class SplitBillController extends Controller
             'paid_amount' => $paidTotal,
             'change_amount' => $changeTotal,
         ]);
+
+        // Split bill lunas — meja dibebaskan seperti transaksi biasa.
+        $this->syncTableStatus($sale->table_id, $storeId);
 
         // Employee commission (if applicable)
         $this->maybeCreateCommission($sale);

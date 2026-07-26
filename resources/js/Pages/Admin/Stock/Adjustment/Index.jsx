@@ -72,42 +72,42 @@ export default function Index({ adjustments, stats }) {
             <Head title="Penyesuaian Stok" />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{flash.success}</div>
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
             )}
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-slate-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">Total</p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">{stats.total}</p>
+                <div className="rounded-2xl border border-border border-l-4 border-l-muted-foreground bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">Total</p>
+                    <p className="mt-1 text-xl font-bold text-foreground">{stats.total}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-amber-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">Draft</p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">{stats.draft}</p>
+                <div className="rounded-2xl border border-border border-l-4 border-l-warning bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">Draft</p>
+                    <p className="mt-1 text-xl font-bold text-foreground">{stats.draft}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-emerald-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">Disetujui</p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">{stats.approved}</p>
+                <div className="rounded-2xl border border-border border-l-4 border-l-success bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">Disetujui</p>
+                    <p className="mt-1 text-xl font-bold text-foreground">{stats.approved}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 border-l-4 border-l-red-400 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-medium text-slate-400">Ditolak</p>
-                    <p className="mt-1 text-xl font-bold text-slate-800">{stats.rejected}</p>
+                <div className="rounded-2xl border border-border border-l-4 border-l-destructive bg-card p-4 shadow-sm">
+                    <p className="text-xs font-medium text-muted-foreground">Ditolak</p>
+                    <p className="mt-1 text-xl font-bold text-foreground">{stats.rejected}</p>
                 </div>
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
-                <div className="border-b border-slate-100 p-4">
+                <div className="border-b border-border p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <div className="relative flex-1">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={1.8} />
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.8} />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari no. penyesuaian / alasan..."
-                                className="block w-full rounded-xl border border-slate-300 py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                         <Select
@@ -129,11 +129,11 @@ export default function Index({ adjustments, stats }) {
                         </Button>
                     </div>
                     <div className="flex items-center justify-between pt-4">
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                             Menampilkan{' '}
-                            <span className="font-semibold text-slate-700">{filtered.length}</span>{' '}
+                            <span className="font-semibold text-foreground">{filtered.length}</span>{' '}
                             dari{' '}
-                            <span className="font-semibold text-slate-700">{adjustments.length}</span>{' '}
+                            <span className="font-semibold text-foreground">{adjustments.length}</span>{' '}
                             penyesuaian
                         </p>
                     </div>
@@ -142,31 +142,31 @@ export default function Index({ adjustments, stats }) {
                 {/* Desktop Table */}
                 <div className="hidden md:block">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-200">
-                            <thead className="bg-slate-50/60">
+                        <table className="min-w-full divide-y divide-border">
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">No. Penyesuaian</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Tanggal</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Alasan</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Oleh</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">Aksi</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">No. Penyesuaian</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Tanggal</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Alasan</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Oleh</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Status</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-border bg-background">
                                 {filtered.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className="px-5 py-16 text-center">
                                             <div className="flex flex-col items-center">
-                                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                                                    <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                                    <svg className="h-8 w-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                                                     </svg>
                                                 </div>
-                                                <p className="mt-4 text-sm font-medium text-slate-600">
+                                                <p className="mt-4 text-sm font-medium text-foreground">
                                                     {search || statusFilter ? 'Penyesuaian tidak ditemukan' : 'Belum ada penyesuaian stok'}
                                                 </p>
-                                                <p className="mt-1 text-xs text-slate-400">
+                                                <p className="mt-1 text-xs text-muted-foreground">
                                                     {search || statusFilter ? 'Coba ubah filter atau kata kunci' : 'Buat penyesuaian baru untuk mengkoreksi stok'}
                                                 </p>
                                             </div>
@@ -174,18 +174,18 @@ export default function Index({ adjustments, stats }) {
                                     </tr>
                                 ) : (
                                     filtered.map((a) => (
-                                        <tr key={a.id} className="transition hover:bg-slate-50/50">
+                                        <tr key={a.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <Link
                                                     href={route('admin.stock-adjustments.show', a.id)}
-                                                    className="text-sm font-semibold text-primary-600 hover:text-primary-800"
+                                                    className="text-sm font-semibold text-primary hover:text-primary/80"
                                                 >
                                                     {a.adjustment_no}
                                                 </Link>
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-500">{fmtDate(a.adjustment_date)}</td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-500">{a.reason || '—'}</td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-500">{a.user?.name ?? '—'}</td>
+                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{fmtDate(a.adjustment_date)}</td>
+                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{a.reason || '—'}</td>
+                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{a.user?.name ?? '—'}</td>
                                             <td className="whitespace-nowrap px-5 py-4 text-center">
                                                 <StatusBadge status={a.status} />
                                             </td>
@@ -193,7 +193,7 @@ export default function Index({ adjustments, stats }) {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Link
                                                         href={route('admin.stock-adjustments.show', a.id)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-primary-50 hover:text-primary-600"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                         title="Lihat Detail"
                                                     >
                                                         <Eye className="h-4 w-4" strokeWidth={1.8} />
@@ -201,7 +201,7 @@ export default function Index({ adjustments, stats }) {
                                                     {a.status === 'draft' && (
                                                         <button
                                                             onClick={() => setConfirmDelete(a)}
-                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                                                             title="Hapus"
                                                         >
                                                             <Trash2 className="h-4 w-4" strokeWidth={1.8} />
@@ -220,48 +220,48 @@ export default function Index({ adjustments, stats }) {
                 {/* Mobile Cards */}
                 <div className="space-y-3 p-3 md:hidden">
                     {filtered.length === 0 ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                                <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                        <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                <svg className="h-8 w-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                                 </svg>
                             </div>
-                            <p className="mt-4 text-sm font-medium text-slate-600">
+                            <p className="mt-4 text-sm font-medium text-foreground">
                                 {search || statusFilter ? 'Penyesuaian tidak ditemukan' : 'Belum ada penyesuaian stok'}
                             </p>
-                            <p className="mt-1 text-xs text-slate-400">
+                            <p className="mt-1 text-xs text-muted-foreground">
                                 {search || statusFilter ? 'Coba ubah filter atau kata kunci' : 'Buat penyesuaian baru untuk mengkoreksi stok'}
                             </p>
                         </div>
                     ) : (
                         filtered.map((a) => (
-                            <div key={a.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <div key={a.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                                 <div className="flex items-start justify-between">
                                     <div className="min-w-0 flex-1">
                                         <Link
                                             href={route('admin.stock-adjustments.show', a.id)}
-                                            className="text-sm font-semibold text-primary-600 hover:text-primary-800"
+                                            className="text-sm font-semibold text-primary hover:text-primary/80"
                                         >
                                             {a.adjustment_no}
                                         </Link>
-                                        <p className="mt-0.5 text-xs text-slate-400">{fmtDate(a.adjustment_date)}</p>
+                                        <p className="mt-0.5 text-xs text-muted-foreground">{fmtDate(a.adjustment_date)}</p>
                                     </div>
                                     <StatusBadge status={a.status} />
                                 </div>
                                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                                     <div>
-                                        <p className="text-slate-400">Alasan</p>
-                                        <p className="mt-0.5 text-slate-700">{a.reason || '—'}</p>
+                                        <p className="text-muted-foreground">Alasan</p>
+                                        <p className="mt-0.5 text-foreground">{a.reason || '—'}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-slate-400">Oleh</p>
-                                        <p className="mt-0.5 text-slate-700">{a.user?.name ?? '—'}</p>
+                                        <p className="text-muted-foreground">Oleh</p>
+                                        <p className="mt-0.5 text-foreground">{a.user?.name ?? '—'}</p>
                                     </div>
                                 </div>
-                                <div className="mt-3 flex items-center justify-end gap-1 border-t border-slate-100 pt-3">
+                                <div className="mt-3 flex items-center justify-end gap-1 border-t border-border pt-3">
                                     <Link
                                         href={route('admin.stock-adjustments.show', a.id)}
-                                        className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-200"
+                                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
                                     >
                                         <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
                                         Lihat
@@ -269,7 +269,7 @@ export default function Index({ adjustments, stats }) {
                                     {a.status === 'draft' && (
                                         <button
                                             onClick={() => setConfirmDelete(a)}
-                                            className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100"
+                                            className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/20"
                                         >
                                             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                             Hapus
@@ -285,22 +285,22 @@ export default function Index({ adjustments, stats }) {
             {/* Confirm delete modal */}
             {confirmDelete && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onMouseDown={() => !processing && setConfirmDelete(null)}>
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
-                    <div className="relative w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity" />
+                    <div className="relative w-full max-w-sm rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
                         <div className="flex items-start gap-4">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100">
-                                <Trash2 className="h-6 w-6 text-red-600" strokeWidth={1.8} />
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                                <Trash2 className="h-6 w-6 text-destructive" strokeWidth={1.8} />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <h3 className="text-base font-semibold text-slate-900">Hapus Penyesuaian?</h3>
-                                <p className="mt-1 text-sm text-slate-500">
+                                <h3 className="text-base font-semibold text-popover-foreground">Hapus Penyesuaian?</h3>
+                                <p className="mt-1 text-sm text-muted-foreground">
                                     Penyesuaian <strong>{confirmDelete.adjustment_no}</strong> akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
                                 </p>
                             </div>
                         </div>
                         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                            <button onClick={() => setConfirmDelete(null)} disabled={processing} className="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">Batal</button>
-                            <button onClick={handleDelete} disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/30 transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-60">
+                            <button onClick={() => setConfirmDelete(null)} disabled={processing} className="inline-flex justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60">Batal</button>
+                            <button onClick={handleDelete} disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground shadow-lg shadow-destructive/30 transition hover:bg-destructive/90 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2 disabled:opacity-60">
                                 {processing ? 'Menghapus...' : 'Ya, Hapus'}
                             </button>
                         </div>
@@ -312,10 +312,10 @@ export default function Index({ adjustments, stats }) {
 }
 
 function StatusBadge({ status }) {
-    const map = { draft: 'bg-slate-100 text-slate-600', approved: 'bg-emerald-100 text-emerald-700', rejected: 'bg-red-100 text-red-600' };
+    const map = { draft: 'bg-warning/10 text-warning', approved: 'bg-success/10 text-success', rejected: 'bg-destructive/10 text-destructive' };
     const label = { draft: 'Draft', approved: 'Disetujui', rejected: 'Ditolak' };
     return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? 'bg-slate-100 text-slate-600'}`}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? 'bg-muted text-muted-foreground'}`}>
             {label[status] ?? status}
         </span>
     );

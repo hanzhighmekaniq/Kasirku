@@ -9,8 +9,8 @@ import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import Button from "@/Components/ui/Button";
 
 const STATUS_CONFIG = {
-    completed: { label: 'Selesai',    color: 'bg-emerald-100 text-success', dot: 'bg-success/100' },
-    cancelled: { label: 'Dibatalkan', color: 'bg-muted text-muted-foreground', dot: 'bg-slate-400' },
+    completed: { label: 'Selesai',    color: 'bg-success/10 text-success', dot: 'bg-success' },
+    cancelled: { label: 'Dibatalkan', color: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground' },
 };
 
 function formatRupiah(amount) {
@@ -127,15 +127,15 @@ export default function Index({ saleReturns }) {
                     <p className="text-xs font-medium text-muted-foreground">Total Retur</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.total}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-rose-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-destructive bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Dibatalkan</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.cancelled}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-success bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Selesai</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.completed}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-primary-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-primary bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Total Nilai</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{formatRupiah(stats.totalValue)}</p>
                 </div>
@@ -155,7 +155,7 @@ export default function Index({ saleReturns }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nomor retur, pelanggan, atau penjualan..."
-                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                         <Dropdown>
@@ -168,9 +168,9 @@ export default function Index({ saleReturns }) {
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="48">
-                                <button onClick={() => setStatusFilter("all")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "all" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Semua Status</button>
-                                <button onClick={() => setStatusFilter("completed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "completed" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Selesai</button>
-                                <button onClick={() => setStatusFilter("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "cancelled" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Dibatalkan</button>
+                                <button onClick={() => setStatusFilter("all")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "all" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Semua Status</button>
+                                <button onClick={() => setStatusFilter("completed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "completed" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Selesai</button>
+                                <button onClick={() => setStatusFilter("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "cancelled" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Dibatalkan</button>
                             </Dropdown.Content>
                         </Dropdown>
                     </div>
@@ -189,19 +189,19 @@ export default function Index({ saleReturns }) {
                 <div className="hidden md:block">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-border">
-                        <thead className="bg-muted/50">
+                        <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                             <tr>
-                                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">No. Retur</th>
-                                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Penjualan Asal</th>
-                                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pelanggan</th>
-                                <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Items</th>
-                                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total</th>
-                                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tanggal</th>
-                                <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                                <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aksi</th>
+                                <th className="px-5 py-3.5 text-left font-semibold">No. Retur</th>
+                                <th className="px-5 py-3.5 text-left font-semibold">Penjualan Asal</th>
+                                <th className="px-5 py-3.5 text-left font-semibold">Pelanggan</th>
+                                <th className="px-5 py-3.5 text-center font-semibold">Items</th>
+                                <th className="px-5 py-3.5 text-right font-semibold">Total</th>
+                                <th className="px-5 py-3.5 text-left font-semibold">Tanggal</th>
+                                <th className="px-5 py-3.5 text-center font-semibold">Status</th>
+                                <th className="px-5 py-3.5 text-center font-semibold">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-border bg-background">
                             {filtered.length === 0 ? (
                                 <tr>
                                     <td colSpan={8} className="px-5 py-16 text-center">
@@ -218,11 +218,11 @@ export default function Index({ saleReturns }) {
                                 </tr>
                             ) : (
                                 filtered.map((retur) => (
-                                    <tr key={retur.id} className="transition hover:bg-muted/50">
+                                    <tr key={retur.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                         <td className="whitespace-nowrap px-5 py-4">
                                             <Link
                                                 href={route('admin.sale-returns.show', retur.id)}
-                                                className="text-sm font-semibold text-primary-600 hover:text-primary-800"
+                                                className="text-sm font-semibold text-primary hover:text-primary/80"
                                             >
                                                 {retur.return_no}
                                             </Link>
@@ -251,7 +251,7 @@ export default function Index({ saleReturns }) {
                                             <div className="flex items-center justify-center gap-1">
                                                 <Link
                                                     href={route('admin.sale-returns.show', retur.id)}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-muted-foreground"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                                                     title="Lihat Detail"
                                                 >
                                                     <Eye className="h-4 w-4" strokeWidth={1.8} />
@@ -293,7 +293,7 @@ export default function Index({ saleReturns }) {
                                 <div>
                                     <Link
                                         href={route('admin.sale-returns.show', retur.id)}
-                                        className="text-sm font-semibold text-primary-600"
+                                        className="text-sm font-semibold text-primary"
                                     >
                                         {retur.return_no}
                                     </Link>
@@ -326,7 +326,7 @@ export default function Index({ saleReturns }) {
                                     {retur.status !== 'completed' && (
                                         <button
                                             onClick={() => setDeleteTarget(retur)}
-                                            className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-red-100"
+                                            className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/20"
                                         >
                                             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                             Hapus

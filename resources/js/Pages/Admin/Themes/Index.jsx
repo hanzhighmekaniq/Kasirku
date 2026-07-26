@@ -506,10 +506,10 @@ function PreviewModal({ theme: t, isDark, onClose }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-background/80 backdrop-blur-sm"
                 onClick={onClose}
             />
-            <div className="relative w-full max-w-[880px] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+            <div className="relative w-full max-w-[880px] overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl">
                 <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
                     <div>
                         <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -648,7 +648,7 @@ export default function Index({ userThemes = [] }) {
             />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     {flash.success}
                 </div>
             )}

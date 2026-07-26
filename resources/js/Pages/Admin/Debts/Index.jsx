@@ -107,19 +107,19 @@ export default function Index({ customers }) {
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-border bg-muted text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    <th className="px-4 py-3.5">Pelanggan</th>
-                                    <th className="px-4 py-3.5">Telepon</th>
-                                    <th className="px-4 py-3.5 text-right">Total Hutang</th>
-                                    <th className="px-4 py-3.5 text-right">Limit Kredit</th>
-                                    <th className="px-4 py-3.5 text-right">Sisa Limit</th>
-                                    <th className="px-4 py-3.5 text-right">Aksi</th>
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                <tr>
+                                    <th className="px-4 py-3.5 text-left font-semibold">Pelanggan</th>
+                                    <th className="px-4 py-3.5 text-left font-semibold">Telepon</th>
+                                    <th className="px-4 py-3.5 text-right font-semibold">Total Hutang</th>
+                                    <th className="px-4 py-3.5 text-right font-semibold">Limit Kredit</th>
+                                    <th className="px-4 py-3.5 text-right font-semibold">Sisa Limit</th>
+                                    <th className="px-4 py-3.5 text-right font-semibold">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border bg-background">
                                 {filtered.map((c) => (
-                                    <tr key={c.id} className="transition hover:bg-muted">
+                                    <tr key={c.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                         <td className="px-4 py-3.5">
                                             <p className="font-medium text-foreground">{c.name}</p>
                                             {c.code && <p className="text-xs text-muted-foreground">{c.code}</p>}

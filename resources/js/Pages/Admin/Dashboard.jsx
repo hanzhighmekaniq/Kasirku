@@ -352,7 +352,7 @@ function WeeklyTrendChart({ data }) {
                             return (
                                 <div className="rounded-xl border border-[rgb(var(--color-border))] bg-[rgb(var(--color-card))]/95 px-4 py-3 shadow-lg backdrop-blur-sm">
                                     <p className="text-xs font-medium text-[rgb(var(--color-text-secondary))]">{d.fullDate}</p>
-                                    <p className="mt-1 text-base font-bold text-primary-600">{fmt(d.total)}</p>
+                                    <p className="mt-1 text-base font-bold text-primary">{fmt(d.total)}</p>
                                     <p className="text-xs text-[rgb(var(--color-text-muted))]">{d.count} transaksi</p>
                                 </div>
                             );
@@ -676,7 +676,7 @@ export default function Dashboard({
                         value={fmt(stats.today_sales)}
                         sub={`${fmtNum(stats.today_count)} transaksi`}
                         icon={<NavIcons name="wallet" className="h-5 w-5" />}
-                        accent="bg-success/10 text-emerald-600"
+                        accent="bg-success/10 text-success"
                         trend={stats.today_sales_trend}
                     />
                     <StatCard
@@ -692,7 +692,7 @@ export default function Dashboard({
                         value={fmt(stats.today_profit)}
                         sub="Revenue - Pembelian - Pengeluaran"
                         icon={<NavIcons name="banknote" className="h-5 w-5" />}
-                        accent={stats.today_profit >= 0 ? "bg-success/10 text-emerald-600" : "bg-destructive/10 text-destructive"}
+                        accent={stats.today_profit >= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}
                         trend={stats.today_profit_trend}
                     />
                     <StatCard
@@ -712,7 +712,7 @@ export default function Dashboard({
                             value={`${fmtNum(stats.low_stock)} item`}
                             sub={stats.low_stock > 0 ? "Perlu segera restok" : "Stok aman"}
                             icon={stats.low_stock > 0 ? <NavIcons name="badgeAlert" className="h-5 w-5" /> : <NavIcons name="checkCircle" className="h-5 w-5" />}
-                            accent={stats.low_stock > 0 ? "bg-warning/10 text-warning" : "bg-success/10 text-emerald-500"}
+                            accent={stats.low_stock > 0 ? "bg-warning/10 text-warning" : "bg-success/10 text-success"}
                         />
                     ) : (
                         <StatCard
@@ -807,7 +807,7 @@ export default function Dashboard({
                         subtitle="5 transaksi terakhir"
                         action={
                             <div className="flex items-center gap-2">
-                                <Link href={route("admin.sales.index")} className="text-xs font-medium text-primary-600 hover:underline">
+                                <Link href={route("admin.sales.index")} className="text-xs font-medium text-primary hover:underline">
                                     Lihat semua →
                                 </Link>
                                 <ReportBtn label="Laporan" dateRange={{ start: today(), end: today() }} />

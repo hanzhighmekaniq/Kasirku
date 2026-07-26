@@ -14,9 +14,9 @@ export default function ParkingKasir(props) {
     }
 
     const stMap = {
-        free: "bg-card border-border text-card-foreground hover:border-indigo-400",
-        occ: "bg-indigo-500 text-white border-primary shadow-sm",
-        res: "bg-warning/10 border-amber-200 text-amber-800",
+        free: "bg-card border-border text-foreground hover:border-primary/40",
+        occ: "bg-primary text-primary-foreground border-primary shadow-sm",
+        res: "bg-warning/10 border-warning/30 text-warning",
     };
 
     const activeVehicles = [
@@ -56,8 +56,8 @@ export default function ParkingKasir(props) {
                         </div>
                         <div className="flex items-center gap-2 text-[11px]">
                             <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-card border border-border"></span>Free</span>
-                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-indigo-500"></span>Occupied</span>
-                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-amber-100 border border-amber-200"></span>Reserved</span>
+                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-primary"></span>Occupied</span>
+                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-warning/20 border border-warning/30"></span>Reserved</span>
                         </div>
                     </div>
                     <div className="grid grid-cols-12 gap-1.5">
@@ -102,22 +102,22 @@ export default function ParkingKasir(props) {
                         <button className="h-8 px-3 rounded-lg bg-primary text-white text-[11.5px] shadow-sm">Export CSV</button>
                     </div>
                 </div>
-                <div className="overflow-hidden rounded-xl border border-border">
+                <div className="overflow-hidden rounded-xl border border-border bg-card">
                     <table className="w-full text-[12.5px]">
-                        <thead className="bg-muted/50 text-muted-foreground text-[10.5px] uppercase tracking-widest">
+                        <thead className="bg-popover text-card-foreground text-[10.5px] uppercase tracking-wider">
                             <tr>
-                                <th className="text-left px-4 py-2 font-medium">Plate</th>
-                                <th className="text-left px-4 py-2 font-medium">Slot</th>
-                                <th className="text-left px-4 py-2 font-medium">Type</th>
-                                <th className="text-left px-4 py-2 font-medium">Time In</th>
-                                <th className="text-left px-4 py-2 font-medium">Duration</th>
-                                <th className="text-right px-4 py-2 font-medium">Fee</th>
+                                <th className="text-left px-4 py-2 font-semibold">Plate</th>
+                                <th className="text-left px-4 py-2 font-semibold">Slot</th>
+                                <th className="text-left px-4 py-2 font-semibold">Type</th>
+                                <th className="text-left px-4 py-2 font-semibold">Time In</th>
+                                <th className="text-left px-4 py-2 font-semibold">Duration</th>
+                                <th className="text-right px-4 py-2 font-semibold">Fee</th>
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-border bg-background">
                             {activeVehicles.map((a, i) => (
-                                <tr key={i} className="border-t border-border hover:bg-muted/50">
+                                <tr key={i} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                     <td className="px-4 py-2.5 font-mono font-semibold">{a.plate}</td>
                                     <td className="px-4 py-2.5">
                                         <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[10.5px] font-medium text-primary border border-primary/10">{a.slot}</span>

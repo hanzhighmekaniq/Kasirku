@@ -211,6 +211,237 @@ Cocok untuk: border atau garis pemisah sidebar.
 
 ---
 
+# Komponen Standar
+
+## Tabel
+
+> **STANDAR RESMI (diputuskan 2026-07-26): ikuti `Pages/Admin/Products/Index.jsx`.**
+> File itu adalah acuan tunggal untuk pewarnaan tabel. Semua tabel di seluruh
+> halaman Admin sudah disamakan ke pola ini. Kalau ada keraguan, buka
+> `Products/Index.jsx` baris 693 & 880–957, jangan mengarang sendiri.
+
+Kontras berjenjang: `bg-popover` (header) → `bg-card` (wrapper) → `bg-background` (isi baris).
+
+| Layer | Class |
+|---|---|
+| Card wrapper (pembungkus tabel) | `border border-border bg-card` |
+| Thead | `bg-popover text-xs uppercase tracking-wide text-card-foreground` |
+| `<tr>` di dalam thead | **tanpa className** — warna & tipografi diwarisi dari `<thead>` |
+| Th | `px-4 py-3 text-left font-semibold` (pakai `text-center`/`text-right` sesuai kolom; **jangan** tambah class warna) |
+| Tbody | `divide-y divide-border bg-background` |
+| Tr baris data | `transition hover:bg-[rgb(var(--color-table-hover))]` |
+| Td | `px-4 py-3` + `text-foreground` (data utama) atau `text-muted-foreground` (sekunder) |
+
+```jsx
+<div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+    <table className="w-full text-sm">
+        <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+            <tr>
+                <th className="px-4 py-3 text-left font-semibold">Nama</th>
+                <th className="px-4 py-3 text-right font-semibold">Harga</th>
+            </tr>
+        </thead>
+        <tbody className="divide-y divide-border bg-background">
+            <tr className="transition hover:bg-[rgb(var(--color-table-hover))]">
+                <td className="px-4 py-3 text-foreground">Isi</td>
+                <td className="px-4 py-3 text-right text-muted-foreground">Rp 0</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+```
+
+### Kenapa `hover:bg-[rgb(var(--color-table-hover))]` dan bukan token?
+
+Ini **pengecualian yang disengaja** dari aturan "jangan pakai `bg-[rgb(var(--color-xxx))]`"
+di section "Old CSS Variable → New Tailwind Class". `--color-table-hover` **tetap
+ikut tema aktif** karena `resources/js/Theme/ThemeProvider.jsx:149` mengesetnya
+dari `tokens.muted` tema yang dipilih user saat runtime. Nilai di `app.css` hanya
+fallback statis untuk light/dark. Jangan "perbaiki" ini jadi `hover:bg-muted`.
+
+### Yang TIDAK boleh ada di baris tabel
+
+- Tint dekoratif / zebra / hierarki: `even:bg-*`, `odd:bg-*`, `bg-muted/30`,
+  `bg-muted/80`, tint karena `depth === 0`. Semua baris harus rata `bg-background`.
+- Hover lain: `hover:bg-muted`, `hover:bg-muted/50`, `hover:bg-accent`,
+  `hover:bg-slate-50` → semua diganti ke class hover standar di atas.
+
+Highlight baris yang **bermakna data** (batch kadaluarsa `bg-destructive/10`,
+stok habis, baris terpilih `bg-primary/10`) **tetap dipertahankan** — itu
+informasi, bukan dekorasi.
+
+---
+
+## Modal / Dialog (Lengkap)
+
+| Layer | Token | Class |
+|---|---|---|
+| Overlay backdrop | — | `bg-background/80 backdrop-blur-sm` |
+| Background modal | popover | `bg-popover` |
+| Border modal | border | `border border-border rounded-2xl` |
+| Judul modal | popover-foreground | `text-popover-foreground font-semibold` |
+| Deskripsi modal | muted | `text-muted-foreground text-sm` |
+| Footer modal background | muted | `bg-muted/50 border-t border-border` |
+
+```jsx
+<div className="fixed inset-0 bg-background/80 backdrop-blur-sm" />
+<div className="rounded-2xl border border-border bg-popover p-6 shadow-xl">
+    <h3 className="text-popover-foreground font-semibold">Judul</h3>
+    <p className="text-muted-foreground text-sm">Deskripsi</p>
+    <div className="mt-4 flex justify-end gap-2 border-t border-border bg-muted/50 -m-6 mt-6 p-4">
+        <button className="bg-destructive text-destructive-foreground rounded-lg px-4 py-2 hover:bg-destructive/90">
+            Hapus
+        </button>
+    </div>
+</div>
+```
+
+---
+
+## PageHeader / Topbar
+
+| Layer | Token | Class |
+|---|---|---|
+| Background topbar/header | sidebar | `bg-sidebar border-b border-border` |
+| Judul halaman (h1) | foreground | `text-foreground font-bold text-xl` |
+| Breadcrumb teks | muted | `text-muted-foreground text-xs` |
+| Breadcrumb separator | muted | `text-muted-foreground/40` |
+| Deskripsi halaman | muted | `text-muted-foreground text-sm` |
+
+---
+
+## Tombol Inline (Lengkap)
+
+Dipakai saat tidak memakai komponen `Button`, misalnya aksi kecil dalam tabel/card.
+
+| Jenis | Class |
+|---|---|
+| Primary | `bg-primary text-primary-foreground hover:bg-primary/90` |
+| Secondary | `bg-secondary text-secondary-foreground hover:bg-secondary/80` |
+| Destructive | `bg-destructive text-destructive-foreground hover:bg-destructive/90` |
+| Success | `bg-success text-success-foreground hover:bg-success/90` |
+| Warning | `bg-warning text-warning-foreground hover:bg-warning/90` |
+| Outline | `border border-border text-foreground hover:bg-muted` |
+| Ghost | `text-muted-foreground hover:bg-muted hover:text-foreground` |
+| Hover ringan (ganti numeric scale) | `hover:bg-primary/10 hover:text-primary` (bukan `hover:bg-primary-50 hover:text-primary-600`) |
+
+**Jangan pakai** `bg-primary-50`, `text-primary-600`, `border-primary-200`, dst — itu numeric palette scale, bukan token tema. Gunakan opacity modifier: `bg-primary/10`, `text-primary`, `border-primary/20`.
+
+---
+
+## Badge / Status Pill (Lengkap)
+
+Status yang punya makna universal (sukses/gagal/peringatan) **wajib** pakai token tema supaya ikut berubah sesuai tema aktif:
+
+| Status | Token | Class | Kapan dipakai |
+|---|---|---|---|
+| Sukses / Lunas / Aktif / Stok Aman | success | `bg-success/10 text-success` | paid, active, open, safe |
+| Peringatan / Pending / Stok Menipis | warning | `bg-warning/10 text-warning` | pending, draft, low stock |
+| Error / Gagal / Habis / Batal | destructive | `bg-destructive/10 text-destructive` | failed, void, out of stock |
+| Info / Netral / Terpilih | primary | `bg-primary/10 text-primary` | info, selected |
+| Non-aktif / Tutup / Sekunder | muted | `bg-muted text-muted-foreground` | inactive, closed |
+
+**Dilarang** pakai `bg-emerald-100`, `bg-rose-100`, `bg-red-100`, `bg-amber-100` untuk status di atas — semua diganti ke token yang sesuai.
+
+### Badge non-semantik (kategori, role, tipe — bukan status)
+
+Untuk label yang **bukan** status universal (role user, tier membership, tipe produk per kategori bebas), warna hardcoded per kategori masih boleh, **tapi wajib punya varian `dark:`** supaya kontras tetap terjaga di dark mode:
+
+```jsx
+// Role badge
+<span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Admin</span>
+<span className="bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">Supervisor</span>
+
+// Tier membership
+<span className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Gold</span>
+<span className="bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300">Silver</span>
+
+// Tipe produk
+<span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Barang Jadi</span>
+<span className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">Bahan Baku</span>
+```
+
+Aturan: `bg-{color}-100 text-{color}-700` (light) dipasangkan dengan `dark:bg-{color}-900/30 dark:text-{color}-400` (dark). Jangan campur skala berbeda (misal `bg-{color}-50` dengan `dark:bg-{color}-900`), tetap konsisten `100↔900/30` supaya kontrasnya setara.
+
+---
+
+## Alert / Notification Banner
+
+| Jenis | Class |
+|---|---|
+| Success banner | `bg-success/10 border border-success/20 text-success` |
+| Warning banner | `bg-warning/10 border border-warning/20 text-warning` |
+| Error banner | `bg-destructive/10 border border-destructive/20 text-destructive` |
+| Info banner | `bg-primary/10 border border-primary/20 text-primary` |
+
+---
+
+## Form & Input (Lengkap)
+
+| Layer | Token | Class |
+|---|---|---|
+| Background input | background | `bg-background` |
+| Border normal | input | `border-input` |
+| Border focus | ring | `focus:border-ring focus:ring-2 focus:ring-ring/20` |
+| Label | foreground | `text-foreground text-sm font-medium` |
+| Placeholder | muted | `placeholder:text-muted-foreground` |
+| Error border | destructive | `border-destructive` |
+| Error teks | destructive | `text-destructive text-xs mt-1` |
+| Helper text | muted | `text-muted-foreground text-xs mt-1` |
+| Disabled | muted | `opacity-50 cursor-not-allowed bg-muted` |
+
+---
+
+## Empty State
+
+| Layer | Token | Class |
+|---|---|---|
+| Container background | muted | `bg-muted/30 rounded-xl` |
+| Icon | muted | `text-muted-foreground/50 h-8 w-8` |
+| Teks utama | foreground | `text-foreground font-medium text-sm` |
+| Teks deskripsi | muted | `text-muted-foreground text-sm` |
+
+---
+
+## Divider / Separator
+
+```
+Horizontal      → border-t border-border
+Vertical        → w-px bg-border
+List divider    → divide-y divide-border
+Section divider → border-b border-border
+```
+
+> Catatan: pakai `border-border` polos (tanpa `/50`) di semua kondisi — sudah distandarkan, jangan pakai `border-border/50` lagi.
+
+---
+
+## Tabel Referensi Cepat — Semua Komponen
+
+| Komponen | Background | Foreground | Border |
+|---|---|---|---|
+| Card | `bg-card` | `text-card-foreground` | `border-border` |
+| Tabel wrapper | `bg-card` | `text-card-foreground` | `border-border` |
+| Tabel header (thead) | `bg-popover` | `text-card-foreground` | — |
+| Tabel row (tbody) | `bg-background` | `text-foreground` | `divide-border` |
+| Tabel row hover | `bg-[rgb(var(--color-table-hover))]` | — | — |
+| Modal | `bg-popover` | `text-popover-foreground` | `border-border` |
+| Input | `bg-background` | `text-foreground` | `border-input` |
+| Sidebar | `bg-sidebar` | `text-sidebar-foreground` | `border-border` |
+| Topbar/PageHeader | `bg-sidebar` | `text-foreground` | `border-border` |
+| Dropdown/Popover | `bg-popover` | `text-popover-foreground` | `border-border` |
+| Badge sukses | `bg-success/10` | `text-success` | — |
+| Badge warning | `bg-warning/10` | `text-warning` | — |
+| Badge error | `bg-destructive/10` | `text-destructive` | — |
+| Badge info | `bg-primary/10` | `text-primary` | — |
+| Button primary | `bg-primary` | `text-primary-foreground` | — |
+| Button secondary | `bg-secondary` | `text-secondary-foreground` | — |
+| Button outline | transparent | `text-foreground` | `border-border` |
+| Button ghost | transparent | `text-muted-foreground` | — |
+| Button destructive | `bg-destructive` | `text-destructive-foreground` | — |
+
+---
+
 # Ringkasan Penggunaan
 
 `primary`  
@@ -304,7 +535,10 @@ text-popover-foreground → teks di dalam modal
 
 ## Old CSS Variable → New Tailwind Class
 
-Mapping untuk kode lama yang masih pakai `bg-[rgb(var(--color-xxx))]`:
+Mapping untuk kode lama yang masih pakai `bg-[rgb(var(--color-xxx))]`.
+
+> **Pengecualian:** `--color-table-hover` pada baris tabel JANGAN dikonversi —
+> lihat penjelasan di section "Tabel". Itu standar resmi, bukan kode lama.
 
 ```
 bg-[rgb(var(--color-card))]              → bg-card
@@ -365,16 +599,16 @@ text-white (di atas primary)                      → text-primary-foreground
 
 ### Tabel
 ```jsx
-<table>
-    <thead className="bg-muted">
-        <tr className="border-b border-border text-xs text-muted-foreground">
-            <th>Nama</th>
+<table className="w-full text-sm">
+    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+        <tr>
+            <th className="px-4 py-3 text-left font-semibold">Nama</th>
         </tr>
     </thead>
-    <tbody className="divide-y divide-border">
-        <tr className="hover:bg-muted/50">
-            <td className="text-foreground">Isi</td>
-            <td className="text-muted-foreground">Detail</td>
+    <tbody className="divide-y divide-border bg-background">
+        <tr className="transition hover:bg-[rgb(var(--color-table-hover))]">
+            <td className="px-4 py-3 text-foreground">Isi</td>
+            <td className="px-4 py-3 text-muted-foreground">Detail</td>
         </tr>
     </tbody>
 </table>
@@ -474,19 +708,19 @@ text-white (di atas primary)                      → text-primary-foreground
 
 ## Yang TIDAK Diubah (Hardcoded Sengaja)
 
-Badge status informational dan warna per tipe tetap hardcoded karena semantik (bukan tema):
+**Update:** Status universal (Pending/Aktif/Habis/dst) **sekarang wajib pakai token** (`bg-warning/10`, `bg-success/10`, `bg-destructive/10`) — lihat section "Badge / Status Pill (Lengkap)" di atas. Yang tetap hardcoded hanyalah label **non-status**: role user, tier membership, dan kategori/tipe bebas yang tidak punya makna sukses/gagal/peringatan. Semua wajib punya varian `dark:`.
 
 ```jsx
-// Status badges — makna warna spesifik, tidak ikut tema
-<span className="bg-amber-100 text-amber-700">Pending</span>
-<span className="bg-emerald-100 text-emerald-700">Aktif</span>
-<span className="bg-red-100 text-red-700">Habis</span>
+// Role badges — bukan status, warna per-role
+<span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Admin</span>
+<span className="bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">Supervisor</span>
 
-// Role badges
-<span className="bg-blue-100 text-blue-700">Admin</span>
-<span className="bg-violet-100 text-violet-700">Supervisor</span>
+// Tipe produk — kategori bebas, bukan status
+<span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Barang Jadi</span>
+<span className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">Bahan Baku</span>
 
-// Tipe produk
-<span className="bg-blue-100 text-blue-700">Barang Jadi</span>
-<span className="bg-purple-100 text-purple-700">Bahan Baku</span>
+// Status universal — WAJIB token, bukan hardcoded
+<span className="bg-warning/10 text-warning">Pending</span>
+<span className="bg-success/10 text-success">Aktif</span>
+<span className="bg-destructive/10 text-destructive">Habis</span>
 ```

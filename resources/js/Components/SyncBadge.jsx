@@ -88,7 +88,7 @@ export default function SyncBadge() {
                 onClick={openModal}
                 className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 shadow-lg transition-all hover:shadow-xl active:scale-95 ${
                     failedCount > 0
-                        ? "bg-destructive/100 text-white"
+                        ? "bg-destructive text-destructive-foreground"
                         : isOnline
                           ? "bg-amber-500 text-white"
                           : "bg-slate-600 text-white"
@@ -168,7 +168,7 @@ export default function SyncBadge() {
                                         {failedList.map((m) => (
                                             <div
                                                 key={m.id}
-                                                className="rounded-xl border border-destructive/20 bg-destructive/10/50 px-3 py-2.5"
+                                                className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2.5"
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-xs font-semibold text-foreground">

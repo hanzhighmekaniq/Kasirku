@@ -60,7 +60,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                 description="Cari, filter, dan atur kategori produk dari satu tempat."
             />
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
                 <div className="border-b border-border p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -76,7 +76,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari kategori..."
-                                className="block w-full rounded-xl border border-border bg-card text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary-500 py-2.5 pl-9 pr-10"
+                                className="block w-full rounded-xl border border-input bg-background text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 py-2.5 pl-9 pr-10"
                             />
                             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
                                 <svg
@@ -95,7 +95,7 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                             </span>
                             <button
                                 type="submit"
-                                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-primary-500"
+                                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-primary"
                             >
                                 <svg
                                     className="h-4 w-4"
@@ -205,10 +205,10 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                                         href={link.url || "#"}
                                         preserveScroll
                                         className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${link.active
-                                                ? "bg-primary text-primary-foreground shadow-sm"
-                                                : link.url
-                                                    ? "text-muted-foreground hover:bg-muted"
-                                                    : "cursor-not-allowed text-muted-foreground/50"
+                                            ? "bg-primary text-primary-foreground shadow-sm"
+                                            : link.url
+                                                ? "text-muted-foreground hover:bg-muted"
+                                                : "cursor-not-allowed text-muted-foreground/50"
                                             }`}
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
@@ -241,7 +241,7 @@ function CategoryBadge({ cat }) {
     // Roots and parents with children get folder icon
     if (cat.depth === 0 || !cat.parent_id) {
         return (
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/15 to-primary-500/15 text-lg">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-lg">
                 📁
             </span>
         );
@@ -258,7 +258,7 @@ function RowActions({ cat, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <Link
                 href={route("admin.categories.edit", cat.id)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                 title="Edit"
             >
                 <svg
@@ -277,7 +277,7 @@ function RowActions({ cat, onDelete }) {
             </Link>
             <Link
                 href={`${route("admin.categories.create")}?parent_id=${cat.id}`}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-success/10 hover:text-emerald-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-success/10 hover:text-success"
                 title="Tambah Sub-Kategori"
             >
                 <svg
@@ -325,7 +325,7 @@ function ExpandIcon({ expanded, hasChildren, onClick }) {
         <button
             type="button"
             onClick={onClick}
-            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground transition hover:bg-muted/70 hover:text-muted-foreground"
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground transition hover:bg-muted hover:text-foreground"
         >
             <svg
                 className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-90" : ""}`}
@@ -397,14 +397,14 @@ function CategoryTree({ categories, onDelete }) {
                     <div className="flex items-center gap-2 border-b border-border px-4 py-2">
                         <button
                             onClick={expandAll}
-                            className="text-xs text-primary-600 hover:text-primary-800 font-medium"
+                            className="text-xs text-primary hover:text-primary/80 font-medium"
                         >
                             Expand Semua
                         </button>
                         <span className="text-muted-foreground/50">|</span>
                         <button
                             onClick={collapseAll}
-                            className="text-xs text-primary-600 hover:text-primary-800 font-medium"
+                            className="text-xs text-primary hover:text-primary/80 font-medium"
                         >
                             Collapse Semua
                         </button>
@@ -421,19 +421,23 @@ function CategoryTree({ categories, onDelete }) {
             {/* Desktop table */}
             <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            <th className="px-4 py-3.5">Nama</th>
-                            <th className="px-4 py-3.5">Path</th>
-                            <th className="px-4 py-3.5 text-center w-24">
+                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                        <tr>
+                            <th className="px-4 py-3 text-left font-semibold">
+                                Nama
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold">
+                                Path
+                            </th>
+                            <th className="px-4 py-3 text-center font-semibold w-24">
                                 Produk
                             </th>
-                            <th className="px-4 py-3.5 text-right w-24">
+                            <th className="px-4 py-3 text-right font-semibold w-24">
                                 Aksi
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border bg-background">
                         {visible.length === 0 ? (
                             <tr>
                                 <td
@@ -469,7 +473,7 @@ function CategoryTree({ categories, onDelete }) {
                     visible.map((cat) => (
                         <div
                             key={cat.id}
-                            className={`flex items-start gap-3 p-4 ${cat._depth === 0 && !cat.parent_id ? "bg-muted/50" : ""}`}
+                            className={`flex items-start gap-3 p-4 ${cat._depth === 0 && !cat.parent_id ? "bg-muted/30" : ""}`}
                         >
                             {cat._depth > 0 && (
                                 <span className="mt-0.5 shrink-0 select-none">
@@ -505,7 +509,7 @@ function CategoryTree({ categories, onDelete }) {
                                         {cat.name}
                                     </p>
                                     {cat.has_children && (
-                                        <span className="shrink-0 rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-600">
+                                        <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                                             +
                                             {cat.total_products -
                                                 (cat.products_count || 0)}
@@ -517,8 +521,8 @@ function CategoryTree({ categories, onDelete }) {
                                 </p>
                                 <span
                                     className={`mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${cat._depth === 0
-                                            ? "bg-primary-100 text-primary-700"
-                                            : "bg-muted text-muted-foreground"
+                                        ? "bg-primary/10 text-primary"
+                                        : "bg-muted text-muted-foreground"
                                         }`}
                                 >
                                     {cat.total_products} produk
@@ -565,7 +569,7 @@ function CategoryRow({ cat, depth = 0, isExpanded, onToggle, onDelete }) {
 
     return (
         <tr
-            className={`transition hover:bg-muted/70 ${depth === 0 ? "bg-muted/80" : ""}`}
+            className="transition hover:bg-[rgb(var(--color-table-hover))]"
         >
             <td className="px-4 py-3">
                 <div className="flex items-center gap-1">
@@ -594,7 +598,7 @@ function CategoryRow({ cat, depth = 0, isExpanded, onToggle, onDelete }) {
                         {cat.name}
                     </span>
                     {cat.has_children && !isExpanded && (
-                        <span className="rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-600">
+                        <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                             {cat.children?.length ?? 0}
                         </span>
                     )}
@@ -615,8 +619,8 @@ function CategoryRow({ cat, depth = 0, isExpanded, onToggle, onDelete }) {
             <td className="px-4 py-3 text-center">
                 <span
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${depth === 0
-                            ? "bg-primary-100 text-primary-700"
-                            : "bg-muted text-muted-foreground"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground"
                         }`}
                 >
                     {cat.total_products}

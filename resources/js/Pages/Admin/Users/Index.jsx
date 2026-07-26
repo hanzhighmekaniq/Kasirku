@@ -21,48 +21,48 @@ import Button from "@/Components/ui/Button";
 const ROLE_COLOR = {
     owner: {
         dot: "bg-amber-400",
-        bg: "bg-amber-50",
-        text: "text-amber-700",
-        ring: "ring-amber-200",
+        bg: "bg-amber-100 dark:bg-amber-900/30",
+        text: "text-amber-700 dark:text-amber-400",
+        ring: "ring-amber-200 dark:ring-amber-800",
     },
     admin: {
         dot: "bg-blue-400",
-        bg: "bg-blue-50",
-        text: "text-blue-700",
-        ring: "ring-blue-200",
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        text: "text-blue-700 dark:text-blue-400",
+        ring: "ring-blue-200 dark:ring-blue-800",
     },
     supervisor: {
         dot: "bg-violet-400",
-        bg: "bg-violet-50",
-        text: "text-violet-700",
-        ring: "ring-violet-200",
+        bg: "bg-violet-100 dark:bg-violet-900/30",
+        text: "text-violet-700 dark:text-violet-400",
+        ring: "ring-violet-200 dark:ring-violet-800",
     },
     kasir: {
         dot: "bg-green-400",
-        bg: "bg-green-50",
-        text: "text-green-700",
-        ring: "ring-green-200",
+        bg: "bg-green-100 dark:bg-green-900/30",
+        text: "text-green-700 dark:text-green-400",
+        ring: "ring-green-200 dark:ring-green-800",
     },
     gudang: {
         dot: "bg-orange-400",
-        bg: "bg-orange-50",
-        text: "text-orange-700",
-        ring: "ring-orange-200",
+        bg: "bg-orange-100 dark:bg-orange-900/30",
+        text: "text-orange-700 dark:text-orange-400",
+        ring: "ring-orange-200 dark:ring-orange-800",
     },
     kitchen: {
         dot: "bg-red-400",
-        bg: "bg-destructive/10",
-        text: "text-destructive",
-        ring: "ring-red-200",
+        bg: "bg-red-100 dark:bg-red-900/30",
+        text: "text-red-700 dark:text-red-400",
+        ring: "ring-red-200 dark:ring-red-800",
     },
 };
 
 function RoleBadge({ role }) {
     const c = ROLE_COLOR[role] ?? {
-        dot: "bg-slate-400",
+        dot: "bg-muted-foreground",
         bg: "bg-muted",
         text: "text-muted-foreground",
-        ring: "ring-slate-200",
+        ring: "ring-border",
     };
     return (
         <span
@@ -80,7 +80,7 @@ function RoleDropdown({ currentRole, roles, onChange }) {
     const btnRef = useRef(null);
     const c = ROLE_COLOR[currentRole] ??
         ROLE_COLOR.kasir ?? {
-            dot: "bg-slate-400",
+            dot: "bg-muted-foreground",
             bg: "bg-muted",
             text: "text-muted-foreground",
         };
@@ -114,7 +114,7 @@ function RoleDropdown({ currentRole, roles, onChange }) {
                 type="button"
                 disabled={isOwner}
                 onClick={isOwner ? undefined : toggle}
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${isOwner ? "cursor-not-allowed" : "hover:shadow-sm cursor-pointer"} ${c.bg} ${c.text} border-border/60`}
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${isOwner ? "cursor-not-allowed" : "hover:shadow-sm cursor-pointer"} ${c.bg} ${c.text} border-border`}
             >
                 <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
                 {currentRole || "Pilih Role"}
@@ -127,7 +127,7 @@ function RoleDropdown({ currentRole, roles, onChange }) {
             </button>
             {open && (
                 <div
-                    className="fixed z-[100] w-44 overflow-hidden rounded-xl border border-border bg-card shadow-xl ring-1 ring-black/5"
+                    className="fixed z-[100] w-44 overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-xl ring-1 ring-border"
                     style={{ top: pos.top, left: pos.left }}
                 >
                     {roles
@@ -135,7 +135,7 @@ function RoleDropdown({ currentRole, roles, onChange }) {
                         .map((r) => {
                             const rc = ROLE_COLOR[r.name] ??
                                 ROLE_COLOR.kasir ?? {
-                                    dot: "bg-slate-400",
+                                    dot: "bg-muted-foreground",
                                     text: "text-muted-foreground",
                                 };
                             return (
@@ -174,8 +174,8 @@ function RoleDropdown({ currentRole, roles, onChange }) {
 const inp = (err) =>
     `block w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${
         err
-            ? "border-red-300 bg-destructive/10/30 focus:ring-red-200"
-            : "border-border bg-card hover:border-border focus:border-ring focus:ring-ring/20"
+            ? "border-destructive bg-background focus:border-destructive focus:ring-destructive/20"
+            : "border-input bg-background focus:border-ring focus:ring-ring/20"
     }`;
 
 const labelClass =
@@ -324,7 +324,7 @@ export default function Index({
                         (role) => {
                             if (!roleCounts[role]) return null;
                             const c = ROLE_COLOR[role] ?? {
-                                dot: "bg-slate-400",
+                                dot: "bg-muted-foreground",
                                 text: "text-muted-foreground",
                             };
                             return (
@@ -351,7 +351,7 @@ export default function Index({
 
                 {/* Plan warning */}
                 {!canInvite && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    <div className="rounded-xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-warning">
                         Batas {planInfo?.max_users} pengguna paket{" "}
                         {planInfo?.label} tercapai. Upgrade plan untuk menambah
                         lebih banyak.
@@ -407,7 +407,7 @@ export default function Index({
                                 <div
                                     key={u.id}
                                     className={`group flex flex-col rounded-2xl border border-border p-5 shadow-sm transition hover:shadow-md ${
-                                        isOwner ? "bg-amber-50/10 border-amber-100" : "bg-card"
+                                        isOwner ? "bg-amber-50/50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-900/30" : "bg-card"
                                     }`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
@@ -415,8 +415,8 @@ export default function Index({
                                             <span
                                                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold shadow-sm ring-1 ${
                                                     isOwner
-                                                        ? "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700 ring-amber-200"
-                                                        : "bg-gradient-to-br from-primary-100 to-primary-200 text-primary-600 ring-primary-100"
+                                                        ? "bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800"
+                                                        : "bg-primary/10 text-primary ring-primary/20"
                                                 }`}
                                             >
                                                 {isOwner
@@ -429,7 +429,7 @@ export default function Index({
                                                         {u.name}
                                                     </p>
                                                     {isOwner && (
-                                                        <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200">
+                                                        <span className="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800">
                                                             Owner
                                                         </span>
                                                     )}
@@ -498,13 +498,13 @@ export default function Index({
             {showInvite && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        className="absolute inset-0 bg-background/80 backdrop-blur-sm"
                         onClick={() => setShowInvite(false)}
                     />
-                    <div className="relative w-full max-w-lg rounded-2xl bg-card shadow-2xl">
+                    <div className="relative w-full max-w-lg rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl">
                         {/* Modal Header */}
                         <div className="flex items-center gap-3 border-b border-border px-6 py-4">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
                                 <UserPlus
                                     className="h-5 w-5"
                                     strokeWidth={1.8}
@@ -521,7 +521,7 @@ export default function Index({
                             </div>
                             <button
                                 onClick={() => setShowInvite(false)}
-                                className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-muted-foreground"
+                                className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
                             >
                                 <X className="h-5 w-5" strokeWidth={2} />
                             </button>
@@ -529,7 +529,7 @@ export default function Index({
 
                         {/* Modal Body */}
                         <form onSubmit={submitInvite} className="p-6 space-y-4">
-                            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-2">
+                            <div className="rounded-xl border border-primary/20 bg-primary/10 p-4 mb-2">
                                 <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-primary">
                                     Tautkan Karyawan (Opsional)
                                 </label>
@@ -699,7 +699,7 @@ export default function Index({
                                 <button
                                     type="button"
                                     onClick={() => setShowInvite(false)}
-                                    className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
+                                    className="rounded-xl border border-border bg-transparent px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                                 >
                                     Batal
                                 </button>

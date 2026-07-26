@@ -11,10 +11,10 @@ const TYPE_META = {
 };
 
 const inp = (err) =>
-    `mt-1.5 block w-full rounded-xl border py-2.5 px-3.5 text-sm shadow-sm transition focus:outline-none focus:ring-2 ${
+    `mt-1.5 block w-full rounded-xl border bg-background py-2.5 px-3.5 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${
         err
-            ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-            : 'border-border focus:border-ring focus:ring-ring/20'
+            ? 'border-destructive focus:border-destructive focus:ring-destructive/20'
+            : 'border-input focus:border-ring focus:ring-ring/20'
     }`;
 
 export default function PaymentMethodForm({

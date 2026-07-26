@@ -95,6 +95,19 @@ export default function PaymentView({
         setShowPayment(false);
     };
 
+    // Escape menutup payment view — kecuali sedang di tengah split bill
+    // (biar tidak tidak sengaja membatalkan pembagian yang sudah diisi).
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.key === "Escape" && !splitMode) {
+                e.preventDefault();
+                handleBack();
+            }
+        };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+    }, [splitMode, saleId, successData, activePgTrx]);
+
     const [isFinalizing, setIsFinalizing] = useState(false);
 
     const handleMethodPay = useCallback(async (payments, methodLabel, extra = {}) => {
@@ -115,7 +128,7 @@ export default function PaymentView({
                         || pg.initialStatus === 'checking'
                         || pg.canRetry;
                     if (!pg.qrCode && !pg.qrImageUrl && !pg.vaNumber && !pg.paymentUrl && !canWaitWithoutData) {
-                        alert('Gagal mendapatkan data pembayaran dari penyedia. Silakan coba lagi.');
+                        k.setApiError('Gagal mendapatkan data pembayaran dari penyedia. Silakan coba lagi.');
                         return { success: false, message: 'Data pembayaran tidak tersedia.' };
                     }
                     setActivePgTrx(pg);
@@ -232,13 +245,12 @@ export default function PaymentView({
             setActivePgTrx(pg);
             setMainTab('gateway');
         } else {
-            alert(pgResult?.message || 'Gagal membuat transaksi pembayaran online.');
+            k.setApiError(pgResult?.message || 'Gagal membuat transaksi pembayaran online.');
         }
     }, [saleId, saleNo, displayTotal, handleStartPg]);
 
     const handleGateway = useCallback(async (provider, paymentType) => {
         const matchedMethod = findPgPaymentMethod(paymentType, paymentMethods);
-        console.log('[PG] handleGateway:', { provider, paymentType, matchedMethodId: matchedMethod?.id, fallbackId: paymentMethods[0]?.id });
         return handleMethodPay([{
             method_id: matchedMethod?.id ?? paymentMethods[0]?.id,
             amount: displayTotal,
@@ -470,7 +482,7 @@ export default function PaymentView({
                             </div>
 
                             {k.notes && (
-                                <p className="mt-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-1.5 text-[11px] font-medium text-amber-800 dark:text-amber-400">
+                                <p className="mt-2 rounded-lg border border-warning/20 bg-warning/10 px-2.5 py-1.5 text-[11px] font-medium text-warning dark:text-warning">
                                     Catatan: {k.notes}
                                 </p>
                             )}
@@ -518,7 +530,7 @@ export default function PaymentView({
                                         )}
 
                                         {(item.promoDiscount ?? 0) > 0 && (
-                                            <div className="mt-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                                            <div className="mt-1 text-[10px] font-medium text-success dark:text-success">
                                                 Promo {item.promoName || ""}: -
                                                 {fmt(item.promoDiscount)}
                                             </div>
@@ -552,14 +564,14 @@ export default function PaymentView({
                             </div>
 
                             {(k.totalPromoDisc ?? 0) > 0 && (
-                                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                                <div className="flex justify-between text-success dark:text-success">
                                     <span>Promo Produk</span>
                                     <span>-{fmt(k.totalPromoDisc)}</span>
                                 </div>
                             )}
 
                             {(k.cartPromoDiscount ?? 0) > 0 && (
-                                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                                <div className="flex justify-between text-success dark:text-success">
                                     <span>
                                         {k.cartPromoName || "Promo Keranjang"}
                                     </span>
@@ -877,7 +889,7 @@ export default function PaymentView({
                                 </div>
 
                                 {k.notes && (
-                                    <p className="mt-1 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-800 dark:text-amber-400">
+                                    <p className="mt-1 rounded-xl border border-warning/20 bg-warning/10 px-3 py-1.5 text-xs font-medium text-warning dark:text-warning">
                                         Catatan Pesanan: {k.notes}
                                     </p>
                                 )}
@@ -890,31 +902,31 @@ export default function PaymentView({
                         ================================================== */}
                             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
                                 <table className="w-full table-fixed text-xs xl:text-sm">
-                                    <thead className="sticky top-0 z-10 border-b border-border bg-card shadow-sm">
-                                        <tr className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                                            <th className="w-auto px-4 py-2.5 text-left xl:px-5">
+                                    <thead className="sticky top-0 z-10 border-b border-border bg-popover text-[11px] uppercase tracking-wider text-card-foreground shadow-sm">
+                                        <tr>
+                                            <th className="w-auto px-4 py-2.5 text-left font-semibold xl:px-5">
                                                 Produk
                                             </th>
 
-                                            <th className="w-14 px-2 py-2.5 text-center xl:w-16">
+                                            <th className="w-14 px-2 py-2.5 text-center font-semibold xl:w-16">
                                                 Qty
                                             </th>
 
-                                            <th className="w-24 px-2 py-2.5 text-right xl:w-28">
+                                            <th className="w-24 px-2 py-2.5 text-right font-semibold xl:w-28">
                                                 Harga
                                             </th>
 
-                                            <th className="w-24 py-2.5 pl-2 pr-4 text-right xl:w-28 xl:pr-5">
+                                            <th className="w-24 py-2.5 pl-2 pr-4 text-right font-semibold xl:w-28 xl:pr-5">
                                                 Total
                                             </th>
                                         </tr>
                                     </thead>
 
-                                    <tbody>
+                                    <tbody className="divide-y divide-border bg-background">
                                         {cart.map((item) => (
                                             <tr
                                                 key={item.cartId}
-                                                className="border-b border-border/50 align-top transition-colors last:border-0 hover:bg-muted/20"
+                                                className="align-top transition hover:bg-[rgb(var(--color-table-hover))]"
                                             >
                                                 {/* Product */}
                                                 <td className="px-4 py-3 xl:px-5">
@@ -969,7 +981,7 @@ export default function PaymentView({
 
                                                         {(item.promoDiscount ??
                                                             0) > 0 && (
-                                                                <div className="mt-1 text-[11px] font-medium leading-4 text-emerald-600 dark:text-emerald-400">
+                                                                <div className="mt-1 text-[11px] font-medium leading-4 text-success dark:text-success">
                                                                     Promo{" "}
                                                                     {item.promoName ||
                                                                         ""}
@@ -1022,7 +1034,7 @@ export default function PaymentView({
                                 </div>
 
                                 {(k.totalPromoDisc ?? 0) > 0 && (
-                                    <div className="flex justify-between gap-4 text-emerald-600 dark:text-emerald-400">
+                                    <div className="flex justify-between gap-4 text-success dark:text-success">
                                         <span>Diskon Promo Produk</span>
 
                                         <span className="shrink-0">
@@ -1032,7 +1044,7 @@ export default function PaymentView({
                                 )}
 
                                 {(k.cartPromoDiscount ?? 0) > 0 && (
-                                    <div className="flex justify-between gap-4 text-emerald-600 dark:text-emerald-400">
+                                    <div className="flex justify-between gap-4 text-success dark:text-success">
                                         <span>
                                             {k.cartPromoName ||
                                                 "Promo Keranjang"}

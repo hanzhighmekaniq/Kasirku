@@ -65,17 +65,17 @@ export default function Commissions({ from, to, summary, byEmployee = [], commis
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead><tr className="bg-muted text-left text-xs font-semibold text-muted-foreground">
-                                <th className="px-4 py-2.5">Tanggal</th>
-                                <th className="px-4 py-2.5">Karyawan</th>
-                                <th className="px-4 py-2.5">Tipe</th>
-                                <th className="px-4 py-2.5 text-right">Jumlah</th>
-                                <th className="px-4 py-2.5">Status</th>
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground"><tr>
+                                <th className="px-4 py-2.5 text-left font-semibold">Tanggal</th>
+                                <th className="px-4 py-2.5 text-left font-semibold">Karyawan</th>
+                                <th className="px-4 py-2.5 text-left font-semibold">Tipe</th>
+                                <th className="px-4 py-2.5 text-right font-semibold">Jumlah</th>
+                                <th className="px-4 py-2.5 text-left font-semibold">Status</th>
                             </tr></thead>
-                            <tbody>{commissions.length > 0 ? commissions.map((c) => {
+                            <tbody className="divide-y divide-border bg-background">{commissions.length > 0 ? commissions.map((c) => {
                                 const meta = STATUS_META[c.status] || STATUS_META.pending;
                                 return (
-                                    <tr key={c.id} className="border-t border-border">
+                                    <tr key={c.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                         <td className="px-4 py-2.5">{fmtDate(c.commission_date)}</td>
                                         <td className="px-4 py-2.5 font-medium text-foreground">{c.employee_name}</td>
                                         <td className="px-4 py-2.5 text-muted-foreground">{c.type || '—'}</td>

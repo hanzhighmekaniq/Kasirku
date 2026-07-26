@@ -104,7 +104,7 @@ export default function CustomerModal({ show, onClose, k }) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari nama atau telepon..."
-                        className="block w-full rounded-xl border-border bg-muted/50 py-2.5 pl-10 pr-3 text-sm shadow-sm transition focus:border-slate-400 focus:bg-card focus:ring-2 focus:ring-slate-100"
+                            className="block w-full rounded-xl border-border bg-background py-2.5 pl-10 pr-3 text-sm shadow-sm transition focus:border-ring focus:bg-card focus:ring-2 focus:ring-ring/20"
                     />
                 </div>
 
@@ -112,7 +112,7 @@ export default function CustomerModal({ show, onClose, k }) {
                     <button
                         type="button"
                         onClick={() => setAddOpen(true)}
-                        className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2 text-xs font-semibold text-muted-foreground transition hover:border-slate-400 hover:bg-muted"
+                        className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2 text-xs font-semibold text-muted-foreground transition hover:border-border hover:bg-muted"
                     >
                         <UserPlus size={15} />
                         Tambah Pelanggan Baru
@@ -125,14 +125,14 @@ export default function CustomerModal({ show, onClose, k }) {
                             value={addName}
                             onChange={(e) => setAddName(e.target.value)}
                             placeholder="Nama pelanggan *"
-                            className="block w-full rounded-lg border-border py-2 text-sm shadow-sm focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                            className="block w-full rounded-lg border-input bg-background py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                         />
                         <input
                             type="text"
                             value={addPhone}
                             onChange={(e) => setAddPhone(e.target.value)}
                             placeholder="Nomor telepon (opsional)"
-                            className="block w-full rounded-lg border-border py-2 text-sm shadow-sm focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                            className="block w-full rounded-lg border-input bg-background py-2 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                         />
                         {addError && (
                             <p className="flex items-center gap-1.5 text-xs font-medium text-destructive">
@@ -144,7 +144,7 @@ export default function CustomerModal({ show, onClose, k }) {
                                 type="button"
                                 onClick={submitAdd}
                                 disabled={!addName.trim() || adding}
-                                className="flex-1 rounded-lg bg-primary py-2 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50"
+                                className="flex-1 rounded-lg bg-primary py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
                             >
                                 {adding ? "Menyimpan..." : "Simpan & Pilih"}
                             </button>
@@ -172,7 +172,7 @@ export default function CustomerModal({ show, onClose, k }) {
                         U
                     </span>
                     <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-card-foreground">Umum</p>
+                        <p className="text-sm font-semibold text-foreground">Umum</p>
                         <p className="text-[11px] text-muted-foreground/60">
                             Transaksi tanpa pelanggan
                         </p>
@@ -200,7 +200,7 @@ export default function CustomerModal({ show, onClose, k }) {
                                     {c.name?.charAt(0) ?? "?"}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-semibold text-card-foreground">
+                                    <p className="truncate text-sm font-semibold text-foreground">
                                         {c.name}
                                     </p>
                                     <p className="truncate text-[11px] text-muted-foreground/60">

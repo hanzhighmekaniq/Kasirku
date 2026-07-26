@@ -18,13 +18,13 @@ const SYSTEM_ROLE_META = {
 };
 
 const COLOR_MAP = {
-    amber:  'bg-warning/10 text-warning ring-warning/20',
-    blue:   'bg-primary/10 text-primary ring-primary/20',
-    violet: 'bg-primary/10 text-primary ring-primary/20',
-    green:  'bg-success/10 text-success ring-success/20',
-    orange: 'bg-warning/10 text-warning ring-warning/20',
-    red:    'bg-destructive/10 text-destructive ring-destructive/20',
-    custom: 'bg-muted/50 text-foreground ring-border',
+    amber:  'bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800',
+    blue:   'bg-blue-100 text-blue-700 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800',
+    violet: 'bg-violet-100 text-violet-700 ring-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-800',
+    green:  'bg-green-100 text-green-700 ring-green-200 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-800',
+    orange: 'bg-orange-100 text-orange-700 ring-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:ring-orange-800',
+    red:    'bg-red-100 text-red-700 ring-red-200 dark:bg-red-900/30 dark:text-red-400 dark:ring-red-800',
+    custom: 'bg-muted text-muted-foreground ring-border',
 };
 
 const PERMISSION_GROUPS = {
@@ -79,12 +79,12 @@ function PermModal({ role, onClose, onSave }) {
     const isSystem = role?.is_system;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4">
-            <div className="flex w-full max-w-2xl flex-col rounded-2xl bg-card shadow-2xl ring-1 ring-black/5 max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+            <div className="flex w-full max-w-2xl flex-col rounded-2xl bg-popover text-popover-foreground shadow-2xl ring-1 ring-border max-h-[90vh]">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <div>
-                        <h3 className="text-base font-bold text-foreground">
+                        <h3 className="text-base font-bold text-popover-foreground">
                             {isSystem ? 'Lihat Permission —' : 'Atur Permission —'}
                             <span className="ml-1.5 text-primary">{role?.name}</span>
                         </h3>
@@ -160,10 +160,10 @@ function PermModal({ role, onClose, onSave }) {
 // ── Role Form Modal ───────────────────────────────────────────────────────────
 function RoleFormModal({ title, form, onClose, onSubmit }) {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4">
-            <div className="w-full max-w-md rounded-2xl bg-card shadow-2xl ring-1 ring-black/5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+            <div className="w-full max-w-md rounded-2xl bg-popover text-popover-foreground shadow-2xl ring-1 ring-border">
                 <div className="border-b border-border px-6 py-4">
-                    <h3 className="text-base font-bold text-foreground">{title}</h3>
+                    <h3 className="text-base font-bold text-popover-foreground">{title}</h3>
                 </div>
                 <form onSubmit={onSubmit} className="p-6 space-y-4">
                     <div>
@@ -172,7 +172,7 @@ function RoleFormModal({ title, form, onClose, onSubmit }) {
                             value={form.data.name}
                             onChange={e => form.setData('name', e.target.value)}
                             placeholder="cth: kasirdapur, operator-shift2, resepsionis"
-                            className="w-full py-2.5 px-3.5 rounded-lg border border-border bg-card text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary/20 transition-all"
+                            className="w-full py-2.5 px-3.5 rounded-lg border border-input bg-background text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 transition-all"
                         />
                         {form.errors.name && <p className="mt-1.5 text-xs text-destructive">{form.errors.name}</p>}
                     </div>
@@ -182,7 +182,7 @@ function RoleFormModal({ title, form, onClose, onSubmit }) {
                             value={form.data.description}
                             onChange={e => form.setData('description', e.target.value)}
                             placeholder="Deskripsi singkat fungsi role ini"
-                            className="w-full py-2.5 px-3.5 rounded-lg border border-border bg-card text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary/20 transition-all"
+                            className="w-full py-2.5 px-3.5 rounded-lg border border-input bg-background text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 transition-all"
                         />
                     </div>
                     <p className="text-xs text-muted-foreground">Permission bisa diatur setelah role dibuat lewat tombol "Atur Permission".</p>

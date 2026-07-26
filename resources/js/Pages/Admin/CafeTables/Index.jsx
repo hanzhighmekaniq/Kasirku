@@ -14,9 +14,9 @@ const STATUS_LABELS = {
 };
 
 const STATUS_COLORS = {
-    available: 'bg-emerald-100 text-success',
-    occupied: 'bg-red-100 text-destructive',
-    reserved: 'bg-amber-100 text-amber-700',
+    available: 'bg-success/10 text-success',
+    occupied: 'bg-destructive/10 text-destructive',
+    reserved: 'bg-warning/10 text-warning',
 };
 
 export default function Index({ cafeTables, branches }) {
@@ -154,22 +154,22 @@ export default function Index({ cafeTables, branches }) {
                         {/* Desktop table */}
                         <div className="hidden overflow-x-auto md:block">
                             <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                        <th className="px-6 py-3.5">Nomor Meja</th>
-                                        <th className="px-6 py-3.5">Cabang</th>
-                                        <th className="px-6 py-3.5 text-center">Kapasitas</th>
-                                        <th className="px-6 py-3.5 text-center">Status</th>
-                                        <th className="px-6 py-3.5 text-center">Aktif</th>
-                                        <th className="px-6 py-3.5 text-right">Aksi</th>
+                                <thead className="bg-popover text-left text-xs uppercase tracking-wide text-card-foreground">
+                                    <tr>
+                                        <th className="px-6 py-3.5 font-semibold">Nomor Meja</th>
+                                        <th className="px-6 py-3.5 font-semibold">Cabang</th>
+                                        <th className="px-6 py-3.5 text-center font-semibold">Kapasitas</th>
+                                        <th className="px-6 py-3.5 text-center font-semibold">Status</th>
+                                        <th className="px-6 py-3.5 text-center font-semibold">Aktif</th>
+                                        <th className="px-6 py-3.5 text-right font-semibold">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-y divide-border bg-background">
                                     {filtered.map((t) => (
-                                        <tr key={t.id} className="transition hover:bg-muted/70">
+                                        <tr key={t.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10 text-sm font-bold text-primary-600">
+                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/10 text-sm font-bold text-primary">
                                                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 21V8.25A2.25 2.25 0 016.75 6h10.5a2.25 2.25 0 012.25 2.25V21M8.25 21v-5.25A1.5 1.5 0 019.75 14.25h4.5a1.5 1.5 0 011.5 1.5V21M8.25 10.5h.008v.008H8.25V10.5zm3.75 0h.008v.008H12V10.5zm3.75 0h.008v.008h-.008V10.5zM8.25 3h7.5" />
                                                         </svg>
@@ -195,7 +195,7 @@ export default function Index({ cafeTables, branches }) {
                                                 <div className="flex items-center justify-end gap-1">
                                                     <Link
                                                         href={route('admin.cafe-tables.edit', t.id)}
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                         title="Edit"
                                                     >
                                                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor">
@@ -225,7 +225,7 @@ export default function Index({ cafeTables, branches }) {
                                 <div key={t.id} className="p-4">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex items-center gap-3">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10 text-sm font-bold text-primary-600">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/10 text-sm font-bold text-primary">
                                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 21V8.25A2.25 2.25 0 016.75 6h10.5a2.25 2.25 0 012.25 2.25V21M8.25 21v-5.25A1.5 1.5 0 019.75 14.25h4.5a1.5 1.5 0 011.5 1.5V21M8.25 10.5h.008v.008H8.25V10.5zm3.75 0h.008v.008H12V10.5zm3.75 0h.008v.008h-.008V10.5zM8.25 3h7.5" />
                                                 </svg>
@@ -250,7 +250,7 @@ export default function Index({ cafeTables, branches }) {
                                     <div className="mt-3 flex items-center justify-end gap-1">
                                         <Link
                                             href={route('admin.cafe-tables.edit', t.id)}
-                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                         >
                                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />

@@ -5,8 +5,8 @@ import { useState } from 'react';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 const STATUS_CONFIG = {
-    completed: { label: 'Selesai',    color: 'bg-emerald-100 text-success', dot: 'bg-success/100' },
-    cancelled: { label: 'Dibatalkan', color: 'bg-muted text-muted-foreground', dot: 'bg-slate-400' },
+    completed: { label: 'Selesai',    color: 'bg-success/10 text-success', dot: 'bg-success' },
+    cancelled: { label: 'Dibatalkan', color: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground' },
 };
 
 function formatRupiah(amount) {
@@ -101,7 +101,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                                     <button
                                         onClick={() => setShowCancelModal(true)}
                                         disabled={processing}
-                                        className="inline-flex items-center rounded-xl bg-muted0 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-slate-600 disabled:opacity-60"
+                                        className="inline-flex items-center rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground shadow transition hover:bg-secondary/80 disabled:opacity-60"
                                     >
                                         Batalkan Retur
                                     </button>
@@ -115,7 +115,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pembelian Asal</p>
                                 <Link
                                     href={route('admin.purchases.show', purchaseReturn.purchase_id)}
-                                    className="mt-1 text-sm font-semibold text-primary-600 hover:text-primary-800"
+                                    className="mt-1 text-sm font-semibold text-primary hover:text-primary/80"
                                 >
                                     {purchaseReturn.purchase?.purchase_no || '-'}
                                 </Link>
@@ -138,12 +138,12 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
 
                         {/* Payment impact info */}
                         {purchaseReturn.status === 'completed' && (
-                            <div className="mt-4 rounded-xl bg-amber-50 border border-amber-200 p-4">
+                            <div className="mt-4 rounded-xl bg-warning/10 border border-warning/20 p-4">
                                 <div className="flex items-start gap-2">
-                                    <svg className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <svg className="h-5 w-5 text-warning mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     <div>
-                                        <p className="text-sm font-semibold text-amber-800">Dampak ke Pembayaran</p>
-                                        <p className="mt-1 text-sm text-amber-700">
+                                        <p className="text-sm font-semibold text-warning">Dampak ke Pembayaran</p>
+                                        <p className="mt-1 text-sm text-warning">
                                             Total retur sebesar <strong>{formatRupiah(purchaseReturn.total_amount)}</strong> telah dikurangi dari jumlah yang dibayar pada pembelian asal.
                                         </p>
                                     </div>
@@ -175,21 +175,21 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                         {/* Desktop */}
                         <div className="hidden sm:block">
                             <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b border-border">
-                                        <th className="pb-3 text-left text-xs font-semibold text-muted-foreground">Produk</th>
-                                        <th className="pb-3 text-center text-xs font-semibold text-muted-foreground">Qty</th>
-                                        <th className="pb-3 text-right text-xs font-semibold text-muted-foreground">Harga Satuan</th>
-                                        <th className="pb-3 text-right text-xs font-semibold text-muted-foreground">Subtotal</th>
+                                <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                    <tr>
+                                        <th className="pb-3 text-left font-semibold">Produk</th>
+                                        <th className="pb-3 text-center font-semibold">Qty</th>
+                                        <th className="pb-3 text-right font-semibold">Harga Satuan</th>
+                                        <th className="pb-3 text-right font-semibold">Subtotal</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-border">
+                                <tbody className="divide-y divide-border bg-background">
                                     {purchaseReturn.items.map((item) => (
-                                        <tr key={item.id}>
+                                        <tr key={item.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                             <td className="py-3">
                                                 <p className="font-medium text-foreground">{item.product?.name || '-'}</p>
                                                 <p className="text-xs text-muted-foreground">{item.product?.sku}</p>
-                                                {item.reason && <p className="mt-0.5 text-xs text-amber-600 italic">Alasan: {item.reason}</p>}
+                                                {item.reason && <p className="mt-0.5 text-xs text-warning italic">Alasan: {item.reason}</p>}
                                             </td>
                                             <td className="py-3 text-center font-medium text-foreground">{item.quantity}</td>
                                             <td className="py-3 text-right text-muted-foreground">{formatRupiah(item.cost_price)}</td>
@@ -206,7 +206,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                                 <div key={item.id} className="rounded-xl border border-border p-3">
                                     <p className="text-sm font-medium text-foreground">{item.product?.name || '-'}</p>
                                     <p className="text-xs text-muted-foreground">{item.product?.sku}</p>
-                                    {item.reason && <p className="mt-1 text-xs text-amber-600 italic">Alasan: {item.reason}</p>}
+                                    {item.reason && <p className="mt-1 text-xs text-warning italic">Alasan: {item.reason}</p>}
                                     <div className="mt-2 flex items-center justify-between text-sm">
                                         <span className="text-muted-foreground">×{item.quantity} @ {formatRupiah(item.cost_price)}</span>
                                         <span className="font-semibold text-foreground">{formatRupiah(item.subtotal)}</span>
@@ -219,7 +219,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                         <div className="mt-4 border-t border-border pt-4">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm font-semibold text-foreground">Total Retur</span>
-                                <span className="text-lg font-bold text-primary-600">{formatRupiah(purchaseReturn.total_amount)}</span>
+                                <span className="text-lg font-bold text-primary">{formatRupiah(purchaseReturn.total_amount)}</span>
                             </div>
                         </div>
                     </div>

@@ -313,7 +313,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                     <>
                         <button
                             onClick={() => setConfirmingStatus("completed")}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3.5 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-500/30 transition hover:from-emerald-600 hover:to-emerald-700"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-success px-3.5 py-2 text-sm font-semibold text-success-foreground shadow-md transition hover:bg-success/90"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -332,7 +332,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                         </button>
                         <button
                             onClick={() => setConfirmingStatus("cancelled")}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-300 bg-card px-3.5 py-2 text-sm font-semibold text-destructive transition hover:bg-destructive/10"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/20 bg-card px-3.5 py-2 text-sm font-semibold text-destructive transition hover:bg-destructive/10"
                         >
                             <svg
                                 className="h-4 w-4"
@@ -429,9 +429,9 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                         const isNext = stepIdx === currentIdx + 1;
 
                                         const colorMap = {
-                                            amber:   { active: 'bg-amber-500 text-white border-amber-500',     done: 'bg-amber-100 text-amber-600 border-amber-200',     next: 'border-border text-muted-foreground hover:border-amber-300 hover:bg-amber-50' },
-                                            blue:    { active: 'bg-blue-500 text-white border-blue-500',       done: 'bg-blue-100 text-blue-600 border-blue-200',         next: 'border-border text-muted-foreground hover:border-blue-300 hover:bg-blue-50' },
-                                            emerald: { active: 'bg-success/100 text-white border-emerald-500', done: 'bg-emerald-100 text-emerald-600 border-success/20', next: 'border-border text-muted-foreground hover:border-emerald-300 hover:bg-success/10' },
+                                            amber:   { active: 'bg-warning text-warning-foreground border-warning',             done: 'bg-warning/10 text-warning border-warning/20',         next: 'border-border text-muted-foreground hover:border-warning/40 hover:bg-warning/10' },
+                                            blue:    { active: 'bg-primary text-primary-foreground border-primary',             done: 'bg-primary/10 text-primary border-primary/20',         next: 'border-border text-muted-foreground hover:border-primary/40 hover:bg-primary/10' },
+                                            emerald: { active: 'bg-success text-success-foreground border-success',             done: 'bg-success/10 text-success border-success/20',         next: 'border-border text-muted-foreground hover:border-success/40 hover:bg-success/10' },
                                         };
                                         const cls = colorMap[step.color];
 
@@ -462,7 +462,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                                     )}
                                                 </button>
                                                 {idx < 2 && (
-                                                    <div className={`mx-1 h-0.5 w-4 shrink-0 ${stepIdx < currentIdx ? 'bg-emerald-300' : 'bg-slate-200'}`} />
+                                                    <div className={`mx-1 h-0.5 w-4 shrink-0 ${stepIdx < currentIdx ? 'bg-success' : 'bg-border'}`} />
                                                 )}
                                             </div>
                                         );
@@ -479,7 +479,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                         </div>
                                         {sale.service_finished_at && (
                                             <div className="rounded-xl bg-success/10 px-3 py-2">
-                                                <p className="text-emerald-500 mb-0.5">Selesai</p>
+                                                <p className="text-success/70 mb-0.5">Selesai</p>
                                                 <p className="font-semibold text-success">
                                                     {new Date(sale.service_finished_at).toLocaleString('id-ID', { timeStyle: 'short', dateStyle: 'short' })}
                                                 </p>
@@ -501,10 +501,10 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                 {/* Status badge */}
                                 <div className="flex items-center gap-3">
                                     <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold ${
-                                        sale.rental_status === 'returned'  ? 'bg-emerald-100 text-success' :
-                                        sale.rental_status === 'overdue'   ? 'bg-red-100 text-destructive' :
+                                        sale.rental_status === 'returned'  ? 'bg-success/10 text-success' :
+                                        sale.rental_status === 'overdue'   ? 'bg-destructive/10 text-destructive' :
                                         sale.rental_status === 'cancelled' ? 'bg-muted text-muted-foreground' :
-                                        'bg-blue-100 text-blue-700'
+                                        'bg-primary/10 text-primary'
                                     }`}>
                                         {sale.rental_status === 'active'    && '🔑 Sedang Disewa'}
                                         {sale.rental_status === 'returned'  && '✅ Sudah Dikembalikan'}
@@ -541,7 +541,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     )}
                                     {sale.actual_return_at && (
                                         <div className="rounded-xl bg-success/10 px-3 py-2.5">
-                                            <p className="text-emerald-500 mb-0.5">Dikembalikan</p>
+                                            <p className="text-success/70 mb-0.5">Dikembalikan</p>
                                             <p className="font-semibold text-success">
                                                 {new Date(sale.actual_return_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
                                             </p>
@@ -555,7 +555,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                         <button
                                             onClick={() => handleRentalStatus('returned')}
                                             disabled={processing}
-                                            className="flex-1 rounded-xl bg-success/100 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50 transition"
+                                            className="flex-1 rounded-xl bg-success py-2.5 text-sm font-bold text-success-foreground hover:bg-success/90 disabled:opacity-50 transition"
                                         >
                                             {processing ? '...' : '✅ Tandai Sudah Dikembalikan'}
                                         </button>
@@ -572,7 +572,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     <button
                                         onClick={() => handleRentalStatus('returned')}
                                         disabled={processing}
-                                        className="w-full rounded-xl bg-success/100 py-2.5 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-50 transition"
+                                        className="w-full rounded-xl bg-success py-2.5 text-sm font-bold text-success-foreground hover:bg-success/90 disabled:opacity-50 transition"
                                     >
                                         {processing ? '...' : '✅ Sudah Dikembalikan (Terlambat)'}
                                     </button>
@@ -594,8 +594,8 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                         sale.rental_status === 'returned'
                                             ? 'bg-muted text-muted-foreground'
                                             : sale.rental_status === 'overdue'
-                                            ? 'bg-red-100 text-destructive'
-                                            : 'bg-emerald-100 text-success'
+                                            ? 'bg-destructive/10 text-destructive'
+                                            : 'bg-success/10 text-success'
                                     }`}>
                                         {sale.rental_status === 'returned' ? '✓ Check-out' :
                                          sale.rental_status === 'overdue'  ? '⚠️ Terlambat Check-out' :
@@ -615,9 +615,9 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                 {/* Grid info */}
                                 <div className="grid grid-cols-2 gap-3 text-xs">
                                     {sale.extra_data?.room_number && (
-                                        <div className="rounded-xl bg-primary-50 px-3 py-2.5">
-                                            <p className="text-primary-400 mb-0.5">No. Kamar / Unit</p>
-                                            <p className="font-bold text-primary-700 text-sm">🔑 {sale.extra_data.room_number}</p>
+                                        <div className="rounded-xl bg-primary/10 px-3 py-2.5">
+                                            <p className="text-primary/70 mb-0.5">No. Kamar / Unit</p>
+                                            <p className="font-bold text-primary text-sm">🔑 {sale.extra_data.room_number}</p>
                                         </div>
                                     )}
                                     {sale.extra_data?.guest_count && (
@@ -653,7 +653,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     )}
                                     {sale.actual_return_at && (
                                         <div className="rounded-xl bg-success/10 px-3 py-2.5 col-span-2">
-                                            <p className="text-emerald-500 mb-0.5">Check-out Aktual</p>
+                                            <p className="text-success/70 mb-0.5">Check-out Aktual</p>
                                             <p className="font-semibold text-success">
                                                 {new Date(sale.actual_return_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
                                             </p>
@@ -674,10 +674,10 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                 {/* Plat Nomor — menonjol */}
                                 {sale.plate_number && (
                                     <div className={`rounded-2xl border-2 p-4 text-center ${
-                                        sale.exit_at ? 'border-border bg-muted' : 'border-primary-200 bg-primary-50'
+                                        sale.exit_at ? 'border-border bg-muted' : 'border-primary/20 bg-primary/10'
                                     }`}>
                                         <p className="text-xs font-medium text-muted-foreground mb-1">Plat Nomor</p>
-                                        <p className="font-mono text-3xl font-bold tracking-widest text-primary-700">
+                                        <p className="font-mono text-3xl font-bold tracking-widest text-primary">
                                             {sale.plate_number}
                                         </p>
                                         <p className="mt-1 text-sm text-muted-foreground">
@@ -687,7 +687,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                              sale.vehicle_type ?? '-'}
                                         </p>
                                         <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                                            sale.exit_at ? 'bg-slate-200 text-muted-foreground' : 'bg-emerald-100 text-success'
+                                            sale.exit_at ? 'bg-muted text-muted-foreground' : 'bg-success/10 text-success'
                                         }`}>
                                             {sale.exit_at ? '✓ Sudah Keluar' : '🟢 Masih di Area Parkir'}
                                         </span>
@@ -706,12 +706,12 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     )}
                                     {sale.exit_at ? (
                                         <div className="rounded-xl bg-success/10 px-3 py-2.5">
-                                            <p className="text-emerald-500 mb-0.5">✓ Keluar</p>
+                                            <p className="text-success/70 mb-0.5">✓ Keluar</p>
                                             <p className="font-semibold text-success">
                                                 {new Date(sale.exit_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
                                             </p>
                                             {sale.entry_at && (
-                                                <p className="text-emerald-400 text-[10px] mt-0.5">
+                                                <p className="text-success/70 text-[10px] mt-0.5">
                                                     Durasi: {Math.round((new Date(sale.exit_at) - new Date(sale.entry_at)) / 60000)} menit
                                                 </p>
                                             )}
@@ -758,19 +758,19 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                 {/* Unit dan status */}
                                 <div className={`rounded-2xl border-2 p-4 text-center ${
                                     sale.session_status === 'ended'  ? 'border-border bg-muted' :
-                                    sale.session_status === 'paused' ? 'border-amber-200 bg-amber-50' :
+                                    sale.session_status === 'paused' ? 'border-warning/20 bg-warning/10' :
                                     'border-success/20 bg-success/10'
                                 }`}>
                                     {sale.unit_name && (
                                         <>
                                             <p className="text-xs font-medium text-muted-foreground mb-1">Unit / Room</p>
-                                            <p className="font-mono text-2xl font-bold text-primary-700">{sale.unit_name}</p>
+                                            <p className="font-mono text-2xl font-bold text-primary">{sale.unit_name}</p>
                                         </>
                                     )}
                                     <span className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-                                        sale.session_status === 'ended'  ? 'bg-slate-200 text-muted-foreground' :
-                                        sale.session_status === 'paused' ? 'bg-amber-100 text-amber-700' :
-                                        'bg-emerald-100 text-success'
+                                        sale.session_status === 'ended'  ? 'bg-muted text-muted-foreground' :
+                                        sale.session_status === 'paused' ? 'bg-warning/10 text-warning' :
+                                        'bg-success/10 text-success'
                                     }`}>
                                         {sale.session_status === 'ended'  ? '✓ Sesi Selesai' :
                                          sale.session_status === 'paused' ? '⏸ Dijeda' :
@@ -803,9 +803,9 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     ) : (
                                         <div className="rounded-xl bg-success/10 px-3 py-2.5 flex items-center justify-center">
                                             <div className="text-center">
-                                                <p className="text-emerald-600 text-xs font-semibold">⏱ Berjalan</p>
+                                                <p className="text-success text-xs font-semibold">⏱ Berjalan</p>
                                                 {sale.session_started_at && (
-                                                    <p className="text-emerald-500 text-[10px]">
+                                                    <p className="text-success/70 text-[10px]">
                                                         {Math.round((Date.now() - new Date(sale.session_started_at)) / 60000)} menit
                                                     </p>
                                                 )}
@@ -825,7 +825,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     <button
                                         onClick={handleEndSession}
                                         disabled={processing}
-                                        className="w-full rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 py-3 text-sm font-bold text-white shadow transition hover:from-slate-700 hover:to-slate-800 disabled:opacity-50"
+                                        className="w-full rounded-xl bg-secondary py-3 text-sm font-bold text-secondary-foreground shadow transition hover:bg-secondary/80 disabled:opacity-50"
                                     >
                                         {processing ? 'Memproses...' : '⏹ Akhiri Sesi'}
                                     </button>
@@ -849,33 +849,33 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                         <div className="p-0">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm">
-                                    <thead>
-                                        <tr className="border-b border-border">
-                                            <th className="px-6 py-3 font-medium text-muted-foreground">
+                                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                        <tr>
+                                            <th className="px-6 py-3 font-semibold">
                                                 #
                                             </th>
-                                            <th className="px-6 py-3 font-medium text-muted-foreground">
+                                            <th className="px-6 py-3 font-semibold">
                                                 Produk
                                             </th>
-                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">
+                                            <th className="px-6 py-3 text-right font-semibold">
                                                 Qty
                                             </th>
-                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">
+                                            <th className="px-6 py-3 text-right font-semibold">
                                                 Harga
                                             </th>
-                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">
+                                            <th className="px-6 py-3 text-right font-semibold">
                                                 Diskon
                                             </th>
-                                            <th className="px-6 py-3 text-right font-medium text-muted-foreground">
+                                            <th className="px-6 py-3 text-right font-semibold">
                                                 Subtotal
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-y divide-border bg-background">
                                         {items.map((item, idx) => (
                                             <tr
                                                 key={item.id}
-                                                className="transition hover:bg-muted/50"
+                                                className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                             >
                                                 <td className="px-6 py-3.5 text-muted-foreground">
                                                     {idx + 1}
@@ -952,7 +952,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     <dt className="font-semibold text-foreground">
                                         Grand Total
                                     </dt>
-                                    <dd className="text-lg font-bold text-primary-600">
+                                    <dd className="text-lg font-bold text-primary">
                                         {fmtRp(sale.grand_total)}
                                     </dd>
                                 </div>
@@ -965,7 +965,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     <Row
                                         label="Kembalian"
                                         value={fmtRp(sale.change_amount)}
-                                        valueCls="text-emerald-600"
+                                        valueCls="text-success"
                                     />
                                 )}
                             </dl>
@@ -976,9 +976,9 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                     {pgTransactions &&
                         pgTransactions.length > 0 &&
                         pgTransactions.some((t) => t.status === "pending") && (
-                            <div className="overflow-hidden rounded-2xl border border-primary-200 bg-card shadow-sm">
-                                <div className="border-b border-primary-100 bg-primary-50/60 px-6 py-4">
-                                    <h3 className="text-base font-semibold text-primary-900">
+                            <div className="overflow-hidden rounded-2xl border border-primary/20 bg-card shadow-sm">
+                                <div className="border-b border-primary/20 bg-primary/10 px-6 py-4">
+                                    <h3 className="text-base font-semibold text-primary">
                                         Pembayaran Online
                                     </h3>
                                 </div>
@@ -1011,7 +1011,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                                         <span className="text-sm font-bold text-foreground">
                                                             {label}
                                                         </span>
-                                                        <span className="inline-flex rounded-lg bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                                                        <span className="inline-flex rounded-lg bg-warning/10 px-2 py-0.5 text-[11px] font-bold text-warning">
                                                             PENDING
                                                         </span>
                                                     </div>
@@ -1048,7 +1048,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                                                 Virtual Account
                                                             </p>
                                                             {display.vaBank && (
-                                                                <p className="text-sm font-bold text-primary-600 mb-1">
+                                                                <p className="text-sm font-bold text-primary mb-1">
                                                                     {
                                                                         display.vaBank
                                                                     }
@@ -1094,7 +1094,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                                             }
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="flex items-center justify-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-4 py-2.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-100"
+                                                            className="flex items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
                                                         >
                                                             <svg
                                                                 className="h-4 w-4"
@@ -1131,7 +1131,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                                             checkingPgId ===
                                                             trx.id
                                                         }
-                                                        className="w-full rounded-xl border border-primary-200 bg-card px-4 py-2 text-xs font-semibold text-primary-600 transition hover:bg-primary-50 disabled:opacity-50"
+                                                        className="w-full rounded-xl border border-primary/20 bg-card px-4 py-2 text-xs font-semibold text-primary transition hover:bg-primary/10 disabled:opacity-50"
                                                     >
                                                         {checkingPgId === trx.id
                                                             ? "Mengecek..."
@@ -1162,7 +1162,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                                 {fmtShort(pay.paid_at)}{" "}
                                                 {fmtTime(pay.paid_at)}
                                             </span>
-                                            <span className="text-sm font-semibold text-emerald-600">
+                                            <span className="text-sm font-semibold text-success">
                                                 {fmtRp(pay.amount)}
                                             </span>
                                         </div>
@@ -1232,9 +1232,9 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                     className="fixed inset-0 z-50 flex items-center justify-center p-4"
                     onMouseDown={() => !processing && setConfirmingStatus(null)}
                 >
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity" />
                     <div
-                        className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
+                        className="relative w-full max-w-sm rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
                         <h3 className="text-lg font-semibold text-foreground">
@@ -1258,7 +1258,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                             <button
                                 onClick={() => handleStatus(confirmingStatus)}
                                 disabled={processing}
-                                className={`rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md transition disabled:opacity-60 ${confirmingStatus === "completed" ? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-emerald-500/30 hover:from-emerald-600 hover:to-emerald-700" : "bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/30 hover:from-red-600 hover:to-red-700"}`}
+                                className={`rounded-xl px-4 py-2 text-sm font-semibold shadow-md transition disabled:opacity-60 ${confirmingStatus === "completed" ? "bg-success text-success-foreground hover:bg-success/90" : "bg-destructive text-destructive-foreground hover:bg-destructive/90"}`}
                             >
                                 {processing
                                     ? "Memproses..."
@@ -1277,9 +1277,9 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                     className="fixed inset-0 z-50 flex items-center justify-center p-4"
                     onMouseDown={() => !switching && setShowSwitchModal(false)}
                 >
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity" />
                     <div
-                        className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl max-h-[80vh] overflow-y-auto"
+                        className="relative w-full max-w-lg rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl max-h-[80vh] overflow-y-auto"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between mb-5">
@@ -1290,7 +1290,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                 onClick={() =>
                                     !switching && setShowSwitchModal(false)
                                 }
-                                className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-muted-foreground"
+                                className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                             >
                                 <svg
                                     className="h-5 w-5"
@@ -1332,7 +1332,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
 
                         {/* Non-PG options (Tunai, Card, etc.) */}
                         <div className="mb-4">
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                                 Bayar Langsung
                             </p>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1347,7 +1347,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                         className={`rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition ${
                                             switchMethod === String(m.id) &&
                                             !switchPgType
-                                                ? "border-primary-500 bg-primary-50 text-primary-700"
+                                                ? "border-primary bg-primary/10 text-primary"
                                                 : "border-border bg-card text-muted-foreground hover:border-border hover:bg-muted"
                                         } disabled:opacity-50`}
                                     >
@@ -1360,7 +1360,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                         {/* PG options */}
                         {allPgMethods.length > 0 && (
                             <div className="mb-5">
-                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2">
+                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
                                     Pembayaran Online
                                 </p>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1374,7 +1374,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                             }}
                                             className={`rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition ${
                                                 switchPgType === pg.method
-                                                    ? "border-primary-500 bg-primary-50 text-primary-700"
+                                                    ? "border-primary bg-primary/10 text-primary"
                                                     : "border-border bg-card text-muted-foreground hover:border-border hover:bg-muted"
                                             } disabled:opacity-50`}
                                         >
@@ -1402,7 +1402,7 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                     switching ||
                                     (!switchMethod && !switchPgType)
                                 }
-                                className="rounded-xl px-5 py-2 text-sm font-semibold text-white shadow-md transition disabled:opacity-60 bg-gradient-to-r from-amber-500 to-amber-600 shadow-amber-500/30 hover:from-amber-600 hover:to-amber-700"
+                                className="rounded-xl px-5 py-2 text-sm font-semibold shadow-md transition disabled:opacity-60 bg-warning text-warning-foreground hover:bg-warning/90"
                             >
                                 {switching
                                     ? "Memproses..."
@@ -1444,8 +1444,8 @@ function Row({ label, value, valueCls = "" }) {
 function StatusBadge({ status }) {
     const map = {
         draft: "bg-muted text-muted-foreground",
-        completed: "bg-emerald-100 text-success",
-        cancelled: "bg-red-100 text-destructive",
+        completed: "bg-success/10 text-success",
+        cancelled: "bg-destructive/10 text-destructive",
     };
     const label = {
         draft: "Draft",
@@ -1463,9 +1463,9 @@ function StatusBadge({ status }) {
 
 function PaymentBadge({ status }) {
     const map = {
-        unpaid: "bg-rose-100 text-rose-600",
-        partial: "bg-amber-100 text-amber-700",
-        paid: "bg-emerald-100 text-success",
+        unpaid: "bg-destructive/10 text-destructive",
+        partial: "bg-warning/10 text-warning",
+        paid: "bg-success/10 text-success",
     };
     const label = { unpaid: "Belum Bayar", partial: "Sebagian", paid: "Lunas" };
     return (
@@ -1480,39 +1480,39 @@ function PaymentBadge({ status }) {
 function OrderTypeBadge({ type }) {
     const map = {
         // FnB
-        dine_in: { label: "Dine In", cls: "bg-blue-100 text-blue-700" },
-        takeaway: { label: "Takeaway", cls: "bg-orange-100 text-orange-700" },
-        delivery: { label: "Delivery", cls: "bg-purple-100 text-purple-700" },
+        dine_in: { label: "Dine In", cls: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+        takeaway: { label: "Takeaway", cls: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
+        delivery: { label: "Delivery", cls: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" },
         // Retail
-        wholesale: { label: "Grosir", cls: "bg-cyan-100 text-cyan-700" },
+        wholesale: { label: "Grosir", cls: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400" },
         // Service
-        walk_in: { label: "Walk-in", cls: "bg-emerald-100 text-success" },
-        booking: { label: "Booking", cls: "bg-violet-100 text-violet-700" },
+        walk_in: { label: "Walk-in", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
+        booking: { label: "Booking", cls: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" },
         pickup_delivery: {
             label: "Jemput & Antar",
-            cls: "bg-purple-100 text-purple-700",
+            cls: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
         },
         // Rental
-        per_hour: { label: "Per Jam", cls: "bg-amber-100 text-amber-700" },
-        per_day: { label: "Per Hari", cls: "bg-amber-100 text-amber-700" },
-        per_week: { label: "Per Minggu", cls: "bg-amber-100 text-amber-700" },
+        per_hour: { label: "Per Jam", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+        per_day: { label: "Per Hari", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+        per_week: { label: "Per Minggu", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
         // Ticket
-        online: { label: "Online", cls: "bg-rose-100 text-rose-700" },
-        group: { label: "Group", cls: "bg-pink-100 text-pink-700" },
+        online: { label: "Online", cls: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" },
+        group: { label: "Group", cls: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400" },
         // Hospitality
-        check_in: { label: "Check-in", cls: "bg-teal-100 text-teal-700" },
+        check_in: { label: "Check-in", cls: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400" },
         reservation: {
             label: "Reservasi",
-            cls: "bg-primary-100 text-primary-700",
+            cls: "bg-primary/10 text-primary",
         },
-        short_stay: { label: "Short Stay", cls: "bg-sky-100 text-sky-700" },
+        short_stay: { label: "Short Stay", cls: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400" },
         // Parking
         entry: { label: "Masuk", cls: "bg-muted text-foreground" },
-        exit: { label: "Keluar", cls: "bg-slate-200 text-muted-foreground" },
-        lost_ticket: { label: "Tiket Hilang", cls: "bg-red-100 text-destructive" },
+        exit: { label: "Keluar", cls: "bg-muted text-muted-foreground" },
+        lost_ticket: { label: "Tiket Hilang", cls: "bg-destructive/10 text-destructive" },
         // Session
-        postpaid: { label: "Postpaid", cls: "bg-primary-100 text-primary-700" },
-        prepaid: { label: "Prepaid", cls: "bg-violet-100 text-violet-700" },
+        postpaid: { label: "Postpaid", cls: "bg-primary/10 text-primary" },
+        prepaid: { label: "Prepaid", cls: "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" },
     };
     const config = map[type] ?? {
         label: type ?? "-",

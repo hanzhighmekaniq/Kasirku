@@ -162,10 +162,10 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="48">
-                                <button onClick={() => setFilterStatus("all")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "all" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Semua Status</button>
-                                <button onClick={() => setFilterStatus("draft")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "draft" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Draft</button>
-                                <button onClick={() => setFilterStatus("completed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "completed" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Selesai</button>
-                                <button onClick={() => setFilterStatus("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "cancelled" ? "bg-primary-50 font-medium text-primary-600" : "text-muted-foreground hover:bg-muted"}`}>Dibatalkan</button>
+                                <button onClick={() => setFilterStatus("all")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "all" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Semua Status</button>
+                                <button onClick={() => setFilterStatus("draft")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "draft" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Draft</button>
+                                <button onClick={() => setFilterStatus("completed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "completed" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Selesai</button>
+                                <button onClick={() => setFilterStatus("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "cancelled" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Dibatalkan</button>
                             </Dropdown.Content>
                         </Dropdown>
                     </div>
@@ -183,35 +183,35 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                 {/* Table (desktop) */}
                 <div className="hidden overflow-x-auto lg:block">
                     <table className="w-full text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                <th className="px-5 py-3 text-xs font-semibold text-muted-foreground">
+                        <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                            <tr>
+                                <th className="px-5 py-3 font-semibold">
                                     No. Faktur
                                 </th>
-                                <th className="px-5 py-3 text-xs font-semibold text-muted-foreground">
+                                <th className="px-5 py-3 font-semibold">
                                     Supplier
                                 </th>
-                                <th className="px-5 py-3 text-xs font-semibold text-muted-foreground">
+                                <th className="px-5 py-3 font-semibold">
                                     Tanggal
                                 </th>
-                                <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground">
+                                <th className="px-5 py-3 text-right font-semibold">
                                     Total
                                 </th>
-                                <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground">
+                                <th className="px-5 py-3 text-right font-semibold">
                                     Dibayar
                                 </th>
-                                <th className="px-5 py-3 text-xs font-semibold text-muted-foreground">
+                                <th className="px-5 py-3 font-semibold">
                                     Status
                                 </th>
-                                <th className="px-5 py-3 text-xs font-semibold text-muted-foreground">
+                                <th className="px-5 py-3 font-semibold">
                                     Bayar
                                 </th>
-                                <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground">
+                                <th className="px-5 py-3 text-right font-semibold">
                                     Aksi
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-border bg-background">
                             {filtered.length === 0 ? (
                                 <tr>
                                     <td
@@ -244,7 +244,7 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                                 filtered.map((p) => (
                                     <tr
                                         key={p.id}
-                                        className="transition hover:bg-muted"
+                                        className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                     >
                                         <td className="px-5 py-3.5 font-mono text-xs font-medium text-foreground">
                                             {p.purchase_no}
@@ -288,7 +288,7 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                                                         "admin.purchases.show",
                                                         p.id,
                                                     )}
-                                                    className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50"
+                                                    className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
                                                 >
                                                     Detail
                                                 </Link>
@@ -407,15 +407,15 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
 function SummaryCard({ label, value, color = "slate" }) {
     const colors = {
         slate: "bg-muted text-muted-foreground",
-        amber: "bg-amber-50 text-amber-600",
-        emerald: "bg-success/10 text-emerald-600",
-        rose: "bg-rose-50 text-rose-600",
+        amber: "bg-warning/10 text-warning",
+        emerald: "bg-success/10 text-success",
+        rose: "bg-destructive/10 text-destructive",
     };
     const borders = {
         slate: "border-l-muted-foreground/30",
-        amber: "border-l-amber-400",
-        emerald: "border-l-emerald-400",
-        rose: "border-l-rose-400",
+        amber: "border-l-warning",
+        emerald: "border-l-success",
+        rose: "border-l-destructive",
     };
     return (
         <div
@@ -430,8 +430,8 @@ function SummaryCard({ label, value, color = "slate" }) {
 function StatusBadge({ status }) {
     const map = {
         draft: "bg-muted text-muted-foreground",
-        completed: "bg-emerald-100 text-success",
-        cancelled: "bg-red-100 text-destructive",
+        completed: "bg-success/10 text-success",
+        cancelled: "bg-destructive/10 text-destructive",
     };
     const label = {
         draft: "Draft",
@@ -449,9 +449,9 @@ function StatusBadge({ status }) {
 
 function PaymentBadge({ status }) {
     const map = {
-        unpaid: "bg-rose-100 text-rose-600",
-        partial: "bg-amber-100 text-amber-700",
-        paid: "bg-emerald-100 text-success",
+        unpaid: "bg-destructive/10 text-destructive",
+        partial: "bg-warning/10 text-warning",
+        paid: "bg-success/10 text-success",
     };
     const label = {
         unpaid: "Belum Bayar",

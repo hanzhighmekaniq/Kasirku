@@ -3,7 +3,7 @@ import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState, Fragment } from "react";
 import Button from "@/Components/ui/Button";
-import { Eye, Plus } from "lucide-react";
+import { Eye, Plus, SlidersHorizontal } from "lucide-react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import QuickStockModal from "@/Pages/Admin/Products/QuickStockModal";
 import TreePicker from "@/Components/TreePicker";
@@ -149,7 +149,7 @@ function StatusBadge({ isActive }) {
     );
 }
 
-function IndicatorBadges({ product }) {
+function IndicatorBadges({ product, storeType = "retail" }) {
     const badges = [];
     const variantCount = product.variants?.length ?? 0;
     const hasUnits =
@@ -186,6 +186,26 @@ function IndicatorBadges({ product }) {
                 className="inline-flex items-center rounded-md border border-warning/20 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning"
             >
                 Grosir
+            </span>,
+        );
+    }
+    if (storeType === "fnb" && (product.recipes_count ?? 0) > 0) {
+        badges.push(
+            <span
+                key="recipe"
+                className="inline-flex items-center rounded-md border border-success/20 bg-success/10 px-2 py-0.5 text-xs font-medium text-success"
+            >
+                Resep
+            </span>,
+        );
+    }
+    if (storeType === "fnb" && (product.modifier_groups_count ?? 0) > 0) {
+        badges.push(
+            <span
+                key="modifier"
+                className="inline-flex items-center rounded-md border border-violet-200 bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:border-violet-800 dark:bg-violet-900/30 dark:text-violet-400"
+            >
+                Modifier
             </span>,
         );
     }
@@ -261,7 +281,7 @@ function DetailRow({ product, onStockModal }) {
                         return (
                             <div
                                 key={v.id}
-                                className={`group relative rounded-xl border bg-card p-3.5 transition-all hover:shadow-md ${isOut ? "border-destructive/20 bg-destructive/10/30" : isLow ? "border-warning/20 bg-warning/5" : "border-border"}`}
+                                className={`group relative rounded-xl border bg-card p-3.5 transition-all hover:shadow-md ${isOut ? "border-destructive/20 bg-destructive/5" : isLow ? "border-warning/20 bg-warning/5" : "border-border"}`}
                             >
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1">
@@ -717,7 +737,7 @@ export default function Index({
                                         }
                                     }}
                                     placeholder="Cari nama, SKU, atau barcode..."
-                                    className="w-full py-2.5 pl-10 pr-3 rounded-lg border border-border bg-card  text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary-500"
+                                    className="w-full py-2.5 pl-10 pr-3 rounded-lg border border-border bg-card  text-sm text-card-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
                             {/* Filter toggle — mobile only */}
@@ -921,6 +941,11 @@ export default function Index({
                                         <th className="px-4 py-3 text-left font-semibold">
                                             Badges
                                         </th>
+                                        {storeType === "fnb" && (
+                                            <th className="px-4 py-3 text-center font-semibold">
+                                                Waktu Saji
+                                            </th>
+                                        )}
                                         {showStock && (
                                             <th
                                                 className="cursor-pointer select-none px-4 py-3 text-center font-semibold transition hover:text-foreground"
@@ -1039,8 +1064,16 @@ export default function Index({
                                                     <td className="px-4 py-3">
                                                         <IndicatorBadges
                                                             product={product}
+                                                            storeType={storeType}
                                                         />
                                                     </td>
+                                                    {storeType === "fnb" && (
+                                                        <td className="px-4 py-3 text-center text-muted-foreground">
+                                                            {product.preparation_time
+                                                                ? `${product.preparation_time} mnt`
+                                                                : "—"}
+                                                        </td>
+                                                    )}
                                                     {showStock && (
                                                         <td className="px-4 py-3 text-center">
                                                             <StockWithVariant
@@ -1210,6 +1243,30 @@ export default function Index({
                                                                         </svg>
                                                                     </Link>
                                                                 )}
+                                                            {canEdit &&
+                                                                storeType ===
+                                                                "fnb" &&
+                                                                product.type !==
+                                                                "raw_material" && (
+                                                                    <Link
+                                                                        href={route(
+                                                                            "admin.modifier-groups.index",
+                                                                            {
+                                                                                product_id:
+                                                                                    product.id,
+                                                                            },
+                                                                        )}
+                                                                        className="rounded p-1.5 text-card-foreground transition hover:bg-violet-100 hover:text-violet-700 dark:hover:bg-violet-900/30 dark:hover:text-violet-400"
+                                                                        title="Kelola Modifier"
+                                                                    >
+                                                                        <SlidersHorizontal
+                                                                            className="h-4 w-4"
+                                                                            strokeWidth={
+                                                                                1.7
+                                                                            }
+                                                                        />
+                                                                    </Link>
+                                                                )}
                                                             <Link
                                                                 href={route(
                                                                     "admin.products.show",
@@ -1290,6 +1347,10 @@ export default function Index({
                                                                     ? 1
                                                                     : 0) +
                                                                 (showStock
+                                                                    ? 1
+                                                                    : 0) +
+                                                                (storeType ===
+                                                                    "fnb"
                                                                     ? 1
                                                                     : 0)
                                                             }
@@ -1372,6 +1433,7 @@ export default function Index({
                                                 <div className="mt-2">
                                                     <IndicatorBadges
                                                         product={product}
+                                                        storeType={storeType}
                                                     />
                                                 </div>
                                                 <div className="mt-2 flex flex-wrap items-center gap-2">

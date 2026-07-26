@@ -1,23 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronRight, ChevronsUpDown, Search, X } from "lucide-react";
+import { Check, ChevronRight, ChevronsUpDown, Search, X, Folder, Home } from "lucide-react";
 
 /* ── Depth visual helpers ─────────────────────────────── */
 const DEPTH_COLORS = [
-    "text-primary-600",
-    "text-violet-600",
+    "text-primary",
+    "text-indigo-500",
     "text-blue-500",
-    "text-cyan-500",
-    "text-teal-500",
+    "text-emerald-500",
+    "text-amber-500",
 ];
 const DEPTH_BG = [
-    "bg-primary-50",
-    "bg-violet-50",
-    "bg-blue-50",
-    "bg-cyan-50",
-    "bg-teal-50",
+    "bg-primary/10",
+    "bg-indigo-500/10",
+    "bg-blue-500/10",
+    "bg-emerald-500/10",
+    "bg-amber-500/10",
 ];
-const DEPTH_ICONS = ["📁", "📂", "📄", "📎", "🔖"];
 
 function depthColor(d) {
     return DEPTH_COLORS[Math.min(d, DEPTH_COLORS.length - 1)];
@@ -26,7 +25,7 @@ function depthBg(d) {
     return DEPTH_BG[Math.min(d, DEPTH_BG.length - 1)];
 }
 function depthIcon(d) {
-    return DEPTH_ICONS[Math.min(d, DEPTH_ICONS.length - 1)];
+    return <Folder className={`h-3.5 w-3.5 ${depthColor(d)}`} />;
 }
 
 /**
@@ -263,14 +262,14 @@ export default function TreePicker({
                                   e.preventDefault();
                                   clear();
                               }}
-                              className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${!value ? "bg-primary-50" : "hover:bg-muted"}`}
+                              className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${!value ? "bg-primary/10" : "hover:bg-muted"}`}
                           >
-                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-base">
-                                  🏠
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                                  <Home className="h-4 w-4" />
                               </span>
                               <div className="min-w-0 flex-1">
                                   <p
-                                      className={`text-sm font-semibold ${!value ? "text-primary-700" : "text-foreground"}`}
+                                      className={`text-sm font-semibold ${!value ? "text-primary" : "text-foreground"}`}
                                   >
                                       {rootLabel}
                                   </p>
@@ -280,7 +279,7 @@ export default function TreePicker({
                               </div>
                               {!value && (
                                   <svg
-                                      className="ml-auto h-5 w-5 shrink-0 text-primary-500"
+                                      className="ml-auto h-5 w-5 shrink-0 text-primary"
                                       fill="none"
                                       viewBox="0 0 24 24"
                                       strokeWidth={2}
@@ -365,7 +364,7 @@ export default function TreePicker({
                                       </div>
                                       {isSelected && (
                                           <svg
-                                              className="ml-2 h-4 w-4 shrink-0 text-primary-500"
+                                              className="ml-2 h-4 w-4 shrink-0 text-primary"
                                               fill="none"
                                               viewBox="0 0 24 24"
                                               strokeWidth={2.5}
@@ -403,7 +402,7 @@ export default function TreePicker({
                 onClick={open ? closePicker : openPicker}
                 className={`flex w-full items-center gap-2.5 rounded-xl border bg-muted text-left shadow-sm transition focus:outline-none focus:ring-2 focus:ring-ring/20 ${sizeClasses[size]} ${
                                     open
-                                        ? "border-border ring-2 ring-primary-100"
+                                        ? "border-border ring-2 ring-primary/20"
                                         : "border-border hover:border-slate-400"
                                 } ${triggerClassName}`}
             >

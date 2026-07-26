@@ -39,6 +39,8 @@ import HistoryPanel from "../components/HistoryPanel";
 import CartRow from "../components/CartRow";
 import ModeSpecificPanel from "../components/ModeSpecificPanel";
 import StockAlertModal from "../components/StockAlertModal";
+import ScanNotFoundModal from "../components/ScanNotFoundModal";
+import ApiErrorToast from "../components/ApiErrorToast";
 
 import Tooltip from "../components/ui/Tooltip";
 import TipButton from "../components/ui/TipButton";
@@ -125,6 +127,44 @@ export default function KasirLayout({
     const selectedCustomerObj = k.customers.find(
         (c) => String(c.id) === String(k.selectedCustomer),
     );
+
+    // Enter → buka payment view, kalau cart tidak kosong & tidak ada blocker.
+    // Tidak aktif saat sedang mengetik di input/textarea (biar tidak
+    // mengganggu form lain), dan tidak aktif saat payment view sudah terbuka
+    // (di situ Enter dipakai untuk hal lain, mis. submit angka bayar).
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.key !== "Enter") return;
+            if (k.showPayment) return;
+            if (
+                document.activeElement?.tagName === "TEXTAREA" ||
+                (document.activeElement?.tagName === "INPUT" &&
+                    document.activeElement !== k.barcodeRef?.current)
+            ) {
+                return;
+            }
+            if (
+                k.cart.length === 0 ||
+                k.submitting ||
+                !!k.missingRequiredField ||
+                tableGate ||
+                blockedByShift
+            ) {
+                return;
+            }
+            e.preventDefault();
+            k.handleStartAndNavigateToPayment();
+        };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+    }, [
+        k.showPayment,
+        k.cart.length,
+        k.submitting,
+        k.missingRequiredField,
+        tableGate,
+        blockedByShift,
+    ]);
     const isDelivery = k.orderType === "delivery";
     const isTakeaway = k.orderType === "takeaway";
     const isWholesale = k.isRetail && k.orderType === "wholesale";
@@ -277,7 +317,7 @@ export default function KasirLayout({
                         <button
                             type="button"
                             onClick={() => setShowCustomerModal(true)}
-                            className={`flex h-9 shrink-0 items-center gap-2 rounded-xl border border-dashed px-2.5 text-[12px] font-semibold transition ${isWholesale ? "border-warning bg-warning/5 text-warning hover:bg-warning/10" : "border-border text-muted-foreground hover:border-border hover:bg-muted/50"}`}
+                            className={`flex h-9 shrink-0 items-center gap-2 rounded-xl border border-dashed px-2.5 text-[12px] font-semibold transition ${isWholesale ? "border-warning bg-warning/5 text-warning hover:bg-warning/10" : "border-border text-muted-foreground hover:border-border hover:bg-muted"}`}
                         >
                             <UserRound size={14} className="shrink-0" />
                             <span className="hidden sm:inline whitespace-nowrap">
@@ -291,9 +331,9 @@ export default function KasirLayout({
                     {showTableSelector && (
                         <div className="relative shrink-0">
                             {k.selectedTable ? (
-                                <div className="flex h-9 items-center gap-1.5 rounded-xl border border-border bg-muted/50 px-2.5">
+                                <div className="flex h-9 items-center gap-1.5 rounded-xl border border-border bg-muted px-2.5">
                                     <LayoutGrid size={14} className="shrink-0 text-muted-foreground" />
-                                    <span className="truncate text-xs font-semibold text-card-foreground">
+                                    <span className="truncate text-xs font-semibold text-foreground">
                                         {k.tableLabel}{" "}
                                         {tables.find((t) => String(t.id) === String(k.selectedTable))?.table_number}
                                     </span>
@@ -301,7 +341,7 @@ export default function KasirLayout({
                                         type="button"
                                         onClick={() => { k.setSelectedTable(""); k.setTableSearch(""); }}
                                         aria-label="Hapus pilihan meja"
-                                        className="ml-auto shrink-0 rounded-full p-0.5 text-muted-foreground/60 transition hover:bg-muted hover:text-card-foreground"
+                                        className="ml-auto shrink-0 rounded-full p-0.5 text-muted-foreground/60 transition hover:bg-muted hover:text-foreground"
                                     >
                                         <X size={12} strokeWidth={2.5} />
                                     </button>
@@ -362,13 +402,13 @@ export default function KasirLayout({
                                                         k.setShowTableDropdown(false);
                                                         k.setTableSearch("");
                                                     }}
-                                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-muted/50"
+                                                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-muted"
                                                 >
                                                     <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
                                                         {t.table_number}
                                                     </span>
                                                     <div className="min-w-0 flex-1">
-                                                        <p className="font-medium text-card-foreground">
+                                                        <p className="font-medium text-foreground">
                                                             {k.tableLabel} {t.table_number}
                                                         </p>
                                                         <p className="text-[10px] text-muted-foreground/60">
@@ -389,7 +429,7 @@ export default function KasirLayout({
                         <button
                             type="button"
                             onClick={() => setShowInfoModal(true)}
-                            className={`flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-left transition ${hasDeliveryInfo ? "border-border bg-card hover:bg-muted/50" : "border-warning bg-warning/5 hover:bg-warning/10"}`}
+                            className={`flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-2.5 text-left transition ${hasDeliveryInfo ? "border-border bg-card hover:bg-muted" : "border-warning bg-warning/5 hover:bg-warning/10"}`}
                         >
                             <Truck size={14} className={`shrink-0 ${hasDeliveryInfo ? "text-muted-foreground" : "text-warning"}`} />
                             <span className="hidden sm:inline text-[12px] font-medium whitespace-nowrap">
@@ -468,12 +508,12 @@ export default function KasirLayout({
                 {showTableSelector && (
                     <div className="relative w-[46%] shrink-0">
                         {k.selectedTable ? (
-                            <div className="flex h-full items-center gap-1.5 rounded-xl border border-border bg-muted/50 px-2.5 py-2">
+                                <div className="flex h-full items-center gap-1.5 rounded-xl border border-border bg-muted px-2.5 py-2">
                                 <LayoutGrid
                                     size={15}
                                     className="shrink-0 text-muted-foreground"
                                 />
-                                <span className="truncate text-xs font-semibold text-card-foreground">
+                                <span className="truncate text-xs font-semibold text-foreground">
                                     {k.tableLabel}{" "}
                                     {
                                         tables.find(
@@ -490,7 +530,7 @@ export default function KasirLayout({
                                         k.setTableSearch("");
                                     }}
                                     aria-label="Hapus pilihan meja"
-                                    className="ml-auto shrink-0 rounded-full p-0.5 text-muted-foreground/60 transition hover:bg-muted hover:text-card-foreground"
+                                    className="ml-auto shrink-0 rounded-full p-0.5 text-muted-foreground/60 transition hover:bg-muted hover:text-foreground"
                                 >
                                     <X size={13} strokeWidth={2.5} />
                                 </button>
@@ -572,7 +612,7 @@ export default function KasirLayout({
                     <button
                         type="button"
                         onClick={() => setShowCustomerModal(true)}
-                        className={`flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-dashed px-3 py-2.5 text-[13px] font-semibold transition ${isWholesale ? "border-warning bg-warning/5 text-warning hover:bg-warning/10" : "border-border text-muted-foreground hover:border-border hover:bg-muted/50"}`}
+                            className={`flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-dashed px-3 py-2.5 text-[13px] font-semibold transition ${isWholesale ? "border-warning bg-warning/5 text-warning hover:bg-warning/10" : "border-border text-muted-foreground hover:border-border hover:bg-muted"}`}
                     >
                         <UserRound size={16} className="shrink-0" />
                         <span className="truncate">
@@ -590,7 +630,7 @@ export default function KasirLayout({
                 <button
                     type="button"
                     onClick={() => setShowInfoModal(true)}
-                    className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition ${hasDeliveryInfo ? "border-border bg-card hover:bg-muted/50" : "border-warning bg-warning/5 hover:bg-warning/10"}`}
+                    className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left transition ${hasDeliveryInfo ? "border-border bg-card hover:bg-muted" : "border-warning bg-warning/5 hover:bg-warning/10"}`}
                 >
                     <Truck
                         size={16}
@@ -624,7 +664,7 @@ export default function KasirLayout({
                 <button
                     type="button"
                     onClick={() => setShowInfoModal(true)}
-                    className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left transition hover:bg-muted/50"
+                    className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left transition hover:bg-muted"
                 >
                     <PackageCheck size={16} className="shrink-0 text-muted-foreground" />
                     <div className="min-w-0 flex-1 leading-tight">
@@ -721,7 +761,7 @@ export default function KasirLayout({
 
                 {/* Fullscreen quick actions */}
                 {isFullscreen && (
-                    <div className="flex items-stretch gap-2 border-b border-border bg-muted/50 px-3 py-2">
+                    <div className="flex items-stretch gap-2 border-b border-border bg-muted px-3 py-2">
                         {heldCount > 0 && (
                             <button
                                 type="button"
@@ -797,6 +837,7 @@ export default function KasirLayout({
                                 item={item}
                                 onQty={k.changeQty}
                                 onRemove={k.removeItem}
+                                onNoteChange={k.updateItemNote}
                                 productImage={
                                     props.products.find(
                                         (p) => p.id === item.productId,
@@ -964,7 +1005,7 @@ export default function KasirLayout({
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between text-[13px] text-muted-foreground">
                             <span>Subtotal</span>
-                            <span className="font-medium tabular-nums text-card-foreground">
+                                    <span className="font-medium tabular-nums text-foreground">
                                 {k.fmt(k.subtotal)}
                             </span>
                         </div>
@@ -1010,10 +1051,10 @@ export default function KasirLayout({
                             <button
                                 type="button"
                                 onClick={() => setShowAdjustModal(true)}
-                                className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between rounded-lg px-1 py-0.5 text-[13px] text-muted-foreground transition hover:bg-muted/50"
+                                className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between rounded-lg px-1 py-0.5 text-[13px] text-muted-foreground transition hover:bg-muted"
                             >
                                 <span>{taxBadge || "Pajak"}</span>
-                                <span className="font-medium tabular-nums text-card-foreground">
+                                        <span className="font-medium tabular-nums text-foreground">
                                     {k.fmt(k.tax)}
                                 </span>
                             </button>
@@ -1023,7 +1064,7 @@ export default function KasirLayout({
                         {isDelivery && Number(k.deliveryFee) > 0 && (
                             <div className="flex items-center justify-between text-[13px] text-muted-foreground">
                                 <span>Ongkir</span>
-                                <span className="font-medium tabular-nums text-card-foreground">
+                                        <span className="font-medium tabular-nums text-foreground">
                                     {k.fmt(Number(k.deliveryFee))}
                                 </span>
                             </div>
@@ -1148,6 +1189,7 @@ export default function KasirLayout({
                                 item={item}
                                 onQty={k.changeQty}
                                 onRemove={k.removeItem}
+                                onNoteChange={k.updateItemNote}
                                 productImage={props.products.find((p) => p.id === item.productId)?.image || null}
                             />
                         ))
@@ -1312,7 +1354,7 @@ export default function KasirLayout({
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between text-[13px] text-muted-foreground">
                             <span>Subtotal</span>
-                            <span className="font-medium tabular-nums text-card-foreground">{k.fmt(k.subtotal)}</span>
+                            <span className="font-medium tabular-nums text-foreground">{k.fmt(k.subtotal)}</span>
                         </div>
                         {k.totalPromoDisc > 0 && (
                             <div className="flex items-center justify-between text-[13px] text-success">
@@ -1333,15 +1375,15 @@ export default function KasirLayout({
                             </button>
                         )}
                         {k.tax > 0 && (
-                            <button type="button" onClick={() => setShowAdjustModal(true)} className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between rounded-lg px-1 py-0.5 text-[13px] text-muted-foreground transition hover:bg-muted/50">
+                            <button type="button" onClick={() => setShowAdjustModal(true)} className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between rounded-lg px-1 py-0.5 text-[13px] text-muted-foreground transition hover:bg-muted">
                                 <span>{taxBadge || "Pajak"}</span>
-                                <span className="font-medium tabular-nums text-card-foreground">{k.fmt(k.tax)}</span>
+                                <span className="font-medium tabular-nums text-foreground">{k.fmt(k.tax)}</span>
                             </button>
                         )}
                         {isDelivery && Number(k.deliveryFee) > 0 && (
                             <div className="flex items-center justify-between text-[13px] text-muted-foreground">
                                 <span>Ongkir</span>
-                                <span className="font-medium tabular-nums text-card-foreground">{k.fmt(Number(k.deliveryFee))}</span>
+                                <span className="font-medium tabular-nums text-foreground">{k.fmt(Number(k.deliveryFee))}</span>
                             </div>
                         )}
                         <div className="mt-1 flex items-baseline justify-between border-t-2 border-border pt-2.5">
@@ -1500,6 +1542,16 @@ export default function KasirLayout({
                     onClose={() => k.setStockAlert(null)}
                 />
             )}
+            {k.scanNotFound && (
+                <ScanNotFoundModal
+                    barcode={k.scanNotFound}
+                    onClose={() => k.setScanNotFound(null)}
+                />
+            )}
+            <ApiErrorToast
+                message={k.apiError}
+                onClose={() => k.setApiError(null)}
+            />
         </>
     );
 

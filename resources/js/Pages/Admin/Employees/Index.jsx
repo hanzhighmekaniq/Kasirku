@@ -335,7 +335,7 @@ export default function Index({ employees, storeType = "retail" }) {
                                     <button
                                         onClick={() => setStatusFilter("")}
                                         className={`block w-full px-4 py-2.5 text-left text-sm transition ${!statusFilter
-                                                ? "bg-primary-50 font-medium text-primary-600"
+                                                ? "bg-primary/10 font-medium text-primary"
                                                 : "text-muted-foreground hover:bg-muted"
                                             }`}
                                     >
@@ -349,7 +349,7 @@ export default function Index({ employees, storeType = "retail" }) {
                                                     setStatusFilter(value)
                                                 }
                                                 className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === value
-                                                        ? "bg-primary-50 font-medium text-primary-600"
+                                                        ? "bg-primary/10 font-medium text-primary"
                                                         : "text-muted-foreground hover:bg-muted"
                                                     }`}
                                             >
@@ -536,27 +536,27 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
         <>
             <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            <th className="px-6 py-3.5">Karyawan</th>
-                            <th className="px-6 py-3.5">Cabang</th>
-                            <th className="px-6 py-3.5">Kontak</th>
-                            <th className="px-6 py-3.5">Jabatan</th>
+                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                        <tr>
+                            <th className="px-6 py-3.5 text-left font-semibold">Karyawan</th>
+                            <th className="px-6 py-3.5 text-left font-semibold">Cabang</th>
+                            <th className="px-6 py-3.5 text-left font-semibold">Kontak</th>
+                            <th className="px-6 py-3.5 text-left font-semibold">Jabatan</th>
                             {showCommission && (
-                                <th className="px-6 py-3.5 text-center">
+                                <th className="px-6 py-3.5 text-center font-semibold">
                                     Komisi
                                 </th>
                             )}
-                            <th className="px-6 py-3.5 text-center">Role</th>
-                            <th className="px-6 py-3.5 text-center">Status</th>
-                            <th className="px-6 py-3.5 text-right">Aksi</th>
+                            <th className="px-6 py-3.5 text-center font-semibold">Role</th>
+                            <th className="px-6 py-3.5 text-center font-semibold">Status</th>
+                            <th className="px-6 py-3.5 text-right font-semibold">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border bg-background">
                         {items.map((emp) => (
                             <tr
                                 key={emp.id}
-                                className="transition hover:bg-muted/70"
+                                className="transition hover:bg-[rgb(var(--color-table-hover))]"
                             >
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">

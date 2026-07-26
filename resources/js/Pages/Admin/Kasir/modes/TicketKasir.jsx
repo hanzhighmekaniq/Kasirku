@@ -45,7 +45,7 @@ export default function TicketKasir(props) {
                     <div key={i} className={`rounded-2xl border ${i === 0 ? "border-indigo-400 shadow-md" : "border-border"} bg-card p-3 cursor-pointer`}>
                         <div className={`h-24 rounded-xl bg-gradient-to-br ${e.color} grid place-items-center text-4xl text-white/90`}>{e.ic}</div>
                         <div className="mt-3 flex items-center justify-between">
-                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10.5px] font-medium text-card-foreground">{e.c.split(" · ")[0]}</span>
+                            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10.5px] font-medium text-muted-foreground">{e.c.split(" · ")[0]}</span>
                             <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[10.5px] font-medium text-primary border border-primary/10">{e.tag}</span>
                         </div>
                         <div className="text-[13.5px] font-semibold mt-2 leading-tight">{e.n}</div>
@@ -80,8 +80,8 @@ export default function TicketKasir(props) {
                         </div>
                         <div className="flex items-center gap-2 text-[11px]">
                             <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-card border border-border"></span>Free</span>
-                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-200"></span>Taken</span>
-                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-indigo-500"></span>Yours</span>
+                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-muted border border-border"></span>Taken</span>
+                            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-primary"></span>Yours</span>
                         </div>
                     </div>
                     <div className="rounded-xl bg-gradient-to-b from-slate-100 to-transparent py-2 text-center text-[10.5px] uppercase tracking-widest text-muted-foreground font-medium mb-4">Screen</div>
@@ -94,7 +94,7 @@ export default function TicketKasir(props) {
                                     const isPicked = selectedSeats.includes(s);
                                     const isTaken = taken.has(s);
                                     const cls = isPicked ? "bg-gradient-to-br bg-primary text-white border-primary shadow-sm"
-                                        : isTaken ? "bg-slate-200 text-muted-foreground/60 border-border cursor-not-allowed"
+                                        : isTaken ? "bg-muted text-muted-foreground/60 border-border cursor-not-allowed"
                                             : "bg-card border-border hover:border-indigo-400 hover:bg-muted";
                                     return <button key={s} onClick={() => toggleSeat(s)} className={`h-8 w-8 rounded-md border text-[10px] font-medium ${cls}`}>{i + 1}</button>;
                                 })}
@@ -114,7 +114,7 @@ export default function TicketKasir(props) {
             <div className="grid grid-cols-2 gap-3">
                 {addons.map((a, i) => (
                     <div key={i} className="rounded-xl border border-border bg-card p-3 flex items-center gap-3">
-                        <div className="h-11 w-11 rounded-lg bg-muted/50 grid place-items-center text-xl">{a.ic}</div>
+                        <div className="h-11 w-11 rounded-lg bg-muted grid place-items-center text-xl">{a.ic}</div>
                         <div className="flex-1">
                             <div className="text-[12.5px] font-semibold">{a.n}</div>
                             <div className="text-[11px] text-muted-foreground">{k.fmt(a.p)}</div>

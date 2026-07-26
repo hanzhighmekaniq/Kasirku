@@ -77,7 +77,7 @@ export default function BranchForm({ data, setData, errors, processing, onSubmit
                     type="checkbox"
                     checked={data.is_active}
                     onChange={(e) => setData('is_active', e.target.checked)}
-                    className="mt-0.5 rounded border-border text-primary-600 shadow-sm focus:ring-primary-500"
+                    className="mt-0.5 rounded border-border text-primary shadow-sm focus:ring-ring"
                 />
                 <span>
                     <span className="block text-sm font-medium text-foreground">Cabang aktif</span>

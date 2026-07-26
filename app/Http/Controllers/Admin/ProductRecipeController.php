@@ -20,7 +20,7 @@ class ProductRecipeController extends Controller
         $store = Store::with('storeType')->find($storeId);
 
         $product->load([
-            'recipes.rawMaterial:id,name,sku,unit,base_unit,cost_price,type',
+            'recipes.rawMaterial:id,name,sku,unit,base_unit,base_unit_conversion,cost_price,type',
         ]);
 
         // Bahan baku yang bisa dipilih
@@ -28,7 +28,15 @@ class ProductRecipeController extends Controller
             ->where('type', 'raw_material')
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'unit', 'base_unit', 'cost_price']);
+            ->get([
+                'id',
+                'name',
+                'sku',
+                'unit',
+                'base_unit',
+                'base_unit_conversion',
+                'cost_price',
+            ]);
 
         return Inertia::render('Admin/Products/Recipes', [
             'product' => $product->only(
@@ -70,7 +78,7 @@ class ProductRecipeController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $recipe = ProductRecipe::updateOrCreate(
+        ProductRecipe::updateOrCreate(
             [
                 'product_id' => $product->id,
                 'raw_material_id' => $validated['raw_material_id'],
@@ -83,6 +91,8 @@ class ProductRecipeController extends Controller
             ],
         );
 
+        $product->syncIsComposable();
+
         return back()->with('success', 'Bahan berhasil disimpan.');
     }
 
@@ -93,6 +103,8 @@ class ProductRecipeController extends Controller
     {
         abort_if($recipe->product_id !== $product->id, 403);
         $recipe->delete();
+
+        $product->syncIsComposable();
 
         return back()->with('success', 'Bahan dihapus dari resep.');
     }

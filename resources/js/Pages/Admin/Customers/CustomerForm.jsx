@@ -6,7 +6,7 @@ import Field from "@/Components/ui/Field";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 
 const inp = (err) =>
-    `mt-1.5 block w-full rounded-lg border py-2.5 px-3.5 text-sm bg-card text-card-foreground outline-none transition-all ${
+    `mt-1.5 block w-full rounded-lg border py-2.5 px-3.5 text-sm bg-background text-foreground outline-none transition-all ${
         err
             ? "border-destructive focus:border-destructive focus:ring-3 focus:ring-destructive/20"
             : "border-border focus:border-ring focus:ring-3 focus:ring-primary/20"

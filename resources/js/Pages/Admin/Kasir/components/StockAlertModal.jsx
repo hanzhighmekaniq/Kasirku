@@ -17,7 +17,7 @@ export default function StockAlertModal({ productName, available = 0, requested 
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-5 py-4">
                     <h3 className="font-semibold text-foreground">Stok Tidak Cukup</h3>
-                    <button onClick={onClose} className="text-muted-foreground/60 hover:text-card-foreground">
+                    <button onClick={onClose} className="text-muted-foreground/60 hover:text-foreground">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -44,7 +44,7 @@ export default function StockAlertModal({ productName, available = 0, requested 
                     </p>
 
                     {/* Detail angka */}
-                    <div className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl bg-muted/50 px-4 py-3 text-sm">
+                    <div className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl bg-muted px-4 py-3 text-sm">
                         <div className="flex-1 text-center">
                             <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground/60">Tersedia</p>
                             <p className="mt-0.5 font-bold text-foreground">
@@ -55,9 +55,9 @@ export default function StockAlertModal({ productName, available = 0, requested 
                         <div className="h-8 w-px bg-muted" />
                         <div className="flex-1 text-center">
                             <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground/60">Diminta</p>
-                            <p className="mt-0.5 font-bold text-red-600">
+                            <p className="mt-0.5 font-bold text-destructive">
                                 {requested}
-                                {unitLabel && <span className="ml-1 text-xs font-normal text-red-400">{unitLabel}</span>}
+                                {unitLabel && <span className="ml-1 text-xs font-normal text-destructive/60">{unitLabel}</span>}
                             </p>
                         </div>
                     </div>
@@ -68,7 +68,7 @@ export default function StockAlertModal({ productName, available = 0, requested 
                     <button
                         type="button"
                         onClick={onClose}
-                        className="w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:from-indigo-600 hover:to-violet-700"
+                        className="w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90"
                     >
                         Mengerti
                     </button>

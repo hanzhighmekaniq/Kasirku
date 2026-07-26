@@ -1,43 +1,15 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
-import { Head, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Search, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import Button from '@/Components/ui/Button';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
-
-const STATUS_LABELS = {
-    pending: 'Pending',
-    confirmed: 'Confirmed',
-    checked_in: 'Checked In',
-    completed: 'Completed',
-    cancelled: 'Cancelled',
-    no_show: 'No Show',
-};
-
-const STATUS_STYLES = {
-    pending: 'bg-amber-100 text-amber-700',
-    confirmed: 'bg-blue-100 text-blue-700',
-    checked_in: 'bg-emerald-100 text-emerald-700',
-    completed: 'bg-slate-100 text-slate-600',
-    cancelled: 'bg-red-100 text-red-700',
-    no_show: 'bg-orange-100 text-orange-700',
-};
-
-function formatDate(str) {
-    if (!str) return '—';
-    const d = new Date(str);
-    return d.toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
-}
+import StatusBadge, { STATUS_LABELS } from './StatusBadge';
 
 function formatDateTime(str) {
     if (!str) return '—';
-    const d = new Date(str);
-    return d.toLocaleDateString('id-ID', {
+    return new Date(str).toLocaleDateString('id-ID', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
@@ -46,31 +18,9 @@ function formatDateTime(str) {
     });
 }
 
-function toDatetimeLocal(str) {
-    if (!str) return '';
-    const d = new Date(str);
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-export default function Index({ bookings, filters, customers, employees }) {
-    const [showModal, setShowModal] = useState(false);
-    const [editing, setEditing] = useState(null);
+export default function Index({ bookings, filters }) {
     const [deleting, setDeleting] = useState(null);
-    const [processing, setProcessing] = useState(false);
     const [search, setSearch] = useState('');
-
-    const [form, setForm] = useState({
-        customer_id: '',
-        employee_id: '',
-        customer_name: '',
-        customer_phone: '',
-        booking_start_at: '',
-        booking_end_at: '',
-        guest_count: '',
-        status: 'pending',
-        notes: '',
-    });
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -85,55 +35,6 @@ export default function Index({ bookings, filters, customers, employees }) {
     }, [bookings, search]);
 
     const statusFilter = filters?.status || '';
-
-    const openCreate = () => {
-        setEditing(null);
-        setForm({
-            customer_id: '',
-            employee_id: '',
-            customer_name: '',
-            customer_phone: '',
-            booking_start_at: '',
-            booking_end_at: '',
-            guest_count: '',
-            status: 'pending',
-            notes: '',
-        });
-        setShowModal(true);
-    };
-
-    const openEdit = (booking) => {
-        setEditing(booking);
-        setForm({
-            customer_id: booking.customer_id || '',
-            employee_id: booking.employee_id || '',
-            customer_name: booking.customer_name || '',
-            customer_phone: booking.customer_phone || '',
-            booking_start_at: toDatetimeLocal(booking.booking_start_at),
-            booking_end_at: toDatetimeLocal(booking.booking_end_at),
-            guest_count: booking.guest_count || '',
-            status: booking.status,
-            notes: booking.notes || '',
-        });
-        setShowModal(true);
-    };
-
-    const submit = (e) => {
-        e.preventDefault();
-        setProcessing(true);
-        const method = editing ? 'patch' : 'post';
-        const url = editing
-            ? route('admin.bookings.update', editing.id)
-            : route('admin.bookings.store');
-
-        router[method](url, form, {
-            preserveScroll: true,
-            onFinish: () => {
-                setProcessing(false);
-                setShowModal(false);
-            },
-        });
-    };
 
     const confirmDelete = () => {
         if (!deleting) return;
@@ -177,10 +78,12 @@ export default function Index({ bookings, filters, customers, employees }) {
                 }
                 description="Atur reservasi, jam kedatangan, dan status booking pelanggan."
                 action={
-                    <Button onClick={openCreate} icon={Plus}>
-                        <span className="hidden sm:inline">Tambah Booking</span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
+                    <Link href={route('admin.bookings.create')}>
+                        <Button icon={Plus}>
+                            <span className="hidden sm:inline">Tambah Booking</span>
+                            <span className="sm:hidden">Tambah</span>
+                        </Button>
+                    </Link>
                 }
             />
 
@@ -245,17 +148,13 @@ export default function Index({ bookings, filters, customers, employees }) {
                             {search || statusFilter ? 'Coba filter atau kata kunci lain.' : 'Mulai dengan menambahkan booking baru.'}
                         </p>
                         {!search && !statusFilter && (
-                            <Button onClick={openCreate} icon={Plus} className="mt-5">
-                                Tambah Booking
-                            </Button>
+                            <Link href={route('admin.bookings.create')} className="mt-5">
+                                <Button icon={Plus}>Tambah Booking</Button>
+                            </Link>
                         )}
                     </div>
                 ) : (
-                    <BookingTable
-                        items={filtered}
-                        onEdit={openEdit}
-                        onDelete={setDeleting}
-                    />
+                    <BookingTable items={filtered} onDelete={setDeleting} />
                 )}
 
                 {/* Pagination */}
@@ -266,21 +165,6 @@ export default function Index({ bookings, filters, customers, employees }) {
                 )}
             </div>
 
-            {/* Create/Edit Modal */}
-            {showModal && (
-                <BookingModal
-                    form={form}
-                    setForm={setForm}
-                    editing={editing}
-                    processing={processing}
-                    customers={customers || []}
-                    employees={employees || []}
-                    onSubmit={submit}
-                    onClose={() => setShowModal(false)}
-                />
-            )}
-
-            {/* Delete Confirmation Modal */}
             <ConfirmDeleteModal
                 open={!!deleting}
                 title="Hapus booking?"
@@ -296,36 +180,33 @@ export default function Index({ bookings, filters, customers, employees }) {
     );
 }
 
-function StatusBadge({ status }) {
-    return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_STYLES[status] || 'bg-muted text-muted-foreground'}`}>
-            {STATUS_LABELS[status] || status}
-        </span>
-    );
-}
-
-function BookingTable({ items, onEdit, onDelete }) {
+function BookingTable({ items, onDelete }) {
     return (
         <>
             {/* Desktop table */}
             <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            <th className="px-6 py-3.5">No. Booking</th>
-                            <th className="px-6 py-3.5">Pelanggan</th>
-                            <th className="px-6 py-3.5">Mulai</th>
-                            <th className="px-6 py-3.5">Selesai</th>
-                            <th className="px-6 py-3.5 text-center">Tamu</th>
-                            <th className="px-6 py-3.5 text-center">Status</th>
-                            <th className="px-6 py-3.5 text-right">Aksi</th>
+                    <thead className="bg-popover text-left text-xs uppercase tracking-wide text-card-foreground">
+                        <tr>
+                            <th className="px-6 py-3.5 font-semibold">No. Booking</th>
+                            <th className="px-6 py-3.5 font-semibold">Pelanggan</th>
+                            <th className="px-6 py-3.5 font-semibold">Mulai</th>
+                            <th className="px-6 py-3.5 font-semibold">Selesai</th>
+                            <th className="px-6 py-3.5 text-center font-semibold">Tamu</th>
+                            <th className="px-6 py-3.5 text-center font-semibold">Status</th>
+                            <th className="px-6 py-3.5 text-right font-semibold">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border bg-background">
                         {items.map((b) => (
-                            <tr key={b.id} className="transition hover:bg-muted/50">
-                                <td className="px-6 py-4 font-mono text-xs font-semibold text-primary">
-                                    {b.booking_no}
+                            <tr key={b.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
+                                <td className="px-6 py-4">
+                                    <Link
+                                        href={route('admin.bookings.show', b.id)}
+                                        className="font-mono text-xs font-semibold text-primary hover:underline"
+                                    >
+                                        {b.booking_no}
+                                    </Link>
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="min-w-0">
@@ -351,13 +232,13 @@ function BookingTable({ items, onEdit, onDelete }) {
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center justify-end gap-1">
-                                        <button
-                                            onClick={() => onEdit(b)}
+                                        <Link
+                                            href={route('admin.bookings.edit', b.id)}
                                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                             title="Edit"
                                         >
                                             <Pencil className="h-4 w-4" strokeWidth={1.7} />
-                                        </button>
+                                        </Link>
                                         <button
                                             onClick={() => onDelete(b)}
                                             className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
@@ -379,7 +260,12 @@ function BookingTable({ items, onEdit, onDelete }) {
                     <div key={b.id} className="flex flex-col gap-2 p-4">
                         <div className="flex items-start justify-between">
                             <div className="min-w-0">
-                                <p className="font-mono text-xs font-semibold text-primary">{b.booking_no}</p>
+                                <Link
+                                    href={route('admin.bookings.show', b.id)}
+                                    className="font-mono text-xs font-semibold text-primary"
+                                >
+                                    {b.booking_no}
+                                </Link>
                                 <p className="font-medium text-foreground">{b.customer_name}</p>
                                 {b.customer_phone && (
                                     <p className="text-xs text-muted-foreground">{b.customer_phone}</p>
@@ -396,13 +282,13 @@ function BookingTable({ items, onEdit, onDelete }) {
                                 {b.guest_count || '—'} tamu
                             </span>
                             <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => onEdit(b)}
+                                <Link
+                                    href={route('admin.bookings.edit', b.id)}
                                     className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary transition hover:bg-primary/10"
                                 >
                                     <Pencil className="h-3.5 w-3.5" strokeWidth={1.7} />
                                     Edit
-                                </button>
+                                </Link>
                                 <button
                                     onClick={() => onDelete(b)}
                                     className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-destructive transition hover:bg-destructive/10"
@@ -416,190 +302,6 @@ function BookingTable({ items, onEdit, onDelete }) {
                 ))}
             </div>
         </>
-    );
-}
-
-function BookingModal({ form, setForm, editing, processing, customers, employees, onSubmit, onClose }) {
-    const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative mx-4 w-full max-w-lg rounded-2xl bg-popover shadow-2xl">
-                <div className="flex items-center justify-between border-b border-border px-6 py-4">
-                    <h3 className="text-lg font-semibold text-foreground">
-                        {editing ? 'Edit Booking' : 'Tambah Booking'}
-                    </h3>
-                    <button
-                        onClick={onClose}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                    >
-                        <X className="h-5 w-5" strokeWidth={2} />
-                    </button>
-                </div>
-                <form onSubmit={onSubmit} className="max-h-[70vh] overflow-y-auto p-6">
-                    <div className="space-y-4">
-                        {/* Customer Name */}
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-1">
-                                Nama Pelanggan <span className="text-destructive">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={form.customer_name}
-                                onChange={set('customer_name')}
-                                required
-                                maxLength={200}
-                                className="block w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                            />
-                        </div>
-
-                        {/* Customer Phone */}
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-1">
-                                Telepon
-                            </label>
-                            <input
-                                type="text"
-                                value={form.customer_phone}
-                                onChange={set('customer_phone')}
-                                maxLength={30}
-                                className="block w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                            />
-                        </div>
-
-                        {/* Customer Selection */}
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-1">
-                                Pelanggan Terdaftar
-                            </label>
-                            <select
-                                value={form.customer_id}
-                                onChange={set('customer_id')}
-                                className="block w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                            >
-                                <option value="">— Pilih Pelanggan —</option>
-                                {customers.map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Employee Selection */}
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-1">
-                                Karyawan
-                            </label>
-                            <select
-                                value={form.employee_id}
-                                onChange={set('employee_id')}
-                                className="block w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                            >
-                                <option value="">— Pilih Karyawan —</option>
-                                {employees.map((e) => (
-                                    <option key={e.id} value={e.id}>{e.name}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Date/Time row */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Mulai <span className="text-destructive">*</span>
-                                </label>
-                                <input
-                                    type="datetime-local"
-                                    value={form.booking_start_at}
-                                    onChange={set('booking_start_at')}
-                                    required
-                                    className="block w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Selesai
-                                </label>
-                                <input
-                                    type="datetime-local"
-                                    value={form.booking_end_at}
-                                    onChange={set('booking_end_at')}
-                                    className="block w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Guest count + Status */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Jumlah Tamu
-                                </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={form.guest_count}
-                                    onChange={set('guest_count')}
-                                    className="block w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-1">
-                                    Status <span className="text-destructive">*</span>
-                                </label>
-                                <select
-                                    value={form.status}
-                                    onChange={set('status')}
-                                    required
-                                    className="block w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                >
-                                    {editing ? (
-                                        <>
-                                            <option value="pending">Pending</option>
-                                            <option value="confirmed">Confirmed</option>
-                                            <option value="checked_in">Checked In</option>
-                                            <option value="completed">Completed</option>
-                                            <option value="cancelled">Cancelled</option>
-                                            <option value="no_show">No Show</option>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <option value="pending">Pending</option>
-                                            <option value="confirmed">Confirmed</option>
-                                            <option value="checked_in">Checked In</option>
-                                        </>
-                                    )}
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Notes */}
-                        <div>
-                            <label className="block text-sm font-medium text-foreground mb-1">
-                                Catatan
-                            </label>
-                            <textarea
-                                value={form.notes}
-                                onChange={set('notes')}
-                                rows={3}
-                                maxLength={500}
-                                className="block w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="mt-6 flex items-center justify-end gap-3 border-t border-border pt-4">
-                        <Button type="button" variant="outline" onClick={onClose}>
-                            Batal
-                        </Button>
-                        <Button type="submit" loading={processing}>
-                            {processing ? 'Menyimpan...' : editing ? 'Simpan' : 'Buat Booking'}
-                        </Button>
-                    </div>
-                </form>
-            </div>
-        </div>
     );
 }
 

@@ -9,7 +9,7 @@ import SearchableSelect from "@/Components/ui/SearchableSelect";
 
 const fmtRp = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 const inputCls =
-    "block w-full rounded-xl border-border text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20";
+    "block w-full rounded-xl border-input bg-background text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20";
 
 export default function Create({ sales }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -232,7 +232,7 @@ export default function Create({ sales }) {
                                                     onChange={() =>
                                                         toggleItem(item)
                                                     }
-                                                    className="mt-1 h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
+                                                    className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
                                                 />
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-medium text-foreground">
@@ -245,7 +245,7 @@ export default function Create({ sales }) {
                                                         {fmtRp(item.unit_price)}
                                                     </p>
                                                     {item.returned_qty > 0 && (
-                                                        <p className="text-xs text-amber-600">
+                                                        <p className="text-xs text-warning">
                                                             Sudah diretur:{" "}
                                                             {item.returned_qty}
                                                         </p>
@@ -281,7 +281,7 @@ export default function Create({ sales }) {
                                                                             .value,
                                                                     )
                                                                 }
-                                                                className="block w-full rounded-lg border-border py-1.5 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                                className="block w-full rounded-lg border-input bg-background py-1.5 text-sm text-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                             />
                                                         </div>
                                                         <div className="flex-1">
@@ -302,7 +302,7 @@ export default function Create({ sales }) {
                                                                     )
                                                                 }
                                                                 placeholder="Rusak / salah / lainnya..."
-                                                                className="block w-full rounded-lg border-border py-1.5 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                                className="block w-full rounded-lg border-input bg-background py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                             />
                                                         </div>
                                                     </div>
@@ -352,7 +352,7 @@ export default function Create({ sales }) {
                                     <span className="font-semibold text-foreground">
                                         Total Retur
                                     </span>
-                                    <span className="text-lg font-bold text-primary-600">
+                                    <span className="text-lg font-bold text-primary">
                                         {fmtRp(subtotal)}
                                     </span>
                                 </div>

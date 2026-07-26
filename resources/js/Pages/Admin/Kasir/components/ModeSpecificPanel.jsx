@@ -5,7 +5,7 @@ export default function ModeSpecificPanel({ k }) {
         "overflow-hidden rounded-2xl border border-border bg-card shadow-sm";
     const labelClass = "mb-1 block text-xs font-medium text-muted-foreground";
     const inputClass =
-        "block w-full rounded-lg border-slate-300 py-1.5 text-xs shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200";
+        "block w-full rounded-lg border-input bg-background py-1.5 text-xs shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20";
 
     const [showDesc, setShowDesc] = useState(false);
     const tooltipRef = useRef(null);
@@ -35,7 +35,7 @@ export default function ModeSpecificPanel({ k }) {
                         <span className="text-base leading-none shrink-0">
                             {k.modeConfig.icon}
                         </span>
-                        <h3 className="text-xs font-semibold text-indigo-800 truncate">
+                        <h3 className="text-xs font-semibold text-foreground truncate">
                             {k.modeConfig.label} POS
                         </h3>
                     </div>
@@ -44,7 +44,7 @@ export default function ModeSpecificPanel({ k }) {
                         <button
                             type="button"
                             onClick={() => setShowDesc(!showDesc)}
-                            className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-primary transition hover:bg-indigo-200"
+                            className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary transition hover:bg-primary/20"
                             title="Info mode POS"
                         >
                             !
@@ -61,7 +61,7 @@ export default function ModeSpecificPanel({ k }) {
                                             .map((feature) => (
                                                 <span
                                                     key={feature}
-                                                    className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-indigo-100"
+                                                    className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-primary/20"
                                                 >
                                                     {feature.replace(/_/g, " ")}
                                                 </span>
@@ -160,7 +160,7 @@ export default function ModeSpecificPanel({ k }) {
                 {k.isService && (
                     <>
                         {k.isService && !k.selectedCustomer && (
-                            <div className="rounded-xl border border-amber-200 bg-warning/10 px-3 py-2.5 text-xs text-warning">
+                            <div className="rounded-xl border border-warning/20 bg-warning/10 px-3 py-2.5 text-xs text-warning">
                                 <span className="font-semibold">
                                     ⚠️ Customer wajib diisi
                                 </span>
@@ -241,7 +241,7 @@ export default function ModeSpecificPanel({ k }) {
                 {k.isRental && (
                     <>
                         {!k.selectedCustomer && (
-                            <div className="rounded-xl border border-amber-200 bg-warning/10 px-3 py-2.5 text-xs text-warning">
+                            <div className="rounded-xl border border-warning/20 bg-warning/10 px-3 py-2.5 text-xs text-warning">
                                 <span className="font-semibold">
                                     ⚠️ Customer wajib diisi
                                 </span>
@@ -350,7 +350,7 @@ export default function ModeSpecificPanel({ k }) {
                     <>
                         {/* Warning customer wajib */}
                         {!k.selectedCustomer && (
-                            <div className="rounded-xl border border-amber-200 bg-warning/10 px-3 py-2.5 text-xs text-warning">
+                            <div className="rounded-xl border border-warning/20 bg-warning/10 px-3 py-2.5 text-xs text-warning">
                                 <span className="font-semibold">
                                     ⚠️ Data tamu wajib diisi
                                 </span>
@@ -450,8 +450,8 @@ export default function ModeSpecificPanel({ k }) {
                                         );
                                     })()}
                                 </p>
-                                <p className="text-[10px] text-indigo-400 mt-0.5">
-                                    {k.rentalDuration}{" "}
+                         <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                 {k.rentalDuration}{" "}
                                     {k.rentalUnit === "per_hour"
                                         ? "jam"
                                         : k.rentalUnit === "per_week"
@@ -507,8 +507,8 @@ export default function ModeSpecificPanel({ k }) {
                                             k.ticketSlot === opt.v ||
                                             (!k.ticketSlot &&
                                                 opt.v === "motorcycle")
-                                                ? "border-indigo-400 bg-primary/10 text-primary"
-                                                : "border-border text-muted-foreground hover:border-slate-300"
+                                                ? "border-primary/40 bg-primary/10 text-primary"
+                                                : "border-border text-muted-foreground hover:border-primary/30"
                                         }`}
                                     >
                                         {opt.l}
@@ -532,19 +532,19 @@ export default function ModeSpecificPanel({ k }) {
                             />
                         </div>
                         {/* Info waktu masuk */}
-                        <div className="rounded-xl bg-muted/50 border border-border px-3 py-2.5">
+                        <div className="rounded-xl bg-muted border border-border px-3 py-2.5">
                             <p className="text-[10px] font-medium text-muted-foreground">
                                 ⏰ Waktu Masuk
                             </p>
-                            <p className="text-sm font-bold text-card-foreground">
-                                {new Date().toLocaleString("id-ID", {
-                                    dateStyle: "medium",
-                                    timeStyle: "short",
-                                })}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                                Dicatat otomatis saat transaksi diproses
-                            </p>
+                        <p className="text-sm font-bold text-foreground">
+                                            {new Date().toLocaleString("id-ID", {
+                                                dateStyle: "medium",
+                                                timeStyle: "short",
+                                            })}
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                                            Dicatat otomatis saat transaksi diproses
+                                        </p>
                         </div>
                         <p className="text-[11px] text-muted-foreground">
                             Parkir: catat masuk, bayar saat keluar. Plat &amp;
@@ -587,7 +587,7 @@ export default function ModeSpecificPanel({ k }) {
                             />
                         </div>
                         {/* Info sesi */}
-                        <div className="rounded-xl bg-success/10 border border-emerald-200 px-3 py-2.5">
+                        <div className="rounded-xl bg-success/10 border border-success/20 px-3 py-2.5">
                             <p className="text-[10px] font-semibold text-success mb-1">
                                 ⏱️ Sesi Dimulai
                             </p>
@@ -597,9 +597,9 @@ export default function ModeSpecificPanel({ k }) {
                                     timeStyle: "short",
                                 })}
                             </p>
-                            <p className="text-[10px] text-emerald-500 mt-0.5">
-                                Timer mulai saat transaksi diproses
-                            </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                 Timer mulai saat transaksi diproses
+                                             </p>
                         </div>
                         <p className="text-[11px] text-muted-foreground">
                             Session: catat unit, pengguna, dan waktu mulai.

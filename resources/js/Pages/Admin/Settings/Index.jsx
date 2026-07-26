@@ -7,8 +7,8 @@ import Button from "@/Components/ui/Button";
 
 const inp = (err) =>
     `block w-full rounded-xl border px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${err
-        ? "border-red-300 bg-destructive/10/30 focus:ring-red-200"
-        : "border-border bg-card hover:border-border focus:border-ring focus:ring-ring/20"
+        ? "border-destructive bg-destructive/10 focus:border-destructive focus:ring-destructive/20"
+        : "border-input bg-background hover:border-ring/50 focus:border-ring focus:ring-ring/20"
     }`;
 
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
@@ -16,10 +16,10 @@ const errorClass = "mt-1 text-xs text-destructive";
 
 function Section({ title, subtitle, icon: Icon, children }) {
     return (
-        <div className="rounded-2xl border border-border bg-background shadow-sm overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <div className="flex items-center gap-3 border-b border-border bg-muted px-5 py-3.5">
                 {Icon && (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background text-foreground">
                         <Icon className="h-4 w-4" strokeWidth={1.8} />
                     </div>
                 )}
@@ -91,7 +91,7 @@ function FeatureToggle({ feature, onToggle }) {
                         } ${loading ? "opacity-50" : ""}`}
                 >
                     <span
-                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${feature.is_enabled
+                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-card shadow transition-transform duration-200 ${feature.is_enabled
                             ? "translate-x-[22px]"
                             : "translate-x-0.5"
                             }`}
@@ -112,7 +112,7 @@ function FeatureToggle({ feature, onToggle }) {
                                 value={subSettings.cash_rounding_nearest ?? 100}
                                 onChange={(e) => handleSubSettingChange("cash_rounding_nearest", Math.max(1, Number(e.target.value) || 1))}
                                 disabled={loading}
-                                className="w-20 rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring/20"
+                                className="w-20 rounded-lg border border-input bg-background px-2.5 py-1 text-xs text-foreground focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring/20"
                             />
                         </div>
                     </div>
@@ -223,7 +223,7 @@ function BranchEditRow({ branch, isCurrent }) {
                                 className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus:outline-none ${data.is_active ? "bg-primary" : "bg-muted-foreground/30"
                                     }`}
                             >
-                                <span className={`absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${data.is_active ? "translate-x-[22px]" : "translate-x-0.5"
+                                <span className={`absolute top-0.5 block h-5 w-5 rounded-full bg-card shadow transition-transform duration-200 ${data.is_active ? "translate-x-[22px]" : "translate-x-0.5"
                                     }`} />
                             </button>
                             <span className="text-xs text-muted-foreground">{data.is_active ? "Aktif" : "Nonaktif"}</span>
@@ -359,7 +359,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
                             >
                                 {/* Logo Upload */}
                                 <div className="mb-5 flex items-start gap-4 ">
-                                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-backgroundtext-3xl">
+                                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-background text-3xl">
                                         {logoPreview ? (
                                             <img
                                                 src={logoPreview}
@@ -372,7 +372,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex gap-2">
-                                            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-card px-3.5 py-2 text-xs font-semibold text-muted-foreground shadow-sm ring-1 ring-border transition hover:ring-foreground hover:text-foreground">
+                                            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-background px-3.5 py-2 text-xs font-semibold text-muted-foreground shadow-sm ring-1 ring-border transition hover:ring-ring hover:text-foreground">
                                                 <Upload className="h-3.5 w-3.5" strokeWidth={2} />
                                                 {logoPreview ? "Ganti" : "Upload Logo"}
                                                 <input
@@ -386,7 +386,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
                                                 <button
                                                     type="button"
                                                     onClick={removeLogo}
-                                                    className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold text-destructive ring-1 ring-red-200 transition hover:bg-destructive/10"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold text-destructive ring-1 ring-destructive/20 transition hover:bg-destructive/10"
                                                 >
                                                     <X className="h-3.5 w-3.5" strokeWidth={2} />
                                                     Hapus
@@ -522,7 +522,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
                                                         }`}
                                                 >
                                                     <span
-                                                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${data.tax_inclusive ? "translate-x-[22px]" : "translate-x-0.5"
+                                                        className={`absolute top-0.5 block h-5 w-5 rounded-full bg-card shadow transition-transform duration-200 ${data.tax_inclusive ? "translate-x-[22px]" : "translate-x-0.5"
                                                             }`}
                                                     />
                                                 </button>
@@ -576,7 +576,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
                                     subtitle="Live preview sesuai pengaturan"
                                     icon={Image}
                                 >
-                                    <div className="mx-auto max-w-[260px] overflow-hidden rounded-xl border border-border bg-card shadow-inner">
+                                    <div className="mx-auto max-w-[260px] overflow-hidden rounded-xl border border-border bg-background shadow-inner">
                                         <div className="px-4 py-5 text-center font-mono text-[10.5px] leading-relaxed text-muted-foreground">
                                             {/* Logo */}
                                             <div className="mb-2 flex justify-center">

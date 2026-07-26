@@ -81,11 +81,11 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
     const getAvailable = (s) => (s.quantity || 0) - (s.reserved_quantity || 0);
     const getStatus = (s) => {
         const avail = getAvailable(s);
-        if (avail <= 0) return { label: 'Habis', cls: 'bg-red-100 text-destructive' };
+        if (avail <= 0) return { label: 'Habis', cls: 'bg-destructive/10 text-destructive' };
         if (s.product?.track_stock && avail <= (s.product?.stock_minimum || 0)) {
-            return { label: 'Menipis', cls: 'bg-amber-100 text-amber-700' };
+            return { label: 'Menipis', cls: 'bg-warning/10 text-warning' };
         }
-        return { label: 'Aman', cls: 'bg-emerald-100 text-success' };
+        return { label: 'Aman', cls: 'bg-success/10 text-success' };
     };
 
     const formatCurrency = (val) =>
@@ -140,7 +140,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                     <p className="text-xs font-medium text-muted-foreground">{STAT_PRODUCT}</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.total_products}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-primary-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-primary bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Total Item</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.total_items?.toLocaleString('id-ID')}</p>
                 </div>
@@ -162,9 +162,9 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
             {(needsAdjustment || needsOpname || needsTransfer || needsWaste) && (
                 <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     {needsAdjustment && (
-                        <Link href={route('admin.stock-adjustments.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary-200 hover:shadow-md">
+                        <Link href={route('admin.stock-adjustments.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/30 hover:shadow-md">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition group-hover:bg-primary-100">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary/20">
                                     <RotateCcw className="h-5 w-5" strokeWidth={1.8} />
                                 </div>
                                 <div>
@@ -175,9 +175,9 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                         </Link>
                     )}
                     {needsOpname && (
-                        <Link href={route('admin.stock-opnames.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-violet-200 hover:shadow-md">
+                        <Link href={route('admin.stock-opnames.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-violet-200 dark:hover:border-violet-800 hover:shadow-md">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 transition group-hover:bg-violet-100">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 transition group-hover:bg-violet-100 dark:bg-violet-900/30 dark:text-violet-400 dark:group-hover:bg-violet-900/50">
                                     <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />
                                 </div>
                                 <div>
@@ -188,9 +188,9 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                         </Link>
                     )}
                     {needsTransfer && (
-                        <Link href={route('admin.stock-transfers.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-amber-200 hover:shadow-md">
+                        <Link href={route('admin.stock-transfers.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-amber-200 dark:hover:border-amber-800 hover:shadow-md">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition group-hover:bg-amber-100">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition group-hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:group-hover:bg-amber-900/50">
                                     <ArrowRightLeft className="h-5 w-5" strokeWidth={1.8} />
                                 </div>
                                 <div>
@@ -201,9 +201,9 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                         </Link>
                     )}
                     {needsWaste && (
-                        <Link href={route('admin.wastes.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-red-200 hover:shadow-md">
+                        <Link href={route('admin.wastes.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-destructive/30 hover:shadow-md">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 transition group-hover:bg-red-100">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive transition group-hover:bg-destructive/20">
                                     <Trash2 className="h-5 w-5" strokeWidth={1.8} />
                                 </div>
                                 <div>
@@ -228,14 +228,14 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                 onClick={() => { setDropdownOpen(!dropdownOpen); setDropdownSearch(''); }}
                                 className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium shadow-sm transition ${
                                     selectedProduct
-                                        ? 'border-primary-300 bg-primary-50 text-primary-700 hover:bg-primary-100'
+                                        ? 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/20'
                                         : 'border-border bg-card text-foreground hover:bg-muted'
                                 }`}
                             >
                                 <Boxes className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                                 <span className="max-w-[200px] truncate">{selectedProduct ? selectedProduct.name : `Semua ${ITEM_LABEL}`}</span>
                                 {selectedProduct ? (
-                                    <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedProductId(''); }} className="ml-1 rounded-full p-0.5 text-primary-400 hover:bg-primary-100 hover:text-primary-600">
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedProductId(''); }} className="ml-1 rounded-full p-0.5 text-primary/70 hover:bg-primary/20 hover:text-primary">
                                         <X className="h-3.5 w-3.5" strokeWidth={2} />
                                     </button>
                                 ) : (
@@ -262,7 +262,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                             type="button"
                                             onClick={() => { setSelectedProductId(''); setDropdownOpen(false); setDropdownSearch(''); }}
                                             className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                !selectedProductId ? 'bg-primary-50 font-semibold text-primary-700' : 'text-muted-foreground hover:bg-muted'
+                                                !selectedProductId ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:bg-muted'
                                             }`}
                                         >
                                             Semua {ITEM_LABEL}
@@ -276,7 +276,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                                     type="button"
                                                     onClick={() => { setSelectedProductId(p.id); setDropdownOpen(false); setDropdownSearch(''); }}
                                                     className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                        selectedProductId === p.id ? 'bg-primary-50 font-semibold text-primary-700' : 'text-muted-foreground hover:bg-muted'
+                                                        selectedProductId === p.id ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:bg-muted'
                                                     }`}
                                                 >
                                                     <span className="block truncate">{p.name}</span>
@@ -316,18 +316,18 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                 <div className="hidden md:block">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-border">
-                            <thead className="bg-muted/50">
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">{ITEM_LABEL}</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">SKU</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stok</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reserved</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tersedia</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Min. Stok</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">{ITEM_LABEL}</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">SKU</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Stok</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Reserved</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Tersedia</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Min. Stok</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border bg-background">
                                 {filtered.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="px-5 py-16 text-center">
@@ -349,7 +349,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                         const status = getStatus(s);
                                         const available = getAvailable(s);
                                         return (
-                                            <tr key={s.id} className="transition hover:bg-muted/50">
+                                            <tr key={s.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                                 <td className="whitespace-nowrap px-5 py-4">
                                                     <p className="text-sm font-semibold text-foreground">{s.product?.name}</p>
                                                 </td>

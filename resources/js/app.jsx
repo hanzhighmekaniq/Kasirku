@@ -1,4 +1,5 @@
 import "../css/app.css";
+import "../css/datepicker.css";
 import "./bootstrap";
 
 import { createInertiaApp } from "@inertiajs/react";

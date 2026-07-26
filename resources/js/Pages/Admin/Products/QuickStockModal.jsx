@@ -97,7 +97,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                 onClick={() => !processing && onClose?.()}
                 className="absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
             />
-            <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-xl sm:my-8 animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-xl sm:my-8 animate-in fade-in zoom-in-95 duration-200">
                 <div className="mb-6 flex flex-row items-center justify-between">
                     <div className="space-y-1">
                         <h3 className="text-lg font-semibold tracking-tight text-foreground">
@@ -116,7 +116,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
 
                 <div className="space-y-5">
                     {/* Info: pencatatan manual — tanpa supplier */}
-                    <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
+                    <div className="rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary">
                         <div className="flex items-start gap-3">
                             <span className="text-lg leading-none">💡</span>
                             <div>
@@ -131,7 +131,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                     </div>
 
                     {/* Toggle: Stok Masuk / Stok Keluar */}
-                    <div className="flex rounded-xl bg-muted/50 p-1 border border-border/50">
+                    <div className="flex rounded-xl bg-muted/50 p-1 border border-border">
                         <button
                             type="button"
                             onClick={() => handleTypeChange("in")}
@@ -200,7 +200,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                     {/* Produk / Variant Info */}
                     {(!hasVariants || selectedVariant || initialVariant) && (
                         <>
-                            <div className="flex items-start justify-between rounded-xl border border-border bg-base px-4 py-3">
+                            <div className="flex items-start justify-between rounded-xl border border-border bg-muted/50 px-4 py-3">
                                 <div>
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                                         {selectedVariant ? "Variant" : "Produk"}
@@ -243,10 +243,10 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     placeholder="0"
                                     min="0.0001"
                                     step="any"
-                                    className={`w-full rounded-xl border py-3 px-4 text-base font-semibold shadow-sm transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10 ${
+                                    className={`w-full rounded-xl border py-3 px-4 text-base font-semibold shadow-sm transition-all placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 ${
                                         isLargeQty
-                                            ? "border-warning bg-warning/5 text-warning"
-                                            : "border-border bg-card text-foreground"
+                                            ? "border-warning bg-warning/10 text-warning"
+                                            : "border-input bg-background text-foreground"
                                     }`}
                                     autoFocus
                                 />
@@ -286,7 +286,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                             placeholder={activeCostPrice || "0"}
                                             min="0"
                                             step="any"
-                                            className="w-full rounded-xl border border-border bg-card py-2.5 pl-12 pr-4 text-sm font-medium text-foreground shadow-sm transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
+                                            className="w-full rounded-xl border border-input bg-background py-2.5 pl-12 pr-4 text-sm font-medium text-foreground shadow-sm transition-all placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                                         />
                                     </div>
                                 </div>
@@ -319,7 +319,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     placeholder="Tulis catatan di sini..."
-                                    className="w-full rounded-xl border border-border bg-card py-2.5 px-4 text-sm font-medium text-foreground shadow-sm transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
+                                    className="w-full rounded-xl border border-input bg-background py-2.5 px-4 text-sm font-medium text-foreground shadow-sm transition-all placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
                         </>
@@ -332,7 +332,7 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                     )}
                 </div>
 
-                <div className="mt-8 flex items-center justify-end gap-3 pt-6 border-t border-border/50">
+                <div className="mt-8 flex items-center justify-end gap-3 pt-6 border-t border-border">
                     <button
                         onClick={onClose}
                         disabled={processing}
@@ -349,10 +349,10 @@ export default function QuickStockModal({ product, type, variant: initialVariant
                             (hasVariants && !initialVariant && !selectedVariant) ||
                             (!isIn && Number(qty) > activeStock)
                         }
-                        className={`rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100 ${
+                        className={`rounded-xl px-5 py-2.5 text-sm font-semibold shadow-md transition-all active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100 ${
                             isIn
-                                ? "bg-success shadow-success/20 hover:bg-success/90 hover:shadow-success/40"
-                                : "bg-destructive shadow-destructive/20 hover:bg-destructive/90 hover:shadow-destructive/40"
+                                ? "bg-success text-success-foreground shadow-success/20 hover:bg-success/90 hover:shadow-success/40"
+                                : "bg-destructive text-destructive-foreground shadow-destructive/20 hover:bg-destructive/90 hover:shadow-destructive/40"
                         }`}
                     >
                         {processing ? "Menyimpan..." : (isIn ? "Simpan Stok Masuk" : "Simpan Stok Keluar")}

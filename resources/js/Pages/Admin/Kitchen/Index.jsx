@@ -7,31 +7,31 @@ import { RefreshCw } from "lucide-react";
 const STATUS_CONFIG = {
     pending: {
         label: "Menunggu",
-        color: "border-red-200 bg-red-50",
-        headerColor: "bg-red-500",
-        badge: "bg-red-100 text-red-700",
-        dot: "bg-red-500",
+        color: "border-destructive/20 bg-destructive/10",
+        headerColor: "bg-destructive text-destructive-foreground",
+        badge: "bg-destructive/10 text-destructive",
+        dot: "bg-destructive",
     },
     cooking: {
         label: "Dimasak",
-        color: "border-amber-200 bg-amber-50",
-        headerColor: "bg-amber-500",
-        badge: "bg-amber-100 text-amber-700",
-        dot: "bg-amber-500",
+        color: "border-warning/20 bg-warning/10",
+        headerColor: "bg-warning text-warning-foreground",
+        badge: "bg-warning/10 text-warning",
+        dot: "bg-warning",
     },
     ready: {
         label: "Siap Disajikan",
-        color: "border-emerald-200 bg-emerald-50",
-        headerColor: "bg-emerald-500",
-        badge: "bg-emerald-100 text-emerald-700",
-        dot: "bg-emerald-500",
+        color: "border-success/20 bg-success/10",
+        headerColor: "bg-success text-success-foreground",
+        badge: "bg-success/10 text-success",
+        dot: "bg-success",
     },
 };
 
 const NEXT_STATUS = {
-    pending: { status: "cooking", label: "Mulai Masak",      btnClass: "bg-amber-500 hover:bg-amber-600 text-white" },
-    cooking: { status: "ready",   label: "Siap! ✓",          btnClass: "bg-emerald-500 hover:bg-emerald-600 text-white" },
-    ready:   { status: "served",  label: "Sudah Disajikan",  btnClass: "bg-slate-500 hover:bg-slate-600 text-white" },
+    pending: { status: "cooking", label: "Mulai Masak",      btnClass: "bg-warning hover:bg-warning/90 text-warning-foreground" },
+    cooking: { status: "ready",   label: "Siap! ✓",          btnClass: "bg-success hover:bg-success/90 text-success-foreground" },
+    ready:   { status: "served",  label: "Sudah Disajikan",  btnClass: "bg-secondary hover:bg-secondary/80 text-secondary-foreground" },
 };
 
 function timeSince(dateStr) {
@@ -51,7 +51,7 @@ function OrderCard({ order, canUpdate, onStatusChange, updating }) {
     return (
         <div
             className={`rounded-2xl border-2 p-4 shadow-sm transition ${cfg.color} ${
-                isUrgent ? "animate-pulse border-red-400" : ""
+                isUrgent ? "animate-pulse border-destructive" : ""
             }`}
         >
             {/* Header */}
@@ -224,7 +224,7 @@ export default function Index({ orders, stats, canUpdate }) {
                             <div key={status}>
                                 {/* Column header */}
                                 <div
-                                    className={`mb-3 flex items-center justify-between rounded-xl px-4 py-2.5 text-white ${cfg.headerColor}`}
+                                    className={`mb-3 flex items-center justify-between rounded-xl px-4 py-2.5 ${cfg.headerColor}`}
                                 >
                                     <span className="text-sm font-bold">
                                         {cfg.label}

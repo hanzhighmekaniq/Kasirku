@@ -14,8 +14,8 @@ const fmtRp = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
 const inputCls = (hasError = false) =>
     `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
         hasError
-            ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-            : "border-border focus:border-ring focus:ring-ring/20"
+            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+            : "border-input focus:border-ring focus:ring-ring/20"
     }`;
 
 export default function Edit({
@@ -311,13 +311,13 @@ export default function Edit({
                                 />
 
                                 {pendingProduct && (
-                                    <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4">
+                                    <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4">
                                         <div className="mb-3 flex items-center justify-between">
                                             <div>
-                                                <p className="text-sm font-semibold text-primary-800">
+                                                <p className="text-sm font-semibold text-primary">
                                                     {pendingProduct.name}
                                                 </p>
-                                                <p className="text-xs text-primary-500">
+                                                <p className="text-xs text-primary/70">
                                                     {pendingProduct.sku}
                                                 </p>
                                             </div>
@@ -326,7 +326,7 @@ export default function Edit({
                                                 onClick={() =>
                                                     setPendingProduct(null)
                                                 }
-                                                className="text-primary-400 hover:text-primary-600"
+                                                className="text-primary/70 hover:text-primary"
                                             >
                                                 <svg
                                                     className="h-4 w-4"
@@ -346,9 +346,9 @@ export default function Edit({
 
                                         {pendingProduct.is_variant && (
                                             <div className="mb-3">
-                                                <label className="mb-1 block text-xs font-semibold text-primary-700">
+                                                <label className="mb-1 block text-xs font-semibold text-primary">
                                                     Variant{" "}
-                                                    <span className="text-red-400">
+                                                    <span className="text-destructive">
                                                         *
                                                     </span>
                                                 </label>
@@ -370,7 +370,7 @@ export default function Edit({
                                             (!pendingProduct.is_variant ||
                                                 pendingVariantId) && (
                                                 <div className="mb-3">
-                                                    <label className="mb-1 block text-xs font-semibold text-primary-700">
+                                                    <label className="mb-1 block text-xs font-semibold text-primary">
                                                         Satuan
                                                     </label>
                                                     <SearchableSelect
@@ -392,7 +392,7 @@ export default function Edit({
                                             )}
 
                                         {pendingBucketStock !== null && (
-                                            <p className="mb-3 text-xs text-primary-600">
+                                            <p className="mb-3 text-xs text-primary">
                                                 Stok saat ini:{" "}
                                                 <span className="font-semibold">
                                                     {pendingBucketStock}
@@ -403,7 +403,7 @@ export default function Edit({
 
                                         <div className="grid grid-cols-12 items-end gap-3">
                                             <div className="col-span-4 sm:col-span-3">
-                                                <label className="mb-1 block text-xs font-semibold text-primary-700">
+                                                <label className="mb-1 block text-xs font-semibold text-primary">
                                                     Qty{" "}
                                                     {pendingUnit
                                                         ? `(${pendingUnit.name})`
@@ -420,15 +420,15 @@ export default function Edit({
                                                     }
                                                     onKeyDown={handleAddKey}
                                                     min="1"
-                                                    className="block w-full rounded-xl border border-primary-300 bg-card px-3 py-2 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                    className="block w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                 />
                                             </div>
                                             <div className="col-span-5 sm:col-span-5">
-                                                <label className="mb-1 block text-xs font-semibold text-primary-700">
+                                                <label className="mb-1 block text-xs font-semibold text-primary">
                                                     Harga Beli / Satuan
                                                 </label>
                                                 <div className="relative">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-primary-400">
+                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-primary/70">
                                                         Rp
                                                     </span>
                                                     <input
@@ -442,7 +442,7 @@ export default function Edit({
                                                         onKeyDown={handleAddKey}
                                                         min="0"
                                                         placeholder="0"
-                                                        className="block w-full rounded-xl border border-primary-300 bg-card py-2 pl-8 pr-3 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                        className="block w-full rounded-xl border border-input bg-background py-2 pl-8 pr-3 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                     />
                                                 </div>
                                             </div>
@@ -454,7 +454,7 @@ export default function Edit({
                                                         pendingProduct.is_variant &&
                                                         !pendingVariantId
                                                     }
-                                                    className="w-full rounded-xl bg-primary-600 py-2 text-sm font-semibold text-white transition hover:bg-primary/90 active:bg-primary-800 disabled:opacity-40"
+                                                    className="w-full rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 active:bg-primary/80 disabled:opacity-40"
                                                 >
                                                     + Tambah
                                                 </button>
@@ -490,30 +490,30 @@ export default function Edit({
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="overflow-hidden rounded-2xl border border-border">
+                                    <div className="overflow-hidden rounded-2xl border border-border bg-card">
                                         <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                                    <th className="px-4 py-3">
+                                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-left font-semibold">
                                                         Produk
                                                     </th>
-                                                    <th className="px-4 py-3 text-center w-20">
+                                                    <th className="px-4 py-3 text-center w-20 font-semibold">
                                                         Qty
                                                     </th>
-                                                    <th className="px-4 py-3 text-right w-32">
+                                                    <th className="px-4 py-3 text-right w-32 font-semibold">
                                                         Harga Beli
                                                     </th>
-                                                    <th className="px-4 py-3 text-right w-28">
+                                                    <th className="px-4 py-3 text-right w-28 font-semibold">
                                                         Subtotal
                                                     </th>
-                                                    <th className="px-4 py-3 w-10" />
+                                                    <th className="px-4 py-3 w-10 text-left font-semibold" />
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-border">
+                                            <tbody className="divide-y divide-border bg-background">
                                                 {data.items.map((item, i) => (
                                                     <tr
                                                         key={i}
-                                                        className="transition hover:bg-muted/70"
+                                                        className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                                     >
                                                         <td className="px-4 py-3">
                                                             <p className="font-medium text-foreground">
@@ -725,7 +725,7 @@ export default function Edit({
                                                     )
                                                 }
                                                 disabled={grandTotal <= 0}
-                                                className="absolute inset-y-1 right-1 rounded-lg bg-success/100 px-3 text-xs font-bold text-white transition hover:bg-emerald-600 disabled:opacity-40"
+                                                className="absolute inset-y-1 right-1 rounded-lg bg-success px-3 text-xs font-bold text-success-foreground transition hover:bg-success/90 disabled:opacity-40"
                                             >
                                                 Bayar Lunas
                                             </button>
@@ -738,7 +738,7 @@ export default function Edit({
                                             paymentStatus === "paid"
                                                 ? "bg-success/10 text-success"
                                                 : paymentStatus === "partial"
-                                                  ? "bg-amber-50 text-amber-700"
+                                                  ? "bg-warning/10 text-warning"
                                                   : "bg-muted text-muted-foreground"
                                         }`}
                                     >
@@ -807,7 +807,7 @@ export default function Edit({
                                         <dt className="font-semibold text-foreground">
                                             Grand Total
                                         </dt>
-                                        <dd className="text-lg font-bold text-primary-600">
+                                        <dd className="text-lg font-bold text-primary">
                                             {fmtRp(grandTotal)}
                                         </dd>
                                     </div>
@@ -818,7 +818,7 @@ export default function Edit({
                                             <dt className="text-muted-foreground">
                                                 Dibayar
                                             </dt>
-                                            <dd className="font-semibold text-emerald-600">
+                                            <dd className="font-semibold text-success">
                                                 {fmtRp(paidAmount)}
                                             </dd>
                                         </div>
@@ -827,7 +827,7 @@ export default function Edit({
                                                 <dt className="font-semibold text-foreground">
                                                     Sisa Bayar
                                                 </dt>
-                                                <dd className="font-bold text-amber-600">
+                                                <dd className="font-bold text-warning">
                                                     {fmtRp(remaining)}
                                                 </dd>
                                             </div>
@@ -838,20 +838,20 @@ export default function Edit({
                                     <span
                                         className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wide ${
                                             paymentStatus === "paid"
-                                                ? "bg-emerald-100 text-success"
+                                                ? "bg-success/10 text-success"
                                                 : paymentStatus === "partial"
-                                                  ? "bg-amber-100 text-amber-700"
+                                                  ? "bg-warning/10 text-warning"
                                                   : "bg-muted text-muted-foreground"
                                         }`}
                                     >
                                         <span
                                             className={`h-1.5 w-1.5 rounded-full ${
                                                 paymentStatus === "paid"
-                                                    ? "bg-success/100"
+                                                    ? "bg-success"
                                                     : paymentStatus ===
                                                         "partial"
-                                                      ? "bg-amber-500"
-                                                      : "bg-slate-400"
+                                                      ? "bg-warning"
+                                                      : "bg-muted-foreground"
                                             }`}
                                         />
                                         {paymentStatus === "paid" && "LUNAS"}

@@ -82,7 +82,7 @@ export default function SessionKasir(props) {
                                     <div className="text-[11px] text-muted-foreground">{r.end}</div>
                                 </div>
                                 <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
-                                    <div className={`h-full ${isActive ? "bg-success" : "bg-slate-200"}`} style={{ width: isActive ? "60%" : "0%" }}></div>
+                                    <div className={`h-full ${isActive ? "bg-success" : "bg-muted-foreground/30"}`} style={{ width: isActive ? "60%" : "0%" }}></div>
                                 </div>
                                 <div className="mt-3 flex items-center justify-between text-[11.5px]">
                                     <span className="text-muted-foreground">{k.fmt(r.rate)}/hr</span>
@@ -108,19 +108,19 @@ export default function SessionKasir(props) {
                             <div className="text-[11.5px] text-muted-foreground mt-0.5">Charged to session</div>
                         </div>
                     </div>
-                    <div className="overflow-hidden rounded-xl border border-border">
+                    <div className="overflow-hidden rounded-xl border border-border bg-card">
                         <table className="w-full text-[12.5px]">
-                            <thead className="bg-muted/50 text-muted-foreground text-[10.5px] uppercase tracking-widest">
+                            <thead className="bg-popover text-card-foreground text-[10.5px] uppercase tracking-wider">
                                 <tr>
-                                    <th className="text-left px-4 py-2 font-medium">Item</th>
-                                    <th className="text-left px-4 py-2 font-medium">Qty</th>
-                                    <th className="text-left px-4 py-2 font-medium">Time</th>
-                                    <th className="text-right px-4 py-2 font-medium">Amount</th>
+                                    <th className="text-left px-4 py-2 font-semibold">Item</th>
+                                    <th className="text-left px-4 py-2 font-semibold">Qty</th>
+                                    <th className="text-left px-4 py-2 font-semibold">Time</th>
+                                    <th className="text-right px-4 py-2 font-semibold">Amount</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-border bg-background">
                                 {orders.map((o, i) => (
-                                    <tr key={i} className="border-t border-border hover:bg-muted/50">
+                                    <tr key={i} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                         <td className="px-4 py-2.5">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-lg">{o.ic}</span>

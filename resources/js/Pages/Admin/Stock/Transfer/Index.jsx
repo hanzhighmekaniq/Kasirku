@@ -83,35 +83,35 @@ export default function Index({ transfers, stats }) {
             <Head title="Transfer Stok" />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{flash.success}</div>
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
             )}
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                <div className="rounded-2xl border border-border border-l-4 border-l-slate-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-muted-foreground bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Total</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.total}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-warning bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Pending</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.pending}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-sky-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-primary bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Dalam Perjalanan</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.in_transit}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-success bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Diterima</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.received}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-red-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-destructive bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Dibatalkan</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.cancelled}</p>
                 </div>
             </div>
 
             {/* Table card */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
                 <div className="border-b border-border bg-card p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -122,7 +122,7 @@ export default function Index({ transfers, stats }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari no. transfer..."
-                                className="block w-full rounded-xl border border-border bg-input py-2.5 pl-10 pr-4 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                         <Select
@@ -157,19 +157,19 @@ export default function Index({ transfers, stats }) {
                 {/* Desktop Table */}
                 <div className="hidden md:block">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-slate-200">
-                            <thead className="bg-muted/50">
+                        <table className="min-w-full divide-y divide-border">
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">No. Transfer</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tanggal</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dari</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ke</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Oleh</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aksi</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">No. Transfer</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Tanggal</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Dari</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Ke</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Oleh</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Status</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-border bg-background">
                                 {filtered.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="px-5 py-16 text-center">
@@ -190,11 +190,11 @@ export default function Index({ transfers, stats }) {
                                     </tr>
                                 ) : (
                                     filtered.map((t) => (
-                                        <tr key={t.id} className="transition hover:bg-muted/50">
+                                        <tr key={t.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <Link
                                                     href={route('admin.stock-transfers.show', t.id)}
-                                                    className="text-sm font-semibold text-primary-600 hover:text-primary-800"
+                                                    className="text-sm font-semibold text-primary hover:text-primary/80"
                                                 >
                                                     {t.transfer_no}
                                                 </Link>
@@ -210,7 +210,7 @@ export default function Index({ transfers, stats }) {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Link
                                                         href={route('admin.stock-transfers.show', t.id)}
-                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                         title="Lihat Detail"
                                                     >
                                                         <Eye className="h-4 w-4" strokeWidth={1.8} />
@@ -218,7 +218,7 @@ export default function Index({ transfers, stats }) {
                                                     {(t.status === 'pending' || t.status === 'cancelled') && (
                                                         <button
                                                             onClick={() => setConfirmDelete(t)}
-                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                                                             title="Hapus"
                                                         >
                                                             <Trash2 className="h-4 w-4" strokeWidth={1.8} />
@@ -257,7 +257,7 @@ export default function Index({ transfers, stats }) {
                                     <div className="min-w-0 flex-1">
                                         <Link
                                             href={route('admin.stock-transfers.show', t.id)}
-                                            className="text-sm font-semibold text-primary-600 hover:text-primary-800"
+                                            className="text-sm font-semibold text-primary hover:text-primary/80"
                                         >
                                             {t.transfer_no}
                                         </Link>
@@ -278,7 +278,7 @@ export default function Index({ transfers, stats }) {
                                 <div className="mt-3 flex items-center justify-end gap-1 border-t border-border pt-3">
                                     <Link
                                         href={route('admin.stock-transfers.show', t.id)}
-                                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-slate-200"
+                                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition hover:bg-accent"
                                     >
                                         <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
                                         Lihat
@@ -286,7 +286,7 @@ export default function Index({ transfers, stats }) {
                                     {(t.status === 'pending' || t.status === 'cancelled') && (
                                         <button
                                             onClick={() => setConfirmDelete(t)}
-                                            className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100"
+                                            className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/20"
                                         >
                                             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                             Hapus
@@ -302,14 +302,14 @@ export default function Index({ transfers, stats }) {
             {/* Confirm delete modal */}
             {confirmDelete && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onMouseDown={() => !processing && setConfirmDelete(null)}>
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
-                    <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity" />
+                    <div className="relative w-full max-w-sm rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
                         <div className="flex items-start gap-4">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100">
-                                <Trash2 className="h-6 w-6 text-red-600" strokeWidth={1.8} />
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                                <Trash2 className="h-6 w-6 text-destructive" strokeWidth={1.8} />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <h3 className="text-base font-semibold text-slate-900">Hapus Transfer?</h3>
+                                <h3 className="text-base font-semibold text-popover-foreground">Hapus Transfer?</h3>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     Transfer <strong>{confirmDelete.transfer_no}</strong> akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
                                 </p>
@@ -317,7 +317,7 @@ export default function Index({ transfers, stats }) {
                         </div>
                         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                             <button onClick={() => setConfirmDelete(null)} disabled={processing} className="inline-flex justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60">Batal</button>
-                            <button onClick={handleDelete} disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/30 transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-60">
+                            <button onClick={handleDelete} disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground shadow-lg shadow-destructive/30 transition hover:bg-destructive/90 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2 disabled:opacity-60">
                                 {processing ? 'Menghapus...' : 'Ya, Hapus'}
                             </button>
                         </div>
@@ -330,10 +330,10 @@ export default function Index({ transfers, stats }) {
 
 function StatusBadge({ status }) {
     const map = {
-        pending: 'bg-amber-100 text-amber-700',
-        in_transit: 'bg-sky-100 text-sky-700',
-        received: 'bg-emerald-100 text-emerald-700',
-        cancelled: 'bg-red-100 text-red-600',
+        pending: 'bg-warning/10 text-warning',
+        in_transit: 'bg-primary/10 text-primary',
+        received: 'bg-success/10 text-success',
+        cancelled: 'bg-destructive/10 text-destructive',
     };
     const label = {
         pending: 'Pending',
@@ -342,7 +342,7 @@ function StatusBadge({ status }) {
         cancelled: 'Dibatalkan',
     };
     return (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? 'bg-muted text-foreground'}`}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? 'bg-muted text-muted-foreground'}`}>
             {label[status] ?? status}
         </span>
     );

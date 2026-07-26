@@ -13,6 +13,8 @@ import { formatNumber } from "@/Utils/currency";
  *   placeholder — teks placeholder (default: "0")
  *   disabled    — boolean
  *   error       — boolean, tampil border merah
+ *   required    — boolean, diteruskan ke input native
+ *   id          — id input native, supaya bisa disorot lewat reportValidity()
  *   className   — class tambahan
  */
 export default function CurrencyInput({
@@ -22,6 +24,7 @@ export default function CurrencyInput({
     disabled = false,
     error = false,
     required = false,
+    id,
     className = "",
 }) {
     const [display, setDisplay] = useState("");
@@ -54,6 +57,7 @@ export default function CurrencyInput({
                 Rp
             </span>
             <input
+                id={id}
                 type="text"
                 inputMode="numeric"
                 value={display}

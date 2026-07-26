@@ -50,21 +50,29 @@ const TYPE_META = {
     combo: { label: "Combo/Paket", cls: "bg-accent/10 text-accent-foreground" },
 };
 
+/* Label tipe produk khusus FnB — value database tetap
+   finished_goods / raw_material / combo, hanya display yang berubah. */
+const FNB_TYPE_LABEL = {
+    finished_goods: "Menu",
+    raw_material: "Bahan Baku",
+    combo: "Paket",
+};
+
 const EXPIRY_META = {
     active: {
         label: "Aktif",
         cls: "bg-success/10 text-success border border-success/20",
-        dot: "bg-success/100",
+        dot: "bg-success",
     },
     expiring_soon: {
         label: "Hampir Habis",
-        cls: "bg-warning/5 text-warning border border-warning/20",
-        dot: "bg-warning/100",
+        cls: "bg-warning/10 text-warning border border-warning/20",
+        dot: "bg-warning",
     },
     expired: {
         label: "Kadaluarsa",
         cls: "bg-destructive/10 text-destructive border border-destructive/20",
-        dot: "bg-destructive/100",
+        dot: "bg-destructive",
     },
 };
 
@@ -102,29 +110,29 @@ function StockTable({ stocks }) {
     return (
         <div className="overflow-x-auto">
             <table className="w-full text-sm">
-                <thead>
-                    <tr className="bg-muted text-muted-foreground text-xs uppercase tracking-wider">
-                        <th className="text-left font-medium px-6 py-3 rounded-l-lg">
+                <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                    <tr>
+                        <th className="text-left font-semibold px-6 py-3 rounded-l-lg">
                             Cabang
                         </th>
-                        <th className="text-right font-medium px-6 py-3">
+                        <th className="text-right font-semibold px-6 py-3">
                             Stok
                         </th>
-                        <th className="text-right font-medium px-6 py-3">
+                        <th className="text-right font-semibold px-6 py-3">
                             Reserved
                         </th>
-                        <th className="text-right font-medium px-6 py-3 rounded-r-lg">
+                        <th className="text-right font-semibold px-6 py-3 rounded-r-lg">
                             Tersedia
                         </th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border bg-background">
                     {stocks.map((s) => {
                         const avail = s.quantity - s.reserved_quantity;
                         return (
                             <tr
                                 key={s.id}
-                                className="hover:bg-muted transition"
+                                className="transition hover:bg-[rgb(var(--color-table-hover))]"
                             >
                                 <td className="px-6 py-3 font-medium text-foreground">
                                     {s.branch?.name ?? "Semua Cabang"}
@@ -163,36 +171,36 @@ function BatchTable({ batches }) {
     return (
         <div className="overflow-x-auto">
             <table className="w-full text-sm">
-                <thead>
-                    <tr className="bg-muted text-muted-foreground text-xs uppercase tracking-wider">
-                        <th className="text-left font-medium px-6 py-3 rounded-l-lg">
+                <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                    <tr>
+                        <th className="text-left font-semibold px-6 py-3 rounded-l-lg">
                             No. Batch
                         </th>
-                        <th className="text-right font-medium px-6 py-3">
+                        <th className="text-right font-semibold px-6 py-3">
                             Qty
                         </th>
-                        <th className="text-right font-medium px-6 py-3">
+                        <th className="text-right font-semibold px-6 py-3">
                             HPP
                         </th>
-                        <th className="text-left font-medium px-6 py-3">
+                        <th className="text-left font-semibold px-6 py-3">
                             Tgl Beli
                         </th>
-                        <th className="text-left font-medium px-6 py-3">
+                        <th className="text-left font-semibold px-6 py-3">
                             Kadaluarsa
                         </th>
-                        <th className="text-left font-medium px-6 py-3 rounded-r-lg">
+                        <th className="text-left font-semibold px-6 py-3 rounded-r-lg">
                             Status
                         </th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border bg-background">
                     {batches.map((b) => {
                         const status = getBatchStatus(b);
                         const meta = status ? EXPIRY_META[status] : null;
                         return (
                             <tr
                                 key={b.id}
-                                className={`transition hover:bg-muted ${status === "expired" ? "bg-destructive/10/30" : ""}`}
+                                className={`transition hover:bg-[rgb(var(--color-table-hover))] ${status === "expired" ? "bg-destructive/10" : ""}`}
                             >
                                 <td className="px-6 py-3 font-mono text-xs font-semibold text-primary">
                                     {b.batch_no}
@@ -246,28 +254,28 @@ function BucketMarginTable({ bucketMargins }) {
     return (
         <div className="overflow-x-auto">
             <table className="w-full text-sm">
-                <thead>
-                    <tr className="bg-muted text-muted-foreground text-xs uppercase tracking-wider">
-                        <th className="text-left font-medium px-6 py-3 rounded-l-lg">
+                <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                    <tr>
+                        <th className="text-left font-semibold px-6 py-3 rounded-l-lg">
                             Bucket
                         </th>
-                        <th className="text-right font-medium px-6 py-3">
+                        <th className="text-right font-semibold px-6 py-3">
                             Stok
                         </th>
-                        <th className="text-right font-medium px-6 py-3">
+                        <th className="text-right font-semibold px-6 py-3">
                             Harga Jual
                         </th>
-                        <th className="text-right font-medium px-6 py-3">
+                        <th className="text-right font-semibold px-6 py-3">
                             Modal (Avg)
                         </th>
-                        <th className="text-right font-medium px-6 py-3 rounded-r-lg">
+                        <th className="text-right font-semibold px-6 py-3 rounded-r-lg">
                             Margin
                         </th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border bg-background">
                     {bucketMargins.map((b, i) => (
-                        <tr key={i} className="transition hover:bg-muted">
+                        <tr key={i} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                             <td className="px-6 py-3 font-medium text-foreground">
                                 {b.label}
                             </td>
@@ -344,7 +352,7 @@ function VariantsTable({ variants, productId }) {
                                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${v.is_active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}
                             >
                                 <span
-                                    className={`h-1.5 w-1.5 rounded-full ${v.is_active ? "bg-success/100" : "bg-muted-foreground"}`}
+                                    className={`h-1.5 w-1.5 rounded-full ${v.is_active ? "bg-success" : "bg-muted-foreground"}`}
                                 />
                                 {v.is_active ? "Aktif" : "Nonaktif"}
                             </span>
@@ -395,6 +403,227 @@ function VariantsTable({ variants, productId }) {
     );
 }
 
+/* ── FnB: HPP per satuan pakai bahan baku ────────────── */
+const costPerBaseUnit = (material) => {
+    const conversion = Number(material?.base_unit_conversion ?? 0);
+    const cost = Number(material?.cost_price ?? 0);
+    return conversion > 0 ? cost / conversion : cost;
+};
+
+/* ── FnB: Recipe table ───────────────────────────────── */
+function RecipeTable({ recipes, recipeHpp, productId }) {
+    if (!recipes?.length) {
+        return (
+            <div className="flex flex-col items-center px-6 py-8 text-center">
+                <p className="text-sm text-muted-foreground mb-3">
+                    Menu ini belum memiliki resep.
+                </p>
+                <Link
+                    href={route("admin.products.recipes.index", productId)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/10"
+                >
+                    <svg
+                        className="h-3.5 w-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 4.5v15m7.5-7.5h-15"
+                        />
+                    </svg>
+                    Tambah Resep
+                </Link>
+            </div>
+        );
+    }
+    return (
+        <div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                        <tr>
+                            <th className="text-left font-semibold px-6 py-3 rounded-l-lg">
+                                Bahan
+                            </th>
+                            <th className="text-right font-semibold px-6 py-3">
+                                Qty
+                            </th>
+                            <th className="text-left font-semibold px-6 py-3">
+                                Satuan
+                            </th>
+                            <th className="text-right font-semibold px-6 py-3 rounded-r-lg">
+                                HPP
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-background">
+                        {recipes.map((r) => (
+                            <tr
+                                key={r.id}
+                                className="transition hover:bg-[rgb(var(--color-table-hover))]"
+                            >
+                                <td className="px-6 py-3 font-medium text-foreground">
+                                    {r.raw_material?.name ?? "—"}
+                                    {r.is_nullable && (
+                                        <span className="ml-2 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                            Opsional
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="px-6 py-3 text-right font-semibold text-muted-foreground">
+                                    {r.quantity}
+                                </td>
+                                <td className="px-6 py-3 text-muted-foreground">
+                                    {r.unit ?? "—"}
+                                </td>
+                                <td className="px-6 py-3 text-right text-muted-foreground">
+                                    {fmt(
+                                        costPerBaseUnit(r.raw_material) *
+                                            Number(r.quantity ?? 0),
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot>
+                        <tr className="border-t border-border bg-popover">
+                            <td
+                                className="px-6 py-3 text-sm font-medium text-muted-foreground"
+                                colSpan={3}
+                            >
+                                Total HPP
+                            </td>
+                            <td className="px-6 py-3 text-right text-base font-bold text-foreground">
+                                {fmt(recipeHpp)}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div className="p-6 pt-4">
+                <Link
+                    href={route("admin.products.recipes.index", productId)}
+                    className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/20"
+                >
+                    <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.7}
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
+                        />
+                    </svg>
+                    Kelola Resep
+                </Link>
+            </div>
+        </div>
+    );
+}
+
+/* ── FnB: Modifier groups ────────────────────────────── */
+function ModifierGroupsPanel({ groups }) {
+    if (!groups?.length) {
+        return (
+            <p className="px-6 py-8 text-center text-sm text-muted-foreground">
+                Belum ada modifier group untuk produk ini.
+            </p>
+        );
+    }
+    return (
+        <div className="p-6 space-y-3">
+            {groups.map((mg) => (
+                <div
+                    key={mg.id}
+                    className="rounded-xl border border-border p-4"
+                >
+                    <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-foreground">
+                            {mg.name}
+                        </p>
+                        <span
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${mg.is_required ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}
+                        >
+                            {mg.is_required ? "Wajib" : "Opsional"}
+                        </span>
+                    </div>
+                    {mg.modifiers?.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                            {mg.modifiers.map((m) => (
+                                <span
+                                    key={m.id}
+                                    className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
+                                >
+                                    {m.name}
+                                    {Number(m.price_addition) > 0 && (
+                                        <span className="ml-1 font-medium text-foreground">
+                                            +{fmt(m.price_addition)}
+                                        </span>
+                                    )}
+                                </span>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                            Belum ada pilihan di grup ini.
+                        </p>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/* ── FnB: Bahan baku dipakai di resep mana ───────────── */
+function UsedInRecipesTable({ usedInRecipes }) {
+    if (!usedInRecipes?.length) {
+        return (
+            <p className="px-6 py-8 text-center text-sm text-muted-foreground">
+                Bahan baku ini belum dipakai di resep manapun.
+            </p>
+        );
+    }
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+                <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                    <tr>
+                        <th className="text-left font-semibold px-6 py-3 rounded-l-lg">
+                            Menu
+                        </th>
+                        <th className="text-right font-semibold px-6 py-3 rounded-r-lg">
+                            Qty Dipakai
+                        </th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-border bg-background">
+                    {usedInRecipes.map((r) => (
+                        <tr
+                            key={r.id}
+                            className="transition hover:bg-[rgb(var(--color-table-hover))]"
+                        >
+                            <td className="px-6 py-3 font-medium text-foreground">
+                                {r.product?.name ?? "—"}
+                            </td>
+                            <td className="px-6 py-3 text-right text-muted-foreground">
+                                {r.quantity} {r.unit}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
 /* ── Main Show page ──────────────────────────────────── */
 export default function Show({
     product,
@@ -406,7 +635,11 @@ export default function Show({
     stockMovements = [],
     bucketMargins = [],
     storeType = "retail",
+    recipeHpp = 0,
 }) {
+    const { storeTypeFeatures = [] } = usePage().props;
+    const has = (f) => storeTypeFeatures.includes(f);
+
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [activeTab, setActiveTab] = useState("stock");
@@ -414,10 +647,20 @@ export default function Show({
 
     const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
 
-    const typeMeta = TYPE_META[product.type] ?? {
+    const isFnb = storeType === "fnb";
+    const isRawMaterial = product.type === "raw_material";
+    /* Menu / Paket → punya resep & modifier; Bahan Baku → dipakai di resep */
+    const showFnbRecipe = isFnb && !isRawMaterial;
+    const showFnbUsedIn = isFnb && isRawMaterial;
+
+    const baseTypeMeta = TYPE_META[product.type] ?? {
         label: product.type,
         cls: "bg-muted text-muted-foreground",
     };
+    const typeMeta =
+        isFnb && FNB_TYPE_LABEL[product.type]
+            ? { ...baseTypeMeta, label: FNB_TYPE_LABEL[product.type] }
+            : baseTypeMeta;
     const isLowStock =
         product.track_stock && totalStock <= product.stock_minimum;
 
@@ -441,6 +684,29 @@ export default function Show({
             count: product.batches?.length,
         },
         { id: "variants", label: "Varian", count: product.variants?.length },
+        ...(showFnbRecipe
+            ? [
+                {
+                    id: "recipes",
+                    label: "Resep",
+                    count: product.recipes?.length ?? 0,
+                },
+                {
+                    id: "modifiers",
+                    label: "Modifier",
+                    count: product.modifier_groups?.length ?? 0,
+                },
+            ]
+            : []),
+        ...(showFnbUsedIn
+            ? [
+                {
+                    id: "used_in_recipes",
+                    label: "Dipakai di Resep",
+                    count: product.used_in_recipes?.length ?? 0,
+                },
+            ]
+            : []),
         ...(bucketMargins.length > 1
             ? [
                 {
@@ -486,7 +752,7 @@ export default function Show({
                 heading={
                     <>
                         Detail{" "}
-                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                        <span className="text-primary">
                             {product.name}
                         </span>
                     </>
@@ -546,7 +812,7 @@ export default function Show({
 
             {/* ── Expired Batch Alert ── */}
             {batchStats.expired > 0 && (
-                <div className="mb-6 bg-warning/5 border border-warning/20 rounded-2xl p-4 flex items-start gap-3">
+                <div className="mb-6 bg-warning/10 border border-warning/20 rounded-2xl p-4 flex items-start gap-3">
                     <div className="flex-shrink-0 w-10 h-10 bg-warning/10 rounded-full flex items-center justify-center">
                         <svg
                             className="w-5 h-5 text-warning"
@@ -609,7 +875,7 @@ export default function Show({
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${product.is_active ? "bg-success/10 text-success border border-success/20" : "bg-muted text-muted-foreground"}`}
                             >
                                 <span
-                                    className={`w-1.5 h-1.5 rounded-full ${product.is_active ? "bg-success/100 animate-pulse" : "bg-muted-foreground"}`}
+                                    className={`w-1.5 h-1.5 rounded-full ${product.is_active ? "bg-success animate-pulse" : "bg-muted-foreground"}`}
                                 />
                                 {product.is_active ? "Aktif" : "Nonaktif"}
                             </span>
@@ -820,6 +1086,23 @@ export default function Show({
                                 productId={product.id}
                             />
                         )}
+                        {showFnbRecipe && activeTab === "recipes" && (
+                            <RecipeTable
+                                recipes={product.recipes}
+                                recipeHpp={recipeHpp}
+                                productId={product.id}
+                            />
+                        )}
+                        {showFnbRecipe && activeTab === "modifiers" && (
+                            <ModifierGroupsPanel
+                                groups={product.modifier_groups}
+                            />
+                        )}
+                        {showFnbUsedIn && activeTab === "used_in_recipes" && (
+                            <UsedInRecipesTable
+                                usedInRecipes={product.used_in_recipes}
+                            />
+                        )}
                         {activeTab === "margins" && (
                             <BucketMarginTable bucketMargins={bucketMargins} />
                         )}
@@ -883,7 +1166,7 @@ export default function Show({
                                     {product.stock_minimum}
                                 </dd>
                             </div>
-                            {product.preparation_time && (
+                            {has("kitchen") && !!product.preparation_time && (
                                 <div className="flex justify-between sm:block border-b sm:border-0 border-border pb-2 sm:pb-0">
                                     <dt className="text-muted-foreground sm:mb-1">
                                         Waktu Saji
@@ -902,7 +1185,7 @@ export default function Show({
                                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${product.track_stock ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}
                                     >
                                         <span
-                                            className={`h-1.5 w-1.5 rounded-full ${product.track_stock ? "bg-success/100" : "bg-muted-foreground"}`}
+                                            className={`h-1.5 w-1.5 rounded-full ${product.track_stock ? "bg-success" : "bg-muted-foreground"}`}
                                         />
                                         {product.track_stock ? "Ya" : "Tidak"}
                                     </span>
@@ -935,27 +1218,27 @@ export default function Show({
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                            <th className="px-5 py-3">
+                                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                        <tr>
+                                            <th className="px-5 py-3 text-left font-semibold">
                                                 Tanggal
                                             </th>
-                                            <th className="px-5 py-3">Tipe</th>
-                                            <th className="px-5 py-3 text-right">
+                                            <th className="px-5 py-3 text-left font-semibold">Tipe</th>
+                                            <th className="px-5 py-3 text-right font-semibold">
                                                 Qty
                                             </th>
-                                            <th className="px-5 py-3 text-right hidden sm:table-cell">
+                                            <th className="px-5 py-3 text-right font-semibold hidden sm:table-cell">
                                                 Harga
                                             </th>
-                                            <th className="px-5 py-3 hidden sm:table-cell">
+                                            <th className="px-5 py-3 text-left font-semibold hidden sm:table-cell">
                                                 Ref
                                             </th>
-                                            <th className="px-5 py-3 hidden md:table-cell">
+                                            <th className="px-5 py-3 text-left font-semibold hidden md:table-cell">
                                                 Keterangan
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-y divide-border bg-background">
                                         {stockMovements.map((m, i) => {
                                             const isIn =
                                                 m.movement_type?.includes("_in") ||
@@ -964,7 +1247,7 @@ export default function Show({
                                             return (
                                                 <tr
                                                     key={i}
-                                                    className="transition hover:bg-muted/50"
+                                                    className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                                 >
                                                     <td className="px-5 py-3 text-muted-foreground whitespace-nowrap">
                                                         {fmtDate(m.moved_at)}
@@ -1118,7 +1401,7 @@ export default function Show({
                                     }
                                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted border border-border transition text-left group"
                                 >
-                                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-warning/5 flex items-center justify-center group-hover:bg-warning/10 transition">
+                                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center group-hover:bg-warning/20 transition">
                                         <svg
                                             className="w-5 h-5 text-warning"
                                             fill="none"
@@ -1176,7 +1459,7 @@ export default function Show({
                         <p className="text-sm text-primary-foreground leading-relaxed">
                             Produk performa{" "}
                             <span
-                                className={`font-semibold ${margin >= 30 ? "text-success" : margin >= 15 ? "text-warning" : "text-destructive/60"}`}
+                                className={`font-semibold ${margin >= 30 ? "text-success" : margin >= 15 ? "text-warning" : "text-destructive"}`}
                             >
                                 {margin >= 30
                                     ? "baik"
@@ -1198,7 +1481,7 @@ export default function Show({
                             {batchStats.expired > 0 && (
                                 <>
                                     {" "}
-                                    <span className="text-destructive/60 font-semibold">
+                                    <span className="text-destructive font-semibold">
                                         {batchStats.expired} batch
                                     </span>{" "}
                                     sudah kadaluarsa.

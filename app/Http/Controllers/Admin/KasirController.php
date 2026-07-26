@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\FinalizesSaleStock;
 use App\Http\Controllers\Concerns\HasStoreScope;
+use App\Http\Controllers\Concerns\ManagesTableStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\CafeTable;
 use App\Models\CashierShift;
 use App\Models\Category;
@@ -33,7 +35,7 @@ use Inertia\Inertia;
 
 class KasirController extends Controller
 {
-    use FinalizesSaleStock, HasStoreScope;
+    use FinalizesSaleStock, HasStoreScope, ManagesTableStatus;
 
     public function index()
     {
@@ -51,6 +53,14 @@ class KasirController extends Controller
         $products = Product::forStore($storeId)
             ->where('is_active', true)
             ->where('is_sellable', true)
+            ->select([
+                'id', 'store_id', 'category_id', 'supplier_id',
+                'name', 'sku', 'barcode', 'type', 'image',
+                'unit', 'base_unit', 'base_unit_conversion',
+                'sell_price', 'cost_price',
+                'stock_minimum', 'track_stock', 'is_active', 'is_sellable',
+                'is_variant', 'sell_base', 'preparation_time',
+            ])
             ->with([
                 'category:id,name',
                 'variants:id,product_id,name,sku,price,cost_price,is_active',
@@ -184,13 +194,88 @@ class KasirController extends Controller
                 'credit_limit',
             ]);
 
+        // Meja + order yang sedang berjalan di atasnya, supaya floor map bisa
+        // menampilkan meja mana memegang order apa (bukan cuma warna status).
         $tables = [];
         if (in_array($storeTypeCode, ['fnb', 'hospitality'])) {
+            // Reservasi hari ini yang belum lewat, dikelompokkan per meja.
+            //
+            // Sengaja dihitung saat render, BUKAN dengan menulis status
+            // 'reserved' ke cafe_tables. Kolom status itu punya satu penulis
+            // (syncTableStatus) yang menurunkannya dari order; menambah
+            // penulis kedua mengembalikan pola yang dulu membuat meja
+            // nyangkut. Cara ini juga bebas dari status basi — booking yang
+            // dibatalkan langsung hilang, dan booking untuk besok tidak
+            // memblokir meja hari ini.
+            $bookingsByTable = Booking::where('store_id', $storeId)
+                ->where('resource_type', 'table')
+                ->whereNotNull('resource_id')
+                ->whereIn('status', ['pending', 'confirmed', 'checked_in'])
+                ->whereDate('booking_start_at', Carbon::today())
+                ->where(function ($q) {
+                    $q->where('booking_end_at', '>=', now())
+                        ->orWhereNull('booking_end_at');
+                })
+                ->orderBy('booking_start_at')
+                ->get(['id', 'booking_no', 'resource_id', 'customer_name', 'guest_count', 'booking_start_at', 'status'])
+                ->groupBy('resource_id');
+
             $tables = CafeTable::where('store_id', $storeId)
                 ->where('branch_id', $branchId)
                 ->where('is_active', true)
+                ->with('activeSale')
                 ->orderBy('table_number')
-                ->get(['id', 'table_number', 'capacity', 'status']);
+                ->get(['id', 'table_number', 'capacity', 'status'])
+                ->map(fn ($t) => [
+                    'id' => $t->id,
+                    'table_number' => $t->table_number,
+                    'capacity' => $t->capacity,
+                    'status' => $t->status,
+                    'upcoming_booking' => ($b = $bookingsByTable->get($t->id)?->first()) ? [
+                        'id' => $b->id,
+                        'booking_no' => $b->booking_no,
+                        'customer_name' => $b->customer_name,
+                        'guest_count' => $b->guest_count,
+                        'status' => $b->status,
+                        'time' => $b->booking_start_at->format('H:i'),
+                    ] : null,
+                    'active_sale' => $t->activeSale ? [
+                        'id' => $t->activeSale->id,
+                        'sale_no' => $t->activeSale->sale_no,
+                        'kitchen_status' => $t->activeSale->kitchen_status,
+                        'grand_total' => (float) $t->activeSale->grand_total,
+                        'guest_count' => $t->activeSale->guest_count,
+                    ] : null,
+                ]);
+        }
+
+        // Antrian dapur untuk widget di POS. Filternya sengaja disamakan
+        // dengan KitchenController::index() supaya kasir dan layar dapur
+        // tidak pernah menampilkan daftar yang berbeda.
+        $kitchenQueue = [];
+        if ($storeTypeCode === 'fnb') {
+            $kitchenQueue = Sale::where('store_id', $storeId)
+                ->where('branch_id', $branchId)
+                ->where('pos_mode', 'fnb')
+                ->whereIn('kitchen_status', ['pending', 'cooking', 'ready'])
+                ->whereDate('sale_date', Carbon::today())
+                ->with(['table:id,table_number', 'items:id,sale_id,product_id,quantity', 'items.product:id,name'])
+                ->orderBy('sale_date')
+                ->limit(10)
+                ->get(['id', 'sale_no', 'table_id', 'order_type', 'kitchen_status', 'sale_date'])
+                ->map(fn ($s) => [
+                    'id' => $s->id,
+                    'sale_no' => $s->sale_no,
+                    'table' => $s->table?->table_number
+                        ?? ($s->order_type === 'delivery' ? 'DEL' : 'TA'),
+                    'status' => $s->kitchen_status,
+                    'items' => $s->items
+                        ->map(fn ($i) => ($i->product?->name ?? 'Item').' ×'.(int) $i->quantity)
+                        ->implode(', '),
+                    'minutes' => $s->sale_date
+                        ? (int) $s->sale_date->diffInMinutes(now())
+                        : null,
+                ]);
         }
 
         // Hanya untuk mode service/ticket — kirim daftar karyawan aktif
@@ -287,6 +372,7 @@ class KasirController extends Controller
             'promotions' => $promotions,
             'initialCustomers' => $customers,
             'tables' => $tables,
+            'kitchenQueue' => $kitchenQueue,
             'todaySales' => $todaySales,
             'storeType' => $storeTypeCode,
             'posMode' => $storeTypeCode,
@@ -331,6 +417,78 @@ class KasirController extends Controller
                     ?? null,
             ] : null,
         ]);
+    }
+
+    /**
+     * Pastikan harga tiap item yang dikirim kasir cocok dengan salah satu
+     * harga valid produk: base price, tier price, harga variant, atau
+     * harga packaging unit. Toleransi kecil (Rp 1) untuk pembulatan
+     * floating point. Mencegah kasir mengirim harga sembarangan lewat
+     * request langsung ke endpoint (bypass UI POS).
+     */
+    private function assertItemPricesValid(array $items, int $storeId): void
+    {
+        $productIds = collect($items)->pluck('product_id')->unique()->all();
+        $products = Product::forStore($storeId)
+            ->whereIn('id', $productIds)
+            ->with(['variants.priceTiers', 'variants.packagingUnits', 'priceTiers', 'packagingUnits'])
+            ->get()
+            ->keyBy('id');
+
+        foreach ($items as $item) {
+            $product = $products->get($item['product_id']);
+            if (! $product) {
+                continue; // sudah divalidasi exists:products,id di rules
+            }
+
+            $qty = (int) ($item['quantity'] ?? 1);
+            $sentPrice = round((float) $item['price'], 2);
+            $variantId = $item['variant_id'] ?? null;
+            $packagingUnitId = $item['packaging_unit_id'] ?? null;
+
+            $validPrices = [];
+
+            if ($packagingUnitId) {
+                // Packaging unit — dari variant kalau ada, atau dari product langsung.
+                $unit = $variantId
+                    ? optional($product->variants->firstWhere('id', $variantId))->packagingUnits?->firstWhere('id', $packagingUnitId)
+                    : $product->packagingUnits->firstWhere('id', $packagingUnitId);
+                if ($unit) {
+                    $validPrices[] = round((float) $unit->sell_price, 2);
+                }
+            } elseif ($variantId) {
+                $variant = $product->variants->firstWhere('id', $variantId);
+                if ($variant) {
+                    $validPrices[] = round((float) $variant->price, 2);
+                    $tierPrice = $variant->getTierPrice($qty);
+                    if ($tierPrice !== null) {
+                        $validPrices[] = round($tierPrice, 2);
+                    }
+                }
+            } else {
+                $validPrices[] = round((float) $product->sell_price, 2);
+                $tierPrice = $product->getTierPrice($qty);
+                if ($tierPrice !== null) {
+                    $validPrices[] = round($tierPrice, 2);
+                }
+            }
+
+            // Tidak ada harga valid yang bisa dicocokkan (mis. data relasi
+            // tidak ditemukan) — lewati saja, biar tidak false-positive block.
+            if (empty($validPrices)) {
+                continue;
+            }
+
+            $matches = collect($validPrices)->contains(
+                fn ($p) => abs($p - $sentPrice) < 1.0,
+            );
+
+            if (! $matches) {
+                throw new \RuntimeException(
+                    "Harga untuk \"{$product->name}\" tidak valid. Silakan muat ulang halaman kasir.",
+                );
+            }
+        }
     }
 
     /**
@@ -422,6 +580,39 @@ class KasirController extends Controller
         return empty($data) ? null : $data;
     }
 
+    /**
+     * Terapkan field yang hanya relevan untuk mode FnB ke sale yang baru
+     * dibuat: antrian dapur, jumlah tamu, dan asal order delivery.
+     *
+     * kitchen_status di-set untuk SEMUA order FnB tanpa melihat status
+     * pembayaran. Dapur perlu tahu pesanan masuk sebelum dibayar — pelanggan
+     * memesan dulu, membayar belakangan. Sebelumnya order yang menunggu
+     * konfirmasi payment gateway (QRIS/e-wallet) tidak pernah dapat
+     * kitchen_status sehingga tidak pernah muncul di Kitchen Display.
+     */
+    private function applyFnbFields(
+        Sale $sale,
+        array $validated,
+        ?string $storeType,
+    ): void {
+        if ($storeType !== 'fnb') {
+            return;
+        }
+
+        $update = ['kitchen_status' => 'pending'];
+
+        if (! empty($validated['guest_count'])) {
+            $update['guest_count'] = (int) $validated['guest_count'];
+        }
+
+        if (($validated['order_type'] ?? null) === 'delivery') {
+            $update['delivery_platform'] = $validated['delivery_platform'] ?? null;
+            $update['delivery_order_no'] = $validated['delivery_order_no'] ?? null;
+        }
+
+        $sale->update($update);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -450,6 +641,9 @@ class KasirController extends Controller
             'items.*.unit_name' => 'nullable|string|max:50',
             'items.*.unit_conversion_qty' => 'nullable|integer|min:1',
             'delivery_address' => 'required_if:order_type,delivery|nullable|string|max:500',
+            // Asal order delivery (FnB): GoFood / GrabFood / ShopeeFood / dsb.
+            'delivery_platform' => 'nullable|string|max:50',
+            'delivery_order_no' => 'nullable|string|max:100',
             'shipping_amount' => 'nullable|numeric|min:0',
             'rounding_adjustment' => 'nullable|numeric',
             'rounding_mode' => 'nullable|in:nearest,up,down,custom',
@@ -503,6 +697,19 @@ class KasirController extends Controller
             $storeTypeCode =
                 $store?->getRelation('storeType')?->code ?? 'retail';
 
+            // ── Grosir (retail) wajib punya pelanggan ──
+            // Mencerminkan guard di frontend (missingRequiredField), supaya
+            // tidak bisa dilewati dengan request langsung ke endpoint ini.
+            if (
+                $storeTypeCode === 'retail'
+                && $validated['order_type'] === 'wholesale'
+                && empty($validated['customer_id'])
+            ) {
+                throw new \RuntimeException(
+                    'Transaksi grosir wajib memilih pelanggan.',
+                );
+            }
+
             // Load relations needed for hasFeature() gate check
             $store?->load(['planModel.features', 'storeFeatures.feature']);
             $now = now();
@@ -515,6 +722,13 @@ class KasirController extends Controller
             $saleNo = $prefix.str_pad($seq, 3, '0', STR_PAD_LEFT);
 
             $items = $validated['items'];
+
+            // ── Validasi harga item terhadap harga produk asli ──
+            // Cegah manipulasi harga dari client (misal kirim price: 1 untuk
+            // produk seharga Rp 100.000). Harga yang dikirim harus cocok
+            // dengan salah satu harga valid produk: base price, tier price,
+            // harga variant, atau harga packaging unit.
+            $this->assertItemPricesValid($items, $storeId);
 
             // ── Resolve customer tier for promo ──
             $customerTier = null;
@@ -546,6 +760,15 @@ class KasirController extends Controller
             $discount = $validated['discount_amount'] ?? 0;
             $tax = $validated['tax_amount'] ?? 0;
 
+            // ── Diskon manual tidak boleh melebihi subtotal ──
+            // Tanpa guard ini, kasir bisa input diskon Rp yang lebih besar
+            // dari subtotal dan grand_total jadi negatif di laporan.
+            if ($discount > $subtotal) {
+                throw new \RuntimeException(
+                    'Diskon tidak boleh melebihi subtotal ('.number_format($subtotal, 0, ',', '.').').',
+                );
+            }
+
             // ── Auto-apply cart-level promo ──
             $cartPromoResult = $promoEnabled
                 ? $promoService->findBestCartPromo(
@@ -561,8 +784,8 @@ class KasirController extends Controller
             }
 
             // ── Grand total sebelum rounding ──
-            $grandTotal = $subtotal - $discount - $cartPromoDiscount + $tax
-                + ($validated['shipping_amount'] ?? 0);
+            $grandTotal = max(0, $subtotal - $discount - $cartPromoDiscount + $tax
+                + ($validated['shipping_amount'] ?? 0));
 
             // ── Rounding: recalculate server-side (trust CashRoundingService, not client) ──
             $roundingService = app(CashRoundingService::class);
@@ -739,20 +962,13 @@ class KasirController extends Controller
                 $sale->update($sessionUpdate);
             }
 
-            // Set kitchen_status untuk mode FnB
-            if (
-                in_array($storeTypeCode, ['fnb']) &&
-                $saleStatus !== 'pending'
-            ) {
-                $sale->update(['kitchen_status' => 'pending']);
-            }
+            // Field khusus FnB: antrian dapur, jumlah tamu, asal delivery
+            $this->applyFnbFields($sale, $validated, $storeTypeCode);
 
-            // Mark table as occupied
-            if (! empty($validated['table_id'])) {
-                CafeTable::where('id', $validated['table_id'])
-                    ->where('store_id', $storeId)
-                    ->update(['status' => 'occupied']);
-            }
+            // Samakan status meja dengan kondisi order. Kalau sale langsung
+            // selesai (tunai), meja tidak perlu ditandai terisi sama sekali;
+            // kalau masih menunggu pembayaran, meja jadi 'occupied'.
+            $this->syncTableStatus($validated['table_id'] ?? null, $storeId);
 
             // ── Pre-validate stock for all items (before any deduction) ──
             // Setiap item dicek dari bucket-nya sendiri (product + variant +
@@ -1108,6 +1324,9 @@ class KasirController extends Controller
             'rounding_nearest' => 'nullable|integer|min:1',
             'rounding_custom' => 'nullable|numeric',
             'delivery_address' => 'required_if:order_type,delivery|nullable|string|max:500',
+            // Asal order delivery (FnB): GoFood / GrabFood / ShopeeFood / dsb.
+            'delivery_platform' => 'nullable|string|max:50',
+            'delivery_order_no' => 'nullable|string|max:100',
             'customer_name' => 'nullable|string|max:200',
             'notes' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
@@ -1151,6 +1370,18 @@ class KasirController extends Controller
             $branchId = session('branch_id');
             $store = Store::with('storeType')->find($storeId);
             $storeTypeCode = $store?->getRelation('storeType')?->code ?? 'retail';
+
+            // ── Grosir (retail) wajib punya pelanggan ──
+            if (
+                $storeTypeCode === 'retail'
+                && $validated['order_type'] === 'wholesale'
+                && empty($validated['customer_id'])
+            ) {
+                throw new \RuntimeException(
+                    'Transaksi grosir wajib memilih pelanggan.',
+                );
+            }
+
             $store?->load(['planModel.features', 'storeFeatures.feature']);
             $now = now();
 
@@ -1162,6 +1393,9 @@ class KasirController extends Controller
             $saleNo = $prefix.str_pad($seq, 3, '0', STR_PAD_LEFT);
 
             $items = $validated['items'];
+
+            // ── Validasi harga item terhadap harga produk asli ──
+            $this->assertItemPricesValid($items, $storeId);
 
             $customerTier = null;
             if (! empty($validated['customer_id'])) {
@@ -1182,11 +1416,19 @@ class KasirController extends Controller
 
             $discount = $validated['discount_amount'] ?? 0;
             $tax = $validated['tax_amount'] ?? 0;
+
+            // ── Diskon manual tidak boleh melebihi subtotal ──
+            if ($discount > $subtotal) {
+                throw new \RuntimeException(
+                    'Diskon tidak boleh melebihi subtotal ('.number_format($subtotal, 0, ',', '.').').',
+                );
+            }
+
             $cartPromoResult = $promoEnabled ? $promoService->findBestCartPromo($subtotal, $customerTier) : null;
             $cartPromoDiscount = $cartPromoResult ? $cartPromoResult['discount'] : 0;
             $cartPromoId = $cartPromoResult ? $cartPromoResult['promotion']->id : null;
 
-            $preRoundingTotal = $subtotal - $discount - $cartPromoDiscount + $tax + ($validated['shipping_amount'] ?? 0);
+            $preRoundingTotal = max(0, $subtotal - $discount - $cartPromoDiscount + $tax + ($validated['shipping_amount'] ?? 0));
 
             // Rounding — only if store feature enabled AND has cash payment in the (future) payment
             // We defer the full rounding check to finalize(), but pre-calculate from frontend hints
@@ -1234,15 +1476,16 @@ class KasirController extends Controller
                 $sale->update(['employee_id' => $validated['employee_id']]);
             }
 
+            // Field khusus FnB. Ini jalur yang benar-benar dipakai POS
+            // (frontend memanggil start() lalu finalize(), bukan store()),
+            // jadi tanpa ini order FnB tidak pernah sampai ke dapur.
+            $this->applyFnbFields($sale, $validated, $storeTypeCode);
+
             // Create SaleItems (no stock deduction)
             $this->createSaleItems($sale, $items, $storeId);
 
-            // Mark table occupied
-            if (! empty($validated['table_id'])) {
-                CafeTable::where('id', $validated['table_id'])
-                    ->where('store_id', $storeId)
-                    ->update(['status' => 'occupied']);
-            }
+            // Sale ini masih 'pending' — meja otomatis jadi terisi.
+            $this->syncTableStatus($validated['table_id'] ?? null, $storeId);
 
             // Increment promo used_count
             $promoIds = collect($items)->pluck('promotion_id')->filter()->unique();
@@ -1409,6 +1652,16 @@ class KasirController extends Controller
                 'change_amount' => $change,
             ]);
 
+            // Order FnB yang dibuat lewat jalur lama bisa saja belum punya
+            // kitchen_status — pastikan tetap masuk antrian dapur.
+            if ($sale->pos_mode === 'fnb' && is_null($sale->kitchen_status)) {
+                $sale->update(['kitchen_status' => 'pending']);
+            }
+
+            // Sale sudah tuntas (atau tinggal menunggu PG) — bebaskan meja
+            // kalau tidak ada order lain yang masih berjalan di sana.
+            $this->syncTableStatus($sale->table_id, $storeId);
+
             // Commission
             if (! empty($sale->employee_id)) {
                 $employee = Employee::find($sale->employee_id);
@@ -1483,13 +1736,13 @@ class KasirController extends Controller
             return response()->json(['success' => true, 'message' => 'Transaksi sudah selesai.']);
         }
 
-        if ($sale->table_id) {
-            CafeTable::where('id', $sale->table_id)
-                ->where('store_id', $storeId)
-                ->update(['status' => 'available']);
-        }
+        $tableId = $sale->table_id;
 
         $sale->delete(); // cascade deletes items
+
+        // Bebaskan meja hanya kalau tidak ada order lain yang masih berjalan
+        // di sana — meja bisa saja menahan lebih dari satu order.
+        $this->syncTableStatus($tableId, $storeId);
 
         return response()->json(['success' => true, 'message' => 'Transaksi dibatalkan.']);
     }

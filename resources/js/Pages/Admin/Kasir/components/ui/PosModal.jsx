@@ -45,7 +45,7 @@ export default function PosModal({
                     type="button"
                     onClick={onClose}
                     aria-label="Tutup"
-                    className="-mr-1.5 -mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition hover:bg-muted hover:text-card-foreground"
+                    className="-mr-1.5 -mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition hover:bg-muted hover:text-foreground"
                 >
                     <X size={18} strokeWidth={2.2} />
                 </button>

@@ -68,7 +68,7 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
                         {suggestedShiftNo && (
                             <p className="mt-0.5 text-xs text-muted-foreground">
                                 Nomor shift:{" "}
-                                <span className="font-mono font-semibold text-primary-600">
+                                <span className="font-mono font-semibold text-primary">
                                     {suggestedShiftNo}
                                 </span>
                             </p>
@@ -152,7 +152,7 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
                         <button
                             type="submit"
                             disabled={processing}
-                            className="rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-primary/90 disabled:opacity-60"
+                            className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow hover:bg-primary/90 disabled:opacity-60"
                         >
                             {processing ? "Membuka..." : "Buka Shift"}
                         </button>

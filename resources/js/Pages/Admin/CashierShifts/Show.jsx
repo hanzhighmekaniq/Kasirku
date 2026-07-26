@@ -13,7 +13,7 @@ const fmtDt = (d) =>
         : "-";
 
 const STATUS_CLS = {
-    open: "bg-emerald-100 text-success",
+    open: "bg-success/10 text-success",
     closed: "bg-muted text-muted-foreground",
 };
 const STATUS_LBL = { open: "Berjalan", closed: "Tutup" };
@@ -223,7 +223,7 @@ export default function Show({
                             <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
                                 <Link
                                     href={route("admin.kasir.index")}
-                                    className="inline-flex shrink-0 items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-100"
+                                    className="inline-flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
                                 >
                                     <svg
                                         className="h-4 w-4"
@@ -262,7 +262,7 @@ export default function Show({
                         </div>
                         <button
                             onClick={openCloseModal}
-                            className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-primary/90"
+                            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-primary/90"
                         >
                             Tutup Shift
                         </button>
@@ -406,27 +406,27 @@ export default function Show({
                                     </p>
                                 </div>
                                 <table className="w-full text-left text-sm">
-                                    <thead className="border-b border-border bg-muted/50">
+                                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                         <tr>
-                                            <th className="px-5 py-2.5 text-xs font-semibold text-muted-foreground">
+                                            <th className="px-5 py-2.5 font-semibold">
                                                 Metode
                                             </th>
-                                            <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
+                                            <th className="px-5 py-2.5 text-right font-semibold">
                                                 Total (Sistem)
                                             </th>
                                             {!isOpen && (
                                                 <>
-                                                    <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
+                                                    <th className="px-5 py-2.5 text-right font-semibold">
                                                         Aktual
                                                     </th>
-                                                    <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
+                                                    <th className="px-5 py-2.5 text-right font-semibold">
                                                         Selisih
                                                     </th>
                                                 </>
                                             )}
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-border">
+                                    <tbody className="divide-y divide-border bg-background">
                                         {summary.payment_breakdown.map((p) => {
                                             const pm = (
                                                 shift.payments ?? []
@@ -438,7 +438,7 @@ export default function Show({
                                             return (
                                                 <tr
                                                     key={p.payment_method_id}
-                                                    className="hover:bg-muted"
+                                                    className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                                 >
                                                     <td className="px-5 py-2.5">
                                                         <span className="font-medium text-foreground">
@@ -498,30 +498,30 @@ export default function Show({
                                         <p className="text-sm font-semibold text-foreground">
                                             Komisi Karyawan
                                         </p>
-                                        <span className="text-sm font-semibold text-primary-700">
+                                        <span className="text-sm font-semibold text-primary">
                                             {fmt(typeSummary.total_commission)}
                                         </span>
                                     </div>
                                     <table className="w-full text-left text-sm">
-                                        <thead className="border-b border-border bg-muted/50">
+                                        <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                             <tr>
-                                                <th className="px-5 py-2.5 text-xs font-semibold text-muted-foreground">
+                                                <th className="px-5 py-2.5 font-semibold">
                                                     Karyawan
                                                 </th>
-                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
+                                                <th className="px-5 py-2.5 text-right font-semibold">
                                                     Transaksi
                                                 </th>
-                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
+                                                <th className="px-5 py-2.5 text-right font-semibold">
                                                     Total Komisi
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-border">
+                                        <tbody className="divide-y divide-border bg-background">
                                             {typeSummary.commissions.map(
                                                 (c, i) => (
                                                     <tr
                                                         key={i}
-                                                        className="hover:bg-muted"
+                                                        className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                                     >
                                                         <td className="px-5 py-2.5 font-medium text-foreground">
                                                             {c.employee_name}
@@ -531,7 +531,7 @@ export default function Show({
                                                                 c.transaction_count
                                                             }
                                                         </td>
-                                                        <td className="px-5 py-2.5 text-right font-semibold text-primary-700">
+                                                        <td className="px-5 py-2.5 text-right font-semibold text-primary">
                                                             {fmt(
                                                                 c.total_commission,
                                                             )}
@@ -559,25 +559,25 @@ export default function Show({
                                         </span>
                                     </div>
                                     <table className="w-full text-left text-sm">
-                                        <thead className="border-b border-border bg-muted/50">
+                                        <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                             <tr>
-                                                <th className="px-5 py-2.5 text-xs font-semibold text-muted-foreground">
+                                                <th className="px-5 py-2.5 font-semibold">
                                                     Kategori
                                                 </th>
-                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
+                                                <th className="px-5 py-2.5 text-right font-semibold">
                                                     Qty
                                                 </th>
-                                                <th className="px-5 py-2.5 text-right text-xs font-semibold text-muted-foreground">
+                                                <th className="px-5 py-2.5 text-right font-semibold">
                                                     Total
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-border">
+                                        <tbody className="divide-y divide-border bg-background">
                                             {typeSummary.category_breakdown.map(
                                                 (c, i) => (
                                                     <tr
                                                         key={i}
-                                                        className="hover:bg-muted"
+                                                        className="transition hover:bg-[rgb(var(--color-table-hover))]"
                                                     >
                                                         <td className="px-5 py-2.5 font-medium text-foreground">
                                                             {c.category_name}
@@ -619,7 +619,7 @@ export default function Show({
                                             <p className="text-sm text-muted-foreground">
                                                 Booking Dibayar
                                             </p>
-                                            <p className="text-sm font-semibold text-primary-700">
+                                            <p className="text-sm font-semibold text-primary">
                                                 {typeSummary.booking_count}
                                             </p>
                                         </div>
@@ -656,7 +656,7 @@ export default function Show({
                             <SumRow
                                 label="Ekspektasi Kas"
                                 value={fmt(summary?.expected_cash)}
-                                cls="text-primary-700"
+                                cls="text-primary"
                             />
                             {!isOpen && (
                                 <>
@@ -701,11 +701,11 @@ export default function Show({
                             </p>
                         </div>
                         <div className="max-h-[65vh] space-y-5 overflow-y-auto p-6">
-                            <div className="rounded-xl border border-primary-100 bg-primary-50 px-4 py-3">
-                                <p className="text-xs font-medium text-primary-500">
+                            <div className="rounded-xl border border-primary/10 bg-primary/10 px-4 py-3">
+                                <p className="text-xs font-medium text-primary/70">
                                     Ekspektasi Kas di Laci
                                 </p>
-                                <p className="text-xl font-bold text-primary-700">
+                                <p className="text-xl font-bold text-primary">
                                     {fmt(summary?.expected_cash)}
                                 </p>
                             </div>
@@ -860,7 +860,7 @@ export default function Show({
                             <button
                                 onClick={handleClose}
                                 disabled={closing || !closeData.actual_cash}
-                                className="rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-primary/90 disabled:opacity-60"
+                                className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow hover:bg-primary/90 disabled:opacity-60"
                             >
                                 {closing ? "Menutup..." : "Tutup Shift"}
                             </button>
@@ -950,7 +950,7 @@ export default function Show({
                             <button
                                 onClick={handleEdit}
                                 disabled={editing}
-                                className="rounded-xl bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+                                className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
                             >
                                 {editing ? "Menyimpan..." : "Simpan"}
                             </button>

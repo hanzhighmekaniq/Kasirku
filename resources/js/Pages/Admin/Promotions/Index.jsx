@@ -17,18 +17,18 @@ const TYPE_LABELS = {
 };
 
 const TYPE_COLORS = {
-    percentage: 'bg-amber-50 text-amber-700',
-    fixed_amount: 'bg-success/10 text-success',
-    buy_x_get_y: 'bg-sky-50 text-sky-700',
-    bundle: 'bg-violet-50 text-violet-700',
-    tiered: 'bg-cyan-50 text-cyan-700',
-    member_price: 'bg-pink-50 text-pink-700',
-    bogo: 'bg-orange-50 text-orange-700',
+    percentage: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    fixed_amount: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    buy_x_get_y: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
+    bundle: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+    tiered: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+    member_price: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
+    bogo: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
 };
 
 const SCOPE_META = {
-    item: { label: 'Per Item', icon: '📦', color: 'bg-blue-50 text-blue-700' },
-    cart: { label: 'Keranjang', icon: '🛒', color: 'bg-purple-50 text-purple-700' },
+    item: { label: 'Per Item', icon: '📦', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+    cart: { label: 'Keranjang', icon: '🛒', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
 };
 
 function formatDiscount(promo) {
@@ -47,15 +47,15 @@ function PromoStatus({ promo }) {
     if (!promo.is_active) {
         return (
             <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-muted text-muted-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
                 Nonaktif
             </span>
         );
     }
     if (start && start > now) {
         return (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-sky-50 text-sky-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                 Terjadwal
             </span>
         );
@@ -63,14 +63,14 @@ function PromoStatus({ promo }) {
     if (end && end < now) {
         return (
             <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-destructive/10 text-destructive">
-                <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
                 Berakhir
             </span>
         );
     }
     return (
         <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-success/10 text-success">
-            <span className="h-1.5 w-1.5 rounded-full bg-success/100 animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
             Aktif
         </span>
     );
@@ -172,15 +172,15 @@ export default function Index({ promotions }) {
                     <p className="text-xs font-medium text-muted-foreground">Total Promo</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.total}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-success bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Aktif</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.active}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-sky-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-primary bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Terjadwal</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.scheduled}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-primary-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-primary/40 bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Jenis Tipe</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.types}</p>
                 </div>
@@ -200,7 +200,7 @@ export default function Index({ promotions }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nama promo, kode, atau tipe..."
-                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -214,9 +214,9 @@ export default function Index({ promotions }) {
                                     </button>
                                 </Dropdown.Trigger>
                                 <Dropdown.Content width="48">
-                                    <button onClick={() => setFilterType('all')} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterType === 'all' ? 'bg-primary-50 font-medium text-primary-600' : 'text-muted-foreground hover:bg-muted'}`}>Semua Tipe</button>
+                                    <button onClick={() => setFilterType('all')} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterType === 'all' ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted'}`}>Semua Tipe</button>
                                     {Object.entries(TYPE_LABELS).map(([key, label]) => (
-                                        <button key={key} onClick={() => setFilterType(key)} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterType === key ? 'bg-primary-50 font-medium text-primary-600' : 'text-muted-foreground hover:bg-muted'}`}>{label}</button>
+                                        <button key={key} onClick={() => setFilterType(key)} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterType === key ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted'}`}>{label}</button>
                                     ))}
                                 </Dropdown.Content>
                             </Dropdown>
@@ -231,7 +231,7 @@ export default function Index({ promotions }) {
                                 </Dropdown.Trigger>
                                 <Dropdown.Content width="48">
                                     {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                                        <button key={key} onClick={() => setFilterStatus(key)} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === key ? 'bg-primary-50 font-medium text-primary-600' : 'text-muted-foreground hover:bg-muted'}`}>{label}</button>
+                                        <button key={key} onClick={() => setFilterStatus(key)} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === key ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted'}`}>{label}</button>
                                     ))}
                                 </Dropdown.Content>
                             </Dropdown>
@@ -252,31 +252,31 @@ export default function Index({ promotions }) {
                 <div className="hidden md:block">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-border">
-                            <thead className="bg-muted/50">
+                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Promo</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tipe</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cakupan</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Diskon</th>
-                                    <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Periode</th>
-                                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Promo</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Tipe</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Cakupan</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Diskon</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Periode</th>
+                                    <th className="px-5 py-3.5 text-center font-semibold">Status</th>
                                     {canManage && (
-                                        <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">Aksi</th>
+                                        <th className="px-5 py-3.5 text-center font-semibold">Aksi</th>
                                     )}
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="divide-y divide-border bg-background">
                                 {filtered.length === 0 ? (
                                     <tr>
                                         <td colSpan={canManage ? 7 : 6} className="px-5 py-16 text-center">
                                             <div className="flex flex-col items-center">
                                                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                                    <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                                                    <svg className="h-8 w-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                                                     </svg>
                                                 </div>
-                                                <p className="mt-4 text-sm font-medium text-muted-foreground">
+                                                <p className="mt-4 text-sm font-medium text-foreground">
                                                     {search || filterType !== 'all' || filterStatus !== 'all'
                                                         ? 'Promo tidak ditemukan'
                                                         : 'Belum ada promo'}
@@ -291,10 +291,10 @@ export default function Index({ promotions }) {
                                     </tr>
                                 ) : (
                                     filtered.map((promo) => (
-                                        <tr key={promo.id} className="transition hover:bg-muted/50">
+                                        <tr key={promo.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-50 to-violet-50 text-sm">
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm">
                                                         {SCOPE_META[promo.scope]?.icon ?? '🏷️'}
                                                     </div>
                                                     <div className="min-w-0">
@@ -330,7 +330,7 @@ export default function Index({ promotions }) {
                                                     <div className="flex items-center justify-center gap-1">
                                                         <Link
                                                             href={route('admin.promotions.edit', promo.id)}
-                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                             title="Edit"
                                                         >
                                                             <Pencil className="h-4 w-4" strokeWidth={1.8} />
@@ -358,12 +358,12 @@ export default function Index({ promotions }) {
                     {filtered.length === 0 ? (
                         <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
                             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                                <svg className="h-8 w-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                                 </svg>
                             </div>
-                            <p className="mt-4 text-sm font-medium text-muted-foreground">Belum ada promo</p>
+                            <p className="mt-4 text-sm font-medium text-foreground">Belum ada promo</p>
                         </div>
                     ) : (
                         filtered.map((promo) => (
@@ -394,14 +394,14 @@ export default function Index({ promotions }) {
                                     <div className="mt-3 flex items-center justify-end gap-1 border-t border-border pt-3">
                                         <Link
                                             href={route('admin.promotions.edit', promo.id)}
-                                            className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted/70"
+                                            className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
                                         >
                                             <Pencil className="h-3.5 w-3.5" strokeWidth={1.8} />
                                             Edit
                                         </Link>
                                         <button
                                             onClick={() => setDeleteTarget(promo)}
-                                            className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-red-100"
+                                            className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/20"
                                         >
                                             <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                             Hapus

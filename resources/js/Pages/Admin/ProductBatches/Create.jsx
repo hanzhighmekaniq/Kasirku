@@ -47,7 +47,7 @@ export default function Create({ products, branches }) {
             />
             
             <div className="mx-auto max-w-2xl">
-                <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                     <div className="border-b border-border bg-muted/50 px-6 py-5">
                         <h3 className="text-base font-semibold text-foreground">Informasi Batch</h3>
                         <p className="mt-0.5 text-sm text-muted-foreground">Catat batch baru untuk pelacakan stok dan tanggal kadaluarsa.</p>

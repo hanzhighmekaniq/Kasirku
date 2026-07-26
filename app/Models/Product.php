@@ -28,6 +28,7 @@ class Product extends Model
         'is_sellable',
         'unit',
         'base_unit',
+        'base_unit_conversion',
         'cost_price',
         'sell_price',
         'price_per_hour',
@@ -50,6 +51,7 @@ class Product extends Model
         return [
             'cost_price' => 'decimal:2',
             'sell_price' => 'decimal:2',
+            'base_unit_conversion' => 'decimal:4',
             'price_per_hour' => 'decimal:2',
             'deposit_amount' => 'decimal:2',
             'is_composable' => 'boolean',
@@ -117,7 +119,7 @@ class Product extends Model
             'product_modifier_products',
             'product_id',
             'modifier_group_id',
-        );
+        )->withTimestamps();
     }
 
     /** Resep bahan baku produk ini */
@@ -189,6 +191,35 @@ class Product extends Model
     }
 
     // --- Helpers ---
+
+    /**
+     * Selaraskan is_composable dengan keberadaan resep.
+     * Field ini tidak pernah di-expose ke user — dikelola otomatis.
+     */
+    public function syncIsComposable(): void
+    {
+        $hasRecipes = $this->recipes()->exists();
+
+        if ($this->is_composable !== $hasRecipes) {
+            $this->update(['is_composable' => $hasRecipes]);
+        }
+    }
+
+    /**
+     * Modal per satuan pakai (base_unit).
+     * Kalau ada konversi: cost_price dibagi konversi.
+     * Contoh: beli 1 kg Rp 20.000, konversi 1000 → Rp 20 / gram.
+     */
+    public function costPerBaseUnit(): float
+    {
+        $conversion = (float) ($this->base_unit_conversion ?? 0);
+
+        if ($conversion > 0) {
+            return (float) $this->cost_price / $conversion;
+        }
+
+        return (float) $this->cost_price;
+    }
 
     public function currentStock(?int $branchId = null): float
     {

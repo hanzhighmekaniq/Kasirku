@@ -119,11 +119,11 @@ export default function Create({ products, branches }) {
             <Head title="Buat Transfer Stok" />
 
             {flash?.error && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{flash.error}</div>
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
             )}
 
             {errors.items && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                     {typeof errors.items === 'string' ? errors.items : 'Gagal menyimpan transfer.'}
                 </div>
             )}
@@ -183,14 +183,14 @@ export default function Create({ products, branches }) {
                                         <button
                                             type="button"
                                             onClick={() => { setProdDropdownOpen(!prodDropdownOpen); setProdSearch(''); }}
-                                            className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
+                                            className="flex w-full items-center gap-2 rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
                                         >
                                             <Boxes className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                                             <span className="flex-1 truncate text-left">{data.items.length > 0 ? 'Pilih produk lain...' : 'Pilih Produk'}</span>
                                             <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition ${prodDropdownOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
                                         </button>
                                         {prodDropdownOpen && (
-                                            <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border bg-card shadow-xl">
+                                            <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
                                                 <div className="border-b border-border p-3">
                                                     <div className="relative">
                                                         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.8} />
@@ -200,7 +200,7 @@ export default function Create({ products, branches }) {
                                                             value={prodSearch}
                                                             onChange={(e) => setProdSearch(e.target.value)}
                                                             placeholder="Cari nama atau SKU..."
-                                                            className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
+                                                            className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                         />
                                                     </div>
                                                 </div>
@@ -252,7 +252,7 @@ export default function Create({ products, branches }) {
                                                     <button
                                                         type="button"
                                                         onClick={() => removeItem(idx)}
-                                                        className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-red-50 hover:text-red-500"
+                                                        className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                                                     >
                                                         <Trash2 className="h-4 w-4" strokeWidth={1.8} />
                                                     </button>
@@ -272,7 +272,7 @@ export default function Create({ products, branches }) {
                                                             value={item.quantity}
                                                             onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
                                                             min="1"
-                                                            className="h-9 w-full rounded-lg border border-border px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring"
+                                                            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                         />
                                                     </div>
                                                     <div>
@@ -282,7 +282,7 @@ export default function Create({ products, branches }) {
                                                             value={item.notes}
                                                             onChange={(e) => updateItem(idx, 'notes', e.target.value)}
                                                             placeholder="Opsional..."
-                                                            className="h-9 w-full rounded-lg border border-border px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring"
+                                                            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                         />
                                                     </div>
                                                 </div>
@@ -314,7 +314,7 @@ export default function Create({ products, branches }) {
                             <button
                                 type="submit"
                                 disabled={processing || data.items.length === 0}
-                                className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 disabled:opacity-60"
+                                className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:bg-primary/90 disabled:opacity-60"
                             >
                                 {processing ? 'Menyimpan...' : 'Simpan Transfer'}
                             </button>
@@ -348,14 +348,14 @@ function Field({ label, required, error, children }) {
     return (
         <div>
             <label className="mb-1 block text-sm font-medium text-foreground">
-                {label} {required && <span className="text-red-500">*</span>}
+                {label} {required && <span className="text-destructive">*</span>}
             </label>
             {children}
-            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+            {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
         </div>
     );
 }
 
 function inputCls(hasError) {
-    return `block w-full rounded-xl border-border bg-input text-foreground text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring ${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`;
+    return `block w-full rounded-xl border-input bg-background text-foreground text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 ${hasError ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`;
 }

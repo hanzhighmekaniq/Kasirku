@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 const fmt = (n) =>
     new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -13,10 +15,10 @@ function IconBtn({ onClick, title, children, red, amber }) {
             onClick={onClick}
             title={title}
             className={`inline-flex h-6 w-6 items-center justify-center rounded-lg transition-all ${red
-                ? "text-muted-foreground/60 hover:bg-red-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
+                ? "text-muted-foreground/60 hover:bg-destructive hover:text-destructive-foreground hover:scale-110 hover:shadow-md active:scale-95"
                 : amber
-                    ? "text-muted-foreground/60 hover:bg-amber-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
-                    : "text-muted-foreground/60 hover:bg-indigo-500 hover:text-white hover:scale-110 hover:shadow-md active:scale-95"
+                    ? "text-muted-foreground/60 hover:bg-warning hover:text-warning-foreground hover:scale-110 hover:shadow-md active:scale-95"
+                    : "text-muted-foreground/60 hover:bg-primary hover:text-primary-foreground hover:scale-110 hover:shadow-md active:scale-95"
                 }`}
         >
             {children}
@@ -25,10 +27,18 @@ function IconBtn({ onClick, title, children, red, amber }) {
 }
 
 /* ── Cart item row ───────────────────────────────────── */
-export default function CartRow({ item, onQty, onRemove, productImage }) {
+export default function CartRow({ item, onQty, onRemove, onNoteChange, productImage }) {
     const itemTotal = item.price * item.qty;
     const afterPromo = itemTotal - (item.promoDiscount ?? 0);
     const hasPromo = (item.promoDiscount ?? 0) > 0;
+
+    const [editingNote, setEditingNote] = useState(false);
+    const [noteDraft, setNoteDraft] = useState(item.note ?? "");
+
+    const saveNote = () => {
+        onNoteChange?.(item.cartId, noteDraft.trim());
+        setEditingNote(false);
+    };
 
     return (
         <div className="group border border-border flex items-center gap-2.5 rounded-xl bg-card px-2.5 py-2.5 shadow-sm   hover:shadow-md   transition-all">
@@ -57,13 +67,18 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
                         {item.name}
                     </p>
                     {item.variantName && (
-                        <span className="shrink-0 text-[10px] font-semibold text-indigo-600">
+                        <span className="shrink-0 text-[10px] font-semibold text-primary">
                             {item.variantName}
                         </span>
                     )}
                     {item.packagingUnitName && (
-                        <span className="shrink-0 text-[10px] font-semibold text-amber-600">
+                        <span className="shrink-0 text-[10px] font-semibold text-warning">
                             {item.packagingUnitName}
+                        </span>
+                    )}
+                    {item.isTierPrice && (
+                        <span className="shrink-0 inline-flex items-center gap-0.5 rounded-md bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary">
+                            Grosir
                         </span>
                     )}
                 </div>
@@ -71,13 +86,13 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
                 {/* Price per unit */}
                 <p className="mt-0.5 text-xs text-muted-foreground">
                     {fmt(item.price)} × {item.qty}
-                    <span className="mx-1 text-slate-300">=</span>
-                    <span className="font-bold text-indigo-600">{fmt(hasPromo ? afterPromo : itemTotal)}</span>
+                            <span className="mx-1 text-border">=</span>
+                    <span className="font-bold text-primary">{fmt(hasPromo ? afterPromo : itemTotal)}</span>
                 </p>
 
                 {/* Promo discount inline */}
                 {hasPromo && (
-                    <div className="mt-0.5 inline-flex items-center gap-1 rounded-md bg-gradient-to-r from-emerald-500 to-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                    <div className="mt-0.5 inline-flex items-center gap-1 rounded-md bg-success px-1.5 py-0.5 text-[10px] font-bold text-success-foreground shadow-sm">
                         <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
@@ -90,29 +105,66 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
                 {item.modifiers?.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-1">
                         {item.modifiers.map((m, idx) => (
-                            <span key={idx} className="inline-flex items-center gap-0.5 rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-semibold text-muted-foreground">
+                            <span key={idx} className="inline-flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[9px] font-semibold text-muted-foreground">
                                 +{m.name}
                             </span>
                         ))}
                     </div>
                 )}
 
-                {/* Note */}
-                {item.note && (
-                    <div className="mt-1 flex items-start gap-1.5 rounded-lg bg-amber-50 border border-amber-100 px-2 py-1.5">
-                        <svg className="h-3 w-3 shrink-0 text-amber-500 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                {/* Note — editable inline langsung dari keranjang */}
+                {editingNote ? (
+                    <div className="mt-1 flex items-center gap-1.5">
+                        <input
+                            type="text"
+                            autoFocus
+                            value={noteDraft}
+                            onChange={(e) => setNoteDraft(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") saveNote();
+                                if (e.key === "Escape") {
+                                    setNoteDraft(item.note ?? "");
+                                    setEditingNote(false);
+                                }
+                            }}
+                            onBlur={saveNote}
+                            placeholder="Tambah catatan..."
+                            className="min-w-0 flex-1 rounded-lg border border-warning/30 bg-warning/5 px-2 py-1 text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-warning/40"
+                        />
+                    </div>
+                ) : item.note ? (
+                    <button
+                        type="button"
+                        onClick={() => setEditingNote(true)}
+                        className="mt-1 flex w-full items-start gap-1.5 rounded-lg bg-warning/10 border border-warning/20 px-2 py-1.5 text-left transition hover:bg-warning/20"
+                        title="Klik untuk edit catatan"
+                    >
+                        <svg className="h-3 w-3 shrink-0 text-warning mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                         </svg>
-                        <p className="text-[10px] italic text-amber-700 leading-relaxed">
+                        <p className="text-[10px] italic text-warning leading-relaxed">
                             "{item.note}"
                         </p>
-                    </div>
+                    </button>
+                ) : (
+                    onNoteChange && (
+                        <button
+                            type="button"
+                            onClick={() => setEditingNote(true)}
+                            className="mt-1 inline-flex items-center gap-1 rounded-md text-[10px] font-medium text-muted-foreground/70 transition hover:text-primary"
+                        >
+                            <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Tambah catatan
+                        </button>
+                    )
                 )}
             </div>
 
             {/* Quantity controls */}
             <div className="flex shrink-0 flex-col items-center gap-1.5 ">
-                <div className="flex items-center gap-0.5 rounded-md bg-muted ring-1 ring-slate-200 p-0.5">
+                <div className="flex items-center gap-0.5 rounded-md bg-muted ring-1 ring-border p-0.5">
                     <IconBtn
                         onClick={() => item.qty <= 1 ? onRemove(item.cartId) : onQty(item.cartId, -1)}
                         title={item.qty <= 1 ? "Hapus" : "Kurangi"}
@@ -128,7 +180,7 @@ export default function CartRow({ item, onQty, onRemove, productImage }) {
                             </svg>
                         )}
                     </IconBtn>
-                    <div className="flex h-6 min-w-[2rem] items-center justify-center rounded bg-card px-1 shadow-sm ring-1 ring-slate-200/50">
+                    <div className="flex h-6 min-w-[2rem] items-center justify-center rounded bg-card px-1 shadow-sm ring-1 ring-border/50">
                         <span className="text-xs font-extrabold text-foreground">
                             {item.qty}
                         </span>

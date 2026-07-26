@@ -190,8 +190,8 @@ export default function Index({ branches }) {
 
 function StatCard({ label, value, tone = "indigo" }) {
     const tones = {
-        indigo: "bg-primary-50 text-primary-700 border-primary-100",
-        emerald: "bg-success/10 text-success border-emerald-100",
+        indigo: "bg-primary/10 text-primary border-primary/10",
+        emerald: "bg-success/10 text-success border-success/20",
         slate: "bg-muted text-foreground border-border",
     };
 
@@ -209,7 +209,7 @@ function StatCard({ label, value, tone = "indigo" }) {
 
 function BranchBadge({ name }) {
     return (
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500/10 to-primary-500/10 text-sm font-bold text-primary-600">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/10 text-sm font-bold text-primary">
             {name.charAt(0).toUpperCase()}
         </span>
     );
@@ -218,7 +218,7 @@ function BranchBadge({ name }) {
 function StatusBadge({ active }) {
     return (
         <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${active ? "bg-emerald-100 text-success" : "bg-muted text-muted-foreground"}`}
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}
         >
             {active ? "Aktif" : "Nonaktif"}
         </span>
@@ -230,7 +230,7 @@ function RowActions({ branch, onDelete }) {
         <div className="flex items-center justify-end gap-1">
             <Link
                 href={route("admin.branches.edit", branch.id)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary-50 hover:text-primary-600"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                 title="Edit"
             >
                 <svg
@@ -275,23 +275,23 @@ function BranchList({ items, onDelete }) {
         <>
             <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            <th className="px-6 py-3.5">Cabang</th>
-                            <th className="px-6 py-3.5">Telepon</th>
-                            <th className="px-6 py-3.5">Alamat</th>
-                            <th className="px-6 py-3.5 text-center">
+                    <thead className="bg-popover text-left text-xs uppercase tracking-wide text-card-foreground">
+                        <tr>
+                            <th className="px-6 py-3.5 font-semibold">Cabang</th>
+                            <th className="px-6 py-3.5 font-semibold">Telepon</th>
+                            <th className="px-6 py-3.5 font-semibold">Alamat</th>
+                            <th className="px-6 py-3.5 text-center font-semibold">
                                 Karyawan
                             </th>
-                            <th className="px-6 py-3.5 text-center">Status</th>
-                            <th className="px-6 py-3.5 text-right">Aksi</th>
+                            <th className="px-6 py-3.5 text-center font-semibold">Status</th>
+                            <th className="px-6 py-3.5 text-right font-semibold">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border bg-background">
                         {items.map((branch) => (
                             <tr
                                 key={branch.id}
-                                className="transition hover:bg-muted/70"
+                                className="transition hover:bg-[rgb(var(--color-table-hover))]"
                             >
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">

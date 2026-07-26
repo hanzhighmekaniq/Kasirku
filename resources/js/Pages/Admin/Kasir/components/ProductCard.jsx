@@ -66,12 +66,12 @@ export default function ProductCard({ product, onClick }) {
     const priceBlock = hasActiveVariants ? (
         <div className="text-[10px] sm:text-[12.5px] text-muted-foreground">
             From{" "}
-            <span className="font-semibold text-card-foreground">
+            <span className="font-semibold text-foreground">
                 {fmt(Math.min(...activeVariants.map((v) => Number(v.price))))}
             </span>
         </div>
     ) : (
-        <span className="text-[12px] sm:text-[15px] font-semibold tracking-tight text-card-foreground">
+        <span className="text-[12px] sm:text-[15px] font-semibold tracking-tight text-foreground">
             {fmt(product.sell_price)}
             {hasUnits && (
                 <span className="ml-1 text-[9px] sm:text-[10px] font-medium text-muted-foreground/60">
@@ -152,7 +152,7 @@ export default function ProductCard({ product, onClick }) {
             <div className="flex flex-1 flex-col p-2 sm:p-4">
                 <div className="flex items-start justify-between gap-1.5 sm:gap-3">
                     <div className="min-w-0">
-                        <h3 className="line-clamp-2 text-[11px] sm:text-[15px] font-semibold leading-tight text-card-foreground">
+                        <h3 className="line-clamp-2 text-[11px] sm:text-[15px] font-semibold leading-tight text-foreground">
                             {product.name}
                         </h3>
                         <p className="mt-0.5 hidden sm:block text-xs text-muted-foreground">SKU · {product.sku}</p>

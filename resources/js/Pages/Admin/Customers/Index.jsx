@@ -100,7 +100,7 @@ export default function Index({ customers, storeType = "retail" }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari nama, telepon, email..."
-                            className="w-full py-2.5 pl-10 pr-3 rounded-lg border border-border bg-card text-sm text-card-foreground outline-none focus:border-ring focus:ring-3 focus:ring-primary/20 transition-all"
+                            className="w-full py-2.5 pl-10 pr-3 rounded-lg border border-input bg-background text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 transition-all"
                         />
                     </div>
                     <div className="pt-4 flex items-center ">
@@ -235,30 +235,30 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
             {/* Desktop table */}
             <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-border bg-muted/50 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            <th className="px-4 py-3.5">Nama</th>
-                            <th className="px-4 py-3.5">Telepon</th>
-                            <th className="px-4 py-3.5">Email</th>
+                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                        <tr>
+                            <th className="px-4 py-3.5 text-left font-semibold">Nama</th>
+                            <th className="px-4 py-3.5 text-left font-semibold">Telepon</th>
+                            <th className="px-4 py-3.5 text-left font-semibold">Email</th>
                             {showLoyalty && (
-                                <th className="px-4 py-3.5 text-center">
+                                <th className="px-4 py-3.5 text-center font-semibold">
                                     Poin
                                 </th>
                             )}
                             {showLoyalty && (
-                                <th className="px-4 py-3.5 text-center">
+                                <th className="px-4 py-3.5 text-center font-semibold">
                                     Tier
                                 </th>
                             )}
-                            <th className="px-4 py-3.5 text-right">Hutang</th>
-                            <th className="px-4 py-3.5 text-right">Aksi</th>
+                            <th className="px-4 py-3.5 text-right font-semibold">Hutang</th>
+                            <th className="px-4 py-3.5 text-right font-semibold">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-border bg-background">
                         {items.map((c) => (
                             <tr
                                 key={c.id}
-                                className="transition hover:bg-muted/70"
+                                className="transition hover:bg-[rgb(var(--color-table-hover))]"
                             >
                                 <td className="px-4 py-4">
                                     <div className="flex items-center gap-3">

@@ -88,8 +88,8 @@ function ExtraStatusBadge({ sale, storeType }) {
     if (storeType === "rental" && sale.rental_status) {
         const map = {
             active: "bg-blue-100 text-blue-700",
-            returned: "bg-emerald-100 text-success",
-            overdue: "bg-red-100 text-destructive",
+            returned: "bg-success/10 text-success",
+            overdue: "bg-destructive/10 text-destructive",
             cancelled: "bg-muted text-muted-foreground",
         };
         const label = {
@@ -108,9 +108,9 @@ function ExtraStatusBadge({ sale, storeType }) {
     }
     if (storeType === "service" && sale.service_status) {
         const map = {
-            waiting: "bg-amber-100 text-amber-700",
+            waiting: "bg-warning/10 text-warning",
             in_progress: "bg-blue-100 text-blue-700",
-            done: "bg-emerald-100 text-success",
+            done: "bg-success/10 text-success",
         };
         const label = {
             waiting: "⏳ Antri",
@@ -128,7 +128,7 @@ function ExtraStatusBadge({ sale, storeType }) {
     if (storeType === "session" && sale.session_status) {
         const map = {
             running: "bg-blue-100 text-blue-700",
-            ended: "bg-emerald-100 text-success",
+            ended: "bg-success/10 text-success",
         };
         const label = { running: "▶ Aktif", ended: "⏹ Selesai" };
         return (
@@ -142,7 +142,7 @@ function ExtraStatusBadge({ sale, storeType }) {
     if (storeType === "hospitality" && sale.rental_status) {
         const map = {
             active: "bg-blue-100 text-blue-700",
-            returned: "bg-emerald-100 text-success",
+            returned: "bg-success/10 text-success",
         };
         const label = { active: "🛏 Check-in", returned: "✅ Check-out" };
         return (
@@ -156,7 +156,7 @@ function ExtraStatusBadge({ sale, storeType }) {
     if (storeType === "parking" && (sale.exit_at || sale.entry_at)) {
         const map = {
             active: "bg-blue-100 text-blue-700",
-            exited: "bg-emerald-100 text-success",
+            exited: "bg-success/10 text-success",
         };
         const label = {
             active: "🟢 Di Parkir",
@@ -349,7 +349,7 @@ export default function Index({
         } catch (e) {
             alert(
                 "Gagal memuat data struk: " +
-                    (e.response?.data?.message ?? e.message),
+                (e.response?.data?.message ?? e.message),
             );
         } finally {
             setPrintLoading(false);
@@ -441,664 +441,359 @@ export default function Index({
                 {/* Toolbar */}
                 <div className="border-b border-border p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="relative flex-1">
-                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                        <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.8}
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                        <div className="relative flex-1">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+                                <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.8}
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                                    />
+                                </svg>
+                            </span>
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Cari no. struk, pelanggan, atau kasir..."
+                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
-                        </svg>
-                    </span>
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Cari no. struk, pelanggan, atau kasir..."
-                        className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                    />
-                </div>
-                <Dropdown>
-                    <Dropdown.Trigger>
-                        <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
-                            <span
-                                className={
-                                    filterStatus !== "all"
-                                        ? "text-foreground"
-                                        : "text-muted-foreground"
-                                }
-                            >
-                                {filterStatus === "completed"
-                                    ? "Selesai"
-                                    : filterStatus === "draft"
-                                      ? "Draft"
-                                      : filterStatus === "cancelled"
-                                        ? "Dibatalkan"
-                                        : "Semua Status"}
-                            </span>
-                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
-                        </button>
-                    </Dropdown.Trigger>
-                    <Dropdown.Content width="48">
-                        <button
-                            onClick={() => setFilterStatus("all")}
-                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                filterStatus === "all"
-                                    ? "bg-primary-50 font-medium text-primary-600"
-                                    : "text-muted-foreground hover:bg-muted"
-                            }`}
-                        >
-                            Semua Status
-                        </button>
-                        <button
-                            onClick={() => setFilterStatus("completed")}
-                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                filterStatus === "completed"
-                                    ? "bg-primary-50 font-medium text-primary-600"
-                                    : "text-muted-foreground hover:bg-muted"
-                            }`}
-                        >
-                            Selesai
-                        </button>
-                        <button
-                            onClick={() => setFilterStatus("draft")}
-                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                filterStatus === "draft"
-                                    ? "bg-primary-50 font-medium text-primary-600"
-                                    : "text-muted-foreground hover:bg-muted"
-                            }`}
-                        >
-                            Draft
-                        </button>
-                        <button
-                            onClick={() => setFilterStatus("cancelled")}
-                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                filterStatus === "cancelled"
-                                    ? "bg-primary-50 font-medium text-primary-600"
-                                    : "text-muted-foreground hover:bg-muted"
-                            }`}
-                        >
-                            Dibatalkan
-                        </button>
-                    </Dropdown.Content>
-                </Dropdown>
-                <Dropdown>
-                    <Dropdown.Trigger>
-                        <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
-                            <span
-                                className={
-                                    filterOrderType !== "all"
-                                        ? "text-foreground"
-                                        : "text-muted-foreground"
-                                }
-                            >
-                                {filterOrderType !== "all"
-                                    ? (orderTypeOptions.find(
-                                          (o) => o.v === filterOrderType,
-                                      )?.l ?? filterOrderType)
-                                    : "Semua Tipe"}
-                            </span>
-                            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
-                        </button>
-                    </Dropdown.Trigger>
-                    <Dropdown.Content width="56">
-                        <button
-                            onClick={() => setFilterOrderType("all")}
-                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                filterOrderType === "all"
-                                    ? "bg-primary-50 font-medium text-primary-600"
-                                    : "text-muted-foreground hover:bg-muted"
-                            }`}
-                        >
-                            Semua Tipe
-                        </button>
-                        {orderTypeOptions.map((opt) => (
-                            <button
-                                key={opt.v}
-                                onClick={() => setFilterOrderType(opt.v)}
-                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                    filterOrderType === opt.v
-                                        ? "bg-primary-50 font-medium text-primary-600"
-                                        : "text-muted-foreground hover:bg-muted"
-                                }`}
-                            >
-                                {opt.l}
-                            </button>
-                        ))}
-                    </Dropdown.Content>
-                </Dropdown>
-            </div>
-
-                    {/* Server-side filters */}
-                    <div className="mt-3 flex flex-wrap items-end gap-3">
-                {/* Branch filter */}
-                {branches.length > 0 && (
-                    <div className="flex-1">
-                        <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                            Cabang
-                        </label>
+                        </div>
                         <Dropdown>
                             <Dropdown.Trigger>
-                                <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
+                                <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
                                     <span
                                         className={
-                                            filterBranch
+                                            filterStatus !== "all"
                                                 ? "text-foreground"
                                                 : "text-muted-foreground"
                                         }
                                     >
-                                        {filterBranch
-                                            ? (branches.find(
-                                                  (b) =>
-                                                      String(b.id) ===
-                                                      String(filterBranch),
-                                              )?.name ?? "Semua Cabang")
-                                            : "Semua Cabang"}
+                                        {filterStatus === "completed"
+                                            ? "Selesai"
+                                            : filterStatus === "draft"
+                                                ? "Draft"
+                                                : filterStatus === "cancelled"
+                                                    ? "Dibatalkan"
+                                                    : "Semua Status"}
                                     </span>
-                                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
+                                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
+                                </button>
+                            </Dropdown.Trigger>
+                            <Dropdown.Content width="48">
+                                <button
+                                    onClick={() => setFilterStatus("all")}
+                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "all"
+                                            ? "bg-primary/10 font-medium text-primary"
+                                            : "text-muted-foreground hover:bg-muted"
+                                        }`}
+                                >
+                                    Semua Status
+                                </button>
+                                <button
+                                    onClick={() => setFilterStatus("completed")}
+                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "completed"
+                                            ? "bg-primary/10 font-medium text-primary"
+                                            : "text-muted-foreground hover:bg-muted"
+                                        }`}
+                                >
+                                    Selesai
+                                </button>
+                                <button
+                                    onClick={() => setFilterStatus("draft")}
+                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "draft"
+                                            ? "bg-primary/10 font-medium text-primary"
+                                            : "text-muted-foreground hover:bg-muted"
+                                        }`}
+                                >
+                                    Draft
+                                </button>
+                                <button
+                                    onClick={() => setFilterStatus("cancelled")}
+                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "cancelled"
+                                            ? "bg-primary/10 font-medium text-primary"
+                                            : "text-muted-foreground hover:bg-muted"
+                                        }`}
+                                >
+                                    Dibatalkan
+                                </button>
+                            </Dropdown.Content>
+                        </Dropdown>
+                        <Dropdown>
+                            <Dropdown.Trigger>
+                                <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
+                                    <span
+                                        className={
+                                            filterOrderType !== "all"
+                                                ? "text-foreground"
+                                                : "text-muted-foreground"
+                                        }
+                                    >
+                                        {filterOrderType !== "all"
+                                            ? (orderTypeOptions.find(
+                                                (o) => o.v === filterOrderType,
+                                            )?.l ?? filterOrderType)
+                                            : "Semua Tipe"}
+                                    </span>
+                                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="56">
                                 <button
-                                    onClick={() =>
-                                        handleBranchChange("")
-                                    }
-                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                        !filterBranch
-                                            ? "bg-primary-50 font-medium text-primary-600"
+                                    onClick={() => setFilterOrderType("all")}
+                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterOrderType === "all"
+                                            ? "bg-primary/10 font-medium text-primary"
                                             : "text-muted-foreground hover:bg-muted"
-                                    }`}
-                                >
-                                    Semua Cabang
-                                </button>
-                                {branches.map((b) => (
-                                    <button
-                                        key={b.id}
-                                        onClick={() =>
-                                            handleBranchChange(String(b.id))
-                                        }
-                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                            String(filterBranch) ===
-                                            String(b.id)
-                                                ? "bg-primary-50 font-medium text-primary-600"
-                                                : "text-muted-foreground hover:bg-muted"
                                         }`}
+                                >
+                                    Semua Tipe
+                                </button>
+                                {orderTypeOptions.map((opt) => (
+                                    <button
+                                        key={opt.v}
+                                        onClick={() => setFilterOrderType(opt.v)}
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterOrderType === opt.v
+                                                ? "bg-primary/10 font-medium text-primary"
+                                                : "text-muted-foreground hover:bg-muted"
+                                            }`}
                                     >
-                                        {b.name}
+                                        {opt.l}
                                     </button>
                                 ))}
                             </Dropdown.Content>
                         </Dropdown>
                     </div>
-                )}
 
-                {/* Date range */}
-                <div className="flex-1">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                        Dari Tanggal
-                    </label>
-                    <input
-                        type="date"
-                        value={dateFrom}
-                        onChange={(e) =>
-                            handleDateChange("date_from", e.target.value)
-                        }
-                        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                    />
-                </div>
-                <div className="flex-1">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                        Sampai Tanggal
-                    </label>
-                    <input
-                        type="date"
-                        value={dateTo}
-                        onChange={(e) =>
-                            handleDateChange("date_to", e.target.value)
-                        }
-                        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                    />
-                </div>
-
-                {/* Payment status filter */}
-                <div className="flex-1">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                        Status Bayar
-                    </label>
-                    <Dropdown>
-                        <Dropdown.Trigger>
-                            <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
-                                <span
-                                    className={
-                                        filterPayment !== "all"
-                                            ? "text-foreground"
-                                            : "text-muted-foreground"
-                                    }
-                                >
-                                    {filterPayment === "paid"
-                                        ? "Lunas"
-                                        : filterPayment === "partial"
-                                          ? "Sebagian"
-                                          : filterPayment === "unpaid"
-                                            ? "Belum Bayar"
-                                            : "Semua"}
-                                </span>
-                                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
-                            </button>
-                        </Dropdown.Trigger>
-                        <Dropdown.Content width="48">
-                            <button
-                                onClick={() =>
-                                    handlePaymentFilter("all")
-                                }
-                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                    filterPayment === "all"
-                                        ? "bg-primary-50 font-medium text-primary-600"
-                                        : "text-muted-foreground hover:bg-muted"
-                                }`}
-                            >
-                                Semua
-                            </button>
-                            <button
-                                onClick={() =>
-                                    handlePaymentFilter("paid")
-                                }
-                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                    filterPayment === "paid"
-                                        ? "bg-primary-50 font-medium text-primary-600"
-                                        : "text-muted-foreground hover:bg-muted"
-                                }`}
-                            >
-                                Lunas
-                            </button>
-                            <button
-                                onClick={() =>
-                                    handlePaymentFilter("partial")
-                                }
-                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                    filterPayment === "partial"
-                                        ? "bg-primary-50 font-medium text-primary-600"
-                                        : "text-muted-foreground hover:bg-muted"
-                                }`}
-                            >
-                                Sebagian
-                            </button>
-                            <button
-                                onClick={() =>
-                                    handlePaymentFilter("unpaid")
-                                }
-                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${
-                                    filterPayment === "unpaid"
-                                        ? "bg-primary-50 font-medium text-primary-600"
-                                        : "text-muted-foreground hover:bg-muted"
-                                }`}
-                            >
-                                Belum Bayar
-                            </button>
-                        </Dropdown.Content>
-                    </Dropdown>
-                </div>
-
-                {/* Clear button */}
-                {hasActiveServerFilters && (
-                    <button
-                        onClick={clearAllServerFilters}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted"
-                    >
-                        <X className="h-4 w-4" strokeWidth={1.8} />
-                        Reset
-                    </button>
-                )}
-                    </div>
-                <div className="pt-4 flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
-                        Menampilkan{" "}
-                        <span className="font-semibold text-foreground">
-                            {filtered.length}
-                        </span>{" "}
-                        dari{" "}
-                        <span className="font-semibold text-foreground">
-                            {sales.length}
-                        </span>{" "}
-                        {pageTitle.toLowerCase()}
-                    </p>
-                </div>
-            </div>
-
-            {/* Table (desktop) */}
-            <div className="hidden overflow-x-auto lg:block">
-                <table className="w-full text-left text-sm">
-                    <thead>
-                        <tr className="border-b border-border bg-muted/50">
-                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
-                                No. Struk
-                            </th>
-                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
-                                Cabang
-                            </th>
-                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
-                                Kasir
-                            </th>
-                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
-                                Pelanggan
-                            </th>
-                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
-                                Tipe
-                            </th>
-                            {extraCol && (
-                                <th className="px-5 py-3.5 font-medium text-muted-foreground">
-                                    {extraCol.header}
-                                </th>
-                            )}
-                            <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                                Total
-                            </th>
-                            <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                                Dibayar
-                            </th>
-                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
-                                Status
-                            </th>
-                            {[
-                                "rental",
-                                "service",
-                                "session",
-                                "hospitality",
-                                "parking",
-                            ].includes(storeType) && (
-                                <th className="px-5 py-3.5 font-medium text-muted-foreground">
-                                    Status Ops
-                                </th>
-                            )}
-                            <th className="px-5 py-3.5 font-medium text-muted-foreground">
-                                Bayar
-                            </th>
-                            <th className="px-5 py-3.5 text-right font-medium text-muted-foreground">
-                                Aksi
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                        {filtered.length === 0 ? (
-                            <tr>
-                                <td
-                                    colSpan={
-                                        10 +
-                                        (extraCol ? 1 : 0) +
-                                        ([
-                                            "rental",
-                                            "service",
-                                            "session",
-                                            "hospitality",
-                                            "parking",
-                                        ].includes(storeType)
-                                            ? 1
-                                            : 0)
-                                    }
-                                    className="px-5 py-16 text-center text-muted-foreground"
-                                >
-                                    <svg
-                                        className="mx-auto mb-2 h-10 w-10 text-muted-foreground/50"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.5}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                                        />
-                                    </svg>
-                                    Belum ada data penjualan
-                                </td>
-                            </tr>
-                        ) : (
-                            filtered.map((s) => (
-                                <tr
-                                    key={s.id}
-                                    className="transition hover:bg-muted/50"
-                                >
-                                    <td className="px-5 py-3.5 font-medium text-foreground">
-                                        {s.sale_no}
-                                    </td>
-                                    <td className="px-5 py-3.5 text-muted-foreground">
-                                        {s.branch?.name ?? "-"}
-                                    </td>
-                                    <td className="px-5 py-3.5 text-muted-foreground">
-                                        {s.user?.name ?? "-"}
-                                    </td>
-                                    <td className="px-5 py-3.5 text-muted-foreground">
-                                        {s.customer?.name ?? "Umum"}
-                                    </td>
-                                    <td className="px-5 py-3.5">
-                                        <OrderTypeBadge
-                                            type={s.order_type}
-                                            storeType={storeType}
-                                        />
-                                    </td>
-                                    {extraCol && (
-                                        <td className="px-5 py-3.5 text-muted-foreground text-sm">
-                                            {extraCol.render(s)}
-                                        </td>
-                                    )}
-                                    <td className="px-5 py-3.5 text-right font-medium text-foreground">
-                                        {fmtRp(s.grand_total)}
-                                    </td>
-                                    <td className="px-5 py-3.5 text-right text-muted-foreground">
-                                        {fmtRp(s.paid_amount)}
-                                    </td>
-                                    <td className="px-5 py-3.5">
-                                        <StatusBadge status={s.status} />
-                                    </td>
-                                    {[
-                                        "rental",
-                                        "service",
-                                        "session",
-                                        "hospitality",
-                                        "parking",
-                                    ].includes(storeType) && (
-                                        <td className="px-5 py-3.5">
-                                            <ExtraStatusBadge
-                                                sale={s}
-                                                storeType={storeType}
-                                            />
-                                        </td>
-                                    )}
-                                    <td className="px-5 py-3.5">
-                                        <PaymentBadge
-                                            status={s.payment_status}
-                                        />
-                                    </td>
-                                    <td className="px-5 py-3.5 text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <Link
-                                                href={route(
-                                                    "admin.sales.show",
-                                                    s.id,
-                                                )}
-                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                                            >
-                                                <svg
-                                                    className="h-3.5 w-3.5"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    strokeWidth={1.8}
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-                                                    />
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                                    />
-                                                </svg>
-                                                Detail
-                                            </Link>
-                                            {s.status !== "draft" && (
-                                                <Link
-                                                    href={route(
-                                                        "admin.sales.show",
-                                                        {
-                                                            sale: s.id,
-                                                            switch: 1,
-                                                        },
-                                                    )}
-                                                    className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-50 hover:text-amber-800"
-                                                    title="Ganti Pembayaran"
-                                                >
-                                                    <svg
-                                                        className="h-3.5 w-3.5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        strokeWidth={1.8}
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"
-                                                        />
-                                                    </svg>
-                                                    Bayar
-                                                </Link>
-                                            )}
-                                            <button
-                                                onClick={() =>
-                                                    handlePrint(s.id)
+                    {/* Server-side filters */}
+                    <div className="mt-3 flex flex-wrap items-end gap-3">
+                        {/* Branch filter */}
+                        {branches.length > 0 && (
+                            <div className="flex-1">
+                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                    Cabang
+                                </label>
+                                <Dropdown>
+                                    <Dropdown.Trigger>
+                                        <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
+                                            <span
+                                                className={
+                                                    filterBranch
+                                                        ? "text-foreground"
+                                                        : "text-muted-foreground"
                                                 }
-                                                className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary-600 transition hover:bg-primary-50 hover:text-primary-800"
-                                                title="Cetak Struk"
                                             >
-                                                <svg
-                                                    className="h-3.5 w-3.5"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    strokeWidth={1.8}
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z"
-                                                    />
-                                                </svg>
-                                                Cetak
+                                                {filterBranch
+                                                    ? (branches.find(
+                                                        (b) =>
+                                                            String(b.id) ===
+                                                            String(filterBranch),
+                                                    )?.name ?? "Semua Cabang")
+                                                    : "Semua Cabang"}
+                                            </span>
+                                            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
+                                        </button>
+                                    </Dropdown.Trigger>
+                                    <Dropdown.Content width="56">
+                                        <button
+                                            onClick={() =>
+                                                handleBranchChange("")
+                                            }
+                                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${!filterBranch
+                                                    ? "bg-primary/10 font-medium text-primary"
+                                                    : "text-muted-foreground hover:bg-muted"
+                                                }`}
+                                        >
+                                            Semua Cabang
+                                        </button>
+                                        {branches.map((b) => (
+                                            <button
+                                                key={b.id}
+                                                onClick={() =>
+                                                    handleBranchChange(String(b.id))
+                                                }
+                                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${String(filterBranch) ===
+                                                        String(b.id)
+                                                        ? "bg-primary/10 font-medium text-primary"
+                                                        : "text-muted-foreground hover:bg-muted"
+                                                    }`}
+                                            >
+                                                {b.name}
                                             </button>
-                                            {s.status === "draft" && (
-                                                <button
-                                                    onClick={() =>
-                                                        setDeleteTarget(s)
-                                                    }
-                                                    className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/10 hover:text-destructive"
-                                                >
-                                                    <svg
-                                                        className="h-3.5 w-3.5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        strokeWidth={1.8}
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                                        />
-                                                    </svg>
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Cards (mobile) */}
-            <div className="space-y-3 lg:hidden">
-                {filtered.length === 0 ? (
-                    <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground shadow-sm">
-                        Belum ada data penjualan
-                    </div>
-                ) : (
-                    filtered.map((s) => (
-                        <div
-                            key={s.id}
-                            className="rounded-2xl border border-border bg-card p-4 shadow-sm"
-                        >
-                            <div className="mb-2 flex items-start justify-between">
-                                <div>
-                                    <p className="text-sm font-semibold text-foreground">
-                                        {s.sale_no}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {s.branch?.name ?? "-"} &middot;{" "}
-                                        {s.user?.name ?? "-"}
-                                    </p>
-                                </div>
-                                <StatusBadge status={s.status} />
+                                        ))}
+                                    </Dropdown.Content>
+                                </Dropdown>
                             </div>
-                            <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
-                                <div>
-                                    <span className="text-muted-foreground">
-                                        Tanggal
-                                    </span>
-                                    <p className="font-medium text-foreground">
-                                        {new Date(
-                                            s.sale_date,
-                                        ).toLocaleDateString("id-ID")}
-                                    </p>
-                                </div>
-                                <div>
-                                    <span className="text-muted-foreground">
-                                        Total
-                                    </span>
-                                    <p className="font-medium text-foreground">
-                                        {fmtRp(s.grand_total)}
-                                    </p>
-                                </div>
-                                <div>
-                                    <span className="text-muted-foreground">Tipe</span>
-                                    <p className="font-medium text-foreground">
-                                        <OrderTypeBadge
-                                            type={s.order_type}
-                                            storeType={storeType}
-                                        />
-                                    </p>
-                                </div>
-                                <div>
-                                    <span className="text-muted-foreground">
-                                        Bayar
-                                    </span>
-                                    <p className="font-medium text-foreground">
-                                        <PaymentBadge
-                                            status={s.payment_status}
-                                        />
-                                    </p>
-                                </div>
-                                {extraCol && (
-                                    <div>
-                                        <span className="text-muted-foreground">
-                                            {extraCol.header}
+                        )}
+
+                        {/* Date range */}
+                        <div className="flex-1">
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                Dari Tanggal
+                            </label>
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) =>
+                                    handleDateChange("date_from", e.target.value)
+                                }
+                                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                Sampai Tanggal
+                            </label>
+                            <input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) =>
+                                    handleDateChange("date_to", e.target.value)
+                                }
+                                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            />
+                        </div>
+
+                        {/* Payment status filter */}
+                        <div className="flex-1">
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                Status Bayar
+                            </label>
+                            <Dropdown>
+                                <Dropdown.Trigger>
+                                    <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
+                                        <span
+                                            className={
+                                                filterPayment !== "all"
+                                                    ? "text-foreground"
+                                                    : "text-muted-foreground"
+                                            }
+                                        >
+                                            {filterPayment === "paid"
+                                                ? "Lunas"
+                                                : filterPayment === "partial"
+                                                    ? "Sebagian"
+                                                    : filterPayment === "unpaid"
+                                                        ? "Belum Bayar"
+                                                        : "Semua"}
                                         </span>
-                                        <p className="font-medium text-foreground">
-                                            {extraCol.render(s)}
-                                        </p>
-                                    </div>
+                                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
+                                    </button>
+                                </Dropdown.Trigger>
+                                <Dropdown.Content width="48">
+                                    <button
+                                        onClick={() =>
+                                            handlePaymentFilter("all")
+                                        }
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterPayment === "all"
+                                                ? "bg-primary/10 font-medium text-primary"
+                                                : "text-muted-foreground hover:bg-muted"
+                                            }`}
+                                    >
+                                        Semua
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            handlePaymentFilter("paid")
+                                        }
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterPayment === "paid"
+                                                ? "bg-primary/10 font-medium text-primary"
+                                                : "text-muted-foreground hover:bg-muted"
+                                            }`}
+                                    >
+                                        Lunas
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            handlePaymentFilter("partial")
+                                        }
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterPayment === "partial"
+                                                ? "bg-primary/10 font-medium text-primary"
+                                                : "text-muted-foreground hover:bg-muted"
+                                            }`}
+                                    >
+                                        Sebagian
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            handlePaymentFilter("unpaid")
+                                        }
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterPayment === "unpaid"
+                                                ? "bg-primary/10 font-medium text-primary"
+                                                : "text-muted-foreground hover:bg-muted"
+                                            }`}
+                                    >
+                                        Belum Bayar
+                                    </button>
+                                </Dropdown.Content>
+                            </Dropdown>
+                        </div>
+
+                        {/* Clear button */}
+                        {hasActiveServerFilters && (
+                            <button
+                                onClick={clearAllServerFilters}
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted"
+                            >
+                                <X className="h-4 w-4" strokeWidth={1.8} />
+                                Reset
+                            </button>
+                        )}
+                    </div>
+                    <div className="pt-4 flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">
+                            Menampilkan{" "}
+                            <span className="font-semibold text-foreground">
+                                {filtered.length}
+                            </span>{" "}
+                            dari{" "}
+                            <span className="font-semibold text-foreground">
+                                {sales.length}
+                            </span>{" "}
+                            {pageTitle.toLowerCase()}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Table (desktop) */}
+                <div className="hidden overflow-x-auto lg:block">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                            <tr>
+                                <th className="px-5 py-3.5 font-semibold">
+                                    No. Struk
+                                </th>
+                                <th className="px-5 py-3.5 font-semibold">
+                                    Cabang
+                                </th>
+                                <th className="px-5 py-3.5 font-semibold">
+                                    Kasir
+                                </th>
+                                <th className="px-5 py-3.5 font-semibold">
+                                    Pelanggan
+                                </th>
+                                <th className="px-5 py-3.5 font-semibold">
+                                    Tipe
+                                </th>
+                                {extraCol && (
+                                    <th className="px-5 py-3.5 font-semibold">
+                                        {extraCol.header}
+                                    </th>
                                 )}
+                                <th className="px-5 py-3.5 text-right font-semibold">
+                                    Total
+                                </th>
+                                <th className="px-5 py-3.5 text-right font-semibold">
+                                    Dibayar
+                                </th>
+                                <th className="px-5 py-3.5 font-semibold">
+                                    Status
+                                </th>
                                 {[
                                     "rental",
                                     "service",
@@ -1106,57 +801,350 @@ export default function Index({
                                     "hospitality",
                                     "parking",
                                 ].includes(storeType) && (
+                                        <th className="px-5 py-3.5 font-semibold">
+                                            Status Ops
+                                        </th>
+                                    )}
+                                <th className="px-5 py-3.5 font-semibold">
+                                    Bayar
+                                </th>
+                                <th className="px-5 py-3.5 text-right font-semibold">
+                                    Aksi
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border bg-background">
+                            {filtered.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan={
+                                            10 +
+                                            (extraCol ? 1 : 0) +
+                                            ([
+                                                "rental",
+                                                "service",
+                                                "session",
+                                                "hospitality",
+                                                "parking",
+                                            ].includes(storeType)
+                                                ? 1
+                                                : 0)
+                                        }
+                                        className="px-5 py-16 text-center text-muted-foreground"
+                                    >
+                                        <svg
+                                            className="mx-auto mb-2 h-10 w-10 text-muted-foreground/50"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={1.5}
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+                                            />
+                                        </svg>
+                                        Belum ada data penjualan
+                                    </td>
+                                </tr>
+                            ) : (
+                                filtered.map((s) => (
+                                    <tr
+                                        key={s.id}
+                                        className="transition hover:bg-[rgb(var(--color-table-hover))]"
+                                    >
+                                        <td className="px-5 py-3.5 font-medium text-foreground">
+                                            {s.sale_no}
+                                        </td>
+                                        <td className="px-5 py-3.5 text-muted-foreground">
+                                            {s.branch?.name ?? "-"}
+                                        </td>
+                                        <td className="px-5 py-3.5 text-muted-foreground">
+                                            {s.user?.name ?? "-"}
+                                        </td>
+                                        <td className="px-5 py-3.5 text-muted-foreground">
+                                            {s.customer?.name ?? "Umum"}
+                                        </td>
+                                        <td className="px-5 py-3.5">
+                                            <OrderTypeBadge
+                                                type={s.order_type}
+                                                storeType={storeType}
+                                            />
+                                        </td>
+                                        {extraCol && (
+                                            <td className="px-5 py-3.5 text-muted-foreground text-sm">
+                                                {extraCol.render(s)}
+                                            </td>
+                                        )}
+                                        <td className="px-5 py-3.5 text-right font-medium text-foreground">
+                                            {fmtRp(s.grand_total)}
+                                        </td>
+                                        <td className="px-5 py-3.5 text-right text-muted-foreground">
+                                            {fmtRp(s.paid_amount)}
+                                        </td>
+                                        <td className="px-5 py-3.5">
+                                            <StatusBadge status={s.status} />
+                                        </td>
+                                        {[
+                                            "rental",
+                                            "service",
+                                            "session",
+                                            "hospitality",
+                                            "parking",
+                                        ].includes(storeType) && (
+                                                <td className="px-5 py-3.5">
+                                                    <ExtraStatusBadge
+                                                        sale={s}
+                                                        storeType={storeType}
+                                                    />
+                                                </td>
+                                            )}
+                                        <td className="px-5 py-3.5">
+                                            <PaymentBadge
+                                                status={s.payment_status}
+                                            />
+                                        </td>
+                                        <td className="px-5 py-3.5 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Link
+                                                    href={route(
+                                                        "admin.sales.show",
+                                                        s.id,
+                                                    )}
+                                                    className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                                                >
+                                                    <svg
+                                                        className="h-3.5 w-3.5"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        strokeWidth={1.8}
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                                                        />
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                                        />
+                                                    </svg>
+                                                    Detail
+                                                </Link>
+                                                {s.status !== "draft" && (
+                                                    <Link
+                                                        href={route(
+                                                            "admin.sales.show",
+                                                            {
+                                                                sale: s.id,
+                                                                switch: 1,
+                                                            },
+                                                        )}
+                                                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-warning transition hover:bg-warning/10"
+                                                        title="Ganti Pembayaran"
+                                                    >
+                                                        <svg
+                                                            className="h-3.5 w-3.5"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            strokeWidth={1.8}
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"
+                                                            />
+                                                        </svg>
+                                                        Bayar
+                                                    </Link>
+                                                )}
+                                                <button
+                                                    onClick={() =>
+                                                        handlePrint(s.id)
+                                                    }
+                                                    className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/10 hover:text-primary"
+                                                    title="Cetak Struk"
+                                                >
+                                                    <svg
+                                                        className="h-3.5 w-3.5"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        strokeWidth={1.8}
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z"
+                                                        />
+                                                    </svg>
+                                                    Cetak
+                                                </button>
+                                                {s.status === "draft" && (
+                                                    <button
+                                                        onClick={() =>
+                                                            setDeleteTarget(s)
+                                                        }
+                                                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/10 hover:text-destructive"
+                                                    >
+                                                        <svg
+                                                            className="h-3.5 w-3.5"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            strokeWidth={1.8}
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Cards (mobile) */}
+                <div className="space-y-3 lg:hidden">
+                    {filtered.length === 0 ? (
+                        <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground shadow-sm">
+                            Belum ada data penjualan
+                        </div>
+                    ) : (
+                        filtered.map((s) => (
+                            <div
+                                key={s.id}
+                                className="rounded-2xl border border-border bg-card p-4 shadow-sm"
+                            >
+                                <div className="mb-2 flex items-start justify-between">
+                                    <div>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {s.sale_no}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {s.branch?.name ?? "-"} &middot;{" "}
+                                            {s.user?.name ?? "-"}
+                                        </p>
+                                    </div>
+                                    <StatusBadge status={s.status} />
+                                </div>
+                                <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
                                     <div>
                                         <span className="text-muted-foreground">
-                                            Status Ops
+                                            Tanggal
                                         </span>
                                         <p className="font-medium text-foreground">
-                                            <ExtraStatusBadge
-                                                sale={s}
+                                            {new Date(
+                                                s.sale_date,
+                                            ).toLocaleDateString("id-ID")}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted-foreground">
+                                            Total
+                                        </span>
+                                        <p className="font-medium text-foreground">
+                                            {fmtRp(s.grand_total)}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted-foreground">Tipe</span>
+                                        <p className="font-medium text-foreground">
+                                            <OrderTypeBadge
+                                                type={s.order_type}
                                                 storeType={storeType}
                                             />
                                         </p>
                                     </div>
-                                )}
-                            </div>
-                            <div className="flex gap-2">
-                                <Link
-                                    href={route("admin.sales.show", s.id)}
-                                    className="flex-1 rounded-xl border border-border py-2 text-center text-xs font-medium text-muted-foreground transition hover:bg-muted"
-                                >
-                                    Detail
-                                </Link>
-                                {s.status !== "draft" && (
+                                    <div>
+                                        <span className="text-muted-foreground">
+                                            Bayar
+                                        </span>
+                                        <p className="font-medium text-foreground">
+                                            <PaymentBadge
+                                                status={s.payment_status}
+                                            />
+                                        </p>
+                                    </div>
+                                    {extraCol && (
+                                        <div>
+                                            <span className="text-muted-foreground">
+                                                {extraCol.header}
+                                            </span>
+                                            <p className="font-medium text-foreground">
+                                                {extraCol.render(s)}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {[
+                                        "rental",
+                                        "service",
+                                        "session",
+                                        "hospitality",
+                                        "parking",
+                                    ].includes(storeType) && (
+                                            <div>
+                                                <span className="text-muted-foreground">
+                                                    Status Ops
+                                                </span>
+                                                <p className="font-medium text-foreground">
+                                                    <ExtraStatusBadge
+                                                        sale={s}
+                                                        storeType={storeType}
+                                                    />
+                                                </p>
+                                            </div>
+                                        )}
+                                </div>
+                                <div className="flex gap-2">
                                     <Link
-                                        href={route("admin.sales.show", {
-                                            sale: s.id,
-                                            switch: 1,
-                                        })}
-                                        className="rounded-xl border border-amber-200 px-3 py-2 text-xs font-medium text-amber-600 transition hover:bg-amber-50"
-                                        title="Ganti Pembayaran"
+                                        href={route("admin.sales.show", s.id)}
+                                        className="flex-1 rounded-xl border border-border py-2 text-center text-xs font-medium text-muted-foreground transition hover:bg-muted"
                                     >
-                                        Bayar
+                                        Detail
                                     </Link>
-                                )}
-                                <button
-                                    onClick={() => handlePrint(s.id)}
-                                    className="rounded-xl border border-primary-200 px-3 py-2 text-xs font-medium text-primary-600 transition hover:bg-primary-50"
-                                >
-                                    Cetak
-                                </button>
-                                {s.status === "draft" && (
+                                    {s.status !== "draft" && (
+                                        <Link
+                                            href={route("admin.sales.show", {
+                                                sale: s.id,
+                                                switch: 1,
+                                            })}
+                                            className="rounded-xl border border-warning/30 px-3 py-2 text-xs font-medium text-warning transition hover:bg-amber-50"
+                                            title="Ganti Pembayaran"
+                                        >
+                                            Bayar
+                                        </Link>
+                                    )}
                                     <button
-                                        onClick={() => setDeleteTarget(s)}
-                                        className="rounded-xl border border-destructive/20 px-3 py-2 text-xs font-medium text-destructive transition hover:bg-destructive/10"
+                                        onClick={() => handlePrint(s.id)}
+                                        className="rounded-xl border border-primary/20 px-3 py-2 text-xs font-medium text-primary transition hover:bg-primary/10"
                                     >
-                                        Hapus
+                                        Cetak
                                     </button>
-                                )}
+                                    {s.status === "draft" && (
+                                        <button
+                                            onClick={() => setDeleteTarget(s)}
+                                            className="rounded-xl border border-destructive/20 px-3 py-2 text-xs font-medium text-destructive transition hover:bg-destructive/10"
+                                        >
+                                            Hapus
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))
-                )}
-            </div>
+                        ))
+                    )}
+                </div>
             </div>
 
             <ConfirmDeleteModal
@@ -1184,7 +1172,7 @@ export default function Index({
                     <div className="rounded-2xl bg-card px-6 py-5 shadow-2xl">
                         <div className="flex items-center gap-3">
                             <svg
-                                className="h-5 w-5 animate-spin text-primary-500"
+                                className="h-5 w-5 animate-spin text-primary"
                                 viewBox="0 0 24 24"
                                 fill="none"
                             >
@@ -1218,7 +1206,7 @@ function SummaryCard({ label, value, color = "slate" }) {
         slate: "border-l-muted-foreground/30",
         emerald: "border-l-emerald-400",
         amber: "border-l-amber-400",
-        indigo: "border-l-primary-400",
+        indigo: "border-l-primary",
     };
     return (
         <div
@@ -1233,8 +1221,8 @@ function SummaryCard({ label, value, color = "slate" }) {
 function StatusBadge({ status }) {
     const map = {
         draft: "bg-muted text-muted-foreground",
-        completed: "bg-emerald-100 text-success",
-        cancelled: "bg-red-100 text-destructive",
+        completed: "bg-success/10 text-success",
+        cancelled: "bg-destructive/10 text-destructive",
     };
     const label = {
         draft: "Draft",
@@ -1252,9 +1240,9 @@ function StatusBadge({ status }) {
 
 function PaymentBadge({ status }) {
     const map = {
-        unpaid: "bg-rose-100 text-rose-600",
-        partial: "bg-amber-100 text-amber-700",
-        paid: "bg-emerald-100 text-success",
+        unpaid: "bg-destructive/10 text-destructive",
+        partial: "bg-warning/10 text-warning",
+        paid: "bg-success/10 text-success",
     };
     const label = { unpaid: "Belum Bayar", partial: "Sebagian", paid: "Lunas" };
     return (
@@ -1275,32 +1263,32 @@ function OrderTypeBadge({ type, storeType }) {
         // Retail
         wholesale: { label: "Grosir", cls: "bg-cyan-100 text-cyan-700" },
         // Service
-        walk_in: { label: "Walk-in", cls: "bg-emerald-100 text-success" },
+        walk_in: { label: "Walk-in", cls: "bg-success/10 text-success" },
         booking: { label: "Booking", cls: "bg-violet-100 text-violet-700" },
         pickup_delivery: {
             label: "Jemput & Antar",
             cls: "bg-purple-100 text-purple-700",
         },
         // Rental
-        per_hour: { label: "Per Jam", cls: "bg-amber-100 text-amber-700" },
-        per_day: { label: "Per Hari", cls: "bg-amber-100 text-amber-700" },
-        per_week: { label: "Per Minggu", cls: "bg-amber-100 text-amber-700" },
+        per_hour: { label: "Per Jam", cls: "bg-warning/10 text-warning" },
+        per_day: { label: "Per Hari", cls: "bg-warning/10 text-warning" },
+        per_week: { label: "Per Minggu", cls: "bg-warning/10 text-warning" },
         // Ticket
-        online: { label: "Online", cls: "bg-rose-100 text-rose-700" },
+        online: { label: "Online", cls: "bg-destructive/10 text-destructive" },
         group: { label: "Group", cls: "bg-pink-100 text-pink-700" },
         // Hospitality
         check_in: { label: "Check-in", cls: "bg-teal-100 text-teal-700" },
         reservation: {
             label: "Reservasi",
-            cls: "bg-primary-100 text-primary-700",
+            cls: "bg-primary/10 text-primary",
         },
         short_stay: { label: "Short Stay", cls: "bg-sky-100 text-sky-700" },
         // Parking
         entry: { label: "Masuk", cls: "bg-muted text-foreground" },
-        exit: { label: "Keluar", cls: "bg-slate-200 text-muted-foreground" },
-        lost_ticket: { label: "Tiket Hilang", cls: "bg-red-100 text-destructive" },
+        exit: { label: "Keluar", cls: "bg-muted text-muted-foreground" },
+        lost_ticket: { label: "Tiket Hilang", cls: "bg-destructive/10 text-destructive" },
         // Session
-        postpaid: { label: "Postpaid", cls: "bg-primary-100 text-primary-700" },
+        postpaid: { label: "Postpaid", cls: "bg-primary/10 text-primary" },
         prepaid: { label: "Prepaid", cls: "bg-violet-100 text-violet-700" },
     };
     const config = map[type] ?? {

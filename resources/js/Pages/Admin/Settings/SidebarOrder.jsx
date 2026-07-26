@@ -29,7 +29,7 @@ function DragHandle({ listeners, attributes }) {
         <button
             {...listeners}
             {...attributes}
-            className="flex h-7 w-7 cursor-grab items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-muted-foreground active:cursor-grabbing transition-colors"
+            className="flex h-7 w-7 cursor-grab items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing transition-colors"
             title="Drag untuk mengubah urutan"
             tabIndex={-1}
         >
@@ -59,8 +59,8 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
         <tr
             ref={isDragOverlay ? undefined : setNodeRef}
             style={isDragOverlay ? undefined : style}
-            className={`group transition-colors ${isDragging ? "bg-primary-" : "hover:bg-muted"
-                } ${isDragOverlay ? "bg-card shadow-xl ring-1 ring-black/10 rounded-lg" : ""}`}
+            className={`group transition-colors ${isDragging ? "bg-primary/10" : "hover:bg-[rgb(var(--color-table-hover))]"
+                } ${isDragOverlay ? "bg-card shadow-xl ring-1 ring-border rounded-lg" : ""}`}
         >
             <td className="px-4 py-3 w-10">
                 <DragHandle listeners={listeners} attributes={attributes} />
@@ -79,7 +79,7 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
                 </span>
             </td>
             <td className="px-4 py-3 hidden sm:table-cell">
-                <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 ring-1 ring-emerald-200">
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success ring-1 ring-success/20">
                     <Check className="h-2.5 w-2.5" strokeWidth={3} />
                     Aktif
                 </span>
@@ -89,7 +89,7 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
                     <button
                         onClick={onMoveUp}
                         disabled={idx === 0}
-                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
                         title="Naikkan"
                     >
                         <ArrowUp className="h-3.5 w-3.5" strokeWidth={2} />
@@ -97,7 +97,7 @@ function SortableFeatureRow({ item, idx, totalUnlocked, onMoveUp, onMoveDown, is
                     <button
                         onClick={onMoveDown}
                         disabled={idx >= totalUnlocked - 1}
-                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-muted-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition"
                         title="Turunkan"
                     >
                         <ArrowDown className="h-3.5 w-3.5" strokeWidth={2} />
@@ -117,7 +117,7 @@ function LockedFeatureRow({ item }) {
             </td>
             <td className="px-4 py-3">
                 <div className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-200 text-muted-foreground">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-background text-muted-foreground">
                         <NavIcons name={item.icon} className="h-3.5 w-3.5" />
                     </span>
                     <span className="font-medium text-muted-foreground line-through">{item.name}</span>
@@ -127,7 +127,7 @@ function LockedFeatureRow({ item }) {
                 <span className="inline-flex items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground w-6 h-6">—</span>
             </td>
             <td className="px-4 py-3 hidden sm:table-cell">
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-600 ring-1 ring-amber-200">
+                <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning ring-1 ring-warning/20">
                     <Lock className="h-2.5 w-2.5" strokeWidth={2.5} />
                     Terkunci
                 </span>
@@ -209,13 +209,13 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
             >
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-border bg-background text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                            <tr>
                                 <th className="w-10 px-4 py-3"></th>
-                                <th className="px-4 py-3">Fitur</th>
-                                <th className="px-4 py-3 hidden sm:table-cell">Urutan</th>
-                                <th className="px-4 py-3 hidden sm:table-cell">Status</th>
-                                <th className="px-4 py-3 text-right">Aksi</th>
+                                <th className="px-4 py-3 text-left font-semibold">Fitur</th>
+                                <th className="px-4 py-3 text-left font-semibold hidden sm:table-cell">Urutan</th>
+                                <th className="px-4 py-3 text-left font-semibold hidden sm:table-cell">Status</th>
+                                <th className="px-4 py-3 text-right font-semibold">Aksi</th>
                             </tr>
                         </thead>
                         <SortableContext
@@ -239,12 +239,12 @@ function FeatureGroup({ group, items, customOrder, saveGroupOrder }) {
                                     <tr>
                                         <td colSpan={5} className="px-4 py-2">
                                             <div className="flex items-center gap-2">
-                                                <div className="h-px flex-1 bg-slate-200" />
+                                                <div className="h-px flex-1 bg-border" />
                                                 <span className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
                                                     <Lock className="h-3 w-3" strokeWidth={1.8} />
                                                     Fitur Terkunci (Upgrade Plan)
                                                 </span>
-                                                <div className="h-px flex-1 bg-slate-200" />
+                                                <div className="h-px flex-1 bg-border" />
                                             </div>
                                         </td>
                                     </tr>
