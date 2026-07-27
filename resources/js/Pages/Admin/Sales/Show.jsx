@@ -268,18 +268,41 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
         }
     };
 
+    const validReturns = sale.returns?.filter((r) => r.status === "completed") || [];
+    const totalReturned = validReturns.reduce((sum, r) => sum + Number(r.total_amount), 0);
+    const netTotal = Number(sale.grand_total) - totalReturned;
+
     return (
         <AuthenticatedLayout
             
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.sales.index")}>
-                    <div className="text-sm font-semibold text-foreground">
-                        pageTitle
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                        sale.sale_no
+                <div className="flex items-center gap-3">
+                    <Link
+                        href={route("admin.sales.index")}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                        aria-label="Kembali"
+                    >
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.8}
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M15.75 19.5L8.25 12l7.5-7.5"
+                            />
+                        </svg>
+                    </Link>
+                    <div className="leading-tight">
+                        <div className="text-sm font-semibold text-foreground">
+                            {pageTitle}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                            {sale.sale_no}
+                        </div>
                     </div>
                 </div>
             }>
@@ -956,6 +979,27 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                         {fmtRp(sale.grand_total)}
                                     </dd>
                                 </div>
+                                {totalReturned > 0 && (
+                                    <>
+                                        <div className="flex items-center justify-between pt-1">
+                                            <dt className="font-semibold text-destructive">
+                                                Total Retur
+                                            </dt>
+                                            <dd className="font-bold text-destructive">
+                                                - {fmtRp(totalReturned)}
+                                            </dd>
+                                        </div>
+                                        <div className="my-2 border-t border-border" />
+                                        <div className="flex items-center justify-between">
+                                            <dt className="text-sm font-bold text-foreground">
+                                                Netto
+                                            </dt>
+                                            <dd className="text-xl font-bold text-primary">
+                                                {fmtRp(netTotal)}
+                                            </dd>
+                                        </div>
+                                    </>
+                                )}
                                 <div className="my-2 border-t border-border" />
                                 <Row
                                     label="Dibayar"
@@ -1143,6 +1187,68 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                                 </div>
                             </div>
                         )}
+
+                    {/* Returns */}
+                    {validReturns.length > 0 && (
+                        <div className="overflow-hidden rounded-2xl border border-destructive/30 bg-destructive/5 shadow-sm mb-5">
+                            <div className="border-b border-destructive/20 bg-destructive/10 px-6 py-4">
+                                <h3 className="text-base font-semibold text-destructive">
+                                    Riwayat Retur
+                                </h3>
+                            </div>
+                            <div className="divide-y divide-destructive/20 p-4">
+                                {validReturns.map((ret) => (
+                                    <div
+                                        key={ret.id}
+                                        className="flex flex-col py-3 first:pt-0 last:pb-0 space-y-2"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex flex-col">
+                                                <span className="font-semibold text-foreground">
+                                                    {ret.return_no}
+                                                </span>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {fmtDate(ret.return_date)} · {ret.user?.name ?? "-"}
+                                                </span>
+                                            </div>
+                                            <div className="text-right flex flex-col items-end gap-1">
+                                                <span className="font-bold text-destructive">
+                                                    - {fmtRp(ret.total_amount)}
+                                                </span>
+                                                <Link
+                                                    href={route("admin.sale-returns.show", ret.id)}
+                                                    className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-1 text-[10px] font-bold text-destructive hover:bg-destructive/20 transition"
+                                                >
+                                                    Lihat Detail →
+                                                </Link>
+                                            </div>
+                                        </div>
+                                        {/* Daftar Item Retur */}
+                                        {ret.items && ret.items.length > 0 && (
+                                            <div className="mt-2 rounded-xl bg-destructive/5 p-3 text-sm">
+                                                <p className="mb-2 text-xs font-semibold text-destructive/80">Rincian Barang Dikembalikan:</p>
+                                                <ul className="space-y-1.5">
+                                                    {ret.items.map((item, idx) => (
+                                                        <li key={idx} className="flex items-start justify-between gap-2 text-xs">
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium text-foreground">{item.product?.name ?? "Produk tidak diketahui"}</span>
+                                                                <span className="text-[10px] text-muted-foreground">
+                                                                    {Number(item.quantity)} x {fmtRp(item.unit_price)}
+                                                                </span>
+                                                            </div>
+                                                            <span className="font-semibold text-destructive/80">
+                                                                - {fmtRp(item.quantity * item.unit_price)}
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {payments && payments.length > 0 && (
                         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">

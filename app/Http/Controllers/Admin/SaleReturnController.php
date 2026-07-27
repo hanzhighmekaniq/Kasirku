@@ -20,13 +20,19 @@ class SaleReturnController extends Controller
     public function index()
     {
         $storeId = session('current_store_id');
+        $branchId = session('current_branch_id') ?? session('branch_id') ?? Auth::user()->branch_id ?? null;
 
         $returns = SaleReturn::with([
             'sale:id,sale_no,grand_total',
             'customer:id,name',
             'user:id,name',
         ])
-            ->whereHas('sale', fn ($q) => $q->where('store_id', $storeId))
+            ->whereHas('sale', function ($q) use ($storeId, $branchId) {
+                $q->where('store_id', $storeId);
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+            })
             ->latest('return_date')
             ->get()
             ->map(function ($retur) {
@@ -43,8 +49,10 @@ class SaleReturnController extends Controller
     public function create()
     {
         $storeId = session('current_store_id');
+        $branchId = session('current_branch_id') ?? session('branch_id') ?? Auth::user()->branch_id ?? null;
 
         $sales = Sale::where('store_id', $storeId)
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->where('status', 'completed')
             ->with('customer:id,name')
             ->latest('sale_date')
@@ -322,6 +330,9 @@ class SaleReturnController extends Controller
      *
      * Bucket diambil dari SaleItem asalnya supaya barang yang diretur
      * kembali ke varian & kemasan yang sama persis dengan saat dijual.
+     *
+     * Jika SaleItem mencatat batch asal (`product_batch_id`), stok
+     * dikembalikan ke batch tersebut — bukan batch terakhir masuk.
      */
     private function adjustStock(
         SaleItem $saleItem,
@@ -339,6 +350,11 @@ class SaleReturnController extends Controller
             ? 'Pembatalan retur penjualan - stok dikurangi kembali'
             : 'Retur penjualan - stok dikembalikan';
 
+        // Saat return_in: kembalikan ke batch asal jika tercatat di SaleItem
+        $batchId = (! $isReversal && $saleItem->product_batch_id)
+            ? $saleItem->product_batch_id
+            : null;
+
         $mutation = new StockMutation(
             productId: $saleItem->product_id,
             variantId: $saleItem->variant_id,
@@ -349,6 +365,7 @@ class SaleReturnController extends Controller
             movementType: $movementType,
             referenceType: 'sale_return',
             notes: $notes,
+            productBatchId: $batchId,
         );
 
         $stockService = app(StockService::class);

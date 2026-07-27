@@ -1,4 +1,4 @@
-﻿import useKasir from "../useKasir";
+import useKasir from "../useKasir";
 import ProductCard from "../components/ProductCard";
 import KasirLayout from "./KasirLayout";
 import {
@@ -229,6 +229,12 @@ export default function FnBKasir(props) {
                     type="text"
                     value={k.search}
                     onChange={(e) => k.setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            k.handleSearchEnter();
+                        }
+                    }}
                     placeholder="Cari menu, SKU, atau scan barcode... (F2)"
                     className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-0"
                 />

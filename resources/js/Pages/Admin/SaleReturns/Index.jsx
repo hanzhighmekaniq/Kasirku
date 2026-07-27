@@ -340,6 +340,14 @@ export default function Index({ saleReturns }) {
             </div>
             </div>
 
+            {/* Mobile FAB */}
+            <Link
+                href={route('admin.sale-returns.create')}
+                className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95 sm:hidden"
+            >
+                <Plus className="h-6 w-6" strokeWidth={2} />
+            </Link>
+
             <ConfirmDeleteModal
                 open={!!deleteTarget}
                 title={`Hapus retur ${deleteTarget?.return_no}?`}

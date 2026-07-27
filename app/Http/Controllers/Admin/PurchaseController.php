@@ -166,6 +166,8 @@ class PurchaseController extends Controller
             'items.*.unit_name' => 'nullable|string|max:50',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.cost_price' => 'required|numeric|min:0',
+            'items.*.batch_no' => 'nullable|string|max:100',
+            'items.*.expiry_date' => 'nullable|date',
         ]);
 
         DB::beginTransaction();
@@ -227,6 +229,8 @@ class PurchaseController extends Controller
                     'variant_id' => $item['variant_id'] ?? null,
                     'packaging_unit_id' => $item['packaging_unit_id'] ?? null,
                     'unit_name' => $item['unit_name'] ?? null,
+                    'batch_no' => $item['batch_no'] ?? null,
+                    'expiry_date' => $item['expiry_date'] ?? null,
                     'quantity' => $item['quantity'],
                     'cost_price' => $item['cost_price'],
                     'subtotal' => $item['quantity'] * $item['cost_price'],
@@ -377,6 +381,8 @@ class PurchaseController extends Controller
             'items.*.unit_name' => 'nullable|string|max:50',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.cost_price' => 'required|numeric|min:0',
+            'items.*.batch_no' => 'nullable|string|max:100',
+            'items.*.expiry_date' => 'nullable|date',
         ]);
 
         DB::beginTransaction();
@@ -390,6 +396,8 @@ class PurchaseController extends Controller
                     'variant_id' => $item['variant_id'] ?? null,
                     'packaging_unit_id' => $item['packaging_unit_id'] ?? null,
                     'unit_name' => $item['unit_name'] ?? null,
+                    'batch_no' => $item['batch_no'] ?? null,
+                    'expiry_date' => $item['expiry_date'] ?? null,
                     'quantity' => $item['quantity'],
                     'cost_price' => $item['cost_price'],
                     'subtotal' => $item['quantity'] * $item['cost_price'],

@@ -66,7 +66,7 @@ class ProductSeeder extends Seeder
             'category_id' => $catMinuman, 'barcode' => '8999999000031',
             'name' => 'Susu Ultra 200ml', 'description' => 'Susu UHT kemasan 200ml.',
             'type' => 'finished_goods', 'unit' => 'pcs', 'cost_price' => 3800, 'sell_price' => 5500,
-            'stock_minimum' => 12, 'track_stock' => true, 'is_sellable' => true, 'is_active' => true,
+            'stock_minimum' => 12, 'track_stock' => true, 'track_batch' => true, 'is_sellable' => true, 'is_active' => true,
             'is_variant' => true,
         ]);
         ProductVariant::firstOrCreate(['product_id' => $p2->id, 'name' => 'Full Cream'], [
@@ -133,7 +133,7 @@ class ProductSeeder extends Seeder
             'category_id' => $catSembako, 'barcode' => '8991103000061',
             'name' => 'Minyak Goreng Tropical 1L', 'description' => 'Minyak goreng sawit murni kemasan 1 liter.',
             'type' => 'finished_goods', 'unit' => 'pcs', 'cost_price' => 15000, 'sell_price' => 21000,
-            'stock_minimum' => 12, 'track_stock' => true, 'is_sellable' => true, 'is_active' => true,
+            'stock_minimum' => 12, 'track_stock' => true, 'track_batch' => true, 'is_sellable' => true, 'is_active' => true,
         ]);
         ProductPackagingUnit::firstOrCreate(['product_id' => $p6->id, 'variant_id' => null, 'name' => 'Dus'], [
             'conversion_qty' => 12, 'sell_price' => 230000,

@@ -73,9 +73,20 @@ class Customer extends Model
     public function activeMembership(): ?CustomerMembership
     {
         return $this->memberships()
+            ->with('membership')
             ->where('status', 'active')
-            ->where('expired_date', '>=', now())
+            ->where(function ($query) {
+                $query->whereNull('expired_date')
+                    ->orWhere('expired_date', '>=', now());
+            })
             ->latest()
             ->first();
+    }
+
+    public function syncTierFromMembership(): void
+    {
+        $tier = $this->activeMembership()?->membership?->maps_to_tier ?? 'bronze';
+
+        $this->forceFill(['tier' => $tier])->save();
     }
 }

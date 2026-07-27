@@ -22,10 +22,11 @@ class StockAdjustmentController extends Controller
 
     public function index()
     {
-        [$storeId] = $this->storeScope();
+        [$storeId, $branchId] = $this->storeScope();
 
         $adjustments = StockAdjustment::with('user')
             ->where('store_id', $storeId)
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->latest()
             ->get();
 
@@ -44,11 +45,11 @@ class StockAdjustmentController extends Controller
 
     public function create()
     {
-        [$storeId] = $this->storeScope();
+        [$storeId, $branchId] = $this->storeScope();
 
         return Inertia::render('Admin/Stock/Adjustment/Create', [
             'buckets' => $this->stockBucketOptions($storeId),
-            'currentBranchId' => session('current_branch_id'),
+            'currentBranchId' => $branchId,
         ]);
     }
 
@@ -169,8 +170,7 @@ class StockAdjustmentController extends Controller
             'cost_price' => 'nullable|numeric|min:0',
         ]);
 
-        $storeId = session('current_store_id');
-        $branchId = session('current_branch_id');
+        [$storeId, $branchId] = $this->storeScope();
         $product = Product::findOrFail($validated['product_id']);
         $variantId = $validated['variant_id'] ?? null;
         $packagingUnitId = $validated['packaging_unit_id'] ?? null;

@@ -3,6 +3,7 @@
 namespace App\Services\Stock;
 
 use App\Models\Product;
+use App\Models\ProductBatch;
 use App\Models\ProductStock;
 use App\Models\StockMovement;
 
@@ -48,6 +49,14 @@ final class StockService
             $stock->increment('quantity', $m->quantity);
         }
 
+        $product = Product::find($m->productId);
+        if ($product && $product->track_batch && $m->productBatchId) {
+            $batch = ProductBatch::find($m->productBatchId);
+            if ($batch) {
+                $batch->increment('quantity', $m->quantity);
+            }
+        }
+
         $this->recordMovement($m);
     }
 
@@ -55,10 +64,17 @@ final class StockService
      * Kurangi stok dan catat pergerakan keluar.
      *
      * Kalau `$m->revertAvgCost === true` (mis. pembatalan pembelian),
-     * average_cost direvisi seolah qty ini tidak pernah masuk — mencerminkan
-     * perilaku revertBucketAverageCost() yang sebelumnya ada di PurchaseController.
+     * average_cost direvisi seolah qty ini tidak pernah masuk.
+     *
+     * Kalau `$m->productBatchId` diisi, batch tersebut langsung dikurangi
+     * (cocok untuk retur pembelian / penyesuaian batch spesifik).
+     * Tanpa `productBatchId`, sistem pakai urutan FEFO otomatis.
+     *
+     * @return array<int, array{batch_id: int, quantity: float}>
+     *                                                           List batch yang terpotong beserta jumlahnya.
+     *                                                           Kosong jika produk tidak track_batch.
      */
-    public function decrease(StockMutation $m): void
+    public function decrease(StockMutation $m): array
     {
         $stock = $this->resolveBucket($m);
 
@@ -77,7 +93,53 @@ final class StockService
             }
         }
 
+        $batchDeductions = [];
+
+        $product = Product::find($m->productId);
+        if ($product && $product->track_batch) {
+            if ($m->productBatchId) {
+                // Potong batch spesifik (mis. retur pembelian, adjustment manual)
+                $specificBatch = ProductBatch::lockForUpdate()->find($m->productBatchId);
+                if ($specificBatch) {
+                    $take = min((float) $specificBatch->quantity, (float) $m->quantity);
+                    if ($take > 0) {
+                        $specificBatch->decrement('quantity', $take);
+                        $batchDeductions[] = ['batch_id' => $specificBatch->id, 'quantity' => $take];
+                    }
+                }
+            } else {
+                // FEFO otomatis: potong dari batch paling dekat kadaluarsa
+                $remainingQty = (float) $m->quantity;
+
+                $batches = ProductBatch::where([
+                    'product_id' => $m->productId,
+                    'variant_id' => $m->variantId,
+                    'packaging_unit_id' => $m->packagingUnitId,
+                    'store_id' => $m->storeId,
+                    'branch_id' => $m->branchId,
+                ])
+                    ->where('quantity', '>', 0)
+                    ->orderByRaw('expiry_date IS NULL ASC, expiry_date ASC')
+                    ->orderBy('purchase_date', 'asc')
+                    ->lockForUpdate()
+                    ->get();
+
+                foreach ($batches as $batch) {
+                    if ($remainingQty <= 0) {
+                        break;
+                    }
+
+                    $take = min((float) $batch->quantity, $remainingQty);
+                    $batch->decrement('quantity', $take);
+                    $remainingQty -= $take;
+                    $batchDeductions[] = ['batch_id' => $batch->id, 'quantity' => $take];
+                }
+            }
+        }
+
         $this->recordMovement($m);
+
+        return $batchDeductions;
     }
 
     /**
@@ -164,6 +226,7 @@ final class StockService
             if ($recipe->is_nullable) {
                 $rawStock = $recipe->rawMaterial->stocks
                     ->where('store_id', $storeId)
+                    ->where('branch_id', $branchId)
                     ->sum('quantity');
                 if ($rawStock <= 0) {
                     continue;

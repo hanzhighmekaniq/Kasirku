@@ -6,6 +6,8 @@ import PageHeader from "@/Components/PageHeader";
 export default function Edit({ batch, products, branches }) {
     const { data, setData, put, processing, errors } = useForm({
         product_id:    batch.product_id   ?? '',
+        variant_id:    batch.variant_id   ?? '',
+        packaging_unit_id: batch.packaging_unit_id ?? '',
         branch_id:     batch.branch_id    ?? '',
         batch_no:      batch.batch_no     ?? '',
         purchase_date: batch.purchase_date ?? '',

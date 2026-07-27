@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\CustomerDebtLog;
+use App\Models\CustomerMembership;
+use App\Models\Membership;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -20,6 +23,12 @@ class CustomerController extends Controller
         abort_unless($storeId, 403);
 
         $customers = Customer::where('store_id', $storeId)
+            ->with([
+                'memberships' => fn ($query) => $query
+                    ->active()
+                    ->with('membership')
+                    ->latest(),
+            ])
             ->orderByDesc('created_at')
             ->get();
 
@@ -44,6 +53,39 @@ class CustomerController extends Controller
 
         return Inertia::render('Admin/Customers/Edit', [
             'customer' => $customer,
+            'storeType' => $this->resolveStoreType(),
+        ]);
+    }
+
+    public function show(Customer $customer)
+    {
+        $this->ensureSameStore($customer);
+        $storeId = session('current_store_id');
+
+        $customer->load([
+            'memberships' => fn ($query) => $query
+                ->with('membership')
+                ->latest(),
+            'debtLogs' => fn ($query) => $query->latest()->limit(20),
+        ])->loadCount('sales');
+
+        $recentSales = $customer->sales()
+            ->with('user:id,name')
+            ->latest('sale_date')
+            ->limit(20)
+            ->get();
+
+        $membershipPlans = Membership::where('store_id', $storeId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('Admin/Customers/Show', [
+            'customer' => $customer,
+            'activeMembership' => $customer->activeMembership(),
+            'membershipPlans' => $membershipPlans,
+            'recentSales' => $recentSales,
             'storeType' => $this->resolveStoreType(),
         ]);
     }
@@ -174,6 +216,57 @@ class CustomerController extends Controller
         }
 
         return back()->with('success', 'Pelunasan berhasil. Sisa hutang: Rp'.number_format($newBalance));
+    }
+
+    public function assignMembership(Request $request, Customer $customer)
+    {
+        $this->ensureSameStore($customer);
+        $storeId = session('current_store_id');
+
+        $validated = $request->validate([
+            'membership_id' => [
+                'required',
+                Rule::exists('memberships', 'id')->where('store_id', $storeId),
+            ],
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $membership = Membership::where('store_id', $storeId)
+            ->where('is_active', true)
+            ->findOrFail($validated['membership_id']);
+        $startDate = now()->startOfDay();
+
+        DB::transaction(function () use ($customer, $membership, $startDate, $validated) {
+            $customer->memberships()
+                ->active()
+                ->update(['status' => 'cancelled']);
+
+            $customer->memberships()->create([
+                'membership_id' => $membership->id,
+                'start_date' => $startDate,
+                'expired_date' => $membership->calculateExpiry($startDate),
+                'remaining_visits' => $membership->duration_type === 'visit'
+                    ? $membership->duration_value
+                    : null,
+                'status' => 'active',
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            $customer->syncTierFromMembership();
+        });
+
+        return back()->with('success', "Membership {$membership->name} berhasil diaktifkan.");
+    }
+
+    public function revokeMembership(CustomerMembership $customerMembership)
+    {
+        $customerMembership->load('customer');
+        $this->ensureSameStore($customerMembership->customer);
+
+        $customerMembership->update(['status' => 'cancelled']);
+        $customerMembership->customer->syncTierFromMembership();
+
+        return back()->with('success', 'Membership pelanggan berhasil dicabut.');
     }
 
     // ── Helpers ──────────────────────────────────────────

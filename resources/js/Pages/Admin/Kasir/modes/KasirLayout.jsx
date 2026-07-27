@@ -138,8 +138,7 @@ export default function KasirLayout({
             if (k.showPayment) return;
             if (
                 document.activeElement?.tagName === "TEXTAREA" ||
-                (document.activeElement?.tagName === "INPUT" &&
-                    document.activeElement !== k.barcodeRef?.current)
+                document.activeElement?.tagName === "INPUT"
             ) {
                 return;
             }
@@ -200,12 +199,12 @@ export default function KasirLayout({
 
     const headerRightContent = (
         <div className="flex items-center gap-1.5">
-            {/* 
-                Sesuai permintaan: di mode normal (tidak fullscreen),
-                sembunyikan Shift, Ditahan, dan Riwayat.
-                Hanya tampilkan tombol Fullscreen.
-            */}
-            
+            <TipButton
+                label="Riwayat Transaksi"
+                icon={History}
+                variant="subtle"
+                onClick={() => k.setShowHistory(true)}
+            />
             <TipButton
                 label={isFullscreen ? "Keluar Fullscreen (Esc)" : "Fullscreen (F11)"}
                 icon={isFullscreen ? Minimize2 : Maximize2}
@@ -796,21 +795,40 @@ export default function KasirLayout({
 
                 {/* Cart header */}
                 <div className="flex shrink-0 items-center justify-between border-b border-t border-border bg-card px-4 py-2.5">
-                    <h3 className="text-sm font-bold text-foreground">
-                        Keranjang{" "}
-                        <span className="font-normal text-muted-foreground/60">
-                            ({k.cart.length})
-                        </span>
-                    </h3>
-                    {k.cart.length > 0 && (
-                        <TipButton
-                            label="Kosongkan Keranjang"
-                            icon={Trash2}
-                            size="sm"
-                            variant="danger"
-                            onClick={k.clearCart}
-                        />
-                    )}
+                    <div className="flex items-center gap-2">
+                        <ShoppingCart size={18} className="text-primary" />
+                        <h3 className="text-[15px] font-extrabold tracking-tight text-foreground flex items-center gap-1.5">
+                            Keranjang
+                            <span className="flex h-5 items-center justify-center rounded-full bg-primary/10 px-2 text-[11px] font-bold text-primary">
+                                {k.cart.length}
+                            </span>
+                        </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {heldCount > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setShowHeldModal(true)}
+                                className="relative flex items-center justify-center gap-1.5 rounded-lg border border-warning/30 bg-warning/10 px-2 py-1 text-xs font-semibold text-warning transition-colors hover:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
+                                title="Transaksi Ditahan"
+                            >
+                                <Layers size={14} />
+                                <span className="hidden sm:inline">Ditahan</span>
+                                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-warning px-1 text-[10px] font-bold text-white shadow-sm">
+                                    {heldCount}
+                                </span>
+                            </button>
+                        )}
+                        {k.cart.length > 0 && (
+                            <TipButton
+                                label="Kosongkan Keranjang"
+                                icon={Trash2}
+                                size="sm"
+                                variant="danger"
+                                onClick={k.clearCart}
+                            />
+                        )}
+                    </div>
                 </div>
 
                 {/* Cart items — satu-satunya area yang scroll */}
@@ -1522,10 +1540,13 @@ export default function KasirLayout({
             {k.showHistory && (
                 <HistoryPanel
                     sales={k.historyList}
+                    paymentMethods={paymentMethods}
                     onClose={() => k.setShowHistory(false)}
                     onPrint={k.handlePrintHistory}
                     onResumeSplit={k.handleResumeSplit}
                     onCancelSplit={k.handleCancelSplit}
+                    onVoid={k.handleVoidSale}
+                    onUpdatePayment={k.handleUpdatePayment}
                 />
             )}
             <BarcodeScanner

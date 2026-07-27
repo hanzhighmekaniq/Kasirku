@@ -401,23 +401,33 @@ export default function Create({
 
     return (
         <AuthenticatedLayout
-
-
-            backUrl={route("admin.purchases.index")}>
-            <PageHeader
-                title="Tambah Pembelian"
-                breadcrumbs={["Admin", "Pembelian", "Tambah"]}
-                heading={
-                    <>
-                        Tambah{" "}
-                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                            Pembelian
-                        </span>
-                    </>
-                }
-                description="Catat pembelian stok dari supplier, pantau status pembayaran, dan penerimaan barang."
-
-            />
+            header={
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Pembelian
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Manajemen
+                    </div>
+                </div>
+            }
+        >
+            <div className="mx-auto max-w-5xl space-y-6 pb-24 sm:pb-8">
+                <PageHeader
+                    title="Tambah Pembelian"
+                    breadcrumbs={["Admin", "Pembelian", "Tambah"]}
+                    heading={
+                        <>
+                            Tambah{" "}
+                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                                Pembelian
+                            </span>
+                        </>
+                    }
+                    description="Catat pembelian stok dari supplier, pantau status pembayaran, dan penerimaan barang."
+                    backUrl={route("admin.purchases.index")}
+                    className="mb-0"
+                />
 
             {flash?.error && (
                 <div className="mb-4 flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -1143,21 +1153,27 @@ export default function Create({
                             </dl>
                         </SectionCard>
 
-                        <div className="flex flex-col gap-2">
-                            <Button
-                                type="submit"
-                                loading={processing}
-                                disabled={data.items.length === 0}
-                                className="w-full"
-                            >
-                                Simpan Pembelian
-                            </Button>
-                            <Link
-                                href={route("admin.purchases.index")}
-                                className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-center text-sm font-medium text-foreground transition hover:bg-muted"
-                            >
-                                Batal
-                            </Link>
+                        {/* Sticky Action Bar */}
+                        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/80 p-4 backdrop-blur-md sm:static sm:border-0 sm:bg-transparent sm:p-0">
+                            <div className="mx-auto flex max-w-5xl justify-end gap-3 sm:mx-0">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    as={Link}
+                                    href={route("admin.purchases.index")}
+                                    className="w-full sm:w-auto"
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    loading={processing}
+                                    disabled={data.items.length === 0}
+                                    className="w-full sm:w-auto"
+                                >
+                                    Simpan Pembelian
+                                </Button>
+                            </div>
                         </div>
 
                         {data.items.length === 0 && (
@@ -1168,6 +1184,7 @@ export default function Create({
                     </div>
                 </div>
             </form>
+            </div>
         </AuthenticatedLayout>
     );
 }

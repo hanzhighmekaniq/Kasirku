@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import Button from "@/Components/ui/Button";
 import CurrencyInput from '@/Components/ui/CurrencyInput';
 import SearchableSelect from '@/Components/ui/SearchableSelect';
+import NumberInput from '@/Components/ui/NumberInput';
 import AnchoredPanel from '@/Components/ui/AnchoredPanel';
 import { Check, X } from 'lucide-react';
 
@@ -71,7 +72,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         onChange={(e) => {
                             setDropdownSearch(e.target.value);
                             if (data.product_id) {
-                                setData((d) => ({ ...d, product_id: '', _cost_locked: false }));
+                                setData((d) => ({ ...d, product_id: '', variant_id: '', packaging_unit_id: '', _cost_locked: false }));
                             }
                             if (!dropdownOpen) setDropdownOpen(true);
                         }}
@@ -80,7 +81,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         className={`block w-full rounded-xl py-2.5 pl-10 pr-4 bg-background border border-input text-foreground text-sm shadow-sm transition focus:ring-2 ${errors.product_id ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-input focus:border-ring focus:ring-ring/20'}`}
                     />
                     {selectedProduct && (
-                        <button type="button" onClick={() => { setData((d) => ({ ...d, product_id: '', _cost_locked: false })); setDropdownSearch(''); setDropdownOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                        <button type="button" onClick={() => { setData((d) => ({ ...d, product_id: '', variant_id: '', packaging_unit_id: '', _cost_locked: false })); setDropdownSearch(''); setDropdownOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     )}
@@ -101,7 +102,7 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                                     <button
                                         key={p.id}
                                         type="button"
-                                        onClick={() => { setData((d) => ({ ...d, product_id: p.id, _cost_locked: false })); setDropdownSearch(''); setDropdownOpen(false); }}
+                                        onClick={() => { setData((d) => ({ ...d, product_id: p.id, variant_id: '', packaging_unit_id: '', _cost_locked: false })); setDropdownSearch(''); setDropdownOpen(false); }}
                                         className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
                                             Number(data.product_id) === p.id ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:bg-muted'
                                         }`}
@@ -114,6 +115,47 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         </div>
                 </AnchoredPanel>
             </div>
+
+            {/* Variant dan Satuan */}
+            {(selectedProduct?.is_variant || (selectedProduct?.packaging_units && selectedProduct.packaging_units.length > 0)) && (
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    {selectedProduct.is_variant && (
+                        <div>
+                            <label className="block text-sm font-medium text-foreground">
+                                Variant <span className="text-destructive">*</span>
+                            </label>
+                            <div className="mt-1.5">
+                                <SearchableSelect
+                                    options={selectedProduct.variants ?? []}
+                                    value={data.variant_id}
+                                    onChange={(v) => setData('variant_id', v)}
+                                    placeholder="Pilih Variant..."
+                                    error={!!errors.variant_id}
+                                />
+                                {errors.variant_id && <p className="mt-1 text-sm text-destructive">{errors.variant_id}</p>}
+                            </div>
+                        </div>
+                    )}
+                    {selectedProduct.packaging_units && selectedProduct.packaging_units.length > 0 && (
+                        <div>
+                            <label className="block text-sm font-medium text-foreground">Kemasan (Satuan)</label>
+                            <div className="mt-1.5">
+                                <SearchableSelect
+                                    options={[
+                                        { id: '', name: 'Pcs (satuan dasar)' },
+                                        ...(selectedProduct.packaging_units.filter(u => data.variant_id ? String(u.variant_id) === String(data.variant_id) : true))
+                                    ]}
+                                    value={data.packaging_unit_id}
+                                    onChange={(v) => setData('packaging_unit_id', v)}
+                                    placeholder="Pcs (satuan dasar)"
+                                    error={!!errors.packaging_unit_id}
+                                />
+                                {errors.packaging_unit_id && <p className="mt-1 text-sm text-destructive">{errors.packaging_unit_id}</p>}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Nomor Batch + Cabang */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -186,9 +228,8 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                     <label htmlFor="quantity" className="block text-sm font-medium text-foreground">
                         Jumlah <span className="text-destructive">*</span>
                     </label>
-                    <input
+                    <NumberInput
                         id="quantity"
-                        type="number"
                         min="0"
                         required
                         placeholder="0"

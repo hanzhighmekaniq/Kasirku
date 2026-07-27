@@ -80,7 +80,7 @@ trait FinalizesSaleStock
                     ? $existing->average_cost
                     : ($product->cost_price ?? 0);
 
-                $stockService->decrease(new StockMutation(
+                $batchDeductions = $stockService->decrease(new StockMutation(
                     productId: $item['product_id'],
                     variantId: $variantId,
                     packagingUnitId: $packagingUnitId,
@@ -95,6 +95,19 @@ trait FinalizesSaleStock
                     notes: "Penjualan #{$referenceNo} — {$item['quantity']}x{$unitLabel} {$product->name}",
                     movedAt: $now ? (string) $now : null,
                 ));
+
+                // Jika seluruh qty berasal dari 1 batch, catat pada SaleItem
+                // supaya retur nanti bisa mengembalikan stok ke batch yang tepat.
+                if (count($batchDeductions) === 1) {
+                    SaleItem::where([
+                        'sale_id' => $sale->id,
+                        'product_id' => $item['product_id'],
+                        'variant_id' => $variantId,
+                        'packaging_unit_id' => $packagingUnitId,
+                    ])->whereNull('product_batch_id')->update([
+                        'product_batch_id' => $batchDeductions[0]['batch_id'],
+                    ]);
+                }
             }
         }
     }
@@ -104,7 +117,7 @@ trait FinalizesSaleStock
      *
      * @return array items with resolved promo data (for stock deduction)
      */
-    protected function createSaleItems(Sale $sale, $items, int $storeId): array
+    protected function createSaleItems(Sale $sale, $items, int $storeId, ?int $branchId = null): array
     {
         $resolvedItems = [];
 
@@ -125,6 +138,7 @@ trait FinalizesSaleStock
                     $needed = (float) $recipe->quantity * (float) $item['quantity'];
                     $rawStock = $recipe->rawMaterial->stocks
                         ->where('store_id', $storeId)
+                        ->when($branchId, fn ($stocks) => $stocks->where('branch_id', $branchId))
                         ->sum('quantity');
 
                     if (! $recipe->is_nullable && $rawStock < $needed) {

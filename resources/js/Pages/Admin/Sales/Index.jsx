@@ -5,7 +5,7 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import * as ReactDOM from "react-dom";
 import axios from "axios";
-import { ChevronDown, X, ClipboardList, Undo2 } from "lucide-react";
+import { ChevronDown, X, ClipboardList, Undo2, Search } from "lucide-react";
 import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import Button from "@/Components/ui/Button";
@@ -177,8 +177,6 @@ function ExtraStatusBadge({ sale, storeType }) {
 export default function Index({
     sales,
     stats,
-    branches = [],
-    currentBranchId = "",
     activeFilters = {},
     storeType = "retail",
 }) {
@@ -223,9 +221,6 @@ export default function Index({
     const statsLabel = STATS_LABEL[storeType] ?? STATS_LABEL.retail;
 
     // Server-side filter state
-    const [filterBranch, setFilterBranch] = useState(
-        activeFilters.branch_id || "",
-    );
     const [dateFrom, setDateFrom] = useState(activeFilters.date_from || "");
     const [dateTo, setDateTo] = useState(activeFilters.date_to || "");
     const [filterPayment, setFilterPayment] = useState(
@@ -235,7 +230,6 @@ export default function Index({
     // Apply server-side filters via router
     const applyServerFilters = (params) => {
         const query = {};
-        if (params.branch_id) query.branch_id = params.branch_id;
         if (params.date_from) query.date_from = params.date_from;
         if (params.date_to) query.date_to = params.date_to;
         if (params.payment_status && params.payment_status !== "all")
@@ -246,32 +240,19 @@ export default function Index({
         });
     };
 
-    const handleBranchChange = (v) => {
-        setFilterBranch(v);
-        applyServerFilters({
-            branch_id: v,
-            date_from: dateFrom,
-            date_to: dateTo,
-            payment_status: filterPayment,
-        });
-    };
-
     const handleDateChange = (key, v) => {
         const newFrom = key === "date_from" ? v : dateFrom;
         const newTo = key === "date_to" ? v : dateTo;
         if (key === "date_from") setDateFrom(v);
         else setDateTo(v);
-        // Only apply if both dates are filled or both empty
         if (newFrom && newTo) {
             applyServerFilters({
-                branch_id: filterBranch,
                 date_from: newFrom,
                 date_to: newTo,
                 payment_status: filterPayment,
             });
         } else if (!newFrom && !newTo) {
             applyServerFilters({
-                branch_id: filterBranch,
                 date_from: "",
                 date_to: "",
                 payment_status: filterPayment,
@@ -282,7 +263,6 @@ export default function Index({
     const handlePaymentFilter = (v) => {
         setFilterPayment(v);
         applyServerFilters({
-            branch_id: filterBranch,
             date_from: dateFrom,
             date_to: dateTo,
             payment_status: v,
@@ -290,15 +270,13 @@ export default function Index({
     };
 
     const hasActiveServerFilters =
-        filterBranch || dateFrom || dateTo || filterPayment !== "all";
+        dateFrom || dateTo || filterPayment !== "all";
 
     const clearAllServerFilters = () => {
-        setFilterBranch("");
         setDateFrom("");
         setDateTo("");
         setFilterPayment("all");
         applyServerFilters({
-            branch_id: "",
             date_from: "",
             date_to: "",
             payment_status: "all",
@@ -443,31 +421,19 @@ export default function Index({
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <div className="relative flex-1">
                             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                    />
-                                </svg>
+                                <Search className="h-4 w-4" strokeWidth={1.8} />
                             </span>
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari no. struk, pelanggan, atau kasir..."
-                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl border border-border bg-background py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                         <Dropdown>
                             <Dropdown.Trigger>
-                                <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
+                                <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-medium shadow-sm transition hover:bg-muted">
                                     <span
                                         className={
                                             filterStatus !== "all"
@@ -483,7 +449,7 @@ export default function Index({
                                                     ? "Dibatalkan"
                                                     : "Semua Status"}
                                     </span>
-                                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
+                                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="48">
@@ -527,7 +493,7 @@ export default function Index({
                         </Dropdown>
                         <Dropdown>
                             <Dropdown.Trigger>
-                                <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
+                                <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-medium shadow-sm transition hover:bg-muted">
                                     <span
                                         className={
                                             filterOrderType !== "all"
@@ -541,7 +507,7 @@ export default function Index({
                                             )?.l ?? filterOrderType)
                                             : "Semua Tipe"}
                                     </span>
-                                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
+                                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="56">
@@ -571,68 +537,9 @@ export default function Index({
                     </div>
 
                     {/* Server-side filters */}
-                    <div className="mt-3 flex flex-wrap items-end gap-3">
-                        {/* Branch filter */}
-                        {branches.length > 0 && (
-                            <div className="flex-1">
-                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                                    Cabang
-                                </label>
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
-                                            <span
-                                                className={
-                                                    filterBranch
-                                                        ? "text-foreground"
-                                                        : "text-muted-foreground"
-                                                }
-                                            >
-                                                {filterBranch
-                                                    ? (branches.find(
-                                                        (b) =>
-                                                            String(b.id) ===
-                                                            String(filterBranch),
-                                                    )?.name ?? "Semua Cabang")
-                                                    : "Semua Cabang"}
-                                            </span>
-                                            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
-                                        </button>
-                                    </Dropdown.Trigger>
-                                    <Dropdown.Content width="56">
-                                        <button
-                                            onClick={() =>
-                                                handleBranchChange("")
-                                            }
-                                            className={`block w-full px-4 py-2.5 text-left text-sm transition ${!filterBranch
-                                                    ? "bg-primary/10 font-medium text-primary"
-                                                    : "text-muted-foreground hover:bg-muted"
-                                                }`}
-                                        >
-                                            Semua Cabang
-                                        </button>
-                                        {branches.map((b) => (
-                                            <button
-                                                key={b.id}
-                                                onClick={() =>
-                                                    handleBranchChange(String(b.id))
-                                                }
-                                                className={`block w-full px-4 py-2.5 text-left text-sm transition ${String(filterBranch) ===
-                                                        String(b.id)
-                                                        ? "bg-primary/10 font-medium text-primary"
-                                                        : "text-muted-foreground hover:bg-muted"
-                                                    }`}
-                                            >
-                                                {b.name}
-                                            </button>
-                                        ))}
-                                    </Dropdown.Content>
-                                </Dropdown>
-                            </div>
-                        )}
-
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         {/* Date range */}
-                        <div className="flex-1">
+                        <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                 Dari Tanggal
                             </label>
@@ -642,10 +549,10 @@ export default function Index({
                                 onChange={(e) =>
                                     handleDateChange("date_from", e.target.value)
                                 }
-                                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
-                        <div className="flex-1">
+                        <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                 Sampai Tanggal
                             </label>
@@ -655,18 +562,18 @@ export default function Index({
                                 onChange={(e) =>
                                     handleDateChange("date_to", e.target.value)
                                 }
-                                className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
 
                         {/* Payment status filter */}
-                        <div className="flex-1">
+                        <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">
                                 Status Bayar
                             </label>
                             <Dropdown>
                                 <Dropdown.Trigger>
-                                    <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
+                                    <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-medium shadow-sm transition hover:bg-muted">
                                         <span
                                             className={
                                                 filterPayment !== "all"
@@ -682,7 +589,7 @@ export default function Index({
                                                         ? "Belum Bayar"
                                                         : "Semua"}
                                         </span>
-                                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
+                                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
                                     </button>
                                 </Dropdown.Trigger>
                                 <Dropdown.Content width="48">
@@ -736,13 +643,15 @@ export default function Index({
 
                         {/* Clear button */}
                         {hasActiveServerFilters && (
-                            <button
-                                onClick={clearAllServerFilters}
-                                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted"
-                            >
-                                <X className="h-4 w-4" strokeWidth={1.8} />
-                                Reset
-                            </button>
+                            <div className="flex items-end">
+                                <button
+                                    onClick={clearAllServerFilters}
+                                    className="inline-flex h-[38px] items-center gap-1.5 rounded-xl border border-border bg-background px-3 text-sm font-medium text-muted-foreground shadow-sm transition hover:bg-muted hover:text-foreground"
+                                >
+                                    <X className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+                                    Reset
+                                </button>
+                            </div>
                         )}
                     </div>
                     <div className="pt-4 flex items-center justify-between">

@@ -4,6 +4,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
 import { Check, Loader2, Trash2, X } from 'lucide-react';
 import StockBucketPicker, { BucketItemLabel } from '@/Components/ui/StockBucketPicker';
+import NumberInput from '@/Components/ui/NumberInput';
 import { purchaseUnitHint, usesUnitConversion } from '@/Utils/unitConversion';
 
 export default function Create({ buckets = [], currentBranchId = null }) {
@@ -45,8 +46,8 @@ export default function Create({ buckets = [], currentBranchId = null }) {
             unit: bucket.unit,
             base_unit: bucket.base_unit,
             base_unit_conversion: bucket.base_unit_conversion,
-            system_qty: currentStock,
-            actual_qty: currentStock,
+            system_qty: currentStock === 0 ? '' : currentStock,
+            actual_qty: currentStock === 0 ? '' : currentStock,
             unit_cost: Number(bucket.cost_price) || 0,
             notes: '',
         }]);
@@ -58,7 +59,11 @@ export default function Create({ buckets = [], currentBranchId = null }) {
 
     const updateItem = (idx, field, value) => {
         const updated = [...data.items];
-        updated[idx] = { ...updated[idx], [field]: field === 'notes' ? value : (Number(value) || 0) };
+        let finalValue = value;
+        if (field !== 'notes') {
+            finalValue = value === '' ? '' : (Number(value) >= 0 ? Number(value) : 0);
+        }
+        updated[idx] = { ...updated[idx], [field]: finalValue };
         setData('items', updated);
     };
 
@@ -187,13 +192,13 @@ export default function Create({ buckets = [], currentBranchId = null }) {
                                                             <label className="mb-1 block text-xs text-muted-foreground">
                                                                 Stok Sistem <span className="text-destructive">*</span>
                                                             </label>
-                                                            <input type="number" required value={item.system_qty} onChange={(e) => updateItem(idx, 'system_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-input bg-background px-2 text-center text-xs text-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                            <NumberInput required placeholder="0" value={item.system_qty} onChange={(e) => updateItem(idx, 'system_qty', e.target.value)} min="0" className="h-9 px-2 text-center text-xs" />
                                                         </div>
                                                         <div>
                                                             <label className="mb-1 block text-xs text-muted-foreground">
                                                                 Stok Aktual <span className="text-destructive">*</span>
                                                             </label>
-                                                            <input type="number" required value={item.actual_qty} onChange={(e) => updateItem(idx, 'actual_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-input bg-background px-2 text-center text-xs text-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                            <NumberInput required placeholder="0" value={item.actual_qty} onChange={(e) => updateItem(idx, 'actual_qty', e.target.value)} min="0" className="h-9 px-2 text-center text-xs" />
                                                         </div>
                                                         <div>
                                                             <label className="mb-1 block text-xs text-muted-foreground">Selisih</label>

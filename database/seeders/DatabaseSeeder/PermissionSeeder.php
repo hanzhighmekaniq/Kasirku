@@ -39,6 +39,7 @@ class PermissionSeeder extends Seeder
             'stock.opname',
             'stock.transfer',
             'stock.waste',
+            'batch.view',
             // Pembelian
             'purchase.view',
             'purchase.create',

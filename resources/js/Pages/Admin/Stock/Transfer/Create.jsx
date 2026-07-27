@@ -5,13 +5,14 @@ import { useMemo } from 'react';
 import { AlertTriangle, Check, Loader2, Trash2, X } from 'lucide-react';
 import Select from '@/Components/ui/Select';
 import StockBucketPicker, { BucketItemLabel } from '@/Components/ui/StockBucketPicker';
+import NumberInput from '@/Components/ui/NumberInput';
 import { purchaseUnitHint, usesUnitConversion } from '@/Utils/unitConversion';
 
-export default function Create({ buckets = [], branches }) {
+export default function Create({ buckets = [], branches, currentBranchId = null }) {
     const { flash } = usePage().props;
 
     const { data, setData, post, processing, errors } = useForm({
-        from_branch_id: '',
+        from_branch_id: currentBranchId ? String(currentBranchId) : '',
         to_branch_id: '',
         transfer_date: new Date().toISOString().split('T')[0],
         notes: '',
@@ -51,10 +52,9 @@ export default function Create({ buckets = [], branches }) {
                 unit: bucket.unit,
                 base_unit: bucket.base_unit,
                 base_unit_conversion: bucket.base_unit_conversion,
-                // Stok per cabang disimpan utuh supaya angkanya ikut berubah
-                // kalau cabang asal diganti setelah item ditambahkan.
+                // stok per cabang disimpan utuh
                 stock_by_branch: bucket.stock_by_branch,
-                quantity: 1,
+                quantity: '',
                 notes: '',
             },
         ]);
@@ -68,9 +68,14 @@ export default function Create({ buckets = [], branches }) {
     };
 
     const updateItem = (idx, field, value) => {
-        const updated = data.items.map((item, i) =>
-            i === idx ? { ...item, [field]: value } : item,
-        );
+        const updated = data.items.map((item, i) => {
+            if (i !== idx) return item;
+            let finalValue = value;
+            if (field === 'quantity') {
+                finalValue = value === '' ? '' : (Number(value) >= 0 ? Number(value) : 0);
+            }
+            return { ...item, [field]: finalValue };
+        });
         setData('items', updated);
     };
 
@@ -154,6 +159,7 @@ export default function Create({ buckets = [], branches }) {
                                         value={data.from_branch_id}
                                         onChange={(v) => setData('from_branch_id', String(v))}
                                         placeholder="Pilih cabang asal..."
+                                        disabled={!!currentBranchId}
                                     />
                                 </Field>
                                 <Field label="Cabang Tujuan" required error={errors.to_branch_id}>
@@ -262,16 +268,16 @@ export default function Create({ buckets = [], branches }) {
                                                                 </span>
                                                             )}
                                                         </label>
-                                                        <input
-                                                            type="number"
+                                                        <NumberInput
                                                             required
+                                                            placeholder="0"
                                                             value={item.quantity}
                                                             onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
                                                             min="1"
-                                                            className={`h-9 w-full rounded-lg border bg-background px-3 text-sm text-foreground outline-none transition focus:ring-2 ${
+                                                            className={`h-9 px-3 text-sm transition ${
                                                                 isOver
                                                                     ? 'border-destructive focus:border-destructive focus:ring-destructive/20'
-                                                                    : 'border-input focus:border-ring focus:ring-ring/20'
+                                                                    : 'focus:border-ring focus:ring-ring/20'
                                                             }`}
                                                         />
                                                         {isOver && (

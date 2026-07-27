@@ -24,7 +24,7 @@ export default function Index({ wallet, transactions }) {
     const { flash } = usePage().props;
 
     return (
-        <AuthenticatedLayout header="Wallet"
+        <AuthenticatedLayout
             header={
                 <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">

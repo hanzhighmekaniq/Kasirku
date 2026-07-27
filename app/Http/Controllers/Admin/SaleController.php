@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\HasStoreScope;
 use App\Http\Controllers\Controller;
-use App\Models\Branch;
 use App\Models\ProductStock;
 use App\Models\Sale;
 use App\Models\Store;
@@ -24,22 +23,13 @@ class SaleController extends Controller
         $user = Auth::user();
         $storeId = session('current_store_id');
 
-        // Branch filter: query param > session
-        // User tanpa sale.void (kasir) selalu terkunci ke branch-nya sendiri
         $canViewAll = $user->can('sale.void');
 
-        $branchId =
-            $request->input('branch_id') ?:
-            session('current_branch_id') ?? session('branch_id');
-
-        // Jika tidak punya sale.void, paksa ke branch sendiri
-        if (! $canViewAll && ! $branchId) {
-            $branchId = $user->branch_id ?? null;
-        }
-
-        $branches = Branch::where('store_id', $storeId)
-            ->where('is_active', true)
-            ->get(['id', 'code', 'name']);
+        // Cabang selalu mengikuti cabang aktif yang dipilih di sidebar/nav (session),
+        // tidak lagi bisa di-override lewat filter di halaman ini.
+        $branchId = ! $canViewAll
+            ? ($user->branch_id ?? null)
+            : (session('current_branch_id') ?? session('branch_id'));
 
         $query = Sale::where('store_id', $storeId)
             ->with(['customer', 'user', 'branch', 'table'])
@@ -83,7 +73,6 @@ class SaleController extends Controller
         ];
 
         $activeFilters = [
-            'branch_id' => $request->input('branch_id', ''),
             'date_from' => $request->input('date_from', ''),
             'date_to' => $request->input('date_to', ''),
             'payment_status' => $request->input('payment_status', 'all'),
@@ -94,8 +83,6 @@ class SaleController extends Controller
         return Inertia::render('Admin/Sales/Index', [
             'sales' => $sales,
             'stats' => $stats,
-            'branches' => $branches,
-            'currentBranchId' => $branchId ? (string) $branchId : '',
             'activeFilters' => $activeFilters,
             'storeType' => $store?->getRelation('storeType')?->code ?? 'retail',
         ]);
@@ -109,6 +96,8 @@ class SaleController extends Controller
             'items.product',
             'payments.paymentMethod',
             'table',
+            'returns.items.product',
+            'returns.user',
         ]);
         $sale->load([
             'pgTransactions' => function ($q) {

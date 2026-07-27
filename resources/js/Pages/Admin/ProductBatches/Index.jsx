@@ -3,7 +3,7 @@ import PageHeader from "@/Components/PageHeader";
 import StockTabs from "@/Components/StockTabs";
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState, useRef, useEffect } from 'react';
-import { Boxes, ChevronDown, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { Boxes, ChevronDown, ChevronRight, AlertCircle, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import Button from "@/Components/ui/Button";
 import Select from '@/Components/ui/Select';
 import AnchoredPanel from '@/Components/ui/AnchoredPanel';
@@ -170,6 +170,25 @@ export default function Index({ batches, products, filters }) {
                 </button>
             </div>
 
+            {/* Sub-navigation */}
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Link
+                    href={route('admin.product-batches.unbatched')}
+                    className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-warning/30 hover:shadow-md"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning/10 text-warning transition group-hover:bg-warning/20">
+                            <AlertCircle className="h-5 w-5" strokeWidth={1.8} />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground">Penjualan Tanpa Batch</p>
+                            <p className="truncate text-xs text-muted-foreground">Lacak produk terjual tanpa batch</p>
+                        </div>
+                        <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-warning" strokeWidth={2} />
+                    </div>
+                </Link>
+            </div>
+
             {/* Table card */}
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
@@ -281,6 +300,7 @@ export default function Index({ batches, products, filters }) {
                             <span className="font-semibold text-foreground">{batches.length}</span>{' '}
                             batch
                         </p>
+                        
                     </div>
                 </div>
 
@@ -291,6 +311,8 @@ export default function Index({ batches, products, filters }) {
                             <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
                                     <th className="px-4 py-3 text-left font-semibold">Produk</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Variant</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Kemasan</th>
                                     <th className="px-4 py-3 text-left font-semibold">No. Batch</th>
                                     <th className="px-4 py-3 text-left font-semibold">Cabang</th>
                                     <th className="px-4 py-3 text-right font-semibold">Qty</th>
@@ -304,7 +326,7 @@ export default function Index({ batches, products, filters }) {
                             <tbody className="divide-y divide-border bg-background">
                                 {filtered.length === 0 ? (
                                     <tr>
-                                        <td colSpan={9} className="px-4 py-16 text-center">
+                                        <td colSpan={11} className="px-4 py-16 text-center">
                                             <div className="flex flex-col items-center">
                                                 <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-muted/30">
                                                     <Boxes className="h-8 w-8 text-muted-foreground/50" strokeWidth={1.4} />
@@ -325,6 +347,8 @@ export default function Index({ batches, products, filters }) {
                                                 <p className="font-semibold text-foreground">{b.product?.name ?? '—'}</p>
                                                 <p className="text-xs text-muted-foreground">{b.product?.sku}</p>
                                             </td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{b.variant?.name ?? '—'}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{b.packaging_unit?.name ?? '—'}</td>
                                             <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-primary">{b.batch_no}</td>
                                             <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{b.branch?.name ?? '—'}</td>
                                             <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-foreground">{b.quantity}</td>
@@ -387,6 +411,11 @@ export default function Index({ batches, products, filters }) {
                                 <div className="flex items-start justify-between">
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-semibold text-foreground">{b.product?.name ?? '—'}</p>
+                                        {(b.variant?.name || b.packaging_unit?.name) && (
+                                            <p className="truncate text-xs text-muted-foreground">
+                                                {b.variant?.name}{b.variant?.name && b.packaging_unit?.name ? ' — ' : ''}{b.packaging_unit?.name}
+                                            </p>
+                                        )}
                                         <p className="font-mono text-xs text-primary">{b.batch_no}</p>
                                         {b.branch?.name && (
                                             <p className="mt-0.5 text-xs text-muted-foreground">{b.branch.name}</p>

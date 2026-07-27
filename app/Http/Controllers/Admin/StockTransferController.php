@@ -22,10 +22,16 @@ class StockTransferController extends Controller
 
     public function index()
     {
-        [$storeId] = $this->storeScope();
+        [$storeId, $branchId] = $this->storeScope();
 
         $transfers = StockTransfer::with(['fromBranch', 'toBranch', 'user'])
             ->where('store_id', $storeId)
+            ->when($branchId, function ($q) use ($branchId) {
+                $q->where(function ($sq) use ($branchId) {
+                    $sq->where('from_branch_id', $branchId)
+                        ->orWhere('to_branch_id', $branchId);
+                });
+            })
             ->latest()
             ->get();
 
@@ -45,13 +51,14 @@ class StockTransferController extends Controller
 
     public function create()
     {
-        [$storeId] = $this->storeScope();
+        [$storeId, $branchId] = $this->storeScope();
 
         return Inertia::render('Admin/Stock/Transfer/Create', [
             'buckets' => $this->stockBucketOptions($storeId),
             'branches' => Branch::where('store_id', $storeId)
                 ->where('is_active', true)
                 ->get(),
+            'currentBranchId' => $branchId,
         ]);
     }
 
@@ -70,7 +77,12 @@ class StockTransferController extends Controller
             'items.*.notes' => 'nullable|string',
         ]);
 
-        $storeId = session('current_store_id') ?? $request->user()->store?->id;
+        [$storeId, $branchId] = $this->storeScope();
+
+        if ($branchId) {
+            $validated['from_branch_id'] = $branchId;
+        }
+
         $transferNo = $this->generateNumber($validated['transfer_date']);
 
         DB::beginTransaction();

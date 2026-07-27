@@ -15,6 +15,18 @@ const DURATION_LABELS = {
     visit: "Kunjungan",
 };
 
+const TIER_OPTIONS = [
+    { id: "", name: "Tidak mengubah tier" },
+    { id: "bronze", name: "Bronze" },
+    { id: "silver", name: "Silver" },
+    { id: "gold", name: "Gold" },
+    { id: "platinum", name: "Platinum" },
+];
+
+function tierLabel(tier) {
+    return TIER_OPTIONS.find((option) => option.id === tier)?.name ?? "-";
+}
+
 function formatDuration(type, value) {
     const label = DURATION_LABELS[type] ?? type;
     return `${value} ${label}`;
@@ -250,6 +262,7 @@ function MembershipModal({ open, editing, onClose }) {
         price: "",
         discount_percent: "",
         point_multiplier: 1,
+        maps_to_tier: "",
         benefits: "",
         is_active: true,
     });
@@ -269,6 +282,7 @@ function MembershipModal({ open, editing, onClose }) {
                 price: editing.price ?? "",
                 discount_percent: editing.discount_percent ?? "",
                 point_multiplier: editing.point_multiplier || 1,
+                maps_to_tier: editing.maps_to_tier || "",
                 benefits: Array.isArray(editing.benefits)
                     ? editing.benefits.join("\n")
                     : editing.benefits || "",
@@ -308,6 +322,7 @@ function MembershipModal({ open, editing, onClose }) {
                 form.point_multiplier === ""
                     ? 1
                     : Number(form.point_multiplier),
+            maps_to_tier: form.maps_to_tier || null,
             duration_value:
                 form.duration_value === "" ? 1 : Number(form.duration_value),
             benefits: form.benefits
@@ -581,6 +596,29 @@ function MembershipModal({ open, editing, onClose }) {
                         </div>
                     </div>
 
+                    <div>
+                        <label
+                            className="block text-sm font-medium text-foreground"
+                            title="Tier pelanggan yang otomatis dipakai saat membership ini aktif."
+                        >
+                            Setara Tier
+                            <span className="ml-1.5 font-normal text-muted-foreground">
+                                (opsional)
+                            </span>
+                        </label>
+                        <SearchableSelect
+                            options={TIER_OPTIONS}
+                            value={data.maps_to_tier}
+                            onChange={(v) => setData("maps_to_tier", v)}
+                            placeholder="Pilih tier..."
+                        />
+                        {errors.maps_to_tier && (
+                            <p className="mt-1 text-xs text-destructive">
+                                {errors.maps_to_tier}
+                            </p>
+                        )}
+                    </div>
+
                     {/* Benefits */}
                     <div>
                         <label
@@ -727,6 +765,7 @@ function MembershipList({ items, onEdit, onDelete }) {
                             <th className="px-4 py-3 text-left font-semibold">Durasi</th>
                             <th className="px-4 py-3 text-right font-semibold">Harga</th>
                             <th className="px-4 py-3 text-center font-semibold">Diskon</th>
+                            <th className="px-4 py-3 text-center font-semibold">Tier</th>
                             <th className="px-4 py-3 text-center font-semibold">Member</th>
                             <th className="px-4 py-3 text-center font-semibold">Status</th>
                             <th className="px-4 py-3 text-right font-semibold">Aksi</th>
@@ -774,6 +813,11 @@ function MembershipList({ items, onEdit, onDelete }) {
                                             —
                                         </span>
                                     )}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium capitalize text-muted-foreground">
+                                        {tierLabel(m.maps_to_tier)}
+                                    </span>
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                     <MemberBadge
@@ -829,6 +873,11 @@ function MembershipList({ items, onEdit, onDelete }) {
                                     {m.discount_percent ? (
                                         <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
                                             Diskon {m.discount_percent}%
+                                        </span>
+                                    ) : null}
+                                    {m.maps_to_tier ? (
+                                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">
+                                            {tierLabel(m.maps_to_tier)}
                                         </span>
                                     ) : null}
                                     <MemberBadge

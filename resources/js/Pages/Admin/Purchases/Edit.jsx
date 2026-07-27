@@ -16,10 +16,10 @@ import {
 const fmtRp = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
 
 const inputCls = (hasError = false) =>
-    `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
+    `block w-full rounded-xl border-input bg-background text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 ${
         hasError
             ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-            : "border-input focus:border-ring focus:ring-ring/20"
+            : ""
     }`;
 
 export default function Edit({
@@ -90,6 +90,9 @@ export default function Edit({
             variant_name: item.variant?.name ?? null,
             packaging_unit_id: item.packaging_unit_id ?? null,
             unit_name: item.unit_name ?? item.packaging_unit?.name ?? null,
+            track_batch: item.product?.track_batch ?? false,
+            batch_no: item.batch_no ?? "",
+            expiry_date: item.expiry_date ?? "",
             quantity: item.quantity,
             cost_price: item.cost_price,
         })),
@@ -153,6 +156,9 @@ export default function Edit({
             unit_name: pendingUnit?.name ?? null,
             quantity: qty,
             cost_price: price,
+            track_batch: pendingProduct.track_batch ?? false,
+            batch_no: "",
+            expiry_date: "",
         };
 
         const existIdx = data.items.findIndex(
@@ -196,7 +202,7 @@ export default function Edit({
         const updated = [...data.items];
         updated[i] = {
             ...updated[i],
-            [field]: field === "quantity" ? Number(val) || 0 : Number(val) || 0,
+            [field]: ["quantity", "cost_price"].includes(field) ? (Number(val) || 0) : val,
         };
         setData("items", updated);
     };
@@ -209,33 +215,33 @@ export default function Edit({
 
     return (
         <AuthenticatedLayout
-            
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.purchases.show", purchase.id)}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Pembelian
                     </div>
                     <div className="text-[11px] text-muted-foreground">
-                        purchase.purchase_no
+                        {purchase.purchase_no}
                     </div>
                 </div>
-            }>
-            <PageHeader
-                title={`Edit ${purchase.purchase_no}`}
-                breadcrumbs={["Admin", "Pembelian", purchase.purchase_no]}
-                heading={
-                    <>
-                        Edit{" "}
-                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                            Pembelian
-                        </span>
-                    </>
-                }
-                description="Ubah data pembelian stok dari supplier."
-                
-            />
+            }
+        >
+            <div className="mx-auto max-w-5xl space-y-6 pb-24 sm:pb-8">
+                <PageHeader
+                    title={`Edit ${purchase.purchase_no}`}
+                    breadcrumbs={["Admin", "Pembelian", purchase.purchase_no]}
+                    heading={
+                        <>
+                            Edit{" "}
+                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                                Pembelian
+                            </span>
+                        </>
+                    }
+                    description="Ubah data pembelian stok dari supplier."
+                    backUrl={route("admin.purchases.show", purchase.id)}
+                    className="mb-0"
+                />
 
             {flash?.error && (
                 <div className="mb-4 flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -575,6 +581,18 @@ export default function Edit({
                                                                     </span>
                                                                 )}
                                                             </p>
+                                                            {item.track_batch && (
+                                                                <div className="mt-3 grid grid-cols-2 gap-3 max-w-sm">
+                                                                    <div>
+                                                                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">No. Batch</label>
+                                                                        <input type="text" value={item.batch_no || ""} onChange={(e) => updateItem(i, "batch_no", e.target.value)} placeholder="Otomatis" className="block w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tgl Expired</label>
+                                                                        <input type="date" value={item.expiry_date || ""} onChange={(e) => updateItem(i, "expiry_date", e.target.value)} className="block w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <input
@@ -897,28 +915,32 @@ export default function Edit({
                             </dl>
                         </SectionCard>
 
-                        <div className="flex flex-col gap-2">
-                            <Button
-                                type="submit"
-                                loading={processing}
-                                disabled={data.items.length === 0}
-                                className="w-full"
-                            >
-                                Simpan Perubahan
-                            </Button>
-                            <Link
-                                href={route(
-                                    "admin.purchases.show",
-                                    purchase.id,
-                                )}
-                                className="w-full rounded-xl border border-border bg-card px-4 py-2.5 text-center text-sm font-medium text-foreground transition hover:bg-muted"
-                            >
-                                Batal
-                            </Link>
+                        {/* Sticky Action Bar */}
+                        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/80 p-4 backdrop-blur-md sm:static sm:border-0 sm:bg-transparent sm:p-0">
+                            <div className="mx-auto flex max-w-5xl justify-end gap-3 sm:mx-0">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    as={Link}
+                                    href={route("admin.purchases.show", purchase.id)}
+                                    className="w-full sm:w-auto"
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    loading={processing}
+                                    disabled={data.items.length === 0}
+                                    className="w-full sm:w-auto"
+                                >
+                                    Simpan Perubahan
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </form>
+            </div>
         </AuthenticatedLayout>
     );
 }

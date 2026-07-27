@@ -23,6 +23,11 @@ class StockController extends Controller
             'store_id',
             $storeId,
         );
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+
         $stocks = $query->get();
 
         $totalProducts = $stocks->unique('product_id')->count();
@@ -99,6 +104,7 @@ class StockController extends Controller
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name', 'sku']),
+            'filters' => $request->only(['product_id', 'movement_type', 'from_date', 'to_date']),
         ]);
     }
 }

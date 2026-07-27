@@ -147,6 +147,7 @@ class SettingController extends Controller
             'receipt_footer' => 'nullable|string|max:500',
             'tax_inclusive' => 'boolean',
             'default_tax_rate' => 'nullable|numeric|min:0|max:100',
+            'points_per_amount' => 'nullable|numeric|min:0',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'remove_logo' => 'boolean',
         ]);
@@ -174,6 +175,7 @@ class SettingController extends Controller
             'receipt_footer' => $validated['receipt_footer'] ?? null,
             'tax_inclusive' => $validated['tax_inclusive'] ?? false,
             'default_tax_rate' => $validated['default_tax_rate'] ?? 0,
+            'points_per_amount' => $validated['points_per_amount'] ?? null,
             'logo' => $logoPath,
         ]);
 

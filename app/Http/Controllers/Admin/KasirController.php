@@ -70,12 +70,13 @@ class KasirController extends Controller
                 'variants.packagingUnits',
                 'modifierGroups.modifiers',
                 'recipes.rawMaterial:id,name,unit,base_unit,cost_price',
-                'stocks' => fn ($q) => $q->where('store_id', $storeId),
+                'stocks' => fn ($q) => $q->where('store_id', $storeId)
+                    ->when($branchId, fn ($sq) => $sq->where('branch_id', $branchId)),
                 'packagingUnits' => fn ($q) => $q->where('sell_price', '>', 0),
                 'priceTiers',
             ])
             ->get()
-            ->map(function ($p) use ($storeId) {
+            ->map(function ($p) use ($storeId, $branchId) {
                 // Bucket base produk (variant_id=null, packaging_unit_id=null) —
                 // ini stok yang dipakai untuk produk simple tanpa variant/unit.
                 $baseStocks = $p->stocks->filter(
@@ -110,11 +111,12 @@ class KasirController extends Controller
                 });
 
                 // Sertakan stok bahan baku agar frontend bisa cek kecukupan
-                $p->recipes->each(function ($r) use ($storeId) {
+                $p->recipes->each(function ($r) use ($storeId, $branchId) {
                     if ($r->rawMaterial) {
                         $r->rawMaterial->current_stock = $r->rawMaterial
                             ->stocks()
                             ->where('store_id', $storeId)
+                            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
                             ->sum('quantity');
                     }
                 });
@@ -1033,6 +1035,7 @@ class KasirController extends Controller
                         $needed = $recipe->quantity * $item['quantity'];
                         $rawStock = $recipe->rawMaterial->stocks
                             ->where('store_id', $storeId)
+                            ->when($branchId, fn ($stocks) => $stocks->where('branch_id', $branchId))
                             ->sum('quantity');
 
                         // Cek stok bahan (kecuali is_nullable)
@@ -1061,7 +1064,7 @@ class KasirController extends Controller
                     $recipeSnapshot = $snapshot;
                 }
 
-                SaleItem::create([
+                $saleItem = SaleItem::create([
                     'sale_id' => $sale->id,
                     'product_id' => $item['product_id'],
                     'variant_id' => $item['variant_id'] ?? null,
@@ -1098,11 +1101,6 @@ class KasirController extends Controller
                         movedAt: $movedAt ?? null,
                     );
                 } elseif ($product?->track_stock) {
-                    // Potong stok dari bucket yang tepat (product + variant +
-                    // packaging_unit) — minimarket behavior. Menjual per dus
-                    // hanya mengurangi bucket dus (dalam satuan dus itu
-                    // sendiri, tidak ada konversi otomatis ke pcs), tidak
-                    // menyentuh bucket pcs.
                     $variantId = $item['variant_id'] ?? null;
                     $packagingUnitId = $item['packaging_unit_id'] ?? null;
                     $unitLabel = ! empty($item['unit_name']) ? " ({$item['unit_name']})" : '';
@@ -1119,7 +1117,7 @@ class KasirController extends Controller
                         ? $existing->average_cost
                         : ($product->cost_price ?? 0);
 
-                    app(StockService::class)->decrease(new StockMutation(
+                    $batchDeductions = app(StockService::class)->decrease(new StockMutation(
                         productId: $item['product_id'],
                         variantId: $variantId,
                         packagingUnitId: $packagingUnitId,
@@ -1134,6 +1132,11 @@ class KasirController extends Controller
                         notes: "Penjualan #{$saleNo} — {$item['quantity']}x{$unitLabel} {$product->name}",
                         movedAt: $now ? (string) $now : null,
                     ));
+
+                    // Jika seluruh qty berasal dari 1 batch, catat pada SaleItem
+                    if (count($batchDeductions) === 1) {
+                        $saleItem->update(['product_batch_id' => $batchDeductions[0]['batch_id']]);
+                    }
                 }
             }
 
@@ -1454,7 +1457,7 @@ class KasirController extends Controller
             $this->applyFnbFields($sale, $validated, $storeTypeCode);
 
             // Create SaleItems (no stock deduction)
-            $this->createSaleItems($sale, $items, $storeId);
+            $this->createSaleItems($sale, $items, $storeId, $branchId);
 
             // Sale ini masih 'pending' — meja otomatis jadi terisi.
             $this->syncTableStatus($validated['table_id'] ?? null, $storeId);
@@ -1717,5 +1720,102 @@ class KasirController extends Controller
         $this->syncTableStatus($tableId, $storeId);
 
         return response()->json(['success' => true, 'message' => 'Transaksi dibatalkan.']);
+    }
+
+    /**
+     * Membatalkan transaksi yang sudah selesai (Void).
+     * Mengubah status menjadi cancelled dan mengembalikan stok.
+     */
+    public function voidSale(Request $request, Sale $sale)
+    {
+        $storeId = session('current_store_id');
+        abort_if($sale->store_id !== $storeId, 403);
+
+        // Hanya kasir yang bersangkutan atau user dengan izin sale.void yang bisa membatalkan
+        if (! $request->user()->can('sale.void') && $sale->user_id !== $request->user()->id) {
+            abort(403, 'Anda tidak memiliki izin membatalkan transaksi kasir lain.');
+        }
+
+        if ($sale->status === 'cancelled') {
+            return response()->json(['success' => false, 'message' => 'Transaksi sudah dibatalkan sebelumnya.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            if ($sale->status === 'completed') {
+                // Return stock
+                foreach ($sale->items as $item) {
+                    $product = $item->product;
+                    if ($product && $product->track_stock) {
+                        $existing = ProductStock::where([
+                            'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'packaging_unit_id' => $item->packaging_unit_id,
+                            'store_id' => $sale->store_id,
+                            'branch_id' => $sale->branch_id,
+                        ])->first();
+
+                        if ($existing) {
+                            app(StockService::class)->increase(new StockMutation(
+                                productId: $item->product_id,
+                                variantId: $item->variant_id,
+                                packagingUnitId: $item->packaging_unit_id,
+                                storeId: $sale->store_id,
+                                branchId: $sale->branch_id,
+                                quantity: (float) $item->quantity,
+                                unitCost: (float) ($existing->average_cost ?: $product->cost_price ?? 0),
+                                movementType: 'sale_cancel',
+                                referenceType: Sale::class,
+                                referenceId: $sale->id,
+                                referenceNo: $sale->sale_no,
+                                notes: "Penjualan #{$sale->sale_no} di-void dari Kasir",
+                            ));
+                        }
+                    }
+                }
+            }
+
+            $sale->update(['status' => 'cancelled']);
+
+            // Bebaskan meja jika fnb
+            if ($sale->table_id) {
+                $this->syncTableStatus($sale->table_id, $storeId);
+            }
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Transaksi berhasil dibatalkan (void).']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Mengubah metode pembayaran transaksi yang sudah selesai.
+     */
+    public function updatePayment(Request $request, Sale $sale)
+    {
+        $storeId = session('current_store_id');
+        abort_if($sale->store_id !== $storeId, 403);
+
+        $validated = $request->validate([
+            'payment_method_id' => 'required|exists:payment_methods,id',
+        ]);
+
+        if ($sale->status !== 'completed') {
+            return response()->json(['success' => false, 'message' => 'Hanya transaksi selesai yang dapat diubah pembayarannya.'], 422);
+        }
+
+        // Ambil pembayaran utama
+        $mainPayment = $sale->payments()->first();
+        if ($mainPayment) {
+            $mainPayment->update([
+                'payment_method_id' => $validated['payment_method_id'],
+            ]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Metode pembayaran berhasil diubah.']);
     }
 }

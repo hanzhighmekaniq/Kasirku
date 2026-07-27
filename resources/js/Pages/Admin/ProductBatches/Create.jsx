@@ -6,6 +6,8 @@ import PageHeader from "@/Components/PageHeader";
 export default function Create({ products, branches }) {
     const { data, setData, post, processing, errors } = useForm({
         product_id:    '',
+        variant_id:    '',
+        packaging_unit_id: '',
         branch_id:     '',
         batch_no:      '',
         purchase_date: '',

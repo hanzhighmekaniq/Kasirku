@@ -61,33 +61,33 @@ export default function Show({ purchase, storeType = "retail" }) {
 
     return (
         <AuthenticatedLayout
-            
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.purchases.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
-                        pageTitle
+                        {pageTitle}
                     </div>
                     <div className="text-[11px] text-muted-foreground">
-                        purchase.purchase_no
+                        {purchase.purchase_no}
                     </div>
                 </div>
-            }>
-            <PageHeader
-                title={`${pageTitle} ${purchase.purchase_no}`}
-                breadcrumbs={["Admin", pageTitle, purchase.purchase_no]}
-                heading={
-                    <>
-                        Detail{" "}
-                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
-                            {pageTitle}
-                        </span>
-                    </>
-                }
-                description="Lihat rincian pembelian, produk, dan status pembayaran."
-                
-            />
+            }
+        >
+            <div className="mx-auto max-w-5xl space-y-6 pb-24 sm:pb-8">
+                <PageHeader
+                    title={`${pageTitle} ${purchase.purchase_no}`}
+                    breadcrumbs={["Admin", pageTitle, purchase.purchase_no]}
+                    heading={
+                        <>
+                            Detail{" "}
+                            <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                                {pageTitle}
+                            </span>
+                        </>
+                    }
+                    description="Lihat rincian pembelian, produk, dan status pembayaran."
+                    backUrl={route("admin.purchases.index")}
+                    className="mb-0"
+                />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
@@ -453,6 +453,7 @@ export default function Show({ purchase, storeType = "retail" }) {
                     </div>
                 </div>
             )}
+            </div>
         </AuthenticatedLayout>
     );
 }

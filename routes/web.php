@@ -299,6 +299,10 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
             Route::post('/kasir/finalize', [KasirController::class, 'finalize'])->name('kasir.finalize');
             Route::post('/kasir/cancel-pending/{sale}', [KasirController::class, 'cancelPending'])->name('kasir.cancel-pending');
 
+            // History actions
+            Route::post('/kasir/sales/{sale}/void', [KasirController::class, 'voidSale'])->name('kasir.void-sale');
+            Route::put('/kasir/sales/{sale}/payment', [KasirController::class, 'updatePayment'])->name('kasir.update-payment');
+
             // Split bill
             Route::post('/kasir/split/start', [SplitBillController::class, 'start'])->name('kasir.split.start');
             Route::post('/kasir/split/pay-offline', [SplitBillController::class, 'payOffline'])->name('kasir.split.pay-offline');
@@ -625,6 +629,10 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                     'product-batches',
                     ProductBatchController::class,
                 )->except(['show']);
+                Route::get('product-batches-unbatched', [
+                    ProductBatchController::class,
+                    'unbatchedSales',
+                ])->name('product-batches.unbatched');
             },
         );
         Route::middleware([
@@ -765,6 +773,12 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
             'permission:customer.view',
         ])->group(function () {
             Route::resource('customers', CustomerController::class);
+            Route::post('/customers/{customer}/assign-membership', [CustomerController::class, 'assignMembership'])
+                ->middleware(['feature:membership', 'permission:customer.edit'])
+                ->name('customers.assign-membership');
+            Route::delete('/customer-memberships/{customerMembership}', [CustomerController::class, 'revokeMembership'])
+                ->middleware(['feature:membership', 'permission:customer.edit'])
+                ->name('customer-memberships.revoke');
             Route::post('/customers/{customer}/pay-debt', [CustomerController::class, 'payDebt'])->name('customers.pay-debt');
         });
 

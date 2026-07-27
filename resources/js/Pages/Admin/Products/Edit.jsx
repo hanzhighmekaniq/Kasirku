@@ -7,6 +7,7 @@ import TreePicker from "@/Components/TreePicker";
 import Select from "@/Components/ui/Select";
 import Button from "@/Components/ui/Button";
 import CurrencyInput from "@/Components/ui/CurrencyInput";
+import { formatRupiah } from "@/Utils/currency";
 import { ArrowLeft } from "lucide-react";
 import {
     BarChart3,
@@ -689,10 +690,7 @@ export default function Edit({
                                                     <div
                                                         className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-destructive" : "text-success"}`}
                                                     >
-                                                        Rp{" "}
-                                                        {marginRp.toLocaleString(
-                                                            "id-ID",
-                                                        )}
+                                                        {formatRupiah(marginRp)}
                                                     </div>
                                                 </div>
                                                 <div
@@ -786,7 +784,7 @@ export default function Edit({
                                                                     );
                                                                 }}
                                                                 placeholder="Nama (Dus, Box…)"
-                                                                className="block w-full rounded-lg border border-border px-3 py-2 text-xs"
+                                                                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-xs"
                                                             />
                                                         </div>
                                                         <div className="col-span-6 sm:col-span-2">
@@ -814,7 +812,7 @@ export default function Edit({
                                                                     }}
                                                                     min="1"
                                                                     placeholder="12"
-                                                                    className="block w-full rounded-lg border border-border px-3 py-2 pr-8 text-xs"
+                                                                    className="block w-full rounded-lg border border-border bg-card px-3 py-2 pr-8 text-xs"
                                                                 />
                                                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                                     {
@@ -824,36 +822,21 @@ export default function Edit({
                                                             </div>
                                                         </div>
                                                         <div className="col-span-6 sm:col-span-3">
-                                                            <div className="relative">
-                                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
-                                                                    Rp
-                                                                </span>
-                                                                <input
-                                                                    type="number"
-                                                                    value={
-                                                                        pu.sell_price
-                                                                    }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) => {
-                                                                        const updated =
-                                                                            [
-                                                                                ...data.packaging_units,
-                                                                            ];
-                                                                        updated[
-                                                                            i
-                                                                        ].sell_price =
-                                                                            e.target.value;
-                                                                        setData(
-                                                                            "packaging_units",
-                                                                            updated,
-                                                                        );
-                                                                    }}
-                                                                    min="0"
-                                                                    placeholder="Harga"
-                                                                    className="block w-full rounded-lg border border-border py-2 pl-7 pr-3 text-xs"
-                                                                />
-                                                            </div>
+                                                            <CurrencyInput
+                                                                value={pu.sell_price}
+                                                                onChange={(value) => {
+                                                                    const updated = [
+                                                                        ...data.packaging_units,
+                                                                    ];
+                                                                    updated[i].sell_price =
+                                                                        value;
+                                                                    setData(
+                                                                        "packaging_units",
+                                                                        updated,
+                                                                    );
+                                                                }}
+                                                                placeholder="Harga"
+                                                            />
                                                         </div>
                                                         <div className="col-span-10 sm:col-span-3">
                                                             <input
@@ -878,7 +861,7 @@ export default function Edit({
                                                                     );
                                                                 }}
                                                                 placeholder="Barcode (opsional)"
-                                                                className="block w-full rounded-lg border border-border px-3 py-2 text-xs"
+                                                                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-xs"
                                                             />
                                                         </div>
                                                         <div className="col-span-2 sm:col-span-1 flex items-center justify-end">
@@ -909,12 +892,11 @@ export default function Edit({
                                                                 <div className="col-span-12 text-[11px] text-muted-foreground pl-1">
                                                                     ≈{" "}
                                                                     <span className="font-semibold text-success">
-                                                                        Rp{" "}
-                                                                        {Math.round(
-                                                                            pu.sell_price /
-                                                                            pu.conversion_qty,
-                                                                        ).toLocaleString(
-                                                                            "id-ID",
+                                                                        {formatRupiah(
+                                                                            Math.round(
+                                                                                pu.sell_price /
+                                                                                pu.conversion_qty,
+                                                                            ),
                                                                         )}{" "}
                                                                         /{" "}
                                                                         {
@@ -1017,7 +999,7 @@ export default function Edit({
                                                                     );
                                                                 }}
                                                                 placeholder="0"
-                                                                className="block w-full rounded-lg border border-border px-3 py-2 pr-10 text-xs"
+                                                                className="block w-full rounded-lg border border-border bg-card px-3 py-2 pr-10 text-xs"
                                                             />
                                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                                 {data.unit}
@@ -1028,35 +1010,19 @@ export default function Edit({
                                                         <label className="text-[10px] font-semibold text-muted-foreground">
                                                             Harga per Unit
                                                         </label>
-                                                        <div className="relative">
-                                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
-                                                                Rp
-                                                            </span>
-                                                            <input
-                                                                type="number"
-                                                                value={
-                                                                    tier.price
-                                                                }
-                                                                onChange={(
-                                                                    e,
-                                                                ) => {
-                                                                    const updated =
-                                                                        [
-                                                                            ...data.price_tiers,
-                                                                        ];
-                                                                    updated[
-                                                                        i
-                                                                    ].price =
-                                                                        e.target.value;
-                                                                    setData(
-                                                                        "price_tiers",
-                                                                        updated,
-                                                                    );
-                                                                }}
-                                                                placeholder="0"
-                                                                className="block w-full rounded-lg border border-border py-2 pl-7 pr-3 text-xs"
-                                                            />
-                                                        </div>
+                                                        <CurrencyInput
+                                                            value={tier.price}
+                                                            onChange={(value) => {
+                                                                const updated = [
+                                                                    ...data.price_tiers,
+                                                                ];
+                                                                updated[i].price = value;
+                                                                setData(
+                                                                    "price_tiers",
+                                                                    updated,
+                                                                );
+                                                            }}
+                                                        />
                                                     </div>
                                                     <div className="col-span-1 flex items-end justify-end">
                                                         <button
@@ -1235,26 +1201,16 @@ export default function Edit({
                                                         label="Tarif Per Jam"
                                                         error={errors.price_per_hour}
                                                     >
-                                                        <div className="relative">
-                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-                                                                Rp
-                                                            </span>
-                                                            <input
-                                                                type="number"
-                                                                value={
-                                                                    data.price_per_hour
-                                                                }
-                                                                onChange={(e) =>
-                                                                    setData(
-                                                                        "price_per_hour",
-                                                                        e.target.value,
-                                                                    )
-                                                                }
-                                                                min="0"
-                                                                placeholder="0"
-                                                                className={`${inputCls(!!errors.price_per_hour)} pl-9`}
-                                                            />
-                                                        </div>
+                                                        <CurrencyInput
+                                                            value={data.price_per_hour}
+                                                            onChange={(value) =>
+                                                                setData(
+                                                                    "price_per_hour",
+                                                                    value,
+                                                                )
+                                                            }
+                                                            error={!!errors.price_per_hour}
+                                                        />
                                                     </Field>
                                                     <Field
                                                         label="Durasi Minimum"
@@ -1403,24 +1359,16 @@ export default function Edit({
                                                     label="Jumlah Deposit"
                                                     error={errors.deposit_amount}
                                                 >
-                                                    <div className="relative">
-                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-                                                            Rp
-                                                        </span>
-                                                        <input
-                                                            type="number"
-                                                            value={data.deposit_amount}
-                                                            onChange={(e) =>
-                                                                setData(
-                                                                    "deposit_amount",
-                                                                    e.target.value,
-                                                                )
-                                                            }
-                                                            min="0"
-                                                            placeholder="0"
-                                                            className={`${inputCls(!!errors.deposit_amount)} pl-9`}
-                                                        />
-                                                    </div>
+                                                    <CurrencyInput
+                                                        value={data.deposit_amount}
+                                                        onChange={(value) =>
+                                                            setData(
+                                                                "deposit_amount",
+                                                                value,
+                                                            )
+                                                        }
+                                                        error={!!errors.deposit_amount}
+                                                    />
                                                 </Field>
                                             )}
                                     </div>
@@ -1614,9 +1562,9 @@ export default function Edit({
 
             {/* Floating Action Buttons — mobile/tablet only */}
             <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 lg:hidden">
-                <Link
+                 <Link
                     href={route("admin.products.index")}
-                    className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-border transition hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/20"
+                    className="translate-x-1 flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-border transition hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/30"
                     title="Batal"
                 >
                     <X className="h-5 w-5" strokeWidth={2} />
@@ -1625,7 +1573,7 @@ export default function Edit({
                     type="submit"
                     form="productForm"
                     disabled={processing}
-                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary text-white shadow-xl shadow-primary/40 transition hover:shadow-2xl hover:shadow-primary/50 disabled:opacity-60"
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary text-primary-foreground shadow-xl  transition hover:shadow-2xl hover:shadow-primary/50 disabled:opacity-60"
                     title="Simpan Perubahan"
                 >
                     {processing ? (

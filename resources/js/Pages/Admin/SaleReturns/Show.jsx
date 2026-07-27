@@ -84,14 +84,33 @@ export default function Show({ saleReturn }) {
         <AuthenticatedLayout
             
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.sale-returns.index")}>
-                    <div className="text-sm font-semibold text-foreground">
-                        Retur Penjualan
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                        saleReturn.return_no
+                <div className="flex items-center gap-3">
+                    <Link
+                        href={route("admin.sale-returns.index")}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                        aria-label="Kembali"
+                    >
+                        <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.8}
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M15.75 19.5L8.25 12l7.5-7.5"
+                            />
+                        </svg>
+                    </Link>
+                    <div className="leading-tight">
+                        <div className="text-sm font-semibold text-foreground">
+                            Retur Penjualan
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                            {saleReturn.return_no}
+                        </div>
                     </div>
                 </div>
             }>
@@ -106,24 +125,34 @@ export default function Show({ saleReturn }) {
                         </span>
                     </>
                 }
-                description="Lihat rincian retur penjualan."
-                
-                action={
-                    <div className="flex items-center gap-2">
-                        {saleReturn.status === "completed" && (
-                            <button
-                                onClick={() => setConfirmingCancel(true)}
-                                className="rounded-lg border border-warning/20 bg-card px-3 py-1.5 text-xs font-medium text-warning transition hover:bg-warning/10"
-                            >
-                                Batalkan Retur
-                            </button>
-                        )}
-                        <StatusBadge status={saleReturn.status} />
-                    </div>
-                }
             />
 
-            <div className="space-y-5">
+            <div className="mx-auto max-w-5xl space-y-5 pb-24 sm:pb-8">
+                {/* Status badges + actions */}
+                <div className="flex flex-wrap items-center gap-3">
+                    <StatusBadge status={saleReturn.status} />
+                    {saleReturn.status === "completed" && (
+                        <button
+                            onClick={() => setConfirmingCancel(true)}
+                            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-warning/20 bg-card px-3.5 py-2 text-sm font-semibold text-warning shadow-sm transition hover:bg-warning/10"
+                        >
+                            <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                            Batalkan Retur
+                        </button>
+                    )}
+                </div>
                 {/* Info Card */}
                 <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                     <div className="border-b border-border bg-muted/50 px-6 py-4">
@@ -293,6 +322,18 @@ export default function Show({ saleReturn }) {
                     </div>
                 </div>
             </div>
+
+            {/* Mobile Action Bar */}
+            {saleReturn.status === "completed" && (
+                <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/80 p-4 backdrop-blur-md sm:hidden">
+                    <button
+                        onClick={() => setConfirmingCancel(true)}
+                        className="w-full rounded-xl bg-warning py-3 text-sm font-semibold text-warning-foreground shadow-lg transition hover:bg-warning/90"
+                    >
+                        Batalkan Retur
+                    </button>
+                </div>
+            )}
 
             {/* Cancel Confirmation Modal */}
             {confirmingCancel && (

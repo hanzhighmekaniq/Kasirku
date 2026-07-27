@@ -151,13 +151,13 @@ export default function Index({ transfers, stats }) {
                         <table className="min-w-full divide-y divide-border">
                             <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left font-semibold">No. Transfer</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Tanggal</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Dari</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Ke</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Oleh</th>
-                                    <th className="px-5 py-3.5 text-center font-semibold">Status</th>
-                                    <th className="px-5 py-3.5 text-center font-semibold">Aksi</th>
+                                    <th className="px-4 py-3 text-left font-semibold">No. Transfer</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Tanggal</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Dari</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Ke</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Oleh</th>
+                                    <th className="px-4 py-3 text-center font-semibold">Status</th>
+                                    <th className="px-4 py-3 text-center font-semibold">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border bg-background">

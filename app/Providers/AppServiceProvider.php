@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Sale;
+use App\Observers\SaleObserver;
 use App\Services\Stock\StockService;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -18,6 +20,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Sale::observe(SaleObserver::class);
+
         Vite::prefetch(concurrency: 3);
 
         // Auto-set Spatie team ID dari session saat request masuk.

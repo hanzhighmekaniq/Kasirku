@@ -4,6 +4,7 @@ namespace Database\Seeders\DatabaseSeeder;
 
 use App\Models\Branch;
 use App\Models\Product;
+use App\Models\ProductBatch;
 use App\Models\ProductPackagingUnit;
 use App\Models\ProductStock;
 use App\Models\ProductVariant;
@@ -79,6 +80,23 @@ class ProductStockSeeder extends Seeder
                         ['product_id' => $p2->id, 'variant_id' => $v->id, 'packaging_unit_id' => null, 'store_id' => $store->id, 'branch_id' => $branchPusat->id],
                         ['quantity' => $pusat, 'reserved_quantity' => 0, 'average_cost' => $v->cost_price],
                     );
+
+                    ProductBatch::firstOrCreate(
+                        [
+                            'product_id' => $p2->id,
+                            'variant_id' => $v->id,
+                            'packaging_unit_id' => null,
+                            'store_id' => $store->id,
+                            'branch_id' => $branchPusat->id,
+                            'batch_no' => 'BTH-'.date('Ym').'-'.strtoupper(substr($v->name, 0, 3)),
+                        ],
+                        [
+                            'purchase_date' => now()->subDays(10)->toDateString(),
+                            'expiry_date' => now()->addMonths(3)->toDateString(),
+                            'quantity' => $pusat,
+                            'cost_price' => $v->cost_price,
+                        ]
+                    );
                 }
                 if ($babarsari > 0 && $branchBabarsari) {
                     ProductStock::firstOrCreate(
@@ -120,7 +138,7 @@ class ProductStockSeeder extends Seeder
             'S1-002' => [72, 0],   // Beras
             'S1-003' => [20, 0],   // Minyak
             'S1-004' => [25, 0],   // Gula
-            'S1-005' => [0, 0],    // Tepung
+            'S1-005' => [50, 10],  // Tepung
             'S1-006' => [40, 24],  // Aqua
             'S1-009' => [24, 12],  // Coca Cola
             'S1-010' => [20, 0],   // Chitato
@@ -147,6 +165,42 @@ class ProductStockSeeder extends Seeder
                     ['product_id' => $product->id, 'variant_id' => null, 'packaging_unit_id' => null, 'store_id' => $store->id, 'branch_id' => $branchPusat->id],
                     ['quantity' => $pusat, 'reserved_quantity' => 0, 'average_cost' => $product->cost_price],
                 );
+
+                if ($product->track_batch) {
+                    // Create 2 batches for FEFO demonstration
+                    ProductBatch::firstOrCreate(
+                        [
+                            'product_id' => $product->id,
+                            'variant_id' => null,
+                            'packaging_unit_id' => null,
+                            'store_id' => $store->id,
+                            'branch_id' => $branchPusat->id,
+                            'batch_no' => 'BTH-A-'.$product->sku,
+                        ],
+                        [
+                            'purchase_date' => now()->subDays(15)->toDateString(),
+                            'expiry_date' => now()->addMonths(1)->toDateString(), // Expire soon
+                            'quantity' => intval($pusat / 2),
+                            'cost_price' => $product->cost_price,
+                        ]
+                    );
+                    ProductBatch::firstOrCreate(
+                        [
+                            'product_id' => $product->id,
+                            'variant_id' => null,
+                            'packaging_unit_id' => null,
+                            'store_id' => $store->id,
+                            'branch_id' => $branchPusat->id,
+                            'batch_no' => 'BTH-B-'.$product->sku,
+                        ],
+                        [
+                            'purchase_date' => now()->subDays(5)->toDateString(),
+                            'expiry_date' => now()->addMonths(6)->toDateString(), // Expire later
+                            'quantity' => $pusat - intval($pusat / 2),
+                            'cost_price' => $product->cost_price,
+                        ]
+                    );
+                }
             }
             if ($babarsari > 0 && $branchBabarsari) {
                 ProductStock::firstOrCreate(

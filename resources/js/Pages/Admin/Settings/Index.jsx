@@ -258,6 +258,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
         receipt_footer: store?.receipt_footer ?? "",
         tax_inclusive: store?.tax_inclusive ?? false,
         default_tax_rate: store?.default_tax_rate ?? 0,
+        points_per_amount: store?.points_per_amount ?? "",
         logo: null,
         remove_logo: false,
     });
@@ -532,6 +533,36 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </Section>
+
+                            <Section
+                                title="Loyalitas"
+                                subtitle="Atur perhitungan poin pelanggan"
+                                icon={Settings}
+                            >
+                                <div>
+                                    <label className={labelClass}>Nominal Belanja per 1 Poin</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                                            Rp
+                                        </span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="100"
+                                            value={data.points_per_amount}
+                                            onChange={(e) => setData("points_per_amount", e.target.value)}
+                                            className={`${inp(errors.points_per_amount)} pl-10`}
+                                            placeholder="10000"
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Contoh: isi 10000 berarti setiap belanja Rp 10.000 mendapat 1 poin sebelum dikali multiplier membership. Kosongkan atau isi 0 untuk menonaktifkan poin otomatis.
+                                    </p>
+                                    {errors.points_per_amount && (
+                                        <p className={errorClass}>{errors.points_per_amount}</p>
+                                    )}
                                 </div>
                             </Section>
 

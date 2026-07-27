@@ -651,7 +651,7 @@ class PaymentGatewayController extends Controller
                         ? $existing->average_cost
                         : ($product->cost_price ?? 0);
 
-                    app(StockService::class)->decrease(new StockMutation(
+                    $batchDeductions = app(StockService::class)->decrease(new StockMutation(
                         productId: $item->product_id,
                         variantId: $item->variant_id,
                         packagingUnitId: $item->packaging_unit_id,
@@ -665,6 +665,11 @@ class PaymentGatewayController extends Controller
                         referenceNo: $pgTrx->external_id,
                         notes: "PG {$pgTrx->provider} #{$pgTrx->external_id} — {$item->quantity}x{$unitLabel} {$product->name}",
                     ));
+
+                    // Jika seluruh qty berasal dari 1 batch, catat pada SaleItem
+                    if (count($batchDeductions) === 1) {
+                        $item->update(['product_batch_id' => $batchDeductions[0]['batch_id']]);
+                    }
                 }
             }
 

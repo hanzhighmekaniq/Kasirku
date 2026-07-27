@@ -129,16 +129,20 @@ export default function Create({ sales }) {
                 
             />
 
+            <div className="mx-auto max-w-4xl pb-24 sm:pb-8">
             <form onSubmit={submit} className="space-y-5">
                 {/* Info Card */}
                 <SectionCard title="Informasi Retur">
                     <div className="space-y-4">
                         {/* Sale selector */}
-                        <Field
-                            label="Penjualan Asal"
-                            required
-                            error={errors.sale_id}
-                        >
+                            <Field
+                                label={
+                                    <>
+                                        Penjualan Asal <span className="text-destructive">*</span>
+                                    </>
+                                }
+                                error={errors.sale_id}
+                            >
                             <SearchableSelect
                                 options={sales.map((s) => ({
                                     id: s.id,
@@ -159,7 +163,7 @@ export default function Create({ sales }) {
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label className="mb-1.5 block text-sm font-medium text-foreground">
-                                    Tanggal Retur
+                                    Tanggal Retur <span className="text-destructive">*</span>
                                 </label>
                                 <input
                                     type="date"
@@ -232,7 +236,7 @@ export default function Create({ sales }) {
                                                     onChange={() =>
                                                         toggleItem(item)
                                                     }
-                                                    className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
+                                                    className="mt-1 h-5 w-5 rounded bg-primary-foreground border-primary-foreground checked:border-primary text-primary-foreground focus:ring-ring focus:ring-offset-background"
                                                 />
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-medium text-foreground">
@@ -361,8 +365,28 @@ export default function Create({ sales }) {
                     </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                {/* Mobile Floating Action Bar */}
+                <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/80 p-4 backdrop-blur-md sm:hidden">
+                    <div className="mx-auto flex max-w-4xl gap-3">
+                        <Link
+                            href={route("admin.sale-returns.index")}
+                            className="flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground transition hover:bg-muted"
+                        >
+                            Batal
+                        </Link>
+                        <Button
+                            type="submit"
+                            loading={processing}
+                            disabled={selectedItems.length === 0}
+                            className="flex-1 py-3"
+                        >
+                            Simpan
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Desktop Action Bar */}
+                <div className="hidden sm:flex sm:justify-end sm:gap-3">
                     <Link
                         href={route("admin.sale-returns.index")}
                         className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
@@ -378,6 +402,7 @@ export default function Create({ sales }) {
                     </Button>
                 </div>
             </form>
+            </div>
         </AuthenticatedLayout>
     );
 }

@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Boxes, ChevronDown, Search } from "lucide-react";
+import { Boxes, ChevronDown, ChevronRight, ArrowLeft, Search } from "lucide-react";
 
 /**
- * Pemilih bucket stok.
+ * Pemilih bucket stok (Cascading).
  *
- * Stok disimpan per produk + variant + satuan + cabang, jadi yang dipilih di
- * form stok harus bucket-nya, bukan produknya. Satu produk bervariant muncul
- * beberapa kali di daftar ini — satu baris per variant, plus satu baris lagi
- * untuk tiap satuan kemasan variant tersebut.
+ * Stok disimpan per produk + variant + satuan + cabang.
+ * Pemilih ini menggunakan pendekatan step-by-step:
+ * 1. Pilih Produk
+ * 2. Pilih Variant (jika ada)
+ * 3. Pilih Satuan (jika ada multi-satuan)
  *
  * Props:
- *   buckets      — array dari BuildsStockBucketOptions (punya `key`, `label`, `stock_by_branch`)
- *   branchId     — cabang yang stoknya ditampilkan ("" = belum dipilih, stok disembunyikan)
- *   excludeKeys  — Set/array key bucket yang sudah masuk daftar item
+ *   buckets      — array dari BuildsStockBucketOptions
+ *   branchId     — cabang yang stoknya ditampilkan
+ *   excludeKeys  — Set/array key bucket yang sudah dipilih (opsional)
  *   onSelect     — (bucket) => void
  *   disabled     — boolean
  *   placeholder  — teks tombol saat belum memilih
@@ -27,6 +28,10 @@ export default function StockBucketPicker({
 }) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
+    const [step, setStep] = useState("product"); // "product", "variant", "unit"
+    const [selectedProductId, setSelectedProductId] = useState(null);
+    const [selectedVariantId, setSelectedVariantId] = useState(null);
+
     const containerRef = useRef(null);
     const searchRef = useRef(null);
 
@@ -39,7 +44,13 @@ export default function StockBucketPicker({
         const onClickOutside = (e) => {
             if (containerRef.current && !containerRef.current.contains(e.target)) {
                 setOpen(false);
-                setQuery("");
+                // Reset state when closed
+                setTimeout(() => {
+                    setStep("product");
+                    setSelectedProductId(null);
+                    setSelectedVariantId(null);
+                    setQuery("");
+                }, 200);
             }
         };
         if (open) document.addEventListener("mousedown", onClickOutside);
@@ -48,25 +59,142 @@ export default function StockBucketPicker({
 
     useEffect(() => {
         if (open) searchRef.current?.focus();
-    }, [open]);
+    }, [open, step]);
 
     const stockOf = (bucket) => {
         if (branchId === null || branchId === "" || branchId === undefined) return null;
         return bucket.stock_by_branch?.[String(branchId)] ?? 0;
     };
 
-    const visible = useMemo(() => {
+    const handleProductClick = (productId) => {
+        const prodBuckets = buckets.filter((b) => b.product_id === productId);
+        const hasVariants = prodBuckets.some((b) => b.variant_id !== null);
+
+        if (hasVariants) {
+            setSelectedProductId(productId);
+            setStep("variant");
+            setQuery("");
+        } else {
+            const hasUnits = prodBuckets.length > 1;
+            if (hasUnits) {
+                setSelectedProductId(productId);
+                setSelectedVariantId(null);
+                setStep("unit");
+                setQuery("");
+            } else {
+                onSelect?.(prodBuckets[0]);
+                setOpen(false);
+                setStep("product");
+                setQuery("");
+            }
+        }
+    };
+
+    const handleVariantClick = (variantId) => {
+        const varBuckets = buckets.filter(
+            (b) => b.product_id === selectedProductId && b.variant_id === variantId
+        );
+        const hasUnits = varBuckets.length > 1;
+
+        if (hasUnits) {
+            setSelectedVariantId(variantId);
+            setStep("unit");
+            setQuery("");
+        } else {
+            onSelect?.(varBuckets[0]);
+            setOpen(false);
+            setStep("product");
+            setQuery("");
+        }
+    };
+
+    const visibleOptions = useMemo(() => {
         const q = query.trim().toLowerCase();
-        return buckets.filter((b) => {
-            if (excluded.has(b.key)) return false;
-            if (!q) return true;
-            return (
-                b.label?.toLowerCase().includes(q) ||
-                b.sku?.toLowerCase().includes(q) ||
-                b.unit_name?.toLowerCase().includes(q)
-            );
-        });
-    }, [buckets, excluded, query]);
+
+        if (step === "product") {
+            const uniqueProds = [];
+            const seen = new Set();
+            buckets.forEach((b) => {
+                if (!seen.has(b.product_id)) {
+                    // Check if this product has ANY available buckets not excluded
+                    const prodBuckets = buckets.filter((x) => x.product_id === b.product_id);
+                    const allExcluded = prodBuckets.every((x) => excluded.has(x.key));
+                    
+                    // We only hide the product if ALL its combinations are excluded
+                    // BUT for simplicity and UX, we show it and let the user drill down. 
+                    // Actually, let's just filter it out if all are excluded.
+                    if (allExcluded) return;
+
+                    if (!q || b.product_name.toLowerCase().includes(q) || b.sku?.toLowerCase().includes(q)) {
+                        seen.add(b.product_id);
+                        uniqueProds.push({
+                            id: b.product_id,
+                            name: b.product_name,
+                            sku: b.sku,
+                            hasChildren: prodBuckets.length > 1,
+                        });
+                    }
+                }
+            });
+            return uniqueProds;
+        } 
+        else if (step === "variant") {
+            const uniqueVars = [];
+            const seen = new Set();
+            const prodBuckets = buckets.filter((b) => b.product_id === selectedProductId);
+            
+            prodBuckets.forEach((b) => {
+                if (b.variant_id !== null && !seen.has(b.variant_id)) {
+                    const varBuckets = prodBuckets.filter((x) => x.variant_id === b.variant_id);
+                    const allExcluded = varBuckets.every((x) => excluded.has(x.key));
+                    
+                    if (allExcluded) return;
+
+                    if (!q || b.variant_name.toLowerCase().includes(q)) {
+                        seen.add(b.variant_id);
+                        uniqueVars.push({
+                            id: b.variant_id,
+                            name: b.variant_name,
+                            hasChildren: varBuckets.length > 1,
+                        });
+                    }
+                }
+            });
+            return uniqueVars;
+        } 
+        else if (step === "unit") {
+            return buckets
+                .filter((b) => b.product_id === selectedProductId && b.variant_id === selectedVariantId)
+                .filter((b) => !excluded.has(b.key))
+                .filter((b) => {
+                    const label = b.unit_name || b.base_unit || "Dasar";
+                    return !q || label.toLowerCase().includes(q);
+                });
+        }
+        return [];
+    }, [buckets, step, selectedProductId, selectedVariantId, query, excluded]);
+
+    const goBack = () => {
+        if (step === "unit") {
+            // Check if product had variants to know where to go back
+            const prodBuckets = buckets.filter((b) => b.product_id === selectedProductId);
+            const hasVariants = prodBuckets.some((b) => b.variant_id !== null);
+            if (hasVariants) {
+                setStep("variant");
+            } else {
+                setStep("product");
+                setSelectedProductId(null);
+            }
+        } else if (step === "variant") {
+            setStep("product");
+            setSelectedProductId(null);
+        }
+        setQuery("");
+    };
+
+    // Helper for title
+    const currentProduct = useMemo(() => buckets.find((b) => b.product_id === selectedProductId), [buckets, selectedProductId]);
+    const currentVariant = useMemo(() => buckets.find((b) => b.product_id === selectedProductId && b.variant_id === selectedVariantId), [buckets, selectedProductId, selectedVariantId]);
 
     return (
         <div className="relative" ref={containerRef}>
@@ -75,8 +203,13 @@ export default function StockBucketPicker({
                 disabled={disabled}
                 onClick={() => {
                     if (disabled) return;
+                    if (!open) {
+                        setStep("product");
+                        setSelectedProductId(null);
+                        setSelectedVariantId(null);
+                        setQuery("");
+                    }
                     setOpen(!open);
-                    setQuery("");
                 }}
                 className="flex w-full items-center gap-2 rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -92,10 +225,31 @@ export default function StockBucketPicker({
 
             {open && !disabled && (
                 <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
-                    <div className="border-b border-border p-3">
-                        <div className="relative">
+                    <div className="border-b border-border bg-muted/20">
+                        {step !== "product" && (
+                            <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+                                <button
+                                    type="button"
+                                    onClick={goBack}
+                                    className="rounded-lg p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                                >
+                                    <ArrowLeft className="h-4 w-4" strokeWidth={2} />
+                                </button>
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-xs font-semibold text-foreground">
+                                        {currentProduct?.product_name}
+                                    </p>
+                                    {step === "unit" && currentVariant?.variant_name && (
+                                        <p className="truncate text-[10px] text-muted-foreground">
+                                            Variant: {currentVariant.variant_name}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                        <div className="relative p-2">
                             <Search
-                                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
                                 strokeWidth={1.8}
                             />
                             <input
@@ -103,65 +257,99 @@ export default function StockBucketPicker({
                                 type="text"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder="Cari nama, SKU, atau satuan..."
-                                className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                placeholder={
+                                    step === "product"
+                                        ? "Cari produk..."
+                                        : step === "variant"
+                                        ? "Cari variant..."
+                                        : "Cari satuan..."
+                                }
+                                className="w-full rounded-lg border border-input bg-background py-1.5 pl-9 pr-3 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                     </div>
 
                     <div className="max-h-72 overflow-y-auto p-1.5">
-                        {visible.length === 0 ? (
+                        {visibleOptions.length === 0 ? (
                             <p className="px-3 py-4 text-center text-xs text-muted-foreground">
-                                {buckets.length === 0
-                                    ? "Belum ada produk berstok."
-                                    : "Tidak ada yang cocok."}
+                                {buckets.length === 0 ? "Belum ada produk." : "Tidak ada yang cocok."}
                             </p>
                         ) : (
-                            visible.map((b) => {
-                                const stock = stockOf(b);
-                                return (
-                                    <button
-                                        key={b.key}
-                                        type="button"
-                                        onClick={() => {
-                                            onSelect?.(b);
-                                            setOpen(false);
-                                            setQuery("");
-                                        }}
-                                        className="w-full rounded-lg px-3 py-2 text-left text-sm transition hover:bg-accent hover:text-accent-foreground"
-                                    >
-                                        <span className="block truncate font-medium text-foreground">
-                                            {b.product_name}
-                                        </span>
-
-                                        <div className="mt-0.5 flex items-center justify-between gap-2">
-                                            <span className="flex min-w-0 flex-wrap items-center gap-1">
-                                                {b.variant_name && (
-                                                    <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-                                                        {b.variant_name}
+                            visibleOptions.map((opt) => {
+                                if (step === "product") {
+                                    return (
+                                        <button
+                                            key={opt.id}
+                                            type="button"
+                                            onClick={() => handleProductClick(opt.id)}
+                                            className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-accent hover:text-accent-foreground"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <span className="block truncate font-medium">{opt.name}</span>
+                                                {opt.sku && (
+                                                    <span className="block truncate font-mono text-[11px] text-muted-foreground">
+                                                        {opt.sku}
                                                     </span>
                                                 )}
-                                                {b.unit_name && (
-                                                    <span className="inline-flex items-center rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold text-warning">
-                                                        {b.unit_name}
-                                                        {b.conversion_qty
-                                                            ? ` · ${b.conversion_qty} ${b.unit || "pcs"}`
-                                                            : ""}
-                                                    </span>
-                                                )}
-                                                <span className="truncate font-mono text-[11px] text-muted-foreground">
-                                                    {b.sku}
+                                            </div>
+                                            {opt.hasChildren && (
+                                                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
+                                            )}
+                                        </button>
+                                    );
+                                }
+                                if (step === "variant") {
+                                    return (
+                                        <button
+                                            key={opt.id}
+                                            type="button"
+                                            onClick={() => handleVariantClick(opt.id)}
+                                            className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-accent hover:text-accent-foreground"
+                                        >
+                                            <span className="block truncate font-medium">{opt.name}</span>
+                                            {opt.hasChildren && (
+                                                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
+                                            )}
+                                        </button>
+                                    );
+                                }
+                                if (step === "unit") {
+                                    // opt is a bucket
+                                    const stock = stockOf(opt);
+                                    return (
+                                        <button
+                                            key={opt.key}
+                                            type="button"
+                                            onClick={() => {
+                                                onSelect?.(opt);
+                                                setOpen(false);
+                                                setStep("product");
+                                                setQuery("");
+                                            }}
+                                            className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-accent hover:text-accent-foreground"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <span className="block truncate font-medium">
+                                                    {opt.unit_name || opt.base_unit || "Satuan Dasar"}
                                                 </span>
-                                            </span>
-
+                                                {opt.conversion_qty ? (
+                                                    <span className="block truncate text-[11px] text-muted-foreground">
+                                                        1 {opt.unit_name} = {opt.conversion_qty} {opt.unit || "pcs"}
+                                                    </span>
+                                                ) : (
+                                                    <span className="block truncate text-[11px] text-muted-foreground">
+                                                        Satuan Dasar
+                                                    </span>
+                                                )}
+                                            </div>
                                             {stock !== null && (
-                                                <span className="shrink-0 text-xs text-muted-foreground">
+                                                <span className="shrink-0 rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
                                                     Stok: {stock}
                                                 </span>
                                             )}
-                                        </div>
-                                    </button>
-                                );
+                                        </button>
+                                    );
+                                }
                             })
                         )}
                     </div>

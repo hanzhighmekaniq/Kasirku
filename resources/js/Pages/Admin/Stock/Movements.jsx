@@ -2,7 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
-import SelectDropdown from "@/Components/ui/SelectDropdown";
+import Select from "@/Components/ui/Select";
+import AnchoredPanel from '@/Components/ui/AnchoredPanel';
 
 /**
  * Tipe pergerakan adalah KATEGORI, bukan status sukses/gagal — jadi mengikuti
@@ -27,30 +28,20 @@ const MOVEMENT_TYPES = {
     opname_adjustment:   { label: 'Opname Stok',            color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400', icon: 'arrow-down',  desc: 'Koreksi stok dari hasil penghitungan fisik' },
 };
 
-export default function Movements({ movements, products }) {
+export default function Movements({ movements, products, filters: serverFilters = {} }) {
     const { flash } = usePage().props;
     const [filters, setFilters] = useState({
-        product_id: '',
-        movement_type: '',
-        from_date: '',
-        to_date: '',
+        product_id: serverFilters.product_id ?? '',
+        movement_type: serverFilters.movement_type ?? '',
+        from_date: serverFilters.from_date ?? '',
+        to_date: serverFilters.to_date ?? '',
     });
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [dropdownSearch, setDropdownSearch] = useState('');
     const dropdownRef = useRef(null);
     const searchInputRef = useRef(null);
 
-    // Close dropdown on outside click
-    useEffect(() => {
-        const handleClick = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-                setDropdownOpen(false);
-                setDropdownSearch('');
-            }
-        };
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
+
 
     // Focus search input when dropdown opens
     useEffect(() => {
@@ -175,57 +166,65 @@ export default function Movements({ movements, products }) {
                                 <svg className={`ml-auto h-4 w-4 shrink-0 text-muted-foreground transition ${dropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
                             )}
                         </button>
-                        {dropdownOpen && (
-                            <div className="absolute z-50 mt-2 w-80 rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
-                                <div className="border-b border-border p-3">
-                                    <div className="relative">
-                                        <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                                            <input
-                                                ref={searchInputRef}
-                                                type="text"
-                                                value={dropdownSearch}
-                                                onChange={(e) => setDropdownSearch(e.target.value)}
-                                                placeholder="Cari nama atau SKU..."
-                                                className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                            />
-                                    </div>
-                                </div>
-                                <div className="max-h-72 overflow-y-auto p-1.5">
-                                    <button
-                                        type="button"
-                                        onClick={() => { handleFilter('product_id', ''); setDropdownOpen(false); setDropdownSearch(''); }}
-                                        className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                            !filters.product_id ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:bg-muted'
-                                        }`}
-                                    >
-                                        Semua Produk
-                                    </button>
-                                    {dropdownProducts.length === 0 ? (
-                                        <p className="px-3 py-4 text-center text-xs text-muted-foreground">Tidak ada produk ditemukan.</p>
-                                    ) : (
-                                        dropdownProducts.map((p) => (
-                                            <button
-                                                key={p.id}
-                                                type="button"
-                                                onClick={() => { handleFilter('product_id', p.id); setDropdownOpen(false); setDropdownSearch(''); }}
-                                                className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
-                                                    filters.product_id == p.id ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:bg-muted'
-                                                }`}
-                                            >
-                                                <span className="block truncate">{p.name}</span>
-                                                <span className="block truncate text-xs text-muted-foreground">{p.sku}</span>
-                                            </button>
-                                        ))
-                                    )}
+                        <AnchoredPanel
+                            anchorRef={dropdownRef}
+                            open={dropdownOpen}
+                            onClose={() => { setDropdownOpen(false); setDropdownSearch(''); }}
+                            width={320}
+                            className="rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl"
+                        >
+                            <div className="border-b border-border p-3">
+                                <div className="relative">
+                                    <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                                        <input
+                                            ref={searchInputRef}
+                                            type="text"
+                                            value={dropdownSearch}
+                                            onChange={(e) => setDropdownSearch(e.target.value)}
+                                            placeholder="Cari nama atau SKU..."
+                                            className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                        />
                                 </div>
                             </div>
-                        )}
+                            <div className="max-h-72 overflow-y-auto p-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => { handleFilter('product_id', ''); setDropdownOpen(false); setDropdownSearch(''); }}
+                                    className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
+                                        !filters.product_id ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:bg-muted'
+                                    }`}
+                                >
+                                    Semua Produk
+                                </button>
+                                {dropdownProducts.length === 0 ? (
+                                    <p className="px-3 py-4 text-center text-xs text-muted-foreground">Tidak ada produk ditemukan.</p>
+                                ) : (
+                                    dropdownProducts.map((p) => (
+                                        <button
+                                            key={p.id}
+                                            type="button"
+                                            onClick={() => { handleFilter('product_id', p.id); setDropdownOpen(false); setDropdownSearch(''); }}
+                                            className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
+                                                filters.product_id == p.id ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground hover:bg-muted'
+                                            }`}
+                                        >
+                                            <span className="block truncate">{p.name}</span>
+                                            <span className="block truncate text-xs text-muted-foreground">{p.sku}</span>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        </AnchoredPanel>
                     </div>
-                    <SelectDropdown
+                    <Select
                         value={filters.movement_type}
-                        options={Object.entries(MOVEMENT_TYPES).map(([k, v]) => ({ value: k, label: v.label }))}
+                        options={[
+                            { value: '', label: 'Semua Tipe' },
+                            ...Object.entries(MOVEMENT_TYPES).map(([k, v]) => ({ value: k, label: v.label }))
+                        ]}
                         onChange={(v) => handleFilter('movement_type', v)}
                         placeholder="Semua Tipe"
+                        className="min-w-[180px]"
                     />
                     <input type="date" value={filters.from_date} onChange={(e) => handleFilter('from_date', e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
                     <input type="date" value={filters.to_date} onChange={(e) => handleFilter('to_date', e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20" />

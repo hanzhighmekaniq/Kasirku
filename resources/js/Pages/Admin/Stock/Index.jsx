@@ -298,13 +298,13 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                         <table className="min-w-full divide-y divide-border">
                             <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left font-semibold">{ITEM_LABEL}</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">SKU</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Stok Fisik</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold" title="Stok yang sudah dialokasikan ke pesanan dan belum keluar gudang">Dipesan</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold" title="Stok Fisik dikurangi Dipesan">Tersedia</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Min. Stok</th>
-                                    <th className="px-5 py-3.5 text-center font-semibold">Status</th>
+                                    <th className="px-4 py-3 text-left font-semibold">{ITEM_LABEL}</th>
+                                    <th className="px-4 py-3 text-left font-semibold">SKU</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Stok Fisik</th>
+                                    <th className="px-4 py-3 text-left font-semibold" title="Stok yang sudah dialokasikan ke pesanan dan belum keluar gudang">Dipesan</th>
+                                    <th className="px-4 py-3 text-left font-semibold" title="Stok Fisik dikurangi Dipesan">Tersedia</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Min. Stok</th>
+                                    <th className="px-4 py-3 text-center font-semibold">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border bg-background">

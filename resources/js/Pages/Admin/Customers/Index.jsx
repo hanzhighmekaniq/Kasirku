@@ -11,7 +11,12 @@ const TIER_STYLES = {
     bronze: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
     silver: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
     gold: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
+    platinum: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
 };
+
+function activeMembership(customer) {
+    return customer.memberships?.[0] ?? null;
+}
 
 export default function Index({ customers, storeType = "retail" }) {
     const [search, setSearch] = useState("");
@@ -240,6 +245,20 @@ function RowActions({ customer, onDelete }) {
     );
 }
 
+function MembershipBadge({ customer }) {
+    const membership = activeMembership(customer)?.membership;
+
+    if (!membership) {
+        return <span className="text-xs text-muted-foreground">—</span>;
+    }
+
+    return (
+        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+            {membership.name}
+        </span>
+    );
+}
+
 function CustomerList({ items, onDelete, showLoyalty = true }) {
     return (
         <>
@@ -261,6 +280,11 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                     Tier
                                 </th>
                             )}
+                            {showLoyalty && (
+                                <th className="px-4 py-3.5 text-center font-semibold">
+                                    Membership
+                                </th>
+                            )}
                             <th className="px-4 py-3.5 text-right font-semibold">Hutang</th>
                             <th className="px-4 py-3.5 text-right font-semibold">Aksi</th>
                         </tr>
@@ -275,9 +299,12 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                     <div className="flex items-center gap-3">
                                         <CustomerBadge name={c.name} />
                                         <div className="min-w-0">
-                                            <p className="font-medium text-foreground">
+                                            <Link
+                                                href={route("admin.customers.show", c.id)}
+                                                className="font-medium text-foreground transition hover:text-primary"
+                                            >
                                                 {c.name}
-                                            </p>
+                                            </Link>
                                             {c.code && (
                                                 <p className="text-xs text-muted-foreground">
                                                     {c.code}
@@ -308,6 +335,11 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                         </span>
                                     </td>
                                 )}
+                                {showLoyalty && (
+                                    <td className="px-4 py-4 text-center">
+                                        <MembershipBadge customer={c} />
+                                    </td>
+                                )}
                                 <td className="px-4 py-4 text-right">
                                     {(c.debt_balance ?? 0) > 0 ? (
                                         <span className="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-semibold text-destructive">
@@ -336,9 +368,12 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                         <CustomerBadge name={c.name} />
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                                <p className="truncate font-medium text-foreground">
+                                <Link
+                                    href={route("admin.customers.show", c.id)}
+                                    className="truncate font-medium text-foreground transition hover:text-primary"
+                                >
                                     {c.name}
-                                </p>
+                                </Link>
                                 {showLoyalty && (
                                     <span
                                         className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${TIER_STYLES[c.tier] || TIER_STYLES.bronze}`}
@@ -363,6 +398,7 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                         {c.points || 0} poin
                                     </span>
                                 )}
+                                {showLoyalty && <MembershipBadge customer={c} />}
                                 <div className="flex items-center gap-1">
                                     <Link
                                         href={route(

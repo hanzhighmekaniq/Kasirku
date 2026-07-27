@@ -58,13 +58,14 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
             header={
                 <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
-                        pageTitle
+                        {pageTitle}
                     </div>
                     <div className="text-[11px] text-muted-foreground">
                         Manajemen
                     </div>
                 </div>
-            }>
+            }
+        >
             <PageHeader
                 title={pageTitle}
                 breadcrumbs={["Admin", pageTitle]}
@@ -149,7 +150,7 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder={searchPlaceholder}
-                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl bg-background border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                         <Dropdown>

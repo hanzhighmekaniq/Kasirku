@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import CurrencyInput from "@/Components/ui/CurrencyInput";
+import { formatRupiah } from "@/Utils/currency";
 
 /* Satuan dasar per store type. FnB butuh satuan sajian (porsi, piring) dan
    satuan takaran bahan baku (gram, ml) yang tidak relevan di retail. */
@@ -577,7 +578,7 @@ export default function Create({
                                                         Rupiah
                                                     </div>
                                                     <div className={`text-sm font-bold tracking-tight ${marginRp < 0 ? "text-destructive" : "text-success"}`}>
-                                                        Rp {marginRp.toLocaleString("id-ID")}
+                                                        {formatRupiah(marginRp)}
                                                     </div>
                                                 </div>
                                                 <div className={`flex-1 rounded-xl border px-3 py-2.5 ${marginRp < 0 ? "border-destructive/20 bg-destructive/5" : "border-success/20 bg-success/10"}`}>
@@ -634,8 +635,8 @@ export default function Create({
                                                                 updated[i].name = e.target.value;
                                                                 setData("packaging_units", updated);
                                                             }}
-                                                            placeholder="Nama (Dus, Box…)"
-                                                            className="block w-full rounded-lg border border-border px-3 py-2 text-xs"
+                                                            placeholder="Nama (Dus, Box...)"
+                                                            className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-xs"
                                                         />
                                                     </div>
                                                     <div className="col-span-6 sm:col-span-2">
@@ -650,7 +651,7 @@ export default function Create({
                                                                 }}
                                                                 min="1"
                                                                 placeholder="12"
-                                                                className="block w-full rounded-lg border border-border px-3 py-2 pr-8 text-xs"
+                                                                className="block w-full rounded-lg border border-border bg-card px-3 py-2 pr-8 text-xs"
                                                             />
                                                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                                 {data.unit}
@@ -658,23 +659,15 @@ export default function Create({
                                                         </div>
                                                     </div>
                                                     <div className="col-span-6 sm:col-span-3">
-                                                        <div className="relative">
-                                                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
-                                                                Rp
-                                                            </span>
-                                                            <input
-                                                                type="number"
-                                                                value={pu.sell_price}
-                                                                onChange={(e) => {
-                                                                    const updated = [...data.packaging_units];
-                                                                    updated[i].sell_price = e.target.value;
-                                                                    setData("packaging_units", updated);
-                                                                }}
-                                                                min="0"
-                                                                placeholder="Harga"
-                                                                className="block w-full rounded-lg border border-border py-2 pl-7 pr-3 text-xs"
-                                                            />
-                                                        </div>
+                                                        <CurrencyInput
+                                                            value={pu.sell_price}
+                                                            onChange={(value) => {
+                                                                const updated = [...data.packaging_units];
+                                                                updated[i].sell_price = value;
+                                                                setData("packaging_units", updated);
+                                                            }}
+                                                            placeholder="Harga"
+                                                        />
                                                     </div>
                                                     <div className="col-span-10 sm:col-span-3">
                                                         <input
@@ -686,7 +679,7 @@ export default function Create({
                                                                 setData("packaging_units", updated);
                                                             }}
                                                             placeholder="Barcode (opsional)"
-                                                            className="block w-full rounded-lg border border-border px-3 py-2 text-xs"
+                                                            className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-xs"
                                                         />
                                                     </div>
                                                     <div className="col-span-2 sm:col-span-1 flex items-center justify-end">
@@ -703,7 +696,7 @@ export default function Create({
                                                     {pu.conversion_qty > 0 && pu.sell_price > 0 && (
                                                         <div className="col-span-12 text-[11px] text-muted-foreground pl-1">
                                                             ≈ <span className="font-semibold text-success">
-                                                                Rp {Math.round(pu.sell_price / pu.conversion_qty).toLocaleString("id-ID")} / {data.unit}
+                                                                {formatRupiah(Math.round(pu.sell_price / pu.conversion_qty))} / {data.unit}
                                                             </span>
                                                         </div>
                                                     )}
@@ -767,7 +760,7 @@ export default function Create({
                                                                 setData("price_tiers", updated);
                                                             }}
                                                             placeholder="0"
-                                                            className="block w-full rounded-lg border border-border px-3 py-2 pr-10 text-xs"
+                                                            className="block w-full rounded-lg border border-border bg-card px-3 py-2 pr-10 text-xs"
                                                         />
                                                         <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
                                                             {data.unit}
@@ -776,22 +769,14 @@ export default function Create({
                                                 </div>
                                                 <div className="col-span-4 sm:col-span-5">
                                                     <label className="text-[10px] font-semibold text-muted-foreground">Harga per Unit</label>
-                                                    <div className="relative">
-                                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
-                                                            Rp
-                                                        </span>
-                                                        <input
-                                                            type="number"
-                                                            value={tier.price}
-                                                            onChange={(e) => {
-                                                                const updated = [...data.price_tiers];
-                                                                updated[i].price = e.target.value;
-                                                                setData("price_tiers", updated);
-                                                            }}
-                                                            placeholder="0"
-                                                            className="block w-full rounded-lg border border-border py-2 pl-7 pr-3 text-xs"
-                                                        />
-                                                    </div>
+                                                    <CurrencyInput
+                                                        value={tier.price}
+                                                        onChange={(value) => {
+                                                            const updated = [...data.price_tiers];
+                                                            updated[i].price = value;
+                                                            setData("price_tiers", updated);
+                                                        }}
+                                                    />
                                                 </div>
                                                 <div className="col-span-1 flex items-end justify-end">
                                                     <button
@@ -931,19 +916,11 @@ export default function Create({
                                     {(data.type === "time_based" || data.type === "rental_item") && (
                                         <>
                                             <Field label="Tarif Per Jam" error={errors.price_per_hour}>
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-                                                        Rp
-                                                    </span>
-                                                    <input
-                                                        type="number"
-                                                        value={data.price_per_hour}
-                                                        onChange={(e) => setData("price_per_hour", e.target.value)}
-                                                        min="0"
-                                                        placeholder="0"
-                                                        className={`${inputCls(!!errors.price_per_hour)} pl-9`}
-                                                    />
-                                                </div>
+                                                <CurrencyInput
+                                                    value={data.price_per_hour}
+                                                    onChange={(value) => setData("price_per_hour", value)}
+                                                    error={!!errors.price_per_hour}
+                                                />
                                             </Field>
                                             <Field label="Durasi Minimum" error={errors.min_duration_minutes}>
                                                 <div className="relative">
@@ -1032,19 +1009,11 @@ export default function Create({
                                     )}
                                     {(storeType === "rental" || data.type === "rental_item") && (
                                         <Field label="Jumlah Deposit" error={errors.deposit_amount}>
-                                            <div className="relative">
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-                                                    Rp
-                                                </span>
-                                                <input
-                                                    type="number"
-                                                    value={data.deposit_amount}
-                                                    onChange={(e) => setData("deposit_amount", e.target.value)}
-                                                    min="0"
-                                                    placeholder="0"
-                                                    className={`${inputCls(!!errors.deposit_amount)} pl-9`}
-                                                />
-                                            </div>
+                                            <CurrencyInput
+                                                value={data.deposit_amount}
+                                                onChange={(value) => setData("deposit_amount", value)}
+                                                error={!!errors.deposit_amount}
+                                            />
                                         </Field>
                                     )}
                                 </div>
@@ -1204,7 +1173,7 @@ export default function Create({
             <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 lg:hidden">
                 <Link
                     href={route("admin.products.index")}
-                    className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-border transition hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/30"
+                    className="translate-x-1 flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-border transition hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/30"
                     title="Batal"
                 >
                     <X className="h-5 w-5" strokeWidth={2} />
@@ -1213,7 +1182,7 @@ export default function Create({
                     type="submit"
                     form="productForm"
                     disabled={processing}
-                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary text-primary-foreground shadow-xl shadow-primary/40 transition hover:shadow-2xl hover:shadow-primary/50 disabled:opacity-60"
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary text-primary-foreground shadow-xl  transition hover:shadow-2xl hover:shadow-primary/50 disabled:opacity-60"
                     title="Simpan Produk"
                 >
                     {processing ? (
@@ -1286,8 +1255,8 @@ function ToggleSwitch({ checked, onChange, disabled = false }) {
             disabled={disabled}
             onClick={() => onChange(!checked)}
             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${checked
-                    ? "bg-gradient-to-r from-primary to-primary"
-                    : "bg-muted"
+                ? "bg-gradient-to-r from-primary to-primary"
+                : "bg-muted"
                 } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
         >
             <span
@@ -1315,8 +1284,8 @@ function CheckboxTile({ checked, onChange, label, description }) {
     return (
         <label
             className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition ${checked
-                    ? "border-violet-300 bg-violet-100/50 dark:border-violet-700 dark:bg-violet-900/20"
-                    : "border-border bg-card hover:border-primary/20"
+                ? "border-violet-300 bg-violet-100/50 dark:border-violet-700 dark:bg-violet-900/20"
+                : "border-border bg-card hover:border-primary/20"
                 }`}
         >
             <input
@@ -1338,8 +1307,8 @@ function SummaryChip({ label, active, show = true }) {
     return (
         <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${active
-                    ? "border border-success/10 bg-success/10 text-success"
-                    : "border border-border bg-muted text-muted-foreground"
+                ? "border border-success/10 bg-success/10 text-success"
+                : "border border-border bg-muted text-muted-foreground"
                 }`}
         >
             <span className={`h-1.5 w-1.5 rounded-full ${active ? "bg-success" : "bg-muted-foreground"}`} />

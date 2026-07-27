@@ -1965,6 +1965,28 @@ export default function useKasir({
         }
     };
 
+    const handleVoidSale = async (saleId) => {
+        try {
+            const response = await axios.post(route('admin.kasir.void-sale', saleId));
+            return { success: true, message: response.data.message };
+        } catch (e) {
+            console.error('Failed to void sale:', e);
+            return { success: false, message: e.response?.data?.message || e.message };
+        }
+    };
+
+    const handleUpdatePayment = async (saleId, paymentMethodId) => {
+        try {
+            const response = await axios.put(route('admin.kasir.update-payment', saleId), {
+                payment_method_id: paymentMethodId
+            });
+            return { success: true, message: response.data.message };
+        } catch (e) {
+            console.error('Failed to update payment:', e);
+            return { success: false, message: e.response?.data?.message || e.message };
+        }
+    };
+
     const buildWhatsAppMessage = (receipt, sName = storeName) => {
         if (!receipt) return '';
         const lines = [
@@ -2340,6 +2362,8 @@ export default function useKasir({
         handleCancelPendingSale,
         handleStartPg,
         handleRetryPg,
+        handleVoidSale,
+        handleUpdatePayment,
         buildWhatsAppMessage,
         sendWhatsApp,
         handleNewTransaction,

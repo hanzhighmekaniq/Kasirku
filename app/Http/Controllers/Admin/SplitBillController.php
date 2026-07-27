@@ -179,7 +179,7 @@ class SplitBillController extends Controller
             ]);
 
             // Create SaleItems (no stock deduction)
-            $this->createSaleItems($sale, $items, $storeId);
+            $this->createSaleItems($sale, $items, $storeId, $branchId);
 
             // Mark table as occupied
             if (! empty($validated['table_id'])) {

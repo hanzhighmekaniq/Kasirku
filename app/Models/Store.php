@@ -23,6 +23,7 @@ class Store extends Model
         'timezone',
         'tax_inclusive',
         'default_tax_rate',
+        'points_per_amount',
         'receipt_header',
         'receipt_footer',
         'phone',
@@ -41,6 +42,7 @@ class Store extends Model
             'is_active' => 'boolean',
             'tax_inclusive' => 'boolean',
             'default_tax_rate' => 'decimal:2',
+            'points_per_amount' => 'decimal:2',
             'plan_expires_at' => 'date',
         ];
     }

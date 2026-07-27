@@ -1118,7 +1118,7 @@ export default function Index({
                                                                 )
                                                             : undefined
                                                     }
-                                                    className={`group transition hover:bg-[rgb(var(--color-table-hover))] ${canExp
+                                                    className={`group transition hover:bg-muted ${canExp
                                                         ? "cursor-pointer"
                                                         : ""
                                                         } ${isExp
@@ -1190,22 +1190,11 @@ export default function Index({
                                                                 </div>
                                                             )}
                                                             <div className="min-w-0">
-                                                                <Link
-                                                                    href={route(
-                                                                        "admin.products.show",
-                                                                        product.id,
-                                                                    )}
-                                                                    onClick={(
-                                                                        e,
-                                                                    ) =>
-                                                                        e.stopPropagation()
-                                                                    }
-                                                                    className="block max-w-[200px] truncate font-semibold text-foreground transition-colors hover:text-primary"
-                                                                >
+                                                                <p className="block max-w-[200px] truncate font-semibold text-foreground">
                                                                     {
                                                                         product.name
                                                                     }
-                                                                </Link>
+                                                                </p>
                                                                 <p className="font-mono text-xs text-muted-foreground">
                                                                     {product.sku}
                                                                     {product.barcode

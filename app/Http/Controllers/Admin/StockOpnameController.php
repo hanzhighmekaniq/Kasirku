@@ -21,10 +21,11 @@ class StockOpnameController extends Controller
 
     public function index()
     {
-        [$storeId] = $this->storeScope();
+        [$storeId, $branchId] = $this->storeScope();
 
         $opnames = StockOpname::with('user')
             ->where('store_id', $storeId)
+            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
             ->latest()
             ->get();
 
@@ -44,11 +45,11 @@ class StockOpnameController extends Controller
 
     public function create()
     {
-        [$storeId] = $this->storeScope();
+        [$storeId, $branchId] = $this->storeScope();
 
         return Inertia::render('Admin/Stock/Opname/Create', [
             'buckets' => $this->stockBucketOptions($storeId),
-            'currentBranchId' => session('current_branch_id'),
+            'currentBranchId' => $branchId,
         ]);
     }
 

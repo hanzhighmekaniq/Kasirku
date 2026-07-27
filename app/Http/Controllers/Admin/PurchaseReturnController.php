@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductBatch;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
-use App\Models\StockMovement;
 use App\Models\Store;
 use App\Services\Stock\StockMutation;
 use App\Services\Stock\StockService;
@@ -134,6 +134,7 @@ class PurchaseReturnController extends Controller
                     : null;
                 $variantId = $purchaseItem?->variant_id;
                 $packagingUnitId = $purchaseItem?->packaging_unit_id;
+                $batchNo = $purchaseItem?->batch_no;
 
                 $return->items()->create([
                     'purchase_item_id' => $item['purchase_item_id'] ?? null,
@@ -146,29 +147,16 @@ class PurchaseReturnController extends Controller
                     'reason' => $item['reason'] ?? null,
                 ]);
 
-                // Reduce stock — bucket-aware
-                $this->adjustStock($item['product_id'], $variantId, $packagingUnitId, $item['quantity'], $purchase);
-
-                // Record stock movement for return
-                $product = Product::find($item['product_id']);
-                if ($product?->track_stock) {
-                    $supplierName = $purchase->supplier->name ?? 'supplier';
-                    StockMovement::create([
-                        'product_id' => $item['product_id'],
-                        'variant_id' => $variantId,
-                        'packaging_unit_id' => $packagingUnitId,
-                        'store_id' => $purchase->store_id,
-                        'branch_id' => $purchase->branch_id,
-                        'reference_type' => PurchaseReturn::class,
-                        'reference_id' => $return->id,
-                        'movement_type' => 'return_out',
-                        'quantity' => $item['quantity'],
-                        'unit_cost' => $item['cost_price'],
-                        'reference_no' => $returnNo,
-                        'notes' => "Retur #{$returnNo} ke {$supplierName}",
-                        'moved_at' => now(),
-                    ]);
-                }
+                // Reduce stock — batch-aware, movement dicatat oleh StockService
+                $this->adjustStock(
+                    $item['product_id'],
+                    $variantId,
+                    $packagingUnitId,
+                    $item['quantity'],
+                    $purchase,
+                    false,
+                    $batchNo,
+                );
             }
 
             // Reverse payment since status is completed immediately
@@ -320,16 +308,34 @@ class PurchaseReturnController extends Controller
         ]);
     }
 
-    private function adjustStock(int $productId, ?int $variantId, ?int $packagingUnitId, int $quantity, Purchase $purchase, bool $isReversal = false): void
-    {
+    private function adjustStock(
+        int $productId,
+        ?int $variantId,
+        ?int $packagingUnitId,
+        int $quantity,
+        Purchase $purchase,
+        bool $isReversal = false,
+        ?string $batchNo = null,
+    ): void {
         $product = Product::find($productId);
         if (! $product?->track_stock) {
             return;
         }
 
-        // Retur dicatat dalam satuan beli (mengikuti baris pembelian), tapi
-        // saldo stok bahan baku FnB disimpan dalam satuan pakai — samakan dulu.
         $stockQty = $product->toBaseUnit((float) $quantity);
+
+        // Cari batch spesifik dari batch_no agar potong batch yang tepat
+        $productBatchId = null;
+        if ($batchNo && $product->track_batch) {
+            $productBatchId = ProductBatch::where([
+                'product_id' => $productId,
+                'variant_id' => $variantId,
+                'packaging_unit_id' => $packagingUnitId,
+                'store_id' => $purchase->store_id,
+                'branch_id' => $purchase->branch_id,
+                'batch_no' => $batchNo,
+            ])->value('id');
+        }
 
         $mutation = new StockMutation(
             productId: $productId,
@@ -342,6 +348,7 @@ class PurchaseReturnController extends Controller
             referenceType: Purchase::class,
             referenceId: $purchase->id,
             referenceNo: $purchase->purchase_no,
+            productBatchId: $productBatchId,
             notes: $isReversal
                 ? "Pembatalan retur pembelian #{$purchase->purchase_no}"
                 : "Retur pembelian #{$purchase->purchase_no}",
@@ -349,10 +356,8 @@ class PurchaseReturnController extends Controller
 
         $stockService = app(StockService::class);
         if ($isReversal) {
-            // Batalkan retur: kembalikan stok ke kondisi sebelum retur
             $stockService->increase($mutation);
         } else {
-            // Retur: kurangi stok (barang dikembalikan ke supplier)
             $stockService->decrease($mutation);
         }
     }
