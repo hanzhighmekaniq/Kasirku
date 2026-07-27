@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Stock\StockService;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\PermissionRegistrar;
@@ -10,7 +11,9 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // StockService sebagai singleton — satu instance per request,
+        // tidak ada state yang perlu direset antar panggilan.
+        $this->app->singleton(StockService::class);
     }
 
     public function boot(): void

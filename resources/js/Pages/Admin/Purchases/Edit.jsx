@@ -7,6 +7,10 @@ import SectionCard from "@/Components/ui/SectionCard";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 import Button from "@/Components/ui/Button";
 import { ProductCombobox } from "./Create";
+import {
+    baseUnitLabel,
+    usesUnitConversion,
+} from "@/Utils/unitConversion";
 
 /* ── helpers ──────────────────────────────────────── */
 const fmtRp = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
@@ -456,10 +460,39 @@ export default function Edit({
                                                     }
                                                     className="w-full rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 active:bg-primary/80 disabled:opacity-40"
                                                 >
-                                                    + Tambah
+                                                     + Tambah
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {/* Bahan baku berkonversi dicatat per
+                                            satuan beli tapi disimpan per satuan
+                                            pakai — tunjukkan hasilnya sebelum
+                                            disimpan supaya tidak terasa ganjil. */}
+                                        {usesUnitConversion(pendingProduct) &&
+                                            Number(pendingQty) > 0 && (
+                                                <p className="mt-2 text-xs text-primary">
+                                                    Masuk stok:{" "}
+                                                    <strong>
+                                                        {baseUnitLabel(
+                                                            pendingProduct,
+                                                            pendingQty,
+                                                        )}
+                                                    </strong>
+                                                    {Number(pendingPrice) > 0 && (
+                                                        <>
+                                                            {" · Modal ≈ "}
+                                                            <strong>
+                                                                {fmtRp(
+                                                                    Number(pendingPrice) /
+                                                                    Number(pendingProduct.base_unit_conversion),
+                                                                )}
+                                                                /{pendingProduct.base_unit}
+                                                            </strong>
+                                                        </>
+                                                    )}
+                                                </p>
+                                            )}
                                     </div>
                                 )}
 

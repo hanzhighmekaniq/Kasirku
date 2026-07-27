@@ -17,6 +17,9 @@ export default function Index({ customers }) {
     const [payModal, setPayModal] = useState(null);
     const [payAmount, setPayAmount] = useState("");
     const [paying, setPaying] = useState(false);
+    /* Pesan penolakan dari backend. Sebelumnya modal ditutup lewat onFinish
+       sehingga error apa pun ikut hilang dan user mengira sudah tersimpan. */
+    const [payError, setPayError] = useState("");
 
     const filtered = search.trim()
         ? customers.filter(
@@ -30,10 +33,17 @@ export default function Index({ customers }) {
     const handlePay = () => {
         if (!payModal || !payAmount || Number(payAmount) <= 0) return;
         setPaying(true);
+        setPayError("");
         router.post(
             route("admin.debts.pay", payModal.id),
             { amount: Number(payAmount) },
-            { preserveScroll: true, onFinish: () => { setPaying(false); setPayModal(null); setPayAmount(""); } },
+            {
+                preserveScroll: true,
+                // Modal hanya ditutup kalau backend benar-benar menerima.
+                onSuccess: () => { setPayModal(null); setPayAmount(""); },
+                onError: (errors) => setPayError(errors.amount || ""),
+                onFinish: () => setPaying(false),
+            },
         );
     };
 
@@ -165,7 +175,7 @@ export default function Index({ customers }) {
             {/* Pay Modal */}
             {payModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black backdrop-blur-sm" onClick={() => setPayModal(null)} />
+                    <div className="absolute inset-0 bg-background/80" onClick={() => { setPayModal(null); setPayError(""); }} />
                     <div className="relative w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl border border-border">
                         <h3 className="text-base font-bold text-foreground">Lunasi Hutang</h3>
                         <p className="mt-1 text-sm text-muted-foreground">
@@ -186,9 +196,12 @@ export default function Index({ customers }) {
                                     className="block w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
+                            {payError && (
+                                <p className="mt-1.5 text-xs text-destructive">{payError}</p>
+                            )}
                         </div>
                         <div className="mt-5 flex justify-end gap-2">
-                            <Button type="button" variant="outline" size="sm" onClick={() => setPayModal(null)}>
+                            <Button type="button" variant="outline" size="sm" onClick={() => { setPayModal(null); setPayError(""); }}>
                                 Batal
                             </Button>
                             <Button

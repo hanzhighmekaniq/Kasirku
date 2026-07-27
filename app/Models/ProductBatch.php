@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductBatch extends Model
@@ -12,7 +12,7 @@ class ProductBatch extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id', 'store_id', 'branch_id',
+        'product_id', 'variant_id', 'packaging_unit_id', 'store_id', 'branch_id',
         'batch_no', 'purchase_date', 'expiry_date',
         'quantity', 'cost_price',
     ];
@@ -21,8 +21,8 @@ class ProductBatch extends Model
     {
         return [
             'purchase_date' => 'date',
-            'expiry_date'   => 'date',
-            'cost_price'    => 'decimal:2',
+            'expiry_date' => 'date',
+            'cost_price' => 'decimal:2',
         ];
     }
 
@@ -31,6 +31,16 @@ class ProductBatch extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'variant_id');
+    }
+
+    public function packagingUnit(): BelongsTo
+    {
+        return $this->belongsTo(ProductPackagingUnit::class, 'packaging_unit_id');
     }
 
     public function store(): BelongsTo
@@ -51,18 +61,27 @@ class ProductBatch extends Model
      */
     public function getExpiryStatusAttribute(): string
     {
-        if (is_null($this->expiry_date)) return 'active';
+        if (is_null($this->expiry_date)) {
+            return 'active';
+        }
 
         $today = Carbon::today();
-        if ($this->expiry_date->lt($today)) return 'expired';
-        if ($this->expiry_date->diffInDays($today) <= 30) return 'expiring_soon';
+        if ($this->expiry_date->lt($today)) {
+            return 'expired';
+        }
+        if ($this->expiry_date->diffInDays($today) <= 30) {
+            return 'expiring_soon';
+        }
 
         return 'active';
     }
 
     public function getDaysUntilExpiryAttribute(): ?int
     {
-        if (is_null($this->expiry_date)) return null;
+        if (is_null($this->expiry_date)) {
+            return null;
+        }
+
         return Carbon::today()->diffInDays($this->expiry_date, false);
     }
 }

@@ -78,8 +78,12 @@ function PermModal({ role, onClose, onSave }) {
 
     const isSystem = role?.is_system;
 
+    // Overlay sengaja TIDAK memakai backdrop-blur: efek blur pada elemen
+    // full-screen memaksa compositor merender ulang seluruh viewport tiap
+    // frame, dan modal ini berisi 16 kartu permission — itu yang bikin terasa
+    // berat saat dibuka. Warna solid semi-transparan sudah cukup.
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4">
             <div className="flex w-full max-w-2xl flex-col rounded-2xl bg-popover text-popover-foreground shadow-2xl ring-1 ring-border max-h-[90vh]">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
@@ -158,18 +162,22 @@ function PermModal({ role, onClose, onSave }) {
 }
 
 // ── Role Form Modal ───────────────────────────────────────────────────────────
-function RoleFormModal({ title, form, onClose, onSubmit }) {
+function RoleFormModal({ title, form, onClose, onSubmit, isCreate = false }) {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4">
             <div className="w-full max-w-md rounded-2xl bg-popover text-popover-foreground shadow-2xl ring-1 ring-border">
                 <div className="border-b border-border px-6 py-4">
                     <h3 className="text-base font-bold text-popover-foreground">{title}</h3>
                 </div>
                 <form onSubmit={onSubmit} className="p-6 space-y-4">
                     <div>
-                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground">Nama Role *</label>
+                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                            Nama Role <span className="text-destructive">*</span>
+                        </label>
                         <input
                             value={form.data.name}
+                            required
+                            autoFocus
                             onChange={e => form.setData('name', e.target.value)}
                             placeholder="cth: kasirdapur, operator-shift2, resepsionis"
                             className="w-full py-2.5 px-3.5 rounded-lg border border-input bg-background text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 transition-all"
@@ -177,7 +185,10 @@ function RoleFormModal({ title, form, onClose, onSubmit }) {
                         {form.errors.name && <p className="mt-1.5 text-xs text-destructive">{form.errors.name}</p>}
                     </div>
                     <div>
-                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground">Deskripsi</label>
+                        <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                            Deskripsi
+                            <span className="ml-1.5 font-normal normal-case tracking-normal text-muted-foreground/70">(opsional)</span>
+                        </label>
                         <input
                             value={form.data.description}
                             onChange={e => form.setData('description', e.target.value)}
@@ -185,14 +196,30 @@ function RoleFormModal({ title, form, onClose, onSubmit }) {
                             className="w-full py-2.5 px-3.5 rounded-lg border border-input bg-background text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 transition-all"
                         />
                     </div>
-                    <p className="text-xs text-muted-foreground">Permission bisa diatur setelah role dibuat lewat tombol "Atur Permission".</p>
+
+                    {isCreate && (
+                        <div className="flex gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-3">
+                            <svg className="mt-0.5 h-4 w-4 shrink-0 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                            </svg>
+                            <div className="text-xs leading-relaxed text-foreground/80">
+                                <p className="font-semibold text-foreground">Langkah berikutnya: atur hak akses</p>
+                                <p className="mt-0.5">
+                                    Role dibuat tanpa hak akses apa pun. Setelah tersimpan, buka
+                                    tombol <span className="font-semibold text-primary">Atur Permission</span> pada
+                                    kartu role untuk menentukan menu dan tindakan yang boleh diakses.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex justify-end gap-2 pt-2">
                         <button type="button" onClick={onClose}
                             className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted">
                             Batal
                         </button>
                         <Button type="submit" loading={form.processing} className="px-5">
-                            Simpan
+                            {isCreate ? 'Buat & Lanjut Atur Akses' : 'Simpan'}
                         </Button>
                     </div>
                 </form>
@@ -218,8 +245,21 @@ export default function Index({ roles, permissions }) {
 
     const handleCreate = (e) => {
         e.preventDefault();
+        const intendedName = createForm.data.name;
+
         createForm.post(route('admin.roles.store'), {
-            onSuccess: () => { setCreateModal(false); createForm.reset(); },
+            onSuccess: (page) => {
+                setCreateModal(false);
+                createForm.reset();
+
+                // Role baru selalu lahir tanpa permission, jadi langsung
+                // bukakan pengaturan aksesnya — tanpa ini user harus mencari
+                // sendiri kartu rolenya di daftar untuk melanjutkan.
+                const created = page.props.roles?.find(
+                    (r) => r.name === intendedName && !r.is_system,
+                );
+                if (created) setPermModal(created);
+            },
         });
     };
 
@@ -358,7 +398,8 @@ export default function Index({ roles, permissions }) {
                             <h2 className="text-sm font-bold text-foreground">Role Custom</h2>
                             <p className="text-xs text-muted-foreground mt-0.5">Buat role dengan nama dan permission sesuai kebutuhan bisnis kamu.</p>
                         </div>
-                        <Button onClick={() => setCreateModal(true)}>
+                        {/* Di mobile dipindah ke FAB kanan bawah */}
+                        <Button onClick={() => setCreateModal(true)} className="hidden sm:inline-flex">
                             <svg className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                             Buat Role Baru
                         </Button>
@@ -438,6 +479,7 @@ export default function Index({ roles, permissions }) {
                 <RoleFormModal
                     title="Buat Role Custom Baru"
                     form={createForm}
+                    isCreate
                     onClose={() => { setCreateModal(false); createForm.reset(); }}
                     onSubmit={handleCreate}
                 />
@@ -459,6 +501,20 @@ export default function Index({ roles, permissions }) {
                 onConfirm={confirmDelete}
                 onClose={() => !deleting && setDeletingRole(null)}
             />
+
+            {/* FAB — mobile only. Disembunyikan saat ada modal terbuka supaya
+                tidak menimpa panelnya. */}
+            {!permModal && !createModal && !editModal && !deletingRole && (
+                <Button
+                    onClick={() => setCreateModal(true)}
+                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl sm:hidden"
+                    title="Buat Role Baru"
+                >
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                </Button>
+            )}
         </AuthenticatedLayout>
     );
 }

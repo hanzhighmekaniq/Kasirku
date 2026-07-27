@@ -28,7 +28,40 @@ import {
     X,
 } from "lucide-react";
 
-const UNIT_OPTIONS = [
+/* Satuan dasar per store type. FnB butuh satuan sajian (porsi, piring) dan
+   satuan takaran bahan baku (gram, ml) yang tidak relevan di retail. */
+const UNIT_OPTIONS_BY_STORE = {
+    fnb: [
+        "porsi",
+        "piring",
+        "gelas",
+        "cup",
+        "pcs",
+        "botol",
+        "pack",
+        "sachet",
+        "gram",
+        "kg",
+        "ml",
+        "liter",
+        "butir",
+        "lembar",
+    ],
+    retail: [
+        "pcs",
+        "botol",
+        "pack",
+        "dus",
+        "sachet",
+        "kg",
+        "gram",
+        "liter",
+        "ml",
+        "lembar",
+    ],
+};
+
+const DEFAULT_UNIT_OPTIONS = [
     "pcs",
     "botol",
     "cup",
@@ -124,6 +157,7 @@ export default function Edit({
         cost_price: product.cost_price ?? "",
         stock_minimum: product.stock_minimum ?? 0,
         track_stock: product.track_stock ?? true,
+        track_batch: product.track_batch ?? false,
         is_sellable: product.is_sellable ?? true,
         preparation_time: product.preparation_time ?? "",
         is_active: product.is_active ?? true,
@@ -197,7 +231,7 @@ export default function Edit({
                 ? ["kunjungan", "sesi", "pcs", "item"]
                 : data.type === "rental_item"
                     ? ["unit", "pcs", "set", "hari"]
-                    : UNIT_OPTIONS;
+                    : (UNIT_OPTIONS_BY_STORE[storeType] ?? DEFAULT_UNIT_OPTIONS);
 
     const handleTypeChange = (newType) => {
         setData("type", newType);
@@ -1152,6 +1186,14 @@ export default function Edit({
                                         onChange={(v) =>
                                             setData("track_stock", v)
                                         }
+                                    />
+                                )}
+                                {has("batch_expired") && feat.trackStock && !isNoStock && (
+                                    <SettingToggle
+                                        label="Lacak Batch & Kadaluarsa"
+                                        description="Catat nomor batch dan tanggal expired dari pembelian"
+                                        checked={data.track_batch ?? false}
+                                        onChange={(v) => setData("track_batch", v)}
                                     />
                                 )}
                                 <SettingToggle

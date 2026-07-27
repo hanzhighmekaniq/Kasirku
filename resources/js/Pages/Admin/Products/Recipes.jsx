@@ -35,19 +35,6 @@ const hppPerUnit = (material) => {
 const lineHpp = (recipe) =>
     hppPerUnit(recipe?.raw_material) * Number(recipe?.quantity ?? 0);
 
-const UNIT_OPTS = [
-    "gram",
-    "ml",
-    "pcs",
-    "kg",
-    "liter",
-    "sdm",
-    "sdt",
-    "sachet",
-    "lembar",
-    "buah",
-];
-
 const PAGE_TITLE = {
     retail: "Produk",
     fnb: "Menu & Produk",
@@ -142,6 +129,11 @@ export default function Recipes({
     const [deleting, setDeleting] = useState(null);
 
     const pageTitle = PAGE_TITLE[storeType] ?? "Produk";
+
+    /* Paket (combo) diisi produk jadi, bukan bahan mentah — istilahnya ikut
+       menyesuaikan supaya tidak membingungkan saat menyusun paket. */
+    const isCombo = product.type === "combo";
+    const componentLabel = isCombo ? "Isi Paket" : "Bahan Baku";
 
     const { data, setData, post, processing, errors, reset } = useForm({
         raw_material_id: "",
@@ -307,12 +299,12 @@ export default function Recipes({
                     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                         <div className="border-b border-border bg-muted/50 px-6 py-4">
                             <h3 className="text-sm font-semibold text-foreground">
-                                Daftar Bahan Baku
+                                Daftar {componentLabel}
                             </h3>
                             <p className="mt-0.5 text-xs text-muted-foreground">
                                 {recipes.length === 0
-                                    ? "Belum ada bahan. Tambahkan bahan di panel kanan."
-                                    : `${recipes.length} bahan — setiap kali "${product.name}" terjual, stok bahan ini yang berkurang.`}
+                                    ? `Belum ada ${isCombo ? "isi paket" : "bahan"}. Tambahkan di panel kanan.`
+                                    : `${recipes.length} ${isCombo ? "item" : "bahan"} — setiap kali "${product.name}" terjual, stok ${isCombo ? "item" : "bahan"} ini yang berkurang.`}
                             </p>
                         </div>
 
@@ -328,9 +320,9 @@ export default function Recipes({
                                     Resep kosong
                                 </p>
                                 <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-                                    Tambahkan bahan baku. Saat produk ini dijual
-                                    di kasir, stok bahan akan berkurang
-                                    otomatis.
+                                    {isCombo
+                                        ? "Tambahkan produk yang jadi isi paket ini. Saat paket terjual, stok tiap isinya berkurang otomatis."
+                                        : "Tambahkan bahan baku. Saat produk ini dijual di kasir, stok bahan akan berkurang otomatis."}
                                 </p>
                             </div>
                         ) : (
@@ -367,17 +359,19 @@ export default function Recipes({
                     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                         <div className="border-b border-border bg-muted/50 px-6 py-4">
                             <h3 className="text-sm font-semibold text-foreground">
-                                Tambah Bahan
+                                Tambah {isCombo ? "Isi" : "Bahan"}
                             </h3>
                             <p className="mt-0.5 text-xs text-muted-foreground">
-                                Pilih bahan baku dan isi takarannya per 1 porsi.
+                                {isCombo
+                                    ? "Pilih produk yang jadi isi paket dan jumlahnya per 1 paket."
+                                    : "Pilih bahan baku dan isi takarannya per 1 porsi."}
                             </p>
                         </div>
                         <form onSubmit={submit} className="space-y-4 p-5">
-                            {/* Bahan baku */}
+                            {/* Komponen resep */}
                             <div>
                                 <label className="mb-1.5 block text-sm font-medium text-foreground">
-                                    Bahan Baku{" "}
+                                    {componentLabel}{" "}
                                     <span className="text-destructive">*</span>
                                 </label>
                                 <select
@@ -389,7 +383,9 @@ export default function Recipes({
                                         !!errors.raw_material_id,
                                     )}
                                 >
-                                    <option value="">— Pilih Bahan —</option>
+                                    <option value="">
+                                        — Pilih {isCombo ? "Produk" : "Bahan"} —
+                                    </option>
                                     {availableMaterials.map((m) => (
                                         <option key={m.id} value={m.id}>
                                             {m.name} ({m.sku}) —{" "}
@@ -421,8 +417,12 @@ export default function Recipes({
                                     </p>
                                 )}
 
-                                {/* Warning: bahan baku belum punya satuan pakai */}
+                                {/* Warning: bahan baku belum punya satuan pakai.
+                                    Tidak berlaku untuk isi paket berupa produk
+                                    jadi — modalnya memang dihitung per produk,
+                                    bukan per satuan takaran. */}
                                 {selectedMaterial &&
+                                    selectedMaterial.type !== "finished_goods" &&
                                     !selectedMaterial.base_unit && (
                                         <div className="mt-1.5 rounded-lg border border-warning/20 bg-warning/10 px-3 py-2 text-xs text-warning">
                                             Bahan baku ini belum punya satuan
@@ -442,9 +442,9 @@ export default function Recipes({
 
                                 {availableMaterials.length === 0 && (
                                     <p className="mt-1.5 text-xs text-warning">
-                                        Semua bahan sudah ditambahkan, atau
-                                        belum ada produk bertipe{" "}
-                                        <strong>Bahan Baku</strong>.
+                                        {isCombo
+                                            ? "Semua produk sudah ditambahkan, atau belum ada produk sederhana yang bisa dijadikan isi paket."
+                                            : "Semua bahan sudah ditambahkan, atau belum ada produk bertipe Bahan Baku."}
                                     </p>
                                 )}
                                 {errors.raw_material_id && (
@@ -480,29 +480,28 @@ export default function Recipes({
                                 </div>
                                 <div>
                                     <label className="mb-1.5 block text-sm font-medium text-foreground">
-                                        Satuan{" "}
-                                        <span className="text-destructive">*</span>
+                                        Satuan
                                     </label>
-                                    <select
-                                        value={data.unit}
-                                        onChange={(e) =>
-                                            setData("unit", e.target.value)
-                                        }
-                                        className={inputCls(!!errors.unit)}
+                                    {/* Bukan input — satuan resep selalu mengikuti
+                                        satuan pakai bahan. Kalau bisa dipilih bebas,
+                                        qty bisa ditulis dalam satuan yang berbeda dari
+                                        base_unit dan HPP jadi salah tanpa gejala. */}
+                                    <div
+                                        className="flex h-[42px] items-center rounded-xl border border-input bg-muted px-3 text-sm text-muted-foreground"
+                                        title="Satuan mengikuti satuan pakai bahan"
                                     >
-                                        {UNIT_OPTS.map((u) => (
-                                            <option key={u} value={u}>
-                                                {u}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        {selectedMaterial
+                                            ? (selectedMaterial.base_unit ??
+                                              selectedMaterial.unit)
+                                            : `Pilih ${isCombo ? "produk" : "bahan"} dulu`}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Preview HPP bahan ini */}
+                            {/* Preview HPP komponen ini */}
                             {selectedMaterial && data.quantity && (
                                 <div className="rounded-xl bg-warning/10 px-3 py-2 text-xs text-warning">
-                                    HPP bahan ini:{" "}
+                                    HPP {isCombo ? "item" : "bahan"} ini:{" "}
                                     <strong>
                                         {fmt(
                                             hppPerUnit(selectedMaterial) *

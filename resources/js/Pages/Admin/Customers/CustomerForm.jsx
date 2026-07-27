@@ -4,6 +4,7 @@ import { formatRupiah } from "@/Utils/currency";
 import Button from "@/Components/ui/Button";
 import Field from "@/Components/ui/Field";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
+import { Check, X } from "lucide-react";
 
 const inp = (err) =>
     `mt-1.5 block w-full rounded-lg border py-2.5 px-3.5 text-sm bg-background text-foreground outline-none transition-all ${
@@ -27,32 +28,38 @@ export default function CustomerForm({
     cancelHref,
     storeType = "retail",
     customer = null,
+    formId = "customer-form",
 }) {
     const showDeposit = ["service", "rental", "hospitality", "parking", "session"].includes(storeType);
     const [payAmount, setPayAmount] = useState("");
     const [payProcessing, setPayProcessing] = useState(false);
+    const [payError, setPayError] = useState("");
 
     const handlePayDebt = () => {
         if (!payAmount || Number(payAmount) <= 0) return;
         setPayProcessing(true);
+        setPayError("");
         router.post(
             route("admin.customers.pay-debt", customer.id),
             { amount: Number(payAmount) },
             {
                 preserveScroll: true,
                 onSuccess: () => setPayAmount(""),
+                onError: (errs) => setPayError(errs.amount || ""),
                 onFinish: () => setPayProcessing(false),
             },
         );
     };
 
     return (
-        <form onSubmit={onSubmit} className="space-y-5">
+        <>
+        <form id={formId} onSubmit={onSubmit} className="space-y-5">
             <Field label="Nama Pelanggan" required error={errors.name}>
                 <input
                     type="text"
                     value={data.name}
                     autoFocus
+                    required
                     onChange={(e) => setData("name", e.target.value)}
                     placeholder="cth. John Doe"
                     className={inp(errors.name)}
@@ -183,9 +190,12 @@ export default function CustomerForm({
                                     min="0"
                                     max={data.debt_balance}
                                     placeholder="0"
-                                    className={`${inp()} pl-9`}
+                                    className={`${inp(payError)} pl-9`}
                                 />
                             </div>
+                            {payError && (
+                                <p className="mt-1 text-xs text-destructive">{payError}</p>
+                            )}
                         </div>
                         <button
                             type="button"
@@ -209,11 +219,13 @@ export default function CustomerForm({
                 />
             </Field>
 
-            <div className="flex justify-end gap-3 border-t border-border pt-4">
+            {/* Actions — desktop */}
+            <div className="hidden sm:flex justify-end gap-3 border-t border-border pt-4">
                 <Link
                     href={cancelHref}
-                    className="rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted"
+                    className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted"
                 >
+                    <X className="h-4 w-4" />
                     Batal
                 </Link>
                 <Button type="submit" loading={processing}>
@@ -221,5 +233,36 @@ export default function CustomerForm({
                 </Button>
             </div>
         </form>
+
+        {/* FAB — mobile only */}
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 sm:hidden">
+            <Link
+                href={cancelHref}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-border transition hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/30"
+                title="Batal"
+            >
+                <X className="h-5 w-5" strokeWidth={2} />
+            </Link>
+            <button
+                type="submit"
+                form={formId}
+                disabled={processing}
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary text-primary-foreground shadow-xl shadow-primary/40 transition hover:shadow-2xl hover:shadow-primary/50 disabled:opacity-60"
+                title={submitLabel}
+            >
+                {processing ? (
+                    <svg className="h-6 w-6 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                ) : (
+                    <Check className="h-6 w-6" strokeWidth={2.5} />
+                )}
+            </button>
+        </div>
+
+        {/* Spacer supaya konten tidak tertutup FAB di mobile */}
+        <div className="h-24 sm:hidden" />
+        </>
     );
 }

@@ -3,7 +3,17 @@ import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState, Fragment } from "react";
 import Button from "@/Components/ui/Button";
-import { Eye, Plus, SlidersHorizontal } from "lucide-react";
+import {
+    ArrowDownUp,
+    ChevronDown,
+    Eye,
+    Pencil,
+    Plus,
+    ShoppingCart,
+    SlidersHorizontal,
+    Trash2,
+    ArrowUpDown,
+} from "lucide-react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import QuickStockModal from "@/Pages/Admin/Products/QuickStockModal";
 import TreePicker from "@/Components/TreePicker";
@@ -246,6 +256,84 @@ function SummaryCard({ label, value, color = "slate", icon }) {
     );
 }
 
+/**
+ * Satu baris satuan (Dus, Lusin, …) lengkap dengan aksinya.
+ *
+ * Tiap satuan punya bucket stok sendiri di `product_stocks` — bukan hasil
+ * konversi dari satuan dasar — jadi "Stok" dan "Beli" di sini menargetkan
+ * bucket itu langsung lewat `packaging_unit_id`.
+ */
+function UnitActionRow({ product, variant = null, unit, onStockModal }) {
+    const purchaseHref =
+        route("admin.purchases.create") +
+        "?product_id=" +
+        product.id +
+        (variant ? "&variant_id=" + variant.id : "") +
+        "&packaging_unit_id=" +
+        unit.id +
+        (product.supplier_id ? "&supplier_id=" + product.supplier_id : "");
+
+    return (
+        // Di layar sempit label dan tombol ditumpuk. Kalau dipaksa sebaris,
+        // grup tombol kanan (yang tidak boleh menyusut) mendorong isi kartu
+        // melebihi lebar container sehingga terpotong `overflow-hidden`.
+        <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-background px-2.5 py-2 md:flex-row md:items-center md:justify-between">
+            <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-foreground">
+                    {unit.name}
+                </p>
+                <p className="truncate text-[10px] text-muted-foreground">
+                    1 {unit.name} = {unit.conversion_qty} {product.unit || "pcs"}
+                </p>
+            </div>
+            <div className="flex items-center gap-1.5 md:shrink-0">
+                {product.track_stock && (
+                    <span
+                        className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground"
+                        title={`Stok satuan ${unit.name}`}
+                    >
+                        {unit.stock ?? 0}
+                    </span>
+                )}
+                {product.track_stock && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onStockModal?.({
+                                product,
+                                variant,
+                                unit,
+                                type: "in",
+                            });
+                        }}
+                        className="inline-flex h-6 items-center gap-1 rounded-md border border-border bg-card px-2 text-[11px] font-medium text-card-foreground transition hover:bg-muted"
+                        title={`Atur stok manual — ${unit.name}`}
+                    >
+                        <ArrowDownUp className="h-3 w-3" />
+                        Stok
+                    </button>
+                )}
+                <Link
+                    href={purchaseHref}
+                    onClick={(e) => e.stopPropagation()}
+                    className={`inline-flex h-6 items-center gap-1 rounded-md border px-2 text-[11px] font-medium transition ${product.supplier_id
+                        ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/20"
+                        : "border-border bg-card text-muted-foreground hover:bg-muted"
+                        }`}
+                    title={
+                        product.supplier_id
+                            ? `Beli ${unit.name} dari supplier`
+                            : "Belum ada supplier — buka form pembelian"
+                    }
+                >
+                    <ShoppingCart className="h-3 w-3" />
+                    Beli
+                </Link>
+            </div>
+        </div>
+    );
+}
+
 function DetailRow({ product, onStockModal }) {
     const variants = product.variants ?? [];
     const packagingUnits = product.packaging_units ?? [];
@@ -254,7 +342,7 @@ function DetailRow({ product, onStockModal }) {
 
     if (hasVariants) {
         return (
-            <div className="border-t border-border bg-gradient-to-b from-muted/80 to-card px-5 py-4">
+            <div className="overflow-hidden border-t border-border bg-gradient-to-b from-muted/80 to-card px-3 py-4 sm:px-5">
                 <div className="mb-3 flex items-center gap-2">
                     <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-primary/10 text-primary">
                         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -271,9 +359,7 @@ function DetailRow({ product, onStockModal }) {
                         const vStock = v.stock ?? 0;
                         const isLow = product.track_stock && product.stock_minimum > 0 && vStock <= product.stock_minimum;
                         const isOut = product.track_stock && vStock <= 0;
-                        const units = v.packaging_units?.length
-                            ? v.packaging_units.map((u) => `${u.name} (${u.conversion_qty} ${product.unit || "pcs"})`).join(", ")
-                            : null;
+                        const vUnits = v.packaging_units ?? [];
                         const tiers = v.price_tiers?.length
                             ? v.price_tiers.map((t) => `${t.min_qty}+ → Rp ${Number(t.price).toLocaleString("id-ID")}`).join(" · ")
                             : null;
@@ -281,7 +367,7 @@ function DetailRow({ product, onStockModal }) {
                         return (
                             <div
                                 key={v.id}
-                                className={`group relative rounded-xl border bg-card p-3.5 transition-all hover:shadow-md ${isOut ? "border-destructive/20 bg-destructive/5" : isLow ? "border-warning/20 bg-warning/5" : "border-border"}`}
+                                className={`group relative min-w-0 rounded-xl border bg-card p-3 transition-all hover:shadow-md sm:p-3.5 ${isOut ? "border-destructive/20 bg-destructive/5" : isLow ? "border-warning/20 bg-warning/5" : "border-border"}`}
                             >
                                 <div className="mb-2 flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1">
@@ -296,20 +382,31 @@ function DetailRow({ product, onStockModal }) {
                                 </div>
 
                                 <div className="mb-2.5 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                                    <div>
+                                    <div className="min-w-0">
                                         <span className="text-muted-foreground">Jual</span>
-                                        <p className="font-semibold text-card-foreground">Rp {Number(v.price || 0).toLocaleString("id-ID")}</p>
+                                        <p className="truncate font-semibold text-card-foreground">Rp {Number(v.price || 0).toLocaleString("id-ID")}</p>
                                     </div>
-                                    <div>
+                                    <div className="min-w-0">
                                         <span className="text-muted-foreground">Modal</span>
-                                        <p className="font-medium text-card-foreground">Rp {Number(v.cost_price || 0).toLocaleString("id-ID")}</p>
+                                        <p className="truncate font-medium text-card-foreground">Rp {Number(v.cost_price || 0).toLocaleString("id-ID")}</p>
                                     </div>
                                 </div>
 
-                                {units && (
-                                    <p className="mb-1 truncate text-[11px] text-muted-foreground" title={units}>
-                                        <span className="font-medium text-card-foreground">Satuan:</span> {units}
-                                    </p>
+                                {vUnits.length > 0 && (
+                                    <div className="mb-2.5 space-y-1">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                            Multi-Satuan
+                                        </p>
+                                        {vUnits.map((u) => (
+                                            <UnitActionRow
+                                                key={u.id}
+                                                product={product}
+                                                variant={v}
+                                                unit={u}
+                                                onStockModal={onStockModal}
+                                            />
+                                        ))}
+                                    </div>
                                 )}
                                 {tiers && (
                                     <p className="mb-2.5 truncate text-[11px] text-muted-foreground" title={tiers}>
@@ -321,12 +418,10 @@ function DetailRow({ product, onStockModal }) {
                                     {product.track_stock && (
                                         <button
                                             onClick={() => onStockModal?.({ product, variant: v, type: "in" })}
-                                            className="inline-flex h-7 flex-1 items-center justify-center gap-1 rounded-lg border border-border bg-card text-xs font-medium text-card-foreground transition hover:bg-muted"
+                                            className="inline-flex h-7 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card text-xs font-medium text-card-foreground transition hover:border-ring hover:bg-muted"
                                             title={`Atur Stok ${v.name}`}
                                         >
-                                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
-                                            </svg>
+                                            <ArrowUpDown className="h-3 w-3" strokeWidth={2} />
                                             Stok
                                         </button>
                                     )}
@@ -337,12 +432,10 @@ function DetailRow({ product, onStockModal }) {
                                             "&variant_id=" + v.id +
                                             (product.supplier_id ? "&supplier_id=" + product.supplier_id : "")
                                         }
-                                        className={`inline-flex h-7 items-center justify-center gap-1 rounded-lg border text-xs font-medium transition ${product.supplier_id ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/20" : "border-border bg-card text-muted-foreground hover:bg-muted"}`}
+                                        className={`inline-flex h-7 flex-1 items-center justify-center gap-1.5 rounded-lg border text-xs font-medium transition ${product.supplier_id ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/20" : "border-border bg-card text-muted-foreground hover:border-ring hover:bg-muted"}`}
                                         title={product.supplier_id ? `Beli ${v.name} dari Supplier` : "Belum ada supplier — buka Purchase"}
                                     >
-                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 003 3h4.5a3 3 0 003-3H18a1.5 1.5 0 001.5-1.5V6.75A1.5 1.5 0 0018 5.25H6.54m1.34 9l-1.06-4m0 0L5.25 3m1.63 7.25h11.24" />
-                                        </svg>
+                                        <ShoppingCart className="h-3 w-3" strokeWidth={2} />
                                         Beli
                                     </Link>
                                 </div>
@@ -355,15 +448,12 @@ function DetailRow({ product, onStockModal }) {
     }
 
     // Non-variant: flat info strip
-    const units = packagingUnits.length
-        ? packagingUnits.map((u) => `${u.name} (${u.conversion_qty} ${product.unit || "pcs"})`).join(", ")
-        : null;
     const tiers = priceTiers.length
         ? priceTiers.map((t) => `${t.min_qty}+ → Rp ${Number(t.price).toLocaleString("id-ID")}`).join(" · ")
         : null;
 
     return (
-        <div className="border-t border-border bg-gradient-to-b from-[rgb(var(--color-surface-secondary))]/80 to-[rgb(var(--color-card))] px-5 py-4">
+        <div className="overflow-hidden border-t border-border bg-gradient-to-b from-[rgb(var(--color-surface-secondary))]/80 to-[rgb(var(--color-card))] px-3 py-4 sm:px-5">
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs sm:grid-cols-4">
                 <div>
                     <span className="text-muted-foreground">Harga Jual</span>
@@ -374,15 +464,17 @@ function DetailRow({ product, onStockModal }) {
                     <p className="text-sm font-medium text-card-foreground">Rp {Number(product.cost_price || 0).toLocaleString("id-ID")}</p>
                 </div>
                 <div>
-                    <span className="text-muted-foreground">Stok Saat Ini</span>
-                    <p className="text-sm font-semibold text-foreground">{product.stock ?? 0}</p>
+                    <span className="text-muted-foreground">
+                        {packagingUnits.length > 0
+                            ? `Stok ${product.unit || "satuan dasar"}`
+                            : "Stok Saat Ini"}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">
+                        {packagingUnits.length > 0
+                            ? (product.stock_base ?? product.stock ?? 0)
+                            : (product.stock ?? 0)}
+                    </p>
                 </div>
-                {units && (
-                    <div>
-                        <span className="text-muted-foreground">Multi-Satuan</span>
-                        <p className="truncate text-sm text-card-foreground" title={units}>{units}</p>
-                    </div>
-                )}
                 {tiers && (
                     <div className="col-span-2">
                         <span className="text-muted-foreground">Harga Grosir</span>
@@ -390,8 +482,49 @@ function DetailRow({ product, onStockModal }) {
                     </div>
                 )}
             </div>
+
+            {packagingUnits.length > 0 && (
+                <div className="mt-4">
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Multi-Satuan
+                    </p>
+                    <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                        {packagingUnits.map((u) => (
+                            <UnitActionRow
+                                key={u.id}
+                                product={product}
+                                unit={u}
+                                onStockModal={onStockModal}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
+}
+
+/**
+ * Ringkasan isi baris detail — "2 variant · 3 satuan".
+ * Dipakai sebagai tooltip tombol expand supaya user tahu apa yang akan
+ * terbuka sebelum mengkliknya.
+ */
+function expandSummary(product) {
+    const variants = product.variants ?? [];
+    const parts = [];
+
+    const unitCount =
+        (product.packaging_units?.length ?? 0) +
+        variants.reduce((n, v) => n + (v.packaging_units?.length ?? 0), 0);
+    const tierCount =
+        (product.price_tiers?.length ?? 0) +
+        variants.reduce((n, v) => n + (v.price_tiers?.length ?? 0), 0);
+
+    if (variants.length) parts.push(`${variants.length} variant`);
+    if (unitCount) parts.push(`${unitCount} satuan`);
+    if (tierCount) parts.push("harga grosir");
+
+    return parts.join(" · ");
 }
 
 function hasExpandable(product) {
@@ -737,7 +870,7 @@ export default function Index({
                                         }
                                     }}
                                     placeholder="Cari nama, SKU, atau barcode..."
-                                    className="w-full py-2.5 pl-10 pr-3 rounded-lg border border-border bg-card  text-sm text-card-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                    className="w-full py-2.5 pl-10 pr-3 rounded-lg border border-border bg-background  text-sm text-card-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
                             {/* Filter toggle — mobile only */}
@@ -977,10 +1110,55 @@ export default function Index({
                                             <Fragment key={product.id}>
                                                 <tr
                                                     key={product.id}
-                                                    className="transition hover:bg-[rgb(var(--color-table-hover))]"
+                                                    onClick={
+                                                        canExp
+                                                            ? () =>
+                                                                toggleExpand(
+                                                                    product.id,
+                                                                )
+                                                            : undefined
+                                                    }
+                                                    className={`group transition hover:bg-[rgb(var(--color-table-hover))] ${canExp
+                                                        ? "cursor-pointer"
+                                                        : ""
+                                                        } ${isExp
+                                                            ? "bg-[rgb(var(--color-table-hover))]"
+                                                            : ""
+                                                        }`}
                                                 >
                                                     <td className="px-4 py-3">
                                                         <div className="flex items-center gap-3">
+                                                            {canExp ? (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(
+                                                                        e,
+                                                                    ) => {
+                                                                        e.stopPropagation();
+                                                                        toggleExpand(
+                                                                            product.id,
+                                                                        );
+                                                                    }}
+                                                                    aria-expanded={
+                                                                        isExp
+                                                                    }
+                                                                    title={
+                                                                        isExp
+                                                                            ? "Sembunyikan rincian"
+                                                                            : `Lihat rincian${expandSummary(product) ? ` — ${expandSummary(product)}` : ""}`
+                                                                    }
+                                                                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border shadow-sm transition-colors ${isExp
+                                                                        ? "border-primary bg-primary text-primary-foreground"
+                                                                        : "border-border bg-primary text-muted group-hover:border-primary/40 group-hover:bg-primary/10 group-hover:text-primary"
+                                                                        }`}
+                                                                >
+                                                                    <ChevronDown
+                                                                        className={`h-4 w-4 transition-transform duration-200 ${isExp ? "rotate-180" : ""}`}
+                                                                    />
+                                                                </button>
+                                                            ) : (
+                                                                <span className="w-7 shrink-0" />
+                                                            )}
                                                             {product.image ? (
                                                                 <img
                                                                     src={`/storage/${product.image}`}
@@ -1017,6 +1195,11 @@ export default function Index({
                                                                         "admin.products.show",
                                                                         product.id,
                                                                     )}
+                                                                    onClick={(
+                                                                        e,
+                                                                    ) =>
+                                                                        e.stopPropagation()
+                                                                    }
                                                                     className="block max-w-[200px] truncate font-semibold text-foreground transition-colors hover:text-primary"
                                                                 >
                                                                     {
@@ -1160,30 +1343,12 @@ export default function Index({
                                                         />
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <div className="flex items-center justify-center gap-1">
-                                                            {canExp && (
-                                                                <button
-                                                                    onClick={() =>
-                                                                        toggleExpand(
-                                                                            product.id,
-                                                                        )
-                                                                    }
-                                                                    className="rounded p-1.5 text-card-foreground transition hover:bg-muted"
-                                                                    title="Detail"
-                                                                >
-                                                                    <svg
-                                                                        className={`h-4 w-4 transition ${isExp ? "rotate-180" : ""}`}
-                                                                        viewBox="0 0 24 24"
-                                                                        fill="none"
-                                                                        stroke="currentColor"
-                                                                        strokeWidth={
-                                                                            2
-                                                                        }
-                                                                    >
-                                                                        <path d="m6 9 6 6 6-6" />
-                                                                    </svg>
-                                                                </button>
-                                                            )}
+                                                        <div
+                                                            className="flex items-center justify-center gap-1"
+                                                            onClick={(e) =>
+                                                                e.stopPropagation()
+                                                            }
+                                                        >
                                                             {canEdit &&
                                                                 ["retail", "fnb"].includes(
                                                                     storeType,
@@ -1377,7 +1542,17 @@ export default function Index({
                                 const canExp = hasExpandable(product);
                                 return (
                                     <div key={product.id} className="p-4">
-                                        <div className="flex items-start gap-3">
+                                        <div
+                                            onClick={
+                                                canExp
+                                                    ? () =>
+                                                        toggleExpand(
+                                                            product.id,
+                                                        )
+                                                    : undefined
+                                            }
+                                            className={`flex items-start gap-3 ${canExp ? "cursor-pointer" : ""}`}
+                                        >
                                             {product.image ? (
                                                 <img
                                                     src={`/storage/${product.image}`}
@@ -1401,13 +1576,45 @@ export default function Index({
                                                             "admin.products.show",
                                                             product.id,
                                                         )}
+                                                        onClick={(e) =>
+                                                            e.stopPropagation()
+                                                        }
                                                         className="font-semibold text-foreground transition-colors hover:text-primary"
                                                     >
                                                         {product.name}
                                                     </Link>
-                                                    <TypeBadge
-                                                        type={product.type}
-                                                    />
+                                                    <div className="flex shrink-0 items-center gap-1.5">
+                                                        <TypeBadge
+                                                            type={product.type}
+                                                        />
+                                                        {canExp && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleExpand(
+                                                                        product.id,
+                                                                    );
+                                                                }}
+                                                                aria-expanded={
+                                                                    isExp
+                                                                }
+                                                                aria-label={
+                                                                    isExp
+                                                                        ? "Sembunyikan rincian"
+                                                                        : "Lihat rincian"
+                                                                }
+                                                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border shadow-sm transition-colors ${isExp
+                                                                    ? "border-primary bg-primary text-primary-foreground"
+                                                                    : "border-border bg-primary text-muted"
+                                                                    }`}
+                                                            >
+                                                                <ChevronDown
+                                                                    className={`h-4 w-4 transition-transform duration-200 ${isExp ? "rotate-180" : ""}`}
+                                                                />
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <p className="mt-0.5 font-mono text-xs text-muted-foreground">
                                                     {product.sku}
@@ -1459,36 +1666,22 @@ export default function Index({
                                                         }
                                                     />
                                                 </div>
-                                                <div className="mt-3 flex gap-3 text-sm font-medium">
-                                                    {canExp && (
-                                                        <button
-                                                            onClick={() =>
-                                                                toggleExpand(
-                                                                    product.id,
-                                                                )
+
+                                                {/* Aksi STOK — sengaja dipisah dari aksi umum
+                                                    di bawahnya, meniru desktop yang menaruh
+                                                    Stok & Beli di kolom Stok, bukan kolom Aksi.
+                                                    Diberi teks (bukan ikon polos) supaya jelas
+                                                    keduanya menyangkut stok, bukan produknya. */}
+                                                {showStock &&
+                                                    product.track_stock && (
+                                                        <div
+                                                            className="mt-2 flex flex-wrap items-center gap-2"
+                                                            onClick={(e) =>
+                                                                e.stopPropagation()
                                                             }
-                                                            className="text-card-foreground"
                                                         >
-                                                            {isExp
-                                                                ? "Sembunyikan"
-                                                                : "Lihat"}
-                                                        </button>
-                                                    )}
-                                                    {canEdit && (
-                                                        <Link
-                                                            href={route(
-                                                                "admin.products.show",
-                                                                product.id,
-                                                            )}
-                                                            className="rounded p-1.5 text-card-foreground transition hover:bg-primary/10 hover:text-primary"
-                                                            title="Lihat Detail"
-                                                        >
-                                                            Detail
-                                                        </Link>
-                                                    )}
-                                                    {showStock &&
-                                                        product.track_stock && (
                                                             <button
+                                                                type="button"
                                                                 onClick={() =>
                                                                     setStockModal(
                                                                         {
@@ -1497,37 +1690,114 @@ export default function Index({
                                                                         },
                                                                     )
                                                                 }
-                                                                className="text-primary"
+                                                                title="Atur Stok Manual"
+                                                                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-card-foreground shadow-sm transition-colors hover:bg-muted"
                                                             >
+                                                                <ArrowUpDown className="h-3.5 w-3.5" />
                                                                 Stok
                                                             </button>
+                                                            <Link
+                                                                href={
+                                                                    route(
+                                                                        "admin.purchases.create",
+                                                                    ) +
+                                                                    "?product_id=" +
+                                                                    product.id +
+                                                                    (product.supplier_id
+                                                                        ? "&supplier_id=" +
+                                                                        product.supplier_id
+                                                                        : "")
+                                                                }
+                                                                title={
+                                                                    product.supplier_id
+                                                                        ? "Beli dari Supplier"
+                                                                        : "Belum ada supplier — buka form pembelian"
+                                                                }
+                                                                className={`inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-semibold shadow-sm transition-colors ${product.supplier_id
+                                                                        ? "border-primary/20 bg-primary/10 text-primary hover:bg-primary/20"
+                                                                        : "border-border bg-card text-muted-foreground hover:bg-muted"
+                                                                    }`}
+                                                            >
+                                                                <ShoppingCart className="h-3.5 w-3.5" />
+                                                                Beli
+                                                            </Link>
+                                                        </div>
+                                                    )}
+
+                                                {/* Aksi PRODUK — ikon polos, sejajar tabel desktop.
+                                                    Ukuran 36px supaya tetap nyaman disentuh,
+                                                    dan tiap tombol wajib punya title+aria-label
+                                                    karena tidak ada lagi teks yang menjelaskannya. */}
+                                                <div
+                                                    className="mt-3 flex flex-wrap items-center gap-2"
+                                                    onClick={(e) =>
+                                                        e.stopPropagation()
+                                                    }
+                                                >
+                                                    <Link
+                                                        href={route(
+                                                            "admin.products.show",
+                                                            product.id,
                                                         )}
+                                                        title="Lihat Detail"
+                                                        aria-label="Lihat detail produk"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                                                    >
+                                                        <Eye
+                                                            className="h-4 w-4"
+                                                            strokeWidth={1.7}
+                                                        />
+                                                    </Link>
                                                     {canEdit && (
                                                         <Link
                                                             href={route(
                                                                 "admin.products.edit",
                                                                 product.id,
                                                             )}
-                                                            className="text-warning"
+                                                            title="Edit"
+                                                            aria-label="Edit produk"
+                                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-colors hover:border-warning/40 hover:bg-warning/10 hover:text-warning"
                                                         >
-                                                            Edit
+                                                            <Pencil
+                                                                className="h-4 w-4"
+                                                                strokeWidth={
+                                                                    1.7
+                                                                }
+                                                            />
                                                         </Link>
                                                     )}
                                                     {canDelete && (
                                                         <button
+                                                            type="button"
                                                             onClick={() =>
                                                                 setTarget(product)
                                                             }
-                                                            className="text-destructive"
+                                                            title="Hapus"
+                                                            aria-label="Hapus produk"
+                                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
                                                         >
-                                                            Hapus
+                                                            <Trash2
+                                                                className="h-4 w-4"
+                                                                strokeWidth={
+                                                                    1.7
+                                                                }
+                                                            />
                                                         </button>
                                                     )}
                                                 </div>
                                             </div>
                                         </div>
+                                        {/* -mx-4/-mb-4 membatalkan padding kartu supaya
+                                            rincian tampil full-bleed — tanpa ini padding
+                                            kartu dan padding DetailRow bertumpuk dan
+                                            menyisakan lebar isi yang terlalu sempit. */}
                                         {isExp && (
-                                            <DetailRow product={product} onStockModal={setStockModal} />
+                                            <div className="-mx-4 -mb-4 mt-3">
+                                                <DetailRow
+                                                    product={product}
+                                                    onStockModal={setStockModal}
+                                                />
+                                            </div>
                                         )}
                                     </div>
                                 );
@@ -1607,6 +1877,7 @@ export default function Index({
                     product={stockModal.product}
                     type={stockModal.type}
                     variant={stockModal.variant || null}
+                    unit={stockModal.unit || null}
                     onClose={() => setStockModal(null)}
                     onSuccess={() => {
                         setStockModal(null);

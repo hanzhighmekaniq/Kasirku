@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\CustomerDebtLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class DebtController extends Controller
@@ -30,9 +31,10 @@ class DebtController extends Controller
     {
         $storeId = session('current_store_id');
 
-        if ($customer->store_id !== $storeId) {
-            return back()->with('error', 'Pelanggan tidak ditemukan.');
-        }
+        // Session menyimpan store_id sebagai string, sedangkan kolomnya
+        // integer. Perbandingan strict tanpa cast membuat 1 !== "1" selalu
+        // benar sehingga setiap pelunasan ditolak.
+        abort_if($customer->store_id !== (int) $storeId, 403);
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
@@ -42,8 +44,13 @@ class DebtController extends Controller
         $amount = (float) $validated['amount'];
         $currentDebt = (float) $customer->debt_balance;
 
+        // Ditolak sebagai error validasi, bukan back()->with('error'):
+        // pesannya menempel di field dan klien JSON menerima 422, bukan 302
+        // yang terlihat seolah berhasil.
         if ($amount > $currentDebt) {
-            return back()->with('error', 'Jumlah pelunasan melebihi hutang. Sisa: Rp'.number_format($currentDebt));
+            throw ValidationException::withMessages([
+                'amount' => 'Jumlah pelunasan melebihi hutang. Sisa: Rp'.number_format($currentDebt),
+            ]);
         }
 
         $newBalance = $currentDebt - $amount;

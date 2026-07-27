@@ -2,8 +2,9 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import EmployeeTabs from "@/Components/EmployeeTabs";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
+import Dropdown from "@/Components/Dropdown";
 import { Head, router, useForm, usePage } from "@inertiajs/react";
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 import {
     Building2,
     Check,
@@ -74,10 +75,16 @@ function RoleBadge({ role }) {
     );
 }
 
+/**
+ * Pemilih role per pengguna.
+ *
+ * Memakai komponen Dropdown bersama supaya perilaku buka/tutupnya sama dengan
+ * dropdown lain di aplikasi. Versi sebelumnya memposisikan panel secara manual
+ * (position: fixed + koordinat dihitung saat toggle) dengan penutup yang hanya
+ * mengecek tombolnya sendiri — akibatnya klik pada item role dianggap "klik di
+ * luar", panel tertutup lebih dulu, dan role tidak pernah berubah.
+ */
 function RoleDropdown({ currentRole, roles, onChange }) {
-    const [open, setOpen] = useState(false);
-    const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
-    const btnRef = useRef(null);
     const c = ROLE_COLOR[currentRole] ??
         ROLE_COLOR.kasir ?? {
             dot: "bg-muted-foreground",
@@ -86,88 +93,74 @@ function RoleDropdown({ currentRole, roles, onChange }) {
         };
     const isOwner = currentRole === "owner";
 
-    useEffect(() => {
-        const handler = (e) => {
-            if (btnRef.current && !btnRef.current.contains(e.target))
-                setOpen(false);
-        };
-        if (open) document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
-    }, [open]);
-
-    const toggle = () => {
-        if (!open && btnRef.current) {
-            const rect = btnRef.current.getBoundingClientRect();
-            setPos({
-                top: rect.bottom + 4,
-                left: rect.left,
-                width: rect.width,
-            });
-        }
-        setOpen(!open);
-    };
-
-    return (
-        <>
-            <button
-                ref={btnRef}
-                type="button"
-                disabled={isOwner}
-                onClick={isOwner ? undefined : toggle}
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${isOwner ? "cursor-not-allowed" : "hover:shadow-sm cursor-pointer"} ${c.bg} ${c.text} border-border`}
+    // Owner tidak bisa diubah rolenya — tampilkan sebagai badge statis.
+    if (isOwner) {
+        return (
+            <span
+                className={`inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold ${c.bg} ${c.text}`}
             >
                 <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
-                {currentRole || "Pilih Role"}
-                {!isOwner && (
-                    <ChevronDown
-                        className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`}
-                        strokeWidth={2.5}
-                    />
-                )}
-            </button>
-            {open && (
-                <div
-                    className="fixed z-[100] w-44 overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-xl ring-1 ring-border"
-                    style={{ top: pos.top, left: pos.left }}
+                {currentRole}
+            </span>
+        );
+    }
+
+    return (
+        <Dropdown>
+            <Dropdown.Trigger>
+                <button
+                    type="button"
+                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold transition hover:shadow-sm ${c.bg} ${c.text}`}
                 >
-                    {roles
-                        .filter((r) => r.name !== "owner")
-                        .map((r) => {
-                            const rc = ROLE_COLOR[r.name] ??
-                                ROLE_COLOR.kasir ?? {
-                                    dot: "bg-muted-foreground",
-                                    text: "text-muted-foreground",
-                                };
-                            return (
-                                <button
-                                    key={r.id}
-                                    type="button"
-                                    onClick={() => {
-                                        onChange(r.name);
-                                        setOpen(false);
-                                    }}
-                                    className={`flex w-full items-center gap-2 px-3 py-2 text-xs font-medium transition hover:bg-muted ${
-                                        r.name === currentRole
-                                            ? `${rc.bg} ${rc.text} font-bold`
-                                            : "text-muted-foreground"
-                                    }`}
-                                >
-                                    <span
-                                        className={`h-1.5 w-1.5 rounded-full ${rc.dot}`}
+                    <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+                    {currentRole || "Pilih Role"}
+                    <ChevronDown className="h-3 w-3" strokeWidth={2.5} />
+                </button>
+            </Dropdown.Trigger>
+
+            <Dropdown.Content
+                align="left"
+                width="48"
+                radiusClasses="rounded-xl"
+                contentClasses="py-1 bg-popover text-popover-foreground overflow-hidden"
+            >
+                {roles
+                    .filter((r) => r.name !== "owner")
+                    .map((r) => {
+                        const rc = ROLE_COLOR[r.name] ??
+                            ROLE_COLOR.kasir ?? {
+                                dot: "bg-muted-foreground",
+                                bg: "bg-muted",
+                                text: "text-muted-foreground",
+                            };
+                        const active = r.name === currentRole;
+
+                        return (
+                            <button
+                                key={r.id}
+                                type="button"
+                                onClick={() => onChange(r.name)}
+                                className={`flex w-full items-center gap-2 px-3 py-2 text-xs font-medium transition hover:bg-accent hover:text-accent-foreground ${
+                                    active
+                                        ? `${rc.bg} ${rc.text} font-bold`
+                                        : "text-muted-foreground"
+                                }`}
+                            >
+                                <span
+                                    className={`h-1.5 w-1.5 rounded-full ${rc.dot}`}
+                                />
+                                {r.name}
+                                {active && (
+                                    <Check
+                                        className="ml-auto h-4 w-4"
+                                        strokeWidth={3}
                                     />
-                                    {r.name}
-                                    {r.name === currentRole && (
-                                        <Check
-                                            className="ml-auto h-4 w-4"
-                                            strokeWidth={3}
-                                        />
-                                    )}
-                                </button>
-                            );
-                        })}
-                </div>
-            )}
-        </>
+                                )}
+                            </button>
+                        );
+                    })}
+            </Dropdown.Content>
+        </Dropdown>
     );
 }
 
@@ -358,8 +351,8 @@ export default function Index({
                     </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex justify-end">
+                {/* Actions — desktop; di mobile dipindah ke FAB kanan bawah */}
+                <div className="hidden justify-end sm:flex">
                     <Button
                         onClick={() => setShowInvite(true)}
                         disabled={!canInvite}
@@ -370,8 +363,7 @@ export default function Index({
                                 : undefined
                         }
                     >
-                        <span className="hidden sm:inline">Undang Pengguna Baru</span>
-                        <span className="sm:hidden">Undang</span>
+                        Undang Pengguna Baru
                     </Button>
                 </div>
 
@@ -563,6 +555,7 @@ export default function Index({
                                     </label>
                                     <input
                                         value={inviteForm.data.name}
+                                        required
                                         onChange={(e) =>
                                             inviteForm.setData(
                                                 "name",
@@ -585,6 +578,7 @@ export default function Index({
                                     <input
                                         type="email"
                                         value={inviteForm.data.email}
+                                        required
                                         onChange={(e) =>
                                             inviteForm.setData(
                                                 "email",
@@ -607,6 +601,8 @@ export default function Index({
                                     <input
                                         type="password"
                                         value={inviteForm.data.password}
+                                        required
+                                        minLength={6}
                                         onChange={(e) =>
                                             inviteForm.setData(
                                                 "password",
@@ -628,6 +624,7 @@ export default function Index({
                                     <label className={labelClass}>Role *</label>
                                     <select
                                         value={inviteForm.data.role}
+                                        required
                                         onChange={(e) =>
                                             inviteForm.setData(
                                                 "role",
@@ -725,6 +722,19 @@ export default function Index({
                 confirmLabel="Cabut Akses"
                 onConfirm={confirmRevoke}
                 onClose={() => setUserToDelete(null)}
+            />
+
+            {/* FAB — mobile only */}
+            <Button
+                onClick={() => setShowInvite(true)}
+                disabled={!canInvite}
+                icon={UserPlus}
+                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl sm:hidden"
+                title={
+                    !canInvite
+                        ? `Batas ${planInfo?.max_users} user paket ${planInfo?.label} tercapai`
+                        : "Undang Pengguna Baru"
+                }
             />
         </AuthenticatedLayout>
     );

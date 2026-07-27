@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckFeatureAccess;
 use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\Feature;
@@ -7,6 +8,7 @@ use App\Models\Plan;
 use App\Models\Store;
 use App\Models\StoreType;
 use App\Models\User;
+use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -122,7 +124,14 @@ test('employee create page renders', function () {
 });
 
 test('employee edit page includes user roles when account exists', function () {
-    $this->withoutMiddleware();
+    // Route ini punya parameter model {employee}. withoutMiddleware() ikut
+    // mematikan SubstituteBindings sehingga parameternya tidak pernah
+    // di-resolve dan Laravel membalas 404 sebelum controller dijalankan.
+    // Middleware permission/feature saja yang dilewati.
+    $this->withoutMiddleware([
+        CheckFeatureAccess::class,
+        PermissionMiddleware::class,
+    ]);
 
     [$store, $branch, $user] = setupEmployeePageContext(['employee.edit', 'employee.view']);
 
@@ -148,27 +157,13 @@ test('employee edit page includes user roles when account exists', function () {
     ]);
 
     $this->actingAs($user);
-    // Simulasikan session string (seperti HTTP session nyata)
-    session([
-        'current_store_id' => (string) $store->id,
-        'current_branch_id' => (string) $branch->id,
-    ]);
 
-    $response = $this->get(route('admin.employees.edit', $employee));
-
-    if ($response->status() !== 200) {
-        dump([
-            'status' => $response->status(),
-            'location' => $response->headers->get('Location'),
-            'session_error' => session('error'),
-            'employee_store' => $employee->store_id,
-            'session_store' => session('current_store_id'),
-            'types' => [
-                gettype($employee->store_id),
-                gettype(session('current_store_id')),
-            ],
-        ]);
-    }
+    $response = $this
+        ->withSession([
+            'current_store_id' => (string) $store->id,
+            'current_branch_id' => (string) $branch->id,
+        ])
+        ->get(route('admin.employees.edit', $employee));
 
     $response->assertSuccessful();
     $response->assertInertia(fn ($page) => $page

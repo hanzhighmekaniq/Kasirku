@@ -363,12 +363,9 @@ export default function Index({ employees, storeType = "retail" }) {
                                 as={Link}
                                 href={route("admin.employees.create")}
                                 icon={Plus}
-                                className="shrink-0"
+                                className="hidden sm:inline-flex shrink-0"
                             >
-                                <span className="hidden sm:inline">
-                                    {addLabel}
-                                </span>
-                                <span className="sm:hidden">Tambah</span>
+                                {addLabel}
                             </Button>
                         </div>
                     </div>
@@ -445,6 +442,15 @@ export default function Index({ employees, storeType = "retail" }) {
                 processing={deleting}
                 onConfirm={confirmDelete}
                 onClose={() => !deleting && setTarget(null)}
+            />
+
+            {/* FAB — mobile only */}
+            <Button
+                as={Link}
+                href={route("admin.employees.create")}
+                icon={Plus}
+                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl sm:hidden"
+                title={addLabel}
             />
         </AuthenticatedLayout>
     );

@@ -80,13 +80,13 @@ test('jual per dus tidak mengurangi stok bucket pcs pada variant yang sama', fun
     // Bucket pcs (packaging_unit_id null)
     ProductStock::create([
         'product_id' => $product->id, 'variant_id' => $variant->id,
-        'packaging_unit_id' => null, 'store_id' => $store->id, 'quantity' => 20,
+        'packaging_unit_id' => null, 'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 20,
     ]);
 
     // Bucket dus
     ProductStock::create([
         'product_id' => $product->id, 'variant_id' => $variant->id,
-        'packaging_unit_id' => $unitDus->id, 'store_id' => $store->id, 'quantity' => 5,
+        'packaging_unit_id' => $unitDus->id, 'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 5,
     ]);
 
     $this->actingAs($user);
@@ -140,11 +140,11 @@ test('jual variant A tidak mengurangi stok bucket variant B', function () {
 
     ProductStock::create([
         'product_id' => $product->id, 'variant_id' => $variantA->id,
-        'packaging_unit_id' => null, 'store_id' => $store->id, 'quantity' => 10,
+        'packaging_unit_id' => null, 'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 10,
     ]);
     ProductStock::create([
         'product_id' => $product->id, 'variant_id' => $variantB->id,
-        'packaging_unit_id' => null, 'store_id' => $store->id, 'quantity' => 8,
+        'packaging_unit_id' => null, 'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 8,
     ]);
 
     $this->actingAs($user);
@@ -195,11 +195,11 @@ test('checkout gagal jika stok bucket dus tidak cukup, walau bucket pcs variant 
     // Bucket pcs banyak, tapi bucket dus cuma 1
     ProductStock::create([
         'product_id' => $product->id, 'variant_id' => $variant->id,
-        'packaging_unit_id' => null, 'store_id' => $store->id, 'quantity' => 100,
+        'packaging_unit_id' => null, 'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 100,
     ]);
     ProductStock::create([
         'product_id' => $product->id, 'variant_id' => $variant->id,
-        'packaging_unit_id' => $unitDus->id, 'store_id' => $store->id, 'quantity' => 1,
+        'packaging_unit_id' => $unitDus->id, 'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 1,
     ]);
 
     $this->actingAs($user);

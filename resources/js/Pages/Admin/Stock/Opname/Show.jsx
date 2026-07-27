@@ -103,43 +103,43 @@ export default function Show({ opname }) {
                             <h3 className="text-sm font-semibold text-foreground">Item Opname</h3>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-border">
+                            <table className="w-full text-sm">
                                 <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                     <tr>
-                                        <th className="px-5 py-3 text-left font-semibold">#</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Produk</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Stok Sistem</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Hitung Fisik</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Selisih</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Harga Modal</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Nilai</th>
-                                        <th className="px-5 py-3 text-left font-semibold">Catatan</th>
+                                        <th className="px-4 py-3 text-left font-semibold">#</th>
+                                        <th className="px-4 py-3 text-left font-semibold">Produk</th>
+                                        <th className="px-4 py-3 text-right font-semibold">Stok Sistem</th>
+                                        <th className="px-4 py-3 text-right font-semibold">Hitung Fisik</th>
+                                        <th className="px-4 py-3 text-center font-semibold">Selisih</th>
+                                        <th className="px-4 py-3 text-right font-semibold">Harga Modal</th>
+                                        <th className="px-4 py-3 text-right font-semibold">Nilai</th>
+                                        <th className="px-4 py-3 text-left font-semibold">Catatan</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border bg-background">
                                     {items.map((item, idx) => (
                                         <tr key={item.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
-                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm text-muted-foreground">{idx + 1}</td>
-                                            <td className="whitespace-nowrap px-5 py-3.5">
-                                                <p className="text-sm font-semibold text-foreground">{item.product?.name}</p>
+                                            <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{idx + 1}</td>
+                                            <td className="whitespace-nowrap px-4 py-3">
+                                                <p className="font-semibold text-foreground">{item.product?.name}</p>
                                                 <p className="text-xs text-muted-foreground">{item.product?.sku}</p>
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm text-muted-foreground">{item.system_qty}</td>
-                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm font-medium text-foreground">{item.counted_qty}</td>
-                                            <td className="whitespace-nowrap px-5 py-3.5">
+                                            <td className="whitespace-nowrap px-4 py-3 text-right text-muted-foreground">{item.system_qty}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-right font-medium text-foreground">{item.counted_qty}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-center">
                                                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.difference_qty > 0 ? 'bg-success/10 text-success' : item.difference_qty < 0 ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
                                                     {item.difference_qty > 0 ? '+' : ''}{item.difference_qty}
                                                 </span>
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm text-muted-foreground">{fmtCurrency(item.unit_cost || 0)}</td>
-                                            <td className="whitespace-nowrap px-5 py-3.5">
+                                            <td className="whitespace-nowrap px-4 py-3 text-right text-muted-foreground">{fmtCurrency(item.unit_cost || 0)}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-right">
                                                 {(item.total_cost || 0) !== 0 ? (
-                                                    <span className={`text-sm font-medium ${(item.difference_qty || 0) < 0 ? 'text-destructive' : 'text-success'}`}>
+                                                    <span className={`font-medium ${(item.difference_qty || 0) < 0 ? 'text-destructive' : 'text-success'}`}>
                                                         {(item.difference_qty || 0) < 0 ? '−' : '+'}{fmtCurrency(Math.abs(item.total_cost || 0))}
                                                     </span>
-                                                ) : <span className="text-sm text-muted-foreground">—</span>}
+                                                ) : <span className="text-muted-foreground">—</span>}
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-3.5 text-sm text-muted-foreground">{item.notes || '—'}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{item.notes || '—'}</td>
                                         </tr>
                                     ))}
                                 </tbody>

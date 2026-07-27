@@ -8,6 +8,8 @@ use App\Models\Branch;
 use App\Models\ProductStock;
 use App\Models\Sale;
 use App\Models\Store;
+use App\Services\Stock\StockMutation;
+use App\Services\Stock\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -200,14 +202,31 @@ class SaleController extends Controller
             foreach ($sale->items as $item) {
                 $product = $item->product;
                 if ($product && $product->track_stock) {
-                    $stock = ProductStock::where([
+                    $existing = ProductStock::where([
                         'product_id' => $item->product_id,
                         'variant_id' => $item->variant_id,
                         'packaging_unit_id' => $item->packaging_unit_id,
                         'store_id' => $sale->store_id,
+                        'branch_id' => $sale->branch_id,
                     ])->first();
-                    if ($stock) {
-                        $stock->increment('quantity', $item->quantity);
+
+                    if ($existing) {
+                        // Mengembalikan stok: gunakan increase supaya tetap
+                        // lewat pintu tunggal StockService.
+                        app(StockService::class)->increase(new StockMutation(
+                            productId: $item->product_id,
+                            variantId: $item->variant_id,
+                            packagingUnitId: $item->packaging_unit_id,
+                            storeId: $sale->store_id,
+                            branchId: $sale->branch_id,
+                            quantity: (float) $item->quantity,
+                            unitCost: (float) ($existing->average_cost ?: $product->cost_price ?? 0),
+                            movementType: 'sale_cancel',
+                            referenceType: Sale::class,
+                            referenceId: $sale->id,
+                            referenceNo: $sale->sale_no,
+                            notes: "Penjualan #{$sale->sale_no} dihapus — stok dikembalikan",
+                        ));
                     }
                 }
             }

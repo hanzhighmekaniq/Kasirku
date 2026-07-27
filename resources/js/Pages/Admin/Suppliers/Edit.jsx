@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Check, Loader2, X } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import PageHeader from "@/Components/PageHeader";
 
@@ -106,7 +107,8 @@ export default function Edit({ supplier }) {
                             </dl>
                         </SectionCard>
 
-                        <div className="flex flex-col gap-2">
+                        {/* Aksi desktop — di mobile digantikan FAB di bawah */}
+                        <div className="hidden flex-col gap-2 sm:flex">
                             <Button type="submit" loading={processing} disabled={!data.name.trim()} className="w-full">
                                 Simpan Perubahan
                             </Button>
@@ -116,6 +118,32 @@ export default function Edit({ supplier }) {
                         </div>
                     </div>
                 </div>
+
+                {/* FAB — mobile only */}
+                <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 sm:hidden">
+                    <Link
+                        href={route('admin.suppliers.index')}
+                        className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-border transition hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/30"
+                        title="Batal"
+                    >
+                        <X className="h-5 w-5" strokeWidth={2} />
+                    </Link>
+                    <button
+                        type="submit"
+                        disabled={processing || !data.name.trim()}
+                        className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/40 transition hover:bg-primary/90 disabled:opacity-60"
+                        title="Simpan Perubahan"
+                    >
+                        {processing ? (
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                        ) : (
+                            <Check className="h-6 w-6" strokeWidth={2.5} />
+                        )}
+                    </button>
+                </div>
+
+                {/* Spacer supaya konten tidak tertutup FAB di mobile */}
+                <div className="h-24 sm:hidden" />
             </form>
         </AuthenticatedLayout>
     );
@@ -154,6 +182,10 @@ function InfoRow({ label, value }) {
     );
 }
 
+// `border` (lebar) wajib ditulis — tanpa itu `border-input` hanya menyetel
+// warna sementara lebarnya tetap 0, jadi border tidak pernah tampil.
+// `bg-input` juga salah token: `input` dipakai untuk BORDER, background form
+// memakai `bg-background` (lihat TOKEN_MAPPING → Form & Input).
 function inputCls(hasError, extra = '') {
-    return `block w-full rounded-xl bg-input text-foreground text-sm shadow-sm outline-none transition focus:border-ring focus:ring-2 ${hasError ? 'border-destructive focus:ring-destructive' : 'border-border focus:ring-ring'} ${extra}`;
+    return `block w-full rounded-xl border bg-background py-2.5 px-3.5 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground focus:ring-2 ${hasError ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-input focus:border-ring focus:ring-ring/20'} ${extra}`;
 }

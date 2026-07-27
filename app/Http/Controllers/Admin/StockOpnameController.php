@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\BuildsStockBucketOptions;
 use App\Http\Controllers\Concerns\HasStoreScope;
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\ProductStock;
-use App\Models\StockMovement;
 use App\Models\StockOpname;
 use App\Models\StockOpnameItem;
+use App\Services\Stock\StockMutation;
+use App\Services\Stock\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class StockOpnameController extends Controller
 {
+    use BuildsStockBucketOptions;
     use HasStoreScope;
 
     public function index()
@@ -45,16 +47,8 @@ class StockOpnameController extends Controller
         [$storeId] = $this->storeScope();
 
         return Inertia::render('Admin/Stock/Opname/Create', [
-            'products' => Product::forStore($storeId)
-                ->with([
-                    'stocks' => function ($q) use ($storeId) {
-                        $q->where('store_id', $storeId);
-                    },
-                ])
-                ->where('is_active', true)
-                ->where('track_stock', true)
-                ->orderBy('name')
-                ->get(),
+            'buckets' => $this->stockBucketOptions($storeId),
+            'currentBranchId' => session('current_branch_id'),
         ]);
     }
 
@@ -72,13 +66,18 @@ class StockOpnameController extends Controller
             'items.*.notes' => 'nullable|string',
         ]);
 
-        $storeId = session('current_store_id') ?? $request->user()->store?->id;
+        // `branch_id` WAJIB direkam di dokumennya. Penyelesaian opname memakai
+        // $stockOpname->branch_id sebagai kunci bucket — kalau di sini kosong,
+        // selisihnya mendarat di baris ber-cabang NULL yang tidak pernah
+        // tampil di halaman stok mana pun.
+        [$storeId, $branchId] = $this->storeScope();
         $opnameNo = $this->generateNumber($validated['opname_date']);
 
         DB::beginTransaction();
         try {
             $opname = StockOpname::create([
                 'store_id' => $storeId,
+                'branch_id' => $branchId,
                 'user_id' => $request->user()->id,
                 'opname_no' => $opnameNo,
                 'opname_date' => $validated['opname_date'],
@@ -168,50 +167,37 @@ class StockOpnameController extends Controller
             $stockOpname->update(['status' => $request->status]);
 
             if ($request->status === 'completed') {
+                $stockService = app(StockService::class);
+
                 foreach ($stockOpname->items as $item) {
                     $diff = $item->difference_qty;
                     if ($diff === 0) {
                         continue;
                     }
 
-                    // Bucket-aware: key lengkap dengan variant_id + packaging_unit_id
-                    $stock = ProductStock::firstOrCreate(
-                        [
-                            'product_id' => $item->product_id,
-                            'variant_id' => $item->variant_id,
-                            'packaging_unit_id' => $item->packaging_unit_id,
-                            'store_id' => $stockOpname->store_id,
-                        ],
-                        [
-                            'quantity' => 0,
-                            'reserved_quantity' => 0,
-                            'average_cost' => 0,
-                        ],
-                    );
+                    $mutationBase = [
+                        'productId' => $item->product_id,
+                        'variantId' => $item->variant_id,
+                        'packagingUnitId' => $item->packaging_unit_id,
+                        'storeId' => $stockOpname->store_id,
+                        'branchId' => $stockOpname->branch_id,
+                        'unitCost' => (float) $item->unit_cost,
+                        'movementType' => 'opname_adjustment',
+                        'referenceType' => StockOpname::class,
+                        'referenceId' => $stockOpname->id,
+                        'referenceNo' => $stockOpname->opname_no,
+                        'notes' => $item->notes ?? "Opname #{$stockOpname->opname_no}",
+                    ];
 
                     if ($diff > 0) {
-                        $stock->increment('quantity', $diff);
-                        $type = 'opname_adjustment';
+                        $stockService->increase(new StockMutation(
+                            ...$mutationBase, quantity: (float) $diff,
+                        ));
                     } else {
-                        $stock->decrement('quantity', abs($diff));
-                        $type = 'opname_adjustment';
+                        $stockService->decrease(new StockMutation(
+                            ...$mutationBase, quantity: abs((float) $diff),
+                        ));
                     }
-
-                    StockMovement::create([
-                        'product_id' => $item->product_id,
-                        'variant_id' => $item->variant_id,
-                        'packaging_unit_id' => $item->packaging_unit_id,
-                        'store_id' => $stockOpname->store_id,
-                        'branch_id' => $stockOpname->branch_id,
-                        'reference_type' => StockOpname::class,
-                        'reference_id' => $stockOpname->id,
-                        'movement_type' => $type,
-                        'quantity' => abs($diff),
-                        'unit_cost' => $item->unit_cost,
-                        'reference_no' => $stockOpname->opname_no,
-                        'notes' => $item->notes ?? "Opname #{$stockOpname->opname_no}",
-                        'moved_at' => now(),
-                    ]);
                 }
             }
 

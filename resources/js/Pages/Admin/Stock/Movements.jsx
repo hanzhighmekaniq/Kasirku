@@ -1,8 +1,18 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import SelectDropdown from "@/Components/ui/SelectDropdown";
 
+/**
+ * Tipe pergerakan adalah KATEGORI, bukan status sukses/gagal — jadi mengikuti
+ * aturan "Badge non-semantik" di TOKEN_MAPPING.md: warna palet diperbolehkan
+ * asal konsisten `{color}-100/700` dipasangkan `dark:{color}-900/30` +
+ * `dark:{color}-400`. Sengaja tidak dipaksa ke token semantik karena arah
+ * masuk/keluar sudah diwakili warna angka (`text-success`/`text-destructive`);
+ * kalau ke-11 tipe dipetakan ke dua token saja, tipe-tipe ini jadi tidak bisa
+ * dibedakan sekilas.
+ */
 const MOVEMENT_TYPES = {
     purchase_in:         { label: 'Pembelian Masuk',        color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', icon: 'arrow-down',  desc: 'Stok bertambah karena pembelian dari supplier' },
     purchase_out:        { label: 'Pembelian Dibatalkan',    color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',         icon: 'arrow-up',    desc: 'Pembelian dibatalkan, stok dikurangi' },
@@ -13,8 +23,8 @@ const MOVEMENT_TYPES = {
     transfer_out:        { label: 'Transfer Keluar',        color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',   icon: 'arrow-up',    desc: 'Stok dikirim ke cabang lain' },
     return_in:           { label: 'Retur Masuk',            color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',   icon: 'arrow-down',  desc: 'Retur pembelian dibatalkan, stok dikembalikan' },
     return_out:          { label: 'Retur ke Supplier',      color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',       icon: 'arrow-up',    desc: 'Stok dikembalikan ke supplier karena retur' },
-    waste:               { label: 'Waste / Rusak',          color: 'bg-muted text-muted-foreground',       icon: 'arrow-up',    desc: 'Stok hilang/rusak/tumpah, dicatat sebagai waste' },
-    opname_adjustment:   { label: 'Opname Stok',            color: 'bg-primary/10 text-primary',   icon: 'arrow-down',  desc: 'Koreksi stok dari hasil penghitungan fisik' },
+    waste:               { label: 'Waste / Rusak',          color: 'bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300',   icon: 'arrow-up',    desc: 'Stok hilang/rusak/tumpah, dicatat sebagai waste' },
+    opname_adjustment:   { label: 'Opname Stok',            color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400', icon: 'arrow-down',  desc: 'Koreksi stok dari hasil penghitungan fisik' },
 };
 
 export default function Movements({ movements, products }) {
@@ -85,19 +95,33 @@ export default function Movements({ movements, products }) {
 
     return (
         <AuthenticatedLayout
+            backUrl={route('admin.stock.index')}
             header={
-                <div className="flex items-center gap-3">
-                    <Link href={route('admin.stock.index')} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label="Kembali">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-                    </Link>
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">Riwayat Pergerakan Stok</h2>
-                        <p className="text-xs text-muted-foreground">Catatan setiap perubahan jumlah stok di gudang ini</p>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Riwayat Pergerakan
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Stok
                     </div>
                 </div>
             }
         >
             <Head title="Riwayat Pergerakan Stok" />
+            <PageHeader
+                title="Riwayat Pergerakan Stok"
+                breadcrumbs={["Admin", "Stok", "Riwayat Pergerakan"]}
+                heading={
+                    <>
+                        Riwayat{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Pergerakan Stok
+                        </span>
+                    </>
+                }
+                description="Catatan setiap perubahan jumlah stok di gudang ini."
+                backUrl={route('admin.stock.index')}
+            />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
@@ -106,7 +130,7 @@ export default function Movements({ movements, products }) {
             {/* Info Box */}
             <div className="mb-5 rounded-2xl border border-primary/20 bg-primary/10 px-5 py-4">
                 <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
                     </div>
                     <div>
@@ -212,12 +236,12 @@ export default function Movements({ movements, products }) {
             {movements.data.length > 0 && (
                 <div className="mb-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
                     <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                        <p className="text-xs font-medium text-muted-foreground">Total Records</p>
+                        <p className="text-xs font-medium text-muted-foreground">Total Catatan</p>
                         <p className="mt-1 text-2xl font-bold text-foreground">{movements.total.toLocaleString('id-ID')}</p>
                     </div>
                     <div className="rounded-2xl border border-success/20 bg-success/10 p-4">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-success/10">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-success/20">
                                 <svg className="h-3.5 w-3.5 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19.5v-15m0 0l-6.75 6.75M12 4.5l6.75 6.75" /></svg>
                             </div>
                             <p className="text-xs font-medium text-success">Stok Masuk (halaman ini)</p>
@@ -226,7 +250,7 @@ export default function Movements({ movements, products }) {
                     </div>
                     <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-4">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-destructive/10">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-destructive/20">
                                 <svg className="h-3.5 w-3.5 text-destructive" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m0 0l6.75-6.75M12 19.5l-6.75-6.75" /></svg>
                             </div>
                             <p className="text-xs font-medium text-destructive">Stok Keluar (halaman ini)</p>
@@ -254,11 +278,18 @@ export default function Movements({ movements, products }) {
                         <tbody className="divide-y divide-border bg-background">
                             {movements.data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-16 text-center">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <svg className="h-10 w-10 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
-                                            <p className="text-sm text-muted-foreground">Tidak ada data pergerakan stok.</p>
-                                            {hasActiveFilter && <p className="text-xs text-muted-foreground/50">Coba ubah filter yang dipilih.</p>}
+                                    <td colSpan={7} className="px-6 py-16">
+                                        {/* Pola Empty State di TOKEN_MAPPING:
+                                            kontainer bg-muted/30, ikon muted/50,
+                                            teks utama foreground + deskripsi muted. */}
+                                        <div className="mx-auto flex max-w-sm flex-col items-center rounded-xl bg-muted/30 px-6 py-8 text-center">
+                                            <svg className="h-8 w-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
+                                            <p className="mt-3 text-sm font-medium text-foreground">Tidak ada data pergerakan stok.</p>
+                                            <p className="mt-1 text-sm text-muted-foreground">
+                                                {hasActiveFilter
+                                                    ? 'Coba ubah filter yang dipilih.'
+                                                    : 'Pergerakan akan tercatat otomatis setelah ada transaksi.'}
+                                            </p>
                                         </div>
                                     </td>
                                 </tr>

@@ -9,6 +9,7 @@ use App\Models\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class CustomerController extends Controller
@@ -142,8 +143,13 @@ class CustomerController extends Controller
         $amount = (float) $validated['amount'];
         $currentDebt = (float) $customer->debt_balance;
 
+        // Ditolak sebagai error validasi, bukan back()->with('error'):
+        // pesannya menempel di field dan klien JSON menerima 422, bukan 302
+        // yang terlihat seolah berhasil.
         if ($amount > $currentDebt) {
-            return back()->with('error', 'Jumlah pelunasan melebihi hutang. Hutang saat ini: Rp'.number_format($currentDebt));
+            throw ValidationException::withMessages([
+                'amount' => 'Jumlah pelunasan melebihi hutang. Hutang saat ini: Rp'.number_format($currentDebt),
+            ]);
         }
 
         $newBalance = $currentDebt - $amount;
@@ -159,6 +165,13 @@ class CustomerController extends Controller
         ]);
 
         $customer->update(['debt_balance' => $newBalance]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'debt_balance' => $newBalance,
+            ]);
+        }
 
         return back()->with('success', 'Pelunasan berhasil. Sisa hutang: Rp'.number_format($newBalance));
     }

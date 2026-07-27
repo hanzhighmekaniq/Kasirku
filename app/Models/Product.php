@@ -38,6 +38,7 @@ class Product extends Model
         'is_active',
         'is_variant',
         'sell_base',
+        'track_batch',
         // per-type fields
         'capacity',
         'max_guests',
@@ -57,6 +58,7 @@ class Product extends Model
             'is_composable' => 'boolean',
             'is_sellable' => 'boolean',
             'track_stock' => 'boolean',
+            'track_batch' => 'boolean',
             'is_active' => 'boolean',
             'is_variant' => 'boolean',
             'sell_base' => 'boolean',
@@ -206,19 +208,55 @@ class Product extends Model
     }
 
     /**
+     * Apakah produk ini memakai konversi satuan beli → satuan pakai?
+     *
+     * Ini SATU-SATUNYA gerbang menuju semua logika konversi. Syaratnya ganda
+     * dan sengaja ketat:
+     *
+     *   1. type === 'raw_material' — hanya bahan baku yang punya dua satuan
+     *      di satu baris produk (beli kg, pakai gram). Barang jadi retail
+     *      memisahkan satuannya ke bucket packaging_unit masing-masing, jadi
+     *      tidak pernah butuh konversi (lihat komentar di KasirController
+     *      soal "bucket tidak melakukan konversi otomatis").
+     *   2. base_unit_conversion > 0 — konversi memang diisi.
+     *
+     * Selama salah satu tidak terpenuhi, seluruh helper di bawah mengembalikan
+     * nilai apa adanya sehingga perilaku lama terjaga persis.
+     */
+    public function usesUnitConversion(): bool
+    {
+        return $this->type === 'raw_material'
+            && (float) ($this->base_unit_conversion ?? 0) > 0;
+    }
+
+    /**
+     * Konversi qty dari satuan beli (unit) ke satuan pakai (base_unit).
+     * Contoh: beli 5 kg, konversi 1000 → 5.000 gram masuk ke stok.
+     *
+     * Dipakai di titik masuk stok (pembelian) supaya saldo stok selalu
+     * tersimpan dalam satuan yang sama dengan yang dipotong resep.
+     */
+    public function toBaseUnit(float $quantity): float
+    {
+        if (! $this->usesUnitConversion()) {
+            return $quantity;
+        }
+
+        return $quantity * (float) $this->base_unit_conversion;
+    }
+
+    /**
      * Modal per satuan pakai (base_unit).
      * Kalau ada konversi: cost_price dibagi konversi.
      * Contoh: beli 1 kg Rp 20.000, konversi 1000 → Rp 20 / gram.
      */
     public function costPerBaseUnit(): float
     {
-        $conversion = (float) ($this->base_unit_conversion ?? 0);
-
-        if ($conversion > 0) {
-            return (float) $this->cost_price / $conversion;
+        if (! $this->usesUnitConversion()) {
+            return (float) $this->cost_price;
         }
 
-        return (float) $this->cost_price;
+        return (float) $this->cost_price / (float) $this->base_unit_conversion;
     }
 
     public function currentStock(?int $branchId = null): float

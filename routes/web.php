@@ -612,6 +612,15 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                     StockController::class,
                     'movements',
                 ])->name('stock.movements');
+            },
+        );
+
+        // ─────────────────────────────────────────────────────────────────
+        // BATCH & KADALUARSA — feature:batch_expired + permission:batch.*
+        // Dipisah dari feature:stock supaya bisa dinyalakan/matikan sendiri.
+        // ─────────────────────────────────────────────────────────────────
+        Route::middleware(['feature:batch_expired', 'permission:batch.view'])->group(
+            function () {
                 Route::resource(
                     'product-batches',
                     ProductBatchController::class,

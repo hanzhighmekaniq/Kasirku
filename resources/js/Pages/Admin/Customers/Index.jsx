@@ -72,11 +72,13 @@ export default function Index({ customers, storeType = "retail" }) {
                 }
                 description="Manajemen data pelanggan, riwayat transaksi, dan poin loyalitas."
                 action={
-                    <Button as={Link} href={route("admin.customers.create")} icon={Plus}>
-                        <span className="hidden sm:inline">
-                            Tambah Pelanggan
-                        </span>
-                        <span className="sm:hidden">Tambah</span>
+                    <Button
+                        as={Link}
+                        href={route("admin.customers.create")}
+                        icon={Plus}
+                        className="hidden sm:inline-flex"
+                    >
+                        Tambah Pelanggan
                     </Button>
                 }
             />
@@ -171,6 +173,15 @@ export default function Index({ customers, storeType = "retail" }) {
                 processing={deleting}
                 onConfirm={confirmDelete}
                 onClose={() => !deleting && setTarget(null)}
+            />
+
+            {/* FAB — mobile only */}
+            <Button
+                as={Link}
+                href={route("admin.customers.create")}
+                icon={Plus}
+                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl sm:hidden"
+                title="Tambah Pelanggan"
             />
         </AuthenticatedLayout>
     );

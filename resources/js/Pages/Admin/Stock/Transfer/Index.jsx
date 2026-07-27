@@ -4,8 +4,9 @@ import StockTabs from "@/Components/StockTabs";
 import Button from "@/Components/ui/Button";
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft, Eye, Plus, Search, Trash2 } from 'lucide-react';
+import { Eye, Plus, Search, Trash2 } from 'lucide-react';
 import Select from '@/Components/ui/Select';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 
 const STATUS_OPTS = [
     { value: '', label: 'Semua Status' },
@@ -66,16 +67,6 @@ export default function Index({ transfers, stats }) {
                     </>
                 }
                 description="Pindahkan stok antar cabang dengan mudah."
-                action={
-                    <Button
-                        as={Link}
-                        href={route('admin.stock-transfers.create')}
-                        icon={Plus}
-                    >
-                        <span className="hidden sm:inline">Transfer Stok</span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
-                }
             />
 
             <StockTabs />
@@ -133,14 +124,14 @@ export default function Index({ transfers, stats }) {
                             className="min-w-[160px]"
                         />
                     
+                        {/* Di mobile dipindah ke FAB kanan bawah */}
                         <Button
                             as={Link}
                             href={route('admin.stock-transfers.create')}
                             icon={Plus}
-                            className="w-full justify-center sm:w-auto"
+                            className="hidden sm:inline-flex sm:w-auto"
                         >
-                            <span className="hidden sm:inline">Buat Transfer</span>
-                            <span className="sm:hidden">Tambah</span>
+                            Buat Transfer
                         </Button>
                     </div>
                     <div className="flex items-center justify-between pt-4">
@@ -174,8 +165,8 @@ export default function Index({ transfers, stats }) {
                                     <tr>
                                         <td colSpan={7} className="px-5 py-16 text-center">
                                             <div className="flex flex-col items-center">
-                                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                                    <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                                                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-muted/30">
+                                                    <svg className="h-8 w-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                                                     </svg>
                                                 </div>
@@ -237,9 +228,9 @@ export default function Index({ transfers, stats }) {
                 {/* Mobile Cards */}
                 <div className="space-y-3 p-3 md:hidden">
                     {filtered.length === 0 ? (
-                        <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
-                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
+                        <div className="rounded-2xl bg-muted/30 p-10 text-center">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-muted/50">
+                                <svg className="h-8 w-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                                 </svg>
                             </div>
@@ -299,30 +290,33 @@ export default function Index({ transfers, stats }) {
                 </div>
             </div>
 
-            {/* Confirm delete modal */}
-            {confirmDelete && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onMouseDown={() => !processing && setConfirmDelete(null)}>
-                    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity" />
-                    <div className="relative w-full max-w-sm rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
-                        <div className="flex items-start gap-4">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-destructive/10">
-                                <Trash2 className="h-6 w-6 text-destructive" strokeWidth={1.8} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <h3 className="text-base font-semibold text-popover-foreground">Hapus Transfer?</h3>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    Transfer <strong>{confirmDelete.transfer_no}</strong> akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                            <button onClick={() => setConfirmDelete(null)} disabled={processing} className="inline-flex justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-60">Batal</button>
-                            <button onClick={handleDelete} disabled={processing} className="inline-flex items-center justify-center gap-2 rounded-xl bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground shadow-lg shadow-destructive/30 transition hover:bg-destructive/90 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2 disabled:opacity-60">
-                                {processing ? 'Menghapus...' : 'Ya, Hapus'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            {/* Confirm delete modal — komponen bersama, sama seperti halaman CRUD lain */}
+            <ConfirmDeleteModal
+                open={!!confirmDelete}
+                title="Hapus Transfer?"
+                description={
+                    confirmDelete
+                        ? `Transfer "${confirmDelete.transfer_no}" akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`
+                        : 'Tindakan ini tidak dapat dibatalkan.'
+                }
+                confirmLabel="Hapus"
+                processing={processing}
+                onConfirm={handleDelete}
+                onClose={() => {
+                    if (!processing) setConfirmDelete(null);
+                }}
+            />
+
+            {/* FAB — mobile only. Disembunyikan saat modal terbuka supaya tidak
+                menimpa panelnya. */}
+            {!confirmDelete && (
+                <Button
+                    as={Link}
+                    href={route('admin.stock-transfers.create')}
+                    icon={Plus}
+                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl sm:hidden"
+                    title="Buat Transfer"
+                />
             )}
         </AuthenticatedLayout>
     );

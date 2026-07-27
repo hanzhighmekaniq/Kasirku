@@ -1086,7 +1086,7 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                 className={`flex min-h-screen flex-col transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-[70px]" : "lg:pl-[240px]"}`}
             >
                 {/* Topbar */}
-                <header className="sticky top-0 z-20 flex h-[56px] items-center gap-2.5 border-b border-border bg-sidebar backdrop-blur-md px-4 sm:px-6 shadow-sm">
+                <header className="sticky top-0 z-20 flex h-[56px] items-center gap-2.5 border-b border-border bg-sidebar px-4 sm:px-6 shadow-sm">
                     {/* Mobile menu */}
                     <button
                         onClick={() => setSidebarOpen(true)}

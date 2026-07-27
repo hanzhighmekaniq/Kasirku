@@ -2,19 +2,22 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\BuildsStockBucketOptions;
 use App\Http\Controllers\Concerns\HasStoreScope;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\StockAdjustment;
 use App\Models\StockAdjustmentItem;
-use App\Models\StockMovement;
+use App\Services\Stock\StockMutation;
+use App\Services\Stock\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class StockAdjustmentController extends Controller
 {
+    use BuildsStockBucketOptions;
     use HasStoreScope;
 
     public function index()
@@ -44,16 +47,8 @@ class StockAdjustmentController extends Controller
         [$storeId] = $this->storeScope();
 
         return Inertia::render('Admin/Stock/Adjustment/Create', [
-            'products' => Product::forStore($storeId)
-                ->with([
-                    'stocks' => function ($q) use ($storeId) {
-                        $q->where('store_id', $storeId);
-                    },
-                ])
-                ->where('is_active', true)
-                ->where('track_stock', true)
-                ->orderBy('name')
-                ->get(),
+            'buckets' => $this->stockBucketOptions($storeId),
+            'currentBranchId' => session('current_branch_id'),
         ]);
     }
 
@@ -72,14 +67,18 @@ class StockAdjustmentController extends Controller
             'items.*.notes' => 'nullable|string',
         ]);
 
-        $store = $request->user()->store;
-        $storeId = session('current_store_id') ?? $store?->id;
+        // `branch_id` WAJIB direkam di dokumennya. Persetujuan memakai
+        // $adjustment->branch_id sebagai kunci bucket — kalau di sini kosong,
+        // selisihnya mendarat di baris ber-cabang NULL yang tidak pernah
+        // tampil di halaman stok mana pun.
+        [$storeId, $branchId] = $this->storeScope();
         $adjNo = $this->generateNumber($validated['adjustment_date']);
 
         DB::beginTransaction();
         try {
             $adjustment = StockAdjustment::create([
                 'store_id' => $storeId,
+                'branch_id' => $branchId,
                 'user_id' => $request->user()->id,
                 'adjustment_no' => $adjNo,
                 'adjustment_date' => $validated['adjustment_date'],
@@ -176,12 +175,20 @@ class StockAdjustmentController extends Controller
         $variantId = $validated['variant_id'] ?? null;
         $packagingUnitId = $validated['packaging_unit_id'] ?? null;
 
-        $productStock = ProductStock::where('product_id', $product->id)
-            ->where('variant_id', $variantId)
-            ->where('packaging_unit_id', $packagingUnitId)
-            ->where('store_id', $storeId)
-            ->when($branchId, fn ($q) => $q->where('branch_id', $branchId))
-            ->first();
+        // Satu bucket stok dikunci LIMA kolom sekaligus, termasuk branch_id.
+        // Kalau branch_id tidak ikut jadi kunci, penyesuaian di cabang aktif
+        // bisa mendarat di baris cabang lain (baris pertama yang ketemu),
+        // sementara halaman produk membaca cabang aktif — hasilnya stok
+        // terlihat sama sekali tidak berubah setelah disimpan.
+        $bucketKeys = [
+            'product_id' => $product->id,
+            'variant_id' => $variantId,
+            'packaging_unit_id' => $packagingUnitId,
+            'store_id' => $storeId,
+            'branch_id' => $branchId,
+        ];
+
+        $productStock = ProductStock::where($bucketKeys)->first();
         $currentStock = $productStock->quantity ?? 0;
 
         // Validasi: stok tidak mencukupi untuk OUT
@@ -232,59 +239,33 @@ class StockAdjustmentController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
-            // Bucket-aware: update stok di bucket yang tepat
-            $stock = ProductStock::firstOrCreate(
-                [
-                    'product_id' => $product->id,
-                    'variant_id' => $variantId,
-                    'packaging_unit_id' => $packagingUnitId,
-                    'store_id' => $storeId,
-                ],
-                [
-                    'branch_id' => $branchId,
-                    'quantity' => 0,
-                    'reserved_quantity' => 0,
-                    'average_cost' => 0,
-                ],
-            );
+            $stockService = app(StockService::class);
+            $mutationBase = [
+                'productId' => $product->id,
+                'variantId' => $variantId,
+                'packagingUnitId' => $packagingUnitId,
+                'storeId' => $storeId,
+                'branchId' => $branchId,
+                'unitCost' => (float) $unitCost,
+                'referenceType' => StockAdjustment::class,
+                'referenceId' => $adjustment->id,
+                'referenceNo' => $adjustment->adjustment_no,
+                'notes' => $validated['notes'] ?? "Penyesuaian #{$adjustment->adjustment_no}",
+            ];
 
             if ($diff > 0) {
-                $stock->increment('quantity', $diff);
-                $type = 'adjustment_in';
-
-                // Update average_cost bucket (weighted average)
-                if (isset($validated['cost_price']) && $validated['cost_price'] > 0) {
-                    $oldQty = $currentStock;
-                    $oldCost = $stock->average_cost ?? 0;
-                    $newCost = $validated['cost_price'];
-                    $totalQty = $oldQty + $diff;
-                    if ($totalQty > 0) {
-                        $stock->update([
-                            'average_cost' => (($oldCost * $oldQty) + ($newCost * $diff)) / $totalQty,
-                        ]);
-                    }
-                }
+                $stockService->increase(new StockMutation(
+                    ...$mutationBase,
+                    quantity: $diff,
+                    movementType: 'adjustment_in',
+                ));
             } else {
-                $stock->decrement('quantity', abs($diff));
-                $type = 'adjustment_out';
+                $stockService->decrease(new StockMutation(
+                    ...$mutationBase,
+                    quantity: abs($diff),
+                    movementType: 'adjustment_out',
+                ));
             }
-
-            StockMovement::create([
-                'product_id' => $product->id,
-                'variant_id' => $variantId,
-                'packaging_unit_id' => $packagingUnitId,
-                'store_id' => $storeId,
-                'branch_id' => $branchId,
-                'reference_type' => StockAdjustment::class,
-                'reference_id' => $adjustment->id,
-                'movement_type' => $type,
-                'quantity' => abs($diff),
-                'unit_cost' => $unitCost,
-                'reference_no' => $adjustment->adjustment_no,
-                'notes' => $validated['notes'] ??
-                    "Penyesuaian #{$adjustment->adjustment_no}",
-                'moved_at' => now(),
-            ]);
 
             DB::commit();
 
@@ -319,51 +300,40 @@ class StockAdjustmentController extends Controller
             $stockAdjustment->update(['status' => $request->status]);
 
             if ($request->status === 'approved') {
+                $stockService = app(StockService::class);
+
                 foreach ($stockAdjustment->items as $item) {
                     $diff = $item->difference_qty;
                     if ($diff === 0) {
                         continue;
                     }
 
-                    // Bucket-aware: key lengkap dengan variant_id + packaging_unit_id
-                    $stock = ProductStock::firstOrCreate(
-                        [
-                            'product_id' => $item->product_id,
-                            'variant_id' => $item->variant_id,
-                            'packaging_unit_id' => $item->packaging_unit_id,
-                            'store_id' => $stockAdjustment->store_id,
-                        ],
-                        [
-                            'quantity' => 0,
-                            'reserved_quantity' => 0,
-                            'average_cost' => 0,
-                        ],
-                    );
+                    $mutationBase = [
+                        'productId' => $item->product_id,
+                        'variantId' => $item->variant_id,
+                        'packagingUnitId' => $item->packaging_unit_id,
+                        'storeId' => $stockAdjustment->store_id,
+                        'branchId' => $stockAdjustment->branch_id,
+                        'unitCost' => (float) $item->unit_cost,
+                        'referenceType' => StockAdjustment::class,
+                        'referenceId' => $stockAdjustment->id,
+                        'referenceNo' => $stockAdjustment->adjustment_no,
+                        'notes' => $item->notes ?? "Penyesuaian #{$stockAdjustment->adjustment_no}",
+                    ];
 
                     if ($diff > 0) {
-                        $stock->increment('quantity', $diff);
-                        $type = 'adjustment_in';
+                        $stockService->increase(new StockMutation(
+                            ...$mutationBase,
+                            quantity: (float) $diff,
+                            movementType: 'adjustment_in',
+                        ));
                     } else {
-                        $stock->decrement('quantity', abs($diff));
-                        $type = 'adjustment_out';
+                        $stockService->decrease(new StockMutation(
+                            ...$mutationBase,
+                            quantity: abs((float) $diff),
+                            movementType: 'adjustment_out',
+                        ));
                     }
-
-                    StockMovement::create([
-                        'product_id' => $item->product_id,
-                        'variant_id' => $item->variant_id,
-                        'packaging_unit_id' => $item->packaging_unit_id,
-                        'store_id' => $stockAdjustment->store_id,
-                        'branch_id' => null,
-                        'reference_type' => StockAdjustment::class,
-                        'reference_id' => $stockAdjustment->id,
-                        'movement_type' => $type,
-                        'quantity' => abs($diff),
-                        'unit_cost' => $item->unit_cost,
-                        'reference_no' => $stockAdjustment->adjustment_no,
-                        'notes' => $item->notes ??
-                            "Penyesuaian #{$stockAdjustment->adjustment_no}",
-                        'moved_at' => now(),
-                    ]);
                 }
             }
 

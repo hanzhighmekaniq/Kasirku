@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
-import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
+import { Head, router, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CurrencyInput from "@/Components/ui/CurrencyInput";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
@@ -144,16 +144,17 @@ export default function Index({ memberships }) {
                             </span>
                         </p>
                     </div>
-                    <Button onClick={openCreate} icon={Plus} className="w-full sm:w-auto">
+                    {/* Di mobile dipindah ke FAB kanan bawah */}
+                    <Button onClick={openCreate} icon={Plus} className="hidden sm:inline-flex sm:w-auto">
                         Tambah Membership
                     </Button>
                 </div>
 
                 {filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-muted/30">
                             <svg
-                                className="h-8 w-8 text-muted-foreground"
+                                className="h-8 w-8 text-muted-foreground/50"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
@@ -214,6 +215,17 @@ export default function Index({ memberships }) {
                     if (!processing) setDeleting(null);
                 }}
             />
+
+            {/* FAB — mobile only. Disembunyikan saat modal terbuka supaya tidak
+                menimpa panelnya. */}
+            {!modalOpen && !deleting && (
+                <Button
+                    onClick={openCreate}
+                    icon={Plus}
+                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl sm:hidden"
+                    title="Tambah Membership"
+                />
+            )}
         </AuthenticatedLayout>
     );
 }
@@ -229,7 +241,7 @@ const inp = (err) =>
     }`;
 
 function MembershipModal({ open, editing, onClose }) {
-    const { data, setData, post, patch, processing, errors, reset } = useForm({
+    const { data, setData, post, patch, processing, errors, reset, transform } = useForm({
         code: "",
         name: "",
         description: "",
@@ -282,35 +294,39 @@ function MembershipModal({ open, editing, onClose }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const payload = {
-            ...data,
-            price: data.price === "" ? 0 : data.price,
+
+        // Dipetakan lewat transform(), bukan opsi `data` pada post()/patch() —
+        // useForm mengabaikan opsi itu, sehingga sebelumnya payload mentah yang
+        // terkirim: `benefits` masih berupa string padahal backend memvalidasi
+        // `nullable|array`, dan field kosong terkirim sebagai "" bukan angka.
+        transform((form) => ({
+            ...form,
+            price: form.price === "" ? 0 : form.price,
             discount_percent:
-                data.discount_percent === "" ? 0 : data.discount_percent,
+                form.discount_percent === "" ? 0 : form.discount_percent,
             point_multiplier:
-                data.point_multiplier === ""
+                form.point_multiplier === ""
                     ? 1
-                    : Number(data.point_multiplier),
-            benefits: data.benefits
-                ? data.benefits
+                    : Number(form.point_multiplier),
+            duration_value:
+                form.duration_value === "" ? 1 : Number(form.duration_value),
+            benefits: form.benefits
+                ? form.benefits
                       .split("\n")
                       .map((b) => b.trim())
                       .filter(Boolean)
                 : [],
+        }));
+
+        const options = {
+            preserveScroll: true,
+            onSuccess: () => onClose(),
         };
 
         if (editing) {
-            patch(route("admin.memberships.update", editing.id), {
-                data: payload,
-                preserveScroll: true,
-                onSuccess: () => onClose(),
-            });
+            patch(route("admin.memberships.update", editing.id), options);
         } else {
-            post(route("admin.memberships.store"), {
-                data: payload,
-                preserveScroll: true,
-                onSuccess: () => onClose(),
-            });
+            post(route("admin.memberships.store"), options);
         }
     };
 
@@ -325,10 +341,12 @@ function MembershipModal({ open, editing, onClose }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto pt-10 pb-10">
-            {/* Backdrop */}
+            {/* Backdrop — tanpa backdrop-blur. Blur pada elemen full-screen
+                memaksa compositor merender ulang seluruh viewport tiap frame,
+                dan itu yang membuat modal terasa berat saat dibuka/ditutup. */}
             <div
                 onClick={() => !processing && onClose()}
-                className={`fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity duration-200 ${
+                className={`fixed inset-0 bg-background/70 transition-opacity duration-200 ${
                     show ? "opacity-100" : "opacity-0"
                 }`}
             />
@@ -343,7 +361,7 @@ function MembershipModal({ open, editing, onClose }) {
                         : "translate-y-3 scale-95 opacity-0"
                 }`}
             >
-                <div className="flex items-center justify-between border-b border-border px-4 py-4">
+                <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <h3 className="text-base font-semibold text-popover-foreground">
                         {editing ? "Edit Membership" : "Tambah Membership"}
                     </h3>
@@ -366,6 +384,7 @@ function MembershipModal({ open, editing, onClose }) {
                             ref={firstInput}
                             type="text"
                             value={data.code}
+                            required
                             onChange={(e) => setData("code", e.target.value)}
                             maxLength={50}
                             className={inp(errors.code)}
@@ -386,6 +405,7 @@ function MembershipModal({ open, editing, onClose }) {
                         <input
                             type="text"
                             value={data.name}
+                            required
                             onChange={(e) => setData("name", e.target.value)}
                             maxLength={255}
                             className={inp(errors.name)}
@@ -457,6 +477,7 @@ function MembershipModal({ open, editing, onClose }) {
                             <input
                                 type="number"
                                 min={1}
+                                required
                                 value={data.duration_value}
                                 onChange={(e) =>
                                     setData("duration_value", e.target.value)
@@ -478,7 +499,10 @@ function MembershipModal({ open, editing, onClose }) {
                             className="block text-sm font-medium text-foreground"
                             title="Harga untuk bergabung ke membership ini. Isi 0 jika gratis."
                         >
-                            Harga <span className="text-destructive">*</span>
+                            Harga
+                            <span className="ml-1.5 font-normal text-muted-foreground">
+                                (kosongkan jika gratis)
+                            </span>
                             <span className="ml-1 cursor-help text-muted-foreground">
                                 ⓘ
                             </span>
@@ -503,7 +527,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 className="block text-sm font-medium text-foreground"
                                 title="Persentase diskon otomatis saat transaksi. Kosongkan jika tidak ada."
                             >
-                                Diskon (%)
+                                Diskon (%) <span className="text-destructive">*</span>
                                 <span className="ml-1 cursor-help text-muted-foreground">
                                     ⓘ
                                 </span>
@@ -513,6 +537,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 min={0}
                                 max={100}
                                 step={0.01}
+                                required
                                 value={data.discount_percent}
                                 onChange={(e) =>
                                     setData("discount_percent", e.target.value)
@@ -531,7 +556,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 className="block text-sm font-medium text-foreground"
                                 title="Berapa kali lipat poin didapat. 1 = normal, 2 = 2x lipat."
                             >
-                                Multiplier Poin
+                                Multiplier Poin <span className="text-destructive">*</span>
                                 <span className="ml-1 cursor-help text-muted-foreground">
                                     ⓘ
                                 </span>
@@ -540,6 +565,7 @@ function MembershipModal({ open, editing, onClose }) {
                                 type="number"
                                 min={1}
                                 step={1}
+                                required
                                 value={data.point_multiplier}
                                 onChange={(e) =>
                                     setData("point_multiplier", e.target.value)
@@ -612,8 +638,8 @@ function MembershipModal({ open, editing, onClose }) {
                         <span className="text-sm text-foreground">Aktif</span>
                     </label>
 
-                    {/* Buttons */}
-                    <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+                    {/* Footer — bg-muted/50 sesuai standar modal di TOKEN_MAPPING */}
+                    <div className="-mx-6 -mb-6 mt-6 flex items-center justify-end gap-3 border-t border-border bg-muted/50 px-6 py-4">
                         <Button
                             type="button"
                             variant="outline"
@@ -635,13 +661,24 @@ function MembershipModal({ open, editing, onClose }) {
 /* ------------------------------------------------------------------ */
 /*  Table / List                                                         */
 /* ------------------------------------------------------------------ */
+/**
+ * Penanda status aktif/nonaktif.
+ *
+ * Mengikuti standar Badge / Status Pill di TOKEN_MAPPING.md: status universal
+ * wajib memakai token tema (`success` / `muted`), bukan warna hardcoded, supaya
+ * ikut berubah mengikuti tema aktif. Titik warna ditambahkan sebagai penanda
+ * visual — kontras latar `/10` sendiri memang tipis, tapi menaikkan opacity
+ * akan menyimpang dari standar; titik solid menyelesaikannya tanpa itu.
+ */
 function StatusBadge({ active }) {
     return active ? (
-        <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
             Aktif
         </span>
     ) : (
-        <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
             Nonaktif
         </span>
     );
@@ -683,16 +720,16 @@ function MembershipList({ items, onEdit, onDelete }) {
             {/* Desktop table */}
             <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
-                    <thead className="bg-popover text-left text-xs uppercase tracking-wide text-card-foreground">
+                    <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                         <tr>
-                            <th className="px-4 py-3.5 font-semibold">Kode</th>
-                            <th className="px-4 py-3.5 font-semibold">Nama</th>
-                            <th className="px-4 py-3.5 font-semibold">Durasi</th>
-                            <th className="px-4 py-3.5 text-right font-semibold">Harga</th>
-                            <th className="px-4 py-3.5 text-center font-semibold">Diskon</th>
-                            <th className="px-4 py-3.5 text-center font-semibold">Member</th>
-                            <th className="px-4 py-3.5 text-center font-semibold">Status</th>
-                            <th className="px-4 py-3.5 text-right font-semibold">Aksi</th>
+                            <th className="px-4 py-3 text-left font-semibold">Kode</th>
+                            <th className="px-4 py-3 text-left font-semibold">Nama</th>
+                            <th className="px-4 py-3 text-left font-semibold">Durasi</th>
+                            <th className="px-4 py-3 text-right font-semibold">Harga</th>
+                            <th className="px-4 py-3 text-center font-semibold">Diskon</th>
+                            <th className="px-4 py-3 text-center font-semibold">Member</th>
+                            <th className="px-4 py-3 text-center font-semibold">Status</th>
+                            <th className="px-4 py-3 text-right font-semibold">Aksi</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border bg-background">
@@ -701,12 +738,12 @@ function MembershipList({ items, onEdit, onDelete }) {
                                 key={m.id}
                                 className="transition hover:bg-[rgb(var(--color-table-hover))]"
                             >
-                                <td className="px-4 py-4">
-                                    <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-mono font-semibold text-foreground">
+                                <td className="px-4 py-3">
+                                    <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 font-mono text-xs font-semibold text-foreground">
                                         {m.code}
                                     </span>
                                 </td>
-                                <td className="px-4 py-4">
+                                <td className="px-4 py-3">
                                     <div className="min-w-0">
                                         <p className="font-medium text-foreground">
                                             {m.name}
@@ -718,16 +755,16 @@ function MembershipList({ items, onEdit, onDelete }) {
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-4 py-4 text-muted-foreground">
+                                <td className="px-4 py-3 text-muted-foreground">
                                     {formatDuration(
                                         m.duration_type,
                                         m.duration_value,
                                     )}
                                 </td>
-                                <td className="px-4 py-4 text-right font-medium text-foreground">
+                                <td className="px-4 py-3 text-right font-medium text-foreground">
                                     {formatIDR(m.price)}
                                 </td>
-                                <td className="px-4 py-4 text-center">
+                                <td className="px-4 py-3 text-center">
                                     {m.discount_percent ? (
                                         <span className="inline-flex items-center rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
                                             {m.discount_percent}%
@@ -738,15 +775,15 @@ function MembershipList({ items, onEdit, onDelete }) {
                                         </span>
                                     )}
                                 </td>
-                                <td className="px-4 py-4 text-center">
+                                <td className="px-4 py-3 text-center">
                                     <MemberBadge
                                         count={m.customer_memberships_count}
                                     />
                                 </td>
-                                <td className="px-4 py-4 text-center">
+                                <td className="px-4 py-3 text-center">
                                     <StatusBadge active={m.is_active} />
                                 </td>
-                                <td className="px-4 py-4">
+                                <td className="px-4 py-3">
                                     <RowActions
                                         item={m}
                                         onEdit={onEdit}

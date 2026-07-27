@@ -6,6 +6,10 @@ import Field from "@/Components/ui/Field";
 import SectionCard from "@/Components/ui/SectionCard";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 import Button from "@/Components/ui/Button";
+import {
+    baseUnitLabel,
+    usesUnitConversion,
+} from "@/Utils/unitConversion";
 
 /* ── helpers ──────────────────────────────────────── */
 const fmtRp = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
@@ -272,6 +276,8 @@ export default function Create({
                     cost_price: prefill.cost_price || 0,
                     variant_id: prefill.variant_id ?? null,
                     variant_name: prefill.variant_name ?? null,
+                    packaging_unit_id: prefill.packaging_unit_id ?? null,
+                    unit_name: prefill.unit_name ?? null,
                 },
             ]
             : [],
@@ -648,6 +654,35 @@ export default function Create({
                                                 </button>
                                             </div>
                                         </div>
+                                        {/* Bahan baku berkonversi dicatat per
+                                            satuan beli tapi disimpan per satuan
+                                            pakai — tunjukkan hasilnya sebelum
+                                            disimpan supaya tidak terasa ganjil. */}
+                                        {usesUnitConversion(pendingProduct) &&
+                                            Number(pendingQty) > 0 && (
+                                                <p className="mt-2 text-xs text-primary">
+                                                    Masuk stok:{" "}
+                                                    <strong>
+                                                        {baseUnitLabel(
+                                                            pendingProduct,
+                                                            pendingQty,
+                                                        )}
+                                                    </strong>
+                                                    {Number(pendingPrice) > 0 && (
+                                                        <>
+                                                            {" · Modal ≈ "}
+                                                            <strong>
+                                                                {fmtRp(
+                                                                    Number(pendingPrice) /
+                                                                    Number(pendingProduct.base_unit_conversion),
+                                                                )}
+                                                                /{pendingProduct.base_unit}
+                                                            </strong>
+                                                        </>
+                                                    )}
+                                                </p>
+                                            )}
+
                                         {pendingQty > 0 && pendingPrice > 0 && (
                                             <p className="mt-2 text-right text-xs text-primary font-medium">
                                                 Subtotal:{" "}

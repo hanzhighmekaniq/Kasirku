@@ -37,7 +37,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route($this->profileEditRoute($request));
     }
 
     /**
@@ -59,5 +59,19 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * Nama route halaman profil sesuai grup yang sedang diakses.
+     *
+     * Controller ini dipakai dua grup route — `admin.` dan `developer.` —
+     * sehingga nama `profile.edit` polos tidak pernah ada dan membuat
+     * penyimpanan profil selalu melempar RouteNotFoundException.
+     */
+    private function profileEditRoute(Request $request): string
+    {
+        return str_starts_with($request->route()?->getName() ?? '', 'developer.')
+            ? 'developer.profile.edit'
+            : 'admin.profile.edit';
     }
 }

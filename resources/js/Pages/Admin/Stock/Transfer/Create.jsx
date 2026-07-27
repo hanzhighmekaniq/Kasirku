@@ -1,10 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useMemo, useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Boxes, ChevronDown, Plus, Search, Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
+import { AlertTriangle, Check, Loader2, Trash2, X } from 'lucide-react';
 import Select from '@/Components/ui/Select';
+import StockBucketPicker, { BucketItemLabel } from '@/Components/ui/StockBucketPicker';
+import { purchaseUnitHint, usesUnitConversion } from '@/Utils/unitConversion';
 
-export default function Create({ products, branches }) {
+export default function Create({ buckets = [], branches }) {
     const { flash } = usePage().props;
 
     const { data, setData, post, processing, errors } = useForm({
@@ -15,65 +18,43 @@ export default function Create({ products, branches }) {
         items: [],
     });
 
-    const [prodDropdownOpen, setProdDropdownOpen] = useState(false);
-    const [prodSearch, setProdSearch] = useState('');
-    const prodDropdownRef = useRef(null);
-    const prodSearchRef = useRef(null);
-
-    useEffect(() => {
-        const handleClick = (e) => {
-            if (prodDropdownRef.current && !prodDropdownRef.current.contains(e.target)) {
-                setProdDropdownOpen(false);
-                setProdSearch('');
-            }
-        };
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
-
-    useEffect(() => {
-        if (prodDropdownOpen && prodSearchRef.current) {
-            prodSearchRef.current.focus();
-        }
-    }, [prodDropdownOpen]);
-
-    const availableProducts = useMemo(
-        () => products.filter((p) => !data.items.some((i) => i.product_id === p.id)),
-        [products, data.items],
-    );
-
-    const filteredProds = useMemo(() => {
-        if (!prodSearch) return availableProducts;
-        const q = prodSearch.toLowerCase();
-        return availableProducts.filter(
-            (p) => p.name?.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q),
-        );
-    }, [availableProducts, prodSearch]);
-
     const branchOptions = branches.map((b) => ({ value: b.id, label: b.name }));
 
-    const getStock = (productId) => {
-        if (!data.from_branch_id) return null;
-        const product = products.find((p) => p.id === productId);
-        if (!product?.stocks) return null;
-        const stock = product.stocks.find(
-            (s) => String(s.branch_id) === String(data.from_branch_id),
-        );
-        return stock ? stock.quantity : 0;
-    };
+    const usedKeys = useMemo(() => new Set(data.items.map((i) => i.key)), [data.items]);
 
-    const addItem = (productId) => {
-        const product = products.find((p) => p.id === productId);
-        if (!product) return;
-        const currentStock = getStock(productId);
+    const stockAt = (bucket, branchId) =>
+        branchId ? (bucket.stock_by_branch?.[String(branchId)] ?? 0) : 0;
+
+    /**
+     * Satu item = satu bucket (produk + variant + satuan) di cabang asal,
+     * bukan satu produk. Transfer yang hanya mengirim product_id akan
+     * memindahkan bucket dasar, yang untuk produk bervariant kosong.
+     */
+    const addItem = (bucket) => {
+        if (usedKeys.has(bucket.key)) return;
+
         setData('items', [
             ...data.items,
             {
-                product_id: product.id,
-                product_name: product.name,
-                product_sku: product.sku || '',
+                key: bucket.key,
+                product_id: bucket.product_id,
+                variant_id: bucket.variant_id,
+                packaging_unit_id: bucket.packaging_unit_id,
+                product_name: bucket.product_name,
+                product_sku: bucket.sku || '',
+                variant_name: bucket.variant_name,
+                unit_name: bucket.unit_name,
+                conversion_qty: bucket.conversion_qty,
+                // Disalin supaya baris item bisa menampilkan satuan tanpa
+                // mencari ulang produknya di daftar.
+                type: bucket.type,
+                unit: bucket.unit,
+                base_unit: bucket.base_unit,
+                base_unit_conversion: bucket.base_unit_conversion,
+                // Stok per cabang disimpan utuh supaya angkanya ikut berubah
+                // kalau cabang asal diganti setelah item ditambahkan.
+                stock_by_branch: bucket.stock_by_branch,
                 quantity: 1,
-                stock_at_branch: currentStock ?? 0,
                 notes: '',
             },
         ]);
@@ -95,28 +76,60 @@ export default function Create({ products, branches }) {
 
     const totalQty = data.items.reduce((s, i) => s + Number(i.quantity || 0), 0);
 
+    const sameBranch =
+        !!data.from_branch_id &&
+        String(data.from_branch_id) === String(data.to_branch_id);
+
+    // Qty melebihi stok cabang asal akan ditolak backend saat diproses —
+    // ditandai lebih awal supaya ketahuan sebelum disimpan.
+    const overStockCount = data.items.filter(
+        (i) =>
+            data.from_branch_id &&
+            Number(i.quantity || 0) > stockAt(i, data.from_branch_id),
+    ).length;
+
+    const canSubmit =
+        !processing &&
+        data.items.length > 0 &&
+        !sameBranch &&
+        !!data.from_branch_id &&
+        !!data.to_branch_id;
+
     const submit = (e) => {
         e.preventDefault();
-        if (data.items.length === 0) return;
+        if (!canSubmit) return;
         post(route('admin.stock-transfers.store'));
     };
 
     return (
         <AuthenticatedLayout
+            backUrl={route('admin.stock-transfers.index')}
             header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('admin.stock-transfers.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
-                    </Link>
-                    <h2 className="text-lg font-semibold text-foreground">Buat Transfer Stok</h2>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Stok
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Buat Transfer
+                    </div>
                 </div>
             }
         >
             <Head title="Buat Transfer Stok" />
+            <PageHeader
+                title="Buat Transfer Stok"
+                breadcrumbs={["Admin", "Stok", "Transfer Stok", "Buat"]}
+                heading={
+                    <>
+                        Buat{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Transfer Stok
+                        </span>
+                    </>
+                }
+                description="Pindahkan stok dari satu cabang ke cabang lain."
+                backUrl={route('admin.stock-transfers.index')}
+            />
 
             {flash?.error && (
                 <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
@@ -161,7 +174,7 @@ export default function Create({ products, branches }) {
                                         className={inputCls(!!errors.transfer_date)}
                                     />
                                 </Field>
-                                <Field label="Catatan" error={errors.notes}>
+                                <Field label="Catatan" hint="Opsional" error={errors.notes}>
                                     <input
                                         type="text"
                                         value={data.notes}
@@ -171,69 +184,42 @@ export default function Create({ products, branches }) {
                                     />
                                 </Field>
                             </div>
+
+                            {/* Backend memvalidasi `different:from_branch_id` — dicegat di
+                                sini supaya tidak perlu gagal dulu di server. */}
+                            {sameBranch && (
+                                <p className="mt-3 flex items-start gap-1.5 text-xs font-medium text-destructive">
+                                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                    <span>Cabang tujuan harus berbeda dari cabang asal.</span>
+                                </p>
+                            )}
                         </SectionCard>
 
                         {/* Items */}
-                        <SectionCard title="Item Transfer" subtitle="Pilih produk dan jumlah yang akan ditransfer">
+                        <SectionCard title="Item Transfer" required subtitle="Pilih produk dan jumlah yang akan ditransfer. Minimal 1 item.">
                             <div className="space-y-4">
                                 {/* Add item row */}
-                                <div className="flex items-end gap-3">
-                                    <div className="relative flex-1" ref={prodDropdownRef}>
-                                        <label className="mb-1 block text-sm font-medium text-foreground">Produk</label>
-                                        <button
-                                            type="button"
-                                            onClick={() => { setProdDropdownOpen(!prodDropdownOpen); setProdSearch(''); }}
-                                            className="flex w-full items-center gap-2 rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
-                                        >
-                                            <Boxes className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
-                                            <span className="flex-1 truncate text-left">{data.items.length > 0 ? 'Pilih produk lain...' : 'Pilih Produk'}</span>
-                                            <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition ${prodDropdownOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
-                                        </button>
-                                        {prodDropdownOpen && (
-                                            <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
-                                                <div className="border-b border-border p-3">
-                                                    <div className="relative">
-                                                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.8} />
-                                                        <input
-                                                            ref={prodSearchRef}
-                                                            type="text"
-                                                            value={prodSearch}
-                                                            onChange={(e) => setProdSearch(e.target.value)}
-                                                            placeholder="Cari nama atau SKU..."
-                                                            className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="max-h-72 overflow-y-auto p-1.5">
-                                                    {filteredProds.length === 0 ? (
-                                                        <p className="px-3 py-4 text-center text-xs text-muted-foreground">Tidak ada produk ditemukan.</p>
-                                                    ) : (
-                                                        filteredProds.map((p) => {
-                                                            const stock = getStock(p.id);
-                                                            return (
-                                                                <button
-                                                                    key={p.id}
-                                                                    type="button"
-                                                                    onClick={() => { addItem(p.id); setProdDropdownOpen(false); setProdSearch(''); }}
-                                                                    className="w-full rounded-lg px-3 py-2 text-left text-sm transition hover:bg-muted"
-                                                                >
-                                                                    <span className="block truncate font-medium text-foreground">{p.name}</span>
-                                                                    <div className="flex items-center justify-between">
-                                                                        <span className="text-xs text-muted-foreground">{p.sku}</span>
-                                                                        {data.from_branch_id && (
-                                                                            <span className="text-xs text-muted-foreground">
-                                                                                Stok: {stock ?? 0}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </button>
-                                                            );
-                                                        })
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-foreground">
+                                        Produk / Variant / Satuan
+                                    </label>
+                                    <StockBucketPicker
+                                        buckets={buckets}
+                                        branchId={data.from_branch_id}
+                                        excludeKeys={usedKeys}
+                                        onSelect={addItem}
+                                        disabled={!data.from_branch_id}
+                                        placeholder={
+                                            data.from_branch_id
+                                                ? 'Pilih produk / variant / satuan'
+                                                : 'Pilih cabang asal dulu'
+                                        }
+                                    />
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        {data.from_branch_id
+                                            ? 'Stok disimpan terpisah per variant dan per satuan — pilih yang persis mau dipindahkan.'
+                                            : 'Stok berbeda-beda tiap cabang, jadi cabang asal harus ditentukan lebih dulu.'}
+                                    </p>
                                 </div>
 
                                 {data.items.length === 0 ? (
@@ -242,17 +228,19 @@ export default function Create({ products, branches }) {
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
-                                        {data.items.map((item, idx) => (
-                                            <div key={idx} className="rounded-xl border border-border bg-muted/50 px-4 py-3">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <p className="text-sm font-medium text-foreground">{item.product_name}</p>
-                                                        <p className="text-xs text-muted-foreground">{item.product_sku}</p>
-                                                    </div>
+                                        {data.items.map((item, idx) => {
+                                        const stokCabang = stockAt(item, data.from_branch_id);
+                                        const isOver =
+                                            !!data.from_branch_id &&
+                                            Number(item.quantity || 0) > stokCabang;
+                                        return (
+                                            <div key={item.key} className="rounded-xl border border-border bg-muted/50 px-4 py-3">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <BucketItemLabel item={item} />
                                                     <button
                                                         type="button"
                                                         onClick={() => removeItem(idx)}
-                                                        className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                                                        className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                                                     >
                                                         <Trash2 className="h-4 w-4" strokeWidth={1.8} />
                                                     </button>
@@ -260,34 +248,61 @@ export default function Create({ products, branches }) {
                                                 <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                                                     <div>
                                                         <label className="mb-1 block text-xs text-muted-foreground">
-                                                            Jumlah Transfer
+                                                            Jumlah Transfer <span className="text-destructive">*</span>
+                                                            {/* Satuan kemasan dihitung per kemasan;
+                                                                bahan baku berkonversi per satuan pakai. */}
+                                                            {item.packaging_unit_id ? (
+                                                                <span className="ml-1 font-normal">({item.unit_name})</span>
+                                                            ) : usesUnitConversion(item) ? (
+                                                                <span className="ml-1 font-normal">({item.base_unit})</span>
+                                                            ) : null}
                                                             {data.from_branch_id && (
                                                                 <span className="ml-1 font-normal text-muted-foreground">
-                                                                    (Stok: {item.stock_at_branch})
+                                                                    (Stok: {stokCabang})
                                                                 </span>
                                                             )}
                                                         </label>
                                                         <input
                                                             type="number"
+                                                            required
                                                             value={item.quantity}
                                                             onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
                                                             min="1"
-                                                            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                            className={`h-9 w-full rounded-lg border bg-background px-3 text-sm text-foreground outline-none transition focus:ring-2 ${
+                                                                isOver
+                                                                    ? 'border-destructive focus:border-destructive focus:ring-destructive/20'
+                                                                    : 'border-input focus:border-ring focus:ring-ring/20'
+                                                            }`}
                                                         />
+                                                        {isOver && (
+                                                            <p className="mt-1 flex items-start gap-1.5 text-[11px] font-medium text-destructive">
+                                                                <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                                                                <span>Melebihi stok cabang asal ({stokCabang}).</span>
+                                                            </p>
+                                                        )}
+                                                        {!item.packaging_unit_id && purchaseUnitHint(item, item.quantity) && (
+                                                            <p className="mt-1 text-[11px] text-muted-foreground">
+                                                                {purchaseUnitHint(item, item.quantity)}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                     <div>
-                                                        <label className="mb-1 block text-xs text-muted-foreground">Catatan Item</label>
+                                                        <label className="mb-1 block text-xs text-muted-foreground">
+                                                            Catatan Item{" "}
+                                                            <span className="font-normal">(Opsional)</span>
+                                                        </label>
                                                         <input
                                                             type="text"
                                                             value={item.notes}
                                                             onChange={(e) => updateItem(idx, 'notes', e.target.value)}
                                                             placeholder="Opsional..."
-                                                            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                                                         />
                                                     </div>
                                                 </div>
                                             </div>
-                                        ))}
+                                        );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -307,13 +322,20 @@ export default function Create({ products, branches }) {
                                     <dt className="font-semibold text-foreground">Total Qty</dt>
                                     <dd className="text-lg font-bold text-foreground">{totalQty}</dd>
                                 </div>
+                                {overStockCount > 0 && (
+                                    <p className="flex items-start gap-1.5 pt-1 text-xs font-medium text-destructive">
+                                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                        <span>{overStockCount} item melebihi stok cabang asal.</span>
+                                    </p>
+                                )}
                             </dl>
                         </SectionCard>
 
-                        <div className="flex flex-col gap-2">
+                        {/* Aksi desktop — di mobile digantikan FAB di bawah */}
+                        <div className="hidden flex-col gap-2 sm:flex">
                             <button
                                 type="submit"
-                                disabled={processing || data.items.length === 0}
+                                disabled={!canSubmit}
                                 className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:bg-primary/90 disabled:opacity-60"
                             >
                                 {processing ? 'Menyimpan...' : 'Simpan Transfer'}
@@ -327,16 +349,52 @@ export default function Create({ products, branches }) {
                         </div>
                     </div>
                 </div>
+
+                {/* FAB — mobile only */}
+                <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 sm:hidden">
+                    <Link
+                        href={route('admin.stock-transfers.index')}
+                        className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-border transition hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/30"
+                        title="Batal"
+                    >
+                        <X className="h-5 w-5" strokeWidth={2} />
+                    </Link>
+                    <button
+                        type="submit"
+                        disabled={!canSubmit}
+                        className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/40 transition hover:bg-primary/90 disabled:opacity-60"
+                        title="Simpan Transfer"
+                    >
+                        {processing ? (
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                        ) : (
+                            <Check className="h-6 w-6" strokeWidth={2.5} />
+                        )}
+                    </button>
+                </div>
+
+                {/* Spacer supaya konten tidak tertutup FAB di mobile */}
+                <div className="h-24 sm:hidden" />
             </form>
         </AuthenticatedLayout>
     );
 }
 
-function SectionCard({ title, subtitle, children }) {
+/**
+ * Kartu section.
+ *
+ * Sengaja TANPA `overflow-hidden`: pemilih produk dan `Select` cabang di
+ * dalamnya diposisikan `absolute`, dan `overflow-hidden` akan memotongnya di
+ * batas kartu berapa pun z-index-nya — clipping terjadi sebelum z-index
+ * dievaluasi. Sudut membulat header tetap rapi lewat `rounded-t-2xl`.
+ */
+function SectionCard({ title, subtitle, required, children }) {
     return (
-        <div className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
-            <div className="border-b border-border bg-muted/50 px-6 py-4">
-                <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <div className="rounded-2xl border border-border bg-card shadow-sm">
+            <div className="rounded-t-2xl border-b border-border bg-muted/50 px-6 py-4">
+                <h3 className="text-sm font-semibold text-foreground">
+                    {title} {required && <span className="text-destructive">*</span>}
+                </h3>
                 {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
             </div>
             <div className="p-6">{children}</div>
@@ -344,11 +402,12 @@ function SectionCard({ title, subtitle, children }) {
     );
 }
 
-function Field({ label, required, error, children }) {
+function Field({ label, required, hint, error, children }) {
     return (
         <div>
             <label className="mb-1 block text-sm font-medium text-foreground">
                 {label} {required && <span className="text-destructive">*</span>}
+                {hint && <span className="ml-1 text-xs font-normal text-muted-foreground">{hint}</span>}
             </label>
             {children}
             {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
@@ -356,6 +415,9 @@ function Field({ label, required, error, children }) {
     );
 }
 
+// `border` (lebar) wajib ditulis — tanpa itu `border-input` hanya menyetel
+// warna sementara lebarnya tetap 0, jadi border tidak pernah tampil. Padding
+// juga tidak ada sebelumnya, sehingga teks input menempel ke tepi.
 function inputCls(hasError) {
-    return `block w-full rounded-xl border-input bg-background text-foreground text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 ${hasError ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : ''}`;
+    return `block w-full rounded-xl border bg-background py-2.5 px-3.5 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground focus:ring-2 ${hasError ? 'border-destructive focus:border-destructive focus:ring-destructive/20' : 'border-input focus:border-ring focus:ring-ring/20'}`;
 }

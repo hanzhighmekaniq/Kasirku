@@ -38,18 +38,26 @@ const Trigger = ({ children }) => {
 const Content = ({
     align = 'right',
     width = '48',
+    dropUp = false,
+    radiusClasses = 'rounded-md',
     contentClasses = 'py-1 bg-popover text-popover-foreground',
     children,
 }) => {
     const { open, setOpen } = useContext(DropDownContext);
 
-    let alignmentClasses = 'origin-top';
+    let alignmentClasses = dropUp ? 'origin-bottom' : 'origin-top';
 
     if (align === 'left') {
-        alignmentClasses = 'ltr:origin-top-left rtl:origin-top-right start-0';
+        alignmentClasses = dropUp
+            ? 'ltr:origin-bottom-left rtl:origin-bottom-right start-0'
+            : 'ltr:origin-top-left rtl:origin-top-right start-0';
     } else if (align === 'right') {
-        alignmentClasses = 'ltr:origin-top-right rtl:origin-top-left end-0';
+        alignmentClasses = dropUp
+            ? 'ltr:origin-bottom-right rtl:origin-bottom-left end-0'
+            : 'ltr:origin-top-right rtl:origin-top-left end-0';
     }
+
+    const verticalClasses = dropUp ? 'bottom-full mb-2' : 'mt-2';
 
     let widthClasses = '';
 
@@ -61,6 +69,8 @@ const Content = ({
         widthClasses = 'w-64';
     } else if (width === '72') {
         widthClasses = 'w-72';
+    } else if (width === 'full') {
+        widthClasses = 'w-full';
     }
 
     return (
@@ -75,12 +85,12 @@ const Content = ({
                 leaveTo="opacity-0 scale-95"
             >
                 <div
-                    className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
+                    className={`absolute z-50 shadow-lg ${radiusClasses} ${verticalClasses} ${alignmentClasses} ${widthClasses}`}
                     onClick={() => setOpen(false)}
                 >
                     <div
                         className={
-                            `rounded-md border border-border ` +
+                            `border border-border ${radiusClasses} ` +
                             contentClasses
                         }
                     >

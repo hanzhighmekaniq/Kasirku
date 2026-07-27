@@ -1,10 +1,45 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import { Eye, Plus, Search } from "lucide-react";
+import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import PageHeader from "@/Components/PageHeader";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
+
+function SupplierAvatar({ name }) {
+    return (
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-sm">
+            {name.charAt(0).toUpperCase()}
+        </div>
+    );
+}
+
+function CountBadge({ value, tone = "primary", label }) {
+    const tones = {
+        primary: "bg-primary/10 text-primary",
+        success: "bg-success/10 text-success",
+    };
+
+    return (
+        <span
+            className={`inline-flex min-w-[28px] items-center justify-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold ${tones[tone]}`}
+        >
+            {value ?? 0}
+            {label && <span className="font-medium">{label}</span>}
+        </span>
+    );
+}
+
+function StatCard({ label, value, accent }) {
+    return (
+        <div
+            className={`rounded-2xl border border-border bg-card p-4 shadow-sm border-l-4 ${accent}`}
+        >
+            <p className="text-xs font-medium text-muted-foreground">{label}</p>
+            <p className="mt-1 text-xl font-bold text-foreground">{value}</p>
+        </div>
+    );
+}
 
 export default function Index({ suppliers, stats }) {
     const { flash } = usePage().props;
@@ -88,38 +123,26 @@ export default function Index({ suppliers, stats }) {
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl border border-border border-l-4 border-l-muted-foreground/30 bg-card p-4 shadow-sm">
-                    <p className="text-xs font-medium text-muted-foreground">
-                        Total Supplier
-                    </p>
-                    <p className="mt-1 text-xl font-bold text-foreground">
-                        {stats.total}
-                    </p>
-                </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
-                    <p className="text-xs font-medium text-muted-foreground">
-                        Total Produk
-                    </p>
-                    <p className="mt-1 text-xl font-bold text-foreground">
-                        {stats.total_products}
-                    </p>
-                </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-blue-400 bg-card p-4 shadow-sm">
-                    <p className="text-xs font-medium text-muted-foreground">
-                        Total Pembelian
-                    </p>
-                    <p className="mt-1 text-xl font-bold text-foreground">
-                        {stats.total_purchases}
-                    </p>
-                </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 shadow-sm">
-                    <p className="text-xs font-medium text-muted-foreground">
-                        Nilai Pembelian
-                    </p>
-                    <p className="mt-1 text-xl font-bold text-foreground">
-                        {fmtCurrency(stats.total_purchase_value)}
-                    </p>
-                </div>
+                <StatCard
+                    label="Total Supplier"
+                    value={stats.total}
+                    accent="border-l-muted-foreground/30"
+                />
+                <StatCard
+                    label="Total Produk"
+                    value={stats.total_products}
+                    accent="border-l-success"
+                />
+                <StatCard
+                    label="Total Pembelian"
+                    value={stats.total_purchases}
+                    accent="border-l-primary"
+                />
+                <StatCard
+                    label="Nilai Pembelian"
+                    value={fmtCurrency(stats.total_purchase_value)}
+                    accent="border-l-warning"
+                />
             </div>
 
             {/* Main Content Area */}
@@ -136,7 +159,7 @@ export default function Index({ suppliers, stats }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nama, kode, telepon, email..."
-                                className="block w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring"
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                         <p className="mt-2 text-xs text-muted-foreground">
@@ -150,15 +173,15 @@ export default function Index({ suppliers, stats }) {
                             </span>
                         </p>
                     </div>
-                    <div className="flex items-center self-start sm:self-auto">
-                        <Button
-                            as={Link}
-                            href={route("admin.suppliers.create")}
-                            icon={Plus}
-                        >
-                            Tambah Supplier
-                        </Button>
-                    </div>
+                    {/* Di mobile dipindah ke FAB kanan bawah */}
+                    <Button
+                        as={Link}
+                        href={route("admin.suppliers.create")}
+                        icon={Plus}
+                        className="hidden sm:inline-flex sm:w-auto"
+                    >
+                        Tambah Supplier
+                    </Button>
                 </div>
 
                 {filtered.length === 0 ? (
@@ -188,154 +211,251 @@ export default function Index({ suppliers, stats }) {
                                 ? "Coba kata kunci lain."
                                 : "Mulai dengan menambahkan supplier pertama."}
                         </p>
+                        {!search && (
+                            <Button
+                                as={Link}
+                                href={route("admin.suppliers.create")}
+                                icon={Plus}
+                                className="mt-5"
+                            >
+                                Tambah Supplier
+                            </Button>
+                        )}
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
-                                <tr>
-                                    <th className="px-6 py-3.5 font-semibold">
-                                        Supplier
-                                    </th>
-                                    <th className="px-6 py-3.5 font-semibold">
-                                        Kontak
-                                    </th>
-                                    <th className="px-6 py-3.5 font-semibold">
-                                        Telepon
-                                    </th>
-                                    <th className="px-6 py-3.5 text-center font-semibold">
-                                        Produk
-                                    </th>
-                                    <th className="px-6 py-3.5 text-center font-semibold">
-                                        Pembelian
-                                    </th>
-                                    <th className="px-6 py-3.5 text-right font-semibold">
-                                        Aksi
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border bg-background">
-                                {filtered.map((s) => (
-                                    <tr
-                                        key={s.id}
-                                        className="transition hover:bg-[rgb(var(--color-table-hover))]"
-                                    >
-                                        <td className="px-6 py-3.5">
-                                            <Link
-                                                href={route(
-                                                    "admin.suppliers.show",
-                                                    s.id,
-                                                )}
-                                                className="flex items-center gap-3"
-                                            >
-                                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary text-xs font-bold text-white shadow-sm">
-                                                    {s.name
-                                                        .charAt(0)
-                                                        .toUpperCase()}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="font-semibold text-foreground hover:text-primary transition">
-                                                        {s.name}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {s.code}
-                                                    </p>
-                                                </div>
-                                            </Link>
-                                        </td>
-                                        <td className="px-6 py-3.5 text-muted-foreground">
-                                            {s.contact_person || (
-                                                <span className="text-muted-foreground/50">
-                                                    -
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-3.5 text-muted-foreground">
-                                            {s.phone ? (
-                                                <a
-                                                    href={`tel:${s.phone}`}
-                                                    className="hover:text-primary transition"
-                                                >
-                                                    {s.phone}
-                                                </a>
-                                            ) : (
-                                                <span className="text-muted-foreground/50">
-                                                    -
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-3.5 text-center">
-                                            <span className="inline-flex min-w-[28px] justify-center rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-600">
-                                                {s.products_count ?? 0}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-3.5 text-center">
-                                            <span className="inline-flex min-w-[28px] justify-center rounded-lg bg-success/10 px-2 py-0.5 text-xs font-semibold text-emerald-600">
-                                                {s.purchases_count ?? 0}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-3.5 text-right">
-                                            <div className="flex items-center justify-end gap-1">
+                    <>
+                        {/* Desktop table */}
+                        <div className="hidden overflow-x-auto md:block">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
+                                    <tr>
+                                        <th className="px-6 py-3.5 font-semibold">
+                                            Supplier
+                                        </th>
+                                        <th className="px-6 py-3.5 font-semibold">
+                                            Kontak
+                                        </th>
+                                        <th className="px-6 py-3.5 font-semibold">
+                                            Telepon
+                                        </th>
+                                        <th className="px-6 py-3.5 text-center font-semibold">
+                                            Produk
+                                        </th>
+                                        <th className="px-6 py-3.5 text-center font-semibold">
+                                            Pembelian
+                                        </th>
+                                        <th className="px-6 py-3.5 text-right font-semibold">
+                                            Aksi
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border bg-background">
+                                    {filtered.map((s) => (
+                                        <tr
+                                            key={s.id}
+                                            className="transition hover:bg-[rgb(var(--color-table-hover))]"
+                                        >
+                                            <td className="px-6 py-3.5">
                                                 <Link
                                                     href={route(
                                                         "admin.suppliers.show",
                                                         s.id,
                                                     )}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-muted-foreground"
-                                                    title="Lihat Detail"
+                                                    className="group flex items-center gap-3"
                                                 >
-                                                    <Eye className="h-5 w-5" strokeWidth={1.8} />
+                                                    <SupplierAvatar
+                                                        name={s.name}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold text-foreground transition group-hover:text-primary">
+                                                            {s.name}
+                                                        </p>
+                                                        <p className="font-mono text-xs text-muted-foreground">
+                                                            {s.code}
+                                                        </p>
+                                                    </div>
+                                                </Link>
+                                            </td>
+                                            <td className="px-6 py-3.5 text-muted-foreground">
+                                                {s.contact_person || (
+                                                    <span className="text-muted-foreground/50">
+                                                        -
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-3.5 text-muted-foreground">
+                                                {s.phone ? (
+                                                    <a
+                                                        href={`tel:${s.phone}`}
+                                                        className="transition hover:text-primary"
+                                                    >
+                                                        {s.phone}
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-muted-foreground/50">
+                                                        -
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-3.5 text-center">
+                                                <CountBadge
+                                                    value={s.products_count}
+                                                    tone="primary"
+                                                />
+                                            </td>
+                                            <td className="px-6 py-3.5 text-center">
+                                                <CountBadge
+                                                    value={s.purchases_count}
+                                                    tone="success"
+                                                />
+                                            </td>
+                                            <td className="px-6 py-3.5 text-right">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Link
+                                                        href={route(
+                                                            "admin.suppliers.show",
+                                                            s.id,
+                                                        )}
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+                                                        title="Lihat Detail"
+                                                    >
+                                                        <Eye
+                                                            className="h-5 w-5"
+                                                            strokeWidth={1.7}
+                                                        />
+                                                    </Link>
+                                                    <Link
+                                                        href={route(
+                                                            "admin.suppliers.edit",
+                                                            s.id,
+                                                        )}
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-warning/10 hover:text-warning"
+                                                        title="Edit"
+                                                    >
+                                                        <Pencil
+                                                            className="h-5 w-5"
+                                                            strokeWidth={1.7}
+                                                        />
+                                                    </Link>
+                                                    <button
+                                                        onClick={() =>
+                                                            setConfirmDelete(s)
+                                                        }
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                                                        title="Hapus"
+                                                    >
+                                                        <Trash2
+                                                            className="h-5 w-5"
+                                                            strokeWidth={1.7}
+                                                        />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile cards */}
+                        <div className="divide-y divide-border md:hidden">
+                            {filtered.map((s) => (
+                                <div key={s.id} className="p-4">
+                                    <div className="flex items-start gap-3">
+                                        <SupplierAvatar name={s.name} />
+                                        <div className="min-w-0 flex-1">
+                                            <Link
+                                                href={route(
+                                                    "admin.suppliers.show",
+                                                    s.id,
+                                                )}
+                                                className="block truncate font-semibold text-foreground transition hover:text-primary"
+                                            >
+                                                {s.name}
+                                            </Link>
+                                            <p className="font-mono text-xs text-muted-foreground">
+                                                {s.code}
+                                            </p>
+
+                                            {s.contact_person && (
+                                                <p className="mt-1 truncate text-sm text-muted-foreground">
+                                                    {s.contact_person}
+                                                </p>
+                                            )}
+                                            {s.phone && (
+                                                <a
+                                                    href={`tel:${s.phone}`}
+                                                    className="mt-0.5 block truncate text-sm text-primary"
+                                                >
+                                                    {s.phone}
+                                                </a>
+                                            )}
+
+                                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                <CountBadge
+                                                    value={s.products_count}
+                                                    tone="primary"
+                                                    label="produk"
+                                                />
+                                                <CountBadge
+                                                    value={s.purchases_count}
+                                                    tone="success"
+                                                    label="pembelian"
+                                                />
+                                            </div>
+
+                                            {/* Aksi ikon 36px — sama seperti tabel desktop,
+                                                diperbesar supaya nyaman disentuh. */}
+                                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                                                <Link
+                                                    href={route(
+                                                        "admin.suppliers.show",
+                                                        s.id,
+                                                    )}
+                                                    title="Lihat Detail"
+                                                    aria-label="Lihat detail supplier"
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                                                >
+                                                    <Eye
+                                                        className="h-4 w-4"
+                                                        strokeWidth={1.7}
+                                                    />
                                                 </Link>
                                                 <Link
                                                     href={route(
                                                         "admin.suppliers.edit",
                                                         s.id,
                                                     )}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                                     title="Edit"
+                                                    aria-label="Edit supplier"
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-colors hover:border-warning/40 hover:bg-warning/10 hover:text-warning"
                                                 >
-                                                    <svg
-                                                        className="h-5 w-5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
+                                                    <Pencil
+                                                        className="h-4 w-4"
                                                         strokeWidth={1.7}
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-                                                        />
-                                                    </svg>
+                                                    />
                                                 </Link>
                                                 <button
+                                                    type="button"
                                                     onClick={() =>
                                                         setConfirmDelete(s)
                                                     }
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-destructive transition hover:bg-destructive/10"
                                                     title="Hapus"
+                                                    aria-label="Hapus supplier"
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
                                                 >
-                                                    <svg
-                                                        className="h-5 w-5"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
+                                                    <Trash2
+                                                        className="h-4 w-4"
                                                         strokeWidth={1.7}
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                                        />
-                                                    </svg>
+                                                    />
                                                 </button>
                                             </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
 
@@ -355,6 +475,18 @@ export default function Index({ suppliers, stats }) {
                     if (!processing) setConfirmDelete(null);
                 }}
             />
+
+            {/* FAB — mobile only. Disembunyikan saat modal terbuka supaya tidak
+                menimpa panelnya. */}
+            {!confirmDelete && (
+                <Button
+                    as={Link}
+                    href={route("admin.suppliers.create")}
+                    icon={Plus}
+                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl sm:hidden"
+                    title="Tambah Supplier"
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

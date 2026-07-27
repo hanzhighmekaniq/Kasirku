@@ -11,13 +11,14 @@ use App\Models\PlatformPaymentGateway;
 use App\Models\ProductStock;
 use App\Models\Sale;
 use App\Models\SalePayment;
-use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\StoreWallet;
 use App\Services\PaymentGateway\Exceptions\PaymentClientException;
 use App\Services\PaymentGateway\Exceptions\PaymentServerException;
 use App\Services\PaymentGateway\Exceptions\PaymentTimeoutException;
 use App\Services\PaymentGateway\PaymentGatewayFactory;
+use App\Services\Stock\StockMutation;
+use App\Services\Stock\StockService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -626,69 +627,44 @@ class PaymentGatewayController extends Controller
                 // Cek resep — bahan baku selalu product-level (variant_id=null, packaging_unit_id=null)
                 $product->load('recipes.rawMaterial.stocks');
                 if ($product->recipes->isNotEmpty()) {
-                    foreach ($product->recipes as $recipe) {
-                        $needed = $recipe->quantity * $item->quantity;
-                        if ($recipe->is_nullable) {
-                            $avail = $recipe->rawMaterial->stocks
-                                ->where('store_id', $sale->store_id)
-                                ->sum('quantity');
-                            if ($avail <= 0) {
-                                continue;
-                            }
-                        }
-                        $stock = ProductStock::firstOrCreate(
-                            [
-                                'product_id' => $recipe->raw_material_id,
-                                'variant_id' => null,
-                                'packaging_unit_id' => null,
-                                'store_id' => $sale->store_id,
-                            ],
-                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
-                        );
-                        $stock->decrement('quantity', $needed);
-
-                        StockMovement::create([
-                            'product_id' => $recipe->raw_material_id,
-                            'store_id' => $sale->store_id,
-                            'reference_type' => Sale::class,
-                            'reference_id' => $sale->id,
-                            'movement_type' => 'sale_out',
-                            'quantity' => $needed,
-                            'unit_cost' => $recipe->rawMaterial->cost_price ?? 0,
-                            'reference_no' => $pgTrx->external_id,
-                            'notes' => "PG {$pgTrx->provider} #{$pgTrx->external_id} — bahan untuk {$product->name}",
-                            'moved_at' => $now,
-                        ]);
-                    }
-                } elseif ($product->track_stock) {
-                    // Bucket-aware: potong stok dari bucket yang tepat
-                    $stock = ProductStock::firstOrCreate(
-                        [
-                            'product_id' => $item->product_id,
-                            'variant_id' => $item->variant_id,
-                            'packaging_unit_id' => $item->packaging_unit_id,
-                            'store_id' => $sale->store_id,
-                        ],
-                        ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
+                    app(StockService::class)->decreaseRecipeIngredients(
+                        item: ['product_id' => $item->product_id, 'quantity' => $item->quantity],
+                        product: $product,
+                        referenceType: Sale::class,
+                        referenceId: $sale->id,
+                        referenceNo: $pgTrx->external_id,
+                        storeId: $sale->store_id,
+                        branchId: $sale->branch_id,
                     );
-                    $stock->decrement('quantity', $item->quantity);
-
+                } elseif ($product->track_stock) {
                     $unitLabel = $item->unit_name ? " ({$item->unit_name})" : '';
 
-                    StockMovement::create([
+                    $existing = ProductStock::where([
                         'product_id' => $item->product_id,
                         'variant_id' => $item->variant_id,
                         'packaging_unit_id' => $item->packaging_unit_id,
                         'store_id' => $sale->store_id,
-                        'reference_type' => Sale::class,
-                        'reference_id' => $sale->id,
-                        'movement_type' => 'sale_out',
-                        'quantity' => $item->quantity,
-                        'unit_cost' => $stock->average_cost > 0 ? $stock->average_cost : ($product->cost_price ?? 0),
-                        'reference_no' => $pgTrx->external_id,
-                        'notes' => "PG {$pgTrx->provider} #{$pgTrx->external_id} — {$item->quantity}x{$unitLabel} {$product->name}",
-                        'moved_at' => $now,
-                    ]);
+                        'branch_id' => $sale->branch_id,
+                    ])->first();
+
+                    $unitCost = $existing && $existing->average_cost > 0
+                        ? $existing->average_cost
+                        : ($product->cost_price ?? 0);
+
+                    app(StockService::class)->decrease(new StockMutation(
+                        productId: $item->product_id,
+                        variantId: $item->variant_id,
+                        packagingUnitId: $item->packaging_unit_id,
+                        storeId: $sale->store_id,
+                        branchId: $sale->branch_id,
+                        quantity: (float) $item->quantity,
+                        unitCost: (float) $unitCost,
+                        movementType: 'sale_out',
+                        referenceType: Sale::class,
+                        referenceId: $sale->id,
+                        referenceNo: $pgTrx->external_id,
+                        notes: "PG {$pgTrx->provider} #{$pgTrx->external_id} — {$item->quantity}x{$unitLabel} {$product->name}",
+                    ));
                 }
             }
 

@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Models\ProductStock;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
 use App\Models\StockMovement;
 use App\Models\Store;
+use App\Services\Stock\StockMutation;
+use App\Services\Stock\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -326,18 +327,33 @@ class PurchaseReturnController extends Controller
             return;
         }
 
-        $qtyChange = $isReversal ? $quantity : -$quantity;
+        // Retur dicatat dalam satuan beli (mengikuti baris pembelian), tapi
+        // saldo stok bahan baku FnB disimpan dalam satuan pakai — samakan dulu.
+        $stockQty = $product->toBaseUnit((float) $quantity);
 
-        // Bucket-aware: key lengkap dengan variant_id + packaging_unit_id
-        $stock = ProductStock::firstOrCreate(
-            [
-                'product_id' => $productId,
-                'variant_id' => $variantId,
-                'packaging_unit_id' => $packagingUnitId,
-                'store_id' => $purchase->store_id,
-            ],
-            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
+        $mutation = new StockMutation(
+            productId: $productId,
+            variantId: $variantId,
+            packagingUnitId: $packagingUnitId,
+            storeId: $purchase->store_id,
+            branchId: $purchase->branch_id,
+            quantity: $stockQty,
+            movementType: $isReversal ? 'purchase_return_cancel' : 'purchase_return',
+            referenceType: Purchase::class,
+            referenceId: $purchase->id,
+            referenceNo: $purchase->purchase_no,
+            notes: $isReversal
+                ? "Pembatalan retur pembelian #{$purchase->purchase_no}"
+                : "Retur pembelian #{$purchase->purchase_no}",
         );
-        $stock->increment('quantity', $qtyChange);
+
+        $stockService = app(StockService::class);
+        if ($isReversal) {
+            // Batalkan retur: kembalikan stok ke kondisi sebelum retur
+            $stockService->increase($mutation);
+        } else {
+            // Retur: kurangi stok (barang dikembalikan ke supplier)
+            $stockService->decrease($mutation);
+        }
     }
 }

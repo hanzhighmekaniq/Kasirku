@@ -147,7 +147,7 @@ class SplitBillController extends Controller
                 + ($validated['shipping_amount'] ?? 0);
 
             // Pre-validate stock
-            $this->validateStockForItems($items, $storeId);
+            $this->validateStockForItems($items, $storeId, $branchId);
 
             // Create Sale (pending, no stock deduction yet)
             $sale = Sale::create([

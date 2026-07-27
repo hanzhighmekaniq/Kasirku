@@ -69,8 +69,7 @@ test('checkout fails when stock is insufficient for tracked product', function (
 
     ProductStock::create([
         'product_id' => $product->id,
-        'store_id' => $store->id,
-        'quantity' => 5,
+        'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 5,
         'reserved_quantity' => 0,
     ]);
 
@@ -172,8 +171,7 @@ test('checkout succeeds when stock is sufficient', function () {
 
     ProductStock::create([
         'product_id' => $product->id,
-        'store_id' => $store->id,
-        'quantity' => 20,
+        'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 20,
         'reserved_quantity' => 0,
     ]);
 

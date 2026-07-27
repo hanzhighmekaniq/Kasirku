@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\BuildsStockBucketOptions;
 use App\Http\Controllers\Concerns\HasStoreScope;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
-use App\Models\Product;
 use App\Models\ProductStock;
-use App\Models\StockMovement;
 use App\Models\StockTransfer;
 use App\Models\StockTransferItem;
+use App\Services\Stock\StockMutation;
+use App\Services\Stock\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class StockTransferController extends Controller
 {
+    use BuildsStockBucketOptions;
     use HasStoreScope;
 
     public function index()
@@ -46,16 +48,7 @@ class StockTransferController extends Controller
         [$storeId] = $this->storeScope();
 
         return Inertia::render('Admin/Stock/Transfer/Create', [
-            'products' => Product::forStore($storeId)
-                ->with([
-                    'stocks' => function ($q) use ($storeId) {
-                        $q->where('store_id', $storeId);
-                    },
-                ])
-                ->where('is_active', true)
-                ->where('track_stock', true)
-                ->orderBy('name')
-                ->get(),
+            'buckets' => $this->stockBucketOptions($storeId),
             'branches' => Branch::where('store_id', $storeId)
                 ->where('is_active', true)
                 ->get(),
@@ -172,76 +165,52 @@ class StockTransferController extends Controller
             $stockTransfer->update(['status' => $request->status]);
 
             if ($request->status === 'received') {
+                $stockService = app(StockService::class);
+
                 foreach ($stockTransfer->items as $item) {
-                    $variantId = $item->variant_id;
-                    $packagingUnitId = $item->packaging_unit_id;
-
-                    // 1. Kurangi stok di cabang asal (from_branch)
-                    $fromStock = ProductStock::firstOrCreate(
-                        [
-                            'product_id' => $item->product_id,
-                            'variant_id' => $variantId,
-                            'packaging_unit_id' => $packagingUnitId,
-                            'store_id' => $stockTransfer->store_id,
-                        ],
-                        [
-                            'quantity' => 0,
-                            'reserved_quantity' => 0,
-                            'average_cost' => 0,
-                        ],
-                    );
-                    $fromStock->decrement('quantity', $item->quantity);
-
-                    // 2. Tambah stok di cabang tujuan (to_branch)
-                    $toStock = ProductStock::firstOrCreate(
-                        [
-                            'product_id' => $item->product_id,
-                            'variant_id' => $variantId,
-                            'packaging_unit_id' => $packagingUnitId,
-                            'store_id' => $stockTransfer->store_id,
-                        ],
-                        [
-                            'quantity' => 0,
-                            'reserved_quantity' => 0,
-                            'average_cost' => $fromStock->average_cost,
-                        ],
-                    );
-                    $toStock->increment('quantity', $item->quantity);
-
-                    // 3. Catat StockMovement untuk audit trail
-                    StockMovement::create([
+                    // Baca average_cost cabang asal sebelum dipotong,
+                    // supaya nilai modal ikut berpindah ke cabang tujuan.
+                    $fromExisting = ProductStock::where([
                         'product_id' => $item->product_id,
-                        'variant_id' => $variantId,
-                        'packaging_unit_id' => $packagingUnitId,
+                        'variant_id' => $item->variant_id,
+                        'packaging_unit_id' => $item->packaging_unit_id,
                         'store_id' => $stockTransfer->store_id,
                         'branch_id' => $stockTransfer->from_branch_id,
-                        'reference_type' => StockTransfer::class,
-                        'reference_id' => $stockTransfer->id,
-                        'movement_type' => 'transfer_out',
-                        'quantity' => $item->quantity,
-                        'unit_cost' => $fromStock->average_cost,
-                        'reference_no' => $stockTransfer->transfer_no,
-                        'notes' => 'Transfer keluar ke '.
-                            $stockTransfer->toBranch->name,
-                        'moved_at' => now(),
-                    ]);
+                    ])->first();
 
-                    StockMovement::create([
-                        'product_id' => $item->product_id,
-                        'variant_id' => $variantId,
-                        'packaging_unit_id' => $packagingUnitId,
-                        'store_id' => $stockTransfer->store_id,
-                        'branch_id' => $stockTransfer->to_branch_id,
-                        'reference_type' => StockTransfer::class,
-                        'reference_id' => $stockTransfer->id,
-                        'movement_type' => 'transfer_in',
-                        'quantity' => $item->quantity,
-                        'unit_cost' => $fromStock->average_cost,
-                        'reference_no' => $stockTransfer->transfer_no,
-                        'notes' => 'Transfer masuk dari '.
-                            $stockTransfer->fromBranch->name,
-                        'moved_at' => now(),
-                    ]);
+                    $unitCost = (float) ($fromExisting?->average_cost ?? 0);
+
+                    // 1. Kurangi stok di cabang asal
+                    $stockService->decrease(new StockMutation(
+                        productId: $item->product_id,
+                        variantId: $item->variant_id,
+                        packagingUnitId: $item->packaging_unit_id,
+                        storeId: $stockTransfer->store_id,
+                        branchId: $stockTransfer->from_branch_id,
+                        quantity: (float) $item->quantity,
+                        unitCost: $unitCost,
+                        movementType: 'transfer_out',
+                        referenceType: StockTransfer::class,
+                        referenceId: $stockTransfer->id,
+                        referenceNo: $stockTransfer->transfer_no,
+                        notes: 'Transfer keluar ke '.$stockTransfer->toBranch->name,
+                    ));
+
+                    // 2. Tambah stok di cabang tujuan (modal ikut dari cabang asal)
+                    $stockService->increase(new StockMutation(
+                        productId: $item->product_id,
+                        variantId: $item->variant_id,
+                        packagingUnitId: $item->packaging_unit_id,
+                        storeId: $stockTransfer->store_id,
+                        branchId: $stockTransfer->to_branch_id,
+                        quantity: (float) $item->quantity,
+                        unitCost: $unitCost,
+                        movementType: 'transfer_in',
+                        referenceType: StockTransfer::class,
+                        referenceId: $stockTransfer->id,
+                        referenceNo: $stockTransfer->transfer_no,
+                        notes: 'Transfer masuk dari '.$stockTransfer->fromBranch->name,
+                    ));
                 }
             }
 

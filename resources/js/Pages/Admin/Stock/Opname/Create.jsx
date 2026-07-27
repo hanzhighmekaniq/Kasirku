@@ -1,11 +1,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Trash2, X } from 'lucide-react';
+import StockBucketPicker, { BucketItemLabel } from '@/Components/ui/StockBucketPicker';
+import { purchaseUnitHint, usesUnitConversion } from '@/Utils/unitConversion';
 
-export default function Create({ products }) {
+const FORM_ID = 'stock-opname-form';
+
+export default function Create({ buckets = [], currentBranchId = null }) {
     const { flash } = usePage().props;
-    const [selectedProduct, setSelectedProduct] = useState('');
 
     const { data, setData, post, processing, errors } = useForm({
         opname_date: new Date().toISOString().split('T')[0],
@@ -13,24 +16,39 @@ export default function Create({ products }) {
         items: [],
     });
 
-    const addItem = () => {
-        if (!selectedProduct) return;
-        const product = products.find((p) => p.id === Number(selectedProduct));
-        if (!product) return;
-        if (data.items.some((i) => i.product_id === product.id)) return;
+    const usedKeys = useMemo(() => new Set(data.items.map((i) => i.key)), [data.items]);
 
-        const currentStock = product.stocks?.reduce((sum, s) => sum + (s.quantity || 0), 0) || 0;
+    /**
+     * Satu item = satu bucket (produk + variant + satuan) di cabang aktif,
+     * bukan satu produk. Opname yang hanya mengirim product_id akan mengoreksi
+     * bucket dasar, yang untuk produk bervariant tidak pernah dipakai berjualan.
+     */
+    const addItem = (bucket) => {
+        if (usedKeys.has(bucket.key)) return;
+
+        const currentStock = bucket.stock_by_branch?.[String(currentBranchId)] ?? 0;
 
         setData('items', [...data.items, {
-            product_id: product.id,
-            product_name: product.name,
-            product_sku: product.sku,
+            key: bucket.key,
+            product_id: bucket.product_id,
+            variant_id: bucket.variant_id,
+            packaging_unit_id: bucket.packaging_unit_id,
+            product_name: bucket.product_name,
+            product_sku: bucket.sku,
+            variant_name: bucket.variant_name,
+            unit_name: bucket.unit_name,
+            conversion_qty: bucket.conversion_qty,
+            // Disalin supaya baris item bisa menampilkan satuan tanpa
+            // mencari ulang produknya di daftar.
+            type: bucket.type,
+            unit: bucket.unit,
+            base_unit: bucket.base_unit,
+            base_unit_conversion: bucket.base_unit_conversion,
             system_qty: currentStock,
             counted_qty: currentStock,
-            unit_cost: Number(product.cost_price) || 0,
+            unit_cost: Number(bucket.cost_price) || 0,
             notes: '',
         }]);
-        setSelectedProduct('');
     };
 
     const removeItem = (idx) => {
@@ -86,14 +104,14 @@ export default function Create({ products }) {
                 <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
             )}
 
-            <form onSubmit={submit}>
+            <form id={FORM_ID} onSubmit={submit}>
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                     {/* Main */}
                     <div className="space-y-5 lg:col-span-2">
                         <SectionCard title="Informasi Opname">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <Field label="Tanggal" required error={errors.opname_date}>
-                                    <input type="date" value={data.opname_date} onChange={(e) => setData('opname_date', e.target.value)} className={inputCls(!!errors.opname_date)} />
+                                    <input type="date" required value={data.opname_date} onChange={(e) => setData('opname_date', e.target.value)} className={inputCls(!!errors.opname_date)} />
                                 </Field>
                                 <div />
                             </div>
@@ -106,19 +124,20 @@ export default function Create({ products }) {
 
                         <SectionCard title="Item Opname" subtitle="Hitung fisik dan masukkan jumlah aktual">
                             <div className="space-y-4">
-                                <div className="flex items-end gap-3">
-                                    <div className="flex-1">
-                                        <label className="mb-1 block text-sm font-medium text-foreground">Produk</label>
-                                        <select value={selectedProduct} onChange={(e) => setSelectedProduct(e.target.value)} className={inputCls(false)}>
-                                            <option value="">Pilih Produk</option>
-                                            {products.filter((p) => !data.items.some((i) => i.product_id === p.id)).map((p) => (
-                                                <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <button type="button" onClick={addItem} disabled={!selectedProduct} className="rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50">
-                                        + Tambah
-                                    </button>
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-foreground">
+                                        Produk / Variant / Satuan
+                                    </label>
+                                    <StockBucketPicker
+                                        buckets={buckets}
+                                        branchId={currentBranchId}
+                                        excludeKeys={usedKeys}
+                                        onSelect={addItem}
+                                    />
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Stok disimpan terpisah per variant dan per satuan — hitung
+                                        fisiknya juga per baris ini.
+                                    </p>
                                 </div>
 
                                 {errors.items && <p className="text-xs text-destructive">{typeof errors.items === 'string' ? errors.items : 'Minimal 1 item harus ditambahkan'}</p>}
@@ -132,24 +151,25 @@ export default function Create({ products }) {
                                         {data.items.map((item, idx) => {
                                             const diff = item.counted_qty - item.system_qty;
                                             return (
-                                                <div key={idx} className="rounded-xl border border-border bg-muted/50 px-4 py-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <div>
-                                                            <p className="text-sm font-medium text-foreground">{item.product_name}</p>
-                                                            <p className="text-xs text-muted-foreground">{item.product_sku}</p>
-                                                        </div>
-                                                        <button type="button" onClick={() => removeItem(idx)} className="rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
+                                                <div key={item.key} className="rounded-xl border border-border bg-muted/50 px-4 py-3">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <BucketItemLabel item={item} />
+                                                        <button type="button" onClick={() => removeItem(idx)} className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
                                                             <Trash2 className="h-4 w-4" strokeWidth={1.8} />
                                                         </button>
                                                     </div>
                                                     <div className="mt-3 grid grid-cols-3 gap-3">
                                                         <div>
-                                                            <label className="mb-1 block text-xs text-muted-foreground">Stok Sistem</label>
-                                                            <input type="number" value={item.system_qty} onChange={(e) => updateItem(idx, 'system_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-input bg-background px-2 text-center text-xs text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                            <label className="mb-1 block text-xs text-muted-foreground">
+                                                                Stok Sistem <span className="text-destructive">*</span>
+                                                            </label>
+                                                            <input type="number" required value={item.system_qty} onChange={(e) => updateItem(idx, 'system_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-input bg-background px-2 text-center text-xs text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20" />
                                                         </div>
                                                         <div>
-                                                            <label className="mb-1 block text-xs text-muted-foreground">Hitung Fisik</label>
-                                                            <input type="number" value={item.counted_qty} onChange={(e) => updateItem(idx, 'counted_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-input bg-background px-2 text-center text-xs text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                            <label className="mb-1 block text-xs text-muted-foreground">
+                                                                Hitung Fisik <span className="text-destructive">*</span>
+                                                            </label>
+                                                            <input type="number" required value={item.counted_qty} onChange={(e) => updateItem(idx, 'counted_qty', e.target.value)} min="0" className="h-9 w-full rounded-lg border border-input bg-background px-2 text-center text-xs text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20" />
                                                         </div>
                                                         <div>
                                                             <label className="mb-1 block text-xs text-muted-foreground">Selisih</label>
@@ -158,8 +178,30 @@ export default function Create({ products }) {
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    {/* Bahan baku berkonversi: stok disimpan
+                                                        per satuan pakai, jadi hitung fisik
+                                                        juga dicatat dalam satuan itu. Tidak
+                                                        berlaku saat bucket-nya satuan kemasan. */}
+                                                    {!item.packaging_unit_id && usesUnitConversion(item) && (
+                                                        <p className="mt-2 text-xs text-muted-foreground">
+                                                            Semua angka dalam <strong>{item.base_unit}</strong>
+                                                            {purchaseUnitHint(item, item.counted_qty) && (
+                                                                <> · hitung fisik {purchaseUnitHint(item, item.counted_qty)}</>
+                                                            )}
+                                                        </p>
+                                                    )}
+                                                    {item.packaging_unit_id && (
+                                                        <p className="mt-2 text-xs text-muted-foreground">
+                                                            Semua angka dalam <strong>{item.unit_name}</strong>
+                                                            {item.conversion_qty
+                                                                ? ` (1 ${item.unit_name} = ${item.conversion_qty} ${item.unit || 'pcs'})`
+                                                                : ''}
+                                                        </p>
+                                                    )}
                                                     <div className="mt-2 flex items-center justify-between text-xs">
-                                                        <span className="text-muted-foreground">Modal: {fmtCurrency(item.unit_cost)}/unit</span>
+                                                        <span className="text-muted-foreground">
+                                                            Modal: {fmtCurrency(item.unit_cost)}/{item.unit_name ?? item.base_unit ?? item.unit ?? 'unit'}
+                                                        </span>
                                                         {diff !== 0 && (
                                                             <span className={`font-medium ${diff < 0 ? 'text-destructive' : 'text-success'}`}>
                                                                 {diff < 0 ? '-' : '+'}{fmtCurrency(Math.abs(diff) * item.unit_cost)}
@@ -208,7 +250,8 @@ export default function Create({ products }) {
                             </dl>
                         </SectionCard>
 
-                        <div className="flex flex-col gap-2">
+                        {/* Aksi — desktop; di mobile dipindah ke FAB kanan bawah */}
+                        <div className="hidden flex-col gap-2 sm:flex">
                             <button type="submit" disabled={processing || data.items.length === 0} className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition hover:bg-primary/90 disabled:opacity-60">
                                 {processing ? 'Menyimpan...' : 'Simpan Opname'}
                             </button>
@@ -219,14 +262,52 @@ export default function Create({ products }) {
                     </div>
                 </div>
             </form>
+
+            {/* FAB — mobile only */}
+            <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 sm:hidden">
+                <Link
+                    href={route('admin.stock-opnames.index')}
+                    className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-border transition hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/30"
+                    title="Batal"
+                >
+                    <X className="h-5 w-5" strokeWidth={2} />
+                </Link>
+                <button
+                    type="submit"
+                    form={FORM_ID}
+                    disabled={processing || data.items.length === 0}
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/40 transition hover:bg-primary/90 hover:shadow-2xl disabled:opacity-60"
+                    title="Simpan Opname"
+                >
+                    {processing ? (
+                        <svg className="h-6 w-6 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                    ) : (
+                        <Check className="h-6 w-6" strokeWidth={2.5} />
+                    )}
+                </button>
+            </div>
+
+            {/* Spacer supaya konten tidak tertutup FAB di mobile */}
+            <div className="h-24 sm:hidden" />
         </AuthenticatedLayout>
     );
 }
 
+/**
+ * Kartu section.
+ *
+ * Sengaja TANPA `overflow-hidden`: dropdown `SearchableSelect` pemilih produk
+ * di dalamnya diposisikan `absolute`, dan `overflow-hidden` akan memotongnya
+ * di batas kartu berapa pun z-index-nya — clipping terjadi sebelum z-index
+ * dievaluasi. Sudut membulat header tetap rapi lewat `rounded-t-2xl`.
+ */
 function SectionCard({ title, subtitle, children }) {
     return (
-        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <div className="border-b border-border bg-muted/50 px-6 py-5">
+        <div className="rounded-2xl border border-border bg-card shadow-sm">
+            <div className="rounded-t-2xl border-b border-border bg-muted/50 px-6 py-5">
                 <h3 className="text-base font-semibold text-foreground">{title}</h3>
                 {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
             </div>

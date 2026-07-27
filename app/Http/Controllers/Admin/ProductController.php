@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -102,9 +103,29 @@ class ProductController extends Controller
         // Map stock ke collection yang sudah dipaginate
         // Hanya hitung base product stock (variant_id IS NULL) agar tidak double-count
         $paginated->getCollection()->transform(function ($product) {
-            $product->stock =
-                $product->stocks->whereNull('variant_id')->sum('quantity') -
-                $product->stocks->whereNull('variant_id')->sum('reserved_quantity');
+            $available = fn ($rows) => $rows->sum('quantity') - $rows->sum('reserved_quantity');
+            $baseRows = $product->stocks->whereNull('variant_id');
+
+            $product->stock = $available($baseRows);
+
+            // Stok bucket satuan dasar saja — $product->stock di atas ikut
+            // menjumlahkan bucket packaging unit, jadi tanpa ini rincian
+            // per-satuan di baris detail tidak akan cocok dengan totalnya.
+            $product->stock_base = $available($baseRows->whereNull('packaging_unit_id'));
+
+            // Stok per packaging unit, sumber angka untuk tombol "Atur Stok"
+            // dan "Beli" masing-masing satuan di baris detail.
+            $product->packagingUnits->each(function ($unit) use ($available, $baseRows) {
+                $unit->stock = $available($baseRows->where('packaging_unit_id', $unit->id));
+            });
+
+            $product->variants->each(function ($variant) use ($available) {
+                $variant->packagingUnits->each(function ($unit) use ($available, $variant) {
+                    $unit->stock = $available(
+                        $variant->stocks->where('packaging_unit_id', $unit->id),
+                    );
+                });
+            });
 
             return $product;
         });
@@ -420,28 +441,126 @@ class ProductController extends Controller
     }
 
     /**
-     * Aturan wajib yang hanya berlaku untuk kombinasi store type + tipe
-     * produk tertentu, jadi tidak bisa ditaruh di rule array biasa.
+     * Aturan validasi produk, dipakai bersama oleh store() dan update().
      *
-     * Bahan baku FnB wajib punya Satuan Pakai: tanpa itu konversi HPP resep
-     * jatuh ke cost_price mentah tanpa konversi satuan, dan hasilnya salah.
-     * Di store type lain field ini memang tidak dirender, jadi tidak dipaksa.
+     * Dijadikan satu supaya perbedaan aturan antara tambah dan edit tidak
+     * pernah terjadi diam-diam — sebelumnya dua array terpisah yang nyaris
+     * identik dan harus diubah berpasangan setiap kali ada field baru.
+     *
+     * @return array<string, mixed>
+     */
+    private function productRules(?Product $product = null): array
+    {
+        $storeId = session('current_store_id');
+
+        return [
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:2000',
+            // SKU unik PER TOKO. Kode internal tiap toko berdiri sendiri;
+            // dulu unik global sehingga toko kedua bentrok saat memakai
+            // nomor auto-generate yang sama.
+            'sku' => [
+                'required', 'string', 'max:100',
+                Rule::unique('products', 'sku')
+                    ->where('store_id', $storeId)
+                    ->ignore($product?->id),
+            ],
+            // Barcode tetap unik global — identitas produk pabrik.
+            'barcode' => [
+                'nullable', 'string', 'max:100',
+                Rule::unique('products', 'barcode')->ignore($product?->id),
+            ],
+            'type' => 'required|in:finished_goods,raw_material,combo,service,rental_item,time_based',
+            // Relasi dibatasi ke toko aktif supaya request langsung ke
+            // endpoint tidak bisa menautkan produk ke data toko lain.
+            'category_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')->where('store_id', $storeId),
+            ],
+            'supplier_id' => [
+                'nullable',
+                Rule::exists('suppliers', 'id')->where('store_id', $storeId),
+            ],
+            'unit' => 'nullable|string|max:30',
+            'base_unit' => 'nullable|string|max:30',
+            'base_unit_conversion' => 'nullable|numeric|min:0.0001',
+            'sell_price' => 'nullable|numeric|min:0',
+            'cost_price' => 'nullable|numeric|min:0',
+            'price_per_hour' => 'nullable|numeric|min:0',
+            'min_duration_minutes' => 'nullable|integer|min:0',
+            'stock_minimum' => 'nullable|integer|min:0',
+            'track_stock' => 'boolean',
+            'is_sellable' => 'boolean',
+            'preparation_time' => 'nullable|integer|min:0',
+            'is_active' => 'boolean',
+            'sell_base' => 'boolean',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'remove_image' => 'boolean',
+            'modifier_group_ids' => 'nullable|array',
+            'modifier_group_ids.*' => [
+                Rule::exists('product_modifier_groups', 'id')
+                    ->where('store_id', $storeId),
+            ],
+            'sync_modifier_groups' => 'boolean',
+            'capacity' => 'nullable|integer|min:1',
+            'max_guests' => 'nullable|integer|min:1',
+            'valid_duration_minutes' => 'nullable|integer|min:0',
+            'session_duration_minutes' => 'nullable|integer|min:0',
+            'deposit_amount' => 'nullable|numeric|min:0',
+            'packaging_units' => 'nullable|array',
+            'packaging_units.*.name' => 'required|string|max:50',
+            'packaging_units.*.conversion_qty' => 'required|integer|min:1',
+            'packaging_units.*.sell_price' => 'nullable|numeric|min:0',
+            'packaging_units.*.barcode' => 'nullable|string|max:100',
+            'price_tiers' => 'nullable|array',
+            'price_tiers.*.min_qty' => 'required|integer|min:1',
+            'price_tiers.*.price' => 'required|numeric|min:0',
+        ];
+    }
+
+    /**
+     * Aturan wajib yang bergantung pada kombinasi store type + tipe produk,
+     * jadi tidak bisa ditaruh di rule array biasa.
+     *
+     * Semuanya mencerminkan attribute `required` di form (lihat
+     * Planing/PLANNING_create_fnb.md). Kalau HTML menahan sebuah field,
+     * backend wajib menahannya juga — kalau tidak, request langsung ke
+     * endpoint bisa melewati aturan yang dilihat user di layar.
      *
      * @throws ValidationException
      */
     private function validateFnbProductRules(array $validated): void
     {
-        if ($this->currentStoreTypeCode() !== 'fnb') {
+        $type = $validated['type'] ?? null;
+        $isFnb = $this->currentStoreTypeCode() === 'fnb';
+
+        // Harga jual wajib untuk apa pun yang dijual langsung ke pelanggan.
+        // Bahan baku dikecualikan karena memang tidak dijual satuan.
+        if (in_array($type, ['finished_goods', 'combo'], true)
+            && ! is_numeric($validated['sell_price'] ?? null)) {
+            throw ValidationException::withMessages([
+                'sell_price' => 'Harga Jual wajib diisi.',
+            ]);
+        }
+
+        if (! $isFnb || $type !== 'raw_material') {
             return;
         }
 
-        if (($validated['type'] ?? null) !== 'raw_material') {
-            return;
-        }
-
+        // Tanpa Satuan Pakai, konversi HPP resep jatuh ke cost_price mentah
+        // dan hasilnya salah. Di store type lain field ini tidak dirender,
+        // jadi tidak dipaksa.
         if (trim((string) ($validated['base_unit'] ?? '')) === '') {
             throw ValidationException::withMessages([
                 'base_unit' => 'Satuan Pakai wajib diisi untuk Bahan Baku.',
+            ]);
+        }
+
+        // Harga modal jadi dasar perhitungan HPP resep — tanpa itu seluruh
+        // margin menu yang memakai bahan ini ikut salah.
+        if (! is_numeric($validated['cost_price'] ?? null)) {
+            throw ValidationException::withMessages([
+                'cost_price' => 'Harga Modal wajib diisi untuk Bahan Baku.',
             ]);
         }
     }
@@ -462,45 +581,7 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:2000',
-            'sku' => 'required|string|max:100|unique:products,sku',
-            'barcode' => 'nullable|string|max:100|unique:products,barcode',
-            'type' => 'required|in:finished_goods,raw_material,combo,service,rental_item,time_based',
-            'category_id' => 'nullable|exists:categories,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'unit' => 'nullable|string|max:30',
-            'base_unit' => 'nullable|string|max:30',
-            'base_unit_conversion' => 'nullable|numeric|min:0.0001',
-            'sell_price' => 'nullable|numeric|min:0',
-            'cost_price' => 'nullable|numeric|min:0',
-            'price_per_hour' => 'nullable|numeric|min:0',
-            'min_duration_minutes' => 'nullable|integer|min:0',
-            'stock_minimum' => 'nullable|integer|min:0',
-            'track_stock' => 'boolean',
-            'is_sellable' => 'boolean',
-            'preparation_time' => 'nullable|integer|min:0',
-            'is_active' => 'boolean',
-            'sell_base' => 'boolean',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'modifier_group_ids' => 'nullable|array',
-            'modifier_group_ids.*' => 'exists:product_modifier_groups,id',
-            'sync_modifier_groups' => 'boolean',
-            'capacity' => 'nullable|integer|min:1',
-            'max_guests' => 'nullable|integer|min:1',
-            'valid_duration_minutes' => 'nullable|integer|min:0',
-            'session_duration_minutes' => 'nullable|integer|min:0',
-            'deposit_amount' => 'nullable|numeric|min:0',
-            'packaging_units' => 'nullable|array',
-            'packaging_units.*.name' => 'required|string|max:50',
-            'packaging_units.*.conversion_qty' => 'required|integer|min:1',
-            'packaging_units.*.sell_price' => 'nullable|numeric|min:0',
-            'packaging_units.*.barcode' => 'nullable|string|max:100',
-            'price_tiers' => 'nullable|array',
-            'price_tiers.*.min_qty' => 'required|integer|min:1',
-            'price_tiers.*.price' => 'required|numeric|min:0',
-        ]);
+        $validated = $request->validate($this->productRules());
 
         $this->validateFnbProductRules($validated);
 
@@ -631,47 +712,7 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:2000',
-            'sku' => 'required|string|max:100|unique:products,sku,'.$product->id,
-            'barcode' => 'nullable|string|max:100|unique:products,barcode,'.
-                $product->id,
-            'type' => 'required|in:finished_goods,raw_material,combo,service,rental_item,time_based',
-            'category_id' => 'nullable|exists:categories,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'unit' => 'nullable|string|max:30',
-            'base_unit' => 'nullable|string|max:30',
-            'base_unit_conversion' => 'nullable|numeric|min:0.0001',
-            'sell_price' => 'nullable|numeric|min:0',
-            'cost_price' => 'nullable|numeric|min:0',
-            'price_per_hour' => 'nullable|numeric|min:0',
-            'min_duration_minutes' => 'nullable|integer|min:0',
-            'stock_minimum' => 'nullable|integer|min:0',
-            'track_stock' => 'boolean',
-            'is_sellable' => 'boolean',
-            'preparation_time' => 'nullable|integer|min:0',
-            'is_active' => 'boolean',
-            'sell_base' => 'boolean',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'remove_image' => 'boolean',
-            'modifier_group_ids' => 'nullable|array',
-            'modifier_group_ids.*' => 'exists:product_modifier_groups,id',
-            'sync_modifier_groups' => 'boolean',
-            'capacity' => 'nullable|integer|min:1',
-            'max_guests' => 'nullable|integer|min:1',
-            'valid_duration_minutes' => 'nullable|integer|min:0',
-            'session_duration_minutes' => 'nullable|integer|min:0',
-            'deposit_amount' => 'nullable|numeric|min:0',
-            'packaging_units' => 'nullable|array',
-            'packaging_units.*.name' => 'required|string|max:50',
-            'packaging_units.*.conversion_qty' => 'required|integer|min:1',
-            'packaging_units.*.sell_price' => 'nullable|numeric|min:0',
-            'packaging_units.*.barcode' => 'nullable|string|max:100',
-            'price_tiers' => 'nullable|array',
-            'price_tiers.*.min_qty' => 'required|integer|min:1',
-            'price_tiers.*.price' => 'required|numeric|min:0',
-        ]);
+        $validated = $request->validate($this->productRules($product));
 
         $this->validateFnbProductRules($validated);
 

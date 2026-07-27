@@ -6,45 +6,26 @@ use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\StockMovement;
+use App\Services\Stock\StockMutation;
+use App\Services\Stock\StockService;
 
 /**
  * Shared stock deduction logic for sales (normal & split bill).
+ *
+ * Setelah refactor Tahap 1, trait ini mendelegasikan semua operasi stok ke
+ * StockService. Keuntungannya: kalau nanti FEFO atau aturan stok lain
+ * ditambahkan, cukup ubah StockService — trait ini tidak perlu disentuh.
  */
 trait FinalizesSaleStock
 {
     /**
      * Pre-validate that enough stock exists for all items.
      *
-     * @throws \Exception if stock is insufficient
+     * @throws \RuntimeException if stock is insufficient
      */
-    protected function validateStockForItems(array $items, int $storeId): void
+    protected function validateStockForItems(array $items, int $storeId, ?int $branchId = null): void
     {
-        foreach ($items as $item) {
-            $product = Product::find($item['product_id']);
-            if (! $product || ! $product->track_stock) {
-                continue;
-            }
-            $hasRecipe = $product->recipes()->exists();
-            if ($hasRecipe) {
-                continue;
-            }
-
-            $actualQty = $item['quantity'];
-            $currentStock = ProductStock::where('product_id', $item['product_id'])
-                ->where('variant_id', $item['variant_id'] ?? null)
-                ->where('packaging_unit_id', $item['packaging_unit_id'] ?? null)
-                ->where('store_id', $storeId)
-                ->sum('quantity');
-
-            if ($currentStock < $actualQty) {
-                $unitLabel = ! empty($item['unit_name']) ? " ({$item['unit_name']})" : '';
-                throw new \Exception(
-                    "Stok \"{$product->name}{$unitLabel}\" tidak cukup. ".
-                    "Dibutuhkan {$actualQty}, tersedia {$currentStock}.",
-                );
-            }
-        }
+        app(StockService::class)->assertSufficientStock($items, $storeId, $branchId ?? 0);
     }
 
     /**
@@ -59,92 +40,61 @@ trait FinalizesSaleStock
         string $referenceNo,
         ?\DateTimeImmutable $movedAt = null,
     ): void {
+        $stockService = app(StockService::class);
         $now = $movedAt ?? now();
 
         foreach ($items as $item) {
-            $product = Product::with(
-                'recipes.rawMaterial.stocks',
-            )->find($item['product_id']);
+            $product = Product::with('recipes.rawMaterial.stocks')->find($item['product_id']);
 
             if (! $product) {
                 continue;
             }
 
-            $hasRecipe = $product->recipes->isNotEmpty();
-
-            if ($hasRecipe) {
-                // Potong stok bahan baku
-                foreach ($product->recipes as $recipe) {
-                    $needed = $recipe->quantity * $item['quantity'];
-                    if ($recipe->is_nullable) {
-                        $rawStock = $recipe->rawMaterial->stocks
-                            ->where('store_id', $storeId)
-                            ->sum('quantity');
-                        if ($rawStock <= 0) {
-                            continue;
-                        }
-                    }
-                    $stock = ProductStock::firstOrCreate(
-                        [
-                            'product_id' => $recipe->raw_material_id,
-                            'variant_id' => null,
-                            'packaging_unit_id' => null,
-                            'store_id' => $storeId,
-                        ],
-                        ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
-                    );
-                    $stock->decrement('quantity', $needed);
-
-                    StockMovement::create([
-                        'product_id' => $recipe->raw_material_id,
-                        'store_id' => $storeId,
-                        'branch_id' => $branchId,
-                        'reference_type' => Sale::class,
-                        'reference_id' => $sale->id,
-                        'movement_type' => 'sale_out',
-                        'quantity' => $needed,
-                        'unit_cost' => $recipe->rawMaterial->cost_price,
-                        'reference_no' => $referenceNo,
-                        'notes' => "Penjualan #{$referenceNo} — bahan untuk {$product->name}",
-                        'moved_at' => $now,
-                    ]);
-                }
+            if ($product->recipes->isNotEmpty()) {
+                // Produk FnB berkomposisi: potong bahan baku via resep
+                $stockService->decreaseRecipeIngredients(
+                    item: $item,
+                    product: $product,
+                    referenceType: Sale::class,
+                    referenceId: $sale->id,
+                    referenceNo: $referenceNo,
+                    storeId: $storeId,
+                    branchId: $branchId,
+                    movedAt: $movedAt,
+                );
             } elseif ($product->track_stock) {
-                // Bucket-aware: potong stok dari bucket yang tepat
-                $actualQty = $item['quantity'];
                 $variantId = $item['variant_id'] ?? null;
                 $packagingUnitId = $item['packaging_unit_id'] ?? null;
-
-                $stock = ProductStock::firstOrCreate(
-                    [
-                        'product_id' => $item['product_id'],
-                        'variant_id' => $variantId,
-                        'packaging_unit_id' => $packagingUnitId,
-                        'store_id' => $storeId,
-                    ],
-                    ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
-                );
-                $stock->decrement('quantity', $actualQty);
-
                 $unitLabel = ! empty($item['unit_name']) ? " ({$item['unit_name']})" : '';
 
-                StockMovement::create([
+                // Baca average_cost dari bucket yang tepat sebelum dikurangi
+                $existing = ProductStock::where([
                     'product_id' => $item['product_id'],
                     'variant_id' => $variantId,
                     'packaging_unit_id' => $packagingUnitId,
                     'store_id' => $storeId,
                     'branch_id' => $branchId,
-                    'reference_type' => Sale::class,
-                    'reference_id' => $sale->id,
-                    'movement_type' => 'sale_out',
-                    'quantity' => $actualQty,
-                    'unit_cost' => $stock->average_cost > 0
-                        ? $stock->average_cost
-                        : ($product->cost_price ?? 0),
-                    'reference_no' => $referenceNo,
-                    'notes' => "Penjualan #{$referenceNo} — {$item['quantity']}x{$unitLabel} {$product->name}",
-                    'moved_at' => $now,
-                ]);
+                ])->first();
+
+                $unitCost = $existing && $existing->average_cost > 0
+                    ? $existing->average_cost
+                    : ($product->cost_price ?? 0);
+
+                $stockService->decrease(new StockMutation(
+                    productId: $item['product_id'],
+                    variantId: $variantId,
+                    packagingUnitId: $packagingUnitId,
+                    storeId: $storeId,
+                    branchId: $branchId,
+                    quantity: (float) $item['quantity'],
+                    unitCost: (float) $unitCost,
+                    movementType: 'sale_out',
+                    referenceType: Sale::class,
+                    referenceId: $sale->id,
+                    referenceNo: $referenceNo,
+                    notes: "Penjualan #{$referenceNo} — {$item['quantity']}x{$unitLabel} {$product->name}",
+                    movedAt: $now ? (string) $now : null,
+                ));
             }
         }
     }
@@ -163,9 +113,7 @@ trait FinalizesSaleStock
             $modExtra = collect($item['modifiers'] ?? [])->sum('price_addition');
             $unitPrice = $item['price'] + $modExtra;
 
-            $product = Product::with(
-                'recipes.rawMaterial.stocks',
-            )->find($item['product_id']);
+            $product = Product::with('recipes.rawMaterial.stocks')->find($item['product_id']);
 
             $recipeSnapshot = null;
             $ingredientCost = 0;
@@ -174,19 +122,20 @@ trait FinalizesSaleStock
             if ($hasRecipe) {
                 $snapshot = [];
                 foreach ($product->recipes as $recipe) {
-                    $needed = $recipe->quantity * $item['quantity'];
+                    $needed = (float) $recipe->quantity * (float) $item['quantity'];
                     $rawStock = $recipe->rawMaterial->stocks
                         ->where('store_id', $storeId)
                         ->sum('quantity');
 
                     if (! $recipe->is_nullable && $rawStock < $needed) {
-                        throw new \Exception(
+                        throw new \RuntimeException(
                             "Stok bahan \"{$recipe->rawMaterial->name}\" tidak cukup. ".
                             "Dibutuhkan {$needed} {$recipe->unit}, tersedia {$rawStock}.",
                         );
                     }
 
-                    $ingredientCost += $needed * (float) $recipe->rawMaterial->cost_price;
+                    $costPerUnit = $recipe->rawMaterial->costPerBaseUnit();
+                    $ingredientCost += $needed * $costPerUnit;
 
                     $snapshot[] = [
                         'raw_material_id' => $recipe->raw_material_id,
@@ -194,8 +143,8 @@ trait FinalizesSaleStock
                         'quantity_per_unit' => (float) $recipe->quantity,
                         'total_quantity' => $needed,
                         'unit' => $recipe->unit,
-                        'cost_price' => (float) $recipe->rawMaterial->cost_price,
-                        'total_cost' => $needed * (float) $recipe->rawMaterial->cost_price,
+                        'cost_price' => $costPerUnit,
+                        'total_cost' => $needed * $costPerUnit,
                         'is_nullable' => $recipe->is_nullable,
                     ];
                 }

@@ -26,24 +26,32 @@ use Spatie\Permission\PermissionRegistrar;
 /**
  * Toko dengan store type tertentu + user yang boleh kelola produk.
  *
+ * Sengaja idempoten (firstOrCreate + syncWithoutDetaching) supaya bisa
+ * dipanggil lebih dari sekali dalam satu test — dibutuhkan skenario
+ * multi-toko, mis. memastikan SKU yang sama boleh dipakai di dua toko.
+ *
  * @return array{user: User, store: Store, branch: Branch}
  */
 function createProductTestContext(string $storeTypeCode = 'fnb'): array
 {
-    $storeType = StoreType::create([
-        'code' => $storeTypeCode,
-        'label' => ucfirst($storeTypeCode),
-        'is_active' => true,
-        'sort_order' => 0,
-    ]);
+    $storeType = StoreType::firstOrCreate(
+        ['code' => $storeTypeCode],
+        ['label' => ucfirst($storeTypeCode), 'is_active' => true, 'sort_order' => 0],
+    );
 
-    foreach (['product', 'category', 'purchase', 'stock'] as $code) {
-        $f = Feature::create(['code' => $code, 'label' => $code, 'is_active' => true, 'sort_order' => 0]);
-        $storeType->features()->attach($f->id);
+    foreach (['product', 'category', 'purchase', 'stock', 'recipe', 'modifier'] as $code) {
+        $f = Feature::firstOrCreate(
+            ['code' => $code],
+            ['label' => $code, 'is_active' => true, 'sort_order' => 0],
+        );
+        $storeType->features()->syncWithoutDetaching([$f->id]);
     }
 
-    $plan = Plan::create(['code' => 'basic', 'label' => 'Basic', 'is_active' => true, 'sort_order' => 0, 'price' => 0]);
-    $plan->features()->attach(Feature::pluck('id'));
+    $plan = Plan::firstOrCreate(
+        ['code' => 'basic'],
+        ['label' => 'Basic', 'is_active' => true, 'sort_order' => 0, 'price' => 0],
+    );
+    $plan->features()->syncWithoutDetaching(Feature::pluck('id')->all());
 
     $user = User::factory()->create();
 
@@ -66,7 +74,16 @@ function createProductTestContext(string $storeTypeCode = 'fnb'): array
     app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
     $role = Role::create(['name' => 'owner-'.uniqid(), 'guard_id' => 1]);
     foreach (['product.create', 'product.edit', 'product.view'] as $permName) {
-        $role->givePermissionTo(Permission::create(['name' => $permName, 'guard_id' => 1]));
+        // Permission bersifat global (bukan per-team), jadi pada skenario
+        // multi-toko yang kedua harus memakai ulang yang sudah ada.
+        // `guard_id` hanya dipakai saat membuat — bukan kolom yang bisa
+        // dicari, jadi pencocokan cukup lewat nama.
+        $role->givePermissionTo(
+            Permission::firstOrCreate(
+                ['name' => $permName],
+                ['guard_id' => 1],
+            ),
+        );
     }
     $user->assignRole($role);
 

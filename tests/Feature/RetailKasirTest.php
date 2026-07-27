@@ -112,8 +112,7 @@ test('normal retail transaction succeeds and deducts stock', function () {
 
     ProductStock::create([
         'product_id' => $product->id,
-        'store_id' => $store->id,
-        'quantity' => 50,
+        'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 50,
         'reserved_quantity' => 0,
     ]);
 
@@ -163,8 +162,7 @@ test('transaction with tier price stores the tier price, not the base price', fu
 
     ProductStock::create([
         'product_id' => $product->id,
-        'store_id' => $store->id,
-        'quantity' => 100,
+        'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 100,
         'reserved_quantity' => 0,
     ]);
 
@@ -206,8 +204,7 @@ test('item price that does not match any valid product price is rejected', funct
 
     ProductStock::create([
         'product_id' => $product->id,
-        'store_id' => $store->id,
-        'quantity' => 10,
+        'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 10,
         'reserved_quantity' => 0,
     ]);
 
@@ -248,8 +245,7 @@ test('wholesale order type without a customer is rejected', function () {
 
     ProductStock::create([
         'product_id' => $product->id,
-        'store_id' => $store->id,
-        'quantity' => 20,
+        'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 20,
         'reserved_quantity' => 0,
     ]);
 
@@ -285,8 +281,7 @@ test('wholesale order type with a customer succeeds', function () {
 
     ProductStock::create([
         'product_id' => $product->id,
-        'store_id' => $store->id,
-        'quantity' => 20,
+        'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 20,
         'reserved_quantity' => 0,
     ]);
 
@@ -333,8 +328,7 @@ test('discount exceeding subtotal is rejected', function () {
 
     ProductStock::create([
         'product_id' => $product->id,
-        'store_id' => $store->id,
-        'quantity' => 30,
+        'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 30,
         'reserved_quantity' => 0,
     ]);
 
@@ -376,8 +370,7 @@ test('duplicate idempotency key returns the existing sale instead of creating a 
 
     ProductStock::create([
         'product_id' => $product->id,
-        'store_id' => $store->id,
-        'quantity' => 40,
+        'store_id' => $store->id, 'branch_id' => $branch->id, 'quantity' => 40,
         'reserved_quantity' => 0,
     ]);
 

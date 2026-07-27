@@ -38,7 +38,7 @@ class BranchMiddleware
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
@@ -47,14 +47,22 @@ class BranchMiddleware
             return $next($request);
         }
 
-        $storeId  = $request->session()->get('current_store_id');
+        // Route exempt (profil, dashboard, pemilih toko/cabang) tidak boleh
+        // menuntut cabang. Tanpa cek ini, user yang belum punya employee
+        // record — mis. owner baru — ditendang dari halaman profilnya sendiri
+        // ke dashboard, yang justru ikut terdaftar exempt di sini.
+        if (in_array($request->route()?->getName() ?? '', self::BRANCH_EXEMPT_ROUTES, true)) {
+            return $next($request);
+        }
+
+        $storeId = $request->session()->get('current_store_id');
         $branchId = $request->session()->get('current_branch_id')
                  ?? $request->session()->get('branch_id');
 
         // ── Kasir (tanpa sale.void): branch dari employee record ──
-        if (!$user->can('sale.void') && !$branchId) {
+        if (! $user->can('sale.void') && ! $branchId) {
             $empBranch = $user->employee?->branch_id;
-            if (!$empBranch) {
+            if (! $empBranch) {
                 return redirect()
                     ->route('admin.dashboard')
                     ->with('error', 'Akun kamu belum ditugaskan ke cabang.');
@@ -62,6 +70,7 @@ class BranchMiddleware
             $branchId = $empBranch;
             $request->session()->put('current_branch_id', $branchId);
             $request->session()->put('branch_id', $branchId);
+
             return $next($request);
         }
 
@@ -72,14 +81,14 @@ class BranchMiddleware
                 ->where('is_active', true)
                 ->exists();
 
-            if (!$valid) {
+            if (! $valid) {
                 $request->session()->forget(['current_branch_id', 'branch_id']);
                 $branchId = null;
             }
         }
 
         // ── Auto-set branch ──────────────────────────────────────────
-        if ($storeId && !$branchId) {
+        if ($storeId && ! $branchId) {
             $branches = Branch::where('store_id', $storeId)
                 ->where('is_active', true)
                 ->orderBy('id')

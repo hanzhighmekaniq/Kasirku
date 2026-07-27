@@ -4,11 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Models\ProductStock;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\SaleReturn;
 use App\Models\SaleReturnItem;
-use App\Models\StockMovement;
+use App\Services\Stock\StockMutation;
+use App\Services\Stock\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -151,9 +152,9 @@ class SaleReturnController extends Controller
                     'reason' => $item['reason'] ?? null,
                 ]);
 
-                // Return stock
+                // Return stock — bucket mengikuti item penjualan aslinya
                 $this->adjustStock(
-                    $item['product_id'],
+                    $sale->items->find($item['sale_item_id']),
                     $item['quantity'],
                     $sale,
                     false,
@@ -240,12 +241,11 @@ class SaleReturnController extends Controller
 
             // Reverse stock: remove returned items from stock
             foreach ($saleReturn->items as $item) {
-                $this->adjustStock(
-                    $item->product_id,
-                    $item->quantity,
-                    $sale,
-                    true,
-                );
+                $saleItem = $sale->items->find($item->sale_item_id);
+                if (! $saleItem) {
+                    continue;
+                }
+                $this->adjustStock($saleItem, $item->quantity, $sale, true);
             }
 
             // Restore sale payment
@@ -317,52 +317,45 @@ class SaleReturnController extends Controller
         ]);
     }
 
+    /**
+     * Kembalikan (atau tarik ulang) stok hasil retur.
+     *
+     * Bucket diambil dari SaleItem asalnya supaya barang yang diretur
+     * kembali ke varian & kemasan yang sama persis dengan saat dijual.
+     */
     private function adjustStock(
-        int $productId,
+        SaleItem $saleItem,
         float $quantity,
         Sale $sale,
         bool $isReversal,
     ): void {
-        $product = Product::find($productId);
+        $product = Product::find($saleItem->product_id);
         if (! $product || ! $product->track_stock) {
             return;
         }
 
-        $stock = ProductStock::firstOrCreate(
-            [
-                'product_id' => $productId,
-                'store_id' => $sale->store_id,
-                'branch_id' => $sale->branch_id,
-            ],
-            ['quantity' => 0, 'reserved_quantity' => 0],
+        $movementType = $isReversal ? 'return_cancel' : 'return_in';
+        $notes = $isReversal
+            ? 'Pembatalan retur penjualan - stok dikurangi kembali'
+            : 'Retur penjualan - stok dikembalikan';
+
+        $mutation = new StockMutation(
+            productId: $saleItem->product_id,
+            variantId: $saleItem->variant_id,
+            packagingUnitId: $saleItem->packaging_unit_id,
+            storeId: $sale->store_id,
+            branchId: $sale->branch_id,
+            quantity: $quantity,
+            movementType: $movementType,
+            referenceType: 'sale_return',
+            notes: $notes,
         );
 
+        $stockService = app(StockService::class);
         if ($isReversal) {
-            // Cancel return → remove stock that was re-added
-            $stock->decrement('quantity', $quantity);
-            StockMovement::create([
-                'product_id' => $productId,
-                'store_id' => $sale->store_id,
-                'branch_id' => $sale->branch_id,
-                'movement_type' => 'return_cancel',
-                'quantity' => -$quantity,
-                'reference_type' => 'sale_return',
-                'reference_id' => null,
-                'notes' => 'Pembatalan retur penjualan - stok dikurangi kembali',
-            ]);
+            $stockService->decrease($mutation);
         } else {
-            // Return → add stock back
-            $stock->increment('quantity', $quantity);
-            StockMovement::create([
-                'product_id' => $productId,
-                'store_id' => $sale->store_id,
-                'branch_id' => $sale->branch_id,
-                'movement_type' => 'return_in',
-                'quantity' => $quantity,
-                'reference_type' => 'sale_return',
-                'reference_id' => null,
-                'notes' => 'Retur penjualan - stok dikembalikan',
-            ]);
+            $stockService->increase($mutation);
         }
     }
 }

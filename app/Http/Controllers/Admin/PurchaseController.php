@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\HasStoreScope;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\ProductBatch;
 use App\Models\ProductStock;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
@@ -13,6 +14,8 @@ use App\Models\PurchasePayment;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\Supplier;
+use App\Services\Stock\StockMutation;
+use App\Services\Stock\StockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -69,6 +72,14 @@ class PurchaseController extends Controller
                     ? $prefillProduct->variants()->find($variantId)
                     : null;
 
+                // Pembelian bisa diarahkan ke bucket satuan tertentu (mis. Dus),
+                // bukan hanya satuan dasar — dipakai tombol "Beli" per satuan
+                // di baris detail halaman produk.
+                $unitId = $request->query('packaging_unit_id');
+                $unit = $unitId
+                    ? $prefillProduct->packagingUnits()->find($unitId)
+                    : null;
+
                 $prefill = [
                     'supplier_id' => (int) $request->query('supplier_id'),
                     'product_id' => $prefillProduct->id,
@@ -77,6 +88,8 @@ class PurchaseController extends Controller
                     'cost_price' => $variant?->cost_price ?? $prefillProduct->cost_price ?? 0,
                     'variant_id' => $variant?->id,
                     'variant_name' => $variant?->name,
+                    'packaging_unit_id' => $unit?->id,
+                    'unit_name' => $unit?->name,
                 ];
             }
         }
@@ -232,50 +245,36 @@ class PurchaseController extends Controller
 
             // Jika langsung completed (lunas), tambah stok sekaligus
             if ($status === 'completed') {
+                $stockService = app(StockService::class);
+
                 foreach ($purchase->items as $item) {
                     $product = Product::find($item->product_id);
                     if ($product?->track_stock) {
-                        $stock = ProductStock::firstOrCreate(
-                            [
-                                'product_id' => $item->product_id,
-                                'variant_id' => $item->variant_id,
-                                'packaging_unit_id' => $item->packaging_unit_id,
-                                'store_id' => $storeId,
-                                'branch_id' => $branchId,
-                            ],
-                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
-                        );
-                        $oldQty = $stock->quantity;
-                        $stock->increment('quantity', $item->quantity);
+                        $stockQty = $item->stockQuantity();
+                        $stockCost = $item->stockUnitCost();
+
+                        $stockService->increase(new StockMutation(
+                            productId: $item->product_id,
+                            variantId: $item->variant_id,
+                            packagingUnitId: $item->packaging_unit_id,
+                            storeId: $storeId,
+                            branchId: $branchId,
+                            quantity: $stockQty,
+                            unitCost: $stockCost,
+                            movementType: 'purchase_in',
+                            referenceType: Purchase::class,
+                            referenceId: $purchase->id,
+                            referenceNo: $purchase->purchase_no,
+                            notes: "Pembelian #{$purchase->purchase_no}",
+                        ));
 
                         // Auto-set supplier default pada produk
-                        $product->update([
-                            'supplier_id' => $purchase->supplier_id,
-                        ]);
+                        $product->update(['supplier_id' => $purchase->supplier_id]);
+                    }
 
-                        // Update moving average cost per bucket
-                        $this->updateBucketAverageCost(
-                            $stock,
-                            $item->cost_price,
-                            $item->quantity,
-                            $oldQty,
-                        );
-
-                        StockMovement::create([
-                            'product_id' => $item->product_id,
-                            'variant_id' => $item->variant_id,
-                            'packaging_unit_id' => $item->packaging_unit_id,
-                            'store_id' => $storeId,
-                            'branch_id' => $branchId,
-                            'reference_type' => Purchase::class,
-                            'reference_id' => $purchase->id,
-                            'movement_type' => 'purchase_in',
-                            'quantity' => $item->quantity,
-                            'unit_cost' => $item->cost_price,
-                            'reference_no' => $purchase->purchase_no,
-                            'notes' => "Pembelian #{$purchase->purchase_no}",
-                            'moved_at' => now(),
-                        ]);
+                    // Buat batch otomatis untuk produk yang track_batch = true
+                    if ($product?->track_batch) {
+                        $this->createBatchFromPurchaseItem($item, $purchase, $storeId, $branchId);
                     }
                 }
             }
@@ -436,31 +435,15 @@ class PurchaseController extends Controller
 
             // If moving from draft to completed, update stock
             if ($wasDraft && $status === 'completed') {
+                $stockService = app(StockService::class);
+
                 foreach ($purchase->items as $item) {
                     $product = Product::find($item->product_id);
                     if ($product?->track_stock) {
-                        $stock = ProductStock::firstOrCreate(
-                            [
-                                'product_id' => $item->product_id,
-                                'variant_id' => $item->variant_id,
-                                'packaging_unit_id' => $item->packaging_unit_id,
-                                'store_id' => $storeId,
-                                'branch_id' => $purchase->branch_id,
-                            ],
-                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
-                        );
-                        $oldQty = $stock->quantity;
-                        $stock->increment('quantity', $item->quantity);
+                        $stockQty = $item->stockQuantity();
+                        $stockCost = $item->stockUnitCost();
 
-                        // Update moving average cost per bucket
-                        $this->updateBucketAverageCost(
-                            $stock,
-                            $item->cost_price,
-                            $item->quantity,
-                            $oldQty,
-                        );
-
-                        $exists = StockMovement::where([
+                        $alreadyRecorded = StockMovement::where([
                             'reference_type' => Purchase::class,
                             'reference_id' => $purchase->id,
                             'product_id' => $item->product_id,
@@ -468,23 +451,27 @@ class PurchaseController extends Controller
                             'packaging_unit_id' => $item->packaging_unit_id,
                             'movement_type' => 'purchase_in',
                         ])->exists();
-                        if (! $exists) {
-                            StockMovement::create([
-                                'product_id' => $item->product_id,
-                                'variant_id' => $item->variant_id,
-                                'packaging_unit_id' => $item->packaging_unit_id,
-                                'store_id' => $storeId,
-                                'branch_id' => $purchase->branch_id,
-                                'reference_type' => Purchase::class,
-                                'reference_id' => $purchase->id,
-                                'movement_type' => 'purchase_in',
-                                'quantity' => $item->quantity,
-                                'unit_cost' => $item->cost_price,
-                                'reference_no' => $purchase->purchase_no,
-                                'notes' => "Pembelian #{$purchase->purchase_no}",
-                                'moved_at' => now(),
-                            ]);
+
+                        if (! $alreadyRecorded) {
+                            $stockService->increase(new StockMutation(
+                                productId: $item->product_id,
+                                variantId: $item->variant_id,
+                                packagingUnitId: $item->packaging_unit_id,
+                                storeId: $storeId,
+                                branchId: $purchase->branch_id,
+                                quantity: $stockQty,
+                                unitCost: $stockCost,
+                                movementType: 'purchase_in',
+                                referenceType: Purchase::class,
+                                referenceId: $purchase->id,
+                                referenceNo: $purchase->purchase_no,
+                                notes: "Pembelian #{$purchase->purchase_no}",
+                            ));
                         }
+                    }
+
+                    if ($product?->track_batch) {
+                        $this->createBatchFromPurchaseItem($item, $purchase, $storeId, $purchase->branch_id);
                     }
                 }
             }
@@ -528,45 +515,29 @@ class PurchaseController extends Controller
     public function destroy(Purchase $purchase)
     {
         if ($purchase->status === 'completed') {
-            // Reverse stock for completed purchases (bucket-level)
+            $stockService = app(StockService::class);
+
             foreach ($purchase->items as $item) {
                 $product = $item->product;
                 if ($product?->track_stock) {
-                    $stock = ProductStock::where([
-                        'product_id' => $item->product_id,
-                        'variant_id' => $item->variant_id,
-                        'packaging_unit_id' => $item->packaging_unit_id,
-                        'store_id' => $purchase->store_id,
-                        'branch_id' => $purchase->branch_id,
-                    ])->first();
-                    if ($stock) {
-                        $oldQty = $stock->quantity;
-                        $stock->decrement('quantity', $item->quantity);
+                    $stockQty = $item->stockQuantity();
+                    $stockCost = $item->stockUnitCost();
 
-                        // Revert moving average cost per bucket
-                        $this->revertBucketAverageCost(
-                            $stock,
-                            $item->cost_price,
-                            $item->quantity,
-                            $oldQty,
-                        );
-
-                        StockMovement::create([
-                            'product_id' => $item->product_id,
-                            'variant_id' => $item->variant_id,
-                            'packaging_unit_id' => $item->packaging_unit_id,
-                            'store_id' => $purchase->store_id,
-                            'branch_id' => $purchase->branch_id,
-                            'reference_type' => Purchase::class,
-                            'reference_id' => $purchase->id,
-                            'movement_type' => 'purchase_out',
-                            'quantity' => $item['quantity'],
-                            'unit_cost' => $item->cost_price,
-                            'reference_no' => $purchase->purchase_no,
-                            'notes' => "Pembelian #{$purchase->purchase_no} — dihapus",
-                            'moved_at' => now(),
-                        ]);
-                    }
+                    $stockService->decrease(new StockMutation(
+                        productId: $item->product_id,
+                        variantId: $item->variant_id,
+                        packagingUnitId: $item->packaging_unit_id,
+                        storeId: $purchase->store_id,
+                        branchId: $purchase->branch_id,
+                        quantity: $stockQty,
+                        unitCost: $stockCost,
+                        movementType: 'purchase_out',
+                        referenceType: Purchase::class,
+                        referenceId: $purchase->id,
+                        referenceNo: $purchase->purchase_no,
+                        notes: "Pembelian #{$purchase->purchase_no} — dihapus",
+                        revertAvgCost: true,
+                    ));
                 }
             }
         }
@@ -590,92 +561,53 @@ class PurchaseController extends Controller
         DB::beginTransaction();
 
         try {
+            $stockService = app(StockService::class);
+
             if ($oldStatus !== 'completed' && $newStatus === 'completed') {
-                // Mark as completed — add stock (bucket-level)
+                // Mark as completed — add stock
                 foreach ($purchase->items as $item) {
                     $product = $item->product;
                     if ($product?->track_stock) {
-                        $stock = ProductStock::firstOrCreate(
-                            [
-                                'product_id' => $item->product_id,
-                                'variant_id' => $item->variant_id,
-                                'packaging_unit_id' => $item->packaging_unit_id,
-                                'store_id' => $purchase->store_id,
-                                'branch_id' => $purchase->branch_id,
-                            ],
-                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
-                        );
-                        $oldQty = $stock->quantity;
-                        $stock->increment('quantity', $item->quantity);
+                        $stockService->increase(new StockMutation(
+                            productId: $item->product_id,
+                            variantId: $item->variant_id,
+                            packagingUnitId: $item->packaging_unit_id,
+                            storeId: $purchase->store_id,
+                            branchId: $purchase->branch_id,
+                            quantity: $item->stockQuantity(),
+                            unitCost: $item->stockUnitCost(),
+                            movementType: 'purchase_in',
+                            referenceType: Purchase::class,
+                            referenceId: $purchase->id,
+                            referenceNo: $purchase->purchase_no,
+                            notes: "Pembelian #{$purchase->purchase_no} — diubah ke selesai",
+                        ));
+                    }
 
-                        // Update moving average cost per bucket
-                        $this->updateBucketAverageCost(
-                            $stock,
-                            $item->cost_price,
-                            $item->quantity,
-                            $oldQty,
-                        );
-
-                        StockMovement::create([
-                            'product_id' => $item->product_id,
-                            'variant_id' => $item->variant_id,
-                            'packaging_unit_id' => $item->packaging_unit_id,
-                            'store_id' => $purchase->store_id,
-                            'branch_id' => $purchase->branch_id,
-                            'reference_type' => Purchase::class,
-                            'reference_id' => $purchase->id,
-                            'movement_type' => 'purchase_in',
-                            'quantity' => $item['quantity'],
-                            'unit_cost' => $item->cost_price,
-                            'reference_no' => $purchase->purchase_no,
-                            'notes' => "Pembelian #{$purchase->purchase_no} — diubah ke selesai",
-                            'moved_at' => now(),
-                        ]);
+                    if ($product?->track_batch) {
+                        $this->createBatchFromPurchaseItem($item, $purchase, $purchase->store_id, $purchase->branch_id);
                     }
                 }
-            } elseif (
-                $oldStatus === 'completed' &&
-                $newStatus === 'cancelled'
-            ) {
-                // Cancel completed — reverse stock (bucket-level)
+            } elseif ($oldStatus === 'completed' && $newStatus === 'cancelled') {
+                // Cancel completed — reverse stock
                 foreach ($purchase->items as $item) {
                     $product = $item->product;
                     if ($product?->track_stock) {
-                        $stock = ProductStock::where([
-                            'product_id' => $item->product_id,
-                            'variant_id' => $item->variant_id,
-                            'packaging_unit_id' => $item->packaging_unit_id,
-                            'store_id' => $purchase->store_id,
-                            'branch_id' => $purchase->branch_id,
-                        ])->first();
-                        if ($stock) {
-                            $oldQty = $stock->quantity;
-                            $stock->decrement('quantity', $item->quantity);
-
-                            // Revert moving average cost when cancelling
-                            $this->revertBucketAverageCost(
-                                $stock,
-                                $item->cost_price,
-                                $item->quantity,
-                                $oldQty,
-                            );
-
-                            StockMovement::create([
-                                'product_id' => $item->product_id,
-                                'variant_id' => $item->variant_id,
-                                'packaging_unit_id' => $item->packaging_unit_id,
-                                'store_id' => $purchase->store_id,
-                                'branch_id' => $purchase->branch_id,
-                                'reference_type' => Purchase::class,
-                                'reference_id' => $purchase->id,
-                                'movement_type' => 'purchase_out',
-                                'quantity' => $item['quantity'],
-                                'unit_cost' => $item->cost_price,
-                                'reference_no' => $purchase->purchase_no,
-                                'notes' => "Pembelian #{$purchase->purchase_no} — dibatalkan",
-                                'moved_at' => now(),
-                            ]);
-                        }
+                        $stockService->decrease(new StockMutation(
+                            productId: $item->product_id,
+                            variantId: $item->variant_id,
+                            packagingUnitId: $item->packaging_unit_id,
+                            storeId: $purchase->store_id,
+                            branchId: $purchase->branch_id,
+                            quantity: $item->stockQuantity(),
+                            unitCost: $item->stockUnitCost(),
+                            movementType: 'purchase_out',
+                            referenceType: Purchase::class,
+                            referenceId: $purchase->id,
+                            referenceNo: $purchase->purchase_no,
+                            notes: "Pembelian #{$purchase->purchase_no} — dibatalkan",
+                            revertAvgCost: true,
+                        ));
                     }
                 }
             }
@@ -755,5 +687,47 @@ class PurchaseController extends Controller
                 'average_cost' => round(max(0, $revertCost), 2),
             ]);
         }
+    }
+
+    /**
+     * Buat batch otomatis dari satu baris pembelian.
+     *
+     * Dipanggil saat pembelian berstatus completed, hanya untuk produk
+     * yang track_batch = true. Kalau batch dengan nomor yang sama sudah
+     * ada (mis. update() dipanggil dua kali karena idempotency), baris
+     * yang sudah ada dibiarkan — tidak duplikat, tidak error.
+     *
+     * Nomor batch: pakai field yang dikirim form (`batch_no`), atau
+     * auto-generate dari nomor PO + urutan baris kalau kosong.
+     */
+    private function createBatchFromPurchaseItem(
+        PurchaseItem $item,
+        Purchase $purchase,
+        int $storeId,
+        ?int $branchId,
+    ): void {
+        $batchNo = $item->batch_no ?? null;
+
+        if (! $batchNo) {
+            $seq = $item->id % 1000;
+            $batchNo = $purchase->purchase_no.'-'.str_pad($seq, 3, '0', STR_PAD_LEFT);
+        }
+
+        ProductBatch::firstOrCreate(
+            [
+                'product_id' => $item->product_id,
+                'variant_id' => $item->variant_id,
+                'packaging_unit_id' => $item->packaging_unit_id,
+                'batch_no' => $batchNo,
+            ],
+            [
+                'store_id' => $storeId,
+                'branch_id' => $branchId,
+                'purchase_date' => $purchase->purchase_date,
+                'expiry_date' => $item->expiry_date ?? null,
+                'quantity' => $item->quantity,
+                'cost_price' => $item->cost_price,
+            ],
+        );
     }
 }

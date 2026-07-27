@@ -2,7 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Folder } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
@@ -93,35 +93,15 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                                     />
                                 </svg>
                             </span>
-                            <button
-                                type="submit"
-                                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-primary"
-                            >
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.8}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                                    />
-                                </svg>
-                            </button>
+                            
                         </form>
                         <Button
                             as={Link}
                             href={route("admin.categories.create")}
                             icon={Plus}
-                            className="shrink-0"
+                            className="hidden sm:inline-flex shrink-0"
                         >
-                            <span className="hidden sm:inline">
-                                Tambah Kategori
-                            </span>
-                            <span className="sm:hidden">Tambah</span>
+                            Tambah Kategori
                         </Button>
                     </div>
                     <div className="pt-3 flex items-center">
@@ -233,6 +213,15 @@ export default function Index({ categories, stats = {}, filters = {} }) {
                 onConfirm={confirmDelete}
                 onClose={() => !deleting && setTarget(null)}
             />
+
+            {/* FAB Create — mobile only, mengikuti pola Products/Index.jsx */}
+            <Button
+                as={Link}
+                href={route("admin.categories.create")}
+                icon={Plus}
+                className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl sm:hidden"
+                title="Tambah Kategori"
+            />
         </AuthenticatedLayout>
     );
 }
@@ -241,8 +230,8 @@ function CategoryBadge({ cat }) {
     // Roots and parents with children get folder icon
     if (cat.depth === 0 || !cat.parent_id) {
         return (
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-lg">
-                📁
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Folder className="h-5 w-5" strokeWidth={1.8} />
             </span>
         );
     }

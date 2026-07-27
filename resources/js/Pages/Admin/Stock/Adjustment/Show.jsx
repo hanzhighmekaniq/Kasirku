@@ -1,7 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import PageHeader from "@/Components/PageHeader";
+import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 export default function Show({ adjustment }) {
     const { flash } = usePage().props;
@@ -34,23 +35,33 @@ export default function Show({ adjustment }) {
 
     return (
         <AuthenticatedLayout
+            backUrl={route('admin.stock-adjustments.index')}
             header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('admin.stock-adjustments.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
-                    </Link>
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">{adjustment.adjustment_no}</h2>
-                        <p className="text-sm text-muted-foreground">Detail Penyesuaian Stok</p>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">
+                        Stok
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                        Detail Penyesuaian
                     </div>
                 </div>
             }
         >
             <Head title={`Penyesuaian ${adjustment.adjustment_no}`} />
+            <PageHeader
+                title={`Penyesuaian ${adjustment.adjustment_no}`}
+                breadcrumbs={["Admin", "Stok", "Penyesuaian Stok", "Detail"]}
+                heading={
+                    <>
+                        Detail{" "}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            {adjustment.adjustment_no}
+                        </span>
+                    </>
+                }
+                description="Rincian selisih stok sistem terhadap hasil hitung fisik."
+                backUrl={route('admin.stock-adjustments.index')}
+            />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
@@ -103,7 +114,8 @@ export default function Show({ adjustment }) {
                         <div className="border-b border-border bg-muted/50 px-6 py-4">
                             <h3 className="text-sm font-semibold text-foreground">Item Penyesuaian</h3>
                         </div>
-                        <div className="overflow-x-auto">
+                        {/* Desktop table — 8 kolom, di mobile diganti kartu di bawah */}
+                        <div className="hidden overflow-x-auto md:block">
                             <table className="min-w-full divide-y divide-border">
                                 <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                     <tr>
@@ -145,6 +157,57 @@ export default function Show({ adjustment }) {
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Mobile cards — angka Selisih ditonjolkan karena itu
+                            inti dari satu baris penyesuaian. */}
+                        <div className="divide-y divide-border md:hidden">
+                            {items.map((item, idx) => {
+                                const diff = item.difference_qty || 0;
+                                return (
+                                    <div key={item.id} className="p-4">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-sm font-semibold text-foreground">
+                                                    <span className="text-muted-foreground">{idx + 1}. </span>
+                                                    {item.product?.name}
+                                                </p>
+                                                <p className="truncate font-mono text-xs text-muted-foreground">{item.product?.sku}</p>
+                                            </div>
+                                            <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${diff > 0 ? 'bg-success/10 text-success' : diff < 0 ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>
+                                                {diff > 0 ? '+' : ''}{diff}
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-3 flex items-stretch gap-2 text-center">
+                                            <div className="flex-1 rounded-lg border border-border px-2 py-1.5">
+                                                <p className="text-[10px] text-muted-foreground">Stok Sistem</p>
+                                                <p className="mt-0.5 text-sm font-semibold text-foreground">{item.system_qty}</p>
+                                            </div>
+                                            <div className="flex items-center text-sm font-semibold text-muted-foreground">&rarr;</div>
+                                            <div className="flex-1 rounded-lg border border-border px-2 py-1.5">
+                                                <p className="text-[10px] text-muted-foreground">Stok Aktual</p>
+                                                <p className="mt-0.5 text-sm font-semibold text-foreground">{item.actual_qty}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                            <span className="text-muted-foreground">
+                                                Modal {fmtCurrency(item.unit_cost || 0)}
+                                            </span>
+                                            {(item.total_cost || 0) !== 0 && (
+                                                <span className={`font-semibold ${diff < 0 ? 'text-destructive' : 'text-success'}`}>
+                                                    {diff < 0 ? '−' : '+'}{fmtCurrency(Math.abs(item.total_cost || 0))}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {item.notes && (
+                                            <p className="mt-2 text-xs text-muted-foreground">{item.notes}</p>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

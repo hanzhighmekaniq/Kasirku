@@ -6,6 +6,7 @@ import { useMemo, useState, useRef, useEffect } from 'react';
 import { Boxes, ChevronDown, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import Button from "@/Components/ui/Button";
 import Select from '@/Components/ui/Select';
+import AnchoredPanel from '@/Components/ui/AnchoredPanel';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 const fmt = (n) =>
@@ -58,16 +59,12 @@ export default function Index({ batches, products, filters }) {
     const prodDropdownRef = useRef(null);
     const prodSearchRef = useRef(null);
 
-    useEffect(() => {
-        const handleClick = (e) => {
-            if (prodDropdownRef.current && !prodDropdownRef.current.contains(e.target)) {
-                setProdDropdownOpen(false);
-                setProdSearch('');
-            }
-        };
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
+    // Penutupan saat klik di luar ditangani AnchoredPanel — panel dirender di
+    // <body> lewat portal, jadi pengecekannya harus mencakup panel itu sendiri.
+    const closeProdDropdown = () => {
+        setProdDropdownOpen(false);
+        setProdSearch('');
+    };
 
     useEffect(() => {
         if (prodDropdownOpen && prodSearchRef.current) {
@@ -199,8 +196,13 @@ export default function Index({ batches, products, filters }) {
                                     <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition ${prodDropdownOpen ? 'rotate-180' : ''}`} strokeWidth={2} />
                                 )}
                             </button>
-                            {prodDropdownOpen && (
-                                <div className="absolute z-50 mt-2 w-80 rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
+                            <AnchoredPanel
+                                anchorRef={prodDropdownRef}
+                                open={prodDropdownOpen}
+                                onClose={closeProdDropdown}
+                                width={320}
+                                className="rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl"
+                            >
                                     <div className="border-b border-border p-3">
                                         <div className="relative">
                                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.8} />
@@ -242,8 +244,7 @@ export default function Index({ batches, products, filters }) {
                                             ))
                                         )}
                                     </div>
-                                </div>
-                            )}
+                            </AnchoredPanel>
                         </div>
 
                         {/* Status filter — using Select component */}
@@ -267,10 +268,9 @@ export default function Index({ batches, products, filters }) {
                             />
                         </div>
 
-                        {/* Add Button */}
-                        <Button as={Link} href={route('admin.product-batches.create')} icon={Plus} className="w-full justify-center sm:w-auto">
-                            <span className="hidden sm:inline">Tambah Batch</span>
-                            <span className="sm:hidden">Tambah</span>
+                        {/* Add Button — di mobile dipindah ke FAB kanan bawah */}
+                        <Button as={Link} href={route('admin.product-batches.create')} icon={Plus} className="hidden sm:inline-flex sm:w-auto">
+                            Tambah Batch
                         </Button>
                     </div>
                     <div className="flex items-center justify-between pt-4">
@@ -287,29 +287,29 @@ export default function Index({ batches, products, filters }) {
                 {/* Desktop Table */}
                 <div className="hidden md:block">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-border">
+                        <table className="w-full text-sm">
                             <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                 <tr>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Produk</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">No. Batch</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Cabang</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Qty</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Harga Pokok</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Tgl Beli</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Kadaluarsa</th>
-                                    <th className="px-5 py-3.5 text-center font-semibold">Status</th>
-                                    <th className="px-5 py-3.5 text-center font-semibold">Aksi</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Produk</th>
+                                    <th className="px-4 py-3 text-left font-semibold">No. Batch</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Cabang</th>
+                                    <th className="px-4 py-3 text-right font-semibold">Qty</th>
+                                    <th className="px-4 py-3 text-right font-semibold">Harga Pokok</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Tgl Beli</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Kadaluarsa</th>
+                                    <th className="px-4 py-3 text-center font-semibold">Status</th>
+                                    <th className="px-4 py-3 text-center font-semibold">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border bg-background">
                                 {filtered.length === 0 ? (
                                     <tr>
-                                        <td colSpan={9} className="px-5 py-16 text-center">
+                                        <td colSpan={9} className="px-4 py-16 text-center">
                                             <div className="flex flex-col items-center">
-                                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                                                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-muted/30">
                                                     <Boxes className="h-8 w-8 text-muted-foreground/50" strokeWidth={1.4} />
                                                 </div>
-                                                <p className="mt-4 text-sm font-medium text-muted-foreground">
+                                                <p className="mt-4 text-sm font-medium text-foreground">
                                                     {productId || status ? 'Batch tidak ditemukan' : 'Belum ada batch'}
                                                 </p>
                                                 <p className="mt-1 text-xs text-muted-foreground">
@@ -321,27 +321,27 @@ export default function Index({ batches, products, filters }) {
                                 ) : (
                                     filtered.map((b) => (
                                         <tr key={b.id} className={`transition hover:bg-[rgb(var(--color-table-hover))] ${b.expiry_status === 'expired' ? 'bg-destructive/10' : ''}`}>
-                                            <td className="whitespace-nowrap px-5 py-4">
-                                                <p className="text-sm font-semibold text-foreground">{b.product?.name ?? '—'}</p>
+                                            <td className="whitespace-nowrap px-4 py-3">
+                                                <p className="font-semibold text-foreground">{b.product?.name ?? '—'}</p>
                                                 <p className="text-xs text-muted-foreground">{b.product?.sku}</p>
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-4 font-mono text-xs font-semibold text-primary">{b.batch_no}</td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{b.branch?.name ?? '—'}</td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-foreground">{b.quantity}</td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{fmt(b.cost_price)}</td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{fmtDate(b.purchase_date)}</td>
-                                            <td className="whitespace-nowrap px-5 py-4">
+                                            <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-primary">{b.batch_no}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{b.branch?.name ?? '—'}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-right font-semibold text-foreground">{b.quantity}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-right text-muted-foreground">{fmt(b.cost_price)}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{fmtDate(b.purchase_date)}</td>
+                                            <td className="whitespace-nowrap px-4 py-3">
                                                 {b.expiry_date ? (
                                                     <div>
-                                                        <p className="text-sm text-foreground">{fmtDate(b.expiry_date)}</p>
+                                                        <p className="text-foreground">{fmtDate(b.expiry_date)}</p>
                                                         <DaysChip days={b.days_until_expiry} />
                                                     </div>
-                                                ) : <span className="text-sm text-muted-foreground">—</span>}
+                                                ) : <span className="text-muted-foreground">—</span>}
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-center">
+                                            <td className="whitespace-nowrap px-4 py-3 text-center">
                                                 <ExpiryBadge status={b.expiry_date ? b.expiry_status : 'no_expiry'} />
                                             </td>
-                                            <td className="whitespace-nowrap px-5 py-4 text-center">
+                                            <td className="whitespace-nowrap px-4 py-3 text-center">
                                                 <div className="flex items-center justify-center gap-1">
                                                     <Link
                                                         href={route('admin.product-batches.edit', b.id)}
@@ -371,10 +371,10 @@ export default function Index({ batches, products, filters }) {
                 <div className="space-y-3 p-3 md:hidden">
                     {filtered.length === 0 ? (
                         <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
-                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-muted/30">
                                 <Boxes className="h-8 w-8 text-muted-foreground/50" strokeWidth={1.4} />
                             </div>
-                            <p className="mt-4 text-sm font-medium text-muted-foreground">
+                            <p className="mt-4 text-sm font-medium text-foreground">
                                 {productId || status ? 'Batch tidak ditemukan' : 'Belum ada batch'}
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground">
@@ -422,7 +422,7 @@ export default function Index({ batches, products, filters }) {
                                 <div className="mt-3 flex items-center justify-end gap-1 border-t border-border pt-3">
                                     <Link
                                         href={route('admin.product-batches.edit', b.id)}
-                                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-accent hover:text-accent-foreground"
+                                        className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                                     >
                                         <Pencil className="h-3.5 w-3.5" strokeWidth={1.8} />
                                         Edit
@@ -449,6 +449,17 @@ export default function Index({ batches, products, filters }) {
                 onConfirm={handleDelete}
                 onClose={() => !deleting && setTarget(null)}
             />
+
+            {/* FAB — mobile only */}
+            {!target && (
+                <Button
+                    as={Link}
+                    href={route('admin.product-batches.create')}
+                    icon={Plus}
+                    className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl sm:hidden"
+                    title="Tambah Batch"
+                />
+            )}
         </AuthenticatedLayout>
     );
 }

@@ -1,6 +1,7 @@
 import { Link } from "@inertiajs/react";
 import Button from "@/Components/ui/Button";
 import Select from "@/Components/ui/Select";
+import { Check, X } from "lucide-react";
 
 const STATUS_OPTIONS = [
     { value: "active", label: "Aktif" },
@@ -78,6 +79,7 @@ export default function EmployeeForm({
     editing = false,
     storeType = "retail",
     showCommission = false,
+    formId = "employee-form",
 }) {
     const showAccountFields = data.create_account;
     const assignableRoles = roles.filter(
@@ -98,7 +100,8 @@ export default function EmployeeForm({
     let step = 1;
 
     return (
-        <form onSubmit={onSubmit} className="space-y-5">
+        <>
+        <form id={formId} onSubmit={onSubmit} className="space-y-5">
             <SectionCard
                 step={step++}
                 title="Informasi Dasar"
@@ -114,6 +117,7 @@ export default function EmployeeForm({
                             type="text"
                             value={data.employee_code}
                             autoFocus
+                            required
                             onChange={(e) =>
                                 setData(
                                     "employee_code",
@@ -143,6 +147,7 @@ export default function EmployeeForm({
                         <input
                             type="text"
                             value={data.name}
+                            required
                             onChange={(e) => setData("name", e.target.value)}
                             placeholder="cth. Siti Aminah"
                             className={inputCls(!!errors.name)}
@@ -169,6 +174,7 @@ export default function EmployeeForm({
                         <input
                             type="email"
                             value={data.email}
+                            required={!!data.create_account}
                             onChange={(e) => setData("email", e.target.value)}
                             placeholder="nama@email.com"
                             className={inputCls(!!errors.email)}
@@ -399,6 +405,7 @@ export default function EmployeeForm({
                                 <input
                                     type="password"
                                     value={data.password}
+                                    required={!editing && !!data.create_account}
                                     onChange={(e) =>
                                         setData("password", e.target.value)
                                     }
@@ -415,6 +422,7 @@ export default function EmployeeForm({
                                 <input
                                     type="password"
                                     value={data.password_confirmation}
+                                    required={!editing && !!data.create_account}
                                     onChange={(e) =>
                                         setData(
                                             "password_confirmation",
@@ -432,11 +440,13 @@ export default function EmployeeForm({
                 )}
             </SectionCard>
 
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            {/* Actions — desktop */}
+            <div className="hidden sm:flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <Link
                     href={cancelHref}
-                    className="inline-flex justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
+                    className="inline-flex justify-center items-center gap-2 rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
                 >
+                    <X className="h-4 w-4" />
                     Batal
                 </Link>
                 <Button type="submit" loading={processing}>
@@ -444,5 +454,36 @@ export default function EmployeeForm({
                 </Button>
             </div>
         </form>
+
+        {/* FAB — mobile only */}
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 sm:hidden">
+            <Link
+                href={cancelHref}
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-card text-muted-foreground shadow-lg ring-1 ring-border transition hover:bg-destructive/10 hover:text-destructive hover:ring-destructive/30"
+                title="Batal"
+            >
+                <X className="h-5 w-5" strokeWidth={2} />
+            </Link>
+            <button
+                type="submit"
+                form={formId}
+                disabled={processing}
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary text-primary-foreground shadow-xl shadow-primary/40 transition hover:shadow-2xl hover:shadow-primary/50 disabled:opacity-60"
+                title={submitLabel}
+            >
+                {processing ? (
+                    <svg className="h-6 w-6 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                ) : (
+                    <Check className="h-6 w-6" strokeWidth={2.5} />
+                )}
+            </button>
+        </div>
+
+        {/* Spacer supaya konten tidak tertutup FAB di mobile */}
+        <div className="h-24 sm:hidden" />
+        </>
     );
 }

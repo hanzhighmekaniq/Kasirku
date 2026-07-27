@@ -3,12 +3,20 @@ import PageHeader from "@/Components/PageHeader";
 import StockTabs from "@/Components/StockTabs";
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Clock, RotateCcw, ShieldCheck, Boxes, ChevronDown, X, Search, ArrowRightLeft, Trash2 } from 'lucide-react';
+import { Clock, Boxes, ChevronDown, ChevronRight, X, Search, Trash2 } from 'lucide-react';
 import { useStoreModules } from '@/Hooks/useStoreModules';
+import { purchaseUnitHint, usesUnitConversion } from '@/Utils/unitConversion';
+
+/**
+ * Satuan pakai di belakang angka stok — hanya untuk bahan baku berkonversi,
+ * karena di situlah satuan simpan (gram) berbeda dari satuan beli (kg).
+ */
+const unitSuffix = (product) =>
+    usesUnitConversion(product) ? ` ${product.base_unit}` : '';
 
 export default function Index({ stocks, stats, storeType = 'retail' }) {
     const { flash } = usePage().props;
-    const { needsAdjustment, needsOpname, needsTransfer, needsWaste } = useStoreModules();
+    const { needsWaste } = useStoreModules();
     const [search, setSearch] = useState('');
     const [selectedProductId, setSelectedProductId] = useState('');
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -115,15 +123,6 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                     </>
                 }
                 description={`Pantau ketersediaan, nilai inventaris, dan pergerakan stok ${ITEM_LABEL.toLowerCase()} Anda.`}
-                action={
-                    <Link
-                        href={route('admin.stock.movements')}
-                        className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-                    >
-                        <Clock className="h-4 w-4" strokeWidth={1.8} />
-                        Riwayat Pergerakan
-                    </Link>
-                }
             />
 
             <StockTabs />
@@ -144,77 +143,58 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                     <p className="text-xs font-medium text-muted-foreground">Total Item</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.total_items?.toLocaleString('id-ID')}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-warning bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Stok Menipis</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.low_stock}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-red-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-destructive bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Stok Habis</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.out_of_stock}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-success bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Total Nilai Stok</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{formatCurrency(stats.total_value)}</p>
                 </div>
             </div>
 
-            {/* Sub-navigation */}
-            {(needsAdjustment || needsOpname || needsTransfer || needsWaste) && (
-                <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    {needsAdjustment && (
-                        <Link href={route('admin.stock-adjustments.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/30 hover:shadow-md">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary/20">
-                                    <RotateCcw className="h-5 w-5" strokeWidth={1.8} />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-foreground">Penyesuaian</p>
-                                    <p className="text-xs text-muted-foreground">Koreksi selisih stok</p>
-                                </div>
+            {/* Sub-navigation — tautan ke halaman lain, sengaja TIDAK ditaruh di
+                PageHeader maupun toolbar tabel supaya tidak tertukar dengan aksi
+                pada data yang sedang ditampilkan. */}
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Link
+                    href={route('admin.stock.movements')}
+                    className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-primary/30 hover:shadow-md"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary/20">
+                            <Clock className="h-5 w-5" strokeWidth={1.8} />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground">Riwayat Pergerakan</p>
+                            <p className="truncate text-xs text-muted-foreground">Semua stok masuk &amp; keluar</p>
+                        </div>
+                        <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" strokeWidth={2} />
+                    </div>
+                </Link>
+
+                {needsWaste && (
+                    <Link
+                        href={route('admin.wastes.index')}
+                        className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-destructive/30 hover:shadow-md"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive transition group-hover:bg-destructive/20">
+                                <Trash2 className="h-5 w-5" strokeWidth={1.8} />
                             </div>
-                        </Link>
-                    )}
-                    {needsOpname && (
-                        <Link href={route('admin.stock-opnames.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-violet-200 dark:hover:border-violet-800 hover:shadow-md">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 transition group-hover:bg-violet-100 dark:bg-violet-900/30 dark:text-violet-400 dark:group-hover:bg-violet-900/50">
-                                    <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-foreground">Opname</p>
-                                    <p className="text-xs text-muted-foreground">Hitung fisik stok</p>
-                                </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-foreground">Pembuangan</p>
+                                <p className="truncate text-xs text-muted-foreground">Stok rusak/kadaluarsa</p>
                             </div>
-                        </Link>
-                    )}
-                    {needsTransfer && (
-                        <Link href={route('admin.stock-transfers.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-amber-200 dark:hover:border-amber-800 hover:shadow-md">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition group-hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:group-hover:bg-amber-900/50">
-                                    <ArrowRightLeft className="h-5 w-5" strokeWidth={1.8} />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-foreground">Transfer</p>
-                                    <p className="text-xs text-muted-foreground">Pindah antar lokasi</p>
-                                </div>
-                            </div>
-                        </Link>
-                    )}
-                    {needsWaste && (
-                        <Link href={route('admin.wastes.index')} className="group overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:border-destructive/30 hover:shadow-md">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive transition group-hover:bg-destructive/20">
-                                    <Trash2 className="h-5 w-5" strokeWidth={1.8} />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-foreground">Pembuangan</p>
-                                    <p className="text-xs text-muted-foreground">Stok rusak/kadaluarsa</p>
-                                </div>
-                            </div>
-                        </Link>
-                    )}
-                </div>
-            )}
+                            <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-destructive" strokeWidth={2} />
+                        </div>
+                    </Link>
+                )}
+            </div>
 
             {/* Table card */}
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -229,7 +209,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                 className={`inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium shadow-sm transition ${
                                     selectedProduct
                                         ? 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/20'
-                                        : 'border-border bg-card text-foreground hover:bg-muted'
+                                        : 'border-border bg-background text-foreground hover:bg-muted'
                                 }`}
                             >
                                 <Boxes className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
@@ -253,7 +233,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                                 value={dropdownSearch}
                                                 onChange={(e) => setDropdownSearch(e.target.value)}
                                                 placeholder="Cari nama atau SKU..."
-                                                className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                                             />
                                         </div>
                                     </div>
@@ -297,7 +277,7 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari produk (nama / SKU)..."
-                                className="block w-full rounded-xl border border-border py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl bg-background border border-border py-2.5 pl-10 pr-4 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                     </div>
@@ -320,9 +300,9 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                 <tr>
                                     <th className="px-5 py-3.5 text-left font-semibold">{ITEM_LABEL}</th>
                                     <th className="px-5 py-3.5 text-left font-semibold">SKU</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Stok</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Reserved</th>
-                                    <th className="px-5 py-3.5 text-left font-semibold">Tersedia</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold">Stok Fisik</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold" title="Stok yang sudah dialokasikan ke pesanan dan belum keluar gudang">Dipesan</th>
+                                    <th className="px-5 py-3.5 text-left font-semibold" title="Stok Fisik dikurangi Dipesan">Tersedia</th>
                                     <th className="px-5 py-3.5 text-left font-semibold">Min. Stok</th>
                                     <th className="px-5 py-3.5 text-center font-semibold">Status</th>
                                 </tr>
@@ -354,9 +334,23 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                                                     <p className="text-sm font-semibold text-foreground">{s.product?.name}</p>
                                                 </td>
                                                 <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{s.product?.sku || '—'}</td>
-                                                <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-foreground">{(s.quantity || 0).toLocaleString('id-ID')}</td>
+                                                <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-foreground">
+                                                    {(s.quantity || 0).toLocaleString('id-ID')}
+                                                    {unitSuffix(s.product)}
+                                                    {/* Stok bahan baku disimpan dalam satuan pakai —
+                                                        setara satuan belinya ditampilkan sebagai bantuan
+                                                        baca saat mencocokkan dengan fisik gudang. */}
+                                                    {purchaseUnitHint(s.product, s.quantity) && (
+                                                        <span className="block text-xs font-normal text-muted-foreground">
+                                                            {purchaseUnitHint(s.product, s.quantity)}
+                                                        </span>
+                                                    )}
+                                                </td>
                                                 <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{(s.reserved_quantity || 0).toLocaleString('id-ID')}</td>
-                                                <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-foreground">{available.toLocaleString('id-ID')}</td>
+                                                <td className="whitespace-nowrap px-5 py-4 text-sm font-semibold text-foreground">
+                                                    {available.toLocaleString('id-ID')}
+                                                    {unitSuffix(s.product)}
+                                                </td>
                                                 <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{s.product?.stock_minimum ?? 0}</td>
                                                 <td className="whitespace-nowrap px-5 py-4 text-center">
                                                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${status.cls}`}>{status.label}</span>
@@ -390,31 +384,54 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
                             const available = getAvailable(s);
                             return (
                                 <div key={s.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                                    <div className="flex items-start justify-between">
+                                    {/* Identitas + status */}
+                                    <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0 flex-1">
                                             <p className="truncate text-sm font-semibold text-foreground">{s.product?.name}</p>
                                             {s.product?.sku && (
-                                                <p className="font-mono text-xs text-muted-foreground">{s.product.sku}</p>
+                                                <p className="truncate font-mono text-xs text-muted-foreground">{s.product.sku}</p>
                                             )}
                                         </div>
-                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${status.cls}`}>{status.label}</span>
+                                        <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${status.cls}`}>{status.label}</span>
                                     </div>
-                                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                                        <div>
-                                            <p className="text-muted-foreground">Stok</p>
-                                            <p className="mt-0.5 font-medium text-foreground">{(s.quantity || 0).toLocaleString('id-ID')}</p>
+
+                                    {/* Angka yang paling menentukan keputusan — ditonjolkan
+                                        sendiri, bukan disamakan bobotnya dengan angka lain. */}
+                                    <div className="mt-3 flex items-end justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2.5">
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                Tersedia
+                                            </p>
+                                            <p className="mt-0.5 text-2xl font-bold leading-none text-foreground">
+                                                {available.toLocaleString('id-ID')}
+                                                <span className="text-sm font-semibold">{unitSuffix(s.product)}</span>
+                                            </p>
+                                            {purchaseUnitHint(s.product, available) && (
+                                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                                    {purchaseUnitHint(s.product, available)}
+                                                </p>
+                                            )}
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-muted-foreground">Reserved</p>
-                                            <p className="mt-0.5 text-muted-foreground">{(s.reserved_quantity || 0).toLocaleString('id-ID')}</p>
+                                        <p className="shrink-0 text-right text-[11px] text-muted-foreground">
+                                            min. {(s.product?.stock_minimum ?? 0).toLocaleString('id-ID')}
+                                        </p>
+                                    </div>
+
+                                    {/* Asal angka di atas, ditulis sebagai hitungan supaya
+                                        hubungan ketiganya langsung terbaca. */}
+                                    <div className="mt-2 flex items-stretch gap-2 text-center">
+                                        <div className="flex-1 rounded-lg border border-border px-2 py-1.5">
+                                            <p className="text-[10px] text-muted-foreground">Stok Fisik</p>
+                                            <p className="mt-0.5 text-sm font-semibold text-foreground">
+                                                {(s.quantity || 0).toLocaleString('id-ID')}
+                                            </p>
                                         </div>
-                                        <div>
-                                            <p className="text-muted-foreground">Tersedia</p>
-                                            <p className="mt-0.5 font-semibold text-foreground">{available.toLocaleString('id-ID')}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-muted-foreground">Min. Stok</p>
-                                            <p className="mt-0.5 text-muted-foreground">{s.product?.stock_minimum ?? 0}</p>
+                                        <div className="flex items-center text-sm font-semibold text-muted-foreground">&minus;</div>
+                                        <div className="flex-1 rounded-lg border border-border px-2 py-1.5">
+                                            <p className="text-[10px] text-muted-foreground">Dipesan</p>
+                                            <p className="mt-0.5 text-sm font-semibold text-foreground">
+                                                {(s.reserved_quantity || 0).toLocaleString('id-ID')}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

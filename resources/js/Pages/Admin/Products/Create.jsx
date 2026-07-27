@@ -27,7 +27,40 @@ import {
 import Button from "@/Components/ui/Button";
 import CurrencyInput from "@/Components/ui/CurrencyInput";
 
-const UNIT_OPTIONS = [
+/* Satuan dasar per store type. FnB butuh satuan sajian (porsi, piring) dan
+   satuan takaran bahan baku (gram, ml) yang tidak relevan di retail. */
+const UNIT_OPTIONS_BY_STORE = {
+    fnb: [
+        "porsi",
+        "piring",
+        "gelas",
+        "cup",
+        "pcs",
+        "botol",
+        "pack",
+        "sachet",
+        "gram",
+        "kg",
+        "ml",
+        "liter",
+        "butir",
+        "lembar",
+    ],
+    retail: [
+        "pcs",
+        "botol",
+        "pack",
+        "dus",
+        "sachet",
+        "kg",
+        "gram",
+        "liter",
+        "ml",
+        "lembar",
+    ],
+};
+
+const DEFAULT_UNIT_OPTIONS = [
     "pcs",
     "botol",
     "cup",
@@ -131,6 +164,7 @@ export default function Create({
         cost_price: "",
         stock_minimum: "",
         track_stock: !NO_STOCK_TYPES.includes(defaultType),
+        track_batch: false,
         is_sellable: true,
         preparation_time: "",
         is_active: true,
@@ -188,7 +222,7 @@ export default function Create({
                 ? ["kunjungan", "sesi", "pcs", "item"]
                 : data.type === "rental_item"
                     ? ["unit", "pcs", "set", "hari"]
-                    : UNIT_OPTIONS;
+                    : (UNIT_OPTIONS_BY_STORE[storeType] ?? DEFAULT_UNIT_OPTIONS);
 
     const handleTypeChange = (newType) => {
         setData("type", newType);
@@ -854,6 +888,17 @@ export default function Create({
                                         description="Kurangi stok otomatis setiap penjualan"
                                         checked={data.track_stock}
                                         onChange={(v) => setData("track_stock", v)}
+                                    />
+                                )}
+                                {/* Batch & Kadaluarsa — hanya muncul kalau fitur batch_expired aktif
+                                    di toko ini. Produk service/time_based tidak punya stok jadi
+                                    tidak relevan melacak batch. */}
+                                {has("batch_expired") && feat.trackStock && !isNoStock && (
+                                    <SettingToggle
+                                        label="Lacak Batch & Kadaluarsa"
+                                        description="Catat nomor batch dan tanggal expired dari pembelian"
+                                        checked={data.track_batch ?? false}
+                                        onChange={(v) => setData("track_batch", v)}
                                     />
                                 )}
                                 <SettingToggle

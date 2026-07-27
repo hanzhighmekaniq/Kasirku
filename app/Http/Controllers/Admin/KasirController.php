@@ -27,6 +27,8 @@ use App\Models\StockMovement;
 use App\Models\Store;
 use App\Services\CashRoundingService;
 use App\Services\PromotionService;
+use App\Services\Stock\StockMutation;
+use App\Services\Stock\StockService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -994,6 +996,7 @@ class KasirController extends Controller
                         ->where('variant_id', $item['variant_id'] ?? null)
                         ->where('packaging_unit_id', $item['packaging_unit_id'] ?? null)
                         ->where('store_id', $storeId)
+                        ->where('branch_id', $branchId)
                         ->sum('quantity');
 
                     if ($currentStock < $actualQty) {
@@ -1040,8 +1043,9 @@ class KasirController extends Controller
                             );
                         }
 
-                        $ingredientCost +=
-                            $needed * (float) $recipe->rawMaterial->cost_price;
+                        // Modal per satuan pakai — sepadan dengan $needed.
+                        $costPerUnit = $recipe->rawMaterial->costPerBaseUnit();
+                        $ingredientCost += $needed * $costPerUnit;
 
                         $snapshot[] = [
                             'raw_material_id' => $recipe->raw_material_id,
@@ -1049,9 +1053,8 @@ class KasirController extends Controller
                             'quantity_per_unit' => (float) $recipe->quantity,
                             'total_quantity' => $needed,
                             'unit' => $recipe->unit,
-                            'cost_price' => (float) $recipe->rawMaterial->cost_price,
-                            'total_cost' => $needed *
-                                (float) $recipe->rawMaterial->cost_price,
+                            'cost_price' => $costPerUnit,
+                            'total_cost' => $needed * $costPerUnit,
                             'is_nullable' => $recipe->is_nullable,
                         ];
                     }
@@ -1084,84 +1087,53 @@ class KasirController extends Controller
                 if ($hasPgPayment) {
                     // Still record recipe snapshot for reference, but don't deduct
                 } elseif ($hasRecipe) {
-                    // Potong stok bahan baku
-                    foreach ($product->recipes as $recipe) {
-                        $needed = $recipe->quantity * $item['quantity'];
-                        if ($recipe->is_nullable) {
-                            $rawStock = $recipe->rawMaterial->stocks
-                                ->where('store_id', $storeId)
-                                ->sum('quantity');
-                            if ($rawStock <= 0) {
-                                continue;
-                            } // skip bahan opsional yang habis
-                        }
-                        $stock = ProductStock::firstOrCreate(
-                            [
-                                'product_id' => $recipe->raw_material_id,
-                                'variant_id' => null,
-                                'packaging_unit_id' => null,
-                                'store_id' => $storeId,
-                            ],
-                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
-                        );
-                        $stock->decrement('quantity', $needed);
-
-                        // Catat riwayat pergerakan stok bahan baku (branch_id untuk audit)
-                        StockMovement::create([
-                            'product_id' => $recipe->raw_material_id,
-                            'store_id' => $storeId,
-                            'branch_id' => $branchId,
-                            'reference_type' => Sale::class,
-                            'reference_id' => $sale->id,
-                            'movement_type' => 'sale_out',
-                            'quantity' => $needed,
-                            'unit_cost' => $recipe->rawMaterial->cost_price,
-                            'reference_no' => $saleNo,
-                            'notes' => "Penjualan #{$saleNo} — bahan untuk {$product->name}",
-                            'moved_at' => $now,
-                        ]);
-                    }
-                } else {
+                    app(StockService::class)->decreaseRecipeIngredients(
+                        item: $item,
+                        product: $product,
+                        referenceType: Sale::class,
+                        referenceId: $sale->id,
+                        referenceNo: $saleNo,
+                        storeId: $storeId,
+                        branchId: $branchId,
+                        movedAt: $movedAt ?? null,
+                    );
+                } elseif ($product?->track_stock) {
                     // Potong stok dari bucket yang tepat (product + variant +
                     // packaging_unit) — minimarket behavior. Menjual per dus
                     // hanya mengurangi bucket dus (dalam satuan dus itu
                     // sendiri, tidak ada konversi otomatis ke pcs), tidak
                     // menyentuh bucket pcs.
-                    if ($product?->track_stock) {
-                        $actualQty = $item['quantity'];
-                        $variantId = $item['variant_id'] ?? null;
-                        $packagingUnitId = $item['packaging_unit_id'] ?? null;
+                    $variantId = $item['variant_id'] ?? null;
+                    $packagingUnitId = $item['packaging_unit_id'] ?? null;
+                    $unitLabel = ! empty($item['unit_name']) ? " ({$item['unit_name']})" : '';
 
-                        $stock = ProductStock::firstOrCreate(
-                            [
-                                'product_id' => $item['product_id'],
-                                'variant_id' => $variantId,
-                                'packaging_unit_id' => $packagingUnitId,
-                                'store_id' => $storeId,
-                            ],
-                            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
-                        );
-                        $stock->decrement('quantity', $actualQty);
+                    $existing = ProductStock::where([
+                        'product_id' => $item['product_id'],
+                        'variant_id' => $variantId,
+                        'packaging_unit_id' => $packagingUnitId,
+                        'store_id' => $storeId,
+                        'branch_id' => $branchId,
+                    ])->first();
 
-                        $unitLabel = ! empty($item['unit_name']) ? " ({$item['unit_name']})" : '';
+                    $unitCost = $existing && $existing->average_cost > 0
+                        ? $existing->average_cost
+                        : ($product->cost_price ?? 0);
 
-                        // Catat riwayat pergerakan stok produk (branch_id untuk audit)
-                        StockMovement::create([
-                            'product_id' => $item['product_id'],
-                            'variant_id' => $variantId,
-                            'packaging_unit_id' => $packagingUnitId,
-                            'store_id' => $storeId,
-                            'branch_id' => $branchId,
-                            'reference_type' => Sale::class,
-                            'reference_id' => $sale->id,
-                            'movement_type' => 'sale_out',
-                            'quantity' => $actualQty,
-                            'unit_cost' => $stock->average_cost > 0 ? $stock->average_cost : ($product?->cost_price ?? 0),
-                            'reference_no' => $saleNo,
-                            'notes' => "Penjualan #{$saleNo} — {$item['quantity']}x{$unitLabel} {$item['product_id']}",
-                            'moved_at' => $now,
-                        ]);
-                    }
+                    app(StockService::class)->decrease(new StockMutation(
+                        productId: $item['product_id'],
+                        variantId: $variantId,
+                        packagingUnitId: $packagingUnitId,
+                        storeId: $storeId,
+                        branchId: $branchId,
+                        quantity: (float) $item['quantity'],
+                        unitCost: (float) $unitCost,
+                        movementType: 'sale_out',
+                        referenceType: Sale::class,
+                        referenceId: $sale->id,
+                        referenceNo: $saleNo,
+                        notes: "Penjualan #{$saleNo} — {$item['quantity']}x{$unitLabel} {$product->name}",
+                        movedAt: $now ? (string) $now : null,
+                    ));
                 }
             }
 
@@ -1440,7 +1412,7 @@ class KasirController extends Controller
             $grandTotal = $preRoundingTotal + $roundingAdjustment;
 
             // Pre-validate stock
-            $this->validateStockForItems($items, $storeId);
+            $this->validateStockForItems($items, $storeId, $branchId);
 
             $sale = Sale::create([
                 'store_id' => $storeId,
