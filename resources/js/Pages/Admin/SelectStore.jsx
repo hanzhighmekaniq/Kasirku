@@ -1,141 +1,319 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from "react";
+import { Head, router, usePage } from "@inertiajs/react";
+import {
+    AlertTriangle,
+    ArrowRight,
+    Check,
+    CircleParking,
+    Coffee,
+    Gamepad2,
+    Hotel,
+    KeyRound,
+    Loader2,
+    Scissors,
+    Search,
+    Store as StoreIcon,
+    Ticket,
+} from "lucide-react";
 
-const STORE_TYPE_ICON = {
-    minimarket:   '🏪',
-    cafe:         '☕',
-    booth_coffee: '🧋',
+/**
+ * Langkah "Pilih Toko" setelah login (akun dengan lebih dari satu toko).
+ *
+ * Satu bahasa visual dengan halaman login dan Admin/SelectBranch: band gelap
+ * di kiri, kartu hairline di kanan, palet paten `.dv-auth` dari
+ * resources/css/app.css. Jangan pakai utility yang terikat theme engine user
+ * di file ini — pakai kelas `dv-*`.
+ */
+
+/** Ikon & label per kode tipe toko (kolom `store_types.code`). */
+const TYPE_ICON = {
+    retail: StoreIcon,
+    fnb: Coffee,
+    service: Scissors,
+    rental: KeyRound,
+    ticket: Ticket,
+    hospitality: Hotel,
+    // backward compat dengan kode tipe lama
+    laundry: Scissors,
+    parking: CircleParking,
+    session: Gamepad2,
 };
 
-const STORE_TYPE_LABEL = {
-    minimarket:   'Minimarket',
-    cafe:         'Cafe / Resto',
-    booth_coffee: 'Booth Kopi',
+const TYPE_LABEL = {
+    retail: "Retail",
+    fnb: "FnB",
+    service: "Service",
+    rental: "Rental",
+    ticket: "Tiket",
+    hospitality: "Hotel",
+    laundry: "Service",
+    parking: "Parkir",
+    session: "Rental",
 };
 
-export default function SelectStore({ stores }) {
-    const { errors } = usePage().props;
+/** Di atas jumlah ini daftar toko dapat kolom pencarian. */
+const SEARCH_THRESHOLD = 6;
+
+export default function SelectStore({ stores = [] }) {
+    const { errors = {}, flash } = usePage().props;
     const [selected, setSelected] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [query, setQuery] = useState("");
+
+    const showSearch = stores.length > SEARCH_THRESHOLD;
+
+    const filtered = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return stores;
+
+        return stores.filter(
+            (store) =>
+                (store.name ?? "").toLowerCase().includes(q) ||
+                (store.code ?? "").toLowerCase().includes(q),
+        );
+    }, [stores, query]);
 
     const handleSelect = (storeId) => {
+        if (submitting) return;
         setSelected(storeId);
         setSubmitting(true);
-        router.post(route('admin.store.select.post'), { store_id: storeId }, {
-            onFinish: () => setSubmitting(false),
-        });
+        router.post(
+            route("admin.store.select.post"),
+            { store_id: storeId },
+            { onFinish: () => setSubmitting(false) },
+        );
     };
+
+    const year = new Date().getFullYear();
+
+    const totalBranches = stores.reduce(
+        (sum, store) => sum + (store.branches_count ?? 0),
+        0,
+    );
+
+    const specs = [
+        { label: "Toko", value: String(stores.length) },
+        { label: "Total cabang", value: String(totalBranches) },
+        { label: "Ganti toko", value: "kapan saja" },
+    ];
 
     return (
         <>
             <Head title="Pilih Toko" />
 
-            <div className="flex min-h-screen bg-muted">
-                {/* Brand panel */}
-                <div className="relative hidden w-1/2 overflow-hidden bg-primary lg:flex lg:flex-col lg:justify-between xl:w-3/5">
-                    <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-primary-foreground/10 blur-3xl" />
-                    <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 translate-x-1/3 translate-y-1/3 rounded-full bg-primary-foreground/5 blur-3xl" />
+            <div className="dv-auth grid min-h-screen lg:grid-cols-[1.15fr_1fr] xl:grid-cols-[1.35fr_1fr]">
+                {/* ── Band gelap: satu-satunya area gelap di halaman ── */}
+                <div className="dv-band hidden flex-col justify-between p-10 xl:p-14 lg:flex">
+                    <a
+                        href="https://devus.id"
+                        className="dv-wordmark text-[1.375rem]"
+                        aria-label="DEVus.id, beranda"
+                    >
+                        DEVus<span className="dv-wordmark__dot">.</span>id
+                    </a>
 
-                    <div className="relative z-10 p-10 xl:p-14">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/10 shadow-lg shadow-primary/20">
-                                <ApplicationLogo className="h-7 w-7 fill-current text-primary-foreground" />
-                            </div>
-                            <div className="leading-tight">
-                                <span className="block text-lg font-bold tracking-tight text-primary-foreground">SIM-KASIR</span>
-                                <span className="block text-xs font-medium text-primary-foreground/70">Point of Sale System</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="relative z-10 p-10 xl:p-14">
-                        <h1 className="max-w-md text-4xl font-bold leading-tight text-primary-foreground xl:text-5xl">
-                            Kamu punya banyak toko.
-                        </h1>
-                        <p className="mt-4 max-w-md text-base text-primary-foreground/70">
-                            Pilih toko yang ingin kamu kelola. Kamu bisa berpindah toko kapan saja dari header.
+                    <div className="max-w-xl space-y-6 py-10">
+                        <p className="dv-flag">
+                            <Check size={13} strokeWidth={2.5} />
+                            Akunmu terhubung ke {stores.length} toko
                         </p>
+
+                        <h1 className="dv-display">
+                            Pilih toko
+                            <br />
+                            yang mau dikelola.
+                        </h1>
+
+                        <p className="dv-lead">
+                            Tiap toko punya produk, stok, karyawan, dan
+                            laporannya sendiri. Setelah masuk, kamu bisa
+                            berpindah toko maupun cabang kapan saja dari
+                            sidebar.
+                        </p>
+
+                        <dl className="dv-spec max-w-sm">
+                            {specs.map((spec) => (
+                                <div key={spec.label} className="dv-spec__row">
+                                    <dt className="dv-label">{spec.label}</dt>
+                                    <dd className="dv-spec__val">
+                                        {spec.value}
+                                    </dd>
+                                </div>
+                            ))}
+                        </dl>
                     </div>
 
-                    <div className="relative z-10 p-10 text-sm text-primary-foreground/60 xl:px-14">
-                        &copy; {new Date().getFullYear()} SIM-KASIR. All rights reserved.
-                    </div>
+                    <p className="dv-label">
+                        &copy; {year} DEVus.id — Seluruh hak dilindungi
+                    </p>
                 </div>
 
-                {/* Store selection */}
-                <div className="flex w-full flex-col items-center justify-center px-6 py-12 lg:w-2/5">
-                    <div className="w-full max-w-md">
-                        {/* Logo mobile */}
-                        <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20">
-                                <ApplicationLogo className="h-6 w-6 fill-current text-primary-foreground" />
-                            </div>
-                            <span className="text-lg font-bold tracking-tight text-foreground">SIM-KASIR</span>
-                        </div>
+                {/* ── Panel pilihan ── */}
+                <div className="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-12">
+                    <div className="mx-auto w-full max-w-[26rem]">
+                        {/* Wordmark versi mobile — band-nya disembunyikan di bawah lg */}
+                        <a
+                            href="https://devus.id"
+                            className="dv-wordmark mb-10 text-[1.375rem] lg:hidden"
+                            aria-label="DEVus.id, beranda"
+                        >
+                            DEVus<span className="dv-wordmark__dot">.</span>id
+                        </a>
 
-                        <h2 className="text-2xl font-bold text-foreground">Pilih Toko</h2>
-                        <p className="mt-1 text-sm text-muted-foreground">Kamu memiliki akses ke {stores.length} toko.</p>
-
-                        {errors?.store_id && (
-                            <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
-                                {errors.store_id}
-                            </div>
-                        )}
-
-                        <div className="mt-6 space-y-3">
-                            {stores.map((store) => (
-                                <button
-                                    key={store.id}
-                                    onClick={() => handleSelect(store.id)}
-                                    disabled={submitting}
-                                    className={`group flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
-                                        selected === store.id
-                                            ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
-                                            : 'border-border bg-card hover:border-primary/50 hover:bg-primary/5 hover:shadow-md'
-                                    } disabled:opacity-60`}
-                                >
-                                    {/* Icon */}
-                                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl transition ${
-                                        selected === store.id ? 'bg-primary/20' : 'bg-muted group-hover:bg-primary/10'
-                                    }`}>
-                                        {STORE_TYPE_ICON[store.store_type] ?? '🏬'}
-                                    </div>
-
-                                    {/* Info */}
-                                    <div className="min-w-0 flex-1">
-                                        <p className={`text-sm font-semibold transition ${
-                                            selected === store.id ? 'text-primary' : 'text-foreground'
-                                        }`}>
-                                            {store.name}
-                                        </p>
-                                        <div className="mt-0.5 flex items-center gap-2">
-                                            <span className="text-xs text-muted-foreground">{STORE_TYPE_LABEL[store.store_type] ?? store.store_type}</span>
-                                            <span className="text-muted-foreground/50">·</span>
-                                            <span className="text-xs text-muted-foreground">{store.branches_count} cabang</span>
-                                            <span className="text-muted-foreground/50">·</span>
-                                            <span className="font-mono text-xs text-muted-foreground">{store.code}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Arrow */}
-                                    <svg className={`h-5 w-5 shrink-0 transition ${
-                                        selected === store.id ? 'text-primary' : 'text-muted-foreground/50 group-hover:text-primary'
-                                    }`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                    </svg>
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="mt-8 text-center">
-                            <button
-                                onClick={() => router.post(route('logout'))}
-                                className="text-sm text-muted-foreground transition hover:text-foreground"
+                        <div className="dv-card p-7 sm:p-8">
+                            <p className="dv-label">Pilih toko</p>
+                            <h2 className="dv-title mt-3">
+                                Mulai dari toko mana?
+                            </h2>
+                            <p
+                                className="mt-2 text-[0.9375rem] leading-relaxed"
+                                style={{ color: "var(--dv-muted)" }}
                             >
-                                ← Kembali ke login
+                                Kamu punya akses ke {stores.length} toko.
+                            </p>
+
+                            {flash?.error && (
+                                <div
+                                    className="dv-alert dv-alert--bad mt-6"
+                                    role="alert"
+                                >
+                                    <AlertTriangle
+                                        size={15}
+                                        strokeWidth={2.5}
+                                        className="mt-px shrink-0"
+                                    />
+                                    <span>{flash.error}</span>
+                                </div>
+                            )}
+
+                            {errors.store_id && (
+                                <div
+                                    className="dv-alert dv-alert--bad mt-6"
+                                    role="alert"
+                                >
+                                    <AlertTriangle
+                                        size={15}
+                                        strokeWidth={2.5}
+                                        className="mt-px shrink-0"
+                                    />
+                                    <span>{errors.store_id}</span>
+                                </div>
+                            )}
+
+                            {showSearch && (
+                                <div className="relative mt-7">
+                                    <Search
+                                        size={16}
+                                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+                                        style={{ color: "var(--dv-muted)" }}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={query}
+                                        onChange={(e) =>
+                                            setQuery(e.target.value)
+                                        }
+                                        className="dv-input pl-9"
+                                        placeholder="Cari nama atau kode toko"
+                                        aria-label="Cari toko"
+                                    />
+                                </div>
+                            )}
+
+                            {filtered.length === 0 ? (
+                                <div className="dv-empty mt-7">
+                                    <p
+                                        className="text-[0.9375rem] font-semibold"
+                                        style={{ color: "var(--dv-ink)" }}
+                                    >
+                                        Toko tidak ditemukan
+                                    </p>
+                                    <p
+                                        className="mt-1 text-[0.8125rem]"
+                                        style={{ color: "var(--dv-muted)" }}
+                                    >
+                                        Coba kata kunci lain.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div
+                                    className={`mt-7 space-y-2 ${showSearch ? "max-h-[19rem] overflow-y-auto pr-1" : ""}`}
+                                >
+                                    {filtered.map((store) => {
+                                        const isActive = selected === store.id;
+                                        const Icon =
+                                            TYPE_ICON[store.store_type] ??
+                                            StoreIcon;
+                                        const meta = [
+                                            TYPE_LABEL[store.store_type] ??
+                                                store.store_type,
+                                            `${store.branches_count ?? 0} cabang`,
+                                            store.code,
+                                        ]
+                                            .filter(Boolean)
+                                            .join(" · ");
+
+                                        return (
+                                            <button
+                                                key={store.id}
+                                                type="button"
+                                                onClick={() =>
+                                                    handleSelect(store.id)
+                                                }
+                                                disabled={submitting}
+                                                aria-busy={
+                                                    isActive && submitting
+                                                        ? "true"
+                                                        : undefined
+                                                }
+                                                className={`dv-option ${isActive ? "dv-option--active" : ""}`}
+                                            >
+                                                <span className="dv-option__icon">
+                                                    <Icon
+                                                        size={17}
+                                                        strokeWidth={2}
+                                                    />
+                                                </span>
+                                                <span className="dv-option__body">
+                                                    <span className="dv-option__name">
+                                                        {store.name}
+                                                    </span>
+                                                    <span className="dv-option__meta">
+                                                        {meta}
+                                                    </span>
+                                                </span>
+                                                {isActive && submitting ? (
+                                                    <Loader2
+                                                        size={16}
+                                                        className="dv-option__arrow animate-spin"
+                                                    />
+                                                ) : (
+                                                    <ArrowRight
+                                                        size={16}
+                                                        strokeWidth={2.5}
+                                                        className="dv-option__arrow"
+                                                    />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-7">
+                            <button
+                                type="button"
+                                onClick={() => router.post(route("logout"))}
+                                className="dv-tlink"
+                            >
+                                Keluar dan masuk dengan akun lain
                             </button>
                         </div>
+
+                        <p className="dv-label mt-10 lg:hidden">
+                            &copy; {year} DEVus.id
+                        </p>
                     </div>
                 </div>
             </div>

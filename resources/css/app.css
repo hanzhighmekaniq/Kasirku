@@ -694,4 +694,108 @@ body:has(.dv-auth) {
         font-weight: 500;
         color: var(--dv-graphite-ink);
     }
+
+    /* ── Baris pilihan (pilih toko / pilih cabang) ──────────────────
+       Dipakai halaman Admin/SelectStore & Admin/SelectBranch supaya kedua
+       langkah setelah login memakai bahasa visual yang sama dengan login:
+       kartu hairline, radius kecil, aksen hanya sebagai satu sinyal. */
+    .dv-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        padding: 0.6875rem 0.75rem;
+        text-align: start;
+        background: var(--dv-paper);
+        border: 1px solid var(--dv-rule);
+        border-radius: 8px;
+        box-shadow: var(--dv-shadow-whisper);
+        transition:
+            background-color 200ms var(--dv-ease),
+            border-color 200ms var(--dv-ease),
+            transform 120ms var(--dv-ease);
+    }
+    @media (hover: hover) and (pointer: fine) {
+        .dv-option:hover {
+            background: var(--dv-accent-tint);
+            border-color: var(--dv-accent);
+        }
+    }
+    .dv-option:focus-visible {
+        outline: 2px solid var(--dv-focus);
+        outline-offset: 2px;
+    }
+    .dv-option:active {
+        transform: translateY(1px);
+    }
+    .dv-option:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+        pointer-events: none;
+    }
+    .dv-option--active {
+        background: var(--dv-accent-tint);
+        border-color: var(--dv-accent);
+    }
+
+    .dv-option__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 6px;
+        color: var(--dv-ink-2);
+        background: var(--dv-paper-3);
+        transition:
+            background-color 200ms var(--dv-ease),
+            color 200ms var(--dv-ease);
+    }
+    .dv-option--active .dv-option__icon {
+        color: var(--dv-accent-ink);
+        background: var(--dv-accent);
+    }
+
+    .dv-option__body {
+        min-width: 0;
+        flex: 1 1 0%;
+    }
+    .dv-option__name {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        letter-spacing: -0.005em;
+        color: var(--dv-ink);
+    }
+    .dv-option__meta {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-block-start: 0.125rem;
+        font-family: var(--dv-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.01em;
+        color: var(--dv-muted);
+    }
+    .dv-option__arrow {
+        flex-shrink: 0;
+        color: var(--dv-muted);
+    }
+    .dv-option--active .dv-option__arrow {
+        color: var(--dv-accent-text);
+    }
+
+    /* ── Keadaan kosong (hasil pencarian tidak ada) ── */
+    .dv-empty {
+        padding: 2rem 0.75rem;
+        text-align: center;
+        border: 1px dashed var(--dv-rule-2);
+        border-radius: 8px;
+    }
 }

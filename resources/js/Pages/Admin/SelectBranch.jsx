@@ -1,133 +1,285 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from "react";
+import { Head, router, usePage } from "@inertiajs/react";
+import {
+    AlertTriangle,
+    ArrowRight,
+    Check,
+    Loader2,
+    MapPin,
+    Search,
+} from "lucide-react";
 
-export default function SelectBranch({ branches, storeName }) {
-    const errors = usePage().props.errors || {};
-    const [selectedBranch, setSelectedBranch] = useState(null);
+/**
+ * Langkah "Pilih Cabang" setelah login.
+ *
+ * Tampilannya sengaja memakai bahasa visual yang SAMA dengan halaman login
+ * (resources/js/Pages/Auth/Login.jsx): band gelap di kiri, kartu hairline di
+ * kanan, palet paten `.dv-auth` dari resources/css/app.css. Jadi di file ini
+ * jangan pakai utility yang terikat theme engine user (`bg-primary`,
+ * `text-foreground`, `rounded-lg`) — pakai kelas `dv-*`.
+ */
+
+/** Di atas jumlah ini daftar cabang dapat kolom pencarian. */
+const SEARCH_THRESHOLD = 6;
+
+export default function SelectBranch({ branches = [], storeName }) {
+    const { errors = {}, flash } = usePage().props;
+    const [selected, setSelected] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [query, setQuery] = useState("");
+
+    const showSearch = branches.length > SEARCH_THRESHOLD;
+
+    const filtered = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return branches;
+
+        return branches.filter(
+            (branch) =>
+                (branch.name ?? "").toLowerCase().includes(q) ||
+                (branch.code ?? "").toLowerCase().includes(q) ||
+                (branch.address ?? "").toLowerCase().includes(q),
+        );
+    }, [branches, query]);
 
     const handleSelect = (branchId) => {
-        setSelectedBranch(branchId);
+        if (submitting) return;
+        setSelected(branchId);
         setSubmitting(true);
-        router.post(route('admin.branch.select.post'), { branch_id: branchId }, {
-            onFinish: () => setSubmitting(false),
-        });
+        router.post(
+            route("admin.branch.select.post"),
+            { branch_id: branchId },
+            { onFinish: () => setSubmitting(false) },
+        );
     };
+
+    const year = new Date().getFullYear();
+
+    const specs = [
+        { label: "Toko", value: storeName },
+        { label: "Cabang aktif", value: String(branches.length) },
+        { label: "Data per cabang", value: "stok & kas" },
+    ];
 
     return (
         <>
             <Head title="Pilih Cabang" />
 
-            <div className="flex min-h-screen bg-muted">
-                {/* Brand panel */}
-                <div className="relative hidden w-1/2 overflow-hidden bg-primary lg:flex lg:flex-col lg:justify-between xl:w-3/5">
-                    <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-primary-foreground/10 blur-3xl" />
-                    <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 translate-x-1/3 translate-y-1/3 rounded-full bg-primary-foreground/5 blur-3xl" />
+            <div className="dv-auth grid min-h-screen lg:grid-cols-[1.15fr_1fr] xl:grid-cols-[1.35fr_1fr]">
+                {/* ── Band gelap: satu-satunya area gelap di halaman ── */}
+                <div className="dv-band hidden flex-col justify-between p-10 xl:p-14 lg:flex">
+                    <a
+                        href="https://devus.id"
+                        className="dv-wordmark text-[1.375rem]"
+                        aria-label="DEVus.id, beranda"
+                    >
+                        DEVus<span className="dv-wordmark__dot">.</span>id
+                    </a>
 
-                    <div className="relative z-10 p-10 xl:p-14">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-foreground/10 shadow-lg shadow-primary/20">
-                                <ApplicationLogo className="h-7 w-7 fill-current text-primary-foreground" />
-                            </div>
-                            <div className="leading-tight">
-                                <span className="block text-lg font-bold tracking-tight text-primary-foreground">SIM-KASIR</span>
-                                <span className="block text-xs font-medium text-primary-foreground/70">Point of Sale System</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="relative z-10 p-10 xl:p-14">
-                        <h1 className="max-w-md text-4xl font-bold leading-tight text-primary-foreground xl:text-5xl">
-                            Pilih cabang untuk mulai bekerja.
-                        </h1>
-                        <p className="mt-4 max-w-md text-base text-primary-foreground/70">
-                            Setiap cabang memiliki data penjualan, stok, dan meja yang terpisah.
+                    <div className="max-w-xl space-y-6 py-10">
+                        <p className="dv-flag">
+                            <Check size={13} strokeWidth={2.5} />
+                            Langkah terakhir
                         </p>
+
+                        <h1 className="dv-display">
+                            Pilih cabang
+                            <br />
+                            tempat kamu bekerja.
+                        </h1>
+
+                        <p className="dv-lead">
+                            Penjualan, stok, kas, dan meja dihitung per cabang.
+                            Pilih yang sesuai supaya angka di dashboard dan
+                            kasir langsung benar. Kamu bisa berpindah cabang
+                            kapan saja dari sidebar.
+                        </p>
+
+                        <dl className="dv-spec max-w-sm">
+                            {specs.map((spec) => (
+                                <div key={spec.label} className="dv-spec__row">
+                                    <dt className="dv-label">{spec.label}</dt>
+                                    <dd className="dv-spec__val">
+                                        {spec.value}
+                                    </dd>
+                                </div>
+                            ))}
+                        </dl>
                     </div>
 
-                    <div className="relative z-10 p-10 text-sm text-primary-foreground/60 xl:px-14">
-                        &copy; {new Date().getFullYear()} SIM-KASIR. All rights reserved.
-                    </div>
+                    <p className="dv-label">
+                        &copy; {year} DEVus.id — Seluruh hak dilindungi
+                    </p>
                 </div>
 
-                {/* Branch selection form */}
-                <div className="flex w-full flex-col items-center justify-center px-6 py-12 lg:w-2/5 xl:w-2/5">
-                    <div className="w-full max-w-md">
-                        {/* Logo (mobile only) */}
-                        <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20">
-                                <ApplicationLogo className="h-6 w-6 fill-current text-primary-foreground" />
-                            </div>
-                            <span className="text-lg font-bold tracking-tight text-foreground">SIM-KASIR</span>
-                        </div>
+                {/* ── Panel pilihan ── */}
+                <div className="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-12">
+                    <div className="mx-auto w-full max-w-[26rem]">
+                        {/* Wordmark versi mobile — band-nya disembunyikan di bawah lg */}
+                        <a
+                            href="https://devus.id"
+                            className="dv-wordmark mb-10 text-[1.375rem] lg:hidden"
+                            aria-label="DEVus.id, beranda"
+                        >
+                            DEVus<span className="dv-wordmark__dot">.</span>id
+                        </a>
 
-                        <h2 className="text-2xl font-bold text-foreground">Pilih Cabang</h2>
-                        <p className="mt-1 text-sm text-muted-foreground">{storeName}</p>
-
-                        {errors.branch_id && (
-                            <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
-                                {errors.branch_id}
-                            </div>
-                        )}
-
-                        <div className="mt-6 space-y-3">
-                            {branches.map((branch) => (
-                                <button
-                                    key={branch.id}
-                                    onClick={() => handleSelect(branch.id)}
-                                    disabled={submitting}
-                                    className={`group flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
-                                        selectedBranch === branch.id
-                                            ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
-                                            : 'border-border bg-card hover:border-primary/50 hover:bg-primary/5 hover:shadow-md'
-                                    } disabled:opacity-60`}
-                                >
-                                    {/* Icon */}
-                                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold text-primary-foreground transition ${
-                                        selectedBranch === branch.id
-                                            ? 'bg-primary'
-                                            : 'bg-muted-foreground group-hover:bg-primary'
-                                    }`}>
-                                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.015A3.001 3.001 0 0021 9.349m-18 0V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v4.099" />
-                                        </svg>
-                                    </div>
-
-                                    {/* Info */}
-                                    <div className="min-w-0 flex-1">
-                                        <p className={`text-sm font-semibold transition ${
-                                            selectedBranch === branch.id ? 'text-primary' : 'text-foreground'
-                                        }`}>
-                                            {branch.name}
-                                        </p>
-                                        {branch.code && (
-                                            <p className="mt-0.5 text-xs text-muted-foreground">Kode: {branch.code}</p>
-                                        )}
-                                        {branch.address && (
-                                            <p className="mt-0.5 text-xs text-muted-foreground truncate">{branch.address}</p>
-                                        )}
-                                    </div>
-
-                                    {/* Arrow */}
-                                    <svg className={`h-5 w-5 shrink-0 transition ${
-                                        selectedBranch === branch.id ? 'text-primary' : 'text-muted-foreground/50 group-hover:text-primary'
-                                    }`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                    </svg>
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Back link */}
-                        <div className="mt-8 text-center">
-                            <button
-                                onClick={() => router.visit(route('admin.dashboard'))}
-                                className="text-sm text-muted-foreground hover:text-foreground transition"
+                        <div className="dv-card p-7 sm:p-8">
+                            <p className="dv-label">Pilih cabang</p>
+                            <h2 className="dv-title mt-3">{storeName}</h2>
+                            <p
+                                className="mt-2 text-[0.9375rem] leading-relaxed"
+                                style={{ color: "var(--dv-muted)" }}
                             >
-                                ← Kembali ke Dashboard
+                                {branches.length} cabang aktif. Pilih satu untuk
+                                melanjutkan.
+                            </p>
+
+                            {flash?.error && (
+                                <div
+                                    className="dv-alert dv-alert--bad mt-6"
+                                    role="alert"
+                                >
+                                    <AlertTriangle
+                                        size={15}
+                                        strokeWidth={2.5}
+                                        className="mt-px shrink-0"
+                                    />
+                                    <span>{flash.error}</span>
+                                </div>
+                            )}
+
+                            {errors.branch_id && (
+                                <div
+                                    className="dv-alert dv-alert--bad mt-6"
+                                    role="alert"
+                                >
+                                    <AlertTriangle
+                                        size={15}
+                                        strokeWidth={2.5}
+                                        className="mt-px shrink-0"
+                                    />
+                                    <span>{errors.branch_id}</span>
+                                </div>
+                            )}
+
+                            {showSearch && (
+                                <div className="relative mt-7">
+                                    <Search
+                                        size={16}
+                                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+                                        style={{ color: "var(--dv-muted)" }}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={query}
+                                        onChange={(e) =>
+                                            setQuery(e.target.value)
+                                        }
+                                        className="dv-input pl-9"
+                                        placeholder="Cari nama, kode, atau alamat cabang"
+                                        aria-label="Cari cabang"
+                                    />
+                                </div>
+                            )}
+
+                            {filtered.length === 0 ? (
+                                <div className="dv-empty mt-7">
+                                    <p
+                                        className="text-[0.9375rem] font-semibold"
+                                        style={{ color: "var(--dv-ink)" }}
+                                    >
+                                        Cabang tidak ditemukan
+                                    </p>
+                                    <p
+                                        className="mt-1 text-[0.8125rem]"
+                                        style={{ color: "var(--dv-muted)" }}
+                                    >
+                                        Coba kata kunci lain.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div
+                                    className={`mt-7 space-y-2 ${showSearch ? "max-h-[19rem] overflow-y-auto pr-1" : ""}`}
+                                >
+                                    {filtered.map((branch) => {
+                                        const isActive = selected === branch.id;
+                                        const meta = [branch.code, branch.address]
+                                            .filter(Boolean)
+                                            .join(" · ");
+
+                                        return (
+                                            <button
+                                                key={branch.id}
+                                                type="button"
+                                                onClick={() =>
+                                                    handleSelect(branch.id)
+                                                }
+                                                disabled={submitting}
+                                                aria-busy={
+                                                    isActive && submitting
+                                                        ? "true"
+                                                        : undefined
+                                                }
+                                                className={`dv-option ${isActive ? "dv-option--active" : ""}`}
+                                            >
+                                                <span className="dv-option__icon">
+                                                    <MapPin
+                                                        size={17}
+                                                        strokeWidth={2}
+                                                    />
+                                                </span>
+                                                <span className="dv-option__body">
+                                                    <span className="dv-option__name">
+                                                        {branch.name}
+                                                    </span>
+                                                    {meta && (
+                                                        <span className="dv-option__meta">
+                                                            {meta}
+                                                        </span>
+                                                    )}
+                                                </span>
+                                                {isActive && submitting ? (
+                                                    <Loader2
+                                                        size={16}
+                                                        className="dv-option__arrow animate-spin"
+                                                    />
+                                                ) : (
+                                                    <ArrowRight
+                                                        size={16}
+                                                        strokeWidth={2.5}
+                                                        className="dv-option__arrow"
+                                                    />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-7 flex items-center justify-between gap-3">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    router.visit(route("admin.dashboard"))
+                                }
+                                className="dv-tlink"
+                            >
+                                Lewati ke dashboard
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => router.post(route("logout"))}
+                                className="dv-tlink"
+                            >
+                                Keluar
                             </button>
                         </div>
+
+                        <p className="dv-label mt-10 lg:hidden">
+                            &copy; {year} DEVus.id
+                        </p>
                     </div>
                 </div>
             </div>
