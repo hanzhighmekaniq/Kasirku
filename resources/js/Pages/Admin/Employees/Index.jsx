@@ -2,12 +2,21 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import EmployeeTabs from "@/Components/EmployeeTabs";
 import { Head, Link, router, usePage } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatRupiah } from "@/Utils/currency";
-import { Plus } from "lucide-react";
+import { Percent, Plus, Wallet, X } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
+import Field from "@/Components/ui/Field";
+import Select from "@/Components/ui/Select";
+import CurrencyInput from "@/Components/ui/CurrencyInput";
+
+const COMMISSION_TYPES = [
+    { value: "none", label: "Tidak Ada Komisi" },
+    { value: "percent", label: "Persen (%) dari Transaksi" },
+    { value: "flat", label: "Nominal Tetap per Transaksi" },
+];
 
 const STATUS_STYLES = {
     active: "bg-success/10 text-success",
@@ -92,6 +101,18 @@ export default function Index({ employees, storeType = "retail" }) {
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [statusFilter, setStatusFilter] = useState("");
+    const [commissionModal, setCommissionModal] = useState(null);
+    /**
+     * Salinan lokal daftar karyawan supaya perubahan komisi dari modal bisa
+     * langsung terlihat di tabel tanpa reload halaman.
+     */
+    const [employeesState, setEmployeesState] = useState(employees);
+
+    // Sinkron ulang kalau prop dari server berubah (misal setelah navigasi
+    // Inertia lain ke halaman ini dengan data baru).
+    useEffect(() => {
+        setEmployeesState(employees);
+    }, [employees]);
 
     const pageLabel = PAGE_LABEL[storeType] ?? "Karyawan";
     const addLabel = ADD_LABEL[storeType] ?? "Tambah Karyawan";
@@ -99,7 +120,7 @@ export default function Index({ employees, storeType = "retail" }) {
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
-        let result = employees;
+        let result = employeesState;
 
         if (q) {
             result = result.filter(
@@ -121,22 +142,22 @@ export default function Index({ employees, storeType = "retail" }) {
         }
 
         return result;
-    }, [employees, search, statusFilter]);
+    }, [employeesState, search, statusFilter]);
 
     const stats = useMemo(() => {
-        const active = employees.filter((e) => e.status === "active").length;
-        const withAccount = employees.filter((e) => e.user).length;
-        const inactive = employees.filter(
+        const active = employeesState.filter((e) => e.status === "active").length;
+        const withAccount = employeesState.filter((e) => e.user).length;
+        const inactive = employeesState.filter(
             (e) => e.status === "inactive" || e.status === "terminated",
         ).length;
 
         return {
-            total: employees.length,
+            total: employeesState.length,
             active,
             withAccount,
             inactive,
         };
-    }, [employees]);
+    }, [employeesState]);
 
     const confirmDelete = () => {
         if (!target) return;
@@ -148,6 +169,29 @@ export default function Index({ employees, storeType = "retail" }) {
                 setTarget(null);
             },
         });
+    };
+
+    /**
+     * Modal komisi dikelola lewat state di sini, bukan navigasi ke halaman
+     * lain, supaya owner bisa ganti rate tanpa membuka form edit lengkap
+     * (akun, role, cabang, dst yang tidak relevan untuk tugas ini).
+     */
+    const openCommissionModal = (emp) => setCommissionModal(emp);
+    const closeCommissionModal = () => setCommissionModal(null);
+
+    const handleCommissionSaved = (updated) => {
+        setEmployeesState((prev) =>
+            prev.map((e) =>
+                e.id === updated.id
+                    ? {
+                        ...e,
+                        commission_type: updated.commission_type,
+                        commission_value: updated.commission_value,
+                    }
+                    : e,
+            ),
+        );
+        closeCommissionModal();
     };
 
     return (
@@ -377,7 +421,7 @@ export default function Index({ employees, storeType = "retail" }) {
                             </span>{" "}
                             dari{" "}
                             <span className="font-semibold text-foreground">
-                                {employees.length}
+                                {employeesState.length}
                             </span>{" "}
                             {pageLabel.toLowerCase()}
                         </p>
@@ -427,9 +471,18 @@ export default function Index({ employees, storeType = "retail" }) {
                         items={filtered}
                         onDelete={setTarget}
                         showCommission={showCommission}
+                        onSetCommission={openCommissionModal}
                     />
                 )}
             </div>
+
+            {showCommission && (
+                <CommissionModal
+                    employee={commissionModal}
+                    onClose={closeCommissionModal}
+                    onSaved={handleCommissionSaved}
+                />
+            )}
 
             <ConfirmDeleteModal
                 open={!!target}
@@ -492,9 +545,18 @@ function RoleBadge({ role }) {
     );
 }
 
-function RowActions({ employee, onDelete }) {
+function RowActions({ employee, onDelete, onSetCommission, showCommission }) {
     return (
         <div className="flex items-center justify-end gap-1">
+            {showCommission && (
+                <button
+                    onClick={() => onSetCommission(employee)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-success/10 hover:text-success"
+                    title="Set Komisi"
+                >
+                    <Wallet className="h-5 w-5" strokeWidth={1.7} />
+                </button>
+            )}
             <Link
                 href={route("admin.employees.edit", employee.id)}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
@@ -537,7 +599,154 @@ function RowActions({ employee, onDelete }) {
     );
 }
 
-function EmployeeList({ items, onDelete, showCommission = true }) {
+/**
+ * Modal Set Komisi — sengaja dipisah dari form Edit Karyawan supaya owner
+ * bisa mengganti rate komisi tanpa membuka field lain (akun, role, cabang).
+ */
+function CommissionModal({ employee, onClose, onSaved }) {
+    const [type, setType] = useState("none");
+    const [value, setValue] = useState("");
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+
+    // Sinkron ulang tiap kali karyawan yang dipilih berubah (modal dibuka).
+    useMemo(() => {
+        if (employee) {
+            setType(employee.commission_type || "none");
+            setValue(
+                employee.commission_value && employee.commission_value !== "0"
+                    ? String(employee.commission_value)
+                    : "",
+            );
+            setError("");
+        }
+    }, [employee]);
+
+    if (!employee) return null;
+
+    const handleSave = () => {
+        setSaving(true);
+        setError("");
+        router.patch(
+            route("admin.employees.update-commission", employee.id),
+            { commission_type: type, commission_value: value || 0 },
+            {
+                preserveScroll: true,
+                onSuccess: () =>
+                    onSaved({
+                        id: employee.id,
+                        commission_type: type,
+                        commission_value: type === "none" ? 0 : Number(value) || 0,
+                    }),
+                onError: (errors) =>
+                    setError(errors.commission_value || errors.commission_type || ""),
+                onFinish: () => setSaving(false),
+            },
+        );
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+                className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+                onClick={onClose}
+            />
+            <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl">
+                <div className="flex items-start justify-between gap-3 px-6 pt-6">
+                    <div className="min-w-0">
+                        <h3 className="text-base font-semibold text-popover-foreground">
+                            Set Komisi
+                        </h3>
+                        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                            {employee.name}
+                            {employee.position ? ` · ${employee.position}` : ""}
+                        </p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                        aria-label="Tutup"
+                    >
+                        <X className="h-4 w-4" strokeWidth={2} />
+                    </button>
+                </div>
+
+                <div className="mt-4 space-y-4 px-6">
+                    <Field label="Tipe Komisi" required>
+                        <Select
+                            options={COMMISSION_TYPES}
+                            value={type}
+                            onChange={(v) => {
+                                setType(v);
+                                if (v === "none") setValue("");
+                            }}
+                        />
+                    </Field>
+
+                    {type !== "none" && (
+                        <Field
+                            label="Nilai Komisi"
+                            required
+                            error={error}
+                        >
+                            {type === "percent" ? (
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.1"
+                                        value={value}
+                                        onChange={(e) => setValue(e.target.value)}
+                                        placeholder="10"
+                                        autoFocus
+                                        className={`block w-full rounded-xl border bg-background py-2.5 pl-3.5 pr-10 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${error
+                                            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+                                            : "border-input focus:border-ring focus:ring-ring/20"
+                                            }`}
+                                    />
+                                    <Percent
+                                        className="pointer-events-none absolute inset-y-0 right-3.5 my-auto h-4 w-4 text-muted-foreground"
+                                        strokeWidth={1.8}
+                                    />
+                                </div>
+                            ) : (
+                                <CurrencyInput
+                                    value={value}
+                                    onChange={setValue}
+                                    placeholder="0"
+                                    error={!!error}
+                                />
+                            )}
+                            <p className="mt-1.5 text-xs text-muted-foreground">
+                                {type === "percent"
+                                    ? "Komisi dihitung dari total transaksi."
+                                    : "Nominal komisi tetap per transaksi."}
+                            </p>
+                        </Field>
+                    )}
+                </div>
+
+                <div className="mt-6 flex justify-end gap-2 border-t border-border bg-muted/50 px-6 py-4">
+                    <Button type="button" variant="outline" size="sm" onClick={onClose}>
+                        Batal
+                    </Button>
+                    <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleSave}
+                        disabled={type !== "none" && !value}
+                        loading={saving}
+                    >
+                        {saving ? "Menyimpan..." : "Simpan Komisi"}
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function EmployeeList({ items, onDelete, showCommission = true, onSetCommission }) {
     return (
         <>
             <div className="hidden overflow-x-auto lg:block">
@@ -622,6 +831,8 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                                     <RowActions
                                         employee={emp}
                                         onDelete={onDelete}
+                                        onSetCommission={onSetCommission}
+                                        showCommission={showCommission}
                                     />
                                 </td>
                             </tr>
@@ -675,7 +886,12 @@ function EmployeeList({ items, onDelete, showCommission = true }) {
                                     )}
                             </div>
                         </div>
-                        <RowActions employee={emp} onDelete={onDelete} />
+                        <RowActions
+                            employee={emp}
+                            onDelete={onDelete}
+                            onSetCommission={onSetCommission}
+                            showCommission={showCommission}
+                        />
                     </div>
                 ))}
             </div>

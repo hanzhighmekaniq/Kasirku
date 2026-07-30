@@ -10,6 +10,7 @@ use App\Models\CashierShift;
 use App\Models\CashierShiftPayment;
 use App\Models\Sale;
 use App\Models\Store;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -309,6 +310,7 @@ class CashierShiftController extends Controller
             'storeType' => $storeType,
             'canClose' => $canClose,
             'canManage' => $user->can('shift.manage'),
+            'isOwner' => $user->hasRole('owner'),
             'prevShift' => $prevShift,
             'nextShift' => $nextShift,
             'pendingCount' => $pendingCount,
@@ -552,6 +554,20 @@ class CashierShiftController extends Controller
             422,
             'Shift belum ditutup.',
         );
+
+        // Shift dari hari sebelumnya hanya bisa dibuka ulang oleh owner.
+        // Kasir atau supervisor yang punya shift.manage tetap tidak boleh
+        // mengutak-atik data histori di luar hari yang sama.
+        if (
+            $cashierShift->opened_at instanceof Carbon
+            && ! $cashierShift->opened_at->isToday()
+            && ! $request->user()->hasRole('owner')
+        ) {
+            abort(
+                403,
+                'Hanya owner yang bisa membuka ulang shift dari hari sebelumnya.',
+            );
+        }
 
         $alreadyOpen = $this->getActiveShift($storeId, $cashierShift->user_id);
         if ($alreadyOpen) {

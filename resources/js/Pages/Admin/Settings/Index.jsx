@@ -2,7 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm, usePage, router } from "@inertiajs/react";
 import { useState } from "react";
-import { Upload, X, Store, Receipt, Image, Puzzle, MapPin, Settings, Clock } from "lucide-react";
+import { Upload, X, Store, Receipt, Image, Puzzle, MapPin, Settings, Clock, Check } from "lucide-react";
 import Button from "@/Components/ui/Button";
 
 const inp = (err) =>
@@ -145,10 +145,63 @@ function FeatureToggle({ feature, onToggle }) {
     );
 }
 
-/* ── BranchEditRow ───────────────────────────────────── */
-function BranchEditRow({ branch, isCurrent }) {
-    const [editing, setEditing] = useState(false);
-    const { data, setData, put, processing, errors, reset } = useForm({
+/* ── BranchSwitcherBar ────────────────────────────────────────────
+ * Pilihan cabang naik ke atas sebagai baris tombol (chip), terpisah dari
+ * form pengaturan toko — cabang adalah "konteks" yang mau diedit, bukan
+ * bagian dari data toko itu sendiri. Klik satu chip menampilkan form edit
+ * untuk cabang itu di bawahnya, mirip pola tab tapi levelnya di atas tab
+ * Umum/Fitur karena berlaku untuk semua tab.
+ */
+function BranchChip({ branch, isCurrent, isSelected, onClick }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`group flex shrink-0 items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition ${
+                isSelected
+                    ? "border-primary bg-primary/10 shadow-sm"
+                    : "border-border bg-card hover:border-primary/40 hover:bg-muted"
+            }`}
+        >
+            <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
+                    isSelected
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground group-hover:text-foreground"
+                }`}
+            >
+                <MapPin className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <span className="min-w-0">
+                <span className="flex items-center gap-1.5">
+                    <span
+                        className={`truncate text-sm font-semibold ${isSelected ? "text-primary" : "text-foreground"}`}
+                    >
+                        {branch.name}
+                    </span>
+                    {!branch.is_active && (
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-destructive" title="Nonaktif" />
+                    )}
+                </span>
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <span className="font-mono">{branch.code}</span>
+                    {isCurrent && (
+                        <>
+                            <span className="text-muted-foreground/50">·</span>
+                            <span className="inline-flex items-center gap-0.5 text-primary">
+                                <Check className="h-3 w-3" strokeWidth={2.5} />
+                                Aktif
+                            </span>
+                        </>
+                    )}
+                </span>
+            </span>
+        </button>
+    );
+}
+
+function BranchEditForm({ branch }) {
+    const { data, setData, put, processing, errors, isDirty } = useForm({
         name: branch.name,
         phone: branch.phone ?? "",
         address: branch.address ?? "",
@@ -159,86 +212,112 @@ function BranchEditRow({ branch, isCurrent }) {
         e.preventDefault();
         put(route("admin.settings.branch.update", branch.id), {
             preserveScroll: true,
-            onSuccess: () => setEditing(false),
         });
     };
 
-    if (!editing) {
-        return (
-            <div className={`flex items-center justify-between gap-4 rounded-xl border px-4 py-3 transition ${isCurrent ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/50 hover:bg-muted'}`}>
-                <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-foreground">{branch.name}</span>
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-mono text-muted-foreground">{branch.code}</span>
-                        {isCurrent && (
-                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">Cabang Saat Ini</span>
-                        )}
-                        {!branch.is_active && (
-                            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-medium text-destructive">Nonaktif</span>
-                        )}
-                    </div>
-                    {(branch.phone || branch.address) && (
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                            {branch.phone && <span className="mr-2">{branch.phone}</span>}
-                            {branch.address}
-                        </p>
-                    )}
-                </div>
-                <button
-                    type="button"
-                    onClick={() => setEditing(true)}
-                    className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                >
-                    Edit
-                </button>
-            </div>
-        );
-    }
-
     return (
-        <form onSubmit={submit} className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-4 space-y-3">
-            <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-primary">{branch.code}</span>
-                <button type="button" onClick={() => { reset(); setEditing(false); }} className="text-xs text-muted-foreground hover:text-foreground">
-                    Batal
-                </button>
-            </div>
-            <div>
-                <label className={labelClass}>Nama Cabang *</label>
-                <input value={data.name} onChange={(e) => setData("name", e.target.value)} className={inp(errors.name)} placeholder="Nama cabang" />
-                {errors.name && <p className={errorClass}>{errors.name}</p>}
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <form onSubmit={submit} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label className={labelClass}>Nama Cabang *</label>
+                    <input
+                        value={data.name}
+                        onChange={(e) => setData("name", e.target.value)}
+                        className={inp(errors.name)}
+                        placeholder="Nama cabang"
+                    />
+                    {errors.name && <p className={errorClass}>{errors.name}</p>}
+                </div>
                 <div>
                     <label className={labelClass}>No. Telepon</label>
-                    <input value={data.phone} onChange={(e) => setData("phone", e.target.value)} className={inp()} placeholder="08xxx" />
-                </div>
-                <div className="flex items-end gap-2">
-                    <div>
-                        <label className={labelClass}>Status</label>
-                        <div className="mt-1 flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setData("is_active", !data.is_active)}
-                                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus:outline-none ${data.is_active ? "bg-primary" : "bg-muted-foreground/30"
-                                    }`}
-                            >
-                                <span className={`absolute top-0.5 block h-5 w-5 rounded-full bg-card shadow transition-transform duration-200 ${data.is_active ? "translate-x-[22px]" : "translate-x-0.5"
-                                    }`} />
-                            </button>
-                            <span className="text-xs text-muted-foreground">{data.is_active ? "Aktif" : "Nonaktif"}</span>
-                        </div>
-                    </div>
+                    <input
+                        value={data.phone}
+                        onChange={(e) => setData("phone", e.target.value)}
+                        className={inp()}
+                        placeholder="08xxx"
+                    />
                 </div>
             </div>
             <div>
                 <label className={labelClass}>Alamat</label>
-                <textarea value={data.address} onChange={(e) => setData("address", e.target.value)} rows={2} className={inp()} placeholder="Alamat cabang" />
+                <textarea
+                    value={data.address}
+                    onChange={(e) => setData("address", e.target.value)}
+                    rows={2}
+                    className={inp()}
+                    placeholder="Alamat cabang"
+                />
             </div>
-            <div className="flex justify-end">
-                <Button type="submit" loading={processing}>Simpan Cabang</Button>
+            <div className="flex items-center justify-between gap-4 border-t border-border pt-4">
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => setData("is_active", !data.is_active)}
+                        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus:outline-none ${
+                            data.is_active ? "bg-primary" : "bg-muted-foreground/30"
+                        }`}
+                    >
+                        <span
+                            className={`absolute top-0.5 block h-5 w-5 rounded-full bg-card shadow transition-transform duration-200 ${
+                                data.is_active ? "translate-x-[22px]" : "translate-x-0.5"
+                            }`}
+                        />
+                    </button>
+                    <span className="text-sm text-foreground">
+                        {data.is_active ? "Cabang aktif" : "Cabang nonaktif"}
+                    </span>
+                </div>
+                <Button type="submit" loading={processing} disabled={!isDirty}>
+                    Simpan Cabang
+                </Button>
             </div>
         </form>
+    );
+}
+
+function BranchSwitcherBar({ branches, currentBranch }) {
+    const [selectedId, setSelectedId] = useState(
+        currentBranch?.id ?? branches[0]?.id ?? null,
+    );
+    const selected = branches.find((b) => b.id === selectedId) ?? branches[0];
+
+    if (branches.length === 0 || !selected) return null;
+
+    return (
+        <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <div className="flex items-center gap-3 border-b border-border bg-muted px-5 py-3.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background text-foreground">
+                    <MapPin className="h-4 w-4" strokeWidth={1.8} />
+                </div>
+                <div>
+                    <h3 className="text-sm font-semibold text-foreground">
+                        Cabang Toko
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                        Pilih cabang untuk melihat dan mengubah datanya
+                    </p>
+                </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto p-4 pb-3 [scrollbar-width:thin]">
+                {branches.map((branch) => (
+                    <BranchChip
+                        key={branch.id}
+                        branch={branch}
+                        isCurrent={currentBranch?.id === branch.id}
+                        isSelected={selected.id === branch.id}
+                        onClick={() => setSelectedId(branch.id)}
+                    />
+                ))}
+            </div>
+
+            <div className="border-t border-border px-5 py-4">
+                <BranchEditForm key={selected.id} branch={selected} />
+                <p className="mt-4 text-xs text-muted-foreground">
+                    Untuk menambah atau menghapus cabang, silakan hubungi tim developer/support.
+                </p>
+            </div>
+        </div>
     );
 }
 
@@ -318,6 +397,11 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
                 }
                 description="Atur informasi toko dan pengaturan umum"
             />
+
+            {/* Pemilih cabang — di atas, terpisah dari tab, karena berlaku
+                untuk seluruh halaman ini (bukan bagian dari data toko). */}
+            <BranchSwitcherBar branches={branches} currentBranch={currentBranch} />
+
             {/* Flash messages */}
             {flash?.success && (
                 <div className="mb-5 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success">
@@ -619,28 +703,6 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
                                     )}
                                 </div>
                             </Section>
-
-                            {/* Cabang */}
-                            {branches.length > 0 && (
-                                <Section
-                                    title="Cabang Toko"
-                                    subtitle="Kelola nama, telepon, alamat, dan status cabang"
-                                    icon={MapPin}
-                                >
-                                    <div className="space-y-3">
-                                        {branches.map((branch) => (
-                                            <BranchEditRow
-                                                key={branch.id}
-                                                branch={branch}
-                                                isCurrent={currentBranch?.id === branch.id}
-                                            />
-                                        ))}
-                                        <p className="text-xs text-muted-foreground">
-                                            Untuk menambah atau menghapus cabang, silakan hubungi tim developer/support.
-                                        </p>
-                                    </div>
-                                </Section>
-                            )}
 
                             {/* Tombol Simpan */}
                             <div className="flex justify-end">

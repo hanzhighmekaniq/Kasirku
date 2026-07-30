@@ -1,5 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
+import CurrencyInput from "@/Components/ui/CurrencyInput";
 import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import {
@@ -71,11 +72,15 @@ export default function Show({
     storeType,
     canClose,
     canManage,
+    isOwner = false,
     prevShift,
     nextShift,
     pendingCount = 0,
 }) {
     const isOpen = shift.status === "open";
+    const isPastDay = shift.opened_at
+        ? new Date(shift.opened_at).toDateString() !== new Date().toDateString()
+        : false;
 
     // ── tutup shift ──
     const [showClose, setShowClose] = useState(false);
@@ -193,7 +198,7 @@ export default function Show({
                         Shift
                     </div>
                     <div className="text-[11px] text-muted-foreground">
-                        shift.shift_no
+                        {shift.shift_no}
                     </div>
                 </div>
             }>
@@ -307,7 +312,11 @@ export default function Show({
                                         >
                                             Edit
                                         </button>
-                                        {!isOpen && (
+                                        {/* Buka Ulang hanya muncul kalau shift
+                                            masih hari ini, ATAU user adalah owner
+                                            (yang boleh buka ulang shift kemarin). */}
+                                        {!isOpen &&
+                                            (!isPastDay || isOwner) && (
                                             <button
                                                 onClick={handleReopen}
                                                 disabled={reopening}
@@ -317,6 +326,11 @@ export default function Show({
                                                     ? "..."
                                                     : "Buka Ulang"}
                                             </button>
+                                        )}
+                                        {!isOpen && isPastDay && !isOwner && (
+                                            <span className="rounded-lg bg-muted px-3 py-1.5 text-xs text-muted-foreground">
+                                                Hanya owner yang bisa membuka ulang shift kemarin
+                                            </span>
                                         )}
                                         <button
                                             onClick={() => setShowDelete(true)}
@@ -820,26 +834,17 @@ export default function Show({
                                     Kas Aktual (Fisik){" "}
                                     <span className="text-destructive">*</span>
                                 </label>
-                                <div className="relative">
-                                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-muted-foreground">
-                                        Rp
-                                    </span>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="1"
-                                        required
-                                        value={closeData.actual_cash}
-                                        onChange={(e) =>
-                                            setCloseData((d) => ({
-                                                ...d,
-                                                actual_cash: e.target.value,
-                                            }))
-                                        }
-                                        className="block w-full rounded-xl border-border pl-9 text-sm focus:border-ring focus:ring-ring/20"
-                                        placeholder="0"
-                                    />
-                                </div>
+                                <CurrencyInput
+                                    value={closeData.actual_cash}
+                                    onChange={(v) =>
+                                        setCloseData((d) => ({
+                                            ...d,
+                                            actual_cash: v,
+                                        }))
+                                    }
+                                    placeholder="0"
+                                    required
+                                />
                                 {closeData.actual_cash !== "" && (
                                     <p
                                         className={`mt-1 text-xs font-medium ${parseFloat(closeData.actual_cash) >= (summary?.expected_cash ?? 0) ? "text-success" : "text-destructive"}`}
@@ -889,40 +894,23 @@ export default function Show({
                                                         {fmt(p.total)}
                                                     </p>
                                                 </div>
-                                                <div className="relative flex-1">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-muted-foreground">
-                                                        Rp
-                                                    </span>
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        step="1"
-                                                        value={
-                                                            closeData
-                                                                .payment_actuals[
-                                                                p
-                                                                    .payment_method_id
-                                                            ] ?? ""
-                                                        }
-                                                        onChange={(e) =>
-                                                            setCloseData(
-                                                                (d) => ({
-                                                                    ...d,
-                                                                    payment_actuals:
-                                                                        {
-                                                                            ...d.payment_actuals,
-                                                                            [p.payment_method_id]:
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
-                                                                        },
-                                                                }),
-                                                            )
-                                                        }
-                                                        className="block w-full rounded-xl border-border pl-9 text-sm focus:border-ring focus:ring-ring/20"
-                                                        placeholder="0"
-                                                    />
-                                                </div>
+                                                <CurrencyInput
+                                                    value={
+                                                        closeData.payment_actuals[
+                                                            p.payment_method_id
+                                                        ] ?? ""
+                                                    }
+                                                    onChange={(v) =>
+                                                        setCloseData((d) => ({
+                                                            ...d,
+                                                            payment_actuals: {
+                                                                ...d.payment_actuals,
+                                                                [p.payment_method_id]: v,
+                                                            },
+                                                        }))
+                                                    }
+                                                    placeholder="0"
+                                                />
                                             </div>
                                         ))}
                                     </div>
@@ -1021,17 +1009,14 @@ export default function Show({
                                             className="block w-full rounded-xl border-border text-sm focus:border-ring focus:ring-ring/20"
                                         />
                                     ) : (
-                                        <input
-                                            type="number"
-                                            min="0"
+                                        <CurrencyInput
                                             value={editData[key]}
-                                            onChange={(e) =>
+                                            onChange={(v) =>
                                                 setEditData((d) => ({
                                                     ...d,
-                                                    [key]: e.target.value,
+                                                    [key]: v,
                                                 }))
                                             }
-                                            className="block w-full rounded-xl border-border text-sm focus:border-ring focus:ring-ring/20"
                                         />
                                     )}
                                 </div>

@@ -945,6 +945,18 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
             ]);
         });
 
+        // Modal "Set Komisi" di index — dipisah dari form edit lengkap
+        // supaya owner bisa ganti rate komisi tanpa membuka semua field lain.
+        Route::middleware([
+            'feature:employee',
+            'permission:employee.edit',
+        ])->group(function () {
+            Route::patch('/employees/{employee}/commission', [
+                EmployeeController::class,
+                'updateCommission',
+            ])->name('employees.update-commission');
+        });
+
         // ─────────────────────────────────────────────────────────────────
         // KOMISI KARYAWAN — permission: commission.view / commission.approve
         // ─────────────────────────────────────────────────────────────────

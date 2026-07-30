@@ -250,6 +250,46 @@ class EmployeeController extends Controller
             ->with('success', 'Karyawan berhasil diperbarui.');
     }
 
+    /**
+     * Set komisi karyawan lewat modal terpisah di halaman index, bukan lewat
+     * form edit lengkap. Owner sering hanya ingin mengganti rate komisi tanpa
+     * membuka semua field lain (akun, role, cabang, dst).
+     */
+    public function updateCommission(Request $request, Employee $employee)
+    {
+        $this->ensureSameStore($request, $employee);
+
+        $validated = $request->validate([
+            'commission_type' => ['required', Rule::in(['none', 'percent', 'flat'])],
+            'commission_value' => [
+                Rule::requiredIf(fn () => $request->input('commission_type') !== 'none'),
+                'nullable',
+                'numeric',
+                'min:0',
+                Rule::when(
+                    fn () => $request->input('commission_type') === 'percent',
+                    ['max:100'],
+                ),
+            ],
+        ]);
+
+        $employee->update([
+            'commission_type' => $validated['commission_type'],
+            'commission_value' => $validated['commission_type'] === 'none'
+                ? 0
+                : $validated['commission_value'] ?? 0,
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'employee' => $employee->only(['id', 'commission_type', 'commission_value']),
+            ]);
+        }
+
+        return back()->with('success', 'Komisi karyawan berhasil diperbarui.');
+    }
+
     public function destroy(Request $request, Employee $employee)
     {
         $this->ensureSameStore($request, $employee);

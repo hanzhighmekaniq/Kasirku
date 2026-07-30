@@ -1,5 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
+import CurrencyInput from "@/Components/ui/CurrencyInput";
 import { Head, Link, useForm } from "@inertiajs/react";
 
 export default function Create({ branchName, suggestedShiftNo, storeType = "retail" }) {
@@ -83,24 +84,14 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
                             >
                                 Kas Awal <span className="text-destructive">*</span>
                             </label>
-                            <div className="relative">
-                                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-muted-foreground">
-                                    Rp
-                                </span>
-                                <input
-                                    id="opening_cash"
-                                    type="number"
-                                    min="0"
-                                    step="1"
-                                    required
-                                    value={data.opening_cash}
-                                    onChange={(e) =>
-                                        setData("opening_cash", e.target.value)
-                                    }
-                                    className="block w-full rounded-xl border-border pl-9 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                    placeholder="0"
-                                />
-                            </div>
+                            <CurrencyInput
+                                id="opening_cash"
+                                value={data.opening_cash}
+                                onChange={(v) => setData("opening_cash", v)}
+                                placeholder="0"
+                                required
+                                error={!!errors.opening_cash}
+                            />
                             {errors.opening_cash && (
                                 <p className="mt-1 text-xs text-destructive">
                                     {errors.opening_cash}

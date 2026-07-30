@@ -20,7 +20,7 @@ export default function Edit({
     roles = [],
     storeType = "retail",
 }) {
-    const { currentBranch = null } = usePage().props;
+    const { currentBranch = null, storeTypeFeatures = [] } = usePage().props;
     const { data, setData, put, processing, errors } = useForm({
         employee_code: employee.employee_code || "",
         branch_id: employee.branch_id || "",
@@ -38,7 +38,10 @@ export default function Edit({
     });
 
     const pageLabel = PAGE_LABEL[storeType] ?? "Karyawan";
-    const showCommission = ["service", "ticket"].includes(storeType);
+    // Ikuti feature flag dari server, sama dengan Index.jsx — sebelumnya
+    // hardcode ke storeType tertentu sehingga tipe toko baru yang butuh
+    // komisi tidak otomatis mendapat section ini.
+    const showCommission = storeTypeFeatures.includes("commission");
 
     const submit = (e) => {
         e.preventDefault();
