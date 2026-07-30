@@ -6,24 +6,23 @@ import {
     Building2,
     Check,
     ChevronDown,
-    ClipboardList,
     Coffee,
     Hotel,
     KeyRound,
     Lock,
-    Package,
     Pencil,
     Puzzle,
     Scissors,
-    Settings,
-    ShoppingCart,
     Store,
     Ticket,
-    Users,
-    Wallet,
     X,
     Zap,
 } from "lucide-react";
+import {
+    FEATURE_GROUPS,
+    FEATURE_GROUP_ORDER,
+    featureGroupOf,
+} from "@/Utils/featureGroups";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STORE_TYPE = {
@@ -46,15 +45,19 @@ const PLAN_STYLE = {
     unlimited: { cls: "bg-primary/10 text-primary ring-primary/20" },
 };
 
-const CAT_META = {
-    pos: { Icon: ShoppingCart, label: "POS & Transaksi" },
-    crm: { Icon: Users, label: "Pelanggan & CRM" },
-    inventory: { Icon: Package, label: "Inventaris & Stok" },
-    finance: { Icon: Wallet, label: "Keuangan" },
-    system: { Icon: Settings, label: "Sistem & Admin" },
-    other: { Icon: ClipboardList, label: "Lainnya" },
+// Ring/bg badge per grup fitur — aksen visual, bukan status (lihat
+// TOKEN_MAPPING.md § Badge non-semantik), jadi hardcoded per grup + varian
+// dark: masih diperbolehkan.
+const GROUP_BADGE_CLS = {
+    home: "bg-blue-100 text-blue-700 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800",
+    transaction: "bg-cyan-100 text-cyan-700 ring-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-400 dark:ring-cyan-800",
+    operations: "bg-orange-100 text-orange-700 ring-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:ring-orange-800",
+    catalog: "bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800",
+    people: "bg-violet-100 text-violet-700 ring-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-800",
+    finance: "bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:ring-emerald-800",
+    system: "bg-muted text-muted-foreground ring-border",
+    other: "bg-muted text-muted-foreground ring-border",
 };
-const CAT_ORDER = ["pos", "crm", "inventory", "finance", "system", "other"];
 
 const ROLE_STYLE = {
     owner: "bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800",
@@ -69,13 +72,6 @@ const ROLE_STYLE = {
 function FeatureGrid({ featureStatus }) {
     const [filter, setFilter] = useState("all"); // all | accessible | blocked
 
-    const grouped = {};
-    featureStatus.forEach((f) => {
-        const cat = f.category || "other";
-        if (!grouped[cat]) grouped[cat] = [];
-        grouped[cat].push(f);
-    });
-
     const accessCount = featureStatus.filter((f) => f.can_access).length;
     const blockedCount = featureStatus.length - accessCount;
 
@@ -89,10 +85,11 @@ function FeatureGrid({ featureStatus }) {
 
     const visibleGrouped = {};
     visible.forEach((f) => {
-        const cat = f.category || "other";
-        if (!visibleGrouped[cat]) visibleGrouped[cat] = [];
-        visibleGrouped[cat].push(f);
+        const g = featureGroupOf(f);
+        if (!visibleGrouped[g]) visibleGrouped[g] = [];
+        visibleGrouped[g].push(f);
     });
+    const orderedGroupKeys = FEATURE_GROUP_ORDER.filter((g) => visibleGrouped[g]?.length > 0);
 
     return (
         <div>
@@ -125,22 +122,21 @@ function FeatureGrid({ featureStatus }) {
                 ))}
             </div>
 
-            {/* Grid per kategori */}
+            {/* Grid per grup (mengikuti sidebar Admin) */}
             <div className="space-y-4">
-                {CAT_ORDER.map((catKey) => {
-                    const items = visibleGrouped[catKey];
-                    if (!items || items.length === 0) return null;
-                    const cat = CAT_META[catKey] ?? CAT_META.other;
-                    const catAccess = items.filter((f) => f.can_access).length;
+                {orderedGroupKeys.map((groupKey) => {
+                    const items = visibleGrouped[groupKey];
+                    const group = FEATURE_GROUPS[groupKey] ?? FEATURE_GROUPS.other;
+                    const groupAccess = items.filter((f) => f.can_access).length;
                     return (
-                        <div key={catKey}>
+                        <div key={groupKey}>
                             <div className="mb-2 flex items-center gap-2">
-                                <cat.Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
+                                <group.Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
                                 <h5 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                                    {cat.label}
+                                    {group.label}
                                 </h5>
                                 <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                                    {catAccess}/{items.length}
+                                    {groupAccess}/{items.length}
                                 </span>
                             </div>
                             <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">

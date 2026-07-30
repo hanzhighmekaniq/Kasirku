@@ -7,7 +7,6 @@ import {
     Building2,
     CircleCheck,
     CircleParking,
-    ClipboardList,
     Coffee,
     Crown,
     Eye,
@@ -15,21 +14,35 @@ import {
     KeyRound,
     Lock,
     Monitor,
-    Package,
     Pencil,
     Plus,
     Scissors,
-    Settings,
     ShieldCheck,
     Shirt,
-    ShoppingCart,
     Store,
     Ticket,
     UserMinus,
     Users,
-    Wallet,
     X,
 } from "lucide-react";
+import {
+    FEATURE_GROUPS,
+    FEATURE_GROUP_ORDER,
+    featureGroupOf,
+} from "@/Utils/featureGroups";
+
+// Badge per grup — aksen visual non-status, hardcoded + varian dark: diperbolehkan
+// (TOKEN_MAPPING.md § Badge non-semantik).
+const GROUP_BADGE_CLS = {
+    home: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+    transaction: "bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400",
+    operations: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
+    catalog: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+    people: "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
+    finance: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+    system: "bg-muted text-muted-foreground",
+    other: "bg-muted text-muted-foreground",
+};
 
 // ── Konstanta ─────────────────────────────────────────────────────────────────
 const STORE_TYPE = {
@@ -66,39 +79,6 @@ const ROLE_STYLE = {
         "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400",
     kasir: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400",
     gudang: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
-};
-
-const FEATURE_CAT = {
-    pos: {
-        Icon: ShoppingCart,
-        label: "POS & Transaksi",
-        bg: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
-    },
-    inventory: {
-        Icon: Package,
-        label: "Inventaris & Stok",
-        bg: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
-    },
-    crm: {
-        Icon: Users,
-        label: "Pelanggan & CRM",
-        bg: "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
-    },
-    finance: {
-        Icon: Wallet,
-        label: "Keuangan",
-        bg: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
-    },
-    system: {
-        Icon: Settings,
-        label: "Sistem & Admin",
-        bg: "bg-muted text-muted-foreground",
-    },
-    other: {
-        Icon: ClipboardList,
-        label: "Lainnya",
-        bg: "bg-muted text-muted-foreground",
-    },
 };
 
 // ── Branch Slide Panel ────────────────────────────────────────────────────────
@@ -389,15 +369,15 @@ function PlanDetailSection({ store, planMeta, planFeatures }) {
         ? new Date(store.plan_expires_at) < new Date()
         : false;
 
-    // Group fitur by category
+    // Group fitur mengikuti sidebar Admin (bukan f.category dari DB)
     const grouped = {};
     planFeatures.forEach((f) => {
-        const cat = f.category || "other";
-        if (!grouped[cat]) grouped[cat] = [];
-        grouped[cat].push(f);
+        const g = featureGroupOf(f);
+        if (!grouped[g]) grouped[g] = [];
+        grouped[g].push(f);
     });
 
-    const catOrder = ["pos", "crm", "inventory", "finance", "system", "other"];
+    const orderedGroupKeys = FEATURE_GROUP_ORDER.filter((g) => grouped[g]?.length > 0);
 
     return (
         <div className="mb-6 rounded-2xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
@@ -491,27 +471,26 @@ function PlanDetailSection({ store, planMeta, planFeatures }) {
                 </div>
             </div>
 
-            {/* Fitur per kategori */}
+            {/* Fitur per grup (sidebar Admin) */}
             {planFeatures.length > 0 ? (
                 <div className="p-5 space-y-5">
-                    {catOrder.map((catKey) => {
-                        const catFeatures = grouped[catKey];
-                        if (!catFeatures || catFeatures.length === 0)
-                            return null;
-                        const cat = FEATURE_CAT[catKey] ?? FEATURE_CAT.other;
+                    {orderedGroupKeys.map((groupKey) => {
+                        const groupFeatures = grouped[groupKey];
+                        const group = FEATURE_GROUPS[groupKey] ?? FEATURE_GROUPS.other;
+                        const badgeCls = GROUP_BADGE_CLS[groupKey] ?? GROUP_BADGE_CLS.other;
                         return (
-                            <div key={catKey}>
+                            <div key={groupKey}>
                                 <div className="flex items-center gap-2 mb-2.5">
-                                    <span className="text-sm">{cat.icon}</span>
+                                    <group.Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
                                     <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                                        {cat.label}
+                                        {group.label}
                                     </h4>
-                                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                                        {catFeatures.length}
+                                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ring-1 ${badgeCls}`}>
+                                        {groupFeatures.length}
                                     </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
-                                    {catFeatures.map((f) => {
+                                    {groupFeatures.map((f) => {
                                         const types = f.store_types ?? [];
                                         const typeMatch =
                                             types.length === 0 ||

@@ -9,8 +9,12 @@ import {
     Package,
     Pencil,
     Plus,
+    Settings,
+    Sparkles,
+    Star,
     Trash2,
     TriangleAlert,
+    Zap,
 } from "lucide-react";
 import {
     DndContext,
@@ -28,7 +32,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// ── Plan badge colors ─────────────────────────────────────────────────────────
 const PLAN_COLOR = {
     free: {
         ring: "ring-border",
@@ -36,7 +39,7 @@ const PLAN_COLOR = {
         text: "text-muted-foreground",
         dot: "bg-muted-foreground",
     },
-    basic: {
+    starter: {
         ring: "ring-blue-200 dark:ring-blue-800",
         bg: "bg-blue-100 dark:bg-blue-900/30",
         text: "text-blue-700 dark:text-blue-400",
@@ -48,6 +51,19 @@ const PLAN_COLOR = {
         text: "text-violet-700 dark:text-violet-400",
         dot: "bg-violet-600 dark:bg-violet-500",
     },
+    business: {
+        ring: "ring-primary/20",
+        bg: "bg-primary/10",
+        text: "text-primary",
+        dot: "bg-primary",
+    },
+    // Fallback untuk plan lama atau plan event
+    basic: {
+        ring: "ring-blue-200 dark:ring-blue-800",
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        text: "text-blue-700 dark:text-blue-400",
+        dot: "bg-blue-600",
+    },
     unlimited: {
         ring: "ring-primary/20",
         bg: "bg-primary/10",
@@ -57,7 +73,7 @@ const PLAN_COLOR = {
 };
 
 function planColor(code) {
-    return PLAN_COLOR[code] ?? PLAN_COLOR.basic;
+    return PLAN_COLOR[code] ?? PLAN_COLOR.starter;
 }
 
 function fmtPrice(price) {
@@ -68,7 +84,6 @@ function fmtPrice(price) {
         maximumFractionDigits: 0,
     }).format(price);
 }
-
 // ── Drag handle icon ──────────────────────────────────────────────────────────
 function DragHandle({ listeners, attributes }) {
     return (
@@ -111,7 +126,6 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
                 isDragging ? "bg-primary/10" : "hover:bg-muted/60"
             } ${isDragOverlay ? "rounded-2xl shadow-xl ring-1 ring-border" : ""}`}
         >
-            {/* Drag handle */}
             <DragHandle listeners={listeners} attributes={attributes} />
 
             {/* Badge urutan */}
@@ -122,8 +136,8 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
             </div>
 
             {/* Info paket */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
                     <p className="text-sm font-semibold text-foreground">
                         {plan.label}
                     </p>
@@ -132,6 +146,18 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
                     >
                         {plan.code}
                     </span>
+                    {plan.is_popular && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-bold text-warning ring-1 ring-warning/20">
+                            <Star className="h-2.5 w-2.5" strokeWidth={2.5} />
+                            Populer
+                        </span>
+                    )}
+                    {plan.is_seasonal && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary ring-1 ring-primary/20">
+                            <Sparkles className="h-2.5 w-2.5" strokeWidth={2.5} />
+                            {plan.seasonal_label || "Event"}
+                        </span>
+                    )}
                     {!plan.is_active && (
                         <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                             Nonaktif
@@ -146,37 +172,42 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
             </div>
 
             {/* Stats */}
-            <div className="hidden sm:flex items-center gap-6 text-xs text-muted-foreground">
+            <div className="hidden items-center gap-4 text-xs text-muted-foreground sm:flex">
+                {[
+                    { label: "User", val: plan.max_users },
+                    { label: "Cabang", val: plan.max_branches },
+                    { label: "Store", val: plan.max_stores ?? 1 },
+                    {
+                        label: "Produk",
+                        val: plan.max_products == null ? "∞" : plan.max_products,
+                    },
+                    { label: "Fitur", val: plan.features?.length ?? 0 },
+                ].map(({ label, val }) => (
+                    <div key={label} className="text-center">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            {label}
+                        </p>
+                        <p className="font-bold text-foreground">{val}</p>
+                    </div>
+                ))}
                 <div className="text-center">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        User
-                    </p>
-                    <p className="font-bold text-foreground">{plan.max_users}</p>
-                </div>
-                <div className="text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Cabang
-                    </p>
-                    <p className="font-bold text-foreground">
-                        {plan.max_branches}
-                    </p>
-                </div>
-                <div className="text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Harga
+                        /bln
                     </p>
                     <p className="font-bold text-foreground">
                         {fmtPrice(plan.price)}
                     </p>
                 </div>
-                <div className="text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Fitur
-                    </p>
-                    <p className="font-bold text-foreground">
-                        {plan.features?.length ?? 0}
-                    </p>
-                </div>
+                {Number(plan.price_yearly) > 0 && (
+                    <div className="text-center">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            /thn
+                        </p>
+                        <p className="font-bold text-success">
+                            {fmtPrice(plan.price_yearly)}
+                        </p>
+                    </div>
+                )}
                 {plan.trial_days > 0 && (
                     <div className="text-center">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -188,12 +219,28 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
                     </div>
                 )}
             </div>
+
             <div
                 className={`h-2 w-2 shrink-0 rounded-full ${plan.is_active ? "bg-success" : "bg-muted-foreground/40"}`}
                 title={plan.is_active ? "Aktif" : "Nonaktif"}
             />
+
             {/* Actions */}
             <div className="flex items-center gap-1">
+                <Link
+                    href={route("developer.plans.features", plan)}
+                    title="Kelola Fitur"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
+                >
+                    <Settings className="h-4 w-4" strokeWidth={1.7} />
+                </Link>
+                <Link
+                    href={route("developer.plans.addons", plan)}
+                    title="Kelola Add-on"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-success/10 hover:text-success"
+                >
+                    <Zap className="h-4 w-4" strokeWidth={1.7} />
+                </Link>
                 <Link
                     href={route("developer.plans.edit", plan)}
                     title="Edit"
@@ -210,7 +257,6 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
                     <Trash2 className="h-4 w-4" strokeWidth={1.7} />
                 </button>
             </div>
-            {/* Status dot */}
         </div>
     );
 }

@@ -12,7 +12,7 @@ class StoreSeeder extends Seeder
     public function run(): void
     {
         $typeId = fn ($code) => StoreType::where('code', $code)->value('id');
-        $unlimitedPlanId = Plan::where('code', 'unlimited')->value('id');
+        $unlimitedPlanId = Plan::where('code', 'business')->value('id');
 
         $stores = [
             [

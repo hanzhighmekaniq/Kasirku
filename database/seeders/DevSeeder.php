@@ -8,6 +8,7 @@ use Database\Seeders\DevSeeder\FeatureSeeder;
 use Database\Seeders\DevSeeder\PaymentGatewaySeeder;
 use Database\Seeders\DevSeeder\PaymentMethodSeeder;
 use Database\Seeders\DevSeeder\PermissionSeeder;
+use Database\Seeders\DevSeeder\PlanAddonSeeder;
 use Database\Seeders\DevSeeder\PlanSeeder;
 use Database\Seeders\DevSeeder\RoleSeeder;
 use Database\Seeders\DevSeeder\StoreSeeder;
@@ -34,6 +35,7 @@ class DevSeeder extends Seeder
             FeatureSeeder::class,
             FeatureDetailSeeder::class,
             PlanSeeder::class,
+            PlanAddonSeeder::class,
             PermissionSeeder::class,
 
             // ── Struktur ───────────────────────────────────────────

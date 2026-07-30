@@ -3,73 +3,61 @@ import { Head, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import {
     Building2,
+    Car,
     Check,
     ChevronLeft,
     CircleCheck,
     ClipboardList,
+    Coffee,
+    Gamepad2,
+    Hotel,
+    KeyRound,
     Loader2,
-    Package,
     Save,
-    Settings,
-    ShoppingCart,
+    Scissors,
+    Store,
+    Ticket,
     TriangleAlert,
-    Users,
-    Wallet,
 } from "lucide-react";
+import {
+    FEATURE_GROUPS,
+    FEATURE_GROUP_ORDER,
+    featureGroupOf,
+} from "@/Utils/featureGroups";
 
-// Warna per tipe toko (index-based)
-const TYPE_COLORS = [
-    {
-        bg: "bg-blue-100 dark:bg-blue-900/30",
-        text: "text-blue-700 dark:text-blue-400",
-        ring: "ring-blue-200 dark:ring-blue-800",
-    },
-    {
-        bg: "bg-orange-100 dark:bg-orange-900/30",
-        text: "text-orange-700 dark:text-orange-400",
-        ring: "ring-orange-200 dark:ring-orange-800",
-    },
-    {
-        bg: "bg-violet-100 dark:bg-violet-900/30",
-        text: "text-violet-700 dark:text-violet-400",
-        ring: "ring-violet-200 dark:ring-violet-800",
-    },
-    {
-        bg: "bg-cyan-100 dark:bg-cyan-900/30",
-        text: "text-cyan-700 dark:text-cyan-400",
-        ring: "ring-cyan-200 dark:ring-cyan-800",
-    },
-    {
-        bg: "bg-rose-100 dark:bg-rose-900/30",
-        text: "text-rose-700 dark:text-rose-400",
-        ring: "ring-rose-200 dark:ring-rose-800",
-    },
-    {
-        bg: "bg-amber-100 dark:bg-amber-900/30",
-        text: "text-amber-700 dark:text-amber-400",
-        ring: "ring-amber-200 dark:ring-amber-800",
-    },
-    {
-        bg: "bg-emerald-100 dark:bg-emerald-900/30",
-        text: "text-emerald-700 dark:text-emerald-400",
-        ring: "ring-emerald-200 dark:ring-emerald-800",
-    },
-    {
-        bg: "bg-pink-100 dark:bg-pink-900/30",
-        text: "text-pink-700 dark:text-pink-400",
-        ring: "ring-pink-200 dark:ring-pink-800",
-    },
-];
-
-// Label kategori fitur
-const CAT_LABELS = {
-    pos: { label: "POS & Transaksi", Icon: ShoppingCart },
-    inventory: { label: "Inventaris & Stok", Icon: Package },
-    crm: { label: "Pelanggan & CRM", Icon: Users },
-    finance: { label: "Keuangan", Icon: Wallet },
-    system: { label: "Sistem", Icon: Settings },
-    other: { label: "Lainnya", Icon: ClipboardList },
+/**
+ * Ikon per kode tipe toko (store_types.code).
+ *
+ * `store_types.icon` di database masih emoji ("🏪", "☕", dst) karena kolom itu
+ * ditulis sebelum halaman ini dipindah ke lucide. Daripada mengandalkan emoji
+ * mentah dari server (tidak konsisten dengan ikon lain di seluruh app), tipe
+ * yang dikenal dipetakan ke lucide di sini — sama seperti pola SelectStore.jsx
+ * dan Developer/Stores/Show.jsx. Tipe baru yang belum dikenal jatuh ke
+ * `Building2` sebagai default netral.
+ */
+const TYPE_ICONS = {
+    retail: Store,
+    fnb: Coffee,
+    service: Scissors,
+    rental: KeyRound,
+    ticket: Ticket,
+    hospitality: Hotel,
+    parking: Car,
+    session: Gamepad2,
 };
+
+// Warna aksen per tipe toko (index-based) — dipertahankan dari desain lama,
+// hanya dipakai untuk highlight kartu sidebar, bukan status.
+const TYPE_COLORS = [
+    { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", ring: "ring-blue-200 dark:ring-blue-800" },
+    { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400", ring: "ring-orange-200 dark:ring-orange-800" },
+    { bg: "bg-violet-100 dark:bg-violet-900/30", text: "text-violet-700 dark:text-violet-400", ring: "ring-violet-200 dark:ring-violet-800" },
+    { bg: "bg-cyan-100 dark:bg-cyan-900/30", text: "text-cyan-700 dark:text-cyan-400", ring: "ring-cyan-200 dark:ring-cyan-800" },
+    { bg: "bg-rose-100 dark:bg-rose-900/30", text: "text-rose-700 dark:text-rose-400", ring: "ring-rose-200 dark:ring-rose-800" },
+    { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", ring: "ring-amber-200 dark:ring-amber-800" },
+    { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", ring: "ring-emerald-200 dark:ring-emerald-800" },
+    { bg: "bg-pink-100 dark:bg-pink-900/30", text: "text-pink-700 dark:text-pink-400", ring: "ring-pink-200 dark:ring-pink-800" },
+];
 
 export default function Index({ types, allFeatures, mapping }) {
     const { flash, allStoreTypes = [] } = usePage().props;
@@ -123,13 +111,14 @@ export default function Index({ types, allFeatures, mapping }) {
         );
     };
 
-    // Group fitur by category
-    const featuresByCategory = {};
+    // Group fitur mengikuti pengelompokan sidebar Admin (bukan kolom DB category)
+    const featuresByGroup = {};
     allFeatures.forEach((f) => {
-        const cat = f.category || "other";
-        if (!featuresByCategory[cat]) featuresByCategory[cat] = [];
-        featuresByCategory[cat].push(f);
+        const g = featureGroupOf(f);
+        if (!featuresByGroup[g]) featuresByGroup[g] = [];
+        featuresByGroup[g].push(f);
     });
+        const orderedGroupKeys = FEATURE_GROUP_ORDER.filter((g) => featuresByGroup[g]?.length > 0);
 
     const type = activeTab;
     const typeIdx = types.indexOf(type);
@@ -137,6 +126,7 @@ export default function Index({ types, allFeatures, mapping }) {
         icon: null,
         label: type,
     };
+    const TypeIcon = TYPE_ICONS[type] ?? Building2;
     const colors = TYPE_COLORS[typeIdx % TYPE_COLORS.length] ?? TYPE_COLORS[0];
     const [sidebarOpen, setSidebarOpen] = useState(() => {
         try {
@@ -250,7 +240,8 @@ export default function Index({ types, allFeatures, mapping }) {
                             {types.map((t, idx) => {
                                 const info = allStoreTypes.find(
                                     (st) => st.code === t,
-                                ) ?? { icon: null, label: t };
+                                ) ?? { label: t };
+                                const ItemIcon = TYPE_ICONS[t] ?? Building2;
                                 const c =
                                     TYPE_COLORS[idx % TYPE_COLORS.length] ??
                                     TYPE_COLORS[0];
@@ -270,7 +261,7 @@ export default function Index({ types, allFeatures, mapping }) {
                                         <span
                                             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${isActive ? "bg-primary-foreground/20" : `${c.bg} ${c.text}`}`}
                                         >
-                                            {info.icon ?? <Building2 className="h-4 w-4" strokeWidth={1.8} />}
+                                            <ItemIcon className="h-4 w-4" strokeWidth={1.8} />
                                         </span>
                                         {sidebarOpen && (
                                             <>
@@ -310,7 +301,7 @@ export default function Index({ types, allFeatures, mapping }) {
                                 <span
                                     className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 ${colors.bg} ${colors.ring}`}
                                 >
-                                    {tm.icon ?? <Building2 className="h-5 w-5" strokeWidth={1.8} />}
+                                    <TypeIcon className={`h-5 w-5 ${colors.text}`} strokeWidth={1.8} />
                                 </span>
                                 <div>
                                     <h3 className="text-base font-bold text-foreground">
@@ -350,7 +341,7 @@ export default function Index({ types, allFeatures, mapping }) {
                             />
                         </div>
 
-                        {/* Feature list by category */}
+                        {/* Feature list by group (mengikuti sidebar Admin) */}
                         <div className="p-6 space-y-6">
                             {allFeatures.length === 0 ? (
                                 <div className="flex flex-col items-center py-12 text-center">
@@ -366,129 +357,100 @@ export default function Index({ types, allFeatures, mapping }) {
                                     </p>
                                 </div>
                             ) : (
-                                Object.entries(featuresByCategory).map(
-                                    ([catKey, catFeatures]) => {
-                                        const cat = CAT_LABELS[catKey] ?? {
-                                            label: catKey,
-                                            Icon: ClipboardList,
-                                        };
-                                        const checkedInCat = catFeatures.filter(
-                                            (f) =>
-                                                checkState[type]?.has(f.code),
-                                        ).length;
-                                        const allCatChecked =
-                                            checkedInCat === catFeatures.length;
-                                        return (
-                                            <div key={catKey}>
-                                                {/* Category header */}
-                                                <div className="mb-3 flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <cat.Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
-                                                        <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                                                            {cat.label}
-                                                        </h4>
-                                                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                                                            {checkedInCat}/
-                                                            {catFeatures.length}
-                                                        </span>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setCheckState(
-                                                                (prev) => {
-                                                                    const s =
-                                                                        new Set(
-                                                                            prev[
-                                                                                type
-                                                                            ],
-                                                                        );
-                                                                    catFeatures.forEach(
-                                                                        (f) =>
-                                                                            allCatChecked
-                                                                                ? s.delete(
-                                                                                      f.code,
-                                                                                  )
-                                                                                : s.add(
-                                                                                      f.code,
-                                                                                  ),
-                                                                    );
-                                                                    return {
-                                                                        ...prev,
-                                                                        [type]: s,
-                                                                    };
-                                                                },
-                                                            );
-                                                        }}
-                                                        className="text-[11px] font-medium text-primary transition hover:text-primary/80"
-                                                    >
-                                                        {allCatChecked
-                                                            ? "Hapus kategori"
-                                                            : "Pilih kategori"}
-                                                    </button>
+                                orderedGroupKeys.map((groupKey) => {
+                                    const groupFeatures = featuresByGroup[groupKey];
+                                    const group = FEATURE_GROUPS[groupKey] ?? FEATURE_GROUPS.other;
+                                    const checkedInGroup = groupFeatures.filter(
+                                        (f) => checkState[type]?.has(f.code),
+                                    ).length;
+                                    const allGroupChecked =
+                                        checkedInGroup === groupFeatures.length;
+                                    return (
+                                        <div key={groupKey}>
+                                            {/* Group header */}
+                                            <div className="mb-3 flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <group.Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
+                                                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                                                        {group.label}
+                                                    </h4>
+                                                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                                        {checkedInGroup}/
+                                                        {groupFeatures.length}
+                                                    </span>
                                                 </div>
-
-                                                {/* Feature chips */}
-                                                <div
-                                                    className={`grid gap-2 ${sidebarOpen ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"}`}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setCheckState((prev) => {
+                                                            const s = new Set(prev[type]);
+                                                            groupFeatures.forEach((f) =>
+                                                                allGroupChecked
+                                                                    ? s.delete(f.code)
+                                                                    : s.add(f.code),
+                                                            );
+                                                            return { ...prev, [type]: s };
+                                                        });
+                                                    }}
+                                                    className="text-[11px] font-medium text-primary transition hover:text-primary/80"
                                                 >
-                                                    {catFeatures.map((f) => {
-                                                        const checked =
-                                                            checkState[
-                                                                type
-                                                            ]?.has(f.code) ??
-                                                            false;
-                                                        return (
-                                                            <label
-                                                                key={f.code}
-                                                                className={`group flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition select-none ${
+                                                    {allGroupChecked
+                                                        ? "Hapus grup"
+                                                        : "Pilih grup"}
+                                                </button>
+                                            </div>
+
+                                            {/* Feature chips */}
+                                            <div
+                                                className={`grid gap-2 ${sidebarOpen ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"}`}
+                                            >
+                                                {groupFeatures.map((f) => {
+                                                    const checked =
+                                                        checkState[type]?.has(f.code) ??
+                                                        false;
+                                                    return (
+                                                        <label
+                                                            key={f.code}
+                                                            className={`group flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition select-none ${
+                                                                checked
+                                                                    ? "border-primary/40 bg-primary/10 text-primary shadow-sm"
+                                                                    : "border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:bg-muted"
+                                                            }`}
+                                                        >
+                                                            <div
+                                                                className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition ${
                                                                     checked
-                                                                        ? "border-primary/40 bg-primary/10 text-primary shadow-sm"
-                                                                        : "border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:bg-muted"
+                                                                        ? "border-primary bg-primary"
+                                                                        : "border-border bg-card group-hover:border-muted-foreground"
                                                                 }`}
                                                             >
-                                                                <div
-                                                                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition ${
-                                                                        checked
-                                                                            ? "border-primary bg-primary"
-                                                                            : "border-border bg-card group-hover:border-muted-foreground"
-                                                                    }`}
-                                                                >
-                                                                    {checked && (
-                                                                        <Check className="h-3 w-3 text-primary-foreground" strokeWidth={3} />
-                                                                    )}
-                                                                </div>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={
-                                                                        checked
-                                                                    }
-                                                                    onChange={() =>
-                                                                        toggleFeature(
-                                                                            type,
-                                                                            f.code,
-                                                                        )
-                                                                    }
-                                                                    className="sr-only"
-                                                                />
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="text-xs font-semibold leading-tight">
-                                                                        {
-                                                                            f.label
-                                                                        }
-                                                                    </p>
-                                                                    <p className="mt-0.5 font-mono text-[10px] opacity-50">
-                                                                        {f.code}
-                                                                    </p>
-                                                                </div>
-                                                            </label>
-                                                        );
-                                                    })}
-                                                </div>
+                                                                {checked && (
+                                                                    <Check className="h-3 w-3 text-primary-foreground" strokeWidth={3} />
+                                                                )}
+                                                            </div>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={checked}
+                                                                onChange={() =>
+                                                                    toggleFeature(type, f.code)
+                                                                }
+                                                                className="sr-only"
+                                                            />
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-xs font-semibold leading-tight">
+                                                                    {f.label}
+                                                                </p>
+                                                                <p className="mt-0.5 font-mono text-[10px] opacity-50">
+                                                                    {f.code}
+                                                                </p>
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })}
                                             </div>
-                                        );
-                                    },
-                                )
+                                        </div>
+                                    );
+                                })
                             )}
                         </div>
 

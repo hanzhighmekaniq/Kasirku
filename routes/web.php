@@ -129,9 +129,15 @@ Route::middleware(['auth', 'developer', 'single-session'])
 
         // Plan / Paket — full CRUD
         Route::resource('plans', PlanController::class)->except(['show']);
-        Route::post('plans/reorder', [PlanController::class, 'reorder'])->name(
-            'plans.reorder',
-        );
+        Route::post('plans/reorder', [PlanController::class, 'reorder'])->name('plans.reorder');
+
+        // Kelola fitur dan add-on per plan (halaman terpisah dari form edit)
+        Route::get('plans/{plan}/features', [PlanController::class, 'features'])->name('plans.features');
+        Route::put('plans/{plan}/features', [PlanController::class, 'updateFeatures'])->name('plans.update-features');
+        Route::get('plans/{plan}/addons', [PlanController::class, 'addons'])->name('plans.addons');
+        Route::post('plans/{plan}/addons', [PlanController::class, 'storeAddon'])->name('plans.addons.store');
+        Route::put('plans/{plan}/addons/{addon}', [PlanController::class, 'updateAddon'])->name('plans.addons.update');
+        Route::delete('plans/{plan}/addons/{addon}', [PlanController::class, 'destroyAddon'])->name('plans.addons.destroy');
 
         // Fitur per Tipe Toko
         Route::get('/type-features', [

@@ -12,26 +12,39 @@ class Plan extends Model
     use HasFactory;
 
     protected $fillable = [
-        "code",
-        "label",
-        "description",
-        "max_users",
-        "max_branches",
-        "price",
-        "trial_days",
-        "is_active",
-        "sort_order",
+        'code',
+        'label',
+        'description',
+        'max_users',
+        'max_branches',
+        'max_stores',
+        'max_products',
+        'max_transactions_per_month',
+        'price',
+        'price_yearly',
+        'trial_days',
+        'is_active',
+        'is_popular',
+        'is_seasonal',
+        'seasonal_label',
+        'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
-            "is_active" => "boolean",
-            "price" => "decimal:2",
-            "max_users" => "integer",
-            "max_branches" => "integer",
-            "trial_days" => "integer",
-            "sort_order" => "integer",
+            'is_active' => 'boolean',
+            'is_popular' => 'boolean',
+            'is_seasonal' => 'boolean',
+            'price' => 'decimal:2',
+            'price_yearly' => 'decimal:2',
+            'max_users' => 'integer',
+            'max_branches' => 'integer',
+            'max_stores' => 'integer',
+            'max_products' => 'integer',
+            'max_transactions_per_month' => 'integer',
+            'trial_days' => 'integer',
+            'sort_order' => 'integer',
         ];
     }
 
@@ -42,7 +55,15 @@ class Plan extends Model
      */
     public function stores(): HasMany
     {
-        return $this->hasMany(Store::class, "plan_id");
+        return $this->hasMany(Store::class, 'plan_id');
+    }
+
+    /**
+     * Add-on yang tersedia untuk plan ini
+     */
+    public function addons(): HasMany
+    {
+        return $this->hasMany(PlanAddon::class)->orderBy('sort_order');
     }
 
     /**
@@ -52,12 +73,13 @@ class Plan extends Model
     {
         return $this->belongsToMany(
             Feature::class,
-            "plan_feature",
+            'plan_feature',
         )->withTimestamps();
     }
 
     /**
      * Alias untuk konsistensi dengan naming convention lama
+     *
      * @deprecated Use features() instead
      */
     public function planFeatures(): BelongsToMany
@@ -71,8 +93,8 @@ class Plan extends Model
     public function featureCodes(): array
     {
         return $this->features()
-            ->where("is_active", true)
-            ->pluck("code")
+            ->where('is_active', true)
+            ->pluck('code')
             ->toArray();
     }
 
@@ -82,9 +104,9 @@ class Plan extends Model
     public function featureList(): array
     {
         return $this->features()
-            ->where("is_active", true)
-            ->orderBy("sort_order")
-            ->pluck("label", "code")
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->pluck('label', 'code')
             ->toArray();
     }
 
@@ -94,12 +116,12 @@ class Plan extends Model
      */
     public function featureDetailCodes(): array
     {
-        return \App\Models\FeatureDetail::whereIn(
-            "feature_id",
-            $this->features()->pluck("features.id"),
+        return FeatureDetail::whereIn(
+            'feature_id',
+            $this->features()->pluck('features.id'),
         )
-            ->where("is_active", true)
-            ->pluck("code")
+            ->where('is_active', true)
+            ->pluck('code')
             ->toArray();
     }
 
@@ -108,12 +130,24 @@ class Plan extends Model
      */
     public function hasFeatureDetail(string $detailCode): bool
     {
-        return \App\Models\FeatureDetail::whereIn(
-            "feature_id",
-            $this->features()->pluck("features.id"),
+        return FeatureDetail::whereIn(
+            'feature_id',
+            $this->features()->pluck('features.id'),
         )
-            ->where("code", $detailCode)
-            ->where("is_active", true)
+            ->where('code', $detailCode)
+            ->where('is_active', true)
             ->exists();
+    }
+
+    /** Apakah limit produk di plan ini unlimited (null = unlimited)? */
+    public function isUnlimitedProducts(): bool
+    {
+        return $this->max_products === null;
+    }
+
+    /** Apakah limit transaksi per bulan di plan ini unlimited (null = unlimited)? */
+    public function isUnlimitedTransactions(): bool
+    {
+        return $this->max_transactions_per_month === null;
     }
 }

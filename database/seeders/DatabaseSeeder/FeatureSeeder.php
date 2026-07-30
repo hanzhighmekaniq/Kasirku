@@ -35,7 +35,7 @@ class FeatureSeeder extends Seeder
     public function run(): void
     {
         $features = [
-            // ── POS & Transaksi ──────────────────────────────────────────
+            // â”€â”€ POS & Transaksi â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             [
                 'code' => 'dashboard',
                 'label' => 'Dashboard',
@@ -115,7 +115,7 @@ class FeatureSeeder extends Seeder
                 ],
             ],
 
-            // ── Master Data ──────────────────────────────────────────────
+            // â”€â”€ Master Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             [
                 'code' => 'product',
                 'label' => 'Produk',
@@ -173,7 +173,7 @@ class FeatureSeeder extends Seeder
                 'applicable_types' => self::ALL_TYPES,
             ],
 
-            // ── Transaksi ────────────────────────────────────────────────
+            // â”€â”€ Transaksi â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             [
                 'code' => 'purchase',
                 'label' => 'Pembelian',
@@ -189,7 +189,7 @@ class FeatureSeeder extends Seeder
                 'applicable_types' => ['retail', 'fnb', 'rental'],
             ],
 
-            // ── Inventaris ───────────────────────────────────────────────
+            // â”€â”€ Inventaris â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             [
                 'code' => 'stock',
                 'label' => 'Manajemen Stok',
@@ -240,7 +240,7 @@ class FeatureSeeder extends Seeder
                 'applicable_types' => ['fnb'],
             ],
 
-            // ── Keuangan & Laporan ───────────────────────────────────────
+            // â”€â”€ Keuangan & Laporan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             [
                 'code' => 'report',
                 'label' => 'Laporan',
@@ -263,7 +263,7 @@ class FeatureSeeder extends Seeder
                 'applicable_types' => self::ALL_TYPES,
             ],
 
-            // ── Sistem & Admin Tools ─────────────────────────────────────
+            // â”€â”€ Sistem & Admin Tools â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             [
                 'code' => 'settings',
                 'label' => 'Pengaturan Toko',
@@ -316,7 +316,7 @@ class FeatureSeeder extends Seeder
                 'applicable_types' => self::ALL_TYPES,
             ],
 
-            // ── Legacy (keep for backward compat, not shown in sidebar) ──
+            // â”€â”€ Legacy (keep for backward compat, not shown in sidebar) â”€â”€
             [
                 'code' => 'deposit',
                 'label' => 'Deposit Pelanggan',
@@ -345,7 +345,7 @@ class FeatureSeeder extends Seeder
             );
         }
 
-        // ── Sync to store_type_feature table ────────────────────────────
+        // â”€â”€ Sync to store_type_feature table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $storeTypeIds = StoreType::pluck('id', 'code');
 
         DB::table('store_type_feature')->delete();
@@ -370,81 +370,8 @@ class FeatureSeeder extends Seeder
             }
         }
 
-        // ── Attach features to plans ──────────────────────────────────────
-
-        // Feature code yang termasuk plan Free (dasar)
-        $freeCodes = [
-            'dashboard',
-            'basic_pos',
-            'shift',
-            'product',
-            'category',
-            'customer',
-            'employee',
-            'expense',
-            'sidebar_order',
-            'cash_rounding',
-            'debt',
-        ];
-
-        // Feature code yang termasuk plan Basic
-        $basicCodes = [
-            'dashboard',
-            'basic_pos',
-            'shift',
-            'sale_return',
-            'promo',
-            'expense',
-            'table',
-            'kitchen',
-            'queue',
-            'booking',
-            'product',
-            'category',
-            'modifier',
-            'customer',
-            'membership',
-            'supplier',
-            'employee',
-            'commission',
-            'purchase',
-            'purchase_return',
-            'stock',
-            'batch_expired',
-            'stock_adjustment',
-            'stock_opname',
-            'stock_transfer',
-            'waste',
-            'recipe',
-            'report',
-            'payment_gateway',
-            'payment_method',
-            'settings',
-            'user_management',
-            'role_management',
-            'activity_log',
-            'sidebar_order',
-            'cash_rounding',
-            'debt',
-        ];
-
-        $free = Plan::where('code', 'free')->first();
-        $basic = Plan::where('code', 'basic')->first();
-        $pro = Plan::where('code', 'pro')->first();
-
-        if ($free) {
-            $free
-                ->features()
-                ->sync(Feature::whereIn('code', $freeCodes)->pluck('id'));
-        }
-        if ($basic) {
-            $basic
-                ->features()
-                ->sync(Feature::whereIn('code', $basicCodes)->pluck('id'));
-        }
-        if ($pro) {
-            // Pro = semua fitur
-            $pro->features()->sync(Feature::pluck('id'));
-        }
+        // Attach features to plans dipindah ke PlanSeeder supaya tidak
+        // saling ketimpa. PlanSeeder adalah satu-satunya sumber kebenaran
+        // untuk relasi plan <-> feature.
     }
 }

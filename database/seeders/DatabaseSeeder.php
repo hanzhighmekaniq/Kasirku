@@ -31,6 +31,7 @@ use Database\Seeders\DatabaseSeeder\MembershipSeeder;
 use Database\Seeders\DatabaseSeeder\PaymentGatewaySeeder;
 use Database\Seeders\DatabaseSeeder\PaymentMethodSeeder;
 use Database\Seeders\DatabaseSeeder\PermissionSeeder;
+use Database\Seeders\DatabaseSeeder\PlanAddonSeeder;
 use Database\Seeders\DatabaseSeeder\PlanSeeder;
 use Database\Seeders\DatabaseSeeder\ProductSeeder;
 use Database\Seeders\DatabaseSeeder\ProductStockSeeder;
@@ -64,6 +65,7 @@ class DatabaseSeeder extends Seeder
             FeatureSeeder::class,
             FeatureDetailSeeder::class,
             PlanSeeder::class,
+            PlanAddonSeeder::class,
             PermissionSeeder::class,
             RoleTemplateSeeder::class,
             ThemePresetSeeder::class,
