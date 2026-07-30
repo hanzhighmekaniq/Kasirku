@@ -7,6 +7,8 @@ import SectionCard from "@/Components/ui/SectionCard";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 import Button from "@/Components/ui/Button";
 import { ProductCombobox } from "./Create";
+import DatePicker from "@/Components/ui/DatePicker";
+import { format } from "date-fns";
 import {
     baseUnitLabel,
     usesUnitConversion,
@@ -291,18 +293,10 @@ export default function Edit({
                                     required
                                     error={errors.purchase_date}
                                 >
-                                    <input
-                                        type="date"
-                                        value={data.purchase_date}
-                                        onChange={(e) =>
-                                            setData(
-                                                "purchase_date",
-                                                e.target.value,
-                                            )
-                                        }
-                                        className={inputCls(
-                                            !!errors.purchase_date,
-                                        )}
+                                    <DatePicker
+                                        value={data.purchase_date ? new Date(data.purchase_date) : null}
+                                        onChange={(d) => setData("purchase_date", d ? format(d, 'yyyy-MM-dd') : '')}
+                                        placeholder="Pilih tanggal pembelian"
                                     />
                                 </Field>
                             </div>
@@ -589,7 +583,11 @@ export default function Edit({
                                                                     </div>
                                                                     <div>
                                                                         <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tgl Expired</label>
-                                                                        <input type="date" value={item.expiry_date || ""} onChange={(e) => updateItem(i, "expiry_date", e.target.value)} className="block w-full rounded-lg border border-input bg-background px-2.5 py-1.5 text-xs focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                                                                        <DatePicker
+                                                                            value={item.expiry_date ? new Date(item.expiry_date) : null}
+                                                                            onChange={(d) => updateItem(i, "expiry_date", d ? format(d, 'yyyy-MM-dd') : '')}
+                                                                            placeholder="Pilih tanggal"
+                                                                        />
                                                                     </div>
                                                                 </div>
                                                             )}

@@ -47,11 +47,9 @@ export default function Edit({
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.employees.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.employees.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Karyawan
                     </div>

@@ -22,14 +22,15 @@ import { id } from "date-fns/locale";
  *   monthsShown  — number, jumlah bulan ditampilkan (default 2)
  */
 const RangeInput = forwardRef(
-    ({ value, onClick, placeholder, disabled, onClear, hasValue }, ref) => {
-        const inputCls = `inline-flex w-auto items-center gap-2 rounded-xl border bg-card px-3 py-2.5 text-sm shadow-sm transition
+    ({ value, onClick, placeholder, disabled, onClear, hasValue, fullWidth }, ref) => {
+        const inputCls = `inline-flex items-center gap-2 rounded-xl border bg-card px-3 py-2.5 text-sm shadow-sm transition
             focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/20
+            ${fullWidth ? "w-full" : "w-auto"}
             ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:border-ring/60"}
             ${hasValue ? "border-input text-foreground" : "border-input text-muted-foreground"}`;
 
         return (
-            <div className="relative inline-block">
+            <div className={`relative ${fullWidth ? "block" : "inline-block"}`}>
                 <button
                     type="button"
                     ref={ref}
@@ -38,7 +39,9 @@ const RangeInput = forwardRef(
                     className={inputCls}
                 >
                     <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="whitespace-nowrap text-left">
+                    <span
+                        className={`text-left ${fullWidth ? "flex-1 truncate" : "whitespace-nowrap"}`}
+                    >
                         {value || placeholder}
                     </span>
                 </button>
@@ -73,6 +76,7 @@ export default function DateRangePicker({
     error,
     className = "",
     monthsShown = 2,
+    fullWidth = false,
 }) {
     const handleChange = ([start, end]) => {
         onChange({ startDate: start, endDate: end });
@@ -96,13 +100,14 @@ export default function DateRangePicker({
     })();
 
     return (
-        <div className={`inline-block ${className}`}>
+        <div className={`${fullWidth ? "block w-full" : "inline-block"} ${className}`}>
             {label && (
                 <label className="mb-1.5 block text-sm font-medium text-foreground">
                     {label}
                 </label>
             )}
             <ReactDatePicker
+                wrapperClassName={fullWidth ? "w-full" : undefined}
                 selectsRange
                 startDate={startDate}
                 endDate={endDate}
@@ -123,6 +128,7 @@ export default function DateRangePicker({
                         disabled={disabled}
                         hasValue={!!startDate}
                         value={displayValue}
+                        fullWidth={fullWidth}
                         onClear={clearable ? handleClear : null}
                     />
                 }

@@ -5,10 +5,12 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import * as ReactDOM from "react-dom";
 import axios from "axios";
-import { ChevronDown, X, ClipboardList, Undo2, Search } from "lucide-react";
-import Dropdown from "@/Components/Dropdown";
+import { X, ClipboardList, Undo2, Search } from "lucide-react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import Button from "@/Components/ui/Button";
+import Select from "@/Components/ui/Select";
+import DateRangePicker from "@/Components/ui/DateRangePicker";
+import { format } from "date-fns";
 
 /* ── Order type options per store type ───────────────── */
 const ORDER_TYPE_OPTIONS = {
@@ -174,6 +176,28 @@ function ExtraStatusBadge({ sale, storeType }) {
     return null;
 }
 
+/* ── Toolbar filter ───────────────────────────────────────
+ * Label semua kontrol filter memakai gaya yang sama. Kontrolnya sendiri pakai
+ * komponen `ui/Select` bersama — bukan Dropdown yang di-styling manual — supaya
+ * tinggi dan sisi kiri-kanannya otomatis sejajar dengan DateRangePicker.
+ */
+const filterLabelClass =
+    "mb-1.5 block text-xs font-medium text-muted-foreground";
+
+const PAYMENT_OPTS = [
+    { value: "all", label: "Semua Pembayaran" },
+    { value: "paid", label: "Lunas" },
+    { value: "partial", label: "Dibayar Sebagian" },
+    { value: "unpaid", label: "Belum Dibayar" },
+];
+
+const STATUS_OPTS = [
+    { value: "all", label: "Semua Status" },
+    { value: "completed", label: "Selesai" },
+    { value: "draft", label: "Draft" },
+    { value: "cancelled", label: "Dibatalkan" },
+];
+
 export default function Index({
     sales,
     stats,
@@ -192,6 +216,16 @@ export default function Index({
     // Derived from storeType
     const orderTypeOptions =
         ORDER_TYPE_OPTIONS[storeType] ?? ORDER_TYPE_OPTIONS.retail;
+
+    /* Opsi untuk komponen `ui/Select` yang memakai bentuk { value, label },
+     * sementara ORDER_TYPE_OPTIONS masih pakai bentuk singkat { v, l }. */
+    const orderTypeSelectOptions = useMemo(
+        () => [
+            { value: "all", label: "Semua Tipe" },
+            ...orderTypeOptions.map((o) => ({ value: o.v, label: o.l })),
+        ],
+        [orderTypeOptions],
+    );
     const extraCol = EXTRA_COL[storeType] ?? null;
 
     // Page title per store type
@@ -221,8 +255,11 @@ export default function Index({
     const statsLabel = STATS_LABEL[storeType] ?? STATS_LABEL.retail;
 
     // Server-side filter state
-    const [dateFrom, setDateFrom] = useState(activeFilters.date_from || "");
-    const [dateTo, setDateTo] = useState(activeFilters.date_to || "");
+    const toDate = (s) => s ? new Date(s) : null;
+    const toStr = (d) => d ? format(d, 'yyyy-MM-dd') : '';
+
+    const [dateFrom, setDateFrom] = useState(toDate(activeFilters.date_from));
+    const [dateTo, setDateTo] = useState(toDate(activeFilters.date_to));
     const [filterPayment, setFilterPayment] = useState(
         activeFilters.payment_status || "all",
     );
@@ -240,21 +277,19 @@ export default function Index({
         });
     };
 
-    const handleDateChange = (key, v) => {
-        const newFrom = key === "date_from" ? v : dateFrom;
-        const newTo = key === "date_to" ? v : dateTo;
-        if (key === "date_from") setDateFrom(v);
-        else setDateTo(v);
-        if (newFrom && newTo) {
+    const handleDateRangeChange = ({ startDate: s, endDate: e }) => {
+        setDateFrom(s);
+        setDateTo(e);
+        if (s && e) {
             applyServerFilters({
-                date_from: newFrom,
-                date_to: newTo,
+                date_from: toStr(s),
+                date_to: toStr(e),
                 payment_status: filterPayment,
             });
-        } else if (!newFrom && !newTo) {
+        } else if (!s && !e) {
             applyServerFilters({
-                date_from: "",
-                date_to: "",
+                date_from: '',
+                date_to: '',
                 payment_status: filterPayment,
             });
         }
@@ -263,19 +298,29 @@ export default function Index({
     const handlePaymentFilter = (v) => {
         setFilterPayment(v);
         applyServerFilters({
-            date_from: dateFrom,
-            date_to: dateTo,
+            date_from: toStr(dateFrom),
+            date_to: toStr(dateTo),
             payment_status: v,
         });
     };
 
-    const hasActiveServerFilters =
-        dateFrom || dateTo || filterPayment !== "all";
+    // Filter dianggap aktif kalau salah satu filter server maupun client diubah,
+    // supaya tombol reset ikut membersihkan pencarian, status, dan tipe pesanan.
+    const hasActiveFilters =
+        dateFrom ||
+        dateTo ||
+        filterPayment !== "all" ||
+        filterStatus !== "all" ||
+        filterOrderType !== "all" ||
+        search.trim() !== "";
 
-    const clearAllServerFilters = () => {
-        setDateFrom("");
-        setDateTo("");
+    const clearAllFilters = () => {
+        setDateFrom(null);
+        setDateTo(null);
         setFilterPayment("all");
+        setFilterStatus("all");
+        setFilterOrderType("all");
+        setSearch("");
         applyServerFilters({
             date_from: "",
             date_to: "",
@@ -418,243 +463,75 @@ export default function Index({
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
                 <div className="border-b border-border p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <div className="relative flex-1">
-                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                                <Search className="h-4 w-4" strokeWidth={1.8} />
-                            </span>
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Cari no. struk, pelanggan, atau kasir..."
-                                className="block w-full rounded-xl border border-border bg-background py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                            />
-                        </div>
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-medium shadow-sm transition hover:bg-muted">
-                                    <span
-                                        className={
-                                            filterStatus !== "all"
-                                                ? "text-foreground"
-                                                : "text-muted-foreground"
-                                        }
-                                    >
-                                        {filterStatus === "completed"
-                                            ? "Selesai"
-                                            : filterStatus === "draft"
-                                                ? "Draft"
-                                                : filterStatus === "cancelled"
-                                                    ? "Dibatalkan"
-                                                    : "Semua Status"}
-                                    </span>
-                                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
-                                </button>
-                            </Dropdown.Trigger>
-                            <Dropdown.Content width="48">
-                                <button
-                                    onClick={() => setFilterStatus("all")}
-                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "all"
-                                            ? "bg-primary/10 font-medium text-primary"
-                                            : "text-muted-foreground hover:bg-muted"
-                                        }`}
-                                >
-                                    Semua Status
-                                </button>
-                                <button
-                                    onClick={() => setFilterStatus("completed")}
-                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "completed"
-                                            ? "bg-primary/10 font-medium text-primary"
-                                            : "text-muted-foreground hover:bg-muted"
-                                        }`}
-                                >
-                                    Selesai
-                                </button>
-                                <button
-                                    onClick={() => setFilterStatus("draft")}
-                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "draft"
-                                            ? "bg-primary/10 font-medium text-primary"
-                                            : "text-muted-foreground hover:bg-muted"
-                                        }`}
-                                >
-                                    Draft
-                                </button>
-                                <button
-                                    onClick={() => setFilterStatus("cancelled")}
-                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "cancelled"
-                                            ? "bg-primary/10 font-medium text-primary"
-                                            : "text-muted-foreground hover:bg-muted"
-                                        }`}
-                                >
-                                    Dibatalkan
-                                </button>
-                            </Dropdown.Content>
-                        </Dropdown>
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-medium shadow-sm transition hover:bg-muted">
-                                    <span
-                                        className={
-                                            filterOrderType !== "all"
-                                                ? "text-foreground"
-                                                : "text-muted-foreground"
-                                        }
-                                    >
-                                        {filterOrderType !== "all"
-                                            ? (orderTypeOptions.find(
-                                                (o) => o.v === filterOrderType,
-                                            )?.l ?? filterOrderType)
-                                            : "Semua Tipe"}
-                                    </span>
-                                    <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
-                                </button>
-                            </Dropdown.Trigger>
-                            <Dropdown.Content width="56">
-                                <button
-                                    onClick={() => setFilterOrderType("all")}
-                                    className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterOrderType === "all"
-                                            ? "bg-primary/10 font-medium text-primary"
-                                            : "text-muted-foreground hover:bg-muted"
-                                        }`}
-                                >
-                                    Semua Tipe
-                                </button>
-                                {orderTypeOptions.map((opt) => (
-                                    <button
-                                        key={opt.v}
-                                        onClick={() => setFilterOrderType(opt.v)}
-                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterOrderType === opt.v
-                                                ? "bg-primary/10 font-medium text-primary"
-                                                : "text-muted-foreground hover:bg-muted"
-                                            }`}
-                                    >
-                                        {opt.l}
-                                    </button>
-                                ))}
-                            </Dropdown.Content>
-                        </Dropdown>
+                    {/* Baris pencarian — dipisah dari filter agar fokus utama jelas */}
+                    <div className="relative">
+                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+                            <Search className="h-4 w-4" strokeWidth={1.8} />
+                        </span>
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Cari no. struk, pelanggan, atau kasir..."
+                            className="block w-full rounded-xl border border-border bg-background py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                        />
                     </div>
 
-                    {/* Server-side filters */}
-                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        {/* Date range */}
-                        <div>
-                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                                Dari Tanggal
+                    {/* Semua filter dalam satu grid berlabel supaya tinggi & sisi
+                        kiri-kanannya sejajar, termasuk saat dibuka di ponsel. */}
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                        <div className="sm:col-span-2">
+                            <label className={filterLabelClass}>
+                                Rentang Tanggal
                             </label>
-                            <input
-                                type="date"
-                                value={dateFrom}
-                                onChange={(e) =>
-                                    handleDateChange("date_from", e.target.value)
-                                }
-                                className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-                            />
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                                Sampai Tanggal
-                            </label>
-                            <input
-                                type="date"
-                                value={dateTo}
-                                onChange={(e) =>
-                                    handleDateChange("date_to", e.target.value)
-                                }
-                                className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            <DateRangePicker
+                                startDate={dateFrom}
+                                endDate={dateTo}
+                                onChange={handleDateRangeChange}
+                                placeholder="Semua tanggal"
+                                monthsShown={2}
+                                fullWidth
                             />
                         </div>
 
-                        {/* Payment status filter */}
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                                Status Bayar
+                            <label className={filterLabelClass}>
+                                Status Pembayaran
                             </label>
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-medium shadow-sm transition hover:bg-muted">
-                                        <span
-                                            className={
-                                                filterPayment !== "all"
-                                                    ? "text-foreground"
-                                                    : "text-muted-foreground"
-                                            }
-                                        >
-                                            {filterPayment === "paid"
-                                                ? "Lunas"
-                                                : filterPayment === "partial"
-                                                    ? "Sebagian"
-                                                    : filterPayment === "unpaid"
-                                                        ? "Belum Bayar"
-                                                        : "Semua"}
-                                        </span>
-                                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
-                                    </button>
-                                </Dropdown.Trigger>
-                                <Dropdown.Content width="48">
-                                    <button
-                                        onClick={() =>
-                                            handlePaymentFilter("all")
-                                        }
-                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterPayment === "all"
-                                                ? "bg-primary/10 font-medium text-primary"
-                                                : "text-muted-foreground hover:bg-muted"
-                                            }`}
-                                    >
-                                        Semua
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            handlePaymentFilter("paid")
-                                        }
-                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterPayment === "paid"
-                                                ? "bg-primary/10 font-medium text-primary"
-                                                : "text-muted-foreground hover:bg-muted"
-                                            }`}
-                                    >
-                                        Lunas
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            handlePaymentFilter("partial")
-                                        }
-                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterPayment === "partial"
-                                                ? "bg-primary/10 font-medium text-primary"
-                                                : "text-muted-foreground hover:bg-muted"
-                                            }`}
-                                    >
-                                        Sebagian
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            handlePaymentFilter("unpaid")
-                                        }
-                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterPayment === "unpaid"
-                                                ? "bg-primary/10 font-medium text-primary"
-                                                : "text-muted-foreground hover:bg-muted"
-                                            }`}
-                                    >
-                                        Belum Bayar
-                                    </button>
-                                </Dropdown.Content>
-                            </Dropdown>
+                            <Select
+                                options={PAYMENT_OPTS}
+                                value={filterPayment}
+                                onChange={handlePaymentFilter}
+                                placeholder="Semua Pembayaran"
+                            />
                         </div>
 
-                        {/* Clear button */}
-                        {hasActiveServerFilters && (
-                            <div className="flex items-end">
-                                <button
-                                    onClick={clearAllServerFilters}
-                                    className="inline-flex h-[38px] items-center gap-1.5 rounded-xl border border-border bg-background px-3 text-sm font-medium text-muted-foreground shadow-sm transition hover:bg-muted hover:text-foreground"
-                                >
-                                    <X className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-                                    Reset
-                                </button>
-                            </div>
-                        )}
+                        <div>
+                            <label className={filterLabelClass}>
+                                Status Transaksi
+                            </label>
+                            <Select
+                                options={STATUS_OPTS}
+                                value={filterStatus}
+                                onChange={setFilterStatus}
+                                placeholder="Semua Status"
+                            />
+                        </div>
+
+                        <div>
+                            <label className={filterLabelClass}>
+                                Tipe Pesanan
+                            </label>
+                            <Select
+                                options={orderTypeSelectOptions}
+                                value={filterOrderType}
+                                onChange={setFilterOrderType}
+                                placeholder="Semua Tipe"
+                            />
+                        </div>
                     </div>
-                    <div className="pt-4 flex items-center justify-between">
+
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
                         <p className="text-xs text-muted-foreground">
                             Menampilkan{" "}
                             <span className="font-semibold text-foreground">
@@ -666,6 +543,15 @@ export default function Index({
                             </span>{" "}
                             {pageTitle.toLowerCase()}
                         </p>
+                        {hasActiveFilters && (
+                            <button
+                                onClick={clearAllFilters}
+                                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                            >
+                                <X className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                                Hapus semua filter
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -715,7 +601,7 @@ export default function Index({
                                         </th>
                                     )}
                                 <th className="px-5 py-3.5 font-semibold">
-                                    Bayar
+                                    Pembayaran
                                 </th>
                                 <th className="px-5 py-3.5 text-right font-semibold">
                                     Aksi
@@ -853,7 +739,7 @@ export default function Index({
                                                             },
                                                         )}
                                                         className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-warning transition hover:bg-warning/10"
-                                                        title="Ganti Pembayaran"
+                                                        title="Ganti metode pembayaran transaksi ini"
                                                     >
                                                         <svg
                                                             className="h-3.5 w-3.5"
@@ -868,7 +754,7 @@ export default function Index({
                                                                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"
                                                             />
                                                         </svg>
-                                                        Bayar
+                                                        Ganti Pembayaran
                                                     </Link>
                                                 )}
                                                 <button
@@ -936,17 +822,22 @@ export default function Index({
                                 key={s.id}
                                 className="rounded-2xl border border-border bg-card p-4 shadow-sm"
                             >
-                                <div className="mb-2 flex items-start justify-between">
-                                    <div>
-                                        <p className="text-sm font-semibold text-foreground">
+                                <div className="mb-3 flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-semibold text-foreground">
                                             {s.sale_no}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {s.branch?.name ?? "-"} &middot;{" "}
+                                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                            Pelanggan: {s.customer?.name ?? "Umum"}
+                                        </p>
+                                        <p className="truncate text-xs text-muted-foreground">
+                                            {s.branch?.name ?? "-"} &middot; Kasir{" "}
                                             {s.user?.name ?? "-"}
                                         </p>
                                     </div>
-                                    <StatusBadge status={s.status} />
+                                    <div className="shrink-0">
+                                        <StatusBadge status={s.status} />
+                                    </div>
                                 </div>
                                 <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
                                     <div>
@@ -968,8 +859,10 @@ export default function Index({
                                         </p>
                                     </div>
                                     <div>
-                                        <span className="text-muted-foreground">Tipe</span>
-                                        <p className="font-medium text-foreground">
+                                        <span className="text-muted-foreground">
+                                            Tipe Pesanan
+                                        </span>
+                                        <p className="mt-0.5">
                                             <OrderTypeBadge
                                                 type={s.order_type}
                                                 storeType={storeType}
@@ -978,9 +871,9 @@ export default function Index({
                                     </div>
                                     <div>
                                         <span className="text-muted-foreground">
-                                            Bayar
+                                            Pembayaran
                                         </span>
-                                        <p className="font-medium text-foreground">
+                                        <p className="mt-0.5">
                                             <PaymentBadge
                                                 status={s.payment_status}
                                             />
@@ -1005,9 +898,9 @@ export default function Index({
                                     ].includes(storeType) && (
                                             <div>
                                                 <span className="text-muted-foreground">
-                                                    Status Ops
+                                                    Status Operasional
                                                 </span>
-                                                <p className="font-medium text-foreground">
+                                                <p className="mt-0.5">
                                                     <ExtraStatusBadge
                                                         sale={s}
                                                         storeType={storeType}
@@ -1016,37 +909,38 @@ export default function Index({
                                             </div>
                                         )}
                                 </div>
-                                <div className="flex gap-2">
+                                {/* Aksi disusun grid agar label penuh tetap terbaca
+                                    di layar sempit, tanpa tombol yang terpotong. */}
+                                <div className="grid grid-cols-2 gap-2">
                                     <Link
                                         href={route("admin.sales.show", s.id)}
-                                        className="flex-1 rounded-xl border border-border py-2 text-center text-xs font-medium text-muted-foreground transition hover:bg-muted"
+                                        className="rounded-xl border border-border py-2.5 text-center text-xs font-semibold text-muted-foreground transition hover:bg-muted"
                                     >
-                                        Detail
+                                        Lihat Detail
                                     </Link>
+                                    <button
+                                        onClick={() => handlePrint(s.id)}
+                                        className="rounded-xl border border-primary/20 py-2.5 text-xs font-semibold text-primary transition hover:bg-primary/10"
+                                    >
+                                        Cetak Struk
+                                    </button>
                                     {s.status !== "draft" && (
                                         <Link
                                             href={route("admin.sales.show", {
                                                 sale: s.id,
                                                 switch: 1,
                                             })}
-                                            className="rounded-xl border border-warning/30 px-3 py-2 text-xs font-medium text-warning transition hover:bg-amber-50"
-                                            title="Ganti Pembayaran"
+                                            className="col-span-2 rounded-xl border border-warning/30 py-2.5 text-center text-xs font-semibold text-warning transition hover:bg-warning/10"
                                         >
-                                            Bayar
+                                            Ganti Metode Pembayaran
                                         </Link>
                                     )}
-                                    <button
-                                        onClick={() => handlePrint(s.id)}
-                                        className="rounded-xl border border-primary/20 px-3 py-2 text-xs font-medium text-primary transition hover:bg-primary/10"
-                                    >
-                                        Cetak
-                                    </button>
                                     {s.status === "draft" && (
                                         <button
                                             onClick={() => setDeleteTarget(s)}
-                                            className="rounded-xl border border-destructive/20 px-3 py-2 text-xs font-medium text-destructive transition hover:bg-destructive/10"
+                                            className="col-span-2 rounded-xl border border-destructive/20 py-2.5 text-xs font-semibold text-destructive transition hover:bg-destructive/10"
                                         >
-                                            Hapus
+                                            Hapus Transaksi
                                         </button>
                                     )}
                                 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Customer;
 use App\Models\Promotion;
 
 class PromotionService
@@ -30,14 +31,68 @@ class PromotionService
             });
     }
 
-    public function findBestPromoForItem(string $productId, int $quantity, float $unitPrice, ?string $customerTier = null): ?array
-    {
+    /**
+     * Apakah target promo mencakup bucket item yang sedang dihitung?
+     *
+     * Aturannya menurun dari yang paling umum ke paling spesifik:
+     * - promo tanpa target sama sekali → berlaku untuk semua produk
+     * - target tanpa varian & satuan    → semua varian/satuan produk itu
+     * - target dengan varian saja       → semua satuan pada varian itu
+     * - target dengan varian & satuan   → hanya kombinasi itu
+     */
+    private function promoCoversItem(
+        Promotion $promo,
+        string|int $productId,
+        ?int $variantId,
+        ?int $packagingUnitId,
+    ): bool {
+        if ($promo->products->isEmpty()) {
+            return true;
+        }
+
+        foreach ($promo->products as $target) {
+            if ((int) $target->id !== (int) $productId) {
+                continue;
+            }
+
+            $targetVariantId = $target->pivot->variant_id;
+            $targetUnitId = $target->pivot->packaging_unit_id;
+
+            if ($targetVariantId !== null && (int) $targetVariantId !== (int) $variantId) {
+                continue;
+            }
+
+            if ($targetUnitId !== null && (int) $targetUnitId !== (int) $packagingUnitId) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Promo terbaik untuk satu item.
+     *
+     * `$customerTierId` merujuk `customer_tiers.id`, bukan nama tier — nama bisa
+     * diganti owner kapan saja, id tidak.
+     */
+    public function findBestPromoForItem(
+        string $productId,
+        int $quantity,
+        float $unitPrice,
+        ?int $customerTierId = null,
+        ?int $variantId = null,
+        ?int $packagingUnitId = null,
+    ): ?array {
         $promotions = $this->activePromosQuery()
             ->where('scope', 'item')
             ->where(function ($q) use ($productId) {
                 $q->whereHas('products', fn ($q2) => $q2->where('products.id', $productId))
                     ->orWhereDoesntHave('products');
             })
+            ->with(['products', 'freeProduct:id,sell_price', 'freeVariant:id,price'])
             ->get();
 
         if ($promotions->isEmpty()) {
@@ -49,7 +104,10 @@ class PromotionService
         $bestPromo = null;
 
         foreach ($promotions as $promo) {
-            if ($promo->products->isNotEmpty() && ! $promo->products->contains('id', $productId)) {
+            if (! $this->promoCoversItem($promo, $productId, $variantId, $packagingUnitId)) {
+                continue;
+            }
+            if (! $promo->isActiveOnDay()) {
                 continue;
             }
             if ($promo->min_purchase_amount > 0 && $itemTotal < $promo->min_purchase_amount) {
@@ -58,11 +116,11 @@ class PromotionService
             if ($promo->min_quantity > 0 && $quantity < $promo->min_quantity) {
                 continue;
             }
-            if ($promo->customer_tier && $promo->customer_tier !== $customerTier) {
+            if ($promo->customer_tier_id && $promo->customer_tier_id !== $customerTierId) {
                 continue;
             }
 
-            $discount = $this->calculateDiscount($promo, $quantity, $unitPrice, $itemTotal, $customerTier);
+            $discount = $this->calculateDiscount($promo, $quantity, $unitPrice, $itemTotal);
 
             if ($discount > $bestDiscount) {
                 $bestDiscount = $discount;
@@ -77,7 +135,7 @@ class PromotionService
         return null;
     }
 
-    private function calculateDiscount(Promotion $promo, int $quantity, float $unitPrice, float $itemTotal, ?string $customerTier): float
+    private function calculateDiscount(Promotion $promo, int $quantity, float $unitPrice, float $itemTotal): float
     {
         return match ($promo->type) {
             'percentage' => $this->calculatePercentage($promo, $unitPrice, $quantity),
@@ -145,12 +203,39 @@ class PromotionService
         if ($buyQty <= 0 || ! $promo->free_product_id || $quantity < $buyQty) {
             return 0;
         }
-        $freeCount = floor($quantity / $buyQty);
 
-        return $freeCount * ($promo->freeProduct?->sell_price ?? 0);
+        // Berapa banyak item gratis per kelipatan pembelian. Default 1 supaya
+        // promo lama yang belum mengisi free_quantity tetap berperilaku sama.
+        $freePerBundle = max(1, (int) ($promo->free_quantity ?? 1));
+        $freeCount = floor($quantity / $buyQty) * $freePerBundle;
+
+        // Harga varian gratis dipakai kalau promo menargetkan varian tertentu,
+        // karena harga varian bisa berbeda dari produk induknya.
+        $freeUnitPrice = (float) (
+            $promo->freeVariant?->price
+            ?: $promo->freeProduct?->sell_price
+            ?: 0
+        );
+
+        return $freeCount * $freeUnitPrice;
     }
 
-    public function findBestCartPromo(float $cartSubtotal, ?string $customerTier = null): ?array
+    /**
+     * Kandidat diskon keranjang dari membership pelanggan.
+     *
+     * Delegasi ke MembershipBenefitService supaya diskon legacy
+     * (`memberships.discount_percent`) dan benefit dinamis di kolom JSON
+     * dievaluasi lewat satu jalur yang sama.
+     */
+    public function membershipDiscountCandidate(?Customer $customer, float $cartSubtotal): ?array
+    {
+        return app(MembershipBenefitService::class)->cartDiscount($customer, $cartSubtotal);
+    }
+
+    /**
+     * Promo keranjang terbaik. `$customerTierId` merujuk `customer_tiers.id`.
+     */
+    public function findBestCartPromo(float $cartSubtotal, ?int $customerTierId = null): ?array
     {
         $promotions = $this->activePromosQuery()
             ->where('scope', 'cart')
@@ -164,10 +249,13 @@ class PromotionService
         $bestPromo = null;
 
         foreach ($promotions as $promo) {
+            if (! $promo->isActiveOnDay()) {
+                continue;
+            }
             if ($promo->min_purchase_amount > 0 && $cartSubtotal < $promo->min_purchase_amount) {
                 continue;
             }
-            if ($promo->customer_tier && $promo->customer_tier !== $customerTier) {
+            if ($promo->customer_tier_id && $promo->customer_tier_id !== $customerTierId) {
                 continue;
             }
 
@@ -193,7 +281,12 @@ class PromotionService
         return null;
     }
 
-    public function applyPromosToCart(array $items, ?string $customerTier = null): array
+    /**
+     * Terapkan promo per item ke seluruh keranjang.
+     *
+     * `$customerTierId` merujuk `customer_tiers.id`.
+     */
+    public function applyPromosToCart(array $items, ?int $customerTierId = null): array
     {
         $fixedAmountPromos = [];
         $result = [];
@@ -204,7 +297,9 @@ class PromotionService
                 $item['product_id'],
                 $item['quantity'],
                 $item['price'],
-                $customerTier
+                $customerTierId,
+                $item['variant_id'] ?? null,
+                $item['packaging_unit_id'] ?? null,
             );
 
             if ($best) {

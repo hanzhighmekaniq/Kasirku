@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CustomerTier;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -42,6 +43,10 @@ class StoreController extends Controller
         ]);
 
         $store = Store::create($validated);
+
+        // Tier bawaan dibuat di sini supaya store baru langsung siap tanpa
+        // harus masuk ke menu "Level Tier" lebih dulu.
+        CustomerTier::seedDefaultsForStore($store->id);
 
         // Auto-seed metode pembayaran wajib (Tunai + Hutang/Kasbon)
         $store->paymentMethods()->create([

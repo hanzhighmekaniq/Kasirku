@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import PageHeader from '@/Components/PageHeader';
 import SectionCard from '@/Components/ui/SectionCard';
 import PaymentMethodForm from './PaymentMethodForm';
 
@@ -51,21 +51,21 @@ export default function Edit({ paymentMethod, types }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('admin.payment-methods.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
-                    </Link>
-                    <h2 className="text-lg font-semibold text-foreground">Edit Metode Pembayaran</h2>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">Edit Metode Pembayaran</div>
+                    <div className="truncate text-[11px] text-muted-foreground">{paymentMethod.name}</div>
                 </div>
             }
+            backUrl={route('admin.payment-methods.index')}
         >
-            <Head title="Edit Metode Pembayaran" />
+            <PageHeader
+                title="Edit Metode Pembayaran"
+                breadcrumbs={['Admin', 'Pengaturan', 'Metode Pembayaran', 'Edit']}
+                heading="Edit Metode Pembayaran"
+                description={`Perbarui detail metode pembayaran "${paymentMethod.name}".`}
+            />
 
-            <div className="mx-auto max-w-2xl">
+            <div className="mx-auto w-full max-w-2xl">
                 <SectionCard
                     title="Informasi Metode Pembayaran"
                     subtitle={<>Perbarui detail untuk <span className="font-medium text-foreground">{paymentMethod.name}</span>.</>}

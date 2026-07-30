@@ -10,6 +10,7 @@ use App\Models\ProductModifierGroup;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Models\Supplier;
+use App\Services\ImageService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,7 @@ class ProductController extends Controller
         $store = Store::with('storeType')->find($storeId);
 
         $query = Product::forStore($storeId)
+            ->where('type', '!=', 'membership')
             ->with([
                 'category',
                 'supplier',
@@ -132,9 +134,9 @@ class ProductController extends Controller
 
         // Stats (full count, bukan dari paginated)
         $stats = [
-            'total' => Product::forStore($storeId)->count(),
-            'active' => Product::forStore($storeId)->where('is_active', true)->count(),
-            'inactive' => Product::forStore($storeId)->where('is_active', false)->count(),
+            'total' => Product::forStore($storeId)->where('type', '!=', 'membership')->count(),
+            'active' => Product::forStore($storeId)->where('type', '!=', 'membership')->where('is_active', true)->count(),
+            'inactive' => Product::forStore($storeId)->where('type', '!=', 'membership')->where('is_active', false)->count(),
         ];
 
         // Low stock — filter branch jika ada
@@ -142,6 +144,7 @@ class ProductController extends Controller
             ? 'AND product_stocks.branch_id = '.(int) $branchId
             : '';
         $stats['lowStock'] = Product::forStore($storeId)
+            ->where('type', '!=', 'membership')
             ->where('track_stock', true)
             ->whereRaw(
                 "products.id IN (
@@ -587,7 +590,7 @@ class ProductController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
+            $imagePath = app(ImageService::class)->upload($request->file('image'), 'products');
         }
 
         $syncModifiers = $request->boolean('sync_modifier_groups');
@@ -730,7 +733,7 @@ class ProductController extends Controller
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
-            $imagePath = $request->file('image')->store('products', 'public');
+            $imagePath = app(ImageService::class)->upload($request->file('image'), 'products');
         }
 
         $syncModifiers = $request->boolean('sync_modifier_groups');
@@ -807,10 +810,18 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        if ($product->type === 'membership') {
+            return back()->with('error',
+                'Produk membership tidak bisa dihapus langsung. Nonaktifkan lewat halaman Membership.');
+        }
+
+        if ($product->saleItems()->exists()) {
+            return back()->with('error',
+                'Produk sudah pernah terjual, tidak bisa dihapus. Nonaktifkan saja agar riwayat transaksi tetap aman.');
+        }
+
         $product->delete();
 
-        return redirect()
-            ->route('admin.products.index')
-            ->with('success', 'Produk berhasil dihapus.');
+        return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus.');
     }
 }

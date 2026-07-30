@@ -2,10 +2,18 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Package, X } from "lucide-react";
 import Field from "@/Components/ui/Field";
 import SectionCard from "@/Components/ui/SectionCard";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
+import Select from "@/Components/ui/Select";
+import CurrencyInput from "@/Components/ui/CurrencyInput";
+import StockBucketPicker, {
+    BucketItemLabel,
+} from "@/Components/ui/StockBucketPicker";
 import Button from "@/Components/ui/Button";
+import DatePicker from "@/Components/ui/DatePicker";
+import { format } from "date-fns";
 import {
     baseUnitLabel,
     usesUnitConversion,
@@ -15,12 +23,16 @@ import {
 const fmtRp = (n) => "Rp " + Number(n || 0).toLocaleString("id-ID");
 
 const inputCls = (hasError = false) =>
-    `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${hasError
+    `block w-full rounded-xl border bg-background text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${hasError
         ? "border-destructive focus:border-destructive focus:ring-destructive/20"
         : "border-input focus:border-ring focus:ring-ring/20"
     }`;
 
-/* ── Product combobox ──────────────────────────────── */
+/* ── Product combobox ──────────────────────────────────
+ * Dipertahankan karena masih dipakai halaman Edit pembelian. Form Create
+ * sudah pindah ke StockBucketPicker yang memilih produk → varian → satuan
+ * dalam satu alur.
+ */
 export function ProductCombobox({
     products,
     storeType,
@@ -212,51 +224,27 @@ export function ProductCombobox({
 export default function Create({
     suppliers,
     products,
+    buckets = [],
     paymentMethods,
     storeType,
     prefill,
+    currentBranchId = null,
 }) {
     const { flash } = usePage().props;
 
-    // Pending item state — terpisah dari form items
-    const [pendingProduct, setPendingProduct] = useState(null);
-    const [pendingVariantId, setPendingVariantId] = useState("");
-    const [pendingUnitId, setPendingUnitId] = useState("");
+    /* ── Item yang sedang disiapkan ────────────────────────
+     * Picker memilih satu bucket (produk + varian + satuan) sekaligus, jadi
+     * tidak ada lagi state variant/unit terpisah yang harus disinkronkan.
+     */
+    const [pendingBucket, setPendingBucket] = useState(null);
     const [pendingQty, setPendingQty] = useState(1);
     const [pendingPrice, setPendingPrice] = useState("");
     const qtyRef = useRef(null);
 
-    // Variant terpilih (object), buat cari packaging units miliknya
-    const pendingVariant = useMemo(
-        () =>
-            pendingProduct?.variants?.find(
-                (v) => String(v.id) === String(pendingVariantId),
-            ) ?? null,
-        [pendingProduct, pendingVariantId],
-    );
-
-    // Packaging units yang relevan: milik variant terpilih, atau level produk
-    // kalau produk tidak punya variant / belum pilih variant.
-    const pendingUnits = useMemo(() => {
-        if (!pendingProduct) return [];
-        if (pendingProduct.is_variant) {
-            return pendingVariant?.packaging_units ?? [];
-        }
-        return pendingProduct.packaging_units ?? [];
-    }, [pendingProduct, pendingVariant]);
-
-    const pendingUnit = useMemo(
-        () => pendingUnits.find((u) => String(u.id) === String(pendingUnitId)) ?? null,
-        [pendingUnits, pendingUnitId],
-    );
-
-    // Stok bucket yang relevan dengan kombinasi produk+variant+unit saat ini
     const pendingBucketStock = useMemo(() => {
-        if (!pendingProduct) return null;
-        if (pendingUnit) return pendingUnit.stock ?? 0;
-        if (pendingProduct.is_variant) return pendingVariant?.stock ?? 0;
-        return pendingProduct.stock ?? 0;
-    }, [pendingProduct, pendingVariant, pendingUnit]);
+        if (!pendingBucket || currentBranchId === null) return null;
+        return pendingBucket.stock_by_branch?.[String(currentBranchId)] ?? 0;
+    }, [pendingBucket, currentBranchId]);
 
     const { data, setData, post, processing, errors } = useForm({
         supplier_id: prefill?.supplier_id ? String(prefill.supplier_id) : "",
@@ -302,53 +290,39 @@ export default function Create({
                 ? "partial"
                 : "unpaid";
 
-    /* ── Pick product from combobox ── */
-    const handlePick = (product) => {
-        setPendingProduct(product);
-        setPendingVariantId("");
-        setPendingUnitId("");
-        setPendingPrice(
-            product.cost_price > 0 ? String(product.cost_price) : "",
-        );
+    /* ── Pilih bucket dari picker ── */
+    const handlePickBucket = (bucket) => {
+        setPendingBucket(bucket);
+        setPendingPrice(bucket.cost_price > 0 ? String(bucket.cost_price) : "");
         setPendingQty(1);
-        // Kalau produk punya variant, fokus belum bisa ke qty — user harus
-        // pilih variant dulu. Kalau produk simple, langsung fokus ke qty.
-        if (!product.is_variant) {
-            setTimeout(() => qtyRef.current?.focus(), 80);
-        }
-    };
-
-    // Saat variant dipilih, reset unit (unit lama mungkin bukan milik variant ini)
-    const handlePickVariant = (variantId) => {
-        setPendingVariantId(variantId);
-        setPendingUnitId("");
         setTimeout(() => qtyRef.current?.focus(), 80);
     };
 
-    /* ── Add pending item to list ── */
+    /* ── Tambahkan item yang disiapkan ke daftar ── */
     const handleAdd = () => {
-        if (!pendingProduct || !pendingQty || Number(pendingQty) < 1) return;
-        // Produk dengan variant wajib pilih variant dulu sebelum ditambahkan
-        if (pendingProduct.is_variant && !pendingVariantId) return;
+        if (!pendingBucket || !pendingQty || Number(pendingQty) < 1) return;
 
         const qty = Number(pendingQty);
         const price = Number(pendingPrice) || 0;
-        const variantId = pendingVariantId ? Number(pendingVariantId) : null;
-        const unitId = pendingUnitId ? Number(pendingUnitId) : null;
 
         const newItem = {
-            product_id: pendingProduct.id,
-            product_name: pendingProduct.name,
-            product_sku: pendingProduct.sku,
-            variant_id: variantId,
-            variant_name: pendingVariant?.name ?? null,
-            packaging_unit_id: unitId,
-            unit_name: pendingUnit?.name ?? null,
+            product_id: pendingBucket.product_id,
+            product_name: pendingBucket.product_name,
+            product_sku: pendingBucket.product_sku,
+            variant_id: pendingBucket.variant_id ?? null,
+            variant_name: pendingBucket.variant_name ?? null,
+            packaging_unit_id: pendingBucket.packaging_unit_id ?? null,
+            unit_name: pendingBucket.unit_name ?? null,
+            conversion_qty: pendingBucket.conversion_qty ?? null,
+            unit: pendingBucket.unit ?? null,
+            base_unit: pendingBucket.base_unit ?? null,
+            base_unit_conversion: pendingBucket.base_unit_conversion ?? null,
+            type: pendingBucket.type ?? null,
             quantity: qty,
             cost_price: price,
         };
 
-        // Merge jika kombinasi produk+variant+unit yang sama sudah ada di list
+        // Merge kalau bucket yang sama sudah ada di daftar.
         const existIdx = data.items.findIndex(
             (i) =>
                 i.product_id === newItem.product_id &&
@@ -366,10 +340,7 @@ export default function Create({
             setData("items", [...data.items, newItem]);
         }
 
-        // Reset pending
-        setPendingProduct(null);
-        setPendingVariantId("");
-        setPendingUnitId("");
+        setPendingBucket(null);
         setPendingQty(1);
         setPendingPrice("");
     };
@@ -426,7 +397,6 @@ export default function Create({
                     }
                     description="Catat pembelian stok dari supplier, pantau status pembayaran, dan penerimaan barang."
                     backUrl={route("admin.purchases.index")}
-                    className="mb-0"
                 />
 
             {flash?.error && (
@@ -449,7 +419,10 @@ export default function Create({
             )}
 
             <form onSubmit={submit}>
-                <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
+                {/* items-start diperlukan agar kolom ringkasan bisa sticky —
+                    default stretch membuat tinggi kolom penuh sehingga tidak
+                    ada ruang untuk menempel. */}
+                <div className="grid grid-cols-1 items-start gap-2 lg:grid-cols-3">
                     {/* ── Kolom utama ── */}
                     <div className="space-y-2 lg:col-span-2">
                         {/* Info dasar */}
@@ -477,18 +450,10 @@ export default function Create({
                                     required
                                     error={errors.purchase_date}
                                 >
-                                    <input
-                                        type="date"
-                                        value={data.purchase_date}
-                                        onChange={(e) =>
-                                            setData(
-                                                "purchase_date",
-                                                e.target.value,
-                                            )
-                                        }
-                                        className={inputCls(
-                                            !!errors.purchase_date,
-                                        )}
+                                    <DatePicker
+                                        value={data.purchase_date ? new Date(data.purchase_date) : null}
+                                        onChange={(d) => setData("purchase_date", d ? format(d, 'yyyy-MM-dd') : '')}
+                                        placeholder="Pilih tanggal pembelian"
                                     />
                                 </Field>
                             </div>
@@ -504,113 +469,58 @@ export default function Create({
                             }
                         >
                             <div className="space-y-4">
-                                {/* Step 1: cari produk */}
-                                <ProductCombobox
-                                    products={products}
-                                    storeType={storeType}
-                                    onPick={handlePick}
-                                />
+                                {/* Langkah 1: pilih bucket produk → varian → satuan */}
+                                <div>
+                                    <label className="mb-1.5 block text-sm font-medium text-foreground">
+                                        {storeType === "fnb"
+                                            ? "Cari Bahan Baku"
+                                            : "Cari Produk"}
+                                    </label>
+                                    <StockBucketPicker
+                                        buckets={buckets}
+                                        branchId={currentBranchId}
+                                        onSelect={handlePickBucket}
+                                        placeholder={
+                                            storeType === "fnb"
+                                                ? "Pilih bahan baku / varian / satuan"
+                                                : "Pilih produk / varian / satuan"
+                                        }
+                                    />
+                                </div>
 
-                                {/* Step 2: pilih variant/unit (jika ada) lalu isi qty + harga */}
-                                {pendingProduct && (
-                                    <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4">
-                                        <div className="mb-3 flex items-center justify-between">
-                                            <div>
-                                                <p className="text-sm font-semibold text-primary">
-                                                    {pendingProduct.name}
-                                                </p>
-                                                <p className="text-xs text-primary/70">
-                                                    {pendingProduct.sku}
-                                                </p>
-                                            </div>
+                                {/* Langkah 2: isi qty + harga beli */}
+                                {pendingBucket && (
+                                    <div className="rounded-2xl border border-border bg-muted/40 p-4">
+                                        <div className="mb-3 flex items-start justify-between gap-3">
+                                            <BucketItemLabel item={pendingBucket} />
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    setPendingProduct(null)
-                                                }
-                                                className="text-primary/70 hover:text-primary"
+                                                onClick={() => setPendingBucket(null)}
+                                                aria-label="Batalkan pilihan"
+                                                className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                                             >
-                                                <svg
-                                                    className="h-4 w-4"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    strokeWidth={2}
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                        d="M6 18L18 6M6 6l12 12"
-                                                    />
-                                                </svg>
+                                                <X className="h-4 w-4" strokeWidth={2} />
                                             </button>
                                         </div>
 
-                                        {/* Dropdown Variant — hanya muncul jika produk is_variant */}
-                                        {pendingProduct.is_variant && (
-                                            <div className="mb-3">
-                                                <label className="mb-1 block text-xs font-semibold text-primary">
-                                                    Variant{" "}
-                                                    <span className="text-destructive">
-                                                        *
-                                                    </span>
-                                                </label>
-                                                <SearchableSelect
-                                                    options={
-                                                        pendingProduct.variants ??
-                                                        []
-                                                    }
-                                                    value={pendingVariantId}
-                                                    onChange={handlePickVariant}
-                                                    placeholder="Pilih Variant"
-                                                    searchPlaceholder="Ketik nama variant…"
-                                                    required
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Dropdown Unit — muncul jika ada packaging units untuk variant/produk terpilih */}
-                                        {pendingUnits.length > 0 &&
-                                            (!pendingProduct.is_variant ||
-                                                pendingVariantId) && (
-                                                <div className="mb-3">
-                                                    <label className="mb-1 block text-xs font-semibold text-primary">
-                                                        Satuan
-                                                    </label>
-                                                    <SearchableSelect
-                                                        options={[
-                                                            {
-                                                                id: "",
-                                                                name: "Pcs (satuan dasar)",
-                                                            },
-                                                            ...pendingUnits,
-                                                        ]}
-                                                        value={pendingUnitId}
-                                                        onChange={
-                                                            setPendingUnitId
-                                                        }
-                                                        placeholder="Pcs (satuan dasar)"
-                                                        searchPlaceholder="Ketik nama satuan…"
-                                                    />
-                                                </div>
-                                            )}
-
                                         {pendingBucketStock !== null && (
-                                            <p className="mb-3 text-xs text-primary">
+                                            <p className="mb-3 text-xs text-muted-foreground">
                                                 Stok saat ini:{" "}
-                                                <span className="font-semibold">
+                                                <span className="font-semibold text-foreground">
                                                     {pendingBucketStock}
                                                 </span>{" "}
-                                                {pendingUnit?.name ?? "pcs"}
+                                                {pendingBucket.unit_name ??
+                                                    pendingBucket.unit ??
+                                                    "pcs"}
                                             </p>
                                         )}
 
-                                        <div className="grid grid-cols-12 items-end gap-3">
-                                            <div className="col-span-4 sm:col-span-3">
-                                                <label className="mb-1 block text-xs font-semibold text-primary">
-                                                    Qty{" "}
-                                                    {pendingUnit
-                                                        ? `(${pendingUnit.name})`
+                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-end">
+                                            <div className="sm:col-span-3">
+                                                <label className="mb-1.5 block text-sm font-medium text-foreground">
+                                                    Qty
+                                                    {pendingBucket.unit_name
+                                                        ? ` (${pendingBucket.unit_name})`
                                                         : ""}
                                                 </label>
                                                 <input
@@ -618,75 +528,57 @@ export default function Create({
                                                     type="number"
                                                     value={pendingQty}
                                                     onChange={(e) =>
-                                                        setPendingQty(
-                                                            e.target.value,
-                                                        )
+                                                        setPendingQty(e.target.value)
                                                     }
                                                     onKeyDown={handleAddKey}
                                                     min="1"
-                                                    className="block w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                    className={`${inputCls()} px-3.5 py-2.5`}
                                                 />
                                             </div>
-                                            <div className="col-span-5 sm:col-span-5">
-                                                <label className="mb-1 block text-xs font-semibold text-primary">
+                                            <div className="sm:col-span-5">
+                                                <label className="mb-1.5 block text-sm font-medium text-foreground">
                                                     Harga Beli / Satuan
                                                 </label>
-                                                <div className="relative">
-                                                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-primary/70">
-                                                        Rp
-                                                    </span>
-                                                    <input
-                                                        type="number"
-                                                        value={pendingPrice}
-                                                        onChange={(e) =>
-                                                            setPendingPrice(
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        onKeyDown={handleAddKey}
-                                                        min="0"
-                                                        placeholder="0"
-                                                        className="block w-full rounded-xl border border-input bg-background py-2 pl-8 pr-3 text-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                                    />
-                                                </div>
+                                                <CurrencyInput
+                                                    value={pendingPrice}
+                                                    onChange={setPendingPrice}
+                                                    placeholder="0"
+                                                />
                                             </div>
-                                            <div className="col-span-3 sm:col-span-4">
-                                                <button
+                                            <div className="sm:col-span-4">
+                                                <Button
                                                     type="button"
                                                     onClick={handleAdd}
-                                                    disabled={
-                                                        pendingProduct.is_variant &&
-                                                        !pendingVariantId
-                                                    }
-                                                    className="w-full rounded-xl bg-primary py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 active:bg-primary/80 disabled:opacity-40"
+                                                    className="w-full"
                                                 >
-                                                    + Tambah
-                                                </button>
+                                                    Tambah Item
+                                                </Button>
                                             </div>
                                         </div>
+
                                         {/* Bahan baku berkonversi dicatat per
                                             satuan beli tapi disimpan per satuan
                                             pakai — tunjukkan hasilnya sebelum
                                             disimpan supaya tidak terasa ganjil. */}
-                                        {usesUnitConversion(pendingProduct) &&
+                                        {usesUnitConversion(pendingBucket) &&
                                             Number(pendingQty) > 0 && (
-                                                <p className="mt-2 text-xs text-primary">
+                                                <p className="mt-3 text-xs text-muted-foreground">
                                                     Masuk stok:{" "}
-                                                    <strong>
+                                                    <strong className="text-foreground">
                                                         {baseUnitLabel(
-                                                            pendingProduct,
+                                                            pendingBucket,
                                                             pendingQty,
                                                         )}
                                                     </strong>
                                                     {Number(pendingPrice) > 0 && (
                                                         <>
                                                             {" · Modal ≈ "}
-                                                            <strong>
+                                                            <strong className="text-foreground">
                                                                 {fmtRp(
                                                                     Number(pendingPrice) /
-                                                                    Number(pendingProduct.base_unit_conversion),
+                                                                    Number(pendingBucket.base_unit_conversion),
                                                                 )}
-                                                                /{pendingProduct.base_unit}
+                                                                /{pendingBucket.base_unit}
                                                             </strong>
                                                         </>
                                                     )}
@@ -694,7 +586,7 @@ export default function Create({
                                             )}
 
                                         {pendingQty > 0 && pendingPrice > 0 && (
-                                            <p className="mt-2 text-right text-xs text-primary font-medium">
+                                            <p className="mt-2 text-right text-xs font-medium text-foreground">
                                                 Subtotal:{" "}
                                                 {fmtRp(
                                                     Number(pendingQty) *
@@ -803,7 +695,7 @@ export default function Create({
                                                                     )
                                                                 }
                                                                 min="1"
-                                                                className="h-8 w-16 rounded-lg border border-border px-2 text-center text-xs focus:border-ring focus:ring-2 focus:ring-ring/20 block mx-auto"
+                                                                className="mx-auto block h-8 w-16 rounded-lg border border-input bg-background px-2 text-center text-xs text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                                                             />
                                                         </td>
                                                         <td className="px-4 py-3">
@@ -828,7 +720,7 @@ export default function Create({
                                                                         )
                                                                     }
                                                                     min="0"
-                                                                    className="h-8 w-28 rounded-lg border border-border pl-7 pr-2 text-right text-xs focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                                                    className="h-8 w-28 rounded-lg border border-input bg-background pl-7 pr-2 text-right text-xs text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                                                                 />
                                                             </div>
                                                         </td>
@@ -890,21 +782,12 @@ export default function Create({
                                         label={label}
                                         error={errors[key]}
                                     >
-                                        <div className="relative">
-                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
-                                                Rp
-                                            </span>
-                                            <input
-                                                type="number"
-                                                value={data[key]}
-                                                onChange={(e) =>
-                                                    setData(key, e.target.value)
-                                                }
-                                                min="0"
-                                                placeholder="0"
-                                                className={`${inputCls(!!errors[key])} pl-9`}
-                                            />
-                                        </div>
+                                        <CurrencyInput
+                                            value={data[key]}
+                                            onChange={(v) => setData(key, v)}
+                                            placeholder="0"
+                                            error={!!errors[key]}
+                                        />
                                     </Field>
                                 ))}
                             </div>
@@ -917,58 +800,51 @@ export default function Create({
                         >
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    {/* Metode pembayaran jumlahnya sedikit, jadi
+                                        pakai Select tanpa search. Panelnya juga
+                                        otomatis membuka ke atas kalau ruang di
+                                        bawah kurang. */}
                                     <Field
                                         label="Metode Pembayaran"
                                         error={errors.payment_method_id}
                                     >
-                                        <SearchableSelect
+                                        <Select
                                             options={paymentMethods}
                                             value={data.payment_method_id}
                                             onChange={(id) =>
                                                 setData("payment_method_id", id)
                                             }
                                             placeholder="Pilih Metode"
-                                            searchPlaceholder="Ketik nama metode…"
-                                            error={!!errors.payment_method_id}
+                                            error={errors.payment_method_id}
                                         />
                                     </Field>
                                     <Field
                                         label="Jumlah Dibayar"
                                         error={errors.paid_amount}
                                     >
-                                        <div className="relative">
-                                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
-                                                Rp
-                                            </span>
-                                            <input
-                                                type="number"
-                                                value={data.paid_amount}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "paid_amount",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                min="0"
-                                                placeholder="0"
-                                                className={`${inputCls(!!errors.paid_amount)} pl-9 pr-28`}
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setData(
-                                                        "paid_amount",
-                                                        grandTotal > 0
-                                                            ? String(grandTotal)
-                                                            : "",
-                                                    )
-                                                }
-                                                disabled={grandTotal <= 0}
-                                                className="absolute inset-y-1 right-1 rounded-lg bg-success px-3 text-xs font-bold text-success-foreground transition hover:bg-success/90 disabled:opacity-40"
-                                            >
-                                                Bayar Lunas
-                                            </button>
-                                        </div>
+                                        <CurrencyInput
+                                            value={data.paid_amount}
+                                            onChange={(v) =>
+                                                setData("paid_amount", v)
+                                            }
+                                            placeholder="0"
+                                            error={!!errors.paid_amount}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setData(
+                                                    "paid_amount",
+                                                    grandTotal > 0
+                                                        ? String(grandTotal)
+                                                        : "",
+                                                )
+                                            }
+                                            disabled={grandTotal <= 0}
+                                            className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground transition hover:bg-success/90 disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            Isi Lunas ({fmtRp(grandTotal)})
+                                        </button>
                                     </Field>
                                 </div>
 
@@ -1041,8 +917,10 @@ export default function Create({
                         </SectionCard>
                     </div>
 
-                    {/* ── Sidebar ringkasan ── */}
-                    <div className="space-y-5">
+                    {/* ── Sidebar ringkasan ──
+                        Sticky di desktop supaya total tetap terlihat saat
+                        daftar item panjang dan halaman digulir. */}
+                    <div className="space-y-5 lg:sticky lg:top-20 lg:self-start">
                         <SectionCard title="Ringkasan">
                             <dl className="space-y-2.5 text-sm">
                                 <div className="flex justify-between">

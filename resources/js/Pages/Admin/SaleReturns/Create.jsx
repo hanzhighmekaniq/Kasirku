@@ -6,6 +6,9 @@ import Field from "@/Components/ui/Field";
 import Button from "@/Components/ui/Button";
 import SectionCard from "@/Components/ui/SectionCard";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
+import DatePicker from "@/Components/ui/DatePicker";
+import Checkbox from "@/Components/ui/Checkbox";
+import { format } from "date-fns";
 
 const fmtRp = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 const inputCls =
@@ -101,11 +104,9 @@ export default function Create({ sales }) {
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.sale-returns.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.sale-returns.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Retur Penjualan
                     </div>
@@ -165,13 +166,10 @@ export default function Create({ sales }) {
                                 <label className="mb-1.5 block text-sm font-medium text-foreground">
                                     Tanggal Retur <span className="text-destructive">*</span>
                                 </label>
-                                <input
-                                    type="date"
-                                    value={data.return_date}
-                                    onChange={(e) =>
-                                        setData("return_date", e.target.value)
-                                    }
-                                    className={inputCls}
+                                <DatePicker
+                                    value={data.return_date ? new Date(data.return_date) : null}
+                                    onChange={(d) => setData("return_date", d ? format(d, 'yyyy-MM-dd') : '')}
+                                    placeholder="Pilih tanggal retur"
                                 />
                                 {errors.return_date && (
                                     <p className="mt-1 text-xs text-destructive">
@@ -230,13 +228,10 @@ export default function Create({ sales }) {
                                             className="px-6 py-4 transition hover:bg-muted/50"
                                         >
                                             <div className="flex items-start gap-4">
-                                                <input
-                                                    type="checkbox"
+                                                <Checkbox
                                                     checked={item.selected}
-                                                    onChange={() =>
-                                                        toggleItem(item)
-                                                    }
-                                                    className="mt-1 h-5 w-5 rounded bg-primary-foreground border-primary-foreground checked:border-primary text-primary-foreground focus:ring-ring focus:ring-offset-background"
+                                                    onChange={() => toggleItem(item)}
+                                                    className="mt-1"
                                                 />
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-medium text-foreground">

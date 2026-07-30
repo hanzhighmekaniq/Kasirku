@@ -1,6 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Calendar, Clock, Hash, Layers, Package, Pencil, Percent, ShieldCheck, ShoppingCart, Tag, Users } from 'lucide-react';
+import PageHeader from '@/Components/PageHeader';
+import Button from '@/Components/ui/Button';
+import { Link, usePage } from '@inertiajs/react';
+import { Calendar, Clock, Hash, Layers, Package, Pencil, Percent, ShieldCheck, ShoppingCart, Tag, Users } from 'lucide-react';
 
 const TYPE_LABELS = {
     percentage: 'Persen',
@@ -93,42 +95,55 @@ function InfoRow({ icon: Icon, label, value }) {
     );
 }
 
-export default function Show({ promotion }) {
+export default function Show({ promotion, customerTierName = null }) {
     const promo = promotion;
+    const { auth } = usePage().props;
+    const canManage = (auth.permissions ?? []).includes('promotion.create');
     const TypeIcon = TYPE_ICONS[promo.type] || Tag;
     const ScopeIcon = SCOPE_META[promo.scope]?.icon || ShoppingCart;
 
+    /* Nama tier dikirim terpisah dari controller — relasi `customerTier` tidak
+       di-load di sini karena key JSON-nya (`customer_tier`) bentrok dengan kolom
+       string lama bernama sama, dan hasilnya bisa jadi objek. */
+    const tierLabel = customerTierName;
+
     return (
         <AuthenticatedLayout
+            backUrl={route('admin.promotions.index')}
             header={
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href={route('admin.promotions.index')}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                            aria-label="Kembali"
-                        >
-                            <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
-                        </Link>
-                        <div>
-                            <h2 className="text-lg font-semibold text-foreground">{promo.name}</h2>
-                            <p className="text-xs text-muted-foreground">Kode: {promo.code}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <StatusBadge promo={promo} />
-                        <Link
-                            href={route('admin.promotions.edit', promo.id)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted"
-                        >
-                            <Pencil size={14} />
-                            Edit
-                        </Link>
-                    </div>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">Promo</div>
+                    <div className="text-[11px] text-muted-foreground">Detail</div>
                 </div>
-            }
-        >
-            <Head title={`Promo: ${promo.name}`} />
+            }>
+            <PageHeader
+                title={`Promo: ${promo.name}`}
+                breadcrumbs={['Admin', 'Promo', 'Detail']}
+                heading={
+                    <>
+                        {promo.name}{' '}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            #{promo.code}
+                        </span>
+                    </>
+                }
+                description="Ringkasan pengaturan promo dan pemakaiannya di kasir."
+                action={
+                    <div className="flex items-center gap-3">
+                        <StatusBadge promo={promo} />
+                        {canManage && (
+                            <Button
+                                as={Link}
+                                href={route('admin.promotions.edit', promo.id)}
+                                icon={Pencil}
+                                variant="outline"
+                            >
+                                Edit
+                            </Button>
+                        )}
+                    </div>
+                }
+            />
 
             <div className="grid gap-5 lg:grid-cols-3">
                 {/* ── Kolom kiri: Detail ── */}
@@ -153,8 +168,8 @@ export default function Show({ promotion }) {
                             {promo.tier_price > 0 && (
                                 <InfoRow icon={Layers} label="Harga Tier" value={fmt(promo.tier_price)} />
                             )}
-                            {promo.customer_tier && (
-                                <InfoRow icon={Users} label="Tier Pelanggan" value={promo.customer_tier} />
+                            {tierLabel && (
+                                <InfoRow icon={Users} label="Tier Pelanggan" value={tierLabel} />
                             )}
                         </div>
                     </div>

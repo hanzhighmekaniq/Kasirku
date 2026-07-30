@@ -24,6 +24,8 @@ class Store extends Model
         'tax_inclusive',
         'default_tax_rate',
         'points_per_amount',
+        'payment_edit_limit_value',
+        'payment_edit_limit_unit',
         'receipt_header',
         'receipt_footer',
         'phone',
@@ -43,8 +45,77 @@ class Store extends Model
             'tax_inclusive' => 'boolean',
             'default_tax_rate' => 'decimal:2',
             'points_per_amount' => 'decimal:2',
+            'payment_edit_limit_value' => 'integer',
             'plan_expires_at' => 'date',
         ];
+    }
+
+    /** Label unit batas waktu ubah pembayaran, dipakai di pesan error & UI. */
+    public const PAYMENT_EDIT_LIMIT_UNITS = [
+        'minutes' => 'Menit',
+        'hours' => 'Jam',
+        'days' => 'Hari',
+    ];
+
+    /**
+     * Batas waktu ubah pembayaran dalam menit.
+     * null berarti tidak ada batas waktu.
+     */
+    public function paymentEditLimitMinutes(): ?int
+    {
+        $value = $this->payment_edit_limit_value;
+
+        if (! $value || $value < 1) {
+            return null;
+        }
+
+        return match ($this->payment_edit_limit_unit) {
+            'hours' => $value * 60,
+            'days' => $value * 60 * 24,
+            default => $value,
+        };
+    }
+
+    /**
+     * Deskripsi batas waktu dalam bahasa manusia, mis. "2 jam".
+     * null berarti tidak ada batas waktu.
+     */
+    public function paymentEditLimitLabel(): ?string
+    {
+        if ($this->paymentEditLimitMinutes() === null) {
+            return null;
+        }
+
+        $unitLabels = [
+            'minutes' => 'menit',
+            'hours' => 'jam',
+            'days' => 'hari',
+        ];
+
+        $unit = $unitLabels[$this->payment_edit_limit_unit] ?? 'menit';
+
+        return "{$this->payment_edit_limit_value} {$unit}";
+    }
+
+    /**
+     * Apakah metode pembayaran transaksi ini masih boleh diubah?
+     * Selalu true kalau toko tidak menetapkan batas waktu.
+     */
+    public function canEditPaymentFor(Sale $sale): bool
+    {
+        $limitMinutes = $this->paymentEditLimitMinutes();
+
+        if ($limitMinutes === null) {
+            return true;
+        }
+
+        $createdAt = $sale->created_at;
+
+        if (! $createdAt) {
+            return true;
+        }
+
+        return $createdAt->copy()->addMinutes($limitMinutes)->isFuture();
     }
 
     // --- Relationships ---
@@ -161,6 +232,11 @@ class Store extends Model
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
+    }
+
+    public function customerTiers(): HasMany
+    {
+        return $this->hasMany(CustomerTier::class);
     }
 
     public function paymentGateways(): HasMany

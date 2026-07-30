@@ -2,19 +2,47 @@ import { useState } from "react";
 import Modal from "@/Components/Modal";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
-
-const fmt = (n) =>
-    new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-        maximumFractionDigits: 0,
-    }).format(n ?? 0);
+import { fmt } from "./helpers";
 
 /* ── History panel ───────────────────────────────────── */
-export default function HistoryPanel({ sales, paymentMethods = [], onPrint, onClose, loading, onResumeSplit, onCancelSplit, onVoid, onUpdatePayment }) {
+export default function HistoryPanel({
+    sales,
+    paymentMethods = [],
+    onPrint,
+    onClose,
+    loading,
+    onResumeSplit,
+    onCancelSplit,
+    onVoid,
+    onUpdatePayment,
+    paymentEditLimitMinutes = null,
+    paymentEditLimitLabel = null,
+}) {
     const [changePaymentSaleId, setChangePaymentSaleId] = useState(null);
     const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    /**
+     * Metode pembayaran hanya bisa diganti selama masih dalam batas waktu yang
+     * diatur di Pengaturan Toko. null = tidak ada batas waktu.
+     */
+    const canChangePayment = (sale) => {
+        if (paymentEditLimitMinutes === null) {
+            return true;
+        }
+
+        // Pakai created_at supaya perhitungan di layar sama dengan validasi
+        // server. Kalau tidak ada, biarkan server yang memutuskan.
+        const createdAt = sale.created_at;
+        if (!createdAt) {
+            return true;
+        }
+
+        const deadline =
+            new Date(createdAt).getTime() + paymentEditLimitMinutes * 60_000;
+
+        return Date.now() < deadline;
+    };
     const STATUS_CLS = {
         completed: "bg-success/10 text-success",
         cancelled: "bg-destructive/10 text-destructive",
@@ -107,15 +135,17 @@ export default function HistoryPanel({ sales, paymentMethods = [], onPrint, onCl
                                                     
                                                     {s.status === 'completed' && (
                                                         <>
+                                                            {canChangePayment(s) && (
                                                             <button
                                                                 onClick={() => setChangePaymentSaleId(s.id)}
                                                                 className="hidden group-hover:flex items-center justify-center size-7 rounded-md bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
-                                                                title="Ubah Pembayaran"
+                                                                title="Ganti Metode Pembayaran"
                                                             >
                                                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
                                                                 </svg>
                                                             </button>
+                                                            )}
                                                             
                                                             <button
                                                                 onClick={() => {
@@ -184,14 +214,19 @@ export default function HistoryPanel({ sales, paymentMethods = [], onPrint, onCl
                 maxWidth="sm"
             >
                 <div className="p-6">
-                    <h2 className="text-lg font-medium text-foreground mb-4">
-                        Ubah Metode Pembayaran
+                    <h2 className="text-lg font-medium text-foreground">
+                        Ganti Metode Pembayaran
                     </h2>
-                    
+                    <p className="mt-1 mb-4 text-sm text-muted-foreground">
+                        {paymentEditLimitLabel
+                            ? `Hanya bisa diganti dalam ${paymentEditLimitLabel} setelah transaksi.`
+                            : "Total transaksi tidak berubah, hanya metode pembayarannya."}
+                    </p>
+
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-foreground mb-2">
-                                Pilih Metode Pembayaran Baru
+                                Pilih metode pembayaran baru
                             </label>
                             <div className="space-y-2 max-h-60 overflow-y-auto">
                                 {paymentMethods.map(pm => (
@@ -226,7 +261,7 @@ export default function HistoryPanel({ sales, paymentMethods = [], onPrint, onCl
                                     setSelectedPaymentMethodId("");
                                 }}
                             >
-                                {isSubmitting ? "Menyimpan..." : "Simpan"}
+                                {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
                             </PrimaryButton>
                         </div>
                     </div>

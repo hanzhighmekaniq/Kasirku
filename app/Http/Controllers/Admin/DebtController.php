@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\CustomerDebtLog;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -24,6 +26,13 @@ class DebtController extends Controller
 
         return Inertia::render('Admin/Debts/Index', [
             'customers' => $customers,
+            // Metode pembayaran non-hutang saja: melunasi hutang dengan
+            // hutang lagi tidak masuk akal dan hanya memindahkan saldo.
+            'paymentMethods' => PaymentMethod::forStore($storeId)
+                ->where('is_active', true)
+                ->where('type', '!=', 'debt')
+                ->orderBy('name')
+                ->get(['id', 'name', 'type']),
         ]);
     }
 
@@ -38,6 +47,15 @@ class DebtController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
+            // Metode dibatasi ke milik toko ini dan bukan tipe hutang, supaya
+            // pelunasan tidak bisa dicatat sebagai hutang baru.
+            'payment_method_id' => [
+                'required',
+                Rule::exists('payment_methods', 'id')
+                    ->where('store_id', $storeId)
+                    ->where('is_active', true)
+                    ->whereNot('type', 'debt'),
+            ],
             'notes' => 'nullable|string|max:500',
         ]);
 
@@ -60,6 +78,7 @@ class DebtController extends Controller
             'store_id' => $storeId,
             'type' => 'payment',
             'amount' => $amount,
+            'payment_method_id' => $validated['payment_method_id'],
             'balance_after' => $newBalance,
             'notes' => $validated['notes'] ?? 'Pelunasan hutang',
             'created_by' => Auth::id(),

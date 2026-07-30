@@ -3,6 +3,16 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState, useCallback } from "react";
 import axios from "axios";
 import {
+    Check,
+    CircleCheck,
+    GripVertical,
+    Package,
+    Pencil,
+    Plus,
+    Trash2,
+    TriangleAlert,
+} from "lucide-react";
+import {
     DndContext,
     closestCenter,
     PointerSensor,
@@ -21,28 +31,28 @@ import { CSS } from "@dnd-kit/utilities";
 // ── Plan badge colors ─────────────────────────────────────────────────────────
 const PLAN_COLOR = {
     free: {
-        ring: "ring-slate-200",
-        bg: "bg-slate-100",
-        text: "text-slate-600",
-        dot: "bg-slate-400",
+        ring: "ring-border",
+        bg: "bg-muted",
+        text: "text-muted-foreground",
+        dot: "bg-muted-foreground",
     },
     basic: {
-        ring: "ring-blue-200",
-        bg: "bg-blue-50",
-        text: "text-blue-700",
-        dot: "bg-blue-500",
+        ring: "ring-blue-200 dark:ring-blue-800",
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        text: "text-blue-700 dark:text-blue-400",
+        dot: "bg-blue-600 dark:bg-blue-500",
     },
     pro: {
-        ring: "ring-violet-200",
-        bg: "bg-violet-50",
-        text: "text-violet-700",
-        dot: "bg-violet-500",
+        ring: "ring-violet-200 dark:ring-violet-800",
+        bg: "bg-violet-100 dark:bg-violet-900/30",
+        text: "text-violet-700 dark:text-violet-400",
+        dot: "bg-violet-600 dark:bg-violet-500",
     },
     unlimited: {
-        ring: "ring-primary-200",
-        bg: "bg-primary-50",
-        text: "text-primary-700",
-        dot: "bg-primary-500",
+        ring: "ring-primary/20",
+        bg: "bg-primary/10",
+        text: "text-primary",
+        dot: "bg-primary",
     },
 };
 
@@ -65,23 +75,11 @@ function DragHandle({ listeners, attributes }) {
         <button
             {...listeners}
             {...attributes}
-            className="flex h-8 w-8 cursor-grab items-center justify-center rounded-lg text-slate-300 hover:bg-slate-100 hover:text-slate-500 active:cursor-grabbing transition-colors"
+            className="flex h-8 w-8 cursor-grab items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground active:cursor-grabbing"
             title="Drag untuk mengubah urutan"
             tabIndex={-1}
         >
-            <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-            >
-                <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"
-                />
-            </svg>
+            <GripVertical className="h-4 w-4" strokeWidth={2} />
         </button>
     );
 }
@@ -109,9 +107,9 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
         <div
             ref={isDragOverlay ? undefined : setNodeRef}
             style={isDragOverlay ? undefined : style}
-            className={`group flex items-center gap-3 border-b border-slate-100 bg-white px-4 py-3.5 last:border-0 transition-colors ${
-                isDragging ? "bg-primary-50/30" : "hover:bg-slate-50/60"
-            } ${isDragOverlay ? "rounded-2xl shadow-xl ring-1 ring-black/10" : ""}`}
+            className={`group flex items-center gap-3 border-b border-border bg-card text-card-foreground px-4 py-3.5 last:border-0 transition-colors ${
+                isDragging ? "bg-primary/10" : "hover:bg-muted/60"
+            } ${isDragOverlay ? "rounded-2xl shadow-xl ring-1 ring-border" : ""}`}
         >
             {/* Drag handle */}
             <DragHandle listeners={listeners} attributes={attributes} />
@@ -126,7 +124,7 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
             {/* Info paket */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-slate-800">
+                    <p className="text-sm font-semibold text-foreground">
                         {plan.label}
                     </p>
                     <span
@@ -135,63 +133,63 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
                         {plan.code}
                     </span>
                     {!plan.is_active && (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                             Nonaktif
                         </span>
                     )}
                 </div>
                 {plan.description && (
-                    <p className="mt-0.5 text-xs text-slate-400 truncate">
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
                         {plan.description}
                     </p>
                 )}
             </div>
 
             {/* Stats */}
-            <div className="hidden sm:flex items-center gap-6 text-xs text-slate-600">
+            <div className="hidden sm:flex items-center gap-6 text-xs text-muted-foreground">
                 <div className="text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                         User
                     </p>
-                    <p className="font-bold text-slate-800">{plan.max_users}</p>
+                    <p className="font-bold text-foreground">{plan.max_users}</p>
                 </div>
                 <div className="text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Cabang
                     </p>
-                    <p className="font-bold text-slate-800">
+                    <p className="font-bold text-foreground">
                         {plan.max_branches}
                     </p>
                 </div>
                 <div className="text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Harga
                     </p>
-                    <p className="font-bold text-slate-800">
+                    <p className="font-bold text-foreground">
                         {fmtPrice(plan.price)}
                     </p>
                 </div>
                 <div className="text-center">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Fitur
                     </p>
-                    <p className="font-bold text-slate-800">
+                    <p className="font-bold text-foreground">
                         {plan.features?.length ?? 0}
                     </p>
                 </div>
                 {plan.trial_days > 0 && (
                     <div className="text-center">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                             Trial
                         </p>
-                        <p className="font-bold text-emerald-600">
+                        <p className="font-bold text-success">
                             {plan.trial_days}h
                         </p>
                     </div>
                 )}
             </div>
             <div
-                className={`h-2 w-2 shrink-0 rounded-full ${plan.is_active ? "bg-emerald-400" : "bg-slate-300"}`}
+                className={`h-2 w-2 shrink-0 rounded-full ${plan.is_active ? "bg-success" : "bg-muted-foreground/40"}`}
                 title={plan.is_active ? "Aktif" : "Nonaktif"}
             />
             {/* Actions */}
@@ -199,41 +197,17 @@ function PlanRow({ plan, onDelete, deleting, isDragOverlay = false }) {
                 <Link
                     href={route("developer.plans.edit", plan)}
                     title="Edit"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-amber-50 hover:text-amber-600"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-warning/10 hover:text-warning"
                 >
-                    <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.7}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-                        />
-                    </svg>
+                    <Pencil className="h-4 w-4" strokeWidth={1.7} />
                 </Link>
                 <button
                     onClick={() => onDelete(plan)}
                     disabled={deleting === plan.id}
                     title="Hapus"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
                 >
-                    <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.7}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                        />
-                    </svg>
+                    <Trash2 className="h-4 w-4" strokeWidth={1.7} />
                 </button>
             </div>
             {/* Status dot */}
@@ -317,56 +291,32 @@ export default function Index({ plans: initialPlans }) {
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-bold text-slate-800">
+                        <h2 className="text-lg font-bold text-foreground">
                             Paket Langganan
                         </h2>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                             {plans.length} paket · drag untuk mengubah urutan
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
                         {/* Saving indicator */}
                         {saving && (
-                            <span className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600">
-                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+                            <span className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 text-xs font-medium text-muted-foreground">
+                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                                 Menyimpan urutan...
                             </span>
                         )}
                         {saved && !saving && (
-                            <span className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
-                                <svg
-                                    className="h-3.5 w-3.5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2.5}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
+                            <span className="flex items-center gap-1.5 rounded-xl bg-success/10 px-3 py-2 text-xs font-medium text-success">
+                                <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
                                 Urutan disimpan
                             </span>
                         )}
                         <Link
                             href={route("developer.plans.create")}
-                            className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
+                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
                         >
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M12 4.5v15m7.5-7.5h-15"
-                                />
-                            </svg>
+                            <Plus className="h-4 w-4" strokeWidth={2.5} />
                             Tambah Paket
                         </Link>
                     </div>
@@ -377,55 +327,31 @@ export default function Index({ plans: initialPlans }) {
 
             {/* Flash */}
             {flash?.success && (
-                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                    <svg
-                        className="h-4 w-4 shrink-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                    </svg>
+                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success">
+                    <CircleCheck className="h-4 w-4 shrink-0" strokeWidth={2} />
                     {flash.success}
                 </div>
             )}
             {flash?.error && (
-                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                    <svg
-                        className="h-4 w-4 shrink-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H2.645c-1.73 0-2.813-1.874-1.948-3.374l7.26-12.547c.866-1.5 3.032-1.5 3.898 0l7.26 12.547zM12 15.75h.007v.008H12v-.008z"
-                        />
-                    </svg>
+                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+                    <TriangleAlert className="h-4 w-4 shrink-0" strokeWidth={2} />
                     {flash.error}
                 </div>
             )}
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
                 {plans.length === 0 ? (
                     <div className="flex flex-col items-center py-16 text-center">
-                        <span className="text-5xl mb-4">📦</span>
-                        <p className="text-base font-semibold text-slate-800">
+                        <Package className="mb-4 h-12 w-12 text-muted-foreground/50" strokeWidth={1.5} />
+                        <p className="text-base font-semibold text-foreground">
                             Belum ada paket
                         </p>
-                        <p className="text-sm text-slate-500 mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                             Buat paket langganan pertama.
                         </p>
                         <Link
                             href={route("developer.plans.create")}
-                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-700"
+                            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
                         >
                             Buat Paket
                         </Link>
@@ -433,17 +359,17 @@ export default function Index({ plans: initialPlans }) {
                 ) : (
                     <>
                         {/* Column header */}
-                        <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-2.5">
+                        <div className="flex items-center gap-3 border-b border-border bg-muted/60 px-4 py-2.5">
                             <div className="w-8" />
                             <div className="w-8" />
-                            <div className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            <div className="flex-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                                 Paket
                             </div>
                             <div className="hidden sm:flex items-center gap-6 pr-2">
                                 {["Aksi"].map((h) => (
                                     <div
                                         key={h}
-                                        className="w-12 text-center text-[10px] font-bold uppercase tracking-wider text-slate-400"
+                                        className="w-12 text-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
                                     >
                                         {h}
                                     </div>
@@ -491,21 +417,9 @@ export default function Index({ plans: initialPlans }) {
                         </DndContext>
 
                         {/* Footer hint */}
-                        <div className="flex items-center gap-2 border-t border-slate-100 bg-slate-50/40 px-5 py-3">
-                            <svg
-                                className="h-3.5 w-3.5 text-slate-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={2}
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"
-                                />
-                            </svg>
-                            <p className="text-[11px] text-slate-400">
+                        <div className="flex items-center gap-2 border-t border-border bg-muted/40 px-5 py-3">
+                            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
+                            <p className="text-[11px] text-muted-foreground">
                                 Tarik baris untuk mengubah urutan tampilan
                                 paket. Perubahan disimpan otomatis.
                             </p>

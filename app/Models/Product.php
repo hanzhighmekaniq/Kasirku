@@ -17,6 +17,7 @@ class Product extends Model
         'store_id',
         'category_id',
         'supplier_id',
+        'membership_id',
         'sku',
         'barcode',
         'name',
@@ -97,6 +98,16 @@ class Product extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    public function membership(): BelongsTo
+    {
+        return $this->belongsTo(Membership::class);
+    }
+
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
     }
 
     public function variants(): HasMany

@@ -1,5 +1,6 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
+import { ArrowLeft } from "lucide-react";
 import BranchForm from "./BranchForm";
 
 export default function Edit({ branch, store, stores = [] }) {
@@ -23,15 +24,16 @@ export default function Edit({ branch, store, stores = [] }) {
                 <div className="flex items-center gap-4">
                     <Link
                         href={route("developer.branches.index")}
-                        className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
-                        ← Kembali
+                        <ArrowLeft className="h-4 w-4" strokeWidth={1.8} />
+                        Kembali
                     </Link>
                     <div>
-                        <h2 className="text-lg font-bold text-slate-800">
+                        <h2 className="text-lg font-bold text-foreground">
                             Edit Cabang
                         </h2>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                             {branch.code} — {store?.name ?? "Toko"}
                         </p>
                     </div>
@@ -40,9 +42,9 @@ export default function Edit({ branch, store, stores = [] }) {
         >
             <Head title={`Edit — ${branch.name}`} />
             <div className="mx-auto max-w-2xl">
-                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+                <div className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm p-6">
                     <div className="mb-5">
-                        <label className="block text-sm font-medium text-slate-700">
+                        <label className="block text-sm font-medium text-foreground">
                             Toko
                         </label>
                         <select
@@ -50,7 +52,7 @@ export default function Edit({ branch, store, stores = [] }) {
                             onChange={(e) =>
                                 setData("store_id", e.target.value)
                             }
-                            className="mt-1.5 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            className="mt-1.5 block w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
                         >
                             {stores.map((s) => (
                                 <option key={s.id} value={String(s.id)}>

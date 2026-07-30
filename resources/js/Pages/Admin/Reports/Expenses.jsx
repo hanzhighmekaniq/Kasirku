@@ -59,7 +59,7 @@ export default function Expenses({ from, to, summary, dailyTrend = [], byCategor
                                 <div key={d.date} className="flex items-center gap-3">
                                     <span className="w-20 text-xs text-muted-foreground">{fmtDate(d.date)}</span>
                                     <div className="flex-1 h-5 rounded-full bg-muted overflow-hidden">
-                                        <div className="h-full rounded-full bg-rose-500" style={{ width: `${Math.min(100, (d.total / Math.max(...dailyTrend.map(x => x.total))) * 100)}%` }} />
+                                        <div className="h-full rounded-full bg-chart-4" style={{ width: `${Math.min(100, (d.total / Math.max(...dailyTrend.map(x => x.total))) * 100)}%` }} />
                                     </div>
                                     <span className="w-24 text-right text-xs font-medium text-foreground">{fmt(d.total)}</span>
                                 </div>
@@ -71,7 +71,7 @@ export default function Expenses({ from, to, summary, dailyTrend = [], byCategor
                 <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h3 className="mb-4 text-sm font-semibold text-foreground">Per Kategori</h3>
                     {byCategory.length > 0 ? byCategory.map((c, i) => (
-                        <div key={i} className="flex items-center justify-between border-b border-slate-50 py-2 last:border-0">
+                        <div key={i} className="flex items-center justify-between border-b border-border py-2 last:border-0">
                             <span className="text-sm text-foreground">{c.name}</span>
                             <span className="text-sm font-medium text-foreground">{fmt(c.total)}</span>
                         </div>

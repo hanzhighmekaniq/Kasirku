@@ -13,6 +13,7 @@ class CustomerDebtLog extends Model
         'sale_id',
         'type',
         'amount',
+        'payment_method_id',
         'balance_after',
         'due_date',
         'notes',
@@ -40,6 +41,11 @@ class CustomerDebtLog extends Model
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    public function paymentMethod(): BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class);
     }
 
     public function creator(): BelongsTo

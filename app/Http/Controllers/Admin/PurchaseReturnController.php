@@ -81,9 +81,16 @@ class PurchaseReturnController extends Controller
 
         $purchase = Purchase::findOrFail($validated['purchase_id']);
 
-        // Validate: each return qty must not exceed returnable qty
+        // Validate: each return qty must not exceed returnable qty.
+        // Kunci utamanya purchase_item_id, bukan product_id, karena satu produk
+        // bisa muncul beberapa kali dalam satu pembelian dengan variant atau
+        // satuan yang berbeda. Mencari lewat product_id saja bisa memvalidasi
+        // baris yang salah.
         foreach ($validated['items'] as $item) {
-            $purchaseItem = $purchase->items()->where('product_id', $item['product_id'])->first();
+            $purchaseItem = ! empty($item['purchase_item_id'])
+                ? $purchase->items()->whereKey($item['purchase_item_id'])->first()
+                : $purchase->items()->where('product_id', $item['product_id'])->first();
+
             if (! $purchaseItem) {
                 abort(422, "Produk {$item['product_id']} tidak ditemukan di pembelian ini.");
             }
@@ -128,8 +135,9 @@ class PurchaseReturnController extends Controller
             foreach ($validated['items'] as $item) {
                 $itemSubtotal = $item['quantity'] * $item['cost_price'];
 
-                // Ambil bucket dari PurchaseItem asal
-                $purchaseItem = $item['purchase_item_id']
+                // Ambil bucket dari PurchaseItem asal. Key-nya opsional di
+                // validasi, jadi pakai ?? null supaya tidak memicu undefined key.
+                $purchaseItem = ! empty($item['purchase_item_id'])
                     ? PurchaseItem::find($item['purchase_item_id'])
                     : null;
                 $variantId = $purchaseItem?->variant_id;
@@ -223,29 +231,11 @@ class PurchaseReturnController extends Controller
         return DB::transaction(function () use ($purchaseReturn) {
             $purchase = $purchaseReturn->purchase;
 
-            // Reverse stock adjustments — bucket-aware
+            // Reverse stock adjustments — bucket-aware.
+            // StockService sudah mencatat StockMovement sendiri lewat
+            // recordMovement(), jadi jangan menulis movement manual di sini.
             foreach ($purchaseReturn->items as $item) {
                 $this->adjustStock($item['product_id'], $item->variant_id, $item->packaging_unit_id, $item['quantity'], $purchase, true);
-
-                // Record stock movement for reversal
-                $product = Product::find($item['product_id']);
-                if ($product?->track_stock) {
-                    StockMovement::create([
-                        'product_id' => $item['product_id'],
-                        'variant_id' => $item->variant_id,
-                        'packaging_unit_id' => $item->packaging_unit_id,
-                        'store_id' => $purchase->store_id,
-                        'branch_id' => $purchase->branch_id,
-                        'reference_type' => PurchaseReturn::class,
-                        'reference_id' => $purchaseReturn->id,
-                        'movement_type' => 'return_in',
-                        'quantity' => $item['quantity'],
-                        'unit_cost' => $item['cost_price'],
-                        'reference_no' => $purchaseReturn->return_no,
-                        'notes' => "Retur #{$purchaseReturn->return_no} dibatalkan — stok dikembalikan",
-                        'moved_at' => now(),
-                    ]);
-                }
             }
 
             // Restore purchase payment

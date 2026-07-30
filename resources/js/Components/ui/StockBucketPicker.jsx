@@ -25,6 +25,14 @@ export default function StockBucketPicker({
     onSelect,
     disabled = false,
     placeholder = "Pilih produk / variant / satuan",
+    /**
+     * Izinkan memilih produk induk (variant & satuan null) meski produk itu
+     * punya varian. Form stok TIDAK memakai ini karena stok selalu hidup di
+     * varian; form promo memakainya supaya satu promo bisa menargetkan
+     * seluruh varian sebuah produk sekaligus.
+     */
+    allowParentSelection = false,
+    parentOptionLabel = "Semua varian",
 }) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -65,6 +73,15 @@ export default function StockBucketPicker({
         if (branchId === null || branchId === "" || branchId === undefined) return null;
         return bucket.stock_by_branch?.[String(branchId)] ?? 0;
     };
+
+    /** Bucket induk produk: tanpa varian dan tanpa satuan. */
+    const parentBucketOf = (productId) =>
+        buckets.find(
+            (b) =>
+                b.product_id === productId &&
+                b.variant_id === null &&
+                b.packaging_unit_id === null,
+        );
 
     const handleProductClick = (productId) => {
         const prodBuckets = buckets.filter((b) => b.product_id === productId);
@@ -142,7 +159,24 @@ export default function StockBucketPicker({
             const uniqueVars = [];
             const seen = new Set();
             const prodBuckets = buckets.filter((b) => b.product_id === selectedProductId);
-            
+
+            // Opsi "semua varian" muncul paling atas supaya user bisa memilih
+            // produk induk tanpa harus menyebut varian tertentu.
+            if (allowParentSelection) {
+                const parent = prodBuckets.find(
+                    (b) => b.variant_id === null && b.packaging_unit_id === null,
+                );
+
+                if (parent && !excluded.has(parent.key)) {
+                    uniqueVars.push({
+                        id: null,
+                        name: parentOptionLabel,
+                        hasChildren: false,
+                        isParent: true,
+                    });
+                }
+            }
+
             prodBuckets.forEach((b) => {
                 if (b.variant_id !== null && !seen.has(b.variant_id)) {
                     const varBuckets = prodBuckets.filter((x) => x.variant_id === b.variant_id);
@@ -172,7 +206,16 @@ export default function StockBucketPicker({
                 });
         }
         return [];
-    }, [buckets, step, selectedProductId, selectedVariantId, query, excluded]);
+    }, [
+        buckets,
+        step,
+        selectedProductId,
+        selectedVariantId,
+        query,
+        excluded,
+        allowParentSelection,
+        parentOptionLabel,
+    ]);
 
     const goBack = () => {
         if (step === "unit") {
@@ -299,6 +342,30 @@ export default function StockBucketPicker({
                                     );
                                 }
                                 if (step === "variant") {
+                                    // Opsi induk langsung memilih bucket produk,
+                                    // tidak menelusuri varian lebih dalam.
+                                    if (opt.isParent) {
+                                        return (
+                                            <button
+                                                key="parent"
+                                                type="button"
+                                                onClick={() => {
+                                                    const parent = parentBucketOf(selectedProductId);
+                                                    if (!parent) return;
+                                                    onSelect?.(parent);
+                                                    setOpen(false);
+                                                    setStep("product");
+                                                    setQuery("");
+                                                }}
+                                                className="mb-1 flex w-full items-center justify-between gap-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-left text-sm transition hover:bg-primary/10"
+                                            >
+                                                <span className="block truncate font-semibold text-primary">
+                                                    {opt.name}
+                                                </span>
+                                            </button>
+                                        );
+                                    }
+
                                     return (
                                         <button
                                             key={opt.id}

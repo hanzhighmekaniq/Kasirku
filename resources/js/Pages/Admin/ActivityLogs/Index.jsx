@@ -2,9 +2,11 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { Head, router } from "@inertiajs/react";
 import { useState, useRef, useEffect } from "react";
-import { Activity, Calendar, ChevronDown, Check, Filter, RotateCcw, Search } from "lucide-react";
+import { Activity, ChevronDown, Check, Filter, RotateCcw, Search } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import SelectDropdown from "@/Components/ui/SelectDropdown";
+import DateRangePicker from "@/Components/ui/DateRangePicker";
+import { format } from "date-fns";
 
 const LOG_NAME_LABELS = {
     shift: "Shift Kasir",
@@ -44,19 +46,24 @@ export default function Index({
     filters,
     currentBranch,
 }) {
+    const toDate = (s) => s ? new Date(s) : null;
+    const toStr = (d) => d ? format(d, 'yyyy-MM-dd') : '';
+
     const [formFilters, setFormFilters] = useState({
         log_name: filters.log_name ?? "",
         user_id: filters.user_id ? String(filters.user_id) : "",
         branch_id: filters.branch_id ? String(filters.branch_id) : "",
-        date_from: filters.date_from ?? "",
-        date_to: filters.date_to ?? "",
+        date_from: toDate(filters.date_from),
+        date_to: toDate(filters.date_to),
     });
 
     const apply = () => {
         const params = {};
-        Object.entries(formFilters).forEach(([k, v]) => {
-            if (v) params[k] = v;
-        });
+        if (formFilters.log_name) params.log_name = formFilters.log_name;
+        if (formFilters.user_id) params.user_id = formFilters.user_id;
+        if (formFilters.branch_id) params.branch_id = formFilters.branch_id;
+        if (formFilters.date_from) params.date_from = toStr(formFilters.date_from);
+        if (formFilters.date_to) params.date_to = toStr(formFilters.date_to);
         router.get(route("admin.activity-logs.index"), params, {
             preserveState: true,
             replace: true,
@@ -68,8 +75,8 @@ export default function Index({
             log_name: "",
             user_id: "",
             branch_id: "",
-            date_from: "",
-            date_to: "",
+            date_from: null,
+            date_to: null,
         });
         router.get(route("admin.activity-logs.index"), {}, {
             preserveState: true,
@@ -113,7 +120,7 @@ export default function Index({
             }>
             <PageHeader
                 title="Log Aktivitas"
-                breadcrumbs={["Admin", "Sistem", "Log Aktivitas"]}
+                breadcrumbs={["Admin", "Laporan", "Log Aktivitas"]}
                 heading={
                     <>
                         <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
@@ -170,31 +177,15 @@ export default function Index({
 
                         {/* Row 2: Dates + Buttons */}
                         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:flex-wrap">
-                            <div className="flex items-end gap-2">
-                                <div>
-                                    <label className={labelClass}>Dari</label>
-                                    <input
-                                        type="date"
-                                        value={formFilters.date_from}
-                                        onChange={(e) =>
-                                            setFormFilters((p) => ({ ...p, date_from: e.target.value }))
-                                        }
-                                        className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition hover:border-ring focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
-                                    />
-                                </div>
-                                <span className="pb-2 text-muted-foreground">—</span>
-                                <div>
-                                    <label className={labelClass}>Sampai</label>
-                                    <input
-                                        type="date"
-                                        value={formFilters.date_to}
-                                        onChange={(e) =>
-                                            setFormFilters((p) => ({ ...p, date_to: e.target.value }))
-                                        }
-                                        className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm text-foreground transition hover:border-ring focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
-                                    />
-                                </div>
-                            </div>
+                            <DateRangePicker
+                                startDate={formFilters.date_from}
+                                endDate={formFilters.date_to}
+                                onChange={({ startDate: s, endDate: e }) =>
+                                    setFormFilters((p) => ({ ...p, date_from: s, date_to: e }))
+                                }
+                                placeholder="Pilih rentang tanggal"
+                                monthsShown={2}
+                            />
 
                             <div className="flex items-center gap-2 ">
                                 <Button onClick={apply} icon={Search} size="lg">

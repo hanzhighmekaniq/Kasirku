@@ -42,7 +42,7 @@ export default function PaymentView({
         cart, grandTotal, roundedGrandTotal, roundingAdjustment,
         showPayment, setShowPayment,
         selectedCustomer, customers, setSelectedCustomer,
-        handleStartSale, handleFinalizePayment, handleCancelPendingSale,
+        handleStartSale, handleFinalizePayment, handleBackToKasir,
         handleStartPg, handleRetryPg, handlePgSuccess: onPgPaidFromKasir,
         // Rounding
         cashRoundingEnabled, cashRoundingNearest, cashRoundingMode,
@@ -88,12 +88,25 @@ export default function PaymentView({
         }
     };
 
-    const handleBack = async () => {
-        if (saleId && !successData && !activePgTrx) {
-            await handleCancelPendingSale(saleId);
-        }
-        setShowPayment(false);
-    };
+    /**
+     * Kembali ke halaman kasir dengan keranjang utuh.
+     *
+     * Pembatalan pending sale di-skip kalau pembayaran sudah jadi (successData)
+     * atau ada transaksi PG yang masih berjalan — keduanya tidak boleh dibatalkan
+     * dari tombol kembali.
+     */
+    const handleBack = () =>
+        handleBackToKasir({
+            saleId,
+            skipCancel: !!successData || !!activePgTrx,
+        });
+
+    // Daftarkan handler ini supaya tombol "Kembali" di header layout memakai
+    // logika yang sama (tahu soal struk & transaksi PG yang masih berjalan).
+    useEffect(() => {
+        k.registerPaymentBack(handleBack);
+        return () => k.registerPaymentBack(null);
+    }, [saleId, successData, activePgTrx]);
 
     // Escape menutup payment view — kecuali sedang di tengah split bill
     // (biar tidak tidak sengaja membatalkan pembagian yang sudah diisi).

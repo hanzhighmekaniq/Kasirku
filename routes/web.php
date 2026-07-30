@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CafeTableController;
 use App\Http\Controllers\Admin\CashierShiftController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\CustomerTierController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DebtController;
 use App\Http\Controllers\Admin\EmployeeCommissionController;
@@ -52,10 +53,13 @@ use App\Http\Controllers\Developer\BranchController;
 use App\Http\Controllers\Developer\DashboardController as DevDashboardController;
 use App\Http\Controllers\Developer\PaymentGatewayController as DevPaymentGatewayController;
 use App\Http\Controllers\Developer\PlanController;
+use App\Http\Controllers\Developer\RoleTemplateController;
 use App\Http\Controllers\Developer\StoreController as DevStoreController;
+use App\Http\Controllers\Developer\ThemeController as DevThemeController;
 use App\Http\Controllers\Developer\UserController as DevUserController;
 use App\Http\Controllers\Developer\WalletController as DevWalletController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SidebarPreferenceController;
 use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\ThemePresetController;
 use App\Http\Controllers\WebhookController;
@@ -193,6 +197,37 @@ Route::middleware(['auth', 'developer', 'single-session'])
             'adjust',
         ])->name('wallets.adjust');
 
+        // ── Template Role — role default yang dibuat saat toko baru lahir,
+        //    beserta cakupan tipe tokonya. Perubahan langsung disinkron ke
+        //    semua toko yang cocok (tambah/update saja, tidak menghapus).
+        Route::get('/role-templates', [
+            RoleTemplateController::class,
+            'index',
+        ])->name('role-templates.index');
+        Route::post('/role-templates', [
+            RoleTemplateController::class,
+            'store',
+        ])->name('role-templates.store');
+        Route::put('/role-templates/{roleTemplate}', [
+            RoleTemplateController::class,
+            'update',
+        ])->name('role-templates.update');
+        Route::put('/role-templates/{roleTemplate}/permissions', [
+            RoleTemplateController::class,
+            'updatePermissions',
+        ])->name('role-templates.permissions');
+        Route::delete('/role-templates/{roleTemplate}', [
+            RoleTemplateController::class,
+            'destroy',
+        ])->name('role-templates.destroy');
+
+        // ── Tema & Warna — personal per-akun developer ─────────────────
+        // Preset sistem (is_system=true) hanya bisa dipakai, tidak bisa
+        // diubah/hapus dari sini — diblok di controller.
+        Route::resource('themes', DevThemeController::class)
+            ->parameters(['themes' => 'theme'])
+            ->except(['show']);
+
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name(
             'profile.edit',
@@ -267,6 +302,13 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
             '/theme-preference',
             [ThemePreferenceController::class, 'update'],
         )->name('theme-preference.update');
+
+        // ── Sidebar preference (custom layout: urutan grup, urutan item,
+        //    pemindahan item antar grup) ───────────────────────────────────
+        Route::patch(
+            '/sidebar-preference',
+            [SidebarPreferenceController::class, 'update'],
+        )->name('sidebar-preference.update');
 
         // ── Offline sync ───────────────────────────────────────────────────
         Route::post('/mutations/sync', [
@@ -840,10 +882,24 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 MembershipController::class,
                 'index',
             ])->name('memberships.index');
+            // Form create/edit dipindah dari modal ke halaman sendiri karena
+            // field-nya banyak (durasi, harga, auto-tier, builder benefit).
+            Route::get('/memberships/create', [
+                MembershipController::class,
+                'create',
+            ])->name('memberships.create');
             Route::post('/memberships', [
                 MembershipController::class,
                 'store',
             ])->name('memberships.store');
+            Route::get('/memberships/{membership}', [
+                MembershipController::class,
+                'show',
+            ])->name('memberships.show');
+            Route::get('/memberships/{membership}/edit', [
+                MembershipController::class,
+                'edit',
+            ])->name('memberships.edit');
             Route::patch('/memberships/{membership}', [
                 MembershipController::class,
                 'update',
@@ -852,6 +908,29 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 MembershipController::class,
                 'destroy',
             ])->name('memberships.destroy');
+
+            // Level tier pelanggan — hierarki yang dipakai membership & promo.
+            // Ikut gate membership karena tier hanya berarti bersama fitur ini.
+            Route::get('/customer-tiers', [
+                CustomerTierController::class,
+                'index',
+            ])->name('customer-tiers.index');
+            Route::post('/customer-tiers', [
+                CustomerTierController::class,
+                'store',
+            ])->name('customer-tiers.store');
+            Route::post('/customer-tiers/reorder', [
+                CustomerTierController::class,
+                'reorder',
+            ])->name('customer-tiers.reorder');
+            Route::patch('/customer-tiers/{customerTier}', [
+                CustomerTierController::class,
+                'update',
+            ])->name('customer-tiers.update');
+            Route::delete('/customer-tiers/{customerTier}', [
+                CustomerTierController::class,
+                'destroy',
+            ])->name('customer-tiers.destroy');
         });
 
         // ─────────────────────────────────────────────────────────────────

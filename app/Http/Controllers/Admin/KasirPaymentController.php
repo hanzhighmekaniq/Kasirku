@@ -16,6 +16,7 @@ use App\Models\Promotion;
 use App\Models\Sale;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\MembershipBenefitService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -353,9 +354,23 @@ class KasirPaymentController extends BaseController
             'posMode' => $storeTypeCode,
             'storeName' => $store?->name ?? '',
             'receiptFooter' => $store?->receipt_footer ?? '',
+            'receiptHeader' => $store?->receipt_header ?? '',
+            'storeAddress' => $store?->address ?? '',
+            'storePhone' => $store?->phone ?? '',
+            'storeLogo' => $store?->logo ? "/storage/{$store->logo}" : null,
+            'defaultTaxRate' => (float) ($store?->default_tax_rate ?? 0),
+            'taxInclusive' => (bool) ($store?->tax_inclusive ?? false),
+            'currency' => $store?->currency ?? 'IDR',
+            'decimalPlaces' => (int) ($store?->decimal_places ?? 0),
             'pgMethods' => $this->getActivePgMethods($storeId),
             'activeShift' => $activeShift,
             'employees' => $employees,
+            // Sama seperti halaman kasir utama: preview total di layar harus
+            // memakai aturan benefit yang sama dengan hitungan server.
+            'membershipBenefits' => $store->hasFeature('membership')
+                ? app(MembershipBenefitService::class)
+                    ->summaryForCustomers($customers->pluck('id')->all())
+                : [],
             'pendingSale' => $pendingSale,
             'pendingPgTransaction' => $pendingPgTransaction,
             'initialPgTransaction' => $initialPgTransaction,

@@ -4,6 +4,8 @@ import { Head, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import Button from "@/Components/ui/Button";
 import SelectDropdown from "@/Components/ui/SelectDropdown";
+import DateRangePicker from "@/Components/ui/DateRangePicker";
+import { format } from "date-fns";
 
 const fmt = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 const fmtDate = (d) =>
@@ -159,28 +161,18 @@ export default function Index({
                         </div>
                     </div>
 
-                    <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:flex sm:flex-nowrap">
-                        <div className="w-full sm:w-36">
-                            <input
-                                type="date"
-                                value={filters.from ?? ""}
-                                onChange={(e) =>
-                                    applyFilter({ from: e.target.value || undefined })
-                                }
-                                className="w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2"
-                            />
-                        </div>
-                        <div className="w-full sm:w-36">
-                            <input
-                                type="date"
-                                value={filters.to ?? ""}
-                                onChange={(e) =>
-                                    applyFilter({ to: e.target.value || undefined })
-                                }
-                                className="w-full rounded-xl border-border bg-card text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2"
-                            />
-                        </div>
-                    </div>
+                    <DateRangePicker
+                        startDate={filters.from ? new Date(filters.from) : null}
+                        endDate={filters.to ? new Date(filters.to) : null}
+                        onChange={({ startDate: s, endDate: e }) =>
+                            applyFilter({
+                                from: s ? format(s, 'yyyy-MM-dd') : undefined,
+                                to: e ? format(e, 'yyyy-MM-dd') : undefined,
+                            })
+                        }
+                        placeholder="Pilih rentang tanggal"
+                        monthsShown={2}
+                    />
 
                     {(filters.status ||
                         filters.employee_id ||

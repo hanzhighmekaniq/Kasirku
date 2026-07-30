@@ -2,6 +2,12 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
+import {
+    ChevronLeft,
+    ChevronRight,
+    Printer,
+    ShoppingCart,
+} from "lucide-react";
 
 const fmt = (v) => `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 const fmtDt = (d) =>
@@ -12,15 +18,35 @@ const fmtDt = (d) =>
           })
         : "-";
 
-const STATUS_CLS = {
-    open: "bg-success/10 text-success",
-    closed: "bg-muted text-muted-foreground",
+const STATUS_CFG = {
+    open: { label: "Berjalan", cls: "bg-success/10 text-success", dot: "bg-success" },
+    closed: {
+        label: "Tutup",
+        cls: "bg-muted text-muted-foreground",
+        dot: "bg-muted-foreground",
+    },
 };
-const STATUS_LBL = { open: "Berjalan", closed: "Tutup" };
+
+function StatusBadge({ status }) {
+    const cfg = STATUS_CFG[status] ?? {
+        label: status,
+        cls: "bg-muted text-muted-foreground",
+        dot: "bg-muted-foreground",
+    };
+
+    return (
+        <span
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${cfg.cls}`}
+        >
+            <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+            {cfg.label}
+        </span>
+    );
+}
 
 function InfoRow({ label, children }) {
     return (
-        <div className="flex items-start justify-between gap-4 border-b border-slate-50 py-2 last:border-0">
+        <div className="flex items-start justify-between gap-4 border-b border-border py-2 last:border-0">
             <span className="shrink-0 text-sm text-muted-foreground">{label}</span>
             <span className="text-right text-sm font-medium text-foreground">
                 {children}
@@ -160,11 +186,9 @@ export default function Show({
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.cashier-shifts.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.cashier-shifts.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Shift
                     </div>
@@ -194,9 +218,7 @@ export default function Show({
                                 className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                                 title={prevShift.shift_no}
                             >
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                                </svg>
+                                <ChevronLeft className="h-4 w-4" strokeWidth={2} />
                                 Sebelumnya
                             </Link>
                         )}
@@ -207,9 +229,7 @@ export default function Show({
                                 title={nextShift.shift_no}
                             >
                                 Berikutnya
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                </svg>
+                                <ChevronRight className="h-4 w-4" strokeWidth={2} />
                             </Link>
                         )}
                     </div>
@@ -225,52 +245,31 @@ export default function Show({
                                     href={route("admin.kasir.index")}
                                     className="inline-flex shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/20"
                                 >
-                                    <svg
-                                        className="h-4 w-4"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.064v5.162c0 .737-.492 1.4-1.215 1.6a48.724 48.724 0 01-8.251 1.135 48.13 48.13 0 01-7.17-.408c-.839-.144-1.465-.844-1.465-1.689v-5.8a2.25 2.25 0 011.5-2.122M6.75 8.25h10.5a2.25 2.25 0 012.25 2.25v4.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 15V10.5a2.25 2.25 0 012.25-2.25z"
-                                        />
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M8.25 8.25V6.375A2.625 2.625 0 0110.875 3.75h2.25a2.625 2.625 0 012.625 2.625V8.25"
-                                        />
-                                    </svg>
+                                    <ShoppingCart className="h-4 w-4" strokeWidth={2} />
                                     Ke POS
                                 </Link>
                             </div>
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-emerald-800">
+                            <p className="text-sm font-semibold text-success">
                                 Shift Sedang{" "}
-                                <span
-                                    className={`inline-flex shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${STATUS_CLS[shift.status] ?? "bg-muted text-muted-foreground"}`}
-                                >
-                                    {STATUS_LBL[shift.status] ?? shift.status}
-                                </span>
+                                <StatusBadge status={shift.status} />
                             </p>
-                            <p className="text-xs text-emerald-600">
+                            <p className="text-xs text-muted-foreground">
                                 Durasi: {durasi(shift.opened_at, null)}
                             </p>
                         </div>
                         <button
                             onClick={openCloseModal}
-                            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-primary/90"
+                            className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90"
                         >
                             Tutup Shift
                         </button>
                     </div>
                 )}
                 {isOpen && !canClose && (
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3">
-                        <p className="text-sm text-amber-800">
+                    <div className="rounded-2xl border border-warning/20 bg-warning/10 px-5 py-3">
+                        <p className="text-sm text-warning">
                             Shift milik kasir lain. Hanya pemilik shift yang
                             dapat menutupnya.
                         </p>
@@ -330,19 +329,10 @@ export default function Show({
                                             className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted"
                                             title="Cetak rekap shift"
                                         >
-                                            <svg
-                                                className="h-4 w-4 inline mr-1"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                strokeWidth={1.5}
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.23c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z"
-                                                />
-                                            </svg>
+                                            <Printer
+                                                className="mr-1 inline h-4 w-4"
+                                                strokeWidth={1.8}
+                                            />
                                             Cetak
                                         </button>
                                     </div>
@@ -405,7 +395,7 @@ export default function Show({
                                         Rincian Pembayaran
                                     </p>
                                 </div>
-                                <table className="w-full text-left text-sm">
+                                <table className="hidden w-full text-left text-sm md:table">
                                     <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                         <tr>
                                             <th className="px-5 py-2.5 font-semibold">
@@ -465,7 +455,7 @@ export default function Show({
                                                                 {pm?.difference_amount !=
                                                                 null ? (
                                                                     <span
-                                                                        className={`font-semibold ${pm.difference_amount === 0 ? "text-muted-foreground" : pm.difference_amount > 0 ? "text-emerald-600" : "text-destructive"}`}
+                                                                        className={`font-semibold ${pm.difference_amount === 0 ? "text-muted-foreground" : pm.difference_amount > 0 ? "text-success" : "text-destructive"}`}
                                                                     >
                                                                         {pm.difference_amount >=
                                                                         0
@@ -486,6 +476,71 @@ export default function Show({
                                         })}
                                     </tbody>
                                 </table>
+
+                                {/* Mobile Cards — rincian pembayaran */}
+                                <div className="divide-y divide-border md:hidden">
+                                    {summary.payment_breakdown.map((p) => {
+                                        const pm = (shift.payments ?? []).find(
+                                            (sp) =>
+                                                sp.payment_method_id ===
+                                                p.payment_method_id,
+                                        );
+                                        return (
+                                            <div
+                                                key={p.payment_method_id}
+                                                className="bg-background p-4"
+                                            >
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-sm font-medium text-foreground">
+                                                            {p.method_name}
+                                                        </p>
+                                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                                            {p.method_type}
+                                                        </p>
+                                                    </div>
+                                                    <p className="shrink-0 text-sm font-semibold text-foreground">
+                                                        {fmt(p.total)}
+                                                    </p>
+                                                </div>
+                                                {!isOpen && (
+                                                    <div className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-xs">
+                                                        <div>
+                                                            <p className="text-muted-foreground">
+                                                                Aktual
+                                                            </p>
+                                                            <p className="mt-0.5 font-medium text-foreground">
+                                                                {pm?.actual_amount != null
+                                                                    ? fmt(pm.actual_amount)
+                                                                    : "-"}
+                                                            </p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-muted-foreground">
+                                                                Selisih
+                                                            </p>
+                                                            <p
+                                                                className={`mt-0.5 font-semibold ${
+                                                                    pm?.difference_amount == null
+                                                                        ? "text-muted-foreground"
+                                                                        : pm.difference_amount === 0
+                                                                          ? "text-muted-foreground"
+                                                                          : pm.difference_amount > 0
+                                                                            ? "text-success"
+                                                                            : "text-destructive"
+                                                                }`}
+                                                            >
+                                                                {pm?.difference_amount != null
+                                                                    ? `${pm.difference_amount >= 0 ? "+" : ""}${fmt(pm.difference_amount)}`
+                                                                    : "-"}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         )}
 
@@ -502,7 +557,7 @@ export default function Show({
                                             {fmt(typeSummary.total_commission)}
                                         </span>
                                     </div>
-                                    <table className="w-full text-left text-sm">
+                                    <table className="hidden w-full text-left text-sm md:table">
                                         <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                             <tr>
                                                 <th className="px-5 py-2.5 font-semibold">
@@ -541,6 +596,27 @@ export default function Show({
                                             )}
                                         </tbody>
                                     </table>
+
+                                    {/* Mobile Cards — komisi karyawan */}
+                                    <div className="divide-y divide-border md:hidden">
+                                        {typeSummary.commissions.map((c, i) => (
+                                            <div key={i} className="bg-background p-4">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-sm font-medium text-foreground">
+                                                            {c.employee_name}
+                                                        </p>
+                                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                                            {c.transaction_count} transaksi
+                                                        </p>
+                                                    </div>
+                                                    <p className="shrink-0 text-sm font-semibold text-primary">
+                                                        {fmt(c.total_commission)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
@@ -558,7 +634,7 @@ export default function Show({
                                             transaksi
                                         </span>
                                     </div>
-                                    <table className="w-full text-left text-sm">
+                                    <table className="hidden w-full text-left text-sm md:table">
                                         <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                             <tr>
                                                 <th className="px-5 py-2.5 font-semibold">
@@ -593,6 +669,27 @@ export default function Show({
                                             )}
                                         </tbody>
                                     </table>
+
+                                    {/* Mobile Cards — penjualan per kategori */}
+                                    <div className="divide-y divide-border md:hidden">
+                                        {typeSummary.category_breakdown.map((c, i) => (
+                                            <div key={i} className="bg-background p-4">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <p className="truncate text-sm font-medium text-foreground">
+                                                            {c.category_name}
+                                                        </p>
+                                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                                            Qty {c.qty}
+                                                        </p>
+                                                    </div>
+                                                    <p className="shrink-0 text-sm font-semibold text-foreground">
+                                                        {fmt(c.total)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
@@ -671,7 +768,7 @@ export default function Show({
                                             shift.cash_difference === 0
                                                 ? "text-foreground"
                                                 : shift.cash_difference > 0
-                                                  ? "text-emerald-600"
+                                                  ? "text-success"
                                                   : "text-destructive"
                                         }
                                     />
@@ -685,11 +782,11 @@ export default function Show({
             {/* ── MODAL TUTUP SHIFT ── */}
             {showClose && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
                     onMouseDown={() => !closing && setShowClose(false)}
                 >
                     <div
-                        className="w-full max-w-lg overflow-hidden rounded-2xl bg-card shadow-2xl"
+                        className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
                         <div className="border-b border-border bg-muted px-6 py-4">
@@ -710,8 +807,8 @@ export default function Show({
                                 </p>
                             </div>
                             {pendingCount > 0 && (
-                                <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                                    <p className="text-sm font-medium text-amber-800">
+                                <div className="rounded-xl border border-warning/20 bg-warning/10 px-4 py-3">
+                                    <p className="text-sm font-medium text-warning">
                                         ⚠️ Ada {pendingCount} transaksi tertunda
                                         (hold/draft) dalam shift ini. Tutup
                                         shift tetap akan melanjutkan.
@@ -745,7 +842,7 @@ export default function Show({
                                 </div>
                                 {closeData.actual_cash !== "" && (
                                     <p
-                                        className={`mt-1 text-xs font-medium ${parseFloat(closeData.actual_cash) >= (summary?.expected_cash ?? 0) ? "text-emerald-600" : "text-destructive"}`}
+                                        className={`mt-1 text-xs font-medium ${parseFloat(closeData.actual_cash) >= (summary?.expected_cash ?? 0) ? "text-success" : "text-destructive"}`}
                                     >
                                         Selisih:{" "}
                                         {fmt(
@@ -760,8 +857,8 @@ export default function Show({
                                         parseFloat(closeData.actual_cash || 0) -
                                             (summary?.expected_cash ?? 0),
                                     ) > 50000 && (
-                                        <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-                                            <p className="text-xs font-medium text-amber-700">
+                                        <div className="mt-2 rounded-lg border border-warning/20 bg-warning/10 px-3 py-2">
+                                            <p className="text-xs font-medium text-warning">
                                                 ⚠️ Selisih kas lebih dari Rp
                                                 50.000. Pastikan perhitungan kas
                                                 aktual sudah benar sebelum
@@ -860,7 +957,7 @@ export default function Show({
                             <button
                                 onClick={handleClose}
                                 disabled={closing || !closeData.actual_cash}
-                                className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow hover:bg-primary/90 disabled:opacity-60"
+                                className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-60"
                             >
                                 {closing ? "Menutup..." : "Tutup Shift"}
                             </button>
@@ -872,11 +969,11 @@ export default function Show({
             {/* ── MODAL EDIT ── */}
             {showEdit && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
                     onMouseDown={() => !editing && setShowEdit(false)}
                 >
                     <div
-                        className="w-full max-w-md overflow-hidden rounded-2xl bg-card shadow-2xl"
+                        className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
                         <div className="border-b border-border bg-muted px-6 py-4">
@@ -950,7 +1047,7 @@ export default function Show({
                             <button
                                 onClick={handleEdit}
                                 disabled={editing}
-                                className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+                                className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                             >
                                 {editing ? "Menyimpan..." : "Simpan"}
                             </button>
@@ -962,11 +1059,11 @@ export default function Show({
             {/* ── MODAL HAPUS ── */}
             {showDelete && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
                     onMouseDown={() => !deleting && setShowDelete(false)}
                 >
                     <div
-                        className="w-full max-w-sm overflow-hidden rounded-2xl bg-card p-6 shadow-2xl"
+                        className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
                         <h3 className="text-base font-semibold text-foreground">
@@ -990,7 +1087,7 @@ export default function Show({
                             <button
                                 onClick={handleDelete}
                                 disabled={deleting}
-                                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                                className="rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 disabled:opacity-60"
                             >
                                 {deleting ? "Menghapus..." : "Hapus"}
                             </button>

@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { CircleDollarSign, RotateCcw } from 'lucide-react';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 const STATUS_CONFIG = {
@@ -54,16 +55,14 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.purchase-returns.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.purchase-returns.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
-                        pageTitle
+                        {pageTitle}
                     </div>
                     <div className="text-[11px] text-muted-foreground">
-                        purchaseReturn.return_no
+                        {purchaseReturn.return_no}
                     </div>
                 </div>
             }>
@@ -82,7 +81,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                     </div>
                 }
                 description="Lihat rincian retur pembelian, produk, dan status."
-                
+                backUrl={route('admin.purchase-returns.index')}
             />
 
             <div className="mx-auto max-w-3xl space-y-6">
@@ -140,7 +139,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                         {purchaseReturn.status === 'completed' && (
                             <div className="mt-4 rounded-xl bg-warning/10 border border-warning/20 p-4">
                                 <div className="flex items-start gap-2">
-                                    <svg className="h-5 w-5 text-warning mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <CircleDollarSign className="mt-0.5 h-5 w-5 shrink-0 text-warning" strokeWidth={1.8} />
                                     <div>
                                         <p className="text-sm font-semibold text-warning">Dampak ke Pembayaran</p>
                                         <p className="mt-1 text-sm text-warning">
@@ -153,7 +152,7 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                         {purchaseReturn.status === 'cancelled' && (
                             <div className="mt-4 rounded-xl bg-muted border border-border p-4">
                                 <div className="flex items-start gap-2">
-                                    <svg className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg>
+                                    <RotateCcw className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                                     <div>
                                         <p className="text-sm font-semibold text-foreground">Retur Dibatalkan</p>
                                         <p className="mt-1 text-sm text-muted-foreground">
@@ -173,27 +172,42 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                     </div>
                     <div className="p-6">
                         {/* Desktop */}
-                        <div className="hidden sm:block">
+                        <div className="hidden overflow-hidden rounded-xl border border-border sm:block">
                             <table className="w-full text-sm">
                                 <thead className="bg-popover text-xs uppercase tracking-wide text-card-foreground">
                                     <tr>
-                                        <th className="pb-3 text-left font-semibold">Produk</th>
-                                        <th className="pb-3 text-center font-semibold">Qty</th>
-                                        <th className="pb-3 text-right font-semibold">Harga Satuan</th>
-                                        <th className="pb-3 text-right font-semibold">Subtotal</th>
+                                        <th className="px-4 py-3 text-left font-semibold">Produk</th>
+                                        <th className="px-4 py-3 text-center font-semibold">Qty</th>
+                                        <th className="px-4 py-3 text-right font-semibold">Harga Satuan</th>
+                                        <th className="px-4 py-3 text-right font-semibold">Subtotal</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border bg-background">
                                     {purchaseReturn.items.map((item) => (
                                         <tr key={item.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
-                                            <td className="py-3">
+                                            <td className="px-4 py-3">
                                                 <p className="font-medium text-foreground">{item.product?.name || '-'}</p>
-                                                <p className="text-xs text-muted-foreground">{item.product?.sku}</p>
-                                                {item.reason && <p className="mt-0.5 text-xs text-warning italic">Alasan: {item.reason}</p>}
+                                                {/* Variant & satuan supaya baris multi-satuan tidak ambigu */}
+                                                <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                                                    {item.variant?.name && (
+                                                        <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                                            {item.variant.name}
+                                                        </span>
+                                                    )}
+                                                    {item.packaging_unit?.name && (
+                                                        <span className="inline-flex items-center rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold text-warning">
+                                                            {item.packaging_unit.name}
+                                                        </span>
+                                                    )}
+                                                    <span className="font-mono text-[11px] text-muted-foreground">
+                                                        {item.product?.sku}
+                                                    </span>
+                                                </div>
+                                                {item.reason && <p className="mt-0.5 text-xs italic text-warning">Alasan: {item.reason}</p>}
                                             </td>
-                                            <td className="py-3 text-center font-medium text-foreground">{item.quantity}</td>
-                                            <td className="py-3 text-right text-muted-foreground">{formatRupiah(item.cost_price)}</td>
-                                            <td className="py-3 text-right font-medium text-foreground">{formatRupiah(item.subtotal)}</td>
+                                            <td className="px-4 py-3 text-center font-medium text-foreground">{item.quantity}</td>
+                                            <td className="px-4 py-3 text-right text-muted-foreground">{formatRupiah(item.cost_price)}</td>
+                                            <td className="px-4 py-3 text-right font-medium text-foreground">{formatRupiah(item.subtotal)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -203,10 +217,24 @@ export default function Show({ purchaseReturn, storeType = 'retail' }) {
                         {/* Mobile */}
                         <div className="space-y-3 sm:hidden">
                             {purchaseReturn.items.map((item) => (
-                                <div key={item.id} className="rounded-xl border border-border p-3">
+                                <div key={item.id} className="rounded-xl border border-border bg-background p-3">
                                     <p className="text-sm font-medium text-foreground">{item.product?.name || '-'}</p>
-                                    <p className="text-xs text-muted-foreground">{item.product?.sku}</p>
-                                    {item.reason && <p className="mt-1 text-xs text-warning italic">Alasan: {item.reason}</p>}
+                                    <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                                        {item.variant?.name && (
+                                            <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                                {item.variant.name}
+                                            </span>
+                                        )}
+                                        {item.packaging_unit?.name && (
+                                            <span className="inline-flex items-center rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold text-warning">
+                                                {item.packaging_unit.name}
+                                            </span>
+                                        )}
+                                        <span className="font-mono text-[11px] text-muted-foreground">
+                                            {item.product?.sku}
+                                        </span>
+                                    </div>
+                                    {item.reason && <p className="mt-1 text-xs italic text-warning">Alasan: {item.reason}</p>}
                                     <div className="mt-2 flex items-center justify-between text-sm">
                                         <span className="text-muted-foreground">×{item.quantity} @ {formatRupiah(item.cost_price)}</span>
                                         <span className="font-semibold text-foreground">{formatRupiah(item.subtotal)}</span>

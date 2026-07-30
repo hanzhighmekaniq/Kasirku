@@ -3,7 +3,7 @@ import PageHeader from "@/Components/PageHeader";
 import PageTabs from "@/Components/PageTabs";
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { ChevronDown, Eye, Plus, Trash2, ShoppingBag, Undo2 } from 'lucide-react';
+import { ChevronDown, Eye, Plus, Search, Trash2, ShoppingBag, Undo2 } from 'lucide-react';
 import Button from "@/Components/ui/Button";
 import Dropdown from '@/Components/Dropdown';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
@@ -80,7 +80,7 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
             header={
                 <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
-                        pageTitle
+                        {pageTitle}
                     </div>
                     <div className="text-[11px] text-muted-foreground">
                         Manajemen
@@ -99,16 +99,6 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                     </>
                 }
                 description="Catat dan pantau retur pembelian stok atau bahan baku ke supplier."
-                action={
-                    <Button
-                        as={Link}
-                        href={route('admin.purchase-returns.create')}
-                        icon={Plus}
-                    >
-                        <span className="hidden sm:inline">Buat Retur</span>
-                        <span className="sm:hidden">Retur</span>
-                    </Button>
-                }
             />
 
             <PageTabs
@@ -155,14 +145,14 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <div className="relative flex-1">
                             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                                <Search className="h-4 w-4" strokeWidth={1.8} />
                             </span>
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari nomor retur, supplier, atau pembelian..."
-                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
                         <Dropdown>
@@ -180,6 +170,16 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                                 <button onClick={() => setStatusFilter("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${statusFilter === "cancelled" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Dibatalkan</button>
                             </Dropdown.Content>
                         </Dropdown>
+
+                        {/* Di mobile dipindah ke FAB kanan bawah */}
+                        <Button
+                            as={Link}
+                            href={route('admin.purchase-returns.create')}
+                            icon={Plus}
+                            className="hidden sm:inline-flex sm:w-auto"
+                        >
+                            Buat Retur
+                        </Button>
                     </div>
                     <div className="pt-4 flex items-center justify-between">
                         <p className="text-xs text-muted-foreground">
@@ -213,26 +213,26 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                                 <tr>
                                     <td colSpan={8} className="px-5 py-16 text-center">
                                         <div className="flex flex-col items-center">
-                                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                                <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                                                </svg>
+                                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/30">
+                                                <Undo2 className="h-8 w-8 text-muted-foreground/50" strokeWidth={1.5} />
                                             </div>
-                                            <p className="mt-4 text-sm font-medium text-muted-foreground">Belum ada {pageTitle.toLowerCase()}</p>
-                                            <p className="mt-1 text-xs text-muted-foreground">Klik "Buat Retur" untuk membuat retur baru</p>
+                                            <p className="mt-4 text-sm font-medium text-foreground">Belum ada {pageTitle.toLowerCase()}</p>
+                                            <p className="mt-1 text-sm text-muted-foreground">Klik "Buat Retur" untuk membuat retur baru</p>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
                                 filtered.map((retur) => (
-                                    <tr key={retur.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
+                                    <tr
+                                        key={retur.id}
+                                        onClick={() => router.visit(route('admin.purchase-returns.show', retur.id))}
+                                        className="cursor-pointer transition hover:bg-[rgb(var(--color-table-hover))]"
+                                        title="Lihat detail retur"
+                                    >
                                         <td className="whitespace-nowrap px-5 py-4">
-                                            <Link
-                                                href={route('admin.purchase-returns.show', retur.id)}
-                                                className="text-sm font-semibold text-primary hover:text-primary/80"
-                                            >
+                                            <span className="text-sm font-semibold text-primary">
                                                 {retur.return_no}
-                                            </Link>
+                                            </span>
                                         </td>
                                         <td className="whitespace-nowrap px-5 py-4">
                                             <span className="text-sm text-muted-foreground">{retur.purchase?.purchase_no || '-'}</span>
@@ -254,7 +254,7 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                                         <td className="whitespace-nowrap px-5 py-4 text-center">
                                             <StatusBadge status={retur.status} />
                                         </td>
-                                        <td className="whitespace-nowrap px-5 py-4 text-center">
+                                        <td className="whitespace-nowrap px-5 py-4 text-center" onClick={(e) => e.stopPropagation()}>
                                             <div className="flex items-center justify-center gap-1">
                                                 <Link
                                                     href={route('admin.purchase-returns.show', retur.id)}
@@ -283,27 +283,26 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="space-y-3 md:hidden">
+                <div className="space-y-3 p-3 md:hidden">
                 {filtered.length === 0 ? (
                     <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
-                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                            <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                            </svg>
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/30">
+                            <Undo2 className="h-8 w-8 text-muted-foreground/50" strokeWidth={1.5} />
                         </div>
-                        <p className="mt-4 text-sm font-medium text-muted-foreground">Belum ada {pageTitle.toLowerCase()}</p>
+                        <p className="mt-4 text-sm font-medium text-foreground">Belum ada {pageTitle.toLowerCase()}</p>
                     </div>
                 ) : (
                     filtered.map((retur) => (
-                        <div key={retur.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                        <div
+                            key={retur.id}
+                            onClick={() => router.visit(route('admin.purchase-returns.show', retur.id))}
+                            className="cursor-pointer rounded-2xl border border-border bg-card p-4 shadow-sm transition active:bg-muted/50"
+                        >
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <Link
-                                        href={route('admin.purchase-returns.show', retur.id)}
-                                        className="text-sm font-semibold text-primary"
-                                    >
+                                    <span className="text-sm font-semibold text-primary">
                                         {retur.return_no}
-                                    </Link>
+                                    </span>
                                     <p className="mt-0.5 text-xs text-muted-foreground">
                                         Dari: {retur.purchase?.purchase_no || '-'}
                                     </p>
@@ -322,7 +321,7 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                             </div>
                             <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
                                 <span className="text-xs text-muted-foreground">{formatDate(retur.return_date)}</span>
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                                     <Link
                                         href={route('admin.purchase-returns.show', retur.id)}
                                         className="inline-flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted/70"
@@ -346,6 +345,16 @@ export default function Index({ purchaseReturns, storeType = 'retail' }) {
                 )}
             </div>
             </div>
+
+            {/* Mobile FAB — pengganti tombol toolbar yang disembunyikan di layar kecil */}
+            <Link
+                href={route('admin.purchase-returns.create')}
+                className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95 sm:hidden"
+                aria-label="Buat retur"
+                title="Buat Retur"
+            >
+                <Plus className="h-6 w-6" strokeWidth={2} />
+            </Link>
 
             <ConfirmDeleteModal
                 open={!!deleteTarget}

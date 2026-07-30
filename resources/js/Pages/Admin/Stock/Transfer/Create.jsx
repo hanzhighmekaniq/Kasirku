@@ -7,6 +7,8 @@ import Select from '@/Components/ui/Select';
 import StockBucketPicker, { BucketItemLabel } from '@/Components/ui/StockBucketPicker';
 import NumberInput from '@/Components/ui/NumberInput';
 import { purchaseUnitHint, usesUnitConversion } from '@/Utils/unitConversion';
+import DatePicker from "@/Components/ui/DatePicker";
+import { format } from "date-fns";
 
 export default function Create({ buckets = [], branches, currentBranchId = null }) {
     const { flash } = usePage().props;
@@ -173,11 +175,10 @@ export default function Create({ buckets = [], branches, currentBranchId = null 
                             </div>
                             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <Field label="Tanggal Transfer" required error={errors.transfer_date}>
-                                    <input
-                                        type="date"
-                                        value={data.transfer_date}
-                                        onChange={(e) => setData('transfer_date', e.target.value)}
-                                        className={inputCls(!!errors.transfer_date)}
+                                    <DatePicker
+                                        value={data.transfer_date ? new Date(data.transfer_date) : null}
+                                        onChange={(d) => setData('transfer_date', d ? format(d, 'yyyy-MM-dd') : '')}
+                                        placeholder="Pilih tanggal transfer"
                                     />
                                 </Field>
                                 <Field label="Catatan" hint="Opsional" error={errors.notes}>

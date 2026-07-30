@@ -7,6 +7,8 @@ import {
 import { fmt } from '../helpers';
 import DenominationGrid from '../DenominationGrid';
 import PaymentMethodCards from './PaymentMethodCards';
+import DatePicker from "@/Components/ui/DatePicker";
+import { format } from "date-fns";
 
 /**
  * KasbonPanel — Refined Kasbon UI with direct DP selector (0%, 25%, 50%, 75%, 100%).
@@ -40,7 +42,7 @@ export default function KasbonPanel({
     const [selectedDpMethod, setSelectedDpMethod] = useState(cashMethod || offlineMethods[0] || null);
     const [selectedPgMethod, setSelectedPgMethod] = useState(pgMethods[0] || null);
     const [cashReceived, setCashReceived] = useState(0);
-    const [dueDate, setDueDate] = useState('');
+    const [dueDate, setDueDate] = useState(null);
     const [note, setNote] = useState('');
 
     const customer = useMemo(
@@ -86,7 +88,7 @@ export default function KasbonPanel({
 
         // 0% DP = Full Hutang
         if (payNow <= 0) {
-            onPay('full', displayTotal, dueDate || null, note || null, [
+            onPay('full', displayTotal, dueDate ? format(dueDate, 'yyyy-MM-dd') : null, note || null, [
                 {
                     method_id: debtMethod.id,
                     amount: displayTotal,
@@ -125,7 +127,7 @@ export default function KasbonPanel({
         onPay(
             remainingDebt > 0 ? 'partial' : 'full',
             remainingDebt,
-            dueDate || null,
+            dueDate ? format(dueDate, 'yyyy-MM-dd') : null,
             note || null,
             payments,
         );
@@ -476,12 +478,14 @@ export default function KasbonPanel({
                                 <label className="text-xs font-semibold text-muted-foreground">
                                     Jatuh Tempo (Opsional)
                                 </label>
-                                <input
-                                    type="date"
-                                    value={dueDate}
-                                    onChange={(e) => setDueDate(e.target.value)}
-                                    className="mt-1 block w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
-                                />
+                                <div className="mt-1">
+                                    <DatePicker
+                                        value={dueDate}
+                                        onChange={setDueDate}
+                                        placeholder="Pilih jatuh tempo"
+                                        clearable
+                                    />
+                                </div>
                             </div>
                             <div>
                                 <label className="text-xs font-semibold text-muted-foreground">Catatan Kasbon</label>

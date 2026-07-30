@@ -35,8 +35,33 @@ class CashierShiftController extends Controller
             ->latest('opened_at');
 
         // Kasir (tidak punya shift.manage) hanya lihat shift sendiri
-        if (! $user->can('shift.manage')) {
+        $canManage = $user->can('shift.manage');
+
+        if (! $canManage) {
             $query->where('user_id', $user->id);
+        }
+
+        // Filter cabang — hanya untuk yang boleh melihat semua shift. Kalau
+        // tidak ada pilihan yang dikirim, semua cabang ditampilkan (default).
+        $branches = $canManage
+            ? Branch::where('store_id', $storeId)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'code', 'name'])
+            : collect();
+
+        $branchIds = [];
+
+        if ($canManage && $request->filled('branch_ids')) {
+            $branchIds = collect((array) $request->input('branch_ids'))
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $branches->contains('id', $id))
+                ->values()
+                ->all();
+
+            if ($branchIds !== []) {
+                $query->whereIn('branch_id', $branchIds);
+            }
         }
 
         if ($request->filled('status')) {
@@ -82,16 +107,20 @@ class CashierShiftController extends Controller
         return Inertia::render('Admin/CashierShifts/Index', [
             'shifts' => $query->paginate(20)->withQueryString(),
             'activeShift' => $activeShift,
-            'filters' => $request->only([
-                'status',
-                'search',
-                'date_from',
-                'date_to',
-                'sort',
-                'direction',
-            ]),
+            'filters' => array_merge(
+                $request->only([
+                    'status',
+                    'search',
+                    'date_from',
+                    'date_to',
+                    'sort',
+                    'direction',
+                ]),
+                ['branch_ids' => $branchIds],
+            ),
+            'branches' => $branches,
             'canOpen' => $user->can('shift.open') && ! $activeShift,
-            'canManage' => $user->can('shift.manage'),
+            'canManage' => $canManage,
             'storeType' => $this->resolveStoreType(),
         ]);
     }

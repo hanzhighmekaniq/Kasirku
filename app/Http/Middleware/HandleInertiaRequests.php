@@ -9,8 +9,10 @@ use App\Models\StoreFeature;
 use App\Models\StoreType;
 use App\Models\ThemePreset;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 use Inertia\Middleware;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -81,6 +83,7 @@ class HandleInertiaRequests extends Middleware
                         'name' => $user->name,
                         'email' => $user->email,
                         'theme_preference' => $user->theme_preference,
+                        'sidebar_preference' => $user->sidebar_preference,
                     ]
                     : null,
 
@@ -254,6 +257,57 @@ class HandleInertiaRequests extends Middleware
                 collect(),
                 false,
             ),
+            /**
+             * Daftar toko + cabang aktifnya untuk modal pemilih workspace.
+             *
+             * Dibuat optional (hanya dikirim saat partial reload memintanya)
+             * karena datanya bisa besar pada akun dengan banyak cabang, dan
+             * hanya dibutuhkan saat user membuka modal pemilih.
+             *
+             * @return Collection<int, array{id:int,name:string,code:string|null,store_type:string|null,branches:array<int, array{id:int,name:string,code:string|null}>}>
+             */
+            'storeBranchOptions' => Inertia::optional(
+                fn () => rescue(
+                    fn () => $user
+                        ? $user
+                            ->stores()
+                            ->with([
+                                'storeType:id,code',
+                                'branches' => fn ($query) => $query
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->select('id', 'store_id', 'name', 'code'),
+                            ])
+                            ->select(
+                                'stores.id',
+                                'stores.name',
+                                'stores.code',
+                                'stores.store_type_id',
+                            )
+                            ->orderBy('stores.name')
+                            ->get()
+                            ->map(fn (Store $store) => [
+                                'id' => $store->id,
+                                'name' => $store->name,
+                                'code' => $store->code,
+                                'store_type' => $store->getRelationValue(
+                                    'storeType',
+                                )?->code,
+                                'branches' => $store
+                                    ->getRelationValue('branches')
+                                    ->map(fn (Branch $branch) => [
+                                        'id' => $branch->id,
+                                        'name' => $branch->name,
+                                        'code' => $branch->code,
+                                    ])
+                                    ->values(),
+                            ])
+                        : collect(),
+                    collect(),
+                    false,
+                ),
+            ),
+
             'currentBranch' => fn () => $branchId
                 ? rescue(
                     fn () => Branch::find($branchId, ['id', 'name', 'code']),

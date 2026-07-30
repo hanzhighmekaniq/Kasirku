@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Developer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Store;
+use App\Services\StoreRoleService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
@@ -18,19 +19,19 @@ class RoleController extends Controller
      */
     public function index(Request $request)
     {
-        $storeId = $request->query("store_id");
+        $storeId = $request->query('store_id');
 
-        $stores = Store::select("id", "code", "name", "store_type_id")
-            ->with("storeType:id,code,label")
-            ->where("is_active", true)
-            ->orderBy("name")
+        $stores = Store::select('id', 'code', 'name', 'store_type_id')
+            ->with('storeType:id,code,label')
+            ->where('is_active', true)
+            ->orderBy('name')
             ->get()
             ->map(
-                fn($s) => [
-                    "id" => $s->id,
-                    "code" => $s->code,
-                    "name" => $s->name,
-                    "store_type" => $s->getRelationValue("storeType")?->code,
+                fn ($s) => [
+                    'id' => $s->id,
+                    'code' => $s->code,
+                    'name' => $s->name,
+                    'store_type' => $s->getRelationValue('storeType')?->code,
                 ],
             );
 
@@ -42,36 +43,43 @@ class RoleController extends Controller
                 (int) $storeId,
             );
 
-            // Ambil semua permissions global
-            $allPermissions = Permission::select("id", "name")
-                ->orderBy("name")
+            // Hanya permission yang fiturnya didukung tipe toko ini. Tanpa
+            // filter ini toko retail ikut ditawari akses kitchen/meja yang
+            // route-nya justru diblok feature middleware.
+            $relevant = StoreRoleService::relevantPermissionsForStore(
+                (int) $storeId,
+            );
+
+            $allPermissions = Permission::select('id', 'name')
+                ->whereIn('name', $relevant)
+                ->orderBy('name')
                 ->get()
                 ->map(
-                    fn($p) => [
-                        "id" => $p->id,
-                        "name" => $p->name,
+                    fn ($p) => [
+                        'id' => $p->id,
+                        'name' => $p->name,
                         // Extract group dari nama permission (e.g. "purchase.create" → "purchase")
-                        "group" => explode(".", $p->name)[0],
+                        'group' => explode('.', $p->name)[0],
                     ],
                 );
 
             // Ambil semua roles untuk store ini
-            $roles = Role::with("permissions:id,name")
-                ->where("store_id", (int) $storeId)
-                ->orderBy("is_system", "desc")
-                ->orderBy("name")
+            $roles = Role::with('permissions:id,name')
+                ->where('store_id', (int) $storeId)
+                ->orderBy('is_system', 'desc')
+                ->orderBy('name')
                 ->get()
                 ->map(
-                    fn($r) => [
-                        "id" => $r->id,
-                        "name" => $r->name,
-                        "description" => $r->description,
-                        "is_system" => (bool) $r->is_system,
-                        "permission_ids" => $r->permissions
-                            ->pluck("id")
+                    fn ($r) => [
+                        'id' => $r->id,
+                        'name' => $r->name,
+                        'description' => $r->description,
+                        'is_system' => (bool) $r->is_system,
+                        'permission_ids' => $r->permissions
+                            ->pluck('id')
                             ->toArray(),
-                        "permission_names" => $r->permissions
-                            ->pluck("name")
+                        'permission_names' => $r->permissions
+                            ->pluck('name')
                             ->toArray(),
                     ],
                 );
@@ -80,14 +88,14 @@ class RoleController extends Controller
         }
 
         $selectedStore = $storeId
-            ? $stores->firstWhere("id", (int) $storeId)
+            ? $stores->firstWhere('id', (int) $storeId)
             : null;
 
-        return Inertia::render("Developer/Roles/Index", [
-            "stores" => $stores,
-            "selectedStore" => $selectedStore,
-            "roles" => $roles,
-            "allPermissions" => $allPermissions,
+        return Inertia::render('Developer/Roles/Index', [
+            'stores' => $stores,
+            'selectedStore' => $selectedStore,
+            'roles' => $roles,
+            'allPermissions' => $allPermissions,
         ]);
     }
 
@@ -98,31 +106,37 @@ class RoleController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            "store_id" => "required|integer|exists:stores,id",
-            "role_id" => "required|integer|exists:roles,id",
-            "permission_ids" => "array",
-            "permission_ids.*" => "integer|exists:permissions,id",
+            'store_id' => 'required|integer|exists:stores,id',
+            'role_id' => 'required|integer|exists:roles,id',
+            'permission_ids' => 'array',
+            'permission_ids.*' => 'integer|exists:permissions,id',
         ]);
 
-        $storeId = (int) $validated["store_id"];
+        $storeId = (int) $validated['store_id'];
 
         app(PermissionRegistrar::class)->setPermissionsTeamId($storeId);
 
-        $role = Role::where("store_id", $storeId)->findOrFail(
-            $validated["role_id"],
+        $role = Role::where('store_id', $storeId)->findOrFail(
+            $validated['role_id'],
         );
 
+        // Penjaga server-side: permission di luar cakupan tipe toko dibuang,
+        // sejalan dengan daftar yang ditampilkan di index().
+        $relevant = StoreRoleService::relevantPermissionsForStore($storeId);
+
         $perms = Permission::whereIn(
-            "id",
-            $validated["permission_ids"] ?? [],
-        )->get();
+            'id',
+            $validated['permission_ids'] ?? [],
+        )
+            ->whereIn('name', $relevant)
+            ->get();
         $role->syncPermissions($perms);
 
         app(PermissionRegistrar::class)->setPermissionsTeamId(null);
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         return back()->with(
-            "success",
+            'success',
             "Permission untuk role \"{$role->name}\" berhasil diperbarui.",
         );
     }
@@ -134,16 +148,16 @@ class RoleController extends Controller
     public function reset(Request $request)
     {
         $validated = $request->validate([
-            "store_id" => "required|integer|exists:stores,id",
+            'store_id' => 'required|integer|exists:stores,id',
         ]);
 
-        $storeId = (int) $validated["store_id"];
+        $storeId = (int) $validated['store_id'];
 
-        \App\Services\StoreRoleService::createRolesForStore($storeId);
+        StoreRoleService::createRolesForStore($storeId);
 
         return back()->with(
-            "success",
-            "Semua role untuk store telah di-reset ke default.",
+            'success',
+            'Semua role untuk store telah di-reset ke default.',
         );
     }
 }

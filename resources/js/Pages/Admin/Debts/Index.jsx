@@ -2,7 +2,11 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { Head, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
+import { Search } from "lucide-react";
 import Button from "@/Components/ui/Button";
+import CurrencyInput from "@/Components/ui/CurrencyInput";
+import Field from "@/Components/ui/Field";
+import Select from "@/Components/ui/Select";
 
 const fmt = (n) =>
     "Rp" +
@@ -11,15 +15,34 @@ const fmt = (n) =>
         maximumFractionDigits: 0,
     });
 
-export default function Index({ customers }) {
+export default function Index({ customers, paymentMethods = [] }) {
     const { flash } = usePage().props;
     const [search, setSearch] = useState("");
     const [payModal, setPayModal] = useState(null);
     const [payAmount, setPayAmount] = useState("");
+    const [payMethodId, setPayMethodId] = useState("");
     const [paying, setPaying] = useState(false);
     /* Pesan penolakan dari backend. Sebelumnya modal ditutup lewat onFinish
        sehingga error apa pun ikut hilang dan user mengira sudah tersimpan. */
     const [payError, setPayError] = useState("");
+    const [methodError, setMethodError] = useState("");
+
+    /** Buka modal dengan metode pembayaran pertama sebagai default. */
+    const openPayModal = (customer) => {
+        setPayModal(customer);
+        setPayAmount("");
+        setPayMethodId(paymentMethods[0] ? String(paymentMethods[0].id) : "");
+        setPayError("");
+        setMethodError("");
+    };
+
+    const closePayModal = () => {
+        setPayModal(null);
+        setPayAmount("");
+        setPayMethodId("");
+        setPayError("");
+        setMethodError("");
+    };
 
     const filtered = search.trim()
         ? customers.filter(
@@ -30,18 +53,35 @@ export default function Index({ customers }) {
         )
         : customers;
 
+    // Total dihitung dari hasil filter supaya angkanya konsisten dengan baris
+    // yang sedang terlihat, bukan seluruh data.
+    const totalDebt = filtered.reduce(
+        (sum, c) => sum + Number(c.debt_balance ?? 0),
+        0,
+    );
+
+    const canSubmitPayment =
+        !!payModal && Number(payAmount) > 0 && !!payMethodId;
+
     const handlePay = () => {
-        if (!payModal || !payAmount || Number(payAmount) <= 0) return;
+        if (!canSubmitPayment) return;
         setPaying(true);
         setPayError("");
+        setMethodError("");
         router.post(
             route("admin.debts.pay", payModal.id),
-            { amount: Number(payAmount) },
+            {
+                amount: Number(payAmount),
+                payment_method_id: payMethodId,
+            },
             {
                 preserveScroll: true,
                 // Modal hanya ditutup kalau backend benar-benar menerima.
-                onSuccess: () => { setPayModal(null); setPayAmount(""); },
-                onError: (errors) => setPayError(errors.amount || ""),
+                onSuccess: closePayModal,
+                onError: (errors) => {
+                    setPayError(errors.amount || "");
+                    setMethodError(errors.payment_method_id || "");
+                },
                 onFinish: () => setPaying(false),
             },
         );
@@ -82,21 +122,34 @@ export default function Index({ customers }) {
             )}
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                <div className="border-b border-border bg-muted px-5 py-3.5">
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-foreground">Daftar Pelanggan Berhutang</span>
-                            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
-                                {customers.length}
+                {/* Toolbar disamakan dengan halaman tabel lain: search selebar
+                    ruang tersisa, tinggi py-2.5, dan ikon di dalam field. */}
+                <div className="border-b border-border p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="relative flex-1">
+                            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+                                <Search className="h-4 w-4" strokeWidth={1.8} />
                             </span>
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Cari nama, kode, atau telepon pelanggan..."
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                            />
                         </div>
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Cari pelanggan..."
-                            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs text-foreground focus:border-ring focus:ring-1 focus:ring-ring/20"
-                        />
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-4">
+                        <p className="text-xs text-muted-foreground">
+                            Menampilkan{" "}
+                            <span className="font-semibold text-foreground">{filtered.length}</span>{" "}
+                            dari{" "}
+                            <span className="font-semibold text-foreground">{customers.length}</span>{" "}
+                            pelanggan berhutang
+                        </p>
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-destructive/10 px-2.5 py-1 text-xs font-semibold text-destructive">
+                            Total hutang {fmt(totalDebt)}
+                        </span>
                     </div>
                 </div>
 
@@ -159,9 +212,9 @@ export default function Index({ customers }) {
                                                 type="button"
                                                 variant="success"
                                                 size="sm"
-                                                onClick={() => { setPayModal(c); setPayAmount(""); }}
+                                                onClick={() => openPayModal(c)}
                                             >
-                                                Lunasi
+                                                Bayar Hutang
                                             </Button>
                                         </td>
                                     </tr>
@@ -172,36 +225,98 @@ export default function Index({ customers }) {
                 )}
             </div>
 
-            {/* Pay Modal */}
+            {/* Modal pembayaran hutang */}
             {payModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-background/80" onClick={() => { setPayModal(null); setPayError(""); }} />
-                    <div className="relative w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl border border-border">
-                        <h3 className="text-base font-bold text-foreground">Lunasi Hutang</h3>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            {payModal.name} — Sisa hutang: <strong>{fmt(payModal.debt_balance)}</strong>
-                        </p>
-                        <div className="mt-4">
-                            <label className="mb-1 block text-xs font-semibold text-muted-foreground">Jumlah Pelunasan</label>
-                            <div className="relative">
-                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">Rp</span>
-                                <input
-                                    type="number"
-                                    value={payAmount}
-                                    onChange={(e) => setPayAmount(e.target.value)}
-                                    min="0"
-                                    max={payModal.debt_balance}
-                                    placeholder="0"
-                                    autoFocus
-                                    className="block w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                />
+                    <div
+                        className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+                        onClick={closePayModal}
+                    />
+                    <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl">
+                        <div className="px-6 pt-6">
+                            <h3 className="text-base font-semibold text-popover-foreground">
+                                Bayar Hutang
+                            </h3>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                {payModal.name}
+                                {payModal.code ? ` · ${payModal.code}` : ""}
+                            </p>
+
+                            <div className="mt-4 flex items-center justify-between rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3">
+                                <span className="text-xs font-medium text-destructive">
+                                    Sisa hutang
+                                </span>
+                                <span className="text-sm font-bold text-destructive">
+                                    {fmt(payModal.debt_balance)}
+                                </span>
                             </div>
-                            {payError && (
-                                <p className="mt-1.5 text-xs text-destructive">{payError}</p>
-                            )}
+
+                            <div className="mt-4 space-y-4">
+                                <Field label="Jumlah Pembayaran" required error={payError}>
+                                    <CurrencyInput
+                                        value={payAmount}
+                                        onChange={setPayAmount}
+                                        placeholder="0"
+                                        error={!!payError}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setPayAmount(String(payModal.debt_balance))
+                                        }
+                                        className="mt-2 inline-flex items-center rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground transition hover:bg-success/90"
+                                    >
+                                        Lunasi Semua ({fmt(payModal.debt_balance)})
+                                    </button>
+                                </Field>
+
+                                <Field
+                                    label="Metode Pembayaran"
+                                    required
+                                    error={methodError}
+                                >
+                                    {paymentMethods.length === 0 ? (
+                                        <p className="rounded-xl border border-warning/20 bg-warning/10 px-3.5 py-2.5 text-xs text-warning">
+                                            Belum ada metode pembayaran aktif. Tambahkan dulu
+                                            di menu Metode Pembayaran.
+                                        </p>
+                                    ) : (
+                                        <Select
+                                            options={paymentMethods}
+                                            value={payMethodId}
+                                            onChange={setPayMethodId}
+                                            placeholder="Pilih metode pembayaran"
+                                            error={methodError}
+                                        />
+                                    )}
+                                </Field>
+
+                                {Number(payAmount) > 0 && (
+                                    <div className="flex items-center justify-between rounded-xl bg-muted px-4 py-3 text-sm">
+                                        <span className="text-muted-foreground">
+                                            Sisa setelah bayar
+                                        </span>
+                                        <span className="font-semibold text-foreground">
+                                            {fmt(
+                                                Math.max(
+                                                    0,
+                                                    Number(payModal.debt_balance) -
+                                                    Number(payAmount),
+                                                ),
+                                            )}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="mt-5 flex justify-end gap-2">
-                            <Button type="button" variant="outline" size="sm" onClick={() => { setPayModal(null); setPayError(""); }}>
+
+                        <div className="mt-6 flex justify-end gap-2 border-t border-border bg-muted/50 px-6 py-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={closePayModal}
+                            >
                                 Batal
                             </Button>
                             <Button
@@ -209,10 +324,10 @@ export default function Index({ customers }) {
                                 variant="success"
                                 size="sm"
                                 onClick={handlePay}
-                                disabled={!payAmount || Number(payAmount) <= 0}
+                                disabled={!canSubmitPayment}
                                 loading={paying}
                             >
-                                {paying ? "Memproses..." : "Bayar"}
+                                {paying ? "Memproses..." : "Simpan Pembayaran"}
                             </Button>
                         </div>
                     </div>

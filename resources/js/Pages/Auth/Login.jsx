@@ -1,24 +1,49 @@
-﻿import ApplicationLogo from "@/Components/ApplicationLogo";
-import Checkbox from "@/Components/Checkbox";
-import InputError from "@/Components/InputError";
+﻿import { useState } from "react";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
+import { AlertTriangle, ArrowRight, Check, Eye, EyeOff } from "lucide-react";
+
+/**
+ * Halaman login.
+ *
+ * Palet & bahasa visualnya PATEN mengikuti landing page DEVus.id
+ * (modern-minimal, tema Cobalt, anchor hue 262) dan sengaja TIDAK ikut
+ * theme engine user — token warnanya ada di `.dv-auth` pada
+ * resources/css/app.css, bukan di `:root`.
+ *
+ * Karena itu di file ini jangan pakai utility yang terikat tema
+ * (`bg-primary`, `text-foreground`, `rounded-lg/md/sm`); pakai kelas `dv-*`
+ * atau nilai eksplisit.
+ */
 
 const QUICK_LOGIN_ACCOUNTS = {
-    retail: [
-        { label: "Owner", email: "owner1@gmail.com", password: "password" },
-        { label: "Developer", email: "dev@gmail.com", password: "password" },
-    ],
-    fnb: [
-        { label: "Owner FnB", email: "owner2@gmail.com", password: "password" },
-        { label: "Kasir Malioboro", email: "kasir.malioboro@gmail.com", password: "password" },
-        { label: "Kasir UGM", email: "kasir.ugm@gmail.com", password: "password" },
-        { label: "Barista", email: "barista.malioboro@gmail.com", password: "password" },
-        { label: "Gudang Kopi", email: "gudang.kopi@gmail.com", password: "password" },
-    ],
+    retail: {
+        label: "Retail — Minimarket Sejahtera",
+        accounts: [
+            { label: "Owner", email: "owner1@gmail.com", password: "password" },
+            { label: "Developer", email: "dev@gmail.com", password: "password" },
+        ],
+    },
+    fnb: {
+        label: "F&B — Warung Kopi Senja",
+        accounts: [
+            { label: "Owner FnB", email: "owner2@gmail.com", password: "password" },
+            { label: "Kasir Malioboro", email: "kasir.malioboro@gmail.com", password: "password" },
+            { label: "Kasir UGM", email: "kasir.ugm@gmail.com", password: "password" },
+            { label: "Barista", email: "barista.malioboro@gmail.com", password: "password" },
+            { label: "Gudang Kopi", email: "gudang.kopi@gmail.com", password: "password" },
+        ],
+    },
 };
+
+const SPECS = [
+    { label: "Jenis usaha", value: "8 mode" },
+    { label: "Kasir gratis", value: "1 selamanya" },
+    { label: "Perangkat", value: "HP / laptop" },
+];
 
 export default function Login({ status, canResetPassword, isLocal }) {
     const { flash } = usePage().props;
+    const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         email: "",
         password: "",
@@ -36,116 +61,116 @@ export default function Login({ status, canResetPassword, isLocal }) {
         setData({ ...data, email, password });
     };
 
+    const year = new Date().getFullYear();
+
     return (
         <>
-            <Head title="Log in" />
+            <Head title="Masuk" />
 
-            <div className="flex min-h-screen bg-slate-100">
-                {/* Brand panel (hidden on small screens) */}
-                <div className="relative hidden w-1/2 overflow-hidden bg-gradient-to-br from-slate-900 via-primary-950 to-primary-950 lg:flex lg:flex-col lg:justify-between xl:w-3/5">
-                    <div className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-primary-500/20 blur-3xl" />
-                    <div className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 translate-x-1/3 translate-y-1/3 rounded-full bg-violet-500/20 blur-3xl" />
+            <div className="dv-auth grid min-h-screen lg:grid-cols-[1.15fr_1fr] xl:grid-cols-[1.35fr_1fr]">
+                {/* ── Band gelap: satu-satunya area gelap di halaman ── */}
+                <div className="dv-band hidden flex-col justify-between p-10 xl:p-14 lg:flex">
+                    <a
+                        href="https://devus.id"
+                        className="dv-wordmark text-[1.375rem]"
+                        aria-label="DEVus.id, beranda"
+                    >
+                        DEVus<span className="dv-wordmark__dot">.</span>id
+                    </a>
 
-                    <div className="relative z-10 p-10 xl:p-14">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30">
-                                <ApplicationLogo className="h-7 w-7 fill-current text-white" />
-                            </div>
-                            <div className="leading-tight">
-                                <span className="block text-lg font-bold tracking-tight text-white">
-                                    SIM-KASIR
-                                </span>
-                                <span className="block text-xs font-medium text-slate-400">
-                                    Point of Sale System
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="relative z-10 p-10 xl:p-14">
-                        <h1 className="max-w-md text-4xl font-bold leading-tight text-white xl:text-5xl">
-                            Kelola bisnismu dalam satu sistem.
-                        </h1>
-                        <p className="mt-4 max-w-md text-base text-slate-300">
-                            Solusi kasir serba bisa untuk minimart, cafe, dan
-                            coffee shop. Cepat, modern, dan dapat diandalkan.
+                    <div className="max-w-xl space-y-6 py-10">
+                        <p className="dv-flag">
+                            <Check size={13} strokeWidth={2.5} />
+                            Gratis untuk 1 kasir, selamanya
                         </p>
-                        <div className="mt-8 flex flex-wrap gap-3">
-                            {["Minimart", "Cafe", "Coffee Shop", "Retail"].map(
-                                (tag) => (
-                                    <span
-                                        key={tag}
-                                        className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-slate-200 backdrop-blur"
-                                    >
-                                        {tag}
-                                    </span>
-                                ),
-                            )}
-                        </div>
+
+                        <h1 className="dv-display">
+                            Satu sistem kasir.
+                            <br />
+                            Delapan jenis usaha.
+                        </h1>
+
+                        <p className="dv-lead">
+                            Retail, kafe, bengkel, laundry, rental, parkir,
+                            warnet, sampai hotel — semuanya jalan di satu
+                            aplikasi. Kamu pilih jenis usaha, tampilan dan
+                            fiturnya menyesuaikan sendiri.
+                        </p>
+
+                        <dl className="dv-spec max-w-sm">
+                            {SPECS.map((spec) => (
+                                <div key={spec.label} className="dv-spec__row">
+                                    <dt className="dv-label">{spec.label}</dt>
+                                    <dd className="dv-spec__val">
+                                        {spec.value}
+                                    </dd>
+                                </div>
+                            ))}
+                        </dl>
                     </div>
 
-                    <div className="relative z-10 p-10 text-sm text-slate-400 xl:px-14">
-                        &copy; {new Date().getFullYear()} SIM-KASIR. All rights
-                        reserved.
-                    </div>
+                    <p className="dv-label">
+                        &copy; {year} DEVus.id — Seluruh hak dilindungi
+                    </p>
                 </div>
 
-                {/* Form panel */}
-                <div className="flex w-full flex-col justify-center px-6 py-12 sm:px-10 lg:w-1/2 xl:w-2/5">
-                    <div className="mx-auto w-full max-w-md">
-                        {/* Mobile brand */}
-                        <div className="mb-8 flex items-center gap-3 lg:hidden">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 shadow-lg shadow-primary-500/30">
-                                <ApplicationLogo className="h-7 w-7 fill-current text-white" />
-                            </div>
-                            <div className="leading-tight">
-                                <span className="block text-lg font-bold tracking-tight text-slate-900">
-                                    SIM-KASIR
-                                </span>
-                                <span className="block text-xs font-medium text-slate-500">
-                                    Point of Sale System
-                                </span>
-                            </div>
-                        </div>
+                {/* ── Panel form ── */}
+                <div className="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-12">
+                    <div className="mx-auto w-full max-w-[26rem]">
+                        {/* Wordmark versi mobile — band-nya disembunyikan di bawah lg */}
+                        <a
+                            href="https://devus.id"
+                            className="dv-wordmark mb-10 text-[1.375rem] lg:hidden"
+                            aria-label="DEVus.id, beranda"
+                        >
+                            DEVus<span className="dv-wordmark__dot">.</span>id
+                        </a>
 
-                        <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-xl shadow-slate-200/60 sm:p-9">
-                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                                Selamat datang kembali
+                        <div className="dv-card p-7 sm:p-8">
+                            <p className="dv-label">Masuk</p>
+                            <h2 className="dv-title mt-3">
+                                Lanjutkan ke dashboard
                             </h2>
-                            <p className="mt-1 text-sm text-slate-500">
-                                Masuk untuk melanjutkan ke dashboard kamu.
+                            <p
+                                className="mt-2 text-[0.9375rem] leading-relaxed"
+                                style={{ color: "var(--dv-muted)" }}
+                            >
+                                Pakai email dan password akun kasirmu.
                             </p>
 
                             {status && (
-                                <div className="mt-5 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                                    {status}
+                                <div
+                                    className="dv-alert dv-alert--ok mt-6"
+                                    role="status"
+                                >
+                                    <Check
+                                        size={15}
+                                        strokeWidth={2.5}
+                                        className="mt-px shrink-0"
+                                    />
+                                    <span>{status}</span>
                                 </div>
                             )}
 
                             {flash?.error && (
-                                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                                    <svg
-                                        className="mr-1.5 inline-block h-4 w-4 align-text-bottom"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-                                        />
-                                    </svg>
-                                    {flash.error}
+                                <div
+                                    className="dv-alert dv-alert--bad mt-6"
+                                    role="alert"
+                                >
+                                    <AlertTriangle
+                                        size={15}
+                                        strokeWidth={2.5}
+                                        className="mt-px shrink-0"
+                                    />
+                                    <span>{flash.error}</span>
                                 </div>
                             )}
 
-                            <form onSubmit={submit} className="mt-6 space-y-5">
-                                <div>
+                            <form onSubmit={submit} className="mt-7 space-y-5">
+                                <div className="space-y-1.5">
                                     <label
                                         htmlFor="email"
-                                        className="block text-sm font-medium text-slate-700"
+                                        className="dv-field-label"
                                     >
                                         Email
                                     </label>
@@ -156,144 +181,201 @@ export default function Login({ status, canResetPassword, isLocal }) {
                                         value={data.email}
                                         autoComplete="username"
                                         autoFocus
+                                        aria-invalid={
+                                            errors.email ? "true" : undefined
+                                        }
+                                        aria-describedby={
+                                            errors.email
+                                                ? "email-error"
+                                                : undefined
+                                        }
                                         onChange={(e) =>
                                             setData("email", e.target.value)
                                         }
-                                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-primary-500 focus:ring-primary-500"
+                                        className="dv-input"
                                         placeholder="nama@email.com"
                                     />
-                                    <InputError
-                                        message={errors.email}
-                                        className="mt-2"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label
-                                        htmlFor="password"
-                                        className="block text-sm font-medium text-slate-700"
-                                    >
-                                        Password
-                                    </label>
-                                    <input
-                                        id="password"
-                                        type="password"
-                                        name="password"
-                                        value={data.password}
-                                        autoComplete="current-password"
-                                        onChange={(e) =>
-                                            setData("password", e.target.value)
-                                        }
-                                        className="mt-1.5 block w-full rounded-xl border-slate-300 shadow-sm transition focus:border-primary-500 focus:ring-primary-500"
-                                        placeholder="••••••••"
-                                    />
-                                    <InputError
-                                        message={errors.password}
-                                        className="mt-2"
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <label className="flex items-center">
-                                        <Checkbox
-                                            name="remember"
-                                            checked={data.remember}
-                                            onChange={(e) =>
-                                                setData(
-                                                    "remember",
-                                                    e.target.checked,
-                                                )
-                                            }
-                                        />
-                                        <span className="ms-2 text-sm text-slate-600">
-                                            Ingat saya
-                                        </span>
-                                    </label>
-                                    {canResetPassword && (
-                                        <Link
-                                            href={route("password.request")}
-                                            className="text-sm font-medium text-primary-600 transition hover:text-primary-500"
+                                    {errors.email && (
+                                        <p
+                                            id="email-error"
+                                            className="dv-error"
                                         >
-                                            Lupa password?
-                                        </Link>
+                                            <AlertTriangle
+                                                size={13}
+                                                strokeWidth={2.5}
+                                                className="mt-0.5 shrink-0"
+                                            />
+                                            <span>{errors.email}</span>
+                                        </p>
                                     )}
                                 </div>
+
+                                <div className="space-y-1.5">
+                                    <div className="flex items-baseline justify-between gap-3">
+                                        <label
+                                            htmlFor="password"
+                                            className="dv-field-label"
+                                        >
+                                            Password
+                                        </label>
+                                        {canResetPassword && (
+                                            <Link
+                                                href={route("password.request")}
+                                                className="dv-tlink"
+                                            >
+                                                Lupa password?
+                                            </Link>
+                                        )}
+                                    </div>
+                                    <div className="relative">
+                                        <input
+                                            id="password"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            name="password"
+                                            value={data.password}
+                                            autoComplete="current-password"
+                                            aria-invalid={
+                                                errors.password
+                                                    ? "true"
+                                                    : undefined
+                                            }
+                                            aria-describedby={
+                                                errors.password
+                                                    ? "password-error"
+                                                    : undefined
+                                            }
+                                            onChange={(e) =>
+                                                setData(
+                                                    "password",
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="dv-input dv-input--action"
+                                            placeholder="Password akun"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setShowPassword((v) => !v)
+                                            }
+                                            className="dv-input-action"
+                                            aria-label={
+                                                showPassword
+                                                    ? "Sembunyikan password"
+                                                    : "Tampilkan password"
+                                            }
+                                            aria-pressed={showPassword}
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff size={16} />
+                                            ) : (
+                                                <Eye size={16} />
+                                            )}
+                                        </button>
+                                    </div>
+                                    {errors.password && (
+                                        <p
+                                            id="password-error"
+                                            className="dv-error"
+                                        >
+                                            <AlertTriangle
+                                                size={13}
+                                                strokeWidth={2.5}
+                                                className="mt-0.5 shrink-0"
+                                            />
+                                            <span>{errors.password}</span>
+                                        </p>
+                                    )}
+                                </div>
+
+                                <label className="flex w-fit items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        name="remember"
+                                        checked={data.remember}
+                                        onChange={(e) =>
+                                            setData(
+                                                "remember",
+                                                e.target.checked,
+                                            )
+                                        }
+                                        className="dv-check"
+                                    />
+                                    <span
+                                        className="text-[0.8125rem] font-medium"
+                                        style={{ color: "var(--dv-ink-2)" }}
+                                    >
+                                        Ingat saya di perangkat ini
+                                    </span>
+                                </label>
 
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-60"
+                                    className="dv-btn dv-btn--accent dv-btn--block"
                                 >
-                                    {processing ? "Memproses..." : "Masuk"}
+                                    {processing ? "Memproses…" : "Masuk"}
+                                    {!processing && (
+                                        <ArrowRight
+                                            size={16}
+                                            strokeWidth={2.5}
+                                        />
+                                    )}
                                 </button>
                             </form>
-
-                            {isLocal && (
-                                <div className="mt-6 border-t border-dashed border-slate-200 pt-5">
-                                    <p className="mb-3 text-center text-xs font-medium uppercase tracking-wide text-slate-400">
-                                        Quick login (dev only)
-                                    </p>
-
-                                    {/* Retail */}
-                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                        Retail — Minimarket Sejahtera
-                                    </p>
-                                    <div className="mb-4 grid grid-cols-2 gap-2">
-                                        {QUICK_LOGIN_ACCOUNTS.retail.map(
-                                            (account) => (
-                                                <button
-                                                    key={account.email}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        fillQuickLogin(
-                                                            account.email,
-                                                            account.password,
-                                                        )
-                                                    }
-                                                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-600"
-                                                >
-                                                    {account.label}
-                                                    <span className="mt-0.5 block truncate font-normal text-slate-400">
-                                                        {account.email}
-                                                    </span>
-                                                </button>
-                                            ),
-                                        )}
-                                    </div>
-
-                                    {/* FnB */}
-                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-500">
-                                        FnB — Warung Kopi Senja
-                                    </p>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {QUICK_LOGIN_ACCOUNTS.fnb.map(
-                                            (account) => (
-                                                <button
-                                                    key={account.email}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        fillQuickLogin(
-                                                            account.email,
-                                                            account.password,
-                                                        )
-                                                    }
-                                                    className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:border-amber-300 hover:bg-amber-100 hover:text-amber-800"
-                                                >
-                                                    {account.label}
-                                                    <span className="mt-0.5 block truncate font-normal text-amber-400">
-                                                        {account.email}
-                                                    </span>
-                                                </button>
-                                            ),
-                                        )}
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
-                        <p className="mt-6 text-center text-xs text-slate-400 lg:hidden">
-                            &copy; {new Date().getFullYear()} SIM-KASIR. All
-                            rights reserved.
+                        {isLocal && (
+                            <div className="mt-6 space-y-5">
+                                <p className="dv-label">Quick login · dev</p>
+
+                                {Object.entries(QUICK_LOGIN_ACCOUNTS).map(
+                                    ([key, group]) => (
+                                        <div key={key} className="space-y-2">
+                                            <p
+                                                className="text-[0.8125rem] font-semibold"
+                                                style={{
+                                                    color: "var(--dv-ink-2)",
+                                                }}
+                                            >
+                                                {group.label}
+                                            </p>
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                {group.accounts.map(
+                                                    (account) => (
+                                                        <button
+                                                            key={account.email}
+                                                            type="button"
+                                                            onClick={() =>
+                                                                fillQuickLogin(
+                                                                    account.email,
+                                                                    account.password,
+                                                                )
+                                                            }
+                                                            className="dv-quick"
+                                                        >
+                                                            <span className="dv-quick__name">
+                                                                {account.label}
+                                                            </span>
+                                                            <span className="dv-quick__mail">
+                                                                {account.email}
+                                                            </span>
+                                                        </button>
+                                                    ),
+                                                )}
+                                            </div>
+                                        </div>
+                                    ),
+                                )}
+                            </div>
+                        )}
+
+                        <p className="dv-label mt-10 lg:hidden">
+                            &copy; {year} DEVus.id
                         </p>
                     </div>
                 </div>

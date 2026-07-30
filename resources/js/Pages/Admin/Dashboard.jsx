@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import Dropdown from "@/Components/Dropdown";
+import CheckboxTile from "@/Components/ui/CheckboxTile";
 import { NavIcons } from "@/Components/NavIcons";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import {
@@ -604,21 +605,12 @@ export default function Dashboard({
                                         {branches.map((b) => {
                                             const isSelected = pendingBranchIds.includes(b.id);
                                             return (
-                                                <label
+                                                <CheckboxTile
                                                     key={b.id}
-                                                    className={`flex cursor-pointer select-none items-center gap-3 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${isSelected
-                                                            ? "border-primary bg-primary/10 text-primary shadow-sm"
-                                                            : "border-border bg-card text-foreground hover:bg-muted"
-                                                        }`}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isSelected}
-                                                        onChange={() => togglePending(b.id)}
-                                                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary/20"
-                                                    />
-                                                    <span>{b.name}</span>
-                                                </label>
+                                                    checked={isSelected}
+                                                    onChange={() => togglePending(b.id)}
+                                                    label={b.name}
+                                                />
                                             );
                                         })}
                                     </div>

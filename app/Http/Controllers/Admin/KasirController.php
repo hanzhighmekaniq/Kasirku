@@ -12,8 +12,10 @@ use App\Models\CashierShift;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\CustomerDebtLog;
+use App\Models\CustomerTier;
 use App\Models\Employee;
 use App\Models\EmployeeCommission;
+use App\Models\Membership;
 use App\Models\PaymentGatewayTransaction;
 use App\Models\PaymentMethod;
 use App\Models\PlatformPaymentGateway;
@@ -26,6 +28,7 @@ use App\Models\SalePayment;
 use App\Models\StockMovement;
 use App\Models\Store;
 use App\Services\CashRoundingService;
+use App\Services\MembershipBenefitService;
 use App\Services\PromotionService;
 use App\Services\Stock\StockMutation;
 use App\Services\Stock\StockService;
@@ -186,12 +189,14 @@ class KasirController extends Controller
 
         $customers = Customer::where('store_id', $storeId)
             ->orderBy('name')
+            ->with('customerTier:id,name,rank,color')
             ->get([
                 'id',
                 'code',
                 'name',
                 'phone',
                 'tier',
+                'customer_tier_id',
                 'points',
                 'total_spent',
                 'debt_balance',
@@ -316,6 +321,9 @@ class KasirController extends Controller
                 'status',
                 'split_status',
                 'is_split_stale',
+                // Dipakai untuk menghitung batas waktu ganti metode pembayaran,
+                // harus sama dengan field yang divalidasi di updatePayment().
+                'created_at',
             ]);
 
         // Check for active shift
@@ -382,9 +390,34 @@ class KasirController extends Controller
             'posMode' => $storeTypeCode,
             'storeName' => $store?->name ?? '',
             'receiptFooter' => $store?->receipt_footer ?? '',
+            'receiptHeader' => $store?->receipt_header ?? '',
+            'storeAddress' => $store?->address ?? '',
+            'storePhone' => $store?->phone ?? '',
+            'storeLogo' => $store?->logo ? "/storage/{$store->logo}" : null,
+            'defaultTaxRate' => (float) ($store?->default_tax_rate ?? 0),
+            'taxInclusive' => (bool) ($store?->tax_inclusive ?? false),
+            'currency' => $store?->currency ?? 'IDR',
+            'decimalPlaces' => (int) ($store?->decimal_places ?? 0),
+            'paymentEditLimitMinutes' => $store?->paymentEditLimitMinutes(),
+            'paymentEditLimitLabel' => $store?->paymentEditLimitLabel(),
             'pgMethods' => $this->getActivePgMethods($storeId),
             'activeShift' => $activeShift,
             'employees' => $employees,
+            'sellableMemberships' => $store->hasFeature('membership')
+                ? Membership::where('store_id', $storeId)
+                    ->where('is_sellable_at_pos', true)
+                    ->where('is_active', true)
+                    ->with('product:id,membership_id,sell_price,is_active')
+                    ->get(['id', 'name', 'price', 'duration_type', 'duration_value', 'maps_to_tier', 'maps_to_tier_id'])
+                : collect(),
+            'customerTiers' => CustomerTier::forStore($storeId)->ranked()->get(['id', 'name', 'rank', 'color']),
+            // Benefit member aktif, dipetakan per customer_id. Kasir memakainya
+            // untuk preview total agar angka di layar sama dengan hitungan
+            // server saat checkout.
+            'membershipBenefits' => $store->hasFeature('membership')
+                ? app(MembershipBenefitService::class)
+                    ->summaryForCustomers($customers->pluck('id')->all())
+                : [],
             'pendingSale' => $pendingSale ? [
                 'sale_id' => $pendingSale->id,
                 'sale_no' => $pendingSale->sale_no,
@@ -617,6 +650,28 @@ class KasirController extends Controller
         $sale->update($update);
     }
 
+    /**
+     * Kurangi biaya kirim sesuai benefit gratis ongkir membership pelanggan.
+     *
+     * Mengembalikan nominal ongkir yang benar-benar ditagihkan. Perhitungan
+     * ditaruh di server karena frontend tidak boleh menentukan sendiri berapa
+     * subsidi yang berlaku.
+     */
+    private function applyMembershipShippingWaiver(
+        ?Customer $customer,
+        float $shippingAmount,
+        float $subtotal,
+    ): float {
+        if (! $customer || $shippingAmount <= 0) {
+            return $shippingAmount;
+        }
+
+        $waiver = app(MembershipBenefitService::class)
+            ->shippingWaiver($customer, $shippingAmount, $subtotal);
+
+        return $waiver ? $waiver['remaining'] : $shippingAmount;
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -735,17 +790,17 @@ class KasirController extends Controller
             $this->assertItemPricesValid($items, $storeId);
 
             // ── Resolve customer tier for promo ──
-            $customerTier = null;
+            $customerTierId = null;
             if (! empty($validated['customer_id'])) {
-                $customerTier = Customer::find($validated['customer_id'])
-                    ?->tier;
+                $customerTierId = Customer::find($validated['customer_id'])
+                    ?->customer_tier_id;
             }
 
             // ── Auto-apply promosi per item ──
             $promoEnabled = $store->hasFeature('promo');
             $promoService = new PromotionService;
             if ($promoEnabled) {
-                $items = $promoService->applyPromosToCart($items, $customerTier);
+                $items = $promoService->applyPromosToCart($items, $customerTierId);
             }
 
             // ── Hitung subtotal (termasuk promo discount) ──
@@ -775,21 +830,37 @@ class KasirController extends Controller
 
             // ── Auto-apply cart-level promo ──
             $cartPromoResult = $promoEnabled
-                ? $promoService->findBestCartPromo(
-                    $subtotal,
-                    $customerTier,
-                )
+                ? $promoService->findBestCartPromo($subtotal, $customerTierId)
                 : null;
+
+            // ── Membership discount kandidat (dibandingkan, ambil terbesar) ──
+            $customerForPromo = ! empty($validated['customer_id'])
+                ? Customer::find($validated['customer_id'])
+                : null;
+            $membershipCandidate = $promoService->membershipDiscountCandidate($customerForPromo, $subtotal);
+
             $cartPromoDiscount = 0;
             $cartPromoId = null;
-            if ($cartPromoResult) {
+            if ($membershipCandidate && (! $cartPromoResult || $membershipCandidate['discount'] > $cartPromoResult['discount'])) {
+                $cartPromoDiscount = $membershipCandidate['discount'];
+                $cartPromoId = null; // bukan Promotion model, jangan increment used_count
+            } elseif ($cartPromoResult) {
                 $cartPromoDiscount = $cartPromoResult['discount'];
                 $cartPromoId = $cartPromoResult['promotion']->id;
             }
 
+            // ── Benefit gratis ongkir dari membership ──
+            // Dihitung server-side supaya nominal ongkir yang tersimpan sudah
+            // bersih; frontend hanya mengirim ongkir asli.
+            $shippingAmount = $this->applyMembershipShippingWaiver(
+                $customerForPromo,
+                (float) ($validated['shipping_amount'] ?? 0),
+                (float) $subtotal,
+            );
+
             // ── Grand total sebelum rounding ──
             $grandTotal = max(0, $subtotal - $discount - $cartPromoDiscount + $tax
-                + ($validated['shipping_amount'] ?? 0));
+                + $shippingAmount);
 
             // ── Rounding: recalculate server-side (trust CashRoundingService, not client) ──
             $roundingService = app(CashRoundingService::class);
@@ -858,7 +929,7 @@ class KasirController extends Controller
                 'subtotal' => $subtotal,
                 'discount_amount' => $discount + $cartPromoDiscount,
                 'tax_amount' => $tax,
-                'shipping_amount' => $validated['shipping_amount'] ?? 0,
+                'shipping_amount' => $shippingAmount,
                 'rounding_adjustment' => $roundingAdjustment,
                 'rounding_mode' => $roundingMode,
                 'rounding_nearest' => $roundingNearest,
@@ -1372,14 +1443,14 @@ class KasirController extends Controller
             // ── Validasi harga item terhadap harga produk asli ──
             $this->assertItemPricesValid($items, $storeId);
 
-            $customerTier = null;
+            $customerTierId = null;
             if (! empty($validated['customer_id'])) {
-                $customerTier = Customer::find($validated['customer_id'])?->tier;
+                $customerTierId = Customer::find($validated['customer_id'])?->customer_tier_id;
             }
             $promoEnabled = $store->hasFeature('promo');
             $promoService = new PromotionService;
             if ($promoEnabled) {
-                $items = $promoService->applyPromosToCart($items, $customerTier);
+                $items = $promoService->applyPromosToCart($items, $customerTierId);
             }
 
             $subtotal = 0;
@@ -1399,11 +1470,32 @@ class KasirController extends Controller
                 );
             }
 
-            $cartPromoResult = $promoEnabled ? $promoService->findBestCartPromo($subtotal, $customerTier) : null;
-            $cartPromoDiscount = $cartPromoResult ? $cartPromoResult['discount'] : 0;
-            $cartPromoId = $cartPromoResult ? $cartPromoResult['promotion']->id : null;
+            $cartPromoResult = $promoEnabled ? $promoService->findBestCartPromo($subtotal, $customerTierId) : null;
 
-            $preRoundingTotal = max(0, $subtotal - $discount - $cartPromoDiscount + $tax + ($validated['shipping_amount'] ?? 0));
+            // ── Membership discount kandidat (dibandingkan, ambil terbesar) ──
+            $customerForPromo = ! empty($validated['customer_id'])
+                ? Customer::find($validated['customer_id'])
+                : null;
+            $membershipCandidate = $promoService->membershipDiscountCandidate($customerForPromo, $subtotal);
+
+            $cartPromoDiscount = 0;
+            $cartPromoId = null;
+            if ($membershipCandidate && (! $cartPromoResult || $membershipCandidate['discount'] > $cartPromoResult['discount'])) {
+                $cartPromoDiscount = $membershipCandidate['discount'];
+                $cartPromoId = null;
+            } elseif ($cartPromoResult) {
+                $cartPromoDiscount = $cartPromoResult['discount'];
+                $cartPromoId = $cartPromoResult['promotion']->id;
+            }
+
+            // ── Benefit gratis ongkir dari membership ──
+            $shippingAmount = $this->applyMembershipShippingWaiver(
+                $customerForPromo,
+                (float) ($validated['shipping_amount'] ?? 0),
+                (float) $subtotal,
+            );
+
+            $preRoundingTotal = max(0, $subtotal - $discount - $cartPromoDiscount + $tax + $shippingAmount);
 
             // Rounding — only if store feature enabled AND has cash payment in the (future) payment
             // We defer the full rounding check to finalize(), but pre-calculate from frontend hints
@@ -1431,7 +1523,7 @@ class KasirController extends Controller
                 'subtotal' => $subtotal,
                 'discount_amount' => $discount + $cartPromoDiscount,
                 'tax_amount' => $tax,
-                'shipping_amount' => $validated['shipping_amount'] ?? 0,
+                'shipping_amount' => $shippingAmount,
                 'rounding_adjustment' => $roundingAdjustment,
                 'rounding_mode' => $roundingMode,
                 'rounding_nearest' => $roundingNearest,
@@ -1806,6 +1898,17 @@ class KasirController extends Controller
 
         if ($sale->status !== 'completed') {
             return response()->json(['success' => false, 'message' => 'Hanya transaksi selesai yang dapat diubah pembayarannya.'], 422);
+        }
+
+        // Batas waktu ubah pembayaran diatur per toko di Pengaturan Toko.
+        // Kalau tidak diisi, pembayaran boleh diubah kapan saja.
+        $store = Store::find($storeId);
+
+        if ($store && ! $store->canEditPaymentFor($sale)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Batas waktu ubah pembayaran sudah terlewat (maksimal {$store->paymentEditLimitLabel()} setelah transaksi).",
+            ], 422);
         }
 
         // Ambil pembayaran utama

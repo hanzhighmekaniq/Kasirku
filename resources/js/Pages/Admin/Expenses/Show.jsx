@@ -53,11 +53,9 @@ export default function Show({ expense }) {
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.expenses.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.expenses.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Pengeluaran
                     </div>

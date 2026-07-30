@@ -3,6 +3,8 @@ import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import Button from "@/Components/ui/Button";
+import DatePicker from "@/Components/ui/DatePicker";
+import { format } from "date-fns";
 
 /* ── Order type options per store type — konsisten dengan Sales/Index.jsx ── */
 const ORDER_TYPE_OPTIONS = {
@@ -142,11 +144,9 @@ export default function Create({ products, customers, paymentMethods, tables, st
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.sales.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.sales.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Penjualan
                     </div>
@@ -191,7 +191,11 @@ export default function Create({ products, customers, paymentMethods, tables, st
                                     </select>
                                 </Field>
                                 <Field label="Tanggal" required error={errors.sale_date}>
-                                    <input type="date" value={data.sale_date} onChange={(e) => setData('sale_date', e.target.value)} className={inputCls(!!errors.sale_date)} />
+                                    <DatePicker
+                                        value={data.sale_date ? new Date(data.sale_date) : null}
+                                        onChange={(d) => setData('sale_date', d ? format(d, 'yyyy-MM-dd') : '')}
+                                        placeholder="Pilih tanggal"
+                                    />
                                 </Field>
                                 <Field label="Pelanggan" error={errors.customer_id}>
                                     <select value={data.customer_id} onChange={(e) => setData('customer_id', e.target.value)} className={inputCls(!!errors.customer_id)}>

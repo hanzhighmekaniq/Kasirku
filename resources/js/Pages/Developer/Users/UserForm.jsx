@@ -1,40 +1,47 @@
 import DeveloperLayout from '@/Layouts/DeveloperLayout';
 import { Link } from '@inertiajs/react';
 import { useState } from 'react';
+import { Building2, ChevronLeft, CircleParking, Coffee, KeyRound, Monitor, Scissors, Search, Shirt, Store, Zap } from 'lucide-react';
 
 const STORE_TYPE_INFO = {
-    retail:  { icon: '🏪', label: 'Retail' },
-    fnb:     { icon: '☕', label: 'FnB' },
-    service: { icon: '✂️', label: 'Service' },
-    laundry: { icon: '👕', label: 'Laundry' },
-    rental:  { icon: '🔑', label: 'Rental' },
-    parking: { icon: '🅿️', label: 'Parkir' },
-    session: { icon: '🖥️', label: 'Sesi' },
+    retail:  { Icon: Store,         label: 'Retail' },
+    fnb:     { Icon: Coffee,        label: 'FnB' },
+    service: { Icon: Scissors,      label: 'Service' },
+    laundry: { Icon: Shirt,         label: 'Laundry' },
+    rental:  { Icon: KeyRound,      label: 'Rental' },
+    parking: { Icon: CircleParking, label: 'Parkir' },
+    session: { Icon: Monitor,       label: 'Sesi' },
 };
 
-const STORE_ROLES = [
-    { value: 'owner',      label: 'Owner',      desc: 'Akses penuh toko, kelola role & user' },
-    { value: 'admin',      label: 'Admin',       desc: 'Kelola operasional harian' },
-    { value: 'supervisor', label: 'Supervisor',  desc: 'Pengawas shift & laporan' },
-    { value: 'kasir',      label: 'Kasir',       desc: 'Operator POS harian' },
-    { value: 'gudang',     label: 'Gudang',      desc: 'Kelola stok & pembelian' },
-    { value: 'kitchen',    label: 'Kitchen',     desc: 'Update status masak (FnB)' },
-];
-
 const inp = (err) =>
-    `block w-full rounded-xl border px-3 py-2.5 text-sm shadow-sm transition focus:outline-none focus:ring-2 ${err ? 'border-red-300 focus:ring-red-200' : 'border-slate-200 focus:border-primary-400 focus:ring-primary-100'}`;
+    `block w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${err ? 'border-destructive focus:ring-destructive/20' : 'border-input focus:border-ring focus:ring-ring/20'}`;
 
 export default function UserForm({
     title, data, setData, errors, processing, onSubmit,
     cancelHref, isEdit = false, user, stores,
     storeRoles = [], // [{ store_id, role }] untuk edit
+    rolesByStoreType = {}, // { retail: [{value,label,desc}], fnb: [...] }
 }) {
     const [storeSearch, setStoreSearch] = useState('');
+
+    // Role dibaca per tipe toko: toko retail tidak boleh menawarkan role yang
+    // hanya ada di FnB (mis. kitchen) — rolenya memang tidak dibuat di sana,
+    // dan assign-nya akan ditolak server.
+    const rolesFor = (storeType) => rolesByStoreType[storeType] ?? [];
 
     const filteredStores = (stores ?? []).filter(s =>
         !storeSearch ||
         s.name.toLowerCase().includes(storeSearch.toLowerCase()) ||
         s.code.toLowerCase().includes(storeSearch.toLowerCase())
+    );
+
+    // Legend menjelaskan seluruh role yang mungkin muncul di daftar toko
+    // sekarang, bukan seluruh role yang ada di sistem.
+    const legendRoles = Object.values(
+        filteredStores.reduce((acc, s) => {
+            rolesFor(s.store_type).forEach(r => { acc[r.value] = r; });
+            return acc;
+        }, {}),
     );
 
     // Tambah/update store role assignment
@@ -60,44 +67,42 @@ export default function UserForm({
     return (
         <DeveloperLayout header={
             <div className="flex items-center gap-3">
-                <Link href={cancelHref} className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                    </svg>
+                <Link href={cancelHref} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground">
+                    <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
                 </Link>
-                <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
+                <h2 className="text-lg font-semibold text-foreground">{title}</h2>
             </div>
         }>
             <div className="mx-auto max-w-2xl">
                 <form onSubmit={onSubmit} className="space-y-5">
 
                     {/* Info dasar */}
-                    <section className="rounded-2xl border border-slate-200 bg-white p-6">
-                        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">Informasi User</h3>
+                    <section className="rounded-2xl border border-border bg-card text-card-foreground p-6">
+                        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Informasi User</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">Nama Lengkap *</label>
+                                <label className="mb-1.5 block text-sm font-medium text-foreground">Nama Lengkap *</label>
                                 <input value={data.name} onChange={e => setData('name', e.target.value)}
                                     className={inp(errors.name)} placeholder="Nama lengkap" />
-                                {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+                                {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name}</p>}
                             </div>
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">Email *</label>
+                                <label className="mb-1.5 block text-sm font-medium text-foreground">Email *</label>
                                 <input type="email" value={data.email} onChange={e => setData('email', e.target.value)}
                                     className={inp(errors.email)} placeholder="user@email.com" />
-                                {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+                                {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
                             </div>
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                                    Password {isEdit && <span className="text-xs font-normal text-slate-400">(kosongkan jika tidak diubah)</span>}
+                                <label className="mb-1.5 block text-sm font-medium text-foreground">
+                                    Password {isEdit && <span className="text-xs font-normal text-muted-foreground">(kosongkan jika tidak diubah)</span>}
                                     {!isEdit && ' *'}
                                 </label>
                                 <input type="password" value={data.password} onChange={e => setData('password', e.target.value)}
                                     className={inp(errors.password)} placeholder={isEdit ? '••••••••' : 'Min. 6 karakter'} />
-                                {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
+                                {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password}</p>}
                             </div>
                             <div>
-                                <label className="mb-1.5 block text-sm font-medium text-slate-700">Konfirmasi Password</label>
+                                <label className="mb-1.5 block text-sm font-medium text-foreground">Konfirmasi Password</label>
                                 <input type="password" value={data.password_confirmation} onChange={e => setData('password_confirmation', e.target.value)}
                                     className={inp()} placeholder="Ulangi password" />
                             </div>
@@ -105,85 +110,103 @@ export default function UserForm({
                     </section>
 
                     {/* Tipe akses */}
-                    <section className="rounded-2xl border border-slate-200 bg-white p-6">
-                        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-500">Tipe Akses</h3>
-                        <label className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition ${data.is_developer ? 'border-violet-500 bg-violet-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                    <section className="rounded-2xl border border-border bg-card text-card-foreground p-6">
+                        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Tipe Akses</h3>
+                        <label className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-4 transition ${data.is_developer ? 'border-primary bg-primary/10' : 'border-border hover:border-border'}`}>
                             <input type="checkbox" checked={!!data.is_developer}
                                 onChange={e => setData('is_developer', e.target.checked)}
                                 className="mt-0.5 h-4 w-4 rounded" />
                             <div>
-                                <p className="font-semibold text-slate-800">⚡ Developer / Super Admin</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Akses penuh ke seluruh platform, tidak terikat toko manapun.</p>
+                                <p className="flex items-center gap-1.5 font-semibold text-foreground">
+                                    <Zap className="h-4 w-4 text-primary" strokeWidth={2} />
+                                    Developer / Super Admin
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Akses penuh ke seluruh platform, tidak terikat toko manapun.</p>
                             </div>
                         </label>
                         {!data.is_developer && (
-                            <p className="mt-2 text-xs text-slate-500">Tanpa akses developer, user hanya bisa masuk ke toko yang di-assign di bawah.</p>
+                            <p className="mt-2 text-xs text-muted-foreground">Tanpa akses developer, user hanya bisa masuk ke toko yang di-assign di bawah.</p>
                         )}
                     </section>
 
                     {/* Assign ke toko */}
-                    <section className="rounded-2xl border border-slate-200 bg-white p-6">
+                    <section className="rounded-2xl border border-border bg-card text-card-foreground p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <div>
-                                <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Assign ke Toko</h3>
-                                {selectedCount > 0 && <p className="text-xs text-primary-600 mt-0.5">{selectedCount} toko dipilih</p>}
+                                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Assign ke Toko</h3>
+                                {selectedCount > 0 && <p className="text-xs text-primary mt-0.5">{selectedCount} toko dipilih</p>}
                             </div>
                         </div>
 
                         {/* Search */}
                         <div className="relative mb-3">
-                            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                             </svg>
                             <input value={storeSearch} onChange={e => setStoreSearch(e.target.value)}
                                 placeholder="Cari toko..."
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100" />
+                                className="w-full rounded-xl border border-border bg-muted py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20" />
                         </div>
 
                         {/* Store list */}
-                        <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-slate-100">
+                        <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-border">
                             {filteredStores.length === 0 && (
-                                <p className="py-8 text-center text-sm text-slate-400">Tidak ada toko.</p>
+                                <p className="py-8 text-center text-sm text-muted-foreground">Tidak ada toko.</p>
                             )}
                             {filteredStores.map(s => {
-                                const tm = STORE_TYPE_INFO[s.store_type] ?? { icon: '🏬', label: s.store_type };
+                                const tm = STORE_TYPE_INFO[s.store_type] ?? { Icon: Building2, label: s.store_type };
+                                const TypeIcon = tm.Icon;
                                 const currentRole = getStoreRole(s.id);
+                                const storeRoleOptions = rolesFor(s.store_type);
                                 return (
-                                    <div key={s.id} className={`flex items-center gap-3 px-4 py-3 transition ${currentRole ? 'bg-primary-50' : 'hover:bg-slate-50'}`}>
-                                        <span className="text-lg">{tm.icon}</span>
+                                    <div key={s.id} className={`flex items-center gap-3 px-4 py-3 transition ${currentRole ? 'bg-primary/10' : 'hover:bg-muted'}`}>
+                                        <TypeIcon className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-800 truncate">{s.name}</p>
-                                            <p className="text-xs text-slate-400">{s.code} · {tm.label}</p>
+                                            <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
+                                            <p className="text-xs text-muted-foreground">{s.code} · {tm.label}</p>
                                         </div>
-                                        <select value={currentRole} onChange={e => setStoreRole(s.id, e.target.value)}
-                                            className={`rounded-lg border px-2 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-ring/20 ${currentRole ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card text-muted-foreground'}`}>
-                                            <option value="">— Tidak assign —</option>
-                                            {STORE_ROLES.map(r => (
-                                                <option key={r.value} value={r.value}>{r.label}</option>
-                                            ))}
-                                        </select>
+                                        {storeRoleOptions.length === 0 ? (
+                                            <span className="shrink-0 text-xs text-muted-foreground" title="Belum ada template role untuk tipe toko ini">
+                                                Tidak ada role
+                                            </span>
+                                        ) : (
+                                            <select value={currentRole} onChange={e => setStoreRole(s.id, e.target.value)}
+                                                className={`rounded-lg border px-2 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-ring/20 ${currentRole ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card text-muted-foreground'}`}>
+                                                <option value="">— Tidak assign —</option>
+                                                {storeRoleOptions.map(r => (
+                                                    <option key={r.value} value={r.value}>{r.label}</option>
+                                                ))}
+                                                {/* Role tersimpan yang sudah di luar cakupan tetap
+                                                    ditampilkan supaya nilainya tidak hilang diam-diam */}
+                                                {currentRole && !storeRoleOptions.some(r => r.value === currentRole) && (
+                                                    <option value={currentRole}>{currentRole} (di luar cakupan)</option>
+                                                )}
+                                            </select>
+                                        )}
                                     </div>
                                 );
                             })}
                         </div>
 
                         {/* Role legend */}
-                        <div className="mt-3 grid grid-cols-2 gap-1.5 rounded-xl border border-slate-100 bg-slate-50 p-3">
-                            {STORE_ROLES.map(r => (
-                                <div key={r.value} className="text-xs text-slate-500">
-                                    <span className="font-semibold text-slate-700">{r.label}:</span> {r.desc}
-                                </div>
-                            ))}
-                        </div>
+                        {legendRoles.length > 0 && (
+                            <div className="mt-3 grid grid-cols-2 gap-1.5 rounded-xl border border-border bg-muted p-3">
+                                {legendRoles.map(r => (
+                                    <div key={r.value} className="text-xs text-muted-foreground">
+                                        <span className="font-semibold text-foreground">{r.label}:</span> {r.desc}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </section>
 
                     {/* Actions */}
                     <div className="flex items-center justify-end gap-3 pb-6">
-                        <Link href={cancelHref} className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                        <Link href={cancelHref} className="rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted">
                             Batal
                         </Link>
                         <button type="submit" disabled={processing}
-                            className="rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:opacity-90 disabled:opacity-60">
+                            className="rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-60">
                             {processing ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Buat User'}
                         </button>
                     </div>

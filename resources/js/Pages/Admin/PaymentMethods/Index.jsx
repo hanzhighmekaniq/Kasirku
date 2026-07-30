@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import axios from "axios";
 import {
@@ -18,6 +18,7 @@ import {
     Trash2,
 } from "lucide-react";
 import Button from "@/Components/ui/Button";
+import PageHeader from "@/Components/PageHeader";
 import {
     DndContext,
     closestCenter,
@@ -59,7 +60,7 @@ function DragHandle({ listeners, attributes }) {
         <button
             {...listeners}
             {...attributes}
-            className="flex h-8 w-8 cursor-grab items-center justify-center rounded-lg text-muted-foreground/50 hover:bg-muted hover:text-muted-foreground active:cursor-grabbing transition-colors"
+            className="flex h-8 w-8 cursor-grab items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground active:cursor-grabbing transition-colors"
             title="Drag untuk mengubah urutan"
             tabIndex={-1}
         >
@@ -96,7 +97,7 @@ function PaymentMethodRow({ method, idx, toggling, onToggle, onDelete, isDragOve
             ref={isDragOverlay ? undefined : setNodeRef}
             style={isDragOverlay ? undefined : style}
             className={`flex items-center gap-2 sm:gap-3 border-b border-border bg-background px-3 sm:px-4 py-3 last:border-0 transition-colors ${
-                isDragging ? "bg-primary/5" : "hover:bg-muted/50"
+                isDragging ? "bg-primary/10" : "hover:bg-[rgb(var(--color-table-hover))]"
             } ${isDragOverlay ? "rounded-2xl shadow-xl ring-1 ring-border" : ""} ${!method.is_active ? "opacity-60" : ""}`}
         >
             {/* Drag handle */}
@@ -265,11 +266,18 @@ export default function Index({ paymentMethods: initialMethods }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <div>
-                        <h2 className="text-lg font-semibold text-foreground">Metode Pembayaran</h2>
-                        <p className="text-sm text-muted-foreground">Atur urutan & metode bayar di kasir</p>
-                    </div>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">Metode Pembayaran</div>
+                    <div className="text-[11px] text-muted-foreground">Atur urutan &amp; metode bayar di kasir</div>
+                </div>
+            }
+        >
+            <PageHeader
+                title="Metode Pembayaran"
+                breadcrumbs={["Admin", "Pengaturan", "Metode Pembayaran"]}
+                heading="Metode Pembayaran"
+                description="Atur metode pembayaran yang bisa dipilih kasir saat transaksi, beserta urutan tampilnya."
+                action={
                     <div className="flex items-center gap-2">
                         {saving && (
                             <span className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 text-xs font-medium text-muted-foreground">
@@ -283,15 +291,9 @@ export default function Index({ paymentMethods: initialMethods }) {
                                 Tersimpan
                             </span>
                         )}
-                        <Button as={Link} href={route("admin.payment-methods.create")} icon={Plus}>
-                            <span className="hidden sm:inline">Tambah Metode</span>
-                            <span className="sm:hidden">Tambah</span>
-                        </Button>
                     </div>
-                </div>
-            }
-        >
-            <Head title="Metode Pembayaran" />
+                }
+            />
 
             {flash?.success && (
                 <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
@@ -324,15 +326,28 @@ export default function Index({ paymentMethods: initialMethods }) {
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
                 <div className="border-b border-border p-4">
-                    <div className="relative">
-                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.8} />
-                        <input
-                            type="text"
-                            placeholder="Cari metode..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-xl border border-input bg-background text-foreground py-2.5 pl-10 pr-4 text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-                        />
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <div className="relative flex-1">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.8} />
+                            <input
+                                type="text"
+                                placeholder="Cari metode..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="block w-full rounded-xl border border-input bg-background text-foreground py-2.5 pl-10 pr-4 text-sm shadow-sm transition outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                            />
+                        </div>
+                        {/* Desktop & tablet: tombol menyatu dengan toolbar tabel.
+                            Di mobile disembunyikan, digantikan FAB di pojok kanan bawah. */}
+                        <Button
+                            as={Link}
+                            href={route("admin.payment-methods.create")}
+                            icon={Plus}
+                            size="lg"
+                            className="hidden shrink-0 sm:inline-flex"
+                        >
+                            Tambah Metode
+                        </Button>
                     </div>
                     <div className="flex items-center justify-between pt-4">
                         <p className="text-xs text-muted-foreground">
@@ -360,13 +375,13 @@ export default function Index({ paymentMethods: initialMethods }) {
                 ) : (
                     <>
                         {/* Column header */}
-                        <div className="flex items-center gap-2 sm:gap-3 border-b border-border bg-muted px-3 sm:px-4 py-2.5">
-                            <div className="w-8" /> 
+                        <div className="flex items-center gap-2 sm:gap-3 border-b border-border bg-popover px-3 sm:px-4 py-2.5 text-xs uppercase tracking-wide text-card-foreground">
+                            <div className="w-8" />
                             <div className="hidden sm:block w-7" />
-                            <div className="flex-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Metode</div>
-                            <div className="hidden sm:block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tipe</div>
-                            <div className="hidden sm:block w-24 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Provider</div>
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</div>
+                            <div className="flex-1 font-semibold">Metode</div>
+                            <div className="hidden sm:block font-semibold">Tipe</div>
+                            <div className="hidden sm:block w-24 text-right font-semibold">Provider</div>
+                            <div className="font-semibold">Status</div>
                             <div className="w-18" />
                         </div>
 
@@ -400,7 +415,7 @@ export default function Index({ paymentMethods: initialMethods }) {
                         </DndContext>
 
                         {/* Footer hint */}
-                        <div className="flex items-center gap-2 border-t border-border bg-muted/50 px-5 py-3">
+                        <div className="flex items-center gap-2 border-t border-border bg-muted px-5 py-3">
                             <Info className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={1.8} />
                             <p className="text-[11px] text-muted-foreground">
                                 Tarik baris untuk mengubah urutan tampilan metode. Perubahan disimpan otomatis.
@@ -409,6 +424,15 @@ export default function Index({ paymentMethods: initialMethods }) {
                     </>
                 )}
             </div>
+
+            {/* FAB — hanya mobile. Di sm ke atas tombol Tambah sudah ada di toolbar tabel. */}
+            <Link
+                href={route("admin.payment-methods.create")}
+                className="fixed bottom-6 right-6 z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:hidden"
+                aria-label="Tambah metode pembayaran"
+            >
+                <Plus className="h-6 w-6" strokeWidth={2.2} />
+            </Link>
 
             <ConfirmDeleteModal
                 open={!!target}

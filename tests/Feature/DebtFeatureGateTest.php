@@ -20,6 +20,7 @@ use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerDebtLog;
 use App\Models\Feature;
+use App\Models\PaymentMethod;
 use App\Models\Plan;
 use App\Models\Store;
 use App\Models\StoreType;
@@ -32,7 +33,7 @@ use Spatie\Permission\PermissionRegistrar;
  * Toko + user dengan permission debt.
  *
  * @param  bool  $withDebtFeature  Pasang fitur `debt` ke tipe toko atau tidak.
- * @return array{user: User, store: Store, branch: Branch, customer: Customer}
+ * @return array{user: User, store: Store, branch: Branch, customer: Customer, paymentMethod: PaymentMethod}
  */
 function createDebtContext(bool $withDebtFeature = true): array
 {
@@ -90,6 +91,18 @@ function createDebtContext(bool $withDebtFeature = true): array
         'credit_limit' => 100000,
     ]);
 
+    // Pelunasan hutang wajib menyebut metode pembayaran, jadi setiap konteks
+    // menyiapkan satu metode tunai.
+    // Kode metode unik global, jadi harus di-randomize agar konteks kedua
+    // (skenario lintas toko) tidak bentrok dengan yang pertama.
+    $paymentMethod = PaymentMethod::create([
+        'store_id' => $store->id,
+        'code' => 'cash-'.uniqid(),
+        'name' => 'Tunai',
+        'type' => 'cash',
+        'is_active' => true,
+    ]);
+
     $user = User::factory()->create();
     $store->users()->attach($user->id);
 
@@ -102,7 +115,7 @@ function createDebtContext(bool $withDebtFeature = true): array
     }
     $user->assignRole($role);
 
-    return compact('user', 'store', 'branch', 'customer');
+    return compact('user', 'store', 'branch', 'customer', 'paymentMethod');
 }
 
 /** Session seperti request HTTP asli — store_id tersimpan sebagai string. */
@@ -137,7 +150,10 @@ test('pelunasan hutang yang sah diterima meski store_id di session berupa string
 
     $this->actingAs($ctx['user'])
         ->withSession(debtSession($ctx))
-        ->post("/app/debts/{$ctx['customer']->id}/pay", ['amount' => 20000])
+        ->post("/app/debts/{$ctx['customer']->id}/pay", [
+            'amount' => 20000,
+            'payment_method_id' => $ctx['paymentMethod']->id,
+        ])
         ->assertSessionHasNoErrors();
 
     expect((float) $ctx['customer']->fresh()->debt_balance)->toBe(30000.0)
@@ -149,7 +165,10 @@ test('pelunasan melebihi sisa hutang ditolak sebagai error validasi', function (
 
     $this->actingAs($ctx['user'])
         ->withSession(debtSession($ctx))
-        ->postJson("/app/debts/{$ctx['customer']->id}/pay", ['amount' => 90000])
+        ->postJson("/app/debts/{$ctx['customer']->id}/pay", [
+            'amount' => 90000,
+            'payment_method_id' => $ctx['paymentMethod']->id,
+        ])
         ->assertStatus(422)
         ->assertJsonValidationErrors('amount');
 
@@ -162,7 +181,10 @@ test('hutang pelanggan toko lain tidak bisa dilunasi', function () {
 
     $this->actingAs($penyerang['user'])
         ->withSession(debtSession($penyerang))
-        ->post("/app/debts/{$korban['customer']->id}/pay", ['amount' => 10000])
+        ->post("/app/debts/{$korban['customer']->id}/pay", [
+            'amount' => 10000,
+            'payment_method_id' => $penyerang['paymentMethod']->id,
+        ])
         ->assertStatus(403);
 
     expect((float) $korban['customer']->fresh()->debt_balance)->toBe(50000.0);

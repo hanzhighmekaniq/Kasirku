@@ -19,11 +19,9 @@ export default function Create() {
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.branches.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.branches.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Cabang
                     </div>

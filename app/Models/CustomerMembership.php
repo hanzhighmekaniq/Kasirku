@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerMembership extends Model
 {
@@ -14,13 +14,13 @@ class CustomerMembership extends Model
     protected $fillable = [
         'customer_id', 'membership_id', 'sale_id',
         'start_date', 'expired_date',
-        'remaining_visits', 'status', 'notes',
+        'remaining_visits', 'status', 'source', 'notes',
     ];
 
     protected function casts(): array
     {
         return [
-            'start_date'   => 'date',
+            'start_date' => 'date',
             'expired_date' => 'date',
         ];
     }
@@ -32,8 +32,18 @@ class CustomerMembership extends Model
         return $query->where('status', 'active')
             ->where(function ($q) {
                 $q->whereNull('expired_date')
-                  ->orWhere('expired_date', '>=', now());
+                    ->orWhere('expired_date', '>=', now());
             });
+    }
+
+    public function scopeAutoTier(Builder $query): Builder
+    {
+        return $query->where('source', 'auto_tier');
+    }
+
+    public function scopeManualOrPurchase(Builder $query): Builder
+    {
+        return $query->whereIn('source', ['manual', 'purchase']);
     }
 
     // --- Relationships ---

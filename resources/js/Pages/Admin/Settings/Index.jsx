@@ -2,7 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, useForm, usePage, router } from "@inertiajs/react";
 import { useState } from "react";
-import { Upload, X, Store, Receipt, Image, Puzzle, MapPin, Settings } from "lucide-react";
+import { Upload, X, Store, Receipt, Image, Puzzle, MapPin, Settings, Clock } from "lucide-react";
 import Button from "@/Components/ui/Button";
 
 const inp = (err) =>
@@ -259,6 +259,8 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
         tax_inclusive: store?.tax_inclusive ?? false,
         default_tax_rate: store?.default_tax_rate ?? 0,
         points_per_amount: store?.points_per_amount ?? "",
+        payment_edit_limit_value: store?.payment_edit_limit_value ?? "",
+        payment_edit_limit_unit: store?.payment_edit_limit_unit ?? "minutes",
         logo: null,
         remove_logo: false,
     });
@@ -562,6 +564,58 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
                                     </p>
                                     {errors.points_per_amount && (
                                         <p className={errorClass}>{errors.points_per_amount}</p>
+                                    )}
+                                </div>
+                            </Section>
+
+                            <Section
+                                title="Transaksi"
+                                subtitle="Atur batas waktu koreksi transaksi"
+                                icon={Clock}
+                            >
+                                <div>
+                                    <label className={labelClass}>
+                                        Batas Waktu Ganti Metode Pembayaran
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="9999"
+                                            value={data.payment_edit_limit_value}
+                                            onChange={(e) =>
+                                                setData("payment_edit_limit_value", e.target.value)
+                                            }
+                                            className={`${inp(errors.payment_edit_limit_value)} flex-1`}
+                                            placeholder="Tanpa batas"
+                                        />
+                                        <select
+                                            value={data.payment_edit_limit_unit}
+                                            onChange={(e) =>
+                                                setData("payment_edit_limit_unit", e.target.value)
+                                            }
+                                            disabled={!data.payment_edit_limit_value}
+                                            className={`${inp(errors.payment_edit_limit_unit)} w-32 shrink-0 disabled:cursor-not-allowed disabled:opacity-50`}
+                                        >
+                                            <option value="minutes">Menit</option>
+                                            <option value="hours">Jam</option>
+                                            <option value="days">Hari</option>
+                                        </select>
+                                    </div>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Setelah melewati batas ini, kasir tidak bisa lagi mengganti
+                                        metode pembayaran transaksi yang sudah selesai. Kosongkan
+                                        untuk mengizinkan penggantian kapan saja.
+                                    </p>
+                                    {errors.payment_edit_limit_value && (
+                                        <p className={errorClass}>
+                                            {errors.payment_edit_limit_value}
+                                        </p>
+                                    )}
+                                    {errors.payment_edit_limit_unit && (
+                                        <p className={errorClass}>
+                                            {errors.payment_edit_limit_unit}
+                                        </p>
                                     )}
                                 </div>
                             </Section>

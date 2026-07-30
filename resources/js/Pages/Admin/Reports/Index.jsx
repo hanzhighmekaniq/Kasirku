@@ -1,9 +1,11 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import ReportTabs from "@/Components/ReportTabs";
-import { Head, router, usePage } from "@inertiajs/react";
+import { router, usePage } from "@inertiajs/react";
 import { useState, useMemo } from "react";
 import Button from "@/Components/ui/Button";
+import DateRangePicker from "@/Components/ui/DateRangePicker";
+import { format } from "date-fns";
 
 const fmt = (n) =>
     new Intl.NumberFormat("id-ID", {
@@ -22,15 +24,17 @@ const fmtDate = (d) => {
     });
 };
 
+/**
+ * Warna seri chart, diambil dari token tema `chart-1..5` supaya ikut berubah
+ * saat user mengganti tema. Ditulis sebagai class statis (bukan dirakit
+ * dinamis) agar tidak dibuang saat build Tailwind.
+ */
 const CHART_COLORS = [
-    "#6366f1",
-    "#10b981",
-    "#f59e0b",
-    "#ef4444",
-    "#8b5cf6",
-    "#06b6d4",
-    "#ec4899",
-    "#14b8a6",
+    "bg-chart-1",
+    "bg-chart-2",
+    "bg-chart-3",
+    "bg-chart-4",
+    "bg-chart-5",
 ];
 
 export default function Index({
@@ -47,8 +51,11 @@ export default function Index({
     const { flash } = usePage().props;
 
     // ── Filters ──────────────────────────────────
-    const [startDate, setStartDate] = useState(from ?? "");
-    const [endDate, setEndDate] = useState(to ?? "");
+    const toDate = (s) => s ? new Date(s) : null;
+    const toStr = (d) => d ? format(d, 'yyyy-MM-dd') : null;
+
+    const [startDate, setStartDate] = useState(toDate(from));
+    const [endDate, setEndDate] = useState(toDate(to));
     const [pendingBranchIds, setPendingBranchIds] = useState(
         branchIds.length > 0
             ? branchIds.map(Number)
@@ -70,8 +77,8 @@ export default function Index({
 
     const applyFilters = () => {
         const params = {};
-        if (startDate) params.start_date = startDate;
-        if (endDate) params.end_date = endDate;
+        if (startDate) params.start_date = toStr(startDate);
+        if (endDate) params.end_date = toStr(endDate);
         if (hasBranchFilter) params.branch_ids = pendingBranchIds;
         router.get(route("admin.reports.index"), params, {
             preserveState: false,
@@ -81,41 +88,6 @@ export default function Index({
 
     // ── Chart data ────────────────────────────────
     const maxDaily = Math.max(...dailyBreakdown.map((d) => d.total), 1);
-
-    // ── Quick date presets ─────────────────────────
-    const presets = [
-        {
-            label: "Hari Ini",
-            start: new Date().toISOString().slice(0, 10),
-            end: new Date().toISOString().slice(0, 10),
-        },
-        {
-            label: "7 Hari",
-            start: new Date(Date.now() - 6 * 86400000)
-                .toISOString()
-                .slice(0, 10),
-            end: new Date().toISOString().slice(0, 10),
-        },
-        {
-            label: "30 Hari",
-            start: new Date(Date.now() - 29 * 86400000)
-                .toISOString()
-                .slice(0, 10),
-            end: new Date().toISOString().slice(0, 10),
-        },
-        {
-            label: "Bulan Ini",
-            start: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-                .toISOString()
-                .slice(0, 10),
-            end: new Date().toISOString().slice(0, 10),
-        },
-    ];
-
-    const applyPreset = (preset) => {
-        setStartDate(preset.start);
-        setEndDate(preset.end);
-    };
 
     return (
         <AuthenticatedLayout
@@ -182,48 +154,18 @@ export default function Index({
                         <div className="mb-3 border-t border-border" />
                     )}
 
-                    {/* Date range + Presets + Tombol Tampilkan */}
+                    {/* Date range + Tombol Tampilkan */}
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:flex-wrap">
-                        {/* Date inputs */}
-                        <div className="flex items-end gap-2">
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                                    Dari
-                                </label>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                />
-                            </div>
-                            <span className="pb-2 text-muted-foreground">—</span>
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                                    Sampai
-                                </label>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm focus:border-ring focus:ring-2 focus:ring-ring/20"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Quick presets */}
-                        <div className="flex flex-wrap items-center gap-1.5 sm:ml-4">
-                            {presets.map((p) => (
-                                <button
-                                    key={p.label}
-                                    type="button"
-                                    onClick={() => applyPreset(p)}
-                                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-primary/40 hover:text-primary"
-                                >
-                                    {p.label}
-                                </button>
-                            ))}
-                        </div>
+                        <DateRangePicker
+                            startDate={startDate}
+                            endDate={endDate}
+                            onChange={({ startDate: s, endDate: e }) => {
+                                setStartDate(s);
+                                setEndDate(e);
+                            }}
+                            placeholder="Pilih rentang tanggal"
+                            monthsShown={2}
+                        />
 
                         {/* Tombol Tampilkan */}
                         <Button
@@ -377,7 +319,7 @@ export default function Index({
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     {/* Top Products */}
                     <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                        <div className="border-b border-border bg-muted/50 px-5 py-3.5">
+                        <div className="border-b border-border px-5 py-4">
                             <h3 className="text-sm font-semibold text-foreground">
                                 Produk Terlaris
                             </h3>
@@ -439,7 +381,7 @@ export default function Index({
                     <div className="space-y-5">
                         {/* Payment Breakdown */}
                         <div className="rounded-2xl border border-border bg-card shadow-sm">
-                            <div className="border-b border-border bg-muted/50 px-5 py-3.5">
+                            <div className="border-b border-border px-5 py-4">
                                 <h3 className="text-sm font-semibold text-foreground">
                                     Metode Pembayaran
                                 </h3>
@@ -471,7 +413,10 @@ export default function Index({
                                                         <span className="text-xs font-semibold text-foreground">{fmt(p.total)}</span>
                                                     </div>
                                                     <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                                                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
+                                                        <div
+                                                            className={`h-full rounded-full transition-all duration-500 ${CHART_COLORS[i % CHART_COLORS.length]}`}
+                                                            style={{ width: `${Math.max(pct, 2)}%` }}
+                                                        />
                                                     </div>
                                                 </div>
                                             );
@@ -483,7 +428,7 @@ export default function Index({
 
                         {/* Category Breakdown */}
                         <div className="rounded-2xl border border-border bg-card shadow-sm">
-                            <div className="border-b border-border bg-muted/50 px-5 py-3.5">
+                            <div className="border-b border-border px-5 py-4">
                                 <h3 className="text-sm font-semibold text-foreground">
                                     Per Kategori
                                 </h3>
@@ -515,7 +460,10 @@ export default function Index({
                                                         <span className="text-xs font-semibold text-foreground">{fmt(c.revenue)}</span>
                                                     </div>
                                                     <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                                                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: CHART_COLORS[(i + 2) % CHART_COLORS.length] }} />
+                                                        <div
+                                                            className={`h-full rounded-full transition-all duration-500 ${CHART_COLORS[(i + 2) % CHART_COLORS.length]}`}
+                                                            style={{ width: `${Math.max(pct, 2)}%` }}
+                                                        />
                                                     </div>
                                                 </div>
                                             );
@@ -543,21 +491,21 @@ function SummaryCard({
         indigo: "from-primary/10 to-primary/5",
         amber: "from-warning/10 to-warning/5",
         red: "from-destructive/10 to-destructive/5",
-        violet: "from-violet-500/10 to-violet-500/5",
+        violet: "from-chart-5/10 to-chart-5/5",
     };
     const textMap = {
         emerald: "text-success",
         indigo: "text-primary",
         amber: "text-warning",
         red: "text-destructive",
-        violet: "text-violet-600 dark:text-violet-400",
+        violet: "text-chart-5",
     };
     const accentMap = {
         emerald: "border-success/40",
         indigo: "border-primary/40",
         amber: "border-warning/40",
         red: "border-destructive/40",
-        violet: "border-violet-500/40",
+        violet: "border-chart-5/40",
     };
 
     const cardBg = highlight ? `bg-gradient-to-br ${gradientMap[color]}` : "bg-card";

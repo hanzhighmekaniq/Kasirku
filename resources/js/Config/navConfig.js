@@ -9,6 +9,11 @@
  *  - hasFeature + can   → NORMAL (klikable)
  *  - locked    + can    → LOCKED  (tampil tapi 🔒, ga bisa diklik)
  *  - !can               → HIDDEN  (ga muncul sama sekali)
+ *
+ * Smart Item:
+ *  Satu item sidebar mewakili beberapa sub-fitur (mis. Manajemen Stok =
+ *  Stok + Batch + Opname + dst). `href` induk otomatis mengarah ke sub-fitur
+ *  pertama yang tidak terkunci. Jika semua anak terkunci, induk ikut terkunci.
  */
 
 function r(name, params) {
@@ -19,75 +24,118 @@ function r(name, params) {
     }
 }
 
-/**
- * Helper: tambah item ke array jika memenuhi syarat
- *
- * Logic:
- * - typeSupport = false → HIDDEN (tidak ditambahkan ke array)
- * - typeSupport = true && planAllows = false → LOCKED (ditambahkan dengan flag locked)
- * - typeSupport = true && planAllows = true → NORMAL (ditambahkan tanpa flag locked)
- *
- * @param {Array} items - Array untuk menambahkan item
- * @param {boolean} typeSupports - Apakah tipe toko support fitur ini (hasFeature || isFeatureLocked)
- * @param {boolean} planAllows - Apakah plan mengizinkan fitur ini (hasFeature, BUKAN !isFeatureLocked)
- * @param {object} item - Item menu yang akan ditambahkan
- */
 function add(items, typeSupports, planAllows, item) {
-    // Jika tipe toko tidak support, jangan tampilkan sama sekali (HIDDEN)
     if (!typeSupports) return;
-
-    // Jika tipe support tapi plan tidak allow, tampilkan tapi locked
-    if (typeSupports && !planAllows) {
+    if (!planAllows) {
         items.push({ ...item, locked: true });
         return;
     }
-
-    // Jika tipe support dan plan allow, tampilkan normal (NORMAL)
     items.push(item);
 }
 
-/**
- * Helper: Sort items agar NORMAL di atas, LOCKED di bawah
- * Ini biar user langsung lihat fitur yang bisa diakses di atas!
- *
- * @param {Array} items - Array items yang sudah diisi
- * @returns {Array} - Array yang sudah di-sort
- */
 function sortByLockState(items) {
-    return items.sort((a, b) => {
-        // Normal (locked=false/undefined) → 0
-        // Locked (locked=true) → 1
-        const aLock = a.locked ? 1 : 0;
-        const bLock = b.locked ? 1 : 0;
-        return aLock - bLock; // Normal items naik ke atas
+    return items.sort((a, b) => (a.locked ? 1 : 0) - (b.locked ? 1 : 0));
+}
+
+function sortGroupsByLockState(groups) {
+    return groups.sort((a, b) => {
+        const aAll = a.items.length > 0 && a.items.every((i) => i.locked);
+        const bAll = b.items.length > 0 && b.items.every((i) => i.locked);
+        return (aAll ? 1 : 0) - (bAll ? 1 : 0);
     });
 }
 
 /**
- * Helper: Sort groups agar group yang punya item NORMAL di atas,
- * group yang semua itemnya LOCKED di bawah.
- * Ini biar user langsung lihat group yang bisa diakses dulu!
+ * Bangun satu item sidebar "cerdas" dari daftar kandidat sub-fitur.
  *
- * @param {Array} groups - Array groups
- * @returns {Array} - Array groups yang sudah di-sort
+ * 1. Mencari kandidat pertama yang tidak terkunci → dijadikan `href` induk.
+ * 2. Jika semua kandidat terkunci → induk ikut terkunci.
+ * 3. Menggabungkan semua pola `current` → halaman manapun aktif, induk ikut highlight.
  */
-function sortGroupsByLockState(groups) {
-    return groups.sort((a, b) => {
-        // Group dianggap "fully locked" kalau semua itemnya locked
-        const aAllLocked = a.items.length > 0 && a.items.every((i) => i.locked);
-        const bAllLocked = b.items.length > 0 && b.items.every((i) => i.locked);
-        const aLock = aAllLocked ? 1 : 0;
-        const bLock = bAllLocked ? 1 : 0;
-        return aLock - bLock; // Group dengan item aktif naik ke atas
-    });
+function smartGroup(item, items, candidates) {
+    const active = candidates.filter((c) => !c.locked);
+    // Kandidat boleh mengosongkan `current` (null / []) kalau halamannya sudah
+    // diklaim item sidebar lain yang lebih spesifik — dia tetap dipakai sebagai
+    // fallback href, tapi tidak ikut menyalakan highlight induk.
+    const combinedCurrent = candidates
+        .flatMap((c) => (Array.isArray(c.current) ? c.current : [c.current]))
+        .filter(Boolean);
+
+    add(
+        items,
+        candidates.length > 0,
+        active.length > 0,
+        {
+            ...item,
+            href: active[0]?.href ?? candidates[0]?.href ?? "#",
+            current: combinedCurrent,
+        },
+    );
 }
+
+// ─── Kandidat per ekosistem (urutan = prioritas fallback href) ───────────────
+
+function stockCandidates(S, B, A, O, T, W) {
+    return [
+        { href: r("admin.stock.index"), locked: !S, current: "admin.stock.*" },
+        { href: r("admin.product-batches.index"), locked: !B, current: "admin.product-batches.*" },
+        { href: r("admin.stock-adjustments.index"), locked: !A, current: "admin.stock-adjustments.*" },
+        { href: r("admin.stock-opnames.index"), locked: !O, current: "admin.stock-opnames.*" },
+        { href: r("admin.stock-transfers.index"), locked: !T, current: "admin.stock-transfers.*" },
+        { href: r("admin.wastes.index"), locked: !W, current: "admin.wastes.*" },
+    ];
+}
+
+function purchaseCandidates(hasPr, hasPR, hasSup) {
+    return [
+        { href: r("admin.purchases.index"), locked: !hasPr, current: "admin.purchases.*" },
+        { href: r("admin.purchase-returns.index"), locked: !hasPR, current: "admin.purchase-returns.*" },
+        { href: r("admin.suppliers.index"), locked: !hasSup, current: "admin.suppliers.*" },
+    ];
+}
+
+function salesCandidates(hasPos, hasSR) {
+    return [
+        { href: r("admin.sales.index"), locked: !hasPos, current: "admin.sales.*" },
+        { href: r("admin.sale-returns.index"), locked: !hasSR, current: "admin.sale-returns.*" },
+    ];
+}
+
+function loyaltyCandidates(hasCust, hasMemb) {
+    return [
+        { href: r("admin.customers.index"), locked: !hasCust, current: "admin.customers.*" },
+        { href: r("admin.memberships.index"), locked: !hasMemb, current: "admin.memberships.*" },
+        { href: r("admin.customer-tiers.index"), locked: !hasMemb, current: "admin.customer-tiers.*" },
+    ];
+}
+
+function hrCandidates(hasEmp, hasCom) {
+    return [
+        { href: r("admin.employees.index"), locked: !hasEmp, current: ["admin.employees.*", "admin.roles.*", "admin.store-users.*"] },
+        { href: r("admin.employee-commissions.index"), locked: !hasCom, current: "admin.employee-commissions.*" },
+    ];
+}
+
+function financeCandidates(can, hasPM, hasDebt, hasPG) {
+    return [
+        { href: r("admin.payment-methods.index"), locked: !(hasPM && can("setting.edit")), current: "admin.payment-methods.*" },
+        // Hutang/Kasbon punya item sidebar sendiri di grup "Pelanggan & Tim".
+        // Tetap jadi kandidat href (fallback kalau metode bayar terkunci), tapi
+        // `current`-nya dikosongkan supaya di /app/debts tidak ada DUA item yang
+        // menyala sekaligus.
+        { href: r("admin.debts.index"), locked: !(hasDebt && can("debt.view")), current: null },
+        { href: r("admin.payment-gateway.index"), locked: !(hasPG && can("setting.edit")), current: "admin.payment-gateway.*" },
+        { href: r("admin.wallet.index"), locked: !(hasPG && can("setting.view")), current: "admin.wallet.*" },
+    ];
+}
+
+// ─── Builder utama ──────────────────────────────────────────────────────────
 
 export function buildNavGroups(modules) {
     const {
         can,
         hasFeature,
         isFeatureLocked,
-        // Feature flags — semua dari hasFeature() yang sudah cek typeSupports + planAllows
         hasDashboard,
         lockedDashboard,
         hasPos,
@@ -152,17 +200,12 @@ export function buildNavGroups(modules) {
         lockedDebt,
         hasSettings,
         lockedSettings,
-        hasUserManagement,
-        lockedUserManagement,
-        hasRoleManagement,
-        lockedRoleManagement,
         hasActivityLog,
         lockedActivityLog,
         hasSidebarOrder,
         lockedSidebarOrder,
     } = modules;
 
-    /* Normalize ke bentuk sederhana — semua fitur gated murni oleh hasFeature (type + plan) */
     const Table = { val: needsTable, lock: lockedTable };
     const Kitchen = { val: needsKitchen, lock: lockedKitchen };
     const Queue = { val: needsQueue, lock: lockedQueue };
@@ -179,51 +222,86 @@ export function buildNavGroups(modules) {
     const Opname = { val: needsOpname, lock: lockedOpname };
     const Transfer = { val: needsTransfer, lock: lockedTransfer };
     const Waste = { val: needsWaste, lock: lockedWaste };
-    const Recipe = { val: needsRecipe, lock: lockedRecipe };
     const Report = { val: needsReport, lock: lockedReport };
     const PaymentGw = { val: needsPaymentGw, lock: lockedPaymentGw };
 
     const groups = [];
 
-    // ── BERANDA ──────────────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    //  [1] BERANDA — 2 item
+    // ═══════════════════════════════════════════════════════════════════════
     {
         const items = [];
-        add(
-            items,
-            hasDashboard || lockedDashboard, // typeSupports: apakah dashboard tersedia untuk tipe toko ini
-            hasDashboard, // planAllows: true jika plan mengizinkan
-            {
-                key: "dashboard",
-                name: "Dashboard",
-                href: r("admin.dashboard"),
-                icon: "dashboard",
-                current: "admin.dashboard",
-            },
-        );
-        add(
-            items,
-            hasPos || lockedPos, // typeSupports
-            hasPos, // planAllows
-            {
-                key: "kasir",
-                name: "Kasir / POS",
-                href: r("admin.kasir.index"),
-                icon: "pos",
-                current: "admin.kasir.*",
-                badge: "POS",
-                badgeColor: "indigo",
-            },
-        );
+        add(items, hasDashboard || lockedDashboard, hasDashboard, {
+            key: "dashboard",
+            name: "Dashboard",
+            href: r("admin.dashboard"),
+            icon: "dashboard",
+            current: "admin.dashboard",
+        });
+        add(items, hasPos || lockedPos, hasPos, {
+            key: "kasir",
+            name: "Kasir / POS",
+            href: r("admin.kasir.index"),
+            icon: "pos",
+            current: "admin.kasir.*",
+            badge: "POS",
+            badgeColor: "indigo",
+        });
         if (items.length > 0)
             groups.push({
                 key: "home",
                 label: "Beranda",
                 icon: "home",
-                items: sortByLockState(items), // Sort: NORMAL di atas, LOCKED di bawah
+                items: sortByLockState(items),
             });
     }
 
-    // ── OPERASIONAL ───────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    //  [2] PENJUALAN — 4 item
+    // ═══════════════════════════════════════════════════════════════════════
+    {
+        const items = [];
+        smartGroup(
+            { key: "sales", name: "Penjualan", icon: "sales" },
+            items,
+            salesCandidates(hasPos, hasSaleReturn),
+        );
+        add(items, hasShift || lockedShift, hasShift, {
+            key: "shifts",
+            name: "Shift Kasir",
+            href: r("admin.cashier-shifts.index"),
+            icon: "shift",
+            current: "admin.cashier-shifts.*",
+        });
+        add(items, hasPromo || lockedPromo, hasPromo, {
+            key: "promotions",
+            name: "Promo & Diskon",
+            href: r("admin.promotions.index"),
+            icon: "promo",
+            current: "admin.promotions.*",
+        });
+        add(items, hasExpense || lockedExpense, hasExpense, {
+            key: "expense",
+            name: "Pengeluaran",
+            href: r("admin.expenses.index"),
+            icon: "expense",
+            // Kategori Pengeluaran adalah sub-halaman Pengeluaran, bukan item
+            // sidebar sendiri — ikut menyalakan item ini.
+            current: ["admin.expenses.*", "admin.expense-categories.*"],
+        });
+        if (items.length > 0)
+            groups.push({
+                key: "transaction",
+                label: "Penjualan",
+                icon: "arrowsRightLeft",
+                items: sortByLockState(items),
+            });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  [3] OPERASIONAL — 2-4 item (FnB / Service / Ticket / Hospitality)
+    // ═══════════════════════════════════════════════════════════════════════
     {
         const items = [];
         add(items, Table?.val || Table?.lock, Table?.val, {
@@ -263,11 +341,14 @@ export function buildNavGroups(modules) {
                 key: "operations",
                 label: "Operasional",
                 icon: "lightning",
-                items: sortByLockState(items), // Sort: NORMAL di atas, LOCKED di bawah
+                items: sortByLockState(items),
             });
     }
 
-    // ── MASTER DATA ───────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    //  [4] KATALOG & STOK — 5 item
+    //  Produk, Kategori, Modifier, Manajemen Stok, Pembelian (termasuk Supplier)
+    // ═══════════════════════════════════════════════════════════════════════
     {
         const items = [];
         add(items, hasProduct || lockedProduct, hasProduct, {
@@ -293,156 +374,40 @@ export function buildNavGroups(modules) {
             badge: "FnB",
             badgeColor: "orange",
         });
-        add(items, Stock?.val || Stock?.lock, Stock?.val, {
-            key: "stock",
-            name: "Manajemen Stok",
-            href: r("admin.stock.index"),
-            icon: "stock",
-            current: ["admin.stock.*", "admin.product-batches.*", "admin.stock-adjustments.*", "admin.stock-opnames.*", "admin.stock-transfers.*", "admin.wastes.*"],
-        });
-        add(items, hasCustomer || lockedCustomer, hasCustomer, {
-            key: "customers",
-            name: "Pelanggan",
-            href: r("admin.customers.index"),
-            icon: "customer",
-            current: "admin.customers.*",
-        });
-        add(items, Membership?.val || Membership?.lock, Membership?.val, {
-            key: "memberships",
-            name: "Membership",
-            href: r("admin.memberships.index"),
-            icon: "membership",
-            current: "admin.memberships.*",
-        });
-        add(items, Supplier?.val || Supplier?.lock, Supplier?.val, {
-            key: "suppliers",
-            name: "Supplier",
-            href: r("admin.suppliers.index"),
-            icon: "supplier",
-            current: "admin.suppliers.*",
-        });
-        add(items, hasEmployee || lockedEmployee, hasEmployee, {
-            key: "employees",
-            name: "Karyawan & Akses",
-            href: r("admin.employees.index"),
-            icon: "users",
-            current: ["admin.employees.*", "admin.roles.*", "admin.store-users.*"],
-        });
-        add(items, Commission?.val || Commission?.lock, Commission?.val, {
-            key: "employee-commissions",
-            name: "Komisi Karyawan",
-            href: r("admin.employee-commissions.index"),
-            icon: "commission",
-            current: "admin.employee-commissions.*",
-        });
+        smartGroup(
+            { key: "stock", name: "Manajemen Stok", icon: "stock" },
+            items,
+            stockCandidates(Stock?.val, Batch?.val, Adjust?.val, Opname?.val, Transfer?.val, Waste?.val),
+        );
+        // Pembelian — smart item: PO → Retur Beli → Supplier
+        smartGroup(
+            { key: "purchases", name: "Pembelian", icon: "purchase" },
+            items,
+            purchaseCandidates(Purchase?.val, PurchReturn?.val, Supplier?.val),
+        );
         if (items.length > 0)
             groups.push({
-                key: "master",
-                label: "Master Data",
-                icon: "database",
-                items: sortByLockState(items), // Sort: NORMAL di atas, LOCKED di bawah
+                key: "catalog",
+                label: "Katalog & Stok",
+                icon: "product",
+                items: sortByLockState(items),
             });
     }
 
-    // ── TRANSAKSI ─────────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    //  [5] PELANGGAN & TIM — 3 item
+    // ═══════════════════════════════════════════════════════════════════════
     {
         const items = [];
-        add(items, hasPos || lockedPos, hasPos, {
-            key: "sales",
-            name: "Penjualan",
-            href: r("admin.sales.index"),
-            icon: "sales",
-            current: ["admin.sales.*", "admin.sale-returns.*"],
-        });
-        add(items, hasShift || lockedShift, hasShift, {
-            key: "shifts",
-            name: "Shift Kasir",
-            href: r("admin.cashier-shifts.index"),
-            icon: "shift",
-            current: "admin.cashier-shifts.*",
-        });
-        add(items, Purchase?.val || Purchase?.lock, Purchase?.val, {
-            key: "purchases",
-            name: "Pembelian",
-            href: r("admin.purchases.index"),
-            icon: "purchase",
-            current: ["admin.purchases.*", "admin.purchase-returns.*"],
-        });
-
-        add(items, hasPromo || lockedPromo, hasPromo, {
-            key: "promotions",
-            name: "Promo & Diskon",
-            href: r("admin.promotions.index"),
-            icon: "promo",
-            current: "admin.promotions.*",
-        });
-        add(items, hasExpense || lockedExpense, hasExpense, {
-            key: "expense",
-            name: "Pengeluaran",
-            href: r("admin.expenses.index"),
-            icon: "expense",
-            current: "admin.expenses.*",
-        });
-        if (items.length > 0)
-            groups.push({
-                key: "transaction",
-                label: "Transaksi",
-                icon: "arrowsRightLeft",
-                items: sortByLockState(items), // Sort: NORMAL di atas, LOCKED di bawah
-            });
-    }
-
-    // ── KEUANGAN ──────────────────────────────────────────────────────────────
-    {
-        const items = [];
-        add(
+        smartGroup(
+            { key: "loyalty", name: "Pelanggan & Loyalitas", icon: "customer" },
             items,
-            (Report?.val || Report?.lock) && can("report.sales"),
-            Report?.val && can("report.sales"),
-            {
-                key: "reports",
-                name: "Laporan",
-                href: r("admin.reports.index"),
-                icon: "reportSales",
-                current: "admin.reports.*",
-            },
+            loyaltyCandidates(hasCustomer, Membership?.val),
         );
-
-        add(
+        smartGroup(
+            { key: "hr", name: "Karyawan", icon: "users" },
             items,
-            (PaymentGw?.val || PaymentGw?.lock) && can("setting.edit"),
-            PaymentGw?.val && can("setting.edit"),
-            {
-                key: "payment-gateways",
-                name: "Payment Gateway",
-                href: r("admin.payment-gateway.index"),
-                icon: "paymentGw",
-                current: "admin.payment-gateway.*",
-            },
-        );
-        add(
-            items,
-            (PaymentGw?.val || PaymentGw?.lock) && can("setting.view"),
-            PaymentGw?.val && can("setting.view"),
-            {
-                key: "wallet",
-                name: "Wallet",
-                href: r("admin.wallet.index"),
-                icon: "wallet",
-                current: "admin.wallet.*",
-            },
-        );
-        add(
-            items,
-            (hasPaymentMethod || lockedPaymentMethod) && can("setting.edit"),
-            hasPaymentMethod && can("setting.edit"),
-            {
-                key: "payment-methods",
-                name: "Metode Pembayaran",
-                href: r("admin.payment-methods.index"),
-                icon: "payment",
-                current: "admin.payment-methods.*",
-            },
+            hrCandidates(hasEmployee, Commission?.val),
         );
         add(
             items,
@@ -458,14 +423,57 @@ export function buildNavGroups(modules) {
         );
         if (items.length > 0)
             groups.push({
-                key: "finance",
-                label: "Keuangan",
-                icon: "currencyDollar",
-                items: sortByLockState(items), // Sort: NORMAL di atas, LOCKED di bawah
+                key: "people",
+                label: "Pelanggan & Tim",
+                icon: "customer",
+                items: sortByLockState(items),
             });
     }
 
-    // ── SISTEM ─────────────────────────────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+    //  [6] LAPORAN — 2 item
+    //  Log Aktivitas ikut di sini: isinya riwayat/audit, satu jenis kerja
+    //  dengan laporan — bukan pengaturan.
+    // ═══════════════════════════════════════════════════════════════════════
+    {
+        const items = [];
+        add(
+            items,
+            (Report?.val || Report?.lock) && can("report.sales"),
+            Report?.val && can("report.sales"),
+            {
+                key: "reports",
+                name: "Laporan",
+                href: r("admin.reports.index"),
+                icon: "reportSales",
+                current: "admin.reports.*",
+            },
+        );
+        add(
+            items,
+            (hasActivityLog || lockedActivityLog) && can("setting.view"),
+            hasActivityLog && can("setting.view"),
+            {
+                key: "activity-logs",
+                name: "Log Aktivitas",
+                href: r("admin.activity-logs.index"),
+                icon: "log",
+                current: "admin.activity-logs.*",
+            },
+        );
+        if (items.length > 0)
+            groups.push({
+                key: "finance",
+                label: "Laporan",
+                icon: "reportSales",
+                items: sortByLockState(items),
+            });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  [7] PENGATURAN — selalu tampil, dikunci (pinned), tidak bisa diatur
+    //  Tidak ikut sortGroupsByLockState, selalu di posisi paling bawah sidebar.
+    // ═══════════════════════════════════════════════════════════════════════
     {
         const items = [];
         add(
@@ -480,19 +488,18 @@ export function buildNavGroups(modules) {
                 current: "admin.settings.*",
             },
         );
-
-
-        add(
-            items,
-            (hasActivityLog || lockedActivityLog) && can("setting.view"),
-            hasActivityLog && can("setting.view"),
+        // Metode Pembayaran — smart item: metode bayar → hutang → gateway →
+        // wallet. Dulu bernama "Keuangan" dan tinggal di grup Laporan, padahal
+        // isinya konfigurasi cara bayar, jadi tempatnya di Pengaturan.
+        // Key-nya ikut diganti supaya tidak mewarisi urutan/penempatan lama.
+        smartGroup(
             {
-                key: "activity-logs",
-                name: "Log Aktivitas",
-                href: r("admin.activity-logs.index"),
-                icon: "log",
-                current: "admin.activity-logs.*",
+                key: "payment-methods",
+                name: "Metode Pembayaran",
+                icon: "currencyDollar",
             },
+            items,
+            financeCandidates(can, hasPaymentMethod, hasDebt, PaymentGw?.val),
         );
         add(
             items,
@@ -506,22 +513,31 @@ export function buildNavGroups(modules) {
                 current: "admin.sidebar-order",
             },
         );
-        // Tema — personal per-akun, tidak digate oleh permission/plan toko.
         items.push({
             key: "themes",
             name: "Tema",
             href: r("admin.themes.index"),
             icon: "theme",
-            current: "admin.themes",
+            // Route-nya admin.themes.index / .create / .edit — pola tanpa `.*`
+            // tidak cocok dengan satu pun, jadi item ini dulu tidak pernah aktif.
+            current: "admin.themes.*",
         });
         if (items.length > 0)
             groups.push({
                 key: "system",
-                label: "Sistem",
+                label: "Pengaturan",
                 icon: "cog",
-                items: sortByLockState(items), // Sort: NORMAL di atas, LOCKED di bawah
+                // pinned: true → grup ini selalu di posisi paling bawah sidebar,
+                // tidak bisa dipindah atau diatur oleh user. Ditangani di
+                // AuthenticatedLayout.jsx dan applyCustomLayout().
+                pinned: true,
+                items: sortByLockState(items),
             });
     }
 
-    return sortGroupsByLockState(groups);
+    // Grup pinned (system) dikeluarkan dari sorting — selalu di bawah.
+    const pinnedGroups = groups.filter((g) => g.pinned);
+    const sortableGroups = groups.filter((g) => !g.pinned);
+
+    return [...sortGroupsByLockState(sortableGroups), ...pinnedGroups];
 }

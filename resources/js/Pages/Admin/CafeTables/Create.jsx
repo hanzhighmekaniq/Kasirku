@@ -19,11 +19,9 @@ export default function Create({ branches }) {
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.cafe-tables.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.cafe-tables.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Meja
                     </div>

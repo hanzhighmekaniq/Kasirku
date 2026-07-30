@@ -1,13 +1,12 @@
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useRef, useState } from "react";
-import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
 import OfflineIndicator from "@/Components/OfflineIndicator";
 import { useStoreModules } from "@/Hooks/useStoreModules";
 import { buildNavGroups } from "@/Config/navConfig";
 import {
     useSidebarOrder,
-    applyCustomOrderToItems,
+    applyCustomLayout,
 } from "@/Hooks/useSidebarOrder";
 import { NavIcons, GroupIcons } from "@/Components/NavIcons";
 import { useTheme } from "@/Theme/ThemeProvider";
@@ -20,6 +19,18 @@ import {
     LogOut,
     User,
     ArrowLeft,
+    Store as StoreIcon,
+    Coffee,
+    Scissors,
+    KeyRound,
+    Ticket,
+    Hotel,
+    CircleParking,
+    Gamepad2,
+    MapPin,
+    Check,
+    ChevronRight,
+    X,
 } from "lucide-react";
 
 /* ─── Type-mismatch modal ───────────────────────────────────── */
@@ -107,18 +118,27 @@ function TypeMismatchModal({ data, onClose }) {
     );
 }
 
-/* ─── Store type ─────────────────────────────────────────────── */
+/* ─── Store type ───────────────────────────────────────────────
+ * Warna badge tipe toko.
+ *
+ * Pola `-500/10` untuk latar + `text-*-600` / `dark:text-*-400` untuk teks —
+ * sama seperti badge di halaman Promo & Pelanggan. Latar semi-transparan ikut
+ * menumpuk di atas surface tema aktif, jadi satu set kelas ini aman di light
+ * MAUPUN dark tanpa pasangan `dark:bg-*` terpisah. Pola lama (`-50` + `dark:bg-*-900/30`)
+ * mengunci warna latar ke palet Tailwind sehingga bertabrakan dengan preset
+ * tema dan berubah drastis saat mode diganti.
+ */
 const TYPE_COLOR = {
-    retail: "bg-blue-50 text-blue-600 ring-1 ring-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800",
-    fnb: "bg-orange-50 text-orange-600 ring-1 ring-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:ring-orange-800",
-    service: "bg-violet-50 text-violet-600 ring-1 ring-violet-100 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-800",
-    rental: "bg-yellow-50 text-yellow-600 ring-1 ring-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-800",
-    ticket: "bg-rose-50 text-rose-600 ring-1 ring-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:ring-rose-800",
-    hospitality: "bg-amber-50 text-amber-600 ring-1 ring-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800",
+    retail: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+    fnb: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
+    service: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    rental: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    ticket: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    hospitality: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
     // backward compat — fallback ke mode baru
-    laundry: "bg-violet-50 text-violet-600 ring-1 ring-violet-100 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-800",
-    session: "bg-yellow-50 text-yellow-600 ring-1 ring-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400 dark:ring-yellow-800",
-    parking: "bg-slate-100 text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700",
+    laundry: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    session: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    parking: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
 };
 const TYPE_LABEL = {
     retail: "Retail",
@@ -132,39 +152,139 @@ const TYPE_LABEL = {
     session: "Rental",
     parking: "Parkir",
 };
-const TYPE_ICON = {
-    retail: "🏪",
-    fnb: "☕",
-    service: "✂️",
-    rental: "🔑",
-    ticket: "🎟️",
-    hospitality: "🏨",
-    parking: "🅿️",
-    session: "🎮",
+/**
+ * Kode tipe toko dari props `currentStore`.
+ *
+ * `store_type` bisa datang sebagai objek relasi (`{ code, label, ... }`) — itu
+ * bentuk yang dikirim HandleInertiaRequests — atau string kode pada payload
+ * lama. Keduanya ditangani di sini supaya badge/ikon tipe tidak jatuh ke
+ * fallback generik.
+ */
+function storeTypeCode(store) {
+    const raw = store?.store_type ?? store?.type;
+
+    return typeof raw === "string" ? raw : (raw?.code ?? null);
+}
+
+/**
+ * Ikon lucide per tipe toko — dipakai di brand mark sidebar (bukan emoji)
+ * supaya bentuknya konsisten dengan ikon lain di layout dan ikut warna tema.
+ */
+const TYPE_LUCIDE = {
+    retail: StoreIcon,
+    fnb: Coffee,
+    service: Scissors,
+    rental: KeyRound,
+    ticket: Ticket,
+    hospitality: Hotel,
+    // backward compat
+    laundry: Scissors,
+    parking: CircleParking,
+    session: Gamepad2,
 };
 
-/* ─── Badge ─────────────────────────────────────────────────── */
+/* ─── Brand mark ─────────────────────────────────────────────────
+ * Logo toko kalau ada; kalau tidak, jatuh ke ikon sesuai tipe toko.
+ * Menggantikan logo Laravel yang sebelumnya statis di sini.
+ */
+function StoreMark({ store }) {
+    const [broken, setBroken] = useState(false);
+    const logo = store?.logo
+        ? /^https?:\/\//.test(store.logo)
+            ? store.logo
+            : `/storage/${store.logo}`
+        : null;
+
+    if (logo && !broken) {
+        return (
+            <img
+                src={logo}
+                alt={store?.name ?? "Logo toko"}
+                onError={() => setBroken(true)}
+                className="h-6 w-6 rounded-md object-contain"
+            />
+        );
+    }
+
+    const Icon = TYPE_LUCIDE[storeTypeCode(store)] ?? StoreIcon;
+
+    return (
+        <Icon
+            className="w-5 h-5 text-primary-foreground"
+            strokeWidth={2}
+        />
+    );
+}
+
+/* ─── Theme toggle (icon only) ──────────────────────────────────── */
+function ThemeIconButton({ isDark, onToggle, collapsed = false }) {
+    return (
+        <button
+            type="button"
+            onClick={onToggle}
+            title={isDark ? "Mode terang" : "Mode gelap"}
+            aria-label={isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
+            className={`flex shrink-0 items-center justify-center rounded-xl border border-border bg-muted transition hover:border-primary hover:bg-primary/10 ${collapsed ? "h-9 w-9" : "w-[44px] self-stretch"}`}
+        >
+            {isDark ? (
+                <Moon className="w-4 h-4 text-sidebar-foreground" strokeWidth={2} />
+            ) : (
+                <Sun className="w-4 h-4 text-warning" strokeWidth={2} />
+            )}
+        </button>
+    );
+}
+
+/* ─── Badge ───────────────────────────────────────────────────
+ * Badge kecil di item nav (POS, FnB, Service). Ikut pola `-500/10` yang sama
+ * dengan badge tipe toko supaya kontrasnya tetap saat mode diganti.
+ */
 const BADGE_BG = {
     indigo: "bg-primary/10 text-primary",
-    orange: "bg-orange-50 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400",
-    violet: "bg-violet-50 text-violet-500 dark:bg-violet-900/30 dark:text-violet-400",
-    cyan: "bg-cyan-50 text-cyan-500 dark:bg-cyan-900/30 dark:text-cyan-400",
+    orange: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
+    violet: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    cyan: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
 };
-function Badge({ label, color = "indigo" }) {
+function Badge({ label, color = "indigo", active = false }) {
+    // Di item yang aktif, latarnya sudah `bg-primary`. Badge default
+    // (`bg-primary/10 text-primary`) jadi setara warna latar dan hilang, jadi
+    // versi aktifnya dibalik memakai pasangan foreground.
     return (
         <span
-            className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${BADGE_BG[color] ?? BADGE_BG.indigo}`}
+            className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                active
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : (BADGE_BG[color] ?? BADGE_BG.indigo)
+            }`}
         >
             {label}
         </span>
     );
 }
 
+/* ─── Active state ───────────────────────────────────────────────
+ * Satu-satunya sumber kebenaran "item ini sedang aktif?" — dipakai NavItem
+ * maupun NavGroup supaya highlight item dan auto-open grup tidak pernah beda.
+ *
+ * `item.current` boleh string atau array pola Ziggy (mis. "admin.products.*").
+ * Dua hal yang dijaga di sini:
+ *
+ *  1. Pola kosong/undefined dibuang. `route().current(undefined)` di Ziggy
+ *     mengembalikan NAMA route saat ini (string non-kosong = truthy), jadi
+ *     item tanpa pola akan tampak aktif di SEMUA halaman. Di-guard di sini.
+ *  2. Hasilnya dipaksa boolean supaya tidak ada nilai truthy nyasar.
+ */
+function isItemActive(item) {
+    const patterns = (
+        Array.isArray(item?.current) ? item.current : [item?.current]
+    ).filter(Boolean);
+
+    return patterns.some((pattern) => route().current(pattern) === true);
+}
+
 /* ─── Nav item ───────────────────────────────────────────────── */
 function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
-    const active = Array.isArray(item.current)
-        ? item.current.some(c => route().current(c))
-        : route().current(item.current);
+    const active = isItemActive(item);
     const locked = item.locked;
 
     // ── Reorder mode: unlocked items jadi draggable ──
@@ -259,7 +379,11 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
                 <span
                     className={`shrink-0 transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"}`}
                 >
-                    <Badge label={item.badge} color={item.badgeColor} />
+                    <Badge
+                        label={item.badge}
+                        color={item.badgeColor}
+                        active={active}
+                    />
                 </span>
             )}
         </>
@@ -284,9 +408,7 @@ function NavItem({ item, collapsed, onClick, reorderMode, onDragStart }) {
 
 /* ─── Nav group ──────────────────────────────────────────────── */
 function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
-    const hasActive = group.items.some((i) =>
-        Array.isArray(i.current) ? i.current.some(c => route().current(c)) : route().current(i.current)
-    );
+    const hasActive = group.items.some(isItemActive);
     const [open, setOpen] = useState(() => {
         if (hasActive) return true;
         try {
@@ -460,6 +582,365 @@ function NavGroup({ group, collapsed, onNavigate, reorderMode, onReorder }) {
     );
 }
 
+/* ─── Workspace picker ──────────────────────────────────────────
+ * Ambang jumlah cabang: sampai sejumlah ini daftar cabang masih enak dibaca
+ * sebagai dropdown. Lebih dari itu (atau kalau user punya lebih dari satu
+ * toko) pemilihan dipindah ke modal yang punya kolom pencarian.
+ */
+const BRANCH_DROPDOWN_LIMIT = 6;
+
+/** Satu baris pilihan — dipakai baik di dropdown maupun di modal. */
+function PickerOption({
+    label,
+    sub,
+    initial,
+    active = false,
+    trailing = "check",
+    onClick,
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition ${
+                active
+                    ? "bg-primary/10 text-primary"
+                    : "text-popover-foreground/80 hover:bg-accent hover:text-accent-foreground"
+            }`}
+        >
+            <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold uppercase ${
+                    active
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                }`}
+            >
+                {initial}
+            </span>
+            <span className="min-w-0 flex-1">
+                <span
+                    className={`block truncate text-[13px] ${active ? "font-semibold" : "font-medium"}`}
+                >
+                    {label}
+                </span>
+                {sub && (
+                    <span className="block truncate text-[11px] text-muted-foreground">
+                        {sub}
+                    </span>
+                )}
+            </span>
+            {trailing === "chevron" ? (
+                <ChevronRight
+                    className="w-4 h-4 shrink-0 text-muted-foreground"
+                    strokeWidth={2}
+                />
+            ) : (
+                active && (
+                    <Check
+                        className="w-4 h-4 shrink-0 text-primary"
+                        strokeWidth={2.5}
+                    />
+                )
+            )}
+        </button>
+    );
+}
+
+/** Skeleton daftar saat opsi toko/cabang masih diambil dari server. */
+function PickerSkeleton() {
+    return (
+        <div className="space-y-1.5 p-1.5">
+            {[0, 1, 2, 3].map((i) => (
+                <div
+                    key={i}
+                    className="flex items-center gap-2.5 rounded-xl px-2.5 py-2"
+                >
+                    <div className="w-7 h-7 rounded-lg bg-muted animate-pulse" />
+                    <div className="flex-1 space-y-1.5">
+                        <div className="w-1/2 h-2.5 rounded bg-muted animate-pulse" />
+                        <div className="w-1/3 h-2 rounded bg-muted animate-pulse" />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/* ─── Workspace picker modal ─────────────────────────────────────
+ * Dipakai kalau opsinya banyak. Alurnya dua langkah bila user punya lebih
+ * dari satu toko: pilih toko dulu → baru cabangnya. Toko dan cabang dikirim
+ * dalam satu request (`admin.store.switch` menerima `branch_id` opsional),
+ * jadi tidak ada halaman perantara.
+ *
+ * Daftar toko + cabangnya datang dari prop optional `storeBranchOptions`,
+ * ditarik lewat partial reload saat modal dibuka supaya payload halaman
+ * biasa tetap ringan.
+ */
+function WorkspacePickerModal({
+    open,
+    onClose,
+    currentStore,
+    currentBranch,
+    branches = [],
+    userStores = [],
+    canPickStore,
+}) {
+    const { storeBranchOptions } = usePage().props;
+    const [step, setStep] = useState("store");
+    const [pickedStore, setPickedStore] = useState(null);
+    const [query, setQuery] = useState("");
+    const [loading, setLoading] = useState(false);
+    const searchRef = useRef(null);
+
+    // Reset state tiap kali dibuka & ambil opsi kalau belum ada di props.
+    useEffect(() => {
+        if (!open) return;
+        setQuery("");
+        setStep(canPickStore ? "store" : "branch");
+        setPickedStore(canPickStore ? null : currentStore);
+
+        // Hanya perlu tarik daftar toko+cabang saat user bisa ganti toko;
+        // untuk satu toko, prop `branches` yang selalu ada sudah cukup.
+        if (canPickStore && !storeBranchOptions) {
+            setLoading(true);
+            router.reload({
+                only: ["storeBranchOptions"],
+                onFinish: () => setLoading(false),
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
+    useEffect(() => {
+        if (!open) return;
+        const handler = (e) => {
+            if (e.key === "Escape") onClose();
+        };
+        document.addEventListener("keydown", handler);
+        return () => document.removeEventListener("keydown", handler);
+    }, [open, onClose]);
+
+    useEffect(() => {
+        if (open) searchRef.current?.focus();
+    }, [open, step]);
+
+    if (!open) return null;
+
+    const stores = storeBranchOptions ?? userStores;
+    const q = query.trim().toLowerCase();
+    const matches = (o) =>
+        !q ||
+        (o.name ?? "").toLowerCase().includes(q) ||
+        (o.code ?? "").toLowerCase().includes(q);
+
+    /** Cabang milik satu toko — dari opsi server, fallback ke prop `branches`. */
+    const branchesOf = (store) => {
+        if (!store) return [];
+        const fromOptions = stores.find((s) => s.id === store.id)?.branches;
+        if (fromOptions) return fromOptions;
+
+        return store.id === currentStore?.id ? branches : [];
+    };
+
+    const switchStore = (storeId, branchId = null) => {
+        onClose();
+        router.post(
+            route("admin.store.switch"),
+            { store_id: storeId, branch_id: branchId },
+            { preserveState: false },
+        );
+    };
+
+    const switchBranch = (branchId) => {
+        onClose();
+        if (branchId === currentBranch?.id) return;
+        router.post(
+            route("admin.branch.switch"),
+            { branch_id: branchId },
+            { preserveState: false },
+        );
+    };
+
+    const pickStore = (store) => {
+        const list = branchesOf(store);
+
+        // Masih ada pilihan cabang → lanjut ke langkah kedua.
+        if (list.length > 1) {
+            setPickedStore(store);
+            setStep("branch");
+            setQuery("");
+
+            return;
+        }
+
+        if (store.id === currentStore?.id) {
+            onClose();
+
+            return;
+        }
+
+        switchStore(store.id, list[0]?.id ?? null);
+    };
+
+    const pickBranch = (branch) => {
+        if (!pickedStore || pickedStore.id === currentStore?.id) {
+            switchBranch(branch.id);
+
+            return;
+        }
+
+        switchStore(pickedStore.id, branch.id);
+    };
+
+    const onStoreStep = step === "store";
+    const options = onStoreStep ? stores : branchesOf(pickedStore);
+    const filtered = options.filter(matches);
+    const showSkeleton = loading && options.length === 0;
+
+    return (
+        <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 pt-[10vh]">
+            <div
+                className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+                onClick={onClose}
+            />
+
+            <div className="relative flex w-full max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl">
+                {/* Header */}
+                <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
+                    {!onStoreStep && canPickStore && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setStep("store");
+                                setQuery("");
+                            }}
+                            title="Kembali ke daftar toko"
+                            className="flex items-center justify-center transition rounded-lg h-7 w-7 shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        >
+                            <ArrowLeft className="w-4 h-4" strokeWidth={2} />
+                        </button>
+                    )}
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground">
+                            {onStoreStep ? "Pilih Toko" : "Pilih Cabang"}
+                        </p>
+                        <p className="truncate text-[11px] text-muted-foreground">
+                            {onStoreStep
+                                ? `${stores.length} toko tersedia`
+                                : (pickedStore?.name ??
+                                  currentStore?.name ??
+                                  "")}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        title="Tutup"
+                        className="flex items-center justify-center transition rounded-lg h-7 w-7 shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                        <X className="w-4 h-4" strokeWidth={2} />
+                    </button>
+                </div>
+
+                {/* Search */}
+                <div className="px-4 py-3 border-b border-border">
+                    <div className="relative">
+                        <Search
+                            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                            strokeWidth={1.8}
+                        />
+                        <input
+                            ref={searchRef}
+                            type="text"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder={
+                                onStoreStep
+                                    ? "Cari nama atau kode toko..."
+                                    : "Cari nama atau kode cabang..."
+                            }
+                            className="block w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                        />
+                    </div>
+                </div>
+
+                {/* List */}
+                {showSkeleton ? (
+                    <PickerSkeleton />
+                ) : filtered.length === 0 ? (
+                    <div className="px-4 py-10 text-center">
+                        <p className="text-sm font-medium text-foreground">
+                            {onStoreStep
+                                ? "Toko tidak ditemukan"
+                                : "Cabang tidak ditemukan"}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Coba kata kunci lain.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="max-h-[45vh] space-y-0.5 overflow-y-auto p-1.5">
+                        {onStoreStep
+                            ? filtered.map((s) => {
+                                  const list = branchesOf(s);
+                                  const typeLabel =
+                                      TYPE_LABEL[storeTypeCode(s)] ?? null;
+                                  const sub = [
+                                      typeLabel,
+                                      list.length > 0
+                                          ? `${list.length} cabang`
+                                          : null,
+                                      s.code,
+                                  ]
+                                      .filter(Boolean)
+                                      .join(" · ");
+
+                                  return (
+                                      <PickerOption
+                                          key={s.id}
+                                          label={s.name}
+                                          sub={sub}
+                                          initial={s.name?.charAt(0)}
+                                          active={s.id === currentStore?.id}
+                                          trailing={
+                                              list.length > 1
+                                                  ? "chevron"
+                                                  : "check"
+                                          }
+                                          onClick={() => pickStore(s)}
+                                      />
+                                  );
+                              })
+                            : filtered.map((b) => (
+                                  <PickerOption
+                                      key={b.id}
+                                      label={b.name}
+                                      sub={b.code}
+                                      initial={(b.code ?? b.name)?.charAt(0)}
+                                      active={
+                                          pickedStore?.id ===
+                                              currentStore?.id &&
+                                          b.id === currentBranch?.id
+                                      }
+                                      onClick={() => pickBranch(b)}
+                                  />
+                              ))}
+                    </div>
+                )}
+
+                {/* Footer hint */}
+                <div className="flex items-center gap-2 border-t border-border bg-muted px-4 py-2.5">
+                    <p className="text-[11px] text-muted-foreground">
+                        {onStoreStep && canPickStore
+                            ? "Pilih toko dulu, cabangnya menyusul."
+                            : "Tekan Esc untuk menutup."}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /* ─── Workspace Switcher (sidebar: toko + cabang jadi satu panel) ── */
 function WorkspaceSwitcher({
     collapsed,
@@ -470,6 +951,7 @@ function WorkspaceSwitcher({
     canSwitch,
 }) {
     const [open, setOpen] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
     const [pos, setPos] = useState({ top: 0, left: 0, width: 260 });
     const btnRef = useRef(null);
     const panelRef = useRef(null);
@@ -491,30 +973,35 @@ function WorkspaceSwitcher({
     const hasBranchChoice = canSwitch && branches.length > 1;
     const clickable = hasStoreChoice || hasBranchChoice;
 
+    // Modal dipakai kalau ada pilihan toko (butuh alur 2 langkah) atau kalau
+    // daftar cabangnya sudah terlalu panjang untuk dropdown.
+    const useModal =
+        hasStoreChoice || branches.length > BRANCH_DROPDOWN_LIMIT;
+
     const toggle = () => {
         if (!clickable) return;
+
+        if (useModal) {
+            setOpen(false);
+            setModalOpen(true);
+
+            return;
+        }
+
         if (!open && btnRef.current) {
             const rect = btnRef.current.getBoundingClientRect();
             setPos({
                 top: rect.bottom + 6,
                 left: rect.left,
-                width: collapsed ? 220 : rect.width,
+                width: collapsed ? 220 : Math.max(rect.width, 220),
             });
         }
         setOpen((o) => !o);
     };
 
-    const switchStore = (storeId) => {
-        setOpen(false);
-        router.post(
-            route("admin.store.switch"),
-            { store_id: storeId },
-            { preserveState: false },
-        );
-    };
-
     const switchBranch = (branchId) => {
         setOpen(false);
+        if (branchId === currentBranch?.id) return;
         router.post(
             route("admin.branch.switch"),
             { branch_id: branchId },
@@ -522,16 +1009,17 @@ function WorkspaceSwitcher({
         );
     };
 
-    const typeIcon = TYPE_ICON[currentStore.type] || "🏬";
-    const typeLabel = TYPE_LABEL[currentStore.type] || currentStore.type;
+    const typeCode = storeTypeCode(currentStore);
+    const TypeIcon = TYPE_LUCIDE[typeCode] ?? StoreIcon;
+    const typeLabel = TYPE_LABEL[typeCode] || typeCode || "Toko";
     const typeColor =
-        TYPE_COLOR[currentStore.type] ||
+        TYPE_COLOR[typeCode] ||
         "bg-muted text-muted-foreground ring-1 ring-muted";
 
     const Trigger = clickable ? "button" : "div";
 
     return (
-        <div className={collapsed ? "flex justify-center" : "px-4"}>
+        <div className={collapsed ? "flex justify-center" : "min-w-0 flex-1"}>
             <Trigger
                 ref={btnRef}
                 type={clickable ? "button" : undefined}
@@ -546,8 +1034,11 @@ function WorkspaceSwitcher({
                     : "w-full gap-2.5 border-border bg-muted px-3 py-2.5 text-left"
                     } ${clickable ? "hover:border-primary hover:bg-primary/10 cursor-pointer" : "cursor-default"}`}
             >
-                <span className="flex items-center justify-center text-sm rounded-lg h-7 w-7 shrink-0 bg-muted">
-                    {typeIcon}
+                {/* Pasangan bg-primary + text-primary-foreground dipakai supaya
+                    kontras ikonnya dijamin di light maupun dark, apa pun preset
+                    tema yang aktif. */}
+                <span className="flex items-center justify-center rounded-lg h-7 w-7 shrink-0 bg-primary text-primary-foreground">
+                    <TypeIcon className="h-4 w-4" strokeWidth={2} />
                 </span>
                 {!collapsed && (
                     <>
@@ -557,8 +1048,14 @@ function WorkspaceSwitcher({
                             </p>
                             <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                                 {currentBranch && (
-                                    <span className="truncate">
-                                        📍 {currentBranch.name}
+                                    <span className="flex min-w-0 items-center gap-1">
+                                        <MapPin
+                                            className="h-3 w-3 shrink-0"
+                                            strokeWidth={2}
+                                        />
+                                        <span className="truncate">
+                                            {currentBranch.name}
+                                        </span>
                                     </span>
                                 )}
                                 <span
@@ -585,7 +1082,8 @@ function WorkspaceSwitcher({
                 )}
             </Trigger>
 
-            {open && clickable && (
+            {/* Dropdown ringkas — hanya untuk kasus sedikit cabang & satu toko */}
+            {open && clickable && !useModal && (
                 <div
                     ref={panelRef}
                     style={{
@@ -596,102 +1094,37 @@ function WorkspaceSwitcher({
                     }}
                     className="z-50 overflow-hidden bg-popover text-popover-foreground border shadow-xl rounded-xl border-border"
                 >
-                    {hasStoreChoice && (
-                        <>
-                            <div className="px-3 py-2 border-b border-border">
-                                <p className="text-[10px] font-semibold uppercase tracking-wider text-popover-foreground/60">
-                                    Toko
-                                </p>
-                            </div>
-                            {userStores.map((s) => (
-                                <button
-                                    key={s.id}
-                                    onClick={() => switchStore(s.id)}
-                                    className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-accent ${s.id === currentStore.id
-                                        ? "bg-primary/10 text-primary font-semibold"
-                                        : "text-popover-foreground/70"
-                                        }`}
-                                >
-                                    <span
-                                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${s.id === currentStore.id
-                                            ? "bg-primary text-primary-foreground"
-                                            : "bg-muted text-muted-foreground"
-                                            }`}
-                                    >
-                                        {s.name.charAt(0).toUpperCase()}
-                                    </span>
-                                    <span className="flex-1 truncate">
-                                        {s.name}
-                                    </span>
-                                    {s.id === currentStore.id && (
-                                        <svg
-                                            className="ml-auto h-3.5 w-3.5 shrink-0 text-primary"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth={2.5}
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M4.5 12.75l6 6 9-13.5"
-                                            />
-                                        </svg>
-                                    )}
-                                </button>
-                            ))}
-                        </>
-                    )}
-
-                    {hasBranchChoice && (
-                        <>
-                            <div
-                                className={`border-b border-border px-3 py-2 ${hasStoreChoice ? "border-t" : ""}`}
-                            >
-                                <p className="text-[10px] font-semibold uppercase tracking-wider text-popover-foreground/60">
-                                    Cabang
-                                </p>
-                            </div>
-                            {branches.map((b) => (
-                                <button
-                                    key={b.id}
-                                    onClick={() => switchBranch(b.id)}
-                                    className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs transition hover:bg-accent ${b.id === currentBranch?.id
-                                        ? "bg-primary/10 text-primary font-semibold"
-                                        : "text-popover-foreground/70"
-                                        }`}
-                                >
-                                    <span
-                                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${b.id === currentBranch?.id
-                                            ? "bg-primary text-primary-foreground"
-                                            : "bg-muted text-muted-foreground"
-                                            }`}
-                                    >
-                                        {b.code?.charAt(0) ?? b.name.charAt(0)}
-                                    </span>
-                                    <span className="flex-1 truncate">
-                                        {b.name}
-                                    </span>
-                                    {b.id === currentBranch?.id && (
-                                        <svg
-                                            className="ml-auto h-3.5 w-3.5 shrink-0 text-primary"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth={2.5}
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M4.5 12.75l6 6 9-13.5"
-                                            />
-                                        </svg>
-                                    )}
-                                </button>
-                            ))}
-                        </>
-                    )}
+                    <div className="px-3 py-2 border-b border-border">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-popover-foreground/60">
+                            Cabang
+                        </p>
+                    </div>
+                    <div className="space-y-0.5 p-1.5">
+                        {branches.map((b) => (
+                            <PickerOption
+                                key={b.id}
+                                label={b.name}
+                                sub={b.code}
+                                initial={(b.code ?? b.name)?.charAt(0)}
+                                active={b.id === currentBranch?.id}
+                                onClick={() => switchBranch(b.id)}
+                            />
+                        ))}
+                    </div>
                 </div>
+            )}
+
+            {/* Modal pemilih — banyak cabang dan/atau multi toko */}
+            {clickable && useModal && (
+                <WorkspacePickerModal
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    currentStore={currentStore}
+                    currentBranch={currentBranch}
+                    branches={branches}
+                    userStores={userStores}
+                    canPickStore={hasStoreChoice}
+                />
             )}
         </div>
     );
@@ -701,7 +1134,6 @@ function WorkspaceSwitcher({
 function SidebarContent({
     collapsed,
     onNavigate,
-    user,
     currentStore,
     userStores,
     currentBranch,
@@ -710,20 +1142,16 @@ function SidebarContent({
 }) {
     const modules = useStoreModules();
     const groups = buildNavGroups(modules);
-    const { customOrder, saveGroupOrder } = useSidebarOrder();
+    const { prefs, saveGroupOrder } = useSidebarOrder();
     const [reorderMode, setReorderMode] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const { isDark, preference, setMode } = useTheme();
     const navRef = useRef(null);
 
-    // Apply custom ordering — unlocked items ikut urutan user, locked tetap di bawah
-    const orderedGroups = groups.map((group) => ({
-        ...group,
-        items: applyCustomOrderToItems(
-            group.items,
-            customOrder[group.key] || [],
-        ),
-    }));
+    // Terapkan preferensi user: urutan grup, urutan item dalam grup, dan
+    // pemindahan item antar grup. Grup/item yang belum pernah diatur user
+    // tetap memakai urutan default dari buildNavGroups().
+    const orderedGroups = applyCustomLayout(groups, prefs);
 
     const handleReorder = (groupKey, newOrder) => {
         saveGroupOrder(groupKey, newOrder);
@@ -775,40 +1203,53 @@ function SidebarContent({
             >
                 <div className="flex items-center gap-3">
                     <div className="relative flex items-center justify-center w-10 h-10 shadow-lg shrink-0 rounded-xl bg-primary shadow-primary/30">
-                        <ApplicationLogo className="w-5 h-5 text-white fill-current" />
+                        <StoreMark store={currentStore} />
                         <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-sidebar bg-success ring-2 ring-success/20" />
                     </div>
                     <div
-                        className={`leading-tight transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0 overflow-hidden ml-0" : "opacity-100 w-auto"}`}
+                        className={`min-w-0 leading-tight transition-all duration-300 ease-in-out ${collapsed ? "opacity-0 w-0 overflow-hidden ml-0" : "opacity-100 w-auto"}`}
                     >
                         <span className="block text-[15px] font-bold tracking-tight text-sidebar-foreground whitespace-nowrap">
                             KasirKu
                         </span>
-                        <span className="block text-[11px] font-medium text-sidebar-foreground/60 whitespace-nowrap">
-                            Point of Sale System
+                        <span className="block max-w-[150px] truncate text-[11px] font-medium text-sidebar-foreground/60">
+                            {currentStore?.name ?? "Point of Sale System"}
                         </span>
                     </div>
                 </div>
             </div>
 
-            {/* Workspace switcher — toko & cabang */}
+            {/* Workspace switcher (kiri) + toggle tema (kanan) — satu baris.
+                Saat collapsed keduanya ditumpuk vertikal & di-center. */}
             <div
-                className={`shrink-0 ${collapsed ? "pt-3 pb-1" : "pt-4 pb-1"}`}
+                className={`shrink-0 ${collapsed ? "px-2 pt-3" : "px-4 pt-4"}`}
             >
-                <WorkspaceSwitcher
-                    collapsed={collapsed}
-                    currentStore={currentStore}
-                    userStores={userStores}
-                    currentBranch={currentBranch}
-                    branches={branches}
-                    canSwitch={canSwitchContext}
-                />
+                <div
+                    className={
+                        collapsed
+                            ? "flex flex-col items-center gap-2"
+                            : `flex items-stretch gap-2 ${currentStore ? "" : "justify-end"}`
+                    }
+                >
+                    <WorkspaceSwitcher
+                        collapsed={collapsed}
+                        currentStore={currentStore}
+                        userStores={userStores}
+                        currentBranch={currentBranch}
+                        branches={branches}
+                        canSwitch={canSwitchContext}
+                    />
+                    <ThemeIconButton
+                        isDark={isDark}
+                        onToggle={toggleTheme}
+                        collapsed={collapsed}
+                    />
+                </div>
             </div>
 
-            {/* Search & Theme Toggle */}
+            {/* Search */}
             {!collapsed && (
-                <div className="px-4 pt-3 pb-3 space-y-3 shrink-0">
-                    {/* Search Bar */}
+                <div className="px-4 pt-3 pb-1 shrink-0">
                     <div className="relative">
                         <Search className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-sidebar-foreground/50" />
                         <input
@@ -818,78 +1259,6 @@ function SidebarContent({
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full rounded-xl border border-border bg-muted pl-10 pr-3 py-2.5 text-sm text-sidebar-foreground placeholder-sidebar-foreground/50 transition focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                         />
-                    </div>
-
-                    {/* Theme Toggle */}
-                    <div className="flex items-center justify-between rounded-xl bg-muted border border-border px-3.5 py-2.5">
-                        <div className="flex items-center gap-2.5">
-                            <div className="flex items-center justify-center rounded-lg h-7 w-7 bg-sidebar">
-                                {isDark ? (
-                                    <Moon className="w-4 h-4 text-sidebar-foreground" />
-                                ) : (
-                                    <Sun className="w-4 h-4 text-warning" />
-                                )}
-                            </div>
-                            <span className="text-sm font-medium text-sidebar-foreground/70">
-                                Tema
-                            </span>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={toggleTheme}
-                            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-                            className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${isDark ? "bg-primary" : "bg-border"
-                                }`}
-                        >
-                            <span
-                                className={`absolute top-0.5 left-0.5 flex h-5 w-5 items-center justify-center rounded-full shadow-sm transition-all duration-300 ${isDark
-                                    ? "translate-x-5 bg-primary-foreground text-primary"
-                                    : "translate-x-0 bg-white text-black"
-                                    }`}
-                            >
-                                {isDark ? (
-                                    // Dark Mode - Moon putih, bulatan hitam
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="size-3"
-                                    >
-                                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                                    </svg>
-                                ) : (
-                                    // Light Mode - Sun hitam, bulatan putih
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="size-3"
-                                    >
-                                        <circle cx="12" cy="12" r="4" />
-                                        <path d="M12 2v2" />
-                                        <path d="M12 20v2" />
-                                        <path d="m4.93 4.93 1.41 1.41" />
-                                        <path d="m17.66 17.66 1.41 1.41" />
-                                        <path d="M2 12h2" />
-                                        <path d="M20 12h2" />
-                                        <path d="m6.34 17.66-1.41 1.41" />
-                                        <path d="m19.07 4.93-1.41 1.41" />
-                                    </svg>
-                                )}
-                            </span>
-                        </button>
                     </div>
                 </div>
             )}
@@ -941,49 +1310,8 @@ function SidebarContent({
                 </div>
             </nav>
 
-            {/* User Profile Card */}
-            <div
-                className={`shrink-0 border-t border-border bg-sidebar transition-all duration-300 ease-in-out ${collapsed ? "p-2" : "p-3"}`}
-            >
-                {collapsed ? (
-                    <div className="flex justify-center">
-                        <button
-                            onClick={() =>
-                                router.visit(route("admin.profile.edit"))
-                            }
-                            className="flex items-center justify-center text-xs font-bold text-primary-foreground transition-all rounded-lg shadow-sm h-9 w-9 bg-primary hover:shadow-md"
-                        >
-                            {user?.name?.charAt(0).toUpperCase()}
-                        </button>
-                    </div>
-                ) : (
-                    <div className="p-3 shadow-lg rounded-xl bg-muted">
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <div className="flex items-center justify-center w-10 h-10 text-sm font-bold text-primary-foreground rounded-lg shadow-md bg-primary">
-                                    {user?.name?.charAt(0).toUpperCase()}
-                                </div>
-                                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-muted bg-success" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-sidebar-foreground truncate">
-                                    {user?.name}
-                                </p>
-                                <p className="truncate text-[10px] text-sidebar-foreground/60">
-                                    {user?.email}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => router.post(route("logout"))}
-                                className="flex items-center justify-center transition-all rounded-lg h-7 w-7 bg-sidebar-foreground/10 text-sidebar-foreground/60 hover:bg-destructive/20 hover:text-destructive"
-                                title="Keluar"
-                            >
-                                <LogOut className="h-3.5 w-3.5" />
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
+            {/* Profil user & logout sengaja TIDAK ada di sidebar — semuanya
+                dikelola dari dropdown user di topbar. */}
         </div>
     );
 }
@@ -1048,7 +1376,6 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                 <SidebarContent
                     collapsed={collapsed}
                     onNavigate={onNavigate}
-                    user={user}
                     currentStore={currentStore}
                     userStores={userStores}
                     currentBranch={currentBranch}
@@ -1071,7 +1398,6 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                     <SidebarContent
                         collapsed={false}
                         onNavigate={onNavigate}
-                        user={user}
                         currentStore={currentStore}
                         userStores={userStores}
                         currentBranch={currentBranch}
@@ -1154,13 +1480,13 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                     </div>
 
                     {/* Right side */}
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-2">
                         {headerRight && (
                             <div className="flex items-center">
                                 {headerRight}
                             </div>
                         )}
-                        
+
                         {/* Toko & cabang kini dikelola dari sidebar (WorkspaceSwitcher) */}
                         <OfflineIndicator />
 
@@ -1188,13 +1514,17 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content>
-                                {/* Mobile-only user info (toko/cabang sudah ada di sidebar) */}
-                                <div className="lg:hidden px-3 py-2.5">
+                                {/* Identitas user — satu-satunya tempat nama &
+                                    email ditampilkan (sidebar sudah bersih) */}
+                                <div className="px-3 py-2.5">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="flex items-center justify-center text-sm font-bold text-primary-foreground rounded-lg shadow-sm h-9 w-9 shrink-0 bg-primary">
-                                            {user?.name
-                                                ?.charAt(0)
-                                                .toUpperCase()}
+                                        <div className="relative shrink-0">
+                                            <div className="flex items-center justify-center text-sm font-bold text-primary-foreground rounded-lg shadow-sm h-9 w-9 bg-primary">
+                                                {user?.name
+                                                    ?.charAt(0)
+                                                    .toUpperCase()}
+                                            </div>
+                                            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-popover bg-success" />
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs font-semibold truncate text-foreground">
@@ -1206,7 +1536,7 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                                         </div>
                                     </div>
                                 </div>
-                                <div className="lg:hidden my-1.5 border-t border-border" />
+                                <div className="my-1.5 border-t border-border" />
                                 <Dropdown.Link
                                     href={route("admin.profile.edit")}
                                 >

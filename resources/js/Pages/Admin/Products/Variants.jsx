@@ -61,12 +61,12 @@ function VariantForm({ product, variant, onClose, onSaved }) {
     const margin = (Number(data.price) || 0) - (Number(data.cost_price) || 0);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 pt-16">
+        <div className="fixed inset-0 z-50 flex min-h-full items-center justify-center overflow-y-auto p-4">
             <div
                 onClick={onClose}
                 className="fixed inset-0 bg-background/80 backdrop-blur-sm"
             />
-            <div className="relative w-full max-w-2xl rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl sm:p-7 mb-10">
+            <div className="relative my-auto w-full max-w-2xl rounded-2xl border border-border bg-popover p-6 text-popover-foreground shadow-2xl sm:p-7">
                 <h3 className="text-base font-semibold text-foreground">
                     {isEdit ? "Edit Varian" : "Tambah Varian"}
                 </h3>

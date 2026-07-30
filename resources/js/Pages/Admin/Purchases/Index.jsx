@@ -3,7 +3,7 @@ import PageHeader from "@/Components/PageHeader";
 import PageTabs from "@/Components/PageTabs";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useMemo, useState } from "react";
-import { ChevronDown, Plus, ShoppingBag, Undo2 } from "lucide-react";
+import { ChevronDown, Eye, Plus, ShoppingBag, Trash2, Undo2 } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
@@ -78,18 +78,6 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                     </>
                 }
                 description="Catat pembelian stok dari supplier, pantau status pembayaran, dan penerimaan barang."
-                action={
-                    <Button
-                        as={Link}
-                        href={route("admin.purchases.create")}
-                        icon={Plus}
-                    >
-                        <span className="hidden sm:inline">
-                            Tambah {addLabel}
-                        </span>
-                        <span className="sm:hidden">Tambah</span>
-                    </Button>
-                }
             />
 
             <PageTabs
@@ -155,20 +143,42 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                         </div>
                         <Dropdown>
                             <Dropdown.Trigger>
-                                <button className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted">
+                                <button className="inline-flex w-full items-center justify-between gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-sm shadow-sm transition hover:bg-muted sm:w-auto sm:justify-start">
                                     <span className={filterStatus !== "all" ? "text-foreground" : "text-muted-foreground"}>
                                         {filterStatus === "draft" ? "Draft" : filterStatus === "completed" ? "Selesai" : filterStatus === "cancelled" ? "Dibatalkan" : "Semua Status"}
                                     </span>
-                                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
+                                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={2} />
                                 </button>
                             </Dropdown.Trigger>
                             <Dropdown.Content width="48">
-                                <button onClick={() => setFilterStatus("all")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "all" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Semua Status</button>
-                                <button onClick={() => setFilterStatus("draft")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "draft" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Draft</button>
-                                <button onClick={() => setFilterStatus("completed")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "completed" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Selesai</button>
-                                <button onClick={() => setFilterStatus("cancelled")} className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === "cancelled" ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}>Dibatalkan</button>
+                                {[
+                                    { v: "all", l: "Semua Status" },
+                                    { v: "draft", l: "Draft" },
+                                    { v: "completed", l: "Selesai" },
+                                    { v: "cancelled", l: "Dibatalkan" },
+                                ].map((opt) => (
+                                    <button
+                                        key={opt.v}
+                                        onClick={() => setFilterStatus(opt.v)}
+                                        className={`block w-full px-4 py-2.5 text-left text-sm transition ${filterStatus === opt.v ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted"}`}
+                                    >
+                                        {opt.l}
+                                    </button>
+                                ))}
                             </Dropdown.Content>
                         </Dropdown>
+
+                        {/* Tombol tambah dipindah ke toolbar tabel supaya aksi
+                            utama berada dekat data yang dikelola. */}
+                        <Button
+                            as={Link}
+                            href={route("admin.purchases.create")}
+                            icon={Plus}
+                            className="w-full sm:w-auto"
+                        >
+                            <span className="hidden sm:inline">Tambah {addLabel}</span>
+                            <span className="sm:hidden">Tambah {addLabel}</span>
+                        </Button>
                     </div>
                     <div className="pt-4 flex items-center justify-between">
                         <p className="text-xs text-muted-foreground">
@@ -289,18 +299,22 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                                                         "admin.purchases.show",
                                                         p.id,
                                                     )}
-                                                    className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+                                                    title="Lihat detail pembelian"
+                                                    aria-label="Lihat detail pembelian"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-primary transition hover:bg-primary/10"
                                                 >
-                                                    Detail
+                                                    <Eye className="h-4 w-4" strokeWidth={1.8} />
                                                 </Link>
                                                 {p.status === "draft" && (
                                                     <button
                                                         onClick={() =>
                                                             setDeleteTarget(p)
                                                         }
-                                                        className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
+                                                        title="Hapus pembelian"
+                                                        aria-label="Hapus pembelian"
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-destructive transition hover:bg-destructive/10"
                                                     >
-                                                        Hapus
+                                                        <Trash2 className="h-4 w-4" strokeWidth={1.8} />
                                                     </button>
                                                 )}
                                             </div>
@@ -370,18 +384,22 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                                     <PaymentBadge status={p.payment_status} />
                                 </div>
                             </div>
+                            {/* Di mobile label tetap ditulis penuh — ikon saja
+                                terlalu ambigu tanpa tooltip di layar sentuh. */}
                             <div className="flex gap-2">
                                 <Link
                                     href={route("admin.purchases.show", p.id)}
-                                    className="flex-1 rounded-xl border border-border py-2 text-center text-xs font-medium text-muted-foreground hover:bg-muted"
+                                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border py-2.5 text-xs font-semibold text-muted-foreground transition hover:bg-muted"
                                 >
-                                    Detail
+                                    <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
+                                    Lihat Detail
                                 </Link>
                                 {p.status === "draft" && (
                                     <button
                                         onClick={() => setDeleteTarget(p)}
-                                        className="rounded-xl border border-destructive/20 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/10"
+                                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-destructive/20 px-3 py-2.5 text-xs font-semibold text-destructive transition hover:bg-destructive/10"
                                     >
+                                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                         Hapus
                                     </button>
                                 )}

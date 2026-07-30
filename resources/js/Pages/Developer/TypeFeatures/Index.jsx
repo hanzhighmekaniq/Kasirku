@@ -1,67 +1,74 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
 import { Head, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
+import {
+    Building2,
+    Check,
+    ChevronLeft,
+    CircleCheck,
+    ClipboardList,
+    Loader2,
+    Package,
+    Save,
+    Settings,
+    ShoppingCart,
+    TriangleAlert,
+    Users,
+    Wallet,
+} from "lucide-react";
 
 // Warna per tipe toko (index-based)
 const TYPE_COLORS = [
     {
-        bg: "bg-blue-50",
-        text: "text-blue-700",
-        ring: "ring-blue-200",
-        active: "bg-blue-600",
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        text: "text-blue-700 dark:text-blue-400",
+        ring: "ring-blue-200 dark:ring-blue-800",
     },
     {
-        bg: "bg-orange-50",
-        text: "text-orange-700",
-        ring: "ring-orange-200",
-        active: "bg-orange-500",
+        bg: "bg-orange-100 dark:bg-orange-900/30",
+        text: "text-orange-700 dark:text-orange-400",
+        ring: "ring-orange-200 dark:ring-orange-800",
     },
     {
-        bg: "bg-violet-50",
-        text: "text-violet-700",
-        ring: "ring-violet-200",
-        active: "bg-violet-600",
+        bg: "bg-violet-100 dark:bg-violet-900/30",
+        text: "text-violet-700 dark:text-violet-400",
+        ring: "ring-violet-200 dark:ring-violet-800",
     },
     {
-        bg: "bg-cyan-50",
-        text: "text-cyan-700",
-        ring: "ring-cyan-200",
-        active: "bg-cyan-600",
+        bg: "bg-cyan-100 dark:bg-cyan-900/30",
+        text: "text-cyan-700 dark:text-cyan-400",
+        ring: "ring-cyan-200 dark:ring-cyan-800",
     },
     {
-        bg: "bg-rose-50",
-        text: "text-rose-700",
-        ring: "ring-rose-200",
-        active: "bg-rose-600",
+        bg: "bg-rose-100 dark:bg-rose-900/30",
+        text: "text-rose-700 dark:text-rose-400",
+        ring: "ring-rose-200 dark:ring-rose-800",
     },
     {
-        bg: "bg-amber-50",
-        text: "text-amber-700",
-        ring: "ring-amber-200",
-        active: "bg-amber-500",
+        bg: "bg-amber-100 dark:bg-amber-900/30",
+        text: "text-amber-700 dark:text-amber-400",
+        ring: "ring-amber-200 dark:ring-amber-800",
     },
     {
-        bg: "bg-emerald-50",
-        text: "text-emerald-700",
-        ring: "ring-emerald-200",
-        active: "bg-emerald-600",
+        bg: "bg-emerald-100 dark:bg-emerald-900/30",
+        text: "text-emerald-700 dark:text-emerald-400",
+        ring: "ring-emerald-200 dark:ring-emerald-800",
     },
     {
-        bg: "bg-pink-50",
-        text: "text-pink-700",
-        ring: "ring-pink-200",
-        active: "bg-pink-600",
+        bg: "bg-pink-100 dark:bg-pink-900/30",
+        text: "text-pink-700 dark:text-pink-400",
+        ring: "ring-pink-200 dark:ring-pink-800",
     },
 ];
 
 // Label kategori fitur
 const CAT_LABELS = {
-    pos: { label: "POS & Transaksi", icon: "🛒" },
-    inventory: { label: "Inventaris & Stok", icon: "📦" },
-    crm: { label: "Pelanggan & CRM", icon: "👥" },
-    finance: { label: "Keuangan", icon: "💰" },
-    system: { label: "Sistem", icon: "⚙️" },
-    other: { label: "Lainnya", icon: "📋" },
+    pos: { label: "POS & Transaksi", Icon: ShoppingCart },
+    inventory: { label: "Inventaris & Stok", Icon: Package },
+    crm: { label: "Pelanggan & CRM", Icon: Users },
+    finance: { label: "Keuangan", Icon: Wallet },
+    system: { label: "Sistem", Icon: Settings },
+    other: { label: "Lainnya", Icon: ClipboardList },
 };
 
 export default function Index({ types, allFeatures, mapping }) {
@@ -127,7 +134,7 @@ export default function Index({ types, allFeatures, mapping }) {
     const type = activeTab;
     const typeIdx = types.indexOf(type);
     const tm = allStoreTypes.find((t) => t.code === type) ?? {
-        icon: "🏬",
+        icon: null,
         label: type,
     };
     const colors = TYPE_COLORS[typeIdx % TYPE_COLORS.length] ?? TYPE_COLORS[0];
@@ -157,10 +164,10 @@ export default function Index({ types, allFeatures, mapping }) {
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-bold text-slate-800">
+                        <h2 className="text-lg font-bold text-foreground">
                             Fitur per Tipe Toko
                         </h2>
-                        <p className="mt-0.5 text-xs text-slate-500">
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                             Tentukan fitur apa saja yang tersedia untuk setiap
                             tipe toko
                         </p>
@@ -168,33 +175,16 @@ export default function Index({ types, allFeatures, mapping }) {
                     <button
                         onClick={handleSave}
                         disabled={processing || !hasChanges}
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {processing ? (
                             <>
-                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                <Loader2 className="h-4 w-4 animate-spin" />
                                 Menyimpan...
                             </>
                         ) : (
                             <>
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4z"
-                                    />
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M17 3v4H7V3M12 12v6m-3-3h6"
-                                    />
-                                </svg>
+                                <Save className="h-4 w-4" strokeWidth={2} />
                                 {hasChanges ? "Simpan Perubahan" : "Tersimpan"}
                             </>
                         )}
@@ -206,38 +196,14 @@ export default function Index({ types, allFeatures, mapping }) {
 
             {/* Flash messages */}
             {flash?.success && (
-                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                    <svg
-                        className="h-5 w-5 shrink-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                    </svg>
+                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success">
+                    <CircleCheck className="h-5 w-5 shrink-0" strokeWidth={2} />
                     {flash.success}
                 </div>
             )}
             {flash?.error && (
-                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                    <svg
-                        className="h-5 w-5 shrink-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H2.645c-1.73 0-2.813-1.874-1.948-3.374l7.26-12.547c.866-1.5 3.032-1.5 3.898 0l7.26 12.547zM12 15.75h.007v.008H12v-.008z"
-                        />
-                    </svg>
+                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+                    <TriangleAlert className="h-5 w-5 shrink-0" strokeWidth={2} />
                     {flash.error}
                 </div>
             )}
@@ -247,10 +213,10 @@ export default function Index({ types, allFeatures, mapping }) {
                 <aside
                     className={`shrink-0 transition-all duration-200 ${sidebarOpen ? "w-52" : "w-14"}`}
                 >
-                    <div className="sticky top-16 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex items-center justify-between border-b border-slate-100 px-2 py-2">
+                    <div className="sticky top-16 overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
+                        <div className="flex items-center justify-between border-b border-border px-2 py-2">
                             {sidebarOpen && (
-                                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                                     Tipe Toko
                                 </p>
                             )}
@@ -265,26 +231,17 @@ export default function Index({ types, allFeatures, mapping }) {
                                         );
                                     } catch {}
                                 }}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                                 title={
                                     sidebarOpen
                                         ? "Perkecil sidebar"
                                         : "Perbesar sidebar"
                                 }
                             >
-                                <svg
+                                <ChevronLeft
                                     className={`h-4 w-4 transition-transform ${sidebarOpen ? "" : "rotate-180"}`}
-                                    fill="none"
-                                    viewBox="0 0 24 24"
                                     strokeWidth={2}
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5"
-                                    />
-                                </svg>
+                                />
                             </button>
                         </div>
                         <nav
@@ -293,7 +250,7 @@ export default function Index({ types, allFeatures, mapping }) {
                             {types.map((t, idx) => {
                                 const info = allStoreTypes.find(
                                     (st) => st.code === t,
-                                ) ?? { icon: "🏬", label: t };
+                                ) ?? { icon: null, label: t };
                                 const c =
                                     TYPE_COLORS[idx % TYPE_COLORS.length] ??
                                     TYPE_COLORS[0];
@@ -308,12 +265,12 @@ export default function Index({ types, allFeatures, mapping }) {
                                                 ? info.label
                                                 : undefined
                                         }
-                                        className={`group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left text-sm font-medium transition ${isActive ? "bg-primary-600 text-white shadow-sm" : "text-slate-700 hover:bg-slate-50"} ${sidebarOpen ? "" : "justify-center"}`}
+                                        className={`group flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left text-sm font-medium transition ${isActive ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground hover:bg-muted"} ${sidebarOpen ? "" : "justify-center"}`}
                                     >
                                         <span
-                                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-base transition ${isActive ? "bg-white/20" : `${c.bg} ${c.text}`}`}
+                                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${isActive ? "bg-primary-foreground/20" : `${c.bg} ${c.text}`}`}
                                         >
-                                            {info.icon}
+                                            {info.icon ?? <Building2 className="h-4 w-4" strokeWidth={1.8} />}
                                         </span>
                                         {sidebarOpen && (
                                             <>
@@ -321,7 +278,7 @@ export default function Index({ types, allFeatures, mapping }) {
                                                     {info.label}
                                                 </span>
                                                 <span
-                                                    className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold transition ${isActive ? "bg-white/25 text-white" : "bg-slate-100 text-slate-500"}`}
+                                                    className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold transition ${isActive ? "bg-primary-foreground/25 text-primary-foreground" : "bg-muted text-muted-foreground"}`}
                                                 >
                                                     {count}
                                                 </span>
@@ -335,9 +292,9 @@ export default function Index({ types, allFeatures, mapping }) {
 
                     {/* Info perubahan */}
                     {sidebarOpen && hasChanges && (
-                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+                        <div className="mt-3 rounded-xl border border-warning/20 bg-warning/10 px-3 py-2.5 text-xs text-warning">
                             <p className="font-semibold">Ada perubahan</p>
-                            <p className="mt-0.5 text-amber-600">
+                            <p className="mt-0.5 text-warning/80">
                                 Klik "Simpan Perubahan" untuk menyimpan.
                             </p>
                         </div>
@@ -346,21 +303,21 @@ export default function Index({ types, allFeatures, mapping }) {
 
                 {/* ── Main: Feature Grid ── */}
                 <div className="flex-1 min-w-0">
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
                         {/* Header tipe aktif */}
-                        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-6 py-4">
+                        <div className="flex items-center justify-between border-b border-border bg-muted/60 px-6 py-4">
                             <div className="flex items-center gap-3">
                                 <span
-                                    className={`flex h-11 w-11 items-center justify-center rounded-xl text-2xl ring-1 ${colors.bg} ${colors.ring}`}
+                                    className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 ${colors.bg} ${colors.ring}`}
                                 >
-                                    {tm.icon}
+                                    {tm.icon ?? <Building2 className="h-5 w-5" strokeWidth={1.8} />}
                                 </span>
                                 <div>
-                                    <h3 className="text-base font-bold text-slate-800">
+                                    <h3 className="text-base font-bold text-foreground">
                                         {tm.label}
                                     </h3>
-                                    <p className="text-xs text-slate-500">
-                                        <span className="font-semibold text-primary-600">
+                                    <p className="text-xs text-muted-foreground">
+                                        <span className="font-semibold text-primary">
                                             {selectedCount}
                                         </span>
                                         {" dari "}
@@ -374,16 +331,16 @@ export default function Index({ types, allFeatures, mapping }) {
                             <button
                                 type="button"
                                 onClick={() => toggleAll(type)}
-                                className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                                className="rounded-xl border border-border bg-card text-card-foreground px-3.5 py-2 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted"
                             >
                                 {allChecked ? "Hapus Semua" : "Pilih Semua"}
                             </button>
                         </div>
 
                         {/* Progress bar */}
-                        <div className="h-1 bg-slate-100">
+                        <div className="h-1 bg-muted">
                             <div
-                                className="h-1 bg-primary-500 transition-all duration-300"
+                                className="h-1 bg-primary transition-all duration-300"
                                 style={{
                                     width:
                                         totalCount > 0
@@ -397,13 +354,13 @@ export default function Index({ types, allFeatures, mapping }) {
                         <div className="p-6 space-y-6">
                             {allFeatures.length === 0 ? (
                                 <div className="flex flex-col items-center py-12 text-center">
-                                    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-3xl">
-                                        📋
+                                    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                                        <ClipboardList className="h-7 w-7 text-muted-foreground/50" strokeWidth={1.5} />
                                     </div>
-                                    <p className="text-sm font-medium text-slate-600">
+                                    <p className="text-sm font-medium text-muted-foreground">
                                         Belum ada fitur
                                     </p>
-                                    <p className="mt-1 text-xs text-slate-400">
+                                    <p className="mt-1 text-xs text-muted-foreground">
                                         Tambah fitur terlebih dahulu di menu
                                         Fitur.
                                     </p>
@@ -413,7 +370,7 @@ export default function Index({ types, allFeatures, mapping }) {
                                     ([catKey, catFeatures]) => {
                                         const cat = CAT_LABELS[catKey] ?? {
                                             label: catKey,
-                                            icon: "📋",
+                                            Icon: ClipboardList,
                                         };
                                         const checkedInCat = catFeatures.filter(
                                             (f) =>
@@ -426,13 +383,11 @@ export default function Index({ types, allFeatures, mapping }) {
                                                 {/* Category header */}
                                                 <div className="mb-3 flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-base">
-                                                            {cat.icon}
-                                                        </span>
-                                                        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                                                        <cat.Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
+                                                        <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                                                             {cat.label}
                                                         </h4>
-                                                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                                                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                                                             {checkedInCat}/
                                                             {catFeatures.length}
                                                         </span>
@@ -465,7 +420,7 @@ export default function Index({ types, allFeatures, mapping }) {
                                                                 },
                                                             );
                                                         }}
-                                                        className="text-[11px] font-medium text-primary-600 hover:text-primary-800 transition"
+                                                        className="text-[11px] font-medium text-primary transition hover:text-primary/80"
                                                     >
                                                         {allCatChecked
                                                             ? "Hapus kategori"
@@ -488,33 +443,19 @@ export default function Index({ types, allFeatures, mapping }) {
                                                                 key={f.code}
                                                                 className={`group flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition select-none ${
                                                                     checked
-                                                                        ? "border-primary-300 bg-primary-50 text-primary-800 shadow-sm"
-                                                                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                                                                        ? "border-primary/40 bg-primary/10 text-primary shadow-sm"
+                                                                        : "border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:bg-muted"
                                                                 }`}
                                                             >
                                                                 <div
                                                                     className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition ${
                                                                         checked
-                                                                            ? "border-primary-500 bg-primary-500"
-                                                                            : "border-slate-300 bg-white group-hover:border-slate-400"
+                                                                            ? "border-primary bg-primary"
+                                                                            : "border-border bg-card group-hover:border-muted-foreground"
                                                                     }`}
                                                                 >
                                                                     {checked && (
-                                                                        <svg
-                                                                            className="h-3 w-3 text-white"
-                                                                            fill="none"
-                                                                            viewBox="0 0 24 24"
-                                                                            strokeWidth={
-                                                                                3
-                                                                            }
-                                                                            stroke="currentColor"
-                                                                        >
-                                                                            <path
-                                                                                strokeLinecap="round"
-                                                                                strokeLinejoin="round"
-                                                                                d="M5 13l4 4L19 7"
-                                                                            />
-                                                                        </svg>
+                                                                        <Check className="h-3 w-3 text-primary-foreground" strokeWidth={3} />
                                                                     )}
                                                                 </div>
                                                                 <input
@@ -552,27 +493,15 @@ export default function Index({ types, allFeatures, mapping }) {
                         </div>
 
                         {/* Footer save */}
-                        <div className="border-t border-slate-100 bg-slate-50/60 px-4 py-4 sm:px-6">
+                        <div className="border-t border-border bg-muted/60 px-4 py-4 sm:px-6">
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-center gap-2">
-                                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary-100 text-xs text-primary-600">
-                                        <svg
-                                            className="h-3.5 w-3.5"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth={2}
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-                                            />
-                                        </svg>
+                                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                                        <TriangleAlert className="h-3.5 w-3.5" strokeWidth={2} />
                                     </span>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-muted-foreground">
                                         Berlaku untuk semua toko bertipe{" "}
-                                        <span className="font-semibold text-slate-700">
+                                        <span className="font-semibold text-foreground">
                                             {tm.label}
                                         </span>
                                     </p>
@@ -580,33 +509,16 @@ export default function Index({ types, allFeatures, mapping }) {
                                 <button
                                     onClick={handleSave}
                                     disabled={processing || !hasChanges}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
                                 >
                                     {processing ? (
                                         <>
-                                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                            <Loader2 className="h-4 w-4 animate-spin" />
                                             Menyimpan...
                                         </>
                                     ) : (
                                         <>
-                                            <svg
-                                                className="h-4 w-4"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                strokeWidth={2}
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4z"
-                                                />
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M12 12v6m-3-3h6"
-                                                />
-                                            </svg>
+                                            <Save className="h-4 w-4" strokeWidth={2} />
                                             Simpan Semua Tipe
                                         </>
                                     )}

@@ -1,7 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import UserForm from './UserForm';
 
-export default function Edit({ user, stores, storeRoles }) {
+export default function Edit({ user, stores, storeRoles, rolesByStoreType = {} }) {
     const { data, setData, put, processing, errors } = useForm({
         name:                  user.name  ?? '',
         email:                 user.email ?? '',
@@ -24,6 +24,7 @@ export default function Edit({ user, stores, storeRoles }) {
                 cancelHref={route('developer.users.show', user.id)}
                 isEdit user={user} stores={stores}
                 storeRoles={storeRoles}
+                rolesByStoreType={rolesByStoreType}
             />
         </>
     );

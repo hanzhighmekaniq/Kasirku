@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,15 +25,62 @@ class Promotion extends Model
         'min_quantity',
         'tier_price',
         'customer_tier',
+        'customer_tier_id',
         'start_date',
         'end_date',
         'start_hour',
         'end_hour',
         'free_product_id',
+        'free_variant_id',
+        'free_quantity',
+        'applicable_days',
         'is_active',
         'max_usage',
         'used_count',
     ];
+
+    /** Tipe promo yang didukung, dipakai untuk validasi & label di UI. */
+    public const TYPES = [
+        'percentage',
+        'fixed_amount',
+        'buy_x_get_y',
+        'bundle',
+        'tiered',
+        'member_price',
+        'bogo',
+    ];
+
+    /**
+     * Cakupan yang valid per tipe promo. Tipe yang hanya bisa dihitung per
+     * baris item tidak boleh dipakai sebagai diskon keranjang, karena
+     * perhitungannya butuh konteks produk dan kuantitas.
+     *
+     * @var array<string, list<string>>
+     */
+    public const SCOPE_SUPPORT = [
+        'percentage' => ['item', 'cart'],
+        'fixed_amount' => ['item', 'cart'],
+        'buy_x_get_y' => ['item'],
+        'bundle' => ['item'],
+        'tiered' => ['item'],
+        'member_price' => ['item'],
+        'bogo' => ['item'],
+    ];
+
+    /** Kode hari yang dipakai di kolom applicable_days. */
+    public const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+    /** Cakupan yang boleh dipakai untuk sebuah tipe promo. */
+    public static function scopesForType(?string $type): array
+    {
+        return self::SCOPE_SUPPORT[$type] ?? ['item', 'cart'];
+    }
+
+    /** Apakah kombinasi tipe + cakupan ini valid? */
+    public static function supportsScope(?string $type, ?string $scope): bool
+    {
+        return in_array($scope, self::scopesForType($type), true);
+    }
 
     protected static function booted(): void
     {
@@ -46,6 +94,11 @@ class Promotion extends Model
     public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
+    }
+
+    public function customerTier(): BelongsTo
+    {
+        return $this->belongsTo(CustomerTier::class, 'customer_tier_id');
     }
 
     public function scopeForStore(Builder $query, int $storeId): Builder
@@ -63,6 +116,8 @@ class Promotion extends Model
             'min_quantity' => 'integer',
             'max_usage' => 'integer',
             'used_count' => 'integer',
+            'free_quantity' => 'integer',
+            'applicable_days' => 'array',
             'start_date' => 'date',
             'end_date' => 'date',
             'is_active' => 'boolean',
@@ -71,12 +126,18 @@ class Promotion extends Model
 
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'promotion_products');
+        return $this->belongsToMany(Product::class, 'promotion_products')
+            ->withPivot(['variant_id', 'packaging_unit_id']);
     }
 
     public function freeProduct(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'free_product_id');
+    }
+
+    public function freeVariant(): BelongsTo
+    {
+        return $this->belongsTo(ProductVariant::class, 'free_variant_id');
     }
 
     public function isActiveNow(): bool
@@ -99,6 +160,28 @@ class Promotion extends Model
             }
         }
 
+        if (! $this->isActiveOnDay()) {
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+     * Apakah promo berlaku pada hari ini? applicable_days yang kosong berarti
+     * promo berlaku setiap hari.
+     */
+    public function isActiveOnDay(?Carbon $at = null): bool
+    {
+        $days = $this->applicable_days;
+
+        if (empty($days) || ! is_array($days)) {
+            return true;
+        }
+
+        // Carbon dayOfWeek: 0 = Minggu, jadi indeks DAYS digeser agar Senin = 0.
+        $index = (($at ?? now())->dayOfWeek + 6) % 7;
+
+        return in_array(self::DAYS[$index], $days, true);
     }
 }

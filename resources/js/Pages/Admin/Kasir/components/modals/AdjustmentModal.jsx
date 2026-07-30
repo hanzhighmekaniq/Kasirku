@@ -34,7 +34,12 @@ export default function AdjustmentModal({ show, onClose, k }) {
     const taxBase = Math.max(0, base - previewDiscount);
     const tVal = Number(tValue) || 0;
     const previewTax = tType === "percent" ? Math.round((taxBase * tVal) / 100) : tVal;
-    const ongkir = k.orderType === "delivery" ? Number(k.deliveryFee || 0) : 0;
+    // Ongkir setelah subsidi membership, supaya preview total di modal ini
+    // sama dengan grand total di panel keranjang.
+    const ongkir =
+        k.orderType === "delivery"
+            ? Number(k.effectiveDeliveryFee ?? k.deliveryFee ?? 0)
+            : 0;
     const total = Math.max(0, base - previewDiscount + previewTax + ongkir);
 
     const apply = () => {

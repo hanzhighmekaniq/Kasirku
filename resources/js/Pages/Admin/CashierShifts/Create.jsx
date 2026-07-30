@@ -27,11 +27,9 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.cashier-shifts.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.cashier-shifts.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Shift
                     </div>
@@ -152,7 +150,7 @@ export default function Create({ branchName, suggestedShiftNo, storeType = "reta
                         <button
                             type="submit"
                             disabled={processing}
-                            className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow hover:bg-primary/90 disabled:opacity-60"
+                            className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow transition hover:bg-primary/90 disabled:opacity-60"
                         >
                             {processing ? "Membuka..." : "Buka Shift"}
                         </button>

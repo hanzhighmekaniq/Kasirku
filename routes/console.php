@@ -13,3 +13,7 @@ Schedule::command('pg:check-pending')->everyThirtySeconds();
 
 // Auto-expire stale split bills every 5 minutes
 Schedule::command('split:check-expired')->everyFiveMinutes();
+
+// Membership: tandai expired & sweep auto-tier harian
+Schedule::command('membership:check-expired')->daily();
+Schedule::command('membership:sweep-auto-tier')->dailyAt('01:00');

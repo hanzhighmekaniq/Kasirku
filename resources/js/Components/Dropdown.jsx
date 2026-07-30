@@ -1,6 +1,13 @@
 import { Transition } from '@headlessui/react';
 import { Link } from '@inertiajs/react';
-import { createContext, useContext, useState } from 'react';
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from 'react';
 
 const DropDownContext = createContext();
 
@@ -44,14 +51,62 @@ const Content = ({
     children,
 }) => {
     const { open, setOpen } = useContext(DropDownContext);
+    const panelRef = useRef(null);
+
+    /* Auto-flip: kalau panel keluar dari viewport di sisi yang dipilih,
+     * arahnya dibalik supaya tidak tembus tepi layar. */
+    const [effectiveAlign, setEffectiveAlign] = useState(align);
+
+    useEffect(() => {
+        if (!open) setEffectiveAlign(align);
+    }, [open, align]);
+
+    useLayoutEffect(() => {
+        if (!open || !panelRef.current) return;
+
+        const reposition = () => {
+            const el = panelRef.current;
+            if (!el) return;
+
+            // Ukur pakai alignment asli supaya keputusan tidak berayun-ayun.
+            const parent = el.parentElement;
+            if (!parent) return;
+
+            const anchor = parent.getBoundingClientRect();
+            const panelWidth = el.offsetWidth;
+            const margin = 8;
+            const viewport = document.documentElement.clientWidth;
+
+            const overflowRight = anchor.left + panelWidth > viewport - margin;
+            const overflowLeft = anchor.right - panelWidth < margin;
+
+            if (align === 'left' && overflowRight && !overflowLeft) {
+                setEffectiveAlign('right');
+            } else if (align === 'right' && overflowLeft && !overflowRight) {
+                setEffectiveAlign('left');
+            } else {
+                setEffectiveAlign(align);
+            }
+        };
+
+        reposition();
+
+        window.addEventListener('resize', reposition);
+        window.addEventListener('scroll', reposition, true);
+
+        return () => {
+            window.removeEventListener('resize', reposition);
+            window.removeEventListener('scroll', reposition, true);
+        };
+    }, [open, align, width]);
 
     let alignmentClasses = dropUp ? 'origin-bottom' : 'origin-top';
 
-    if (align === 'left') {
+    if (effectiveAlign === 'left') {
         alignmentClasses = dropUp
             ? 'ltr:origin-bottom-left rtl:origin-bottom-right start-0'
             : 'ltr:origin-top-left rtl:origin-top-right start-0';
-    } else if (align === 'right') {
+    } else if (effectiveAlign === 'right') {
         alignmentClasses = dropUp
             ? 'ltr:origin-bottom-right rtl:origin-bottom-left end-0'
             : 'ltr:origin-top-right rtl:origin-top-left end-0';
@@ -85,7 +140,8 @@ const Content = ({
                 leaveTo="opacity-0 scale-95"
             >
                 <div
-                    className={`absolute z-50 shadow-lg ${radiusClasses} ${verticalClasses} ${alignmentClasses} ${widthClasses}`}
+                    ref={panelRef}
+                    className={`absolute z-50 max-w-[calc(100vw-1rem)] shadow-lg ${radiusClasses} ${verticalClasses} ${alignmentClasses} ${widthClasses}`}
                     onClick={() => setOpen(false)}
                 >
                     <div

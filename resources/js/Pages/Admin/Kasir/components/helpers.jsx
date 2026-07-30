@@ -1,13 +1,60 @@
 /* ── formatters ──────────────────────────────────────── */
+
+/**
+ * Format mata uang mengikuti pengaturan toko. Disimpan di level modul supaya
+ * seluruh komponen kasir tetap bisa memanggil fmt(n) tanpa perlu meneruskan
+ * currency & decimalPlaces lewat props ke setiap komponen.
+ */
+const currencyConfig = {
+    currency: "IDR",
+    decimalPlaces: 0,
+};
+
+/**
+ * Set konfigurasi mata uang dari pengaturan toko. Dipanggil oleh KasirLayout
+ * saat render pertama, sebelum komponen anak memformat angka.
+ */
+export function configureCurrency({ currency, decimalPlaces } = {}) {
+    if (currency) {
+        currencyConfig.currency = currency;
+    }
+    if (Number.isFinite(Number(decimalPlaces))) {
+        currencyConfig.decimalPlaces = Number(decimalPlaces);
+    }
+}
+
+export const getCurrencyConfig = () => ({ ...currencyConfig });
+
+/**
+ * Label baris pajak di struk, pesan WhatsApp, dan sidebar keranjang.
+ * Menggabungkan nama pajak dengan rate-nya, misalnya "PPN 11%". Kalau rate
+ * tidak diketahui (mis. cetak ulang dari riwayat) label jatuh ke "Pajak".
+ *
+ * @param {{taxName?: string|null, taxRate?: number|null}} source
+ * @returns {string}
+ */
+export function buildTaxLabel({ taxName, taxRate } = {}) {
+    const rate = Number(taxRate) || 0;
+    const label = [taxName, rate > 0 ? `${rate}%` : null]
+        .filter(Boolean)
+        .join(" ");
+
+    return label || "Pajak";
+}
+
 export const fmt = (n) =>
     new Intl.NumberFormat("id-ID", {
         style: "currency",
-        currency: "IDR",
-        maximumFractionDigits: 0,
+        currency: currencyConfig.currency,
+        minimumFractionDigits: currencyConfig.decimalPlaces,
+        maximumFractionDigits: currencyConfig.decimalPlaces,
     }).format(n ?? 0);
 
 export const fmtShort = (n) =>
-    new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(n ?? 0);
+    new Intl.NumberFormat("id-ID", {
+        minimumFractionDigits: currencyConfig.decimalPlaces,
+        maximumFractionDigits: currencyConfig.decimalPlaces,
+    }).format(n ?? 0);
 
 /* ── PG method labels ───────────────────────────────── */
 export const PG_METHOD_LABELS = {

@@ -4,6 +4,8 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import Select from "@/Components/ui/Select";
 import AnchoredPanel from '@/Components/ui/AnchoredPanel';
+import DateRangePicker from "@/Components/ui/DateRangePicker";
+import { format } from "date-fns";
 
 /**
  * Tipe pergerakan adalah KATEGORI, bukan status sukses/gagal — jadi mengikuti
@@ -30,11 +32,14 @@ const MOVEMENT_TYPES = {
 
 export default function Movements({ movements, products, filters: serverFilters = {} }) {
     const { flash } = usePage().props;
+    const toDate = (s) => s ? new Date(s) : null;
+    const toStr = (d) => d ? format(d, 'yyyy-MM-dd') : '';
+
     const [filters, setFilters] = useState({
         product_id: serverFilters.product_id ?? '',
         movement_type: serverFilters.movement_type ?? '',
-        from_date: serverFilters.from_date ?? '',
-        to_date: serverFilters.to_date ?? '',
+        from_date: toDate(serverFilters.from_date),
+        to_date: toDate(serverFilters.to_date),
     });
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [dropdownSearch, setDropdownSearch] = useState('');
@@ -61,7 +66,10 @@ export default function Movements({ movements, products, filters: serverFilters 
         const newFilters = { ...filters, [key]: value };
         setFilters(newFilters);
         const params = {};
-        Object.entries(newFilters).forEach(([k, v]) => { if (v) params[k] = v; });
+        Object.entries(newFilters).forEach(([k, v]) => {
+            if (v instanceof Date) { if (!isNaN(v)) params[k] = toStr(v); }
+            else if (v) params[k] = v;
+        });
         router.get(route('admin.stock.movements'), params, { preserveState: true, replace: true });
     };
 
@@ -139,7 +147,7 @@ export default function Movements({ movements, products, filters: serverFilters 
                 <div className="mb-3 flex items-center justify-between">
                     <p className="text-sm font-medium text-foreground">Filter</p>
                     {hasActiveFilter && (
-                        <button onClick={() => { setFilters({ product_id: '', movement_type: '', from_date: '', to_date: '' }); router.get(route('admin.stock.movements'), {}, { preserveState: true, replace: true }); }} className="text-xs font-medium text-primary transition hover:text-primary/80">
+                        <button onClick={() => { setFilters({ product_id: '', movement_type: '', from_date: null, to_date: null }); router.get(route('admin.stock.movements'), {}, { preserveState: true, replace: true }); }} className="text-xs font-medium text-primary transition hover:text-primary/80">
                             Reset Semua
                         </button>
                     )}
@@ -226,8 +234,29 @@ export default function Movements({ movements, products, filters: serverFilters 
                         placeholder="Semua Tipe"
                         className="min-w-[180px]"
                     />
-                    <input type="date" value={filters.from_date} onChange={(e) => handleFilter('from_date', e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
-                    <input type="date" value={filters.to_date} onChange={(e) => handleFilter('to_date', e.target.value)} className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20" />
+                    <DateRangePicker
+                        startDate={filters.from_date}
+                        endDate={filters.to_date}
+                        onChange={({ startDate: s, endDate: e }) => {
+                            const newFilters = { ...filters, from_date: s, to_date: e };
+                            setFilters(newFilters);
+                            if (s && e) {
+                                const params = {};
+                                if (newFilters.product_id) params.product_id = newFilters.product_id;
+                                if (newFilters.movement_type) params.movement_type = newFilters.movement_type;
+                                params.from_date = toStr(s);
+                                params.to_date = toStr(e);
+                                router.get(route('admin.stock.movements'), params, { preserveState: true, replace: true });
+                            } else if (!s && !e) {
+                                const params = {};
+                                if (newFilters.product_id) params.product_id = newFilters.product_id;
+                                if (newFilters.movement_type) params.movement_type = newFilters.movement_type;
+                                router.get(route('admin.stock.movements'), params, { preserveState: true, replace: true });
+                            }
+                        }}
+                        placeholder="Pilih rentang tanggal"
+                        monthsShown={2}
+                    />
                 </div>
             </div>
 

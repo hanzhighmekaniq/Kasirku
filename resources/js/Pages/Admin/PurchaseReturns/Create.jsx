@@ -3,6 +3,10 @@ import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import Button from "@/Components/ui/Button";
+import DatePicker from "@/Components/ui/DatePicker";
+import Checkbox from "@/Components/ui/Checkbox";
+import { Loader2, Search, ShoppingCart, X } from "lucide-react";
+import { format } from "date-fns";
 
 function formatRupiah(amount) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount || 0);
@@ -79,9 +83,7 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
                         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
                         title="Ganti pembelian"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <X className="h-4 w-4" strokeWidth={2} />
                     </button>
                 </div>
             </div>
@@ -94,9 +96,7 @@ function PurchaseCombobox({ purchases, selectedId, onSelect }) {
                 Pembelian Asal <span className="text-destructive">*</span>
             </label>
             <div className="relative">
-                <svg className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
+                <Search className="pointer-events-none absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
                 <input
                     ref={inputRef}
                     type="text"
@@ -259,13 +259,11 @@ export default function Create({ purchases, storeType = 'retail' }) {
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.purchase-returns.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.purchase-returns.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
-                        pageTitle
+                        {pageTitle}
                     </div>
                     <div className="text-[11px] text-muted-foreground">
                         Buat
@@ -284,13 +282,15 @@ export default function Create({ purchases, storeType = 'retail' }) {
                     </>
                 }
                 description="Pilih pembelian asal dan isi data retur."
-                
+                backUrl={route('admin.purchase-returns.index')}
             />
 
             <form onSubmit={submit} className="mx-auto max-w-3xl space-y-6">
-                {/* Header Info */}
-                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                    <div className="border-b border-border bg-muted/50 px-6 py-5">
+                {/* Header Info — sengaja TANPA overflow-hidden supaya panel
+                    combobox pembelian bisa keluar dari batas card. Kalau
+                    dipasang, dropdown-nya terpotong oleh card ini. */}
+                <div className="relative z-20 rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="rounded-t-2xl border-b border-border bg-muted/50 px-6 py-5">
                         <h3 className="text-base font-semibold text-foreground">Informasi Retur</h3>
                         <p className="mt-0.5 text-sm text-muted-foreground">Pilih pembelian asal dan isi data retur.</p>
                     </div>
@@ -306,12 +306,13 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                 <label className="block text-sm font-medium text-foreground">
                                     Tanggal Retur <span className="text-destructive">*</span>
                                 </label>
-                                <input
-                                    type="date"
-                                    value={data.return_date}
-                                    onChange={(e) => setData('return_date', e.target.value)}
-                                    className={`mt-1.5 ${inputCls('return_date')}`}
-                                />
+                                <div className="mt-1.5">
+                                    <DatePicker
+                                        value={data.return_date ? new Date(data.return_date) : null}
+                                        onChange={(d) => setData('return_date', d ? format(d, 'yyyy-MM-dd') : '')}
+                                        placeholder="Pilih tanggal retur"
+                                    />
+                                </div>
                                 {errors.return_date && <p className="mt-1.5 text-sm text-destructive">{errors.return_date}</p>}
                             </div>
                         </div>
@@ -332,7 +333,7 @@ export default function Create({ purchases, storeType = 'retail' }) {
                 </div>
 
                 {/* Items Selection */}
-                <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                <div className="relative z-10 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                     <div className="border-b border-border bg-muted/50 px-6 py-5">
                         <h3 className="text-base font-semibold text-foreground">Item yang Diretur</h3>
                         <p className="mt-0.5 text-sm text-muted-foreground">Pilih item dari pembelian asal yang akan dikembalikan ke supplier.</p>
@@ -340,17 +341,12 @@ export default function Create({ purchases, storeType = 'retail' }) {
                     <div className="p-6">
                         {!data.purchase_id ? (
                             <div className="rounded-xl border border-dashed border-border py-10 text-center">
-                                <svg className="mx-auto h-10 w-10 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272" />
-                                </svg>
+                                <ShoppingCart className="mx-auto h-10 w-10 text-muted-foreground/50" strokeWidth={1.5} />
                                 <p className="mt-3 text-sm text-muted-foreground">Pilih pembelian asal terlebih dahulu</p>
                             </div>
                         ) : loadingItems ? (
                             <div className="flex items-center justify-center py-10">
-                                <svg className="h-6 w-6 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                </svg>
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" strokeWidth={2} />
                                 <span className="ml-3 text-sm text-muted-foreground">Memuat item pembelian...</span>
                             </div>
                         ) : purchaseItems.length === 0 ? (
@@ -368,20 +364,34 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                     >
                                         <div className="flex items-start gap-3">
                                             <div className="pt-0.5">
-                                                <input
-                                                    type="checkbox"
+                                                <Checkbox
                                                     checked={item.selected}
                                                     onChange={() => toggleItem(idx)}
-                                                    className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                                                 />
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
+                                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                                    <div className="min-w-0">
                                                         <p className="text-sm font-medium text-foreground">{item.product_name}</p>
-                                                        <p className="text-xs text-muted-foreground">SKU: {item.product_sku}</p>
+                                                        {/* Variant & satuan ditampilkan seperti BucketItemLabel di
+                                                            StockBucketPicker supaya multi-satuan tidak ambigu. */}
+                                                        <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                                                            {item.variant_name && (
+                                                                <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                                                    {item.variant_name}
+                                                                </span>
+                                                            )}
+                                                            {item.packaging_unit_name && (
+                                                                <span className="inline-flex items-center rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold text-warning">
+                                                                    {item.packaging_unit_name}
+                                                                </span>
+                                                            )}
+                                                            <span className="truncate font-mono text-[11px] text-muted-foreground">
+                                                                {item.product_sku}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-right">
+                                                    <div className="shrink-0 sm:text-right">
                                                         <p className="text-sm font-medium text-muted-foreground">Beli: {item.quantity}</p>
                                                         {item.returned_qty > 0 && (
                                                             <p className="text-xs text-warning">Sudah diretur: {item.returned_qty}</p>
@@ -389,7 +399,10 @@ export default function Create({ purchases, storeType = 'retail' }) {
                                                         <p className={`text-xs font-medium ${item.returnable_qty > 0 ? 'text-success' : 'text-destructive'}`}>
                                                             Sisa bisa diretur: {item.returnable_qty}
                                                         </p>
-                                                        <p className="text-xs text-muted-foreground">{formatRupiah(item.cost_price)}/pc</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {formatRupiah(item.cost_price)}
+                                                            {item.packaging_unit_name ? ` / ${item.packaging_unit_name}` : ' / pcs'}
+                                                        </p>
                                                     </div>
                                                 </div>
 

@@ -156,3 +156,135 @@ test('kasir index returns pendingSale and pendingPgTransaction props when active
         ->where('pendingPgTransaction.qr_code', '00020101021226680016ID.CO.MIDTRANS.WWW...')
     );
 });
+
+/**
+ * Refresh-safety untuk deep link halaman pembayaran.
+ *
+ * Tombol "Kembali" di header pembayaran membatalkan pending sale lalu
+ * navigasi ke halaman kasir. Kalau kasir kemudian me-refresh URL pembayaran
+ * yang lama, backend HARUS melempar balik ke halaman kasir — bukan merender
+ * layar pembayaran tanpa transaksi yang bisa diproses.
+ */
+test('payment route redirects to kasir after the pending sale was cancelled', function () {
+    [$user, $store, $branch, $product] = createKasirTestEnvironment();
+
+    $sale = Sale::create([
+        'store_id' => $store->id,
+        'branch_id' => $branch->id,
+        'user_id' => $user->id,
+        'sale_no' => 'INV-BACK-001',
+        'sale_date' => now(),
+        'status' => 'pending',
+        'subtotal' => 15000,
+        'grand_total' => 15000,
+        'order_type' => 'dine_in',
+    ]);
+
+    SaleItem::create([
+        'sale_id' => $sale->id,
+        'product_id' => $product->id,
+        'quantity' => 1,
+        'price' => 15000,
+        'subtotal' => 15000,
+    ]);
+
+    $session = [
+        'current_store_id' => $store->id,
+        'current_branch_id' => $branch->id,
+    ];
+
+    // Tombol kembali → batalkan pending sale.
+    $this->actingAs($user)
+        ->withSession($session)
+        ->post("/app/kasir/cancel-pending/{$sale->id}")
+        ->assertOk()
+        ->assertJson(['success' => true]);
+
+    // Refresh URL pembayaran lama → harus balik ke kasir, bukan render payment.
+    $this->actingAs($user)
+        ->withSession($session)
+        ->get('/app/kasir/payment/INV-BACK-001')
+        ->assertRedirect(route('admin.kasir.index'));
+
+    // Halaman kasir juga tidak boleh lagi melihat pending sale itu.
+    $this->actingAs($user)
+        ->withSession($session)
+        ->get('/app/kasir')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('pendingSale', null)
+            ->where('pendingPgTransaction', null)
+        );
+});
+
+test('payment route redirects to kasir when the sale is already completed', function () {
+    [$user, $store, $branch, $product] = createKasirTestEnvironment();
+
+    Sale::create([
+        'store_id' => $store->id,
+        'branch_id' => $branch->id,
+        'user_id' => $user->id,
+        'sale_no' => 'INV-DONE-001',
+        'sale_date' => now(),
+        'status' => 'completed',
+        'subtotal' => 15000,
+        'grand_total' => 15000,
+        'order_type' => 'dine_in',
+    ]);
+
+    $this->actingAs($user)
+        ->withSession([
+            'current_store_id' => $store->id,
+            'current_branch_id' => $branch->id,
+        ])
+        ->get('/app/kasir/payment/INV-DONE-001')
+        ->assertRedirect(route('admin.kasir.index'));
+});
+
+test('payment route redirects to kasir when the sale number is unknown', function () {
+    [$user, $store, $branch] = createKasirTestEnvironment();
+
+    $this->actingAs($user)
+        ->withSession([
+            'current_store_id' => $store->id,
+            'current_branch_id' => $branch->id,
+        ])
+        ->get('/app/kasir/payment/INV-DOES-NOT-EXIST')
+        ->assertRedirect(route('admin.kasir.index'));
+});
+
+test('payment route still renders the payment page for a live pending sale', function () {
+    [$user, $store, $branch, $product] = createKasirTestEnvironment();
+
+    $sale = Sale::create([
+        'store_id' => $store->id,
+        'branch_id' => $branch->id,
+        'user_id' => $user->id,
+        'sale_no' => 'INV-LIVE-001',
+        'sale_date' => now(),
+        'status' => 'pending',
+        'subtotal' => 30000,
+        'grand_total' => 30000,
+        'order_type' => 'dine_in',
+    ]);
+
+    SaleItem::create([
+        'sale_id' => $sale->id,
+        'product_id' => $product->id,
+        'quantity' => 2,
+        'price' => 15000,
+        'subtotal' => 30000,
+    ]);
+
+    $this->actingAs($user)
+        ->withSession([
+            'current_store_id' => $store->id,
+            'current_branch_id' => $branch->id,
+        ])
+        ->get('/app/kasir/payment/INV-LIVE-001')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Kasir/modes/RetailKasir')
+            ->where('pendingSale.sale_id', $sale->id)
+            ->where('pendingSale.sale_no', 'INV-LIVE-001')
+        );
+});

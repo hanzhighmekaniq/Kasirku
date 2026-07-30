@@ -9,9 +9,9 @@ const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency:
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const STATUS_META = {
-    pending: { label: 'Pending', color: 'bg-amber-50 text-amber-700' },
+    pending: { label: 'Pending', color: 'bg-warning/10 text-warning' },
     approved: { label: 'Disetujui', color: 'bg-success/10 text-success' },
-    paid: { label: 'Dibayar', color: 'bg-sky-50 text-sky-700' },
+    paid: { label: 'Dibayar', color: 'bg-primary/10 text-primary' },
 };
 
 export default function Commissions({ from, to, summary, byEmployee = [], commissions = [] }) {
@@ -93,7 +93,7 @@ export default function Commissions({ from, to, summary, byEmployee = [], commis
                 <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h3 className="mb-4 text-sm font-semibold text-foreground">Per Karyawan</h3>
                     {byEmployee.length > 0 ? byEmployee.map((e, i) => (
-                        <div key={i} className="flex items-center justify-between border-b border-slate-50 py-2 last:border-0">
+                        <div key={i} className="flex items-center justify-between border-b border-border py-2 last:border-0">
                             <div>
                                 <span className="text-sm font-medium text-foreground">{e.name}</span>
                                 <span className="ml-2 text-xs text-muted-foreground">{e.count} item</span>

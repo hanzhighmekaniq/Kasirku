@@ -1,10 +1,16 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import PageHeader from '@/Components/PageHeader';
 import SectionCard from '@/Components/ui/SectionCard';
+import { useForm } from '@inertiajs/react';
 import PromotionForm from './PromotionForm';
 
-export default function Edit({ promotion, products }) {
+export default function Edit({
+    promotion,
+    promotionItems = [],
+    buckets = [],
+    customerTiers = [],
+    scopeSupport = {},
+}) {
     const { data, setData, put, processing, errors } = useForm({
         name: promotion.name || '',
         type: promotion.type || 'percentage',
@@ -14,15 +20,18 @@ export default function Edit({ promotion, products }) {
         max_discount_amount: promotion.max_discount_amount || '',
         min_quantity: promotion.min_quantity || '',
         tier_price: promotion.tier_price || '',
-        customer_tier: promotion.customer_tier || '',
+        customer_tier_id: promotion.customer_tier_id || '',
         start_date: promotion.start_date || '',
         end_date: promotion.end_date || '',
         start_hour: promotion.start_hour || '',
         end_hour: promotion.end_hour || '',
+        applicable_days: promotion.applicable_days || [],
         free_product_id: promotion.free_product_id || '',
+        free_variant_id: promotion.free_variant_id || '',
+        free_quantity: promotion.free_quantity ?? '',
         is_active: promotion.is_active ?? true,
         max_usage: promotion.max_usage ?? '',
-        product_ids: (promotion.products || []).map((p) => p.id),
+        items: promotionItems,
     });
 
     const submit = (e) => {
@@ -32,25 +41,31 @@ export default function Edit({ promotion, products }) {
 
     return (
         <AuthenticatedLayout
+            backUrl={route('admin.promotions.index')}
             header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('admin.promotions.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
-                    </Link>
-                    <h2 className="text-lg font-semibold text-foreground">Edit Promo</h2>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">Promo</div>
+                    <div className="text-[11px] text-muted-foreground">Edit</div>
                 </div>
-            }
-        >
-            <Head title={`Edit ${promotion.name}`} />
+            }>
+            <PageHeader
+                title={`Edit ${promotion.name}`}
+                breadcrumbs={['Admin', 'Promo', 'Edit']}
+                heading={
+                    <>
+                        Edit{' '}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Promo
+                        </span>
+                    </>
+                }
+                description={`Ubah pengaturan promo "${promotion.name}".`}
+            />
 
             <div className="mx-auto max-w-2xl">
                 <SectionCard
                     title="Detail Promo"
-                    subtitle={`Edit informasi promo ${promotion.name}`}
+                    subtitle={`Kode promo: ${promotion.code}`}
                 >
                     <PromotionForm
                         data={data}
@@ -60,7 +75,9 @@ export default function Edit({ promotion, products }) {
                         onSubmit={submit}
                         submitLabel="Simpan Perubahan"
                         cancelHref={route('admin.promotions.index')}
-                        products={products}
+                        buckets={buckets}
+                        scopeSupport={scopeSupport}
+                        customerTiers={customerTiers}
                         promotion={promotion}
                     />
                 </SectionCard>

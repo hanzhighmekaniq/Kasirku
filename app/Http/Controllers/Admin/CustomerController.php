@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\CustomerDebtLog;
 use App\Models\CustomerMembership;
+use App\Models\CustomerTier;
 use App\Models\Membership;
 use App\Models\Store;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class CustomerController extends Controller
 
         $customers = Customer::where('store_id', $storeId)
             ->with([
+                'customerTier:id,name,rank,color',
                 'memberships' => fn ($query) => $query
                     ->active()
                     ->with('membership')
@@ -63,6 +65,7 @@ class CustomerController extends Controller
         $storeId = session('current_store_id');
 
         $customer->load([
+            'customerTier:id,name,rank,color',
             'memberships' => fn ($query) => $query
                 ->with('membership')
                 ->latest(),
@@ -79,14 +82,28 @@ class CustomerController extends Controller
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->each->withNormalizedBenefits();
+
+        // Benefit dinormalkan sebelum dikirim ke Inertia supaya tampilan membaca
+        // satu bentuk saja, tidak perlu tahu soal kolom lama.
+        $activeMembership = $customer->activeMembership();
+        $activeMembership?->membership?->withNormalizedBenefits();
+        $customer->memberships->each(
+            fn ($cm) => $cm->membership?->withNormalizedBenefits(),
+        );
 
         return Inertia::render('Admin/Customers/Show', [
             'customer' => $customer,
-            'activeMembership' => $customer->activeMembership(),
+            'activeMembership' => $activeMembership,
             'membershipPlans' => $membershipPlans,
             'recentSales' => $recentSales,
             'storeType' => $this->resolveStoreType(),
+            // Dipakai tampilan untuk menilai sebuah paket itu upgrade atau
+            // downgrade dibanding tier pelanggan sekarang.
+            'customerTiers' => CustomerTier::forStore($storeId)
+                ->ranked()
+                ->get(['id', 'name', 'rank', 'color']),
         ]);
     }
 
@@ -179,6 +196,15 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
+            // Opsional di sini: endpoint ini juga dipakai jalur lain yang tidak
+            // selalu menyertakan metode. Halaman Kasbon mewajibkannya sendiri.
+            'payment_method_id' => [
+                'nullable',
+                Rule::exists('payment_methods', 'id')
+                    ->where('store_id', $customer->store_id)
+                    ->where('is_active', true)
+                    ->whereNot('type', 'debt'),
+            ],
             'notes' => 'nullable|string|max:500',
         ]);
 
@@ -201,6 +227,7 @@ class CustomerController extends Controller
             'store_id' => $customer->store_id,
             'type' => 'payment',
             'amount' => $amount,
+            'payment_method_id' => $validated['payment_method_id'] ?? null,
             'balance_after' => $newBalance,
             'notes' => $validated['notes'] ?? 'Pelunasan hutang',
             'created_by' => Auth::id(),
@@ -249,6 +276,7 @@ class CustomerController extends Controller
                     ? $membership->duration_value
                     : null,
                 'status' => 'active',
+                'source' => 'manual',
                 'notes' => $validated['notes'] ?? null,
             ]);
 

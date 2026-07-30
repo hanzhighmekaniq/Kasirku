@@ -1,65 +1,136 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
 import EmployeeTabs from "@/Components/EmployeeTabs";
-import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
-import { useState } from 'react';
-import PageTabs from '@/Components/PageTabs';
+import { Head, router, usePage, useForm } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Button from '@/Components/ui/Button';
+import {
+    Calendar,
+    ChefHat,
+    Crown,
+    Eye,
+    Monitor,
+    Package,
+    Pencil,
+    Settings,
+    ShieldCheck,
+    Store,
+    Table2,
+    Ticket,
+    Truck,
+    User,
+    Users,
+    Wallet,
+} from 'lucide-react';
 
 // ── Konstanta ────────────────────────────────────────────────────────────────
-const SYSTEM_ROLE_META = {
-    owner:      { icon: '👑', color: 'amber',  desc: 'Akses penuh toko + kelola role & user' },
-    admin:      { icon: '🛠️', color: 'blue',   desc: 'Kelola operasional harian' },
-    supervisor: { icon: '👁️', color: 'violet', desc: 'Pengawas shift & laporan' },
-    kasir:      { icon: '🖥️', color: 'green',  desc: 'Operator POS harian' },
-    gudang:     { icon: '📦', color: 'orange', desc: 'Kelola stok & pembelian' },
-    kitchen:    { icon: '👨‍🍳', color: 'red',   desc: 'Update status masak (FnB)' },
+// Ikon & warna role sistem datang dari template (dikelola developer). Peta di
+// bawah hanya menerjemahkan nama ikon/warna template ke komponen & class.
+const ICON_MAP = {
+    ShieldCheck, Crown, Eye, Monitor, Package, ChefHat, Users, User,
+    Wallet, Settings, Truck, Store, Ticket, Calendar, Table2,
 };
 
 const COLOR_MAP = {
     amber:  'bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800',
     blue:   'bg-blue-100 text-blue-700 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800',
     violet: 'bg-violet-100 text-violet-700 ring-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-800',
+    sky:    'bg-sky-100 text-sky-700 ring-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:ring-sky-800',
+    teal:   'bg-teal-100 text-teal-700 ring-teal-200 dark:bg-teal-900/30 dark:text-teal-400 dark:ring-teal-800',
     green:  'bg-green-100 text-green-700 ring-green-200 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-800',
     orange: 'bg-orange-100 text-orange-700 ring-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:ring-orange-800',
+    rose:   'bg-rose-100 text-rose-700 ring-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:ring-rose-800',
     red:    'bg-red-100 text-red-700 ring-red-200 dark:bg-red-900/30 dark:text-red-400 dark:ring-red-800',
-    custom: 'bg-muted text-muted-foreground ring-border',
+    muted:  'bg-muted text-muted-foreground ring-border',
 };
 
-const PERMISSION_GROUPS = {
-    'Transaksi':       ['sale.create','sale.view','sale.void','sale.discount','sale.return'],
-    'Produk':          ['product.view','product.create','product.edit','product.delete','product.import'],
-    'Stok':            ['stock.view','stock.adjustment','stock.opname','stock.transfer','stock.waste'],
-    'Pembelian':       ['purchase.view','purchase.create','purchase.edit','purchase.delete','purchase.return'],
-    'Pelanggan':       ['customer.view','customer.create','customer.edit','customer.delete','customer.deposit'],
-    'Karyawan':        ['employee.view','employee.create','employee.edit','employee.delete'],
-    'Laporan':         ['report.sales','report.purchase','report.stock','report.expense','report.shift','report.commission'],
-    'Shift':           ['shift.open','shift.close','shift.view','shift.manage'],
-    'Pengeluaran':     ['expense.view','expense.create','expense.edit','expense.delete'],
-    'Promo':           ['promotion.view','promotion.create','promotion.edit','promotion.delete'],
-    'Meja & Kitchen':  ['table.view','table.manage','kitchen.view','kitchen.update'],
-    'Antrian & Booking': ['queue.view','queue.manage','booking.view','booking.create','booking.edit','booking.cancel'],
-    'Membership':      ['membership.view','membership.create','membership.edit'],
-    'Komisi':          ['commission.view','commission.approve'],
-    'Supplier':        ['supplier.view','supplier.create','supplier.edit','supplier.delete'],
-    'Pengaturan':      ['setting.view','setting.edit','setting.payment_method','setting.payment_gateway','setting.module'],
+// Label & urutan grup permission (kunci = prefix nama permission). Grup yang
+// tidak punya permission relevan untuk tipe toko ini otomatis tidak dirender.
+const GROUP_META = {
+    dashboard:  'Dashboard',
+    sale:       'Transaksi',
+    shift:      'Shift',
+    product:    'Produk',
+    stock:      'Stok',
+    batch:      'Batch & Kadaluarsa',
+    purchase:   'Pembelian',
+    supplier:   'Supplier',
+    customer:   'Pelanggan',
+    membership: 'Membership',
+    debt:       'Hutang / Kasbon',
+    employee:   'Karyawan',
+    commission: 'Komisi',
+    expense:    'Pengeluaran',
+    promotion:  'Promo',
+    table:      'Manajemen Meja',
+    kitchen:    'Kitchen Display',
+    queue:      'Antrian',
+    booking:    'Booking / Reservasi',
+    report:     'Laporan',
+    setting:    'Pengaturan',
 };
+
+const GROUP_ORDER = Object.keys(GROUP_META);
 
 const PERM_LABEL = {
     create: 'Buat', view: 'Lihat', edit: 'Edit', delete: 'Hapus',
     void: 'Void', discount: 'Diskon', return: 'Retur', import: 'Import',
     adjustment: 'Penyesuaian', opname: 'Opname', transfer: 'Transfer', waste: 'Waste',
-    deposit: 'Deposit', open: 'Buka', close: 'Tutup', manage: 'Kelola',
+    deposit: 'Deposit', pay: 'Bayar', open: 'Buka', close: 'Tutup', manage: 'Kelola',
     approve: 'Approve', update: 'Update', sales: 'Penjualan', purchase: 'Pembelian',
     stock: 'Stok', expense: 'Pengeluaran', shift: 'Shift', commission: 'Komisi',
     payment_method: 'Metode', payment_gateway: 'Gateway', module: 'Modul',
     cancel: 'Batal',
 };
 
+function roleIcon(iconName) {
+    return ICON_MAP[iconName] ?? ShieldCheck;
+}
+
+function colorClass(color) {
+    return COLOR_MAP[color] ?? COLOR_MAP.muted;
+}
+
+function permLabel(name) {
+    const action = name.split('.').slice(1).join('.');
+    return PERM_LABEL[action] ?? action;
+}
+
+/**
+ * Kelompokkan daftar nama permission jadi grup siap render.
+ *
+ * @param {string[]} permissions
+ * @returns {{group: string, label: string, items: string[]}[]}
+ */
+function groupPermissions(permissions) {
+    const map = {};
+    permissions.forEach((name) => {
+        const group = name.split('.')[0];
+        if (!map[group]) map[group] = [];
+        map[group].push(name);
+    });
+
+    const known = GROUP_ORDER.filter((g) => map[g]?.length);
+    const unknown = Object.keys(map).filter((g) => !GROUP_META[g]).sort();
+
+    return [...known, ...unknown].map((group) => ({
+        group,
+        label: GROUP_META[group] ?? group,
+        items: map[group],
+    }));
+}
+
 // ── Permission Modal ──────────────────────────────────────────────────────────
-function PermModal({ role, onClose, onSave }) {
-    const [selected, setSelected] = useState(() => new Set(role?.permissions ?? []));
+function PermModal({ role, permissions, onClose, onSave }) {
+    const groups = useMemo(() => groupPermissions(permissions), [permissions]);
+
+    // Permission di luar cakupan tipe toko (mis. kitchen.* di retail) tidak
+    // dirender dan tidak ikut tersimpan — route-nya pun diblok feature
+    // middleware, jadi menyimpannya cuma bikin daftar akses menyesatkan.
+    const [selected, setSelected] = useState(
+        () => new Set((role?.permissions ?? []).filter((p) => permissions.includes(p))),
+    );
 
     const toggle = (p) => setSelected(prev => {
         const next = new Set(prev);
@@ -80,8 +151,8 @@ function PermModal({ role, onClose, onSave }) {
 
     // Overlay sengaja TIDAK memakai backdrop-blur: efek blur pada elemen
     // full-screen memaksa compositor merender ulang seluruh viewport tiap
-    // frame, dan modal ini berisi 16 kartu permission — itu yang bikin terasa
-    // berat saat dibuka. Warna solid semi-transparan sudah cukup.
+    // frame, sementara modal ini berisi belasan kartu permission — itu yang
+    // bikin terasa berat saat dibuka. Warna solid semi-transparan sudah cukup.
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4">
             <div className="flex w-full max-w-2xl flex-col rounded-2xl bg-popover text-popover-foreground shadow-2xl ring-1 ring-border max-h-[90vh]">
@@ -90,11 +161,13 @@ function PermModal({ role, onClose, onSave }) {
                     <div>
                         <h3 className="text-base font-bold text-popover-foreground">
                             {isSystem ? 'Lihat Permission —' : 'Atur Permission —'}
-                            <span className="ml-1.5 text-primary">{role?.name}</span>
+                            <span className="ml-1.5 text-primary">{role?.label ?? role?.name}</span>
                         </h3>
-                        {isSystem && (
-                            <p className="mt-0.5 text-xs text-muted-foreground">Role sistem — permission tidak bisa diubah. Duplikat untuk membuat versi custom.</p>
-                        )}
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            {isSystem
+                                ? 'Role sistem — permission tidak bisa diubah. Duplikat untuk membuat versi custom.'
+                                : `Hanya menampilkan ${permissions.length} permission yang didukung tipe toko ini.`}
+                        </p>
                     </div>
                     <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -104,37 +177,37 @@ function PermModal({ role, onClose, onSave }) {
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto p-6 bg-muted/10">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {Object.entries(PERMISSION_GROUPS).map(([group, perms]) => {
-                            const activeCount = perms.filter(p => selected.has(p)).length;
-                            const allOn = activeCount === perms.length;
+                        {groups.map(({ group, label, items }) => {
+                            const activeCount = items.filter(p => selected.has(p)).length;
+                            const allOn = activeCount === items.length;
                             return (
                                 <div key={group} className="rounded-xl border border-border bg-card p-4 shadow-sm transition hover:shadow-md">
                                     <div className="mb-4 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold text-foreground">{group}</span>
-                                            <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{activeCount}/{perms.length} aktif</span>
+                                            <span className="text-sm font-bold text-foreground">{label}</span>
+                                            <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{activeCount}/{items.length} aktif</span>
                                         </div>
                                         {!isSystem && (
-                                            <button type="button" onClick={() => toggleGroup(perms)}
+                                            <button type="button" onClick={() => toggleGroup(items)}
                                                 className={`text-[10px] font-bold uppercase tracking-wider transition ${allOn ? 'text-primary hover:text-primary/80' : 'text-muted-foreground hover:text-foreground'}`}>
                                                 {allOn ? 'Unselect All' : 'Select All'}
                                             </button>
                                         )}
                                     </div>
                                     <div className="flex flex-wrap gap-2">
-                                        {perms.map(p => {
-                                            const key = p.split('.')[1];
-                                            const on  = selected.has(p);
+                                        {items.map(p => {
+                                            const on = selected.has(p);
                                             return (
                                                 <button key={p} type="button"
                                                     disabled={isSystem}
                                                     onClick={() => !isSystem && toggle(p)}
+                                                    title={p}
                                                     className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                                                         on
                                                             ? 'bg-primary text-primary-foreground shadow-sm ring-1 ring-primary'
                                                             : 'bg-muted/30 text-muted-foreground border border-border'
                                                     } ${!isSystem && !on ? 'hover:bg-muted hover:text-foreground hover:border-border' : ''} ${!isSystem && on ? 'hover:bg-primary/90' : ''} ${isSystem ? 'cursor-default opacity-90' : ''}`}>
-                                                    {PERM_LABEL[key] ?? key}
+                                                    {permLabel(p)}
                                                 </button>
                                             );
                                         })}
@@ -229,7 +302,7 @@ function RoleFormModal({ title, form, onClose, onSubmit, isCreate = false }) {
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function Index({ roles, permissions }) {
+export default function Index({ roles = [], permissions = [] }) {
     const { flash } = usePage().props;
     const [permModal,   setPermModal]   = useState(null); // role object
     const [createModal, setCreateModal] = useState(false);
@@ -240,8 +313,16 @@ export default function Index({ roles, permissions }) {
     const createForm = useForm({ name: '', description: '' });
     const editForm   = useForm({ name: '', description: '' });
 
-    const systemRoles = roles.filter(r => r.is_system);
+    // Role sistem di luar cakupan tipe toko (mis. kitchen di retail) tidak
+    // dihapus oleh sync, jadi disembunyikan di sini — kecuali masih dipakai
+    // user, supaya akses yang aktif tidak jadi tak terlihat.
+    const systemRoles = roles.filter(
+        r => r.is_system && (!r.out_of_scope || (r.users_count ?? 0) > 0),
+    );
     const customRoles = roles.filter(r => !r.is_system);
+    const hiddenCount = roles.filter(
+        r => r.is_system && r.out_of_scope && (r.users_count ?? 0) === 0,
+    ).length;
 
     const handleCreate = (e) => {
         e.preventDefault();
@@ -347,31 +428,50 @@ export default function Index({ roles, permissions }) {
                     <div className="mb-4 flex items-center justify-between">
                         <div>
                             <h2 className="text-sm font-bold text-foreground">Role Sistem</h2>
-                            <p className="text-xs text-muted-foreground mt-0.5">Dibuat otomatis, tidak bisa dihapus. Duplikat untuk membuat versi custom yang bisa dimodifikasi.</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Dibuat otomatis dari template sesuai tipe tokomu, tidak bisa dihapus.
+                                Duplikat untuk membuat versi custom yang bisa dimodifikasi.
+                            </p>
                         </div>
                     </div>
+
+                    {systemRoles.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+                            <p className="text-sm font-medium text-muted-foreground">Belum ada role sistem</p>
+                            <p className="mt-1 text-xs text-muted-foreground">Template role untuk tipe toko ini belum disiapkan.</p>
+                        </div>
+                    ) : (
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {systemRoles.map(role => {
-                            const meta  = SYSTEM_ROLE_META[role.name] ?? { icon: '🔒', color: 'custom' };
-                            const clr   = COLOR_MAP[meta.color] ?? COLOR_MAP.custom;
+                            const Icon = roleIcon(role.icon);
+                            const clr  = colorClass(role.color);
                             return (
                                 <div key={role.id} className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex items-center gap-3">
-                                            <span className="text-2xl">{meta.icon}</span>
+                                            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ${clr}`}>
+                                                <Icon className="h-5 w-5" strokeWidth={1.8} />
+                                            </span>
                                             <div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ${clr}`}>{role.name}</span>
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ${clr}`}>{role.label ?? role.name}</span>
                                                     <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">Sistem</span>
+                                                    {role.out_of_scope && (
+                                                        <span
+                                                            title="Role ini di luar cakupan tipe tokomu, tapi masih dipakai user"
+                                                            className="rounded-full bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                                                            Di luar cakupan
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <p className="mt-1 text-xs text-muted-foreground">{role.description ?? meta.desc}</p>
+                                                <p className="mt-1 text-xs text-muted-foreground">{role.description ?? '—'}</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Permission count */}
                                     <div className="mt-3 flex items-center justify-between">
-                                        <span className="text-xs text-muted-foreground">{role.permissions?.length ?? 0} permission aktif</span>
+                                        <span className="text-xs text-muted-foreground">{role.permissions?.length ?? 0} permission · {role.users_count ?? 0} user</span>
                                         <div className="flex items-center gap-1.5">
                                             <button onClick={() => setPermModal(role)}
                                                 className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted">
@@ -389,6 +489,13 @@ export default function Index({ roles, permissions }) {
                             );
                         })}
                     </div>
+                    )}
+
+                    {hiddenCount > 0 && (
+                        <p className="mt-3 text-xs text-muted-foreground">
+                            {hiddenCount} role sistem disembunyikan karena tidak berlaku untuk tipe tokomu.
+                        </p>
+                    )}
                 </section>
 
                 {/* ── Role Custom ── */}
@@ -420,7 +527,9 @@ export default function Index({ roles, permissions }) {
                                 <div key={role.id} className="group rounded-2xl border border-primary/20 bg-card p-5 shadow-sm transition hover:shadow-md hover:border-primary/40">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex items-center gap-3">
-                                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-lg">✏️</span>
+                                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                                <Pencil className="h-5 w-5" strokeWidth={1.8} />
+                                            </span>
                                             <div>
                                                 <div className="flex items-center gap-1.5">
                                                     <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary ring-1 ring-primary/20">{role.name}</span>
@@ -471,6 +580,7 @@ export default function Index({ roles, permissions }) {
             {permModal && (
                 <PermModal
                     role={permModal}
+                    permissions={permissions}
                     onClose={() => setPermModal(null)}
                     onSave={handleSavePerms}
                 />

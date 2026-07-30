@@ -27,6 +27,7 @@ use Database\Seeders\DatabaseSeeder\FnbSaleSeeder;
 use Database\Seeders\DatabaseSeeder\FnbSupplierSeeder;
 use Database\Seeders\DatabaseSeeder\FnbUserSeeder;
 use Database\Seeders\DatabaseSeeder\FnbWasteSeeder;
+use Database\Seeders\DatabaseSeeder\MembershipSeeder;
 use Database\Seeders\DatabaseSeeder\PaymentGatewaySeeder;
 use Database\Seeders\DatabaseSeeder\PaymentMethodSeeder;
 use Database\Seeders\DatabaseSeeder\PermissionSeeder;
@@ -35,6 +36,7 @@ use Database\Seeders\DatabaseSeeder\ProductSeeder;
 use Database\Seeders\DatabaseSeeder\ProductStockSeeder;
 use Database\Seeders\DatabaseSeeder\PurchaseSeeder;
 use Database\Seeders\DatabaseSeeder\RoleSeeder;
+use Database\Seeders\DatabaseSeeder\RoleTemplateSeeder;
 use Database\Seeders\DatabaseSeeder\SaleSeeder;
 use Database\Seeders\DatabaseSeeder\StockMovementSeeder;
 use Database\Seeders\DatabaseSeeder\StoreSeeder;
@@ -63,6 +65,7 @@ class DatabaseSeeder extends Seeder
             FeatureDetailSeeder::class,
             PlanSeeder::class,
             PermissionSeeder::class,
+            RoleTemplateSeeder::class,
             ThemePresetSeeder::class,
 
             // ── Struktur ──────────────────────────────────────────
@@ -80,6 +83,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             ProductSeeder::class,
             ProductStockSeeder::class,
+            MembershipSeeder::class,
             CashierShiftSeeder::class,
             PurchaseSeeder::class,
             SaleSeeder::class,

@@ -8,6 +8,7 @@ use App\Models\Store;
 use App\Models\StoreFeature;
 use App\Models\StoreType;
 use App\Models\User;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -148,6 +149,8 @@ class SettingController extends Controller
             'tax_inclusive' => 'boolean',
             'default_tax_rate' => 'nullable|numeric|min:0|max:100',
             'points_per_amount' => 'nullable|numeric|min:0',
+            'payment_edit_limit_value' => 'nullable|integer|min:1|max:9999',
+            'payment_edit_limit_unit' => 'nullable|in:minutes,hours,days',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'remove_logo' => 'boolean',
         ]);
@@ -158,11 +161,13 @@ class SettingController extends Controller
             if ($store->logo) {
                 Storage::disk('public')->delete($store->logo);
             }
-            $logoPath = $request->file('logo')->store('stores', 'public');
+            $logoPath = app(ImageService::class)->upload($request->file('logo'), 'stores');
         } elseif ($request->boolean('remove_logo') && $store->logo) {
             Storage::disk('public')->delete($store->logo);
             $logoPath = null;
         }
+
+        $paymentEditLimitValue = $validated['payment_edit_limit_value'] ?? null;
 
         $store->update([
             'name' => $validated['name'],
@@ -176,6 +181,12 @@ class SettingController extends Controller
             'tax_inclusive' => $validated['tax_inclusive'] ?? false,
             'default_tax_rate' => $validated['default_tax_rate'] ?? 0,
             'points_per_amount' => $validated['points_per_amount'] ?? null,
+            // Nilai kosong berarti pembayaran boleh diubah kapan saja, jadi
+            // unit ikut dikosongkan supaya tidak ada sisa data yang menyesatkan.
+            'payment_edit_limit_value' => $paymentEditLimitValue,
+            'payment_edit_limit_unit' => $paymentEditLimitValue
+                ? ($validated['payment_edit_limit_unit'] ?? 'minutes')
+                : null,
             'logo' => $logoPath,
         ]);
 

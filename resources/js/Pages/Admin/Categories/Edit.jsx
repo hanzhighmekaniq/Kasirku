@@ -16,11 +16,9 @@ export default function Edit({ category, parentCategories = [] }) {
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.categories.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.categories.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Manajemen Kategori
                     </div>

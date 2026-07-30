@@ -9,18 +9,12 @@ import {
     normalizePosMode,
     POS_MODES,
 } from "./config/posModes";
-import { getTierPrice as sharedGetTierPrice } from "./components/helpers";
-
-/* ── formatters ──────────────────────────────────────── */
-const fmt = (n) =>
-    new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-        maximumFractionDigits: 0,
-    }).format(n ?? 0);
-
-const fmtShort = (n) =>
-    new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(n ?? 0);
+import {
+    buildTaxLabel,
+    fmt,
+    fmtShort,
+    getTierPrice as sharedGetTierPrice,
+} from "./components/helpers";
 
 /* ── ORDER TYPE options — 7 adaptive POS modes ─────────── */
 const ORDER_TYPES = Object.fromEntries(
@@ -78,11 +72,16 @@ export default function useKasir({
     storeType,
     storeName,
     receiptFooter,
+    defaultTaxRate = 0,
+    taxInclusive = false,
     pgMethods = [],
     promotions = [],
     activeShift = null,
     posMode,
     employees = [],
+    sellableMemberships = [],
+    membershipBenefits = {},
+    customerTiers = [],
     storeFeatureSettings = {},
     pendingSale = null,
     pendingPgTransaction = null,
@@ -181,31 +180,83 @@ export default function useKasir({
     const tableLabel = isHospitality ? "Kamar" : "Meja";
     const tableTriggerOrderType = isHospitality ? "check_in" : "dine_in";
 
-    /* ── state ── */
-    const [customers, setCustomers] = useState(initialCustomers || []);
-    const [search, setSearch] = useState("");
-    const [activeCat, setActiveCat] = useState("");
-    const [cart, setCart] = useState([]);
-    // Ref (bukan state) untuk penomoran cartId — dibaca & ditulis secara
-    // synchronous di dalam addToCart, jadi aman dari stale closure walau
-    // addToCart dipanggil berkali-kali sebelum React sempat re-render.
-    const cartIdSeqRef = useRef(0);
-
     // ── Transaksi ditahan (Hold / Park) — disimpan di localStorage saja ──
     const HELD_KEY = `pos:held:${storeName || "default"}`;
 
-    // Detect apakah _success data ada (dari router.visit dengan data)
-    const successDataFromRedirect = null;
+    /* ── Draft keranjang (sessionStorage) ────────────────────────
+     * PaymentView adalah halaman Inertia terpisah (/kasir/payment/{saleNo}),
+     * jadi seluruh state React ikut hilang saat navigasi ke sana dan saat
+     * kembali. Snapshot transaksi berjalan diautosave ke sessionStorage supaya
+     * keranjang tidak pernah hilang: pindah ke halaman bayar, tekan "Kembali",
+     * atau refresh — isi keranjang tetap sama, lengkap dengan modifier,
+     * catatan item, satuan, diskon, dan pelanggan.
+     *
+     * Dipakai sessionStorage (bukan localStorage) supaya draft otomatis hilang
+     * saat tab ditutup dan tidak bocor antar tab kasir.
+     */
+    const DRAFT_KEY = `pos:draft:${storeName || "default"}`;
 
-    // Baca success data dari sessionStorage (survive Inertia navigation)
-    const [successFromSession, setSuccessFromSession] = useState(() => {
+    const readDraft = () => {
         try {
-            const raw = window.sessionStorage.getItem('pos_success');
+            const raw = window.sessionStorage.getItem(DRAFT_KEY);
             return raw ? JSON.parse(raw) : null;
         } catch {
             return null;
         }
-    });
+    };
+
+    const clearDraft = () => {
+        try {
+            window.sessionStorage.removeItem(DRAFT_KEY);
+        } catch {
+            /* storage tidak tersedia — abaikan */
+        }
+    };
+
+    /* Success payload dibaca SEBELUM draft supaya transaksi yang baru selesai
+     * tidak "menghidupkan" lagi keranjang yang sudah dibayar. */
+    const successPayloadRef = useRef(undefined);
+    if (successPayloadRef.current === undefined) {
+        try {
+            const raw = window.sessionStorage.getItem('pos_success');
+            successPayloadRef.current = raw ? JSON.parse(raw) : null;
+        } catch {
+            successPayloadRef.current = null;
+        }
+    }
+
+    /* Draft dibaca sekali, SYNCHRONOUS saat render pertama — bukan di dalam
+     * useEffect. Ini penting: state keranjang di-init langsung dari draft
+     * sehingga tidak ada render dengan keranjang kosong yang bisa keburu
+     * ditimpa oleh autosave. */
+    const initialDraftRef = useRef(undefined);
+    if (initialDraftRef.current === undefined) {
+        if (successPayloadRef.current) {
+            clearDraft();
+            initialDraftRef.current = null;
+        } else {
+            initialDraftRef.current = readDraft();
+        }
+    }
+
+    const initialDraft = initialDraftRef.current;
+
+    /* ── state ── */
+    const [customers, setCustomers] = useState(initialCustomers || []);
+    const [search, setSearch] = useState("");
+    const [activeCat, setActiveCat] = useState("");
+    const [cart, setCart] = useState(() => initialDraft?.cart ?? []);
+    // Ref (bukan state) untuk penomoran cartId — dibaca & ditulis secara
+    // synchronous di dalam addToCart, jadi aman dari stale closure walau
+    // addToCart dipanggil berkali-kali sebelum React sempat re-render.
+    const cartIdSeqRef = useRef(
+        (initialDraft?.cart ?? []).reduce((m, c) => Math.max(m, c.cartId || 0), 0),
+    );
+
+    // Baca success data dari sessionStorage (survive Inertia navigation)
+    const [successFromSession, setSuccessFromSession] = useState(
+        successPayloadRef.current,
+    );
 
     useEffect(() => {
         if (successFromSession) {
@@ -231,12 +282,39 @@ export default function useKasir({
      * dan `tax` DITURUNKAN dari sini di bagian totals (lihat di bawah),
      * jadi diskon persen otomatis ikut berubah saat isi keranjang berubah.
      */
-    const [discountType, setDiscountType] = useState("fixed"); // 'fixed' | 'percent'
-    const [discountValue, setDiscountValue] = useState(0);
-    const [discountReason, setDiscountReason] = useState("");
-    const [taxType, setTaxType] = useState("fixed"); // 'fixed' | 'percent'
-    const [taxValue, setTaxValue] = useState(0);
-    const [taxName, setTaxName] = useState("");
+    const [discountType, setDiscountType] = useState(
+        initialDraft?.discountType || "fixed",
+    ); // 'fixed' | 'percent'
+    const [discountValue, setDiscountValue] = useState(
+        initialDraft?.discountValue || 0,
+    );
+    const [discountReason, setDiscountReason] = useState(
+        initialDraft?.discountReason || "",
+    );
+    /* ── Pajak default dari pengaturan toko ──────────────────────
+     * default_tax_rate di Pengaturan Toko langsung ter-apply sebagai pajak
+     * persen, jadi kasir tidak perlu mengisi pajak manual tiap transaksi.
+     * Kasir tetap bisa menimpanya lewat modal Pajak Manual, dan clearTax()
+     * mengembalikannya ke rate toko (bukan ke nol) supaya pajak tidak
+     * hilang diam-diam. Draft yang tersimpan tetap diprioritaskan.
+     */
+    const storeTaxRate = Number(defaultTaxRate) || 0;
+    const hasStoreTax = storeTaxRate > 0;
+    const storeTaxDefaults = {
+        type: hasStoreTax ? "percent" : "fixed",
+        value: hasStoreTax ? storeTaxRate : 0,
+        name: hasStoreTax ? "PPN" : "",
+    };
+
+    const [taxType, setTaxType] = useState(
+        initialDraft?.taxType ?? storeTaxDefaults.type,
+    ); // 'fixed' | 'percent'
+    const [taxValue, setTaxValue] = useState(
+        initialDraft?.taxValue ?? storeTaxDefaults.value,
+    );
+    const [taxName, setTaxName] = useState(
+        initialDraft?.taxName ?? storeTaxDefaults.name,
+    );
 
     // Backward-compat: setDiscount(n)/setTax(n) memperlakukan input sebagai
     // nominal tetap (fixed) — dipakai halaman fallback Kasir.jsx.
@@ -266,15 +344,19 @@ export default function useKasir({
         setTaxName(name ?? "");
     };
     const clearTax = () => {
-        setTaxType("fixed");
-        setTaxValue(0);
-        setTaxName("");
+        setTaxType(storeTaxDefaults.type);
+        setTaxValue(storeTaxDefaults.value);
+        setTaxName(storeTaxDefaults.name);
     };
 
-    const [orderType, setOrderType] = useState(orderOpts[0].v);
+    const [orderType, setOrderType] = useState(
+        initialDraft?.orderType || orderOpts[0].v,
+    );
 
     /* ── customer / table / delivery ── */
-    const [selectedCustomer, setSelectedCustomer] = useState("");
+    const [selectedCustomer, setSelectedCustomer] = useState(
+        initialDraft?.selectedCustomer || "",
+    );
     const [customerSearch, setCustomerSearch] = useState("");
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const [customerDropdownPos, setCustomerDropdownPos] = useState({
@@ -282,7 +364,9 @@ export default function useKasir({
         left: 0,
         width: 0,
     });
-    const [selectedTable, setSelectedTable] = useState("");
+    const [selectedTable, setSelectedTable] = useState(
+        initialDraft?.selectedTable || "",
+    );
     const [tableSearch, setTableSearch] = useState("");
     const [deliveryAddress, setDeliveryAddress] = useState("");
     const [deliveryFee, setDeliveryFee] = useState("");
@@ -310,7 +394,7 @@ export default function useKasir({
         left: 0,
         width: 0,
     });
-    const [note, setNote] = useState("");
+    const [note, setNote] = useState(initialDraft?.note || "");
 
     /* mode-specific state
      *
@@ -362,15 +446,41 @@ export default function useKasir({
         };
     }, [pendingPgTransaction, pendingSale]);
 
-    // Detect apakah user datang dari URL payment route (bukan klik tombol "Bayar")
-    const isFromPaymentRoute = !!pendingSale?.sale_id && !!pendingPgTransaction;
+    /* ── Deteksi halaman pembayaran ──────────────────────────────
+     * PaymentView HANYA boleh tampil otomatis kalau URL-nya benar-benar
+     * /kasir/payment/{saleNo} DAN backend mengirim pending sale yang valid.
+     *
+     * Sebelumnya `showPayment` di-init dari `!!pendingSale` saja. Karena
+     * KasirController@index juga mengirim pending sale terakhir milik user
+     * (untuk recovery), membuka /kasir biasa bisa langsung melompat ke
+     * PaymentView — termasuk saat transaksinya sudah tidak relevan, sehingga
+     * layar pembayaran muncul tanpa transaksi yang bisa diproses.
+     */
+    const isOnPaymentRoute = () =>
+        typeof window !== "undefined" &&
+        /\/kasir\/payment(\/|$)/.test(window.location.pathname);
 
-    const [showPayment, setShowPayment] = useState(
-        isFromPaymentRoute ? true : !!pendingSale,
-    );
+    const isFromPaymentRoute = isOnPaymentRoute() && !!pendingSale?.sale_id;
 
-    // Restore cart from pending sale items on mount
+    const [showPayment, setShowPayment] = useState(isFromPaymentRoute);
+
+    /* Restore konteks transaksi saat mount.
+     *
+     * Isi keranjang sendiri sudah dipulihkan synchronous lewat initializer
+     * `useState` di atas. Efek ini melengkapi sisanya (order type, pelanggan,
+     * meja, diskon, pajak, catatan, info delivery/pickup, field mode) yang
+     * hanya ada di draft.
+     *
+     * Kalau draft tidak ada — mis. kasir membuka deep link halaman pembayaran
+     * di tab baru — fallback ke `pendingSale.items` dari backend. */
+    const cartRestoredRef = useRef(false);
     useEffect(() => {
+        if (cartRestoredRef.current) return;
+        cartRestoredRef.current = true;
+        if (initialDraft?.cart?.length) {
+            applyCartSnapshot(initialDraft);
+            return;
+        }
         if (pendingSale?.items?.length) {
             const restoredCart = pendingSale.items.map((item, i) => ({
                 cartId: i + 1,
@@ -388,20 +498,39 @@ export default function useKasir({
         }
     }, [pendingSale]);
 
-    // Auto-tampilkan PaymentView jika user navigasi dari URL payment route
+    /* ── Autosave draft ──────────────────────────────────────────
+     * Mirror state transaksi berjalan ke sessionStorage setiap kali berubah.
+     * Karena keranjang di-hydrate synchronous saat render pertama, tidak ada
+     * jeda "keranjang kosong" yang bisa menghapus draft secara tidak sengaja.
+     * Keranjang kosong berarti memang tidak ada draft → kunci dihapus.
+     */
     useEffect(() => {
-        if (isFromPaymentRoute && pendingSale?.sale_id) {
-            setShowPayment(true);
-        }
-    }, [isFromPaymentRoute, pendingSale]);
+        saveDraft();
+    }, [
+        cart,
+        orderType,
+        selectedCustomer,
+        selectedTable,
+        discountType,
+        discountValue,
+        taxType,
+        taxValue,
+        note,
+    ]);
 
-    // Auto-show successData di parent state
+    /* ── Pengaman: jangan pernah tampilkan pembayaran tanpa transaksi ──
+     * Kalau URL /kasir/payment/{saleNo} dibuka/refresh tapi backend tidak
+     * mengirim pending sale (mis. transaksi sudah dibatalkan, kedaluwarsa,
+     * atau milik user lain), PaymentView akan render tanpa sale sama sekali
+     * dan semua aksi bayar gagal. Lempar balik ke halaman kasir — keranjang
+     * tetap ikut karena draft tidak dihapus.
+     */
     useEffect(() => {
-        if (successDataFromRedirect) {
-            setSuccessData(successDataFromRedirect);
-            setAutoShowPayment(false);
-        }
-    }, [successDataFromRedirect]);
+        if (!isOnPaymentRoute()) return;
+        if (pendingSale?.sale_id) return;
+        setShowPayment(false);
+        router.visit(route('admin.kasir.index'), { replace: true });
+    }, [pendingSale]);
 
     const [showReceipt, setShowReceipt] = useState(false);
     const [receiptData, setReceiptData] = useState(null);
@@ -497,14 +626,32 @@ export default function useKasir({
         return result;
     }, [products, search, activeCat, stockFilter, sortBy]);
 
-    /* ── customer tier ── */
+    /* ── customer tier id ── */
     const customerTier = useMemo(() => {
         if (!selectedCustomer) return null;
         const cust = customers.find(
             (c) => String(c.id) === String(selectedCustomer),
         );
+        // Tetap expose tier string untuk backward compat (beberapa tempat masih memakainya)
         return cust?.tier ?? null;
     }, [selectedCustomer, customers]);
+
+    const customerTierId = useMemo(() => {
+        if (!selectedCustomer) return null;
+        const cust = customers.find(
+            (c) => String(c.id) === String(selectedCustomer),
+        );
+        return cust?.customer_tier_id ?? null;
+    }, [selectedCustomer, customers]);
+
+    /* ── benefit membership pelanggan terpilih ──
+     * Ringkasan dari MembershipBenefitService::summaryForCustomers(). Dipakai
+     * hanya untuk preview; angka final tetap dihitung ulang di server saat
+     * checkout. */
+    const memberBenefit = useMemo(
+        () => (selectedCustomer ? membershipBenefits[selectedCustomer] ?? null : null),
+        [selectedCustomer, membershipBenefits],
+    );
 
     /* ── promo helpers ── */
     // Mirror backend PromotionService logic for frontend preview
@@ -535,8 +682,8 @@ export default function useKasir({
             // Check min_quantity
             if (promo.min_quantity > 0 && qty < promo.min_quantity) continue;
 
-            // Check customer tier
-            if (promo.customer_tier && promo.customer_tier !== customerTier)
+            // Check customer tier — dibandingkan pakai id, bukan string nama
+            if (promo.customer_tier_id && promo.customer_tier_id !== customerTierId)
                 continue;
 
             let d = 0;
@@ -600,7 +747,7 @@ export default function useKasir({
                 cartSubtotal < promo.min_purchase_amount
             )
                 continue;
-            if (promo.customer_tier && promo.customer_tier !== customerTier)
+            if (promo.customer_tier_id && promo.customer_tier_id !== customerTierId)
                 continue;
 
             let d = 0;
@@ -625,12 +772,67 @@ export default function useKasir({
 
     // Cart-level promo result (recalculated when cart or customer changes)
     const cartSubtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
-    const cartPromoResult = useMemo(
+    const promoOnlyResult = useMemo(
         () => findBestCartPromo(cartSubtotal),
-        [cartSubtotal, customerTier, promotions],
+        [cartSubtotal, customerTierId, promotions],
     );
-    const cartPromoDiscount = cartPromoResult?.discount ?? 0;
-    const cartPromoName = cartPromoResult?.promo?.name ?? null;
+
+    /* ── Diskon membership ──
+     * Cermin MembershipBenefitService::cartDiscount(): kandidat persen dan
+     * nominal dievaluasi, yang terbesar menang, lalu dibandingkan lagi dengan
+     * promo keranjang. */
+    const memberDiscountResult = useMemo(() => {
+        if (!memberBenefit) return null;
+
+        let best = 0;
+        const percent = memberBenefit.percent;
+        const amount = memberBenefit.amount;
+
+        if (percent?.value > 0 && cartSubtotal >= (percent.min_purchase || 0)) {
+            let d = cartSubtotal * (percent.value / 100);
+            if (percent.cap > 0) d = Math.min(d, percent.cap);
+            best = d;
+        }
+
+        if (amount?.value > 0 && cartSubtotal >= (amount.min_purchase || 0)) {
+            best = Math.max(best, amount.value);
+        }
+
+        best = Math.min(best, cartSubtotal);
+
+        return best > 0
+            ? {
+                  discount: Math.round(best),
+                  name: memberBenefit.membership_name,
+              }
+            : null;
+    }, [memberBenefit, cartSubtotal]);
+
+    // Membership vs promo keranjang — hanya satu yang dipakai, yang terbesar.
+    const memberDiscountWins =
+        memberDiscountResult &&
+        (!promoOnlyResult ||
+            memberDiscountResult.discount > promoOnlyResult.discount);
+    const cartPromoResult = memberDiscountWins ? null : promoOnlyResult;
+    const cartPromoDiscount = memberDiscountWins
+        ? memberDiscountResult.discount
+        : (promoOnlyResult?.discount ?? 0);
+    const cartPromoName = memberDiscountWins
+        ? memberDiscountResult.name
+        : (promoOnlyResult?.promo?.name ?? null);
+
+    /* ── Gratis ongkir dari membership ──
+     * Cermin MembershipBenefitService::shippingWaiver(). Plafon kosong berarti
+     * ongkir dinolkan penuh. */
+    const shippingWaiver = useMemo(() => {
+        const fee = Number(deliveryFee || 0);
+        const fs = memberBenefit?.free_shipping;
+
+        if (!fs?.active || fee <= 0) return 0;
+        if (cartSubtotal < (fs.min_purchase || 0)) return 0;
+
+        return fs.cap > 0 ? Math.min(fs.cap, fee) : fee;
+    }, [memberBenefit, deliveryFee, cartSubtotal]);
 
     // Recalculate promo for a single cart item (used after qty change)
     const recalcPromo = (item) => {
@@ -663,7 +865,7 @@ export default function useKasir({
                 };
             }),
         );
-    }, [customerTier]);
+    }, [customerTierId]);
 
     /* ── scanner helpers ── */
     const playBeep = () => {
@@ -986,6 +1188,10 @@ export default function useKasir({
         // Delivery/dll biasanya melayani beberapa transaksi berturut-turut
         // dengan tipe yang sama, jadi tidak perlu pilih ulang setiap kali.
         setSelectedEmployee("");
+        // Draft keranjang ikut dibuang supaya tidak "hidup lagi" setelah
+        // navigasi/refresh berikutnya.
+        clearDraft();
+        initialDraftRef.current = null;
     };
 
     /* ── click product ── */
@@ -1154,6 +1360,11 @@ export default function useKasir({
                 cartPromoName: null,
                 discount: sale.discount_amount ?? 0,
                 tax: sale.tax_amount ?? 0,
+                // Tabel sales tidak menyimpan nama/rate pajak, jadi struk cetak
+                // ulang memakai label generik "Pajak" alih-alih mengarang rate.
+                taxName: null,
+                taxRate: null,
+                taxInclusive,
                 grandTotal: sale.grand_total,
                 change: sale.change_amount ?? 0,
                 payments: (sale.payments ?? []).map((p) => ({
@@ -1235,6 +1446,12 @@ export default function useKasir({
             ? Math.round((manualTaxBase * (Number(taxValue) || 0)) / 100)
             : Number(taxValue) || 0;
 
+    // Ongkir yang benar-benar ditagihkan setelah subsidi membership.
+    const effectiveDeliveryFee = Math.max(
+        0,
+        Number(deliveryFee || 0) - shippingWaiver,
+    );
+
     const grandTotal = Math.max(
         0,
         subtotal -
@@ -1242,7 +1459,7 @@ export default function useKasir({
             cartPromoDiscount -
             discount +
             tax +
-            Number(deliveryFee || 0),
+            effectiveDeliveryFee,
     );
 
     /* ── cash rounding ── */
@@ -1333,14 +1550,18 @@ export default function useKasir({
         }
     };
 
-    const holdTransaction = () => {
-        if (cart.length === 0) {
-            return false;
-        }
+    /**
+     * Snapshot lengkap transaksi berjalan.
+     *
+     * Dipakai dua tempat: Hold/Park (localStorage) dan draft keranjang
+     * (sessionStorage, supaya keranjang selamat saat pindah ke halaman
+     * pembayaran dan kembali lagi).
+     */
+    const buildCartSnapshot = () => {
         const custName =
             customers.find((c) => String(c.id) === String(selectedCustomer))
                 ?.name || null;
-        const snapshot = {
+        return {
             id: crypto?.randomUUID?.() ?? `held-${Date.now()}`,
             heldAt: new Date().toISOString(),
             label:
@@ -1378,12 +1599,35 @@ export default function useKasir({
             guestCount,
             selectedEmployee,
         };
-        persistHeld([snapshot, ...heldTransactions].slice(0, 50));
+    };
+
+    /** Tulis draft keranjang ke sessionStorage (no-op saat keranjang kosong). */
+    const saveDraft = () => {
+        try {
+            if (cart.length === 0) {
+                window.sessionStorage.removeItem(DRAFT_KEY);
+                return;
+            }
+            window.sessionStorage.setItem(
+                DRAFT_KEY,
+                JSON.stringify(buildCartSnapshot()),
+            );
+        } catch {
+            /* storage penuh / tidak tersedia — abaikan */
+        }
+    };
+
+    const holdTransaction = () => {
+        if (cart.length === 0) {
+            return false;
+        }
+        persistHeld([buildCartSnapshot(), ...heldTransactions].slice(0, 50));
         clearCart();
         return true;
     };
 
-    const resumeHeldTransaction = (held) => {
+    /** Terapkan snapshot (held atau draft) ke seluruh state transaksi. */
+    const applyCartSnapshot = (held) => {
         if (!held) {
             return;
         }
@@ -1401,9 +1645,9 @@ export default function useKasir({
         setDiscountType(held.discountType || "fixed");
         setDiscountValue(held.discountValue || 0);
         setDiscountReason(held.discountReason || "");
-        setTaxType(held.taxType || "fixed");
-        setTaxValue(held.taxValue || 0);
-        setTaxName(held.taxName || "");
+        setTaxType(held.taxType ?? storeTaxDefaults.type);
+        setTaxValue(held.taxValue ?? storeTaxDefaults.value);
+        setTaxName(held.taxName ?? storeTaxDefaults.name);
         setNote(held.note || "");
         setDeliveryAddress(held.deliveryAddress || "");
         setDeliveryFee(held.deliveryFee || "");
@@ -1423,6 +1667,13 @@ export default function useKasir({
         setRoomNumber(held.roomNumber || "");
         setGuestCount(held.guestCount ?? 1);
         setSelectedEmployee(held.selectedEmployee || "");
+    };
+
+    const resumeHeldTransaction = (held) => {
+        if (!held) {
+            return;
+        }
+        applyCartSnapshot(held);
         persistHeld(heldTransactions.filter((h) => h.id !== held.id));
     };
 
@@ -1470,6 +1721,9 @@ export default function useKasir({
             subtotal,
             discount: Number(discount),
             tax: Number(tax),
+            taxName: taxName || null,
+            taxRate: taxType === "percent" ? Number(taxValue) || 0 : null,
+            taxInclusive,
             totalPromoDisc,
             cartPromoDiscount,
             cartPromoName,
@@ -1480,7 +1734,9 @@ export default function useKasir({
             tableName: tables.find(t => String(t.id) === String(selectedTable))?.table_number ?? null,
             orderType,
             deliveryAddress: orderType === "delivery" ? deliveryAddress : null,
-            deliveryFee: orderType === "delivery" ? Number(deliveryFee || 0) : 0,
+            // Ongkir setelah subsidi membership — angka inilah yang tersimpan
+            // di server, jadi struk harus menampilkan yang sama.
+            deliveryFee: orderType === "delivery" ? effectiveDeliveryFee : 0,
             deliveryCustomerName: orderType === "delivery" ? (deliveryCustomerName || customer?.name) : null,
             takeawayCustomerName: orderType === "takeaway" ? takeawayCustomerName || null : null,
             employeeName: selectedEmployee ? (employees.find(e => String(e.id) === String(selectedEmployee))?.name ?? null) : null,
@@ -1762,6 +2018,11 @@ export default function useKasir({
             if (!data.success) throw new Error(data.message);
             setResumeSaleId(data.sale_id);
             setResumeSaleNo(data.sale_no);
+            // Simpan snapshot keranjang sebelum pindah halaman — halaman
+            // pembayaran adalah route Inertia terpisah, jadi state React
+            // sekarang akan hilang. Draft inilah yang dipakai tombol
+            // "Kembali" untuk memulihkan keranjang apa adanya.
+            saveDraft();
             router.visit(route('admin.kasir.payment.show', { saleNo: data.sale_no }));
             return data;
         } catch (e) {
@@ -1893,6 +2154,9 @@ export default function useKasir({
                     subtotal,
                     discount: Number(discount || 0),
                     tax: Number(tax || 0),
+                    taxName: taxName || null,
+                    taxRate: taxType === "percent" ? Number(taxValue) || 0 : null,
+                    taxInclusive,
                     totalPromoDisc: totalPromoDisc || 0,
                     cartPromoDiscount: cartPromoDiscount || 0,
                     cartPromoName: cartPromoName || null,
@@ -1965,6 +2229,53 @@ export default function useKasir({
         }
     };
 
+    /**
+     * Kembali dari halaman pembayaran ke halaman kasir.
+     *
+     * Membatalkan pending sale (kalau ada), lalu benar-benar navigasi ke
+     * `admin.kasir.index` supaya URL tidak tertinggal di /kasir/payment/{saleNo}
+     * — kalau URL dibiarkan, refresh akan melempar kasir balik ke layar
+     * pembayaran padahal transaksinya sudah dibatalkan. Draft keranjang
+     * SENGAJA tidak dihapus supaya isi keranjang kembali utuh di halaman kasir.
+     *
+     * @param {{saleId?: number|null, skipCancel?: boolean}} options
+     */
+    const handleBackToKasir = async ({ saleId = null, skipCancel = false } = {}) => {
+        // Simpan ulang snapshot terkini — pelanggan/diskon bisa saja diubah
+        // dari layar pembayaran, dan perubahan itu harus ikut kembali.
+        saveDraft();
+
+        const targetSaleId = saleId ?? resumeSaleId;
+        if (targetSaleId && !skipCancel) {
+            await handleCancelPendingSale(targetSaleId);
+        }
+        setResumeSaleId(null);
+        setResumeSaleNo(null);
+        setShowPayment(false);
+
+        if (isOnPaymentRoute()) {
+            router.visit(route('admin.kasir.index'));
+        }
+    };
+
+    /* ── Jembatan tombol "Kembali" ────────────────────────────────
+     * Tombolnya ada di header layout, tapi konteks yang menentukan boleh/tidak
+     * membatalkan transaksi (struk sudah terbit, transaksi PG masih berjalan)
+     * ada di dalam PaymentView. PaymentView mendaftarkan handler-nya ke ref ini
+     * supaya tombol header memakai logika yang sama — tanpa itu, tombol header
+     * bisa membatalkan transaksi yang QRIS-nya sedang dibayar pelanggan.
+     */
+    const paymentBackRef = useRef(null);
+
+    const registerPaymentBack = (fn) => {
+        paymentBackRef.current = fn;
+    };
+
+    const requestPaymentBack = () =>
+        paymentBackRef.current
+            ? paymentBackRef.current()
+            : handleBackToKasir();
+
     const handleVoidSale = async (saleId) => {
         try {
             const response = await axios.post(route('admin.kasir.void-sale', saleId));
@@ -2008,7 +2319,9 @@ export default function useKasir({
         lines.push('--------------------------------');
         lines.push(`Subtotal: Rp${Number(receipt.subtotal || 0).toLocaleString('id-ID')}`);
         if (receipt.discount > 0) lines.push(`Diskon: -Rp${Number(receipt.discount).toLocaleString('id-ID')}`);
-        if (receipt.tax > 0) lines.push(`Pajak: +Rp${Number(receipt.tax).toLocaleString('id-ID')}`);
+        if (receipt.tax > 0) {
+            lines.push(`${buildTaxLabel(receipt)}: +Rp${Number(receipt.tax).toLocaleString('id-ID')}`);
+        }
         lines.push(`*TOTAL: Rp${Number(receipt.grandTotal || 0).toLocaleString('id-ID')}*`);
 
         if (receipt.payments && receipt.payments.length > 0) {
@@ -2286,6 +2599,10 @@ export default function useKasir({
         sortBy,
         setSortBy,
         customerTier,
+        customerTierId,
+        memberBenefit,
+        shippingWaiver,
+        effectiveDeliveryFee,
         subtotal,
         totalPromoDisc,
         cartPromoDiscount,
@@ -2360,6 +2677,9 @@ export default function useKasir({
         handleStartAndNavigateToPayment,
         handleFinalizePayment,
         handleCancelPendingSale,
+        handleBackToKasir,
+        registerPaymentBack,
+        requestPaymentBack,
         handleStartPg,
         handleRetryPg,
         handleVoidSale,
@@ -2372,5 +2692,6 @@ export default function useKasir({
         findBestPromoForItem,
         findBestCartPromo,
         recalcPromo,
+        sellableMemberships,
     };
 }

@@ -1,33 +1,43 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
+import {
+    ArrowLeft,
+    Check,
+    ClipboardList,
+    Package,
+    Settings,
+    ShoppingCart,
+    Users,
+    Wallet,
+} from "lucide-react";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const iCls = (err) =>
-    `block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 ${
+    `block w-full rounded-xl border px-3.5 py-2.5 text-sm text-foreground transition placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${
         err
-            ? "border-red-300 bg-red-50/30 focus:ring-red-200"
-            : "border-slate-200 bg-white focus:ring-primary-200 focus:border-primary-400 hover:border-slate-300"
+            ? "border-destructive bg-destructive/10 focus:ring-destructive/20"
+            : "border-input bg-background focus:border-ring focus:ring-ring/20"
     }`;
 
 const CAT_META = {
-    pos:       { icon: "🛒", label: "POS & Transaksi",   cls: "bg-blue-50 text-blue-700 ring-blue-200"      },
-    crm:       { icon: "👥", label: "Pelanggan & CRM",   cls: "bg-violet-50 text-violet-700 ring-violet-200" },
-    inventory: { icon: "📦", label: "Inventaris & Stok", cls: "bg-amber-50 text-amber-700 ring-amber-200"   },
-    finance:   { icon: "💰", label: "Keuangan",          cls: "bg-emerald-50 text-emerald-700 ring-emerald-200"},
-    system:    { icon: "⚙️", label: "Sistem & Admin",    cls: "bg-slate-100 text-slate-600 ring-slate-200"  },
-    other:     { icon: "📋", label: "Lainnya",           cls: "bg-slate-50 text-slate-500 ring-slate-200"   },
+    pos:       { Icon: ShoppingCart,  label: "POS & Transaksi",   cls: "bg-blue-100 text-blue-700 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800"           },
+    crm:       { Icon: Users,         label: "Pelanggan & CRM",   cls: "bg-violet-100 text-violet-700 ring-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-800" },
+    inventory: { Icon: Package,       label: "Inventaris & Stok", cls: "bg-amber-100 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800"      },
+    finance:   { Icon: Wallet,        label: "Keuangan",          cls: "bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:ring-emerald-800" },
+    system:    { Icon: Settings,      label: "Sistem & Admin",    cls: "bg-muted text-muted-foreground ring-border"                                                                   },
+    other:     { Icon: ClipboardList, label: "Lainnya",           cls: "bg-muted text-muted-foreground ring-border"                                                                   },
 };
 const CAT_ORDER = ["pos", "crm", "inventory", "finance", "system", "other"];
 
 function Label({ children, required }) {
     return (
-        <label className="mb-1.5 block text-sm font-medium text-slate-700">
-            {children}{required && <span className="ml-0.5 text-red-400">*</span>}
+        <label className="mb-1.5 block text-sm font-medium text-foreground">
+            {children}{required && <span className="ml-0.5 text-destructive">*</span>}
         </label>
     );
 }
 function FieldError({ msg }) {
-    return msg ? <p className="mt-1 text-xs text-red-600">{msg}</p> : null;
+    return msg ? <p className="mt-1 text-xs text-destructive">{msg}</p> : null;
 }
 
 export default function Form({ plan, allFeatures = [] }) {
@@ -82,16 +92,14 @@ export default function Form({ plan, allFeatures = [] }) {
         <DeveloperLayout header={
             <div className="flex items-center gap-3">
                 <Link href={route("developer.plans.index")}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-700">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                    </svg>
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-sm transition hover:bg-muted hover:text-foreground">
+                    <ArrowLeft className="h-4 w-4" strokeWidth={2} />
                 </Link>
                 <div>
-                    <h2 className="text-lg font-bold text-slate-800">
+                    <h2 className="text-lg font-bold text-foreground">
                         {isEdit ? `Edit Paket — ${plan.label}` : "Tambah Paket Baru"}
                     </h2>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                         {isEdit ? `Kode: ${plan.code}` : "Isi informasi paket langganan"}
                     </p>
                 </div>
@@ -103,10 +111,10 @@ export default function Form({ plan, allFeatures = [] }) {
                 <form onSubmit={submit} className="space-y-5">
 
                     {/* ── Identitas Paket ── */}
-                    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-sm font-bold text-slate-800">Identitas Paket</h3>
-                            <p className="mt-0.5 text-xs text-slate-400">Kode unik dan nama yang tampil ke pengguna</p>
+                    <section className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
+                        <div className="border-b border-border bg-muted/60 px-6 py-4">
+                            <h3 className="text-sm font-bold text-foreground">Identitas Paket</h3>
+                            <p className="mt-0.5 text-xs text-muted-foreground">Kode unik dan nama yang tampil ke pengguna</p>
                         </div>
                         <div className="p-6 grid grid-cols-2 gap-4">
                             <div>
@@ -116,7 +124,7 @@ export default function Form({ plan, allFeatures = [] }) {
                                     className={iCls(errors.code)}
                                     placeholder="free / basic / pro"
                                 />
-                                <p className="mt-1 text-[11px] text-slate-400">Lowercase, tanpa spasi. Tidak bisa diubah setelah pakai.</p>
+                                <p className="mt-1 text-[11px] text-muted-foreground">Lowercase, tanpa spasi. Tidak bisa diubah setelah pakai.</p>
                                 <FieldError msg={errors.code} />
                             </div>
                             <div>
@@ -142,10 +150,10 @@ export default function Form({ plan, allFeatures = [] }) {
                     </section>
 
                     {/* ── Batas & Harga ── */}
-                    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-4">
-                            <h3 className="text-sm font-bold text-slate-800">Batas & Harga</h3>
-                            <p className="mt-0.5 text-xs text-slate-400">Limit penggunaan dan harga langganan</p>
+                    <section className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
+                        <div className="border-b border-border bg-muted/60 px-6 py-4">
+                            <h3 className="text-sm font-bold text-foreground">Batas & Harga</h3>
+                            <p className="mt-0.5 text-xs text-muted-foreground">Limit penggunaan dan harga langganan</p>
                         </div>
                         <div className="p-6 grid grid-cols-2 gap-4">
                             <div>
@@ -155,7 +163,7 @@ export default function Form({ plan, allFeatures = [] }) {
                                         onChange={e => setData("max_users", Number(e.target.value))}
                                         className={iCls(errors.max_users)}
                                     />
-                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">user</span>
+                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">user</span>
                                 </div>
                                 <FieldError msg={errors.max_users} />
                             </div>
@@ -166,14 +174,14 @@ export default function Form({ plan, allFeatures = [] }) {
                                         onChange={e => setData("max_branches", Number(e.target.value))}
                                         className={iCls(errors.max_branches)}
                                     />
-                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">cabang</span>
+                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">cabang</span>
                                 </div>
                                 <FieldError msg={errors.max_branches} />
                             </div>
                             <div>
                                 <Label>Harga / Bulan</Label>
                                 <div className="relative">
-                                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-400">Rp</span>
+                                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">Rp</span>
                                     <input type="number" min="0" step="1000" value={data.price}
                                         onChange={e => setData("price", Number(e.target.value))}
                                         className={`${iCls(errors.price)} pl-9`}
@@ -190,39 +198,39 @@ export default function Form({ plan, allFeatures = [] }) {
                                         className={iCls(errors.trial_days)}
                                         placeholder="0 = Tidak ada trial"
                                     />
-                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">hari</span>
+                                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">hari</span>
                                 </div>
                                 <FieldError msg={errors.trial_days} />
                             </div>
 
                             {/* Status & sort */}
                             <div className="col-span-2 flex items-center gap-6 pt-1">
-                                <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 transition hover:bg-slate-50">
-                                    <div className={`relative h-5 w-9 rounded-full transition-colors ${data.is_active ? "bg-primary-500" : "bg-slate-300"}`}>
-                                        <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${data.is_active ? "translate-x-4" : "translate-x-0.5"}`} />
+                                <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-card text-card-foreground px-4 py-2.5 transition hover:bg-muted">
+                                    <div className={`relative h-5 w-9 rounded-full transition-colors ${data.is_active ? "bg-primary" : "bg-muted-foreground/40"}`}>
+                                        <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-card text-card-foreground shadow-sm transition-transform ${data.is_active ? "translate-x-4" : "translate-x-0.5"}`} />
                                     </div>
                                     <input type="checkbox" checked={data.is_active} onChange={e => setData("is_active", e.target.checked)} className="sr-only" />
-                                    <span className="text-sm font-medium text-slate-700">{data.is_active ? "Aktif" : "Nonaktif"}</span>
+                                    <span className="text-sm font-medium text-foreground">{data.is_active ? "Aktif" : "Nonaktif"}</span>
                                 </label>
                                 <div>
                                     <Label>Urutan</Label>
                                     <input type="number" min="0" value={data.sort_order}
                                         onChange={e => setData("sort_order", Number(e.target.value))}
-                                        className="w-20 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-400"
+                                        className="w-20 rounded-xl border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                                     />
-                                    <p className="mt-1 text-[11px] text-slate-400">Bisa diubah via drag di Index</p>
+                                    <p className="mt-1 text-[11px] text-muted-foreground">Bisa diubah via drag di Index</p>
                                 </div>
                             </div>
                         </div>
                     </section>
 
                     {/* ── Fitur ── */}
-                    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-6 py-4">
+                    <section className="overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
+                        <div className="flex items-center justify-between border-b border-border bg-muted/60 px-6 py-4">
                             <div>
-                                <h3 className="text-sm font-bold text-slate-800">Fitur yang Disertakan</h3>
-                                <p className="mt-0.5 text-xs text-slate-400">
-                                    <span className="font-semibold text-primary-600">{selectedCount}</span>
+                                <h3 className="text-sm font-bold text-foreground">Fitur yang Disertakan</h3>
+                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                    <span className="font-semibold text-primary">{selectedCount}</span>
                                     {" dari "}
                                     <span className="font-semibold">{allIds.length}</span>
                                     {" fitur dipilih"}
@@ -231,16 +239,16 @@ export default function Form({ plan, allFeatures = [] }) {
                             <button type="button" onClick={toggleAll}
                                 className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
                                     allSelected
-                                        ? "bg-primary-100 text-primary-700 hover:bg-primary-200"
-                                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                                        ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                        : "border border-border bg-card text-card-foreground text-muted-foreground hover:bg-muted"
                                 }`}>
                                 {allSelected ? "✓ Semua Dipilih" : "Pilih Semua"}
                             </button>
                         </div>
 
                         {/* Progress bar */}
-                        <div className="h-1 bg-slate-100">
-                            <div className="h-1 bg-primary-500 transition-all duration-300"
+                        <div className="h-1 bg-muted">
+                            <div className="h-1 bg-primary transition-all duration-300"
                                 style={{ width: allIds.length > 0 ? `${(selectedCount / allIds.length) * 100}%` : "0%" }} />
                         </div>
 
@@ -255,8 +263,8 @@ export default function Form({ plan, allFeatures = [] }) {
                                     <div key={catKey}>
                                         <div className="mb-2.5 flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm">{cat.icon}</span>
-                                                <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500">{cat.label}</h4>
+                                                <cat.Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
+                                                <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{cat.label}</h4>
                                                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${cat.cls}`}>
                                                     {catSelected}/{catFeatures.length}
                                                 </span>
@@ -270,7 +278,7 @@ export default function Form({ plan, allFeatures = [] }) {
                                                         setData("feature_ids", newIds);
                                                     }
                                                 }}
-                                                className="text-[11px] font-medium text-primary-600 hover:text-primary-800 transition">
+                                                className="text-[11px] font-medium text-primary transition hover:text-primary/80">
                                                 {catAllSelected ? "Hapus semua" : "Pilih semua"}
                                             </button>
                                         </div>
@@ -281,22 +289,20 @@ export default function Form({ plan, allFeatures = [] }) {
                                                     <label key={f.id}
                                                         className={`group flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition select-none ${
                                                             checked
-                                                                ? "border-primary-300 bg-primary-50"
-                                                                : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                                                                ? "border-primary/40 bg-primary/10"
+                                                                : "border-border bg-card text-card-foreground hover:border-border hover:bg-muted"
                                                         }`}>
                                                         <div className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition ${
-                                                            checked ? "border-primary-500 bg-primary-500" : "border-slate-300 group-hover:border-slate-400"
+                                                            checked ? "border-primary bg-primary" : "border-border group-hover:border-muted-foreground"
                                                         }`}>
                                                             {checked && (
-                                                                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                                </svg>
+                                                                <Check className="h-3 w-3 text-primary-foreground" strokeWidth={3} />
                                                             )}
                                                         </div>
                                                         <input type="checkbox" checked={checked} onChange={() => toggleFeature(f.id)} className="sr-only" />
                                                         <div className="min-w-0">
-                                                            <p className={`text-xs font-semibold leading-tight ${checked ? "text-primary-800" : "text-slate-700"}`}>{f.label}</p>
-                                                            <p className="mt-0.5 font-mono text-[10px] text-slate-400">{f.code}</p>
+                                                            <p className={`text-xs font-semibold leading-tight ${checked ? "text-primary" : "text-foreground"}`}>{f.label}</p>
+                                                            <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{f.code}</p>
                                                         </div>
                                                     </label>
                                                 );
@@ -308,25 +314,25 @@ export default function Form({ plan, allFeatures = [] }) {
                         </div>
 
                         {errors.feature_ids && (
-                            <p className="px-6 pb-4 text-xs text-red-600">{errors.feature_ids}</p>
+                            <p className="px-6 pb-4 text-xs text-destructive">{errors.feature_ids}</p>
                         )}
                     </section>
 
                     {/* ── Actions ── */}
                     <div className="flex items-center justify-between pb-6">
-                        <p className="text-xs text-slate-400">
-                            {selectedCount} fitur dipilih untuk paket <span className="font-semibold text-slate-600">{data.label || "ini"}</span>
+                        <p className="text-xs text-muted-foreground">
+                            {selectedCount} fitur dipilih untuk paket <span className="font-semibold text-muted-foreground">{data.label || "ini"}</span>
                         </p>
                         <div className="flex items-center gap-3">
                             <Link href={route("developer.plans.index")}
-                                className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                                className="rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
                                 Batal
                             </Link>
                             <button type="submit" disabled={processing}
-                                className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:opacity-60 transition-colors">
+                                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-60">
                                 {processing ? (
                                     <>
-                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                                         Menyimpan...
                                     </>
                                 ) : isEdit ? "Simpan Perubahan" : "Buat Paket"}

@@ -1,11 +1,15 @@
 import * as ReactDOM from "react-dom";
 import { useEffect, useState } from "react";
-import { fmt, fmtShort } from "./helpers";
+import { buildTaxLabel, fmt, fmtShort } from "./helpers";
 
 export default function ReceiptModal({
     receipt,
     storeName,
     footer,
+    header,
+    storeAddress,
+    storePhone,
+    storeLogo,
     autoPrint = false,
     onClose,
     onNewTransaction,
@@ -47,9 +51,33 @@ export default function ReceiptModal({
                     </p>
                 </div>
             )}
+            {storeLogo && (
+                <div className="mb-2 flex justify-center">
+                    <img
+                        src={storeLogo}
+                        alt={storeName || "Logo toko"}
+                        className="h-12 w-12 object-contain"
+                    />
+                </div>
+            )}
             <p className="text-center text-sm font-bold text-foreground">
                 {storeName}
             </p>
+            {storeAddress && (
+                <p className="mt-0.5 whitespace-pre-wrap text-center text-muted-foreground">
+                    {storeAddress}
+                </p>
+            )}
+            {storePhone && (
+                <p className="text-center text-muted-foreground">
+                    {storePhone}
+                </p>
+            )}
+            {header && (
+                <p className="mt-1.5 whitespace-pre-wrap text-center text-muted-foreground">
+                    {header}
+                </p>
+            )}
             <p className="mt-0.5 text-center text-muted-foreground">
                 {receipt.saleNo}
                 {receipt.isOffline && (
@@ -216,7 +244,10 @@ export default function ReceiptModal({
             )}
             {receipt.tax > 0 && (
                 <div className="flex justify-between">
-                    <span>Pajak</span>
+                    <span>
+                        {buildTaxLabel(receipt)}
+                        {receipt.taxInclusive ? "*" : ""}
+                    </span>
                     <span>{fmt(receipt.tax)}</span>
                 </div>
             )}
@@ -230,6 +261,11 @@ export default function ReceiptModal({
                 <span>Total</span>
                 <span>{fmt(receipt.grandTotal)}</span>
             </div>
+            {receipt.tax > 0 && receipt.taxInclusive && (
+                <p className="mt-1 text-muted-foreground">
+                    * Harga sudah termasuk {receipt.taxName || "pajak"}
+                </p>
+            )}
             {receipt.payments.map((p, i) => (
                 <div key={i} className="flex justify-between text-muted-foreground">
                     <span>{p.methodName}</span>
@@ -342,6 +378,11 @@ export default function ReceiptModal({
                         font-size: 12px !important;
                         color: #1e293b !important;
                         background: white !important;
+                    }
+                    .print-only-receipt img {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        filter: grayscale(100%) contrast(1.4) !important;
                     }
                     @page {
                         margin: 0;

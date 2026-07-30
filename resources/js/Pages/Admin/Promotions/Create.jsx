@@ -1,10 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import PageHeader from '@/Components/PageHeader';
 import SectionCard from '@/Components/ui/SectionCard';
+import { useForm } from '@inertiajs/react';
 import PromotionForm from './PromotionForm';
 
-export default function Create({ products }) {
+export default function Create({ buckets = [], customerTiers = [], scopeSupport = {} }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         type: 'percentage',
@@ -14,15 +14,18 @@ export default function Create({ products }) {
         max_discount_amount: '',
         min_quantity: '',
         tier_price: '',
-        customer_tier: '',
+        customer_tier_id: '',
         start_date: '',
         end_date: '',
         start_hour: '',
         end_hour: '',
+        applicable_days: [],
         free_product_id: '',
+        free_variant_id: '',
+        free_quantity: '',
         is_active: true,
         max_usage: '',
-        product_ids: [],
+        items: [],
     });
 
     const submit = (e) => {
@@ -32,25 +35,31 @@ export default function Create({ products }) {
 
     return (
         <AuthenticatedLayout
+            backUrl={route('admin.promotions.index')}
             header={
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={route('admin.promotions.index')}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                        aria-label="Kembali"
-                    >
-                        <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
-                    </Link>
-                    <h2 className="text-lg font-semibold text-foreground">Tambah Promo</h2>
+                <div className="leading-tight">
+                    <div className="text-sm font-semibold text-foreground">Promo</div>
+                    <div className="text-[11px] text-muted-foreground">Tambah</div>
                 </div>
-            }
-        >
-            <Head title="Tambah Promo" />
+            }>
+            <PageHeader
+                title="Tambah Promo"
+                breadcrumbs={['Admin', 'Promo', 'Tambah']}
+                heading={
+                    <>
+                        Tambah{' '}
+                        <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
+                            Promo
+                        </span>
+                    </>
+                }
+                description="Buat promo baru untuk mendorong penjualan di kasir."
+            />
 
             <div className="mx-auto max-w-2xl">
                 <SectionCard
                     title="Detail Promo"
-                    subtitle="Buat promo baru untuk meningkatkan penjualan"
+                    subtitle="Tipe promo menentukan field mana yang perlu diisi."
                 >
                     <PromotionForm
                         data={data}
@@ -60,7 +69,9 @@ export default function Create({ products }) {
                         onSubmit={submit}
                         submitLabel="Simpan Promo"
                         cancelHref={route('admin.promotions.index')}
-                        products={products}
+                        buckets={buckets}
+                        scopeSupport={scopeSupport}
+                        customerTiers={customerTiers}
                     />
                 </SectionCard>
             </div>

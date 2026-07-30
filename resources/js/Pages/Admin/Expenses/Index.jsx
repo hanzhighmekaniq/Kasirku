@@ -2,7 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
-import { Plus, Search, Eye, Trash2, Settings } from "lucide-react";
+import { Plus, Search, Eye, Trash2, Settings, Wallet } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
@@ -104,23 +104,6 @@ export default function Index({ expenses }) {
                     </>
                 }
                 description="Catat dan pantau pengeluaran toko seperti operasional, gaji, dan lainnya."
-                action={
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href={route("admin.expense-categories.index")}
-                            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-                        >
-                            <Settings className="h-4 w-4" strokeWidth={1.8} />
-                            Kategori
-                        </Link>
-                        <Button as={Link} href={route("admin.expenses.create")} icon={Plus}>
-                            <span className="hidden sm:inline">
-                                Catat Pengeluaran
-                            </span>
-                            <span className="sm:hidden">Tambah</span>
-                        </Button>
-                    </div>
-                }
             />
 
             {/* Stats */}
@@ -129,17 +112,17 @@ export default function Index({ expenses }) {
                     <p className="text-xs font-medium text-muted-foreground">Total Transaksi</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.total}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-rose-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-destructive bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Total Pengeluaran</p>
                     <p className="mt-1 text-xl font-bold text-foreground">
                         {formatRupiah(stats.totalAmount)}
                     </p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-emerald-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-success bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Posted</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.postedCount}</p>
                 </div>
-                <div className="rounded-2xl border border-border border-l-4 border-l-amber-400 bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-border border-l-4 border-l-warning bg-card p-4 shadow-sm">
                     <p className="text-xs font-medium text-muted-foreground">Draft</p>
                     <p className="mt-1 text-xl font-bold text-foreground">{stats.draftCount}</p>
                 </div>
@@ -158,9 +141,26 @@ export default function Index({ expenses }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari pengeluaran..."
-                                className="block w-full rounded-xl border border-border py-2.5 pl-9 pr-3 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20"
+                                className="block w-full rounded-xl border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20"
                             />
                         </div>
+
+                        {/* Di mobile dipindah ke FAB kanan bawah */}
+                        <Link
+                            href={route("admin.expense-categories.index")}
+                            className="hidden items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted sm:inline-flex sm:w-auto"
+                        >
+                            <Settings className="h-4 w-4" strokeWidth={1.8} />
+                            Kategori
+                        </Link>
+                        <Button
+                            as={Link}
+                            href={route("admin.expenses.create")}
+                            icon={Plus}
+                            className="hidden sm:inline-flex sm:w-auto"
+                        >
+                            Catat Pengeluaran
+                        </Button>
                     </div>
                     <div className="flex items-center justify-between pt-4">
                         <p className="text-xs text-muted-foreground">
@@ -192,16 +192,13 @@ export default function Index({ expenses }) {
                                     <tr>
                                         <td colSpan={6} className="px-5 py-16 text-center">
                                             <div className="flex flex-col items-center">
-                                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                                    <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.012-1.244h3.859m-18.75 0V6a2.25 2.25 0 012.25-2.25h15a2.25 2.25 0 012.25 2.25v7.5m-18.75 0H21" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v5.25m0 0l2.25-2.25M12 13.5L9.75 11.25" />
-                                                    </svg>
+                                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/30">
+                                                    <Wallet className="h-8 w-8 text-muted-foreground/50" strokeWidth={1.5} />
                                                 </div>
-                                                <p className="mt-4 text-sm font-medium text-muted-foreground">
+                                                <p className="mt-4 text-sm font-medium text-foreground">
                                                     {search ? "Pengeluaran tidak ditemukan" : "Belum ada pengeluaran"}
                                                 </p>
-                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                <p className="mt-1 text-sm text-muted-foreground">
                                                     {search ? "Coba ubah kata kunci" : 'Klik "Catat Pengeluaran" untuk mencatat pengeluaran baru'}
                                                 </p>
                                             </div>
@@ -212,11 +209,8 @@ export default function Index({ expenses }) {
                                         <tr key={exp.id} className="transition hover:bg-[rgb(var(--color-table-hover))]">
                                             <td className="whitespace-nowrap px-5 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-violet-50 dark:to-violet-900/30 text-sm">
-                                                        <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.012-1.244h3.859m-18.75 0V6a2.25 2.25 0 012.25-2.25h15a2.25 2.25 0 012.25 2.25v7.5m-18.75 0H21" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v5.25m0 0l2.25-2.25M12 13.5L9.75 11.25" />
-                                                        </svg>
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                                                        <Wallet className="h-4 w-4 text-primary" strokeWidth={1.8} />
                                                     </div>
                                                     <div className="min-w-0">
                                                         <p className="truncate text-sm font-semibold text-foreground">{exp.expense_no}</p>
@@ -262,16 +256,13 @@ export default function Index({ expenses }) {
                 <div className="space-y-3 p-3 md:hidden">
                     {filtered.length === 0 ? (
                         <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
-                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                                <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" strokeWidth={1.4} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.012-1.244h3.859m-18.75 0V6a2.25 2.25 0 012.25-2.25h15a2.25 2.25 0 012.25 2.25v7.5m-18.75 0H21" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v5.25m0 0l2.25-2.25M12 13.5L9.75 11.25" />
-                                </svg>
+                            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/30">
+                                <Wallet className="h-8 w-8 text-muted-foreground/50" strokeWidth={1.5} />
                             </div>
-                            <p className="mt-4 text-sm font-medium text-muted-foreground">
+                            <p className="mt-4 text-sm font-medium text-foreground">
                                 {search ? "Pengeluaran tidak ditemukan" : "Belum ada pengeluaran"}
                             </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
+                            <p className="mt-1 text-sm text-muted-foreground">
                                 {search ? "Coba ubah kata kunci" : 'Klik "Catat Pengeluaran" untuk mencatat pengeluaran baru'}
                             </p>
                         </div>
@@ -320,6 +311,26 @@ export default function Index({ expenses }) {
                         ))
                     )}
                 </div>
+            </div>
+
+            {/* Mobile FAB — pengganti tombol toolbar yang disembunyikan di layar kecil */}
+            <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 sm:hidden">
+                <Link
+                    href={route("admin.expense-categories.index")}
+                    className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+                    aria-label="Kategori pengeluaran"
+                    title="Kategori"
+                >
+                    <Settings className="h-5 w-5" strokeWidth={1.8} />
+                </Link>
+                <Link
+                    href={route("admin.expenses.create")}
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+                    aria-label="Catat pengeluaran"
+                    title="Catat Pengeluaran"
+                >
+                    <Plus className="h-6 w-6" strokeWidth={2} />
+                </Link>
             </div>
 
             <ConfirmDeleteModal

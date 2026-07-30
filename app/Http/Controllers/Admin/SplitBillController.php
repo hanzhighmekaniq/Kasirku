@@ -19,6 +19,7 @@ use App\Models\SalePayment;
 use App\Models\SaleSplitPayer;
 use App\Models\Store;
 use App\Services\CashRoundingService;
+use App\Services\MembershipBenefitService;
 use App\Services\PaymentGateway\PaymentGatewayFactory;
 use App\Services\PromotionService;
 use Illuminate\Http\Request;
@@ -114,14 +115,14 @@ class SplitBillController extends Controller
             $items = $validated['items'];
 
             // Apply promos
-            $customerTier = null;
-            if (! empty($validated['customer_id'])) {
-                $customerTier = Customer::find($validated['customer_id'])?->tier;
-            }
+            $customer = ! empty($validated['customer_id'])
+                ? Customer::find($validated['customer_id'])
+                : null;
+            $customerTierId = $customer?->customer_tier_id;
             $promoEnabled = $store->hasFeature('promo');
             $promoService = new PromotionService;
             if ($promoEnabled) {
-                $items = $promoService->applyPromosToCart($items, $customerTier);
+                $items = $promoService->applyPromosToCart($items, $customerTierId);
             }
 
             // Calculate subtotal
@@ -137,14 +138,36 @@ class SplitBillController extends Controller
 
             // Cart-level promo
             $cartPromoResult = $promoEnabled
-                ? $promoService->findBestCartPromo($subtotal, $customerTier)
+                ? $promoService->findBestCartPromo($subtotal, $customerTierId)
                 : null;
-            $cartPromoDiscount = $cartPromoResult ? $cartPromoResult['discount'] : 0;
-            $cartPromoId = $cartPromoResult ? $cartPromoResult['promotion']->id : null;
+
+            // ── Diskon membership ──
+            // Dibandingkan dengan promo keranjang, yang terbesar dipakai —
+            // aturannya sama dengan checkout normal di KasirController supaya
+            // member tidak kehilangan benefitnya hanya karena bayar split.
+            $membershipCandidate = $promoService->membershipDiscountCandidate($customer, $subtotal);
+
+            $cartPromoDiscount = 0;
+            $cartPromoId = null;
+            if ($membershipCandidate && (! $cartPromoResult || $membershipCandidate['discount'] > $cartPromoResult['discount'])) {
+                $cartPromoDiscount = $membershipCandidate['discount'];
+                $cartPromoId = null; // bukan Promotion model, jangan increment used_count
+            } elseif ($cartPromoResult) {
+                $cartPromoDiscount = $cartPromoResult['discount'];
+                $cartPromoId = $cartPromoResult['promotion']->id;
+            }
+
+            // ── Benefit gratis ongkir dari membership ──
+            $shippingAmount = (float) ($validated['shipping_amount'] ?? 0);
+            if ($customer && $shippingAmount > 0) {
+                $waiver = app(MembershipBenefitService::class)
+                    ->shippingWaiver($customer, $shippingAmount, (float) $subtotal);
+                $shippingAmount = $waiver ? $waiver['remaining'] : $shippingAmount;
+            }
 
             // No rounding at sale level — rounding applies per-payer in payOffline()
             $grandTotal = $subtotal - $discount - $cartPromoDiscount + $tax
-                + ($validated['shipping_amount'] ?? 0);
+                + $shippingAmount;
 
             // Pre-validate stock
             $this->validateStockForItems($items, $storeId, $branchId);
@@ -164,7 +187,7 @@ class SplitBillController extends Controller
                 'subtotal' => $subtotal,
                 'discount_amount' => $discount + $cartPromoDiscount,
                 'tax_amount' => $tax,
-                'shipping_amount' => $validated['shipping_amount'] ?? 0,
+                'shipping_amount' => $shippingAmount,
                 'rounding_adjustment' => 0,
                 'grand_total' => $grandTotal,
                 'paid_amount' => 0,
@@ -231,7 +254,7 @@ class SplitBillController extends Controller
                 'sale_id' => $sale->id,
                 'sale_no' => $saleNo,
                 'grand_total' => $grandTotal,
-                'split_payers' => $createdPayers->map(fn ($p) => [
+                'split_payers' => collect($createdPayers)->map(fn ($p) => [
                     'id' => $p->id,
                     'name' => $p->name,
                     'total' => (float) $p->total,

@@ -22,6 +22,7 @@ class User extends Authenticatable
         'password',
         'session_token',
         'theme_preference',
+        'sidebar_preference',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -33,6 +34,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_developer' => 'boolean',
             'theme_preference' => 'array',
+            'sidebar_preference' => 'array',
         ];
     }
 
@@ -50,6 +52,17 @@ class User extends Authenticatable
                 'stores.store_type_id',
                 'stores.logo',
                 'stores.is_active',
+                // Dipakai saat mencetak struk di kasir.
+                'stores.phone',
+                'stores.address',
+                'stores.receipt_header',
+                'stores.receipt_footer',
+                'stores.currency',
+                'stores.decimal_places',
+                'stores.default_tax_rate',
+                'stores.tax_inclusive',
+                'stores.payment_edit_limit_value',
+                'stores.payment_edit_limit_unit',
             );
     }
 

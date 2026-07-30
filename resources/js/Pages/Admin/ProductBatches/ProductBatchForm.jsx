@@ -6,6 +6,8 @@ import SearchableSelect from '@/Components/ui/SearchableSelect';
 import NumberInput from '@/Components/ui/NumberInput';
 import AnchoredPanel from '@/Components/ui/AnchoredPanel';
 import { Check, X } from 'lucide-react';
+import DatePicker from "@/Components/ui/DatePicker";
+import { format } from "date-fns";
 
 const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n ?? 0);
 
@@ -194,13 +196,13 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                     <label htmlFor="purchase_date" className="block text-sm font-medium text-foreground">Tanggal Beli</label>
-                    <input
-                        id="purchase_date"
-                        type="date"
-                        value={data.purchase_date}
-                        onChange={(e) => setData('purchase_date', e.target.value)}
-                        className={inputCls(errors.purchase_date)}
-                    />
+                    <div className="mt-1.5">
+                        <DatePicker
+                            value={data.purchase_date ? new Date(data.purchase_date) : null}
+                            onChange={(d) => setData('purchase_date', d ? format(d, 'yyyy-MM-dd') : '')}
+                            placeholder="Pilih tanggal beli"
+                        />
+                    </div>
                     {errors.purchase_date && <p className="mt-1 text-sm text-destructive">{errors.purchase_date}</p>}
                 </div>
 
@@ -209,14 +211,14 @@ export default function ProductBatchForm({ data, setData, errors, processing, on
                         Tanggal Kadaluarsa
                         <span className="ml-1 text-xs font-normal text-muted-foreground">(opsional)</span>
                     </label>
-                    <input
-                        id="expiry_date"
-                        type="date"
-                        value={data.expiry_date}
-                        min={data.purchase_date || undefined}
-                        onChange={(e) => setData('expiry_date', e.target.value)}
-                        className={inputCls(errors.expiry_date)}
-                    />
+                    <div className="mt-1.5">
+                        <DatePicker
+                            value={data.expiry_date ? new Date(data.expiry_date) : null}
+                            minDate={data.purchase_date ? new Date(data.purchase_date) : null}
+                            onChange={(d) => setData('expiry_date', d ? format(d, 'yyyy-MM-dd') : '')}
+                            placeholder="Pilih tanggal kadaluarsa"
+                        />
+                    </div>
                     <p className="mt-1 text-xs text-muted-foreground">Kosongkan jika produk tidak kadaluarsa.</p>
                     {errors.expiry_date && <p className="mt-1 text-sm text-destructive">{errors.expiry_date}</p>}
                 </div>

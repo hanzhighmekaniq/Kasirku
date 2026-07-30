@@ -7,28 +7,28 @@ import Field from "@/Components/ui/Field";
 
 const PROVIDER_META = {
     midtrans: {
-        gradient: "from-green-500 to-teal-600",
-        bg: "bg-green-50",
-        text: "text-green-700",
-        logo: "🟢",
+        gradient: "from-success to-teal-600",
+        bg: "bg-success/10",
+        text: "text-success",
+        logo: <Check className="h-5 w-5 text-success" strokeWidth={2} />,
     },
     xendit: {
-        gradient: "from-purple-500 to-primary-600",
-        bg: "bg-purple-50",
-        text: "text-purple-700",
-        logo: "🟣",
+        gradient: "from-purple-500 to-primary",
+        bg: "bg-purple-100 dark:bg-purple-900/30",
+        text: "text-purple-700 dark:text-purple-400",
+        logo: <CreditCard className="h-5 w-5 text-purple-700 dark:text-purple-400" strokeWidth={2} />,
     },
     doku: {
         gradient: "from-blue-500 to-cyan-600",
-        bg: "bg-blue-50",
-        text: "text-blue-700",
-        logo: "🔵",
+        bg: "bg-blue-100 dark:bg-blue-900/30",
+        text: "text-blue-700 dark:text-blue-400",
+        logo: <CreditCard className="h-5 w-5 text-blue-700 dark:text-blue-400" strokeWidth={2} />,
     },
     duitku: {
-        gradient: "from-orange-500 to-red-500",
-        bg: "bg-orange-50",
-        text: "text-orange-700",
-        logo: "🟠",
+        gradient: "from-orange-500 to-destructive",
+        bg: "bg-orange-100 dark:bg-orange-900/30",
+        text: "text-orange-700 dark:text-orange-400",
+        logo: <CreditCard className="h-5 w-5 text-orange-700 dark:text-orange-400" strokeWidth={2} />,
     },
 };
 
@@ -39,16 +39,16 @@ const FIELD_META = {
 };
 
 const METHOD_META = {
-    qris: { label: "QRIS", icon: "📱" },
-    gopay: { label: "GoPay", icon: "🟢" },
-    shopeepay: { label: "ShopeePay", icon: "🟠" },
-    dana: { label: "DANA", icon: "🔵" },
-    ovo: { label: "OVO", icon: "🟣" },
-    bca_va: { label: "VA BCA", icon: "🏦" },
-    mandiri_va: { label: "VA Mandiri", icon: "🏦" },
-    bri_va: { label: "VA BRI", icon: "🏦" },
-    bni_va: { label: "VA BNI", icon: "🏦" },
-    permata_va: { label: "VA Permata", icon: "🏦" },
+    qris: { label: "QRIS" },
+    gopay: { label: "GoPay" },
+    shopeepay: { label: "ShopeePay" },
+    dana: { label: "DANA" },
+    ovo: { label: "OVO" },
+    bca_va: { label: "VA BCA" },
+    mandiri_va: { label: "VA Mandiri" },
+    bri_va: { label: "VA BRI" },
+    bni_va: { label: "VA BNI" },
+    permata_va: { label: "VA Permata" },
 };
 
 function ProviderCard({ provider }) {
@@ -82,7 +82,7 @@ function ProviderCard({ provider }) {
     };
 
     const inputCls =
-        "block w-full rounded-xl border bg-card px-3 py-2.5 text-sm shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20 font-mono";
+        "block w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground font-mono shadow-sm transition focus:border-ring focus:ring-2 focus:ring-ring/20";
 
     return (
         <div className="rounded-2xl border border-border bg-card shadow-sm">
@@ -92,13 +92,13 @@ function ProviderCard({ provider }) {
                 className="flex w-full items-center gap-4 px-5 py-4 text-left"
             >
                 <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${meta.gradient} text-xl shadow-sm`}>
-                    <span className="drop-shadow">{meta.logo}</span>
+                    {meta.logo}
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-foreground">{provider.label}</h3>
                         {provider.configured && provider.is_active && (
-                            <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-700">
+                            <span className="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
                                 Aktif
                             </span>
                         )}
@@ -108,11 +108,11 @@ function ProviderCard({ provider }) {
                             </span>
                         )}
                         {!provider.configured && (
-                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                            <span className="inline-flex items-center rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-medium text-warning">
                                 Belum diatur
                             </span>
                         )}
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${provider.environment === "production" ? "bg-primary-100 text-primary-700" : "bg-amber-50 text-amber-600"}`}>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${provider.environment === "production" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"}`}>
                             {provider.environment === "production" ? "Production" : "Sandbox"}
                         </span>
                     </div>
@@ -133,8 +133,8 @@ function ProviderCard({ provider }) {
                                 role="switch"
                                 aria-checked={data.is_active}
                                 onClick={() => setData("is_active", !data.is_active)}
-                                className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                                    data.is_active ? "bg-green-500" : "bg-slate-300"
+                                className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring/20 focus:ring-offset-2 ${
+                                    data.is_active ? "bg-success" : "bg-muted-foreground/40"
                                 }`}
                             >
                                 <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg transition duration-200 ${
@@ -160,8 +160,8 @@ function ProviderCard({ provider }) {
                                 role="switch"
                                 aria-checked={data.environment === "production"}
                                 onClick={() => setData("environment", data.environment === "production" ? "sandbox" : "production")}
-                                className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                                    data.environment === "production" ? "bg-primary-500" : "bg-amber-400"
+                                className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring/20 focus:ring-offset-2 ${
+                                    data.environment === "production" ? "bg-primary" : "bg-warning"
                                 }`}
                             >
                                 <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg transition duration-200 ${
@@ -193,7 +193,7 @@ function ProviderCard({ provider }) {
                                     placeholder={
                                         provider[`has_${key}`] ? "•••••••• (tersimpan)" : f.placeholder
                                     }
-                                    className={`${inputCls} ${errors[key] ? "border-red-300" : ""}`}
+                                    className={`${inputCls} ${errors[key] ? "border-destructive" : ""}`}
                                 />
                             </Field>
                         );
@@ -203,7 +203,7 @@ function ProviderCard({ provider }) {
                     <Field label="Metode Pembayaran">
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                             {provider.methods.map((key) => {
-                                const m = METHOD_META[key] ?? { label: key, icon: "💳" };
+                                const m = METHOD_META[key] ?? { label: key };
                                 const enabled = data.enabled_methods.includes(key);
                                 return (
                                     <button
@@ -212,13 +212,13 @@ function ProviderCard({ provider }) {
                                         onClick={() => toggleMethod(key)}
                                         className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
                                             enabled
-                                                ? "border-primary-300 bg-primary-50 text-primary-700"
-                                                : "border-border bg-card text-muted-foreground hover:border-border hover:bg-muted"
+                                                ? "border-primary/40 bg-primary/10 text-primary"
+                                                : "border-border bg-card text-muted-foreground hover:border-muted-foreground/30 hover:bg-muted"
                                         }`}
                                     >
-                                        <span>{m.icon}</span>
+                                        <CreditCard className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
                                         {m.label}
-                                        {enabled && <Check className="ml-auto h-3.5 w-3.5 text-primary-500" strokeWidth={2.5} />}
+                                        {enabled && <Check className="ml-auto h-3.5 w-3.5 text-primary" strokeWidth={2.5} />}
                                     </button>
                                 );
                             })}
@@ -244,7 +244,7 @@ export default function Index({ providers = [] }) {
             <Head title="Payment Gateway Platform" />
 
             {flash?.success && (
-                <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
                     {flash.success}
                 </div>
             )}
@@ -254,11 +254,11 @@ export default function Index({ providers = [] }) {
                 </div>
             )}
 
-            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-primary-200 bg-primary-50 p-4">
-                <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-primary-600" strokeWidth={1.8} />
-                <div className="text-sm text-primary-800">
+            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/10 p-4">
+                <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-primary" strokeWidth={1.8} />
+                <div className="text-sm text-foreground">
                     <p className="font-medium">Payment Gateway dikelola di level platform</p>
-                    <p className="mt-0.5 text-primary-700/80">
+                    <p className="mt-0.5 text-primary/80">
                         Semua store memakai akun PG yang sama di bawah ini. Setiap pembayaran online (QRIS/VA/E-Wallet)
                         masuk ke rekening platform, lalu otomatis di-credit ke saldo wallet store terkait. Lihat{" "}
                         <a href={route("developer.wallets.index")} className="underline">

@@ -74,7 +74,7 @@ export default function PaymentMethodForm({
                         </span>
                     )}
                 </label>
-                <div className={`grid grid-cols-2 gap-3 sm:grid-cols-4 ${isTypeLocked ? 'opacity-60 pointer-events-none' : ''}`}>
+                <div className={`grid grid-cols-2 gap-3 md:grid-cols-4 ${isTypeLocked ? 'opacity-60 pointer-events-none' : ''}`}>
                     {types.map((t) => {
                         const meta = TYPE_META[t] ?? { label: t, icon: CreditCard, desc: '' };
                         const Icon = meta.icon;
@@ -156,7 +156,7 @@ export default function PaymentMethodForm({
                 <p className="mb-2.5 text-xs text-muted-foreground">
                     Opsional — tampilkan QR statis agar kasir bisa tunjukkan langsung ke pelanggan.
                 </p>
-                <div className="flex items-start gap-4">
+                <div className="flex flex-col items-start gap-4 sm:flex-row">
                     <div
                         className="group relative flex h-28 w-28 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted/40 transition hover:border-primary hover:bg-primary/5"
                         onClick={() => document.getElementById('pmImageInput').click()}
@@ -234,11 +234,11 @@ export default function PaymentMethodForm({
             <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
                 <Link
                     href={cancelHref}
-                    className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
+                    className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted sm:w-auto"
                 >
                     Batal
                 </Link>
-                <Button type="submit" loading={processing}>
+                <Button type="submit" loading={processing} size="lg" className="w-full sm:w-auto">
                     {submitLabel}
                 </Button>
             </div>

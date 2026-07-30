@@ -9,6 +9,7 @@ use App\Models\Sale;
 use App\Models\Store;
 use App\Services\Stock\StockMutation;
 use App\Services\Stock\StockService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -44,12 +45,29 @@ class SaleController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        // Filter: date range
-        if ($request->filled('date_from')) {
-            $query->whereDate('sale_date', '>=', $request->input('date_from'));
+        /**
+         * Filter rentang tanggal.
+         *
+         * Default-nya awal bulan ini sampai hari ini — sama seperti halaman
+         * Laporan — supaya halaman tidak memuat seluruh riwayat transaksi toko
+         * sekali jalan. Rentang default ini dikirim balik lewat `activeFilters`
+         * agar date picker di UI langsung menampilkannya, bukan placeholder.
+         *
+         * `all_dates=1` dikirim UI saat kasir mengosongkan rentang, sebagai
+         * jalan keluar untuk melihat seluruh riwayat.
+         */
+        $showAllDates = $request->boolean('all_dates');
+
+        $dateFrom = $request->input('date_from')
+            ?: ($showAllDates ? null : Carbon::now()->startOfMonth()->toDateString());
+        $dateTo = $request->input('date_to')
+            ?: ($showAllDates ? null : Carbon::now()->toDateString());
+
+        if ($dateFrom) {
+            $query->whereDate('sale_date', '>=', $dateFrom);
         }
-        if ($request->filled('date_to')) {
-            $query->whereDate('sale_date', '<=', $request->input('date_to'));
+        if ($dateTo) {
+            $query->whereDate('sale_date', '<=', $dateTo);
         }
 
         // Filter: payment status
@@ -73,9 +91,10 @@ class SaleController extends Controller
         ];
 
         $activeFilters = [
-            'date_from' => $request->input('date_from', ''),
-            'date_to' => $request->input('date_to', ''),
+            'date_from' => $dateFrom ?? '',
+            'date_to' => $dateTo ?? '',
             'payment_status' => $request->input('payment_status', 'all'),
+            'all_dates' => $showAllDates,
         ];
 
         $store = Store::with('storeType')->find($storeId);

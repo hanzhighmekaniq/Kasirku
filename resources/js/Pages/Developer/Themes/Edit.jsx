@@ -1,0 +1,115 @@
+import DeveloperLayout from "@/Layouts/DeveloperLayout";
+import { Head, useForm } from "@inertiajs/react";
+import { Eye, Moon, Sun } from "lucide-react";
+import { useMemo, useState } from "react";
+import ThemeForm from "@/Pages/Admin/Themes/ThemeForm";
+import ThemePreview from "@/Pages/Admin/Themes/ThemePreview";
+
+const SWATCH_KEYS = ["primary", "background", "card", "accent", "muted"];
+
+export default function Edit({ theme }) {
+    const { data, setData, put, processing, errors } = useForm({
+        name: theme.name,
+        description: theme.description || "",
+        light_tokens: theme.light_tokens || {},
+        dark_tokens: theme.dark_tokens || {},
+    });
+
+    const [previewMode, setPreviewMode] = useState("light");
+
+    const submit = (e) => {
+        e.preventDefault();
+        put(route("developer.themes.update", theme.id));
+    };
+
+    const previewTokens = useMemo(
+        () =>
+            previewMode === "dark"
+                ? data.dark_tokens || {}
+                : data.light_tokens || {},
+        [previewMode, data.light_tokens, data.dark_tokens],
+    );
+
+    // "Reset mode" kembali ke token tema sebelum diedit.
+    const defaultLight = theme.light_tokens || {};
+    const defaultDark = theme.dark_tokens || {};
+
+    return (
+        <DeveloperLayout header={`Edit Tema — ${theme.name}`}>
+            <Head title={`Edit — ${theme.name}`} />
+
+            <div className="mb-6">
+                <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                    Edit tema
+                </h1>
+                <p className="mt-1.5 max-w-lg text-sm text-muted-foreground">
+                    Ubah token warna untuk mode terang dan gelap. Kalau tema ini
+                    sedang aktif, aktifkan ulang dari daftar tema setelah
+                    menyimpan agar perubahan langsung terpakai.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+                <ThemeForm
+                    data={data}
+                    setData={setData}
+                    errors={errors}
+                    processing={processing}
+                    onSubmit={submit}
+                    submitLabel="Simpan Perubahan"
+                    cancelHref={route("developer.themes.index")}
+                    previewMode={previewMode}
+                    setPreviewMode={setPreviewMode}
+                    defaultLight={defaultLight}
+                    defaultDark={defaultDark}
+                />
+
+                <div className="space-y-4 xl:sticky xl:top-20 xl:self-start">
+                    <div className="rounded-xl border border-border bg-card p-4">
+                        <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm font-semibold text-foreground">
+                                    Live preview
+                                </span>
+                            </div>
+                            <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-0.5 text-[11px] text-muted-foreground">
+                                {previewMode === "light" ? (
+                                    <>
+                                        <Sun className="h-2.5 w-2.5 text-warning" />
+                                        Terang
+                                    </>
+                                ) : (
+                                    <>
+                                        <Moon className="h-2.5 w-2.5 text-primary" />
+                                        Gelap
+                                    </>
+                                )}
+                            </span>
+                        </div>
+                        <ThemePreview
+                            tokens={previewTokens}
+                            isDark={previewMode === "dark"}
+                        />
+                        <div className="mt-3 grid grid-cols-5 gap-2">
+                            {SWATCH_KEYS.map((k) => (
+                                <div key={k} className="text-center">
+                                    <div
+                                        className="h-6 rounded-md border border-border"
+                                        style={{
+                                            background:
+                                                previewTokens[k] || "#ccc",
+                                        }}
+                                    />
+                                    <div className="mt-1 truncate text-[10px] text-muted-foreground">
+                                        {k}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </DeveloperLayout>
+    );
+}

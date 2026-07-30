@@ -3,6 +3,7 @@
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\CustomerMembership;
+use App\Models\CustomerTier;
 use App\Models\Feature;
 use App\Models\Membership;
 use App\Models\Plan;
@@ -34,6 +35,11 @@ function setUpMembershipTestContext(): array
         'store_type_id' => $storeType->id, 'plan_id' => $plan->id,
     ]);
 
+    // Tier bawaan wajib ada supaya syncTierFromMembership() bisa menentukan
+    // level pelanggan setelah membership diatur.
+    CustomerTier::seedDefaultsForStore($store->id);
+    $tierByName = CustomerTier::forStore($store->id)->get()->keyBy(fn ($t) => strtolower($t->name));
+
     $branch = Branch::create(['store_id' => $store->id, 'code' => 'BR001', 'name' => 'Main', 'is_active' => true]);
 
     $customer = Customer::create([
@@ -44,7 +50,11 @@ function setUpMembershipTestContext(): array
         'store_id' => $store->id, 'code' => 'GOLD01', 'name' => 'Gold Member',
         'duration_type' => 'month', 'duration_value' => 1,
         'price' => 100000, 'discount_percent' => 10, 'point_multiplier' => 2,
-        'maps_to_tier' => 'gold', 'is_active' => true,
+        'maps_to_tier' => 'gold', 'maps_to_tier_id' => $tierByName['gold']?->id,
+        'benefits' => [
+            ['type' => 'maps_to_tier', 'label' => 'Setara Gold', 'tier' => 'gold', 'tier_id' => $tierByName['gold']?->id],
+        ],
+        'is_active' => true,
     ]);
 
     $user = User::factory()->create();
@@ -92,7 +102,13 @@ test('assigning a new membership cancels the previous active membership', functi
         'store_id' => $store->id, 'code' => 'SILVER01', 'name' => 'Silver Member',
         'duration_type' => 'month', 'duration_value' => 1,
         'price' => 50000, 'discount_percent' => 5, 'point_multiplier' => 1,
-        'maps_to_tier' => 'silver', 'is_active' => true,
+        'maps_to_tier' => 'silver',
+        'maps_to_tier_id' => CustomerTier::forStore($store->id)->where('name', 'Silver')->value('id'),
+        'benefits' => [
+            ['type' => 'maps_to_tier', 'label' => 'Setara Silver', 'tier' => 'silver',
+                'tier_id' => CustomerTier::forStore($store->id)->where('name', 'Silver')->value('id')],
+        ],
+        'is_active' => true,
     ]);
 
     $this->actingAs($user);

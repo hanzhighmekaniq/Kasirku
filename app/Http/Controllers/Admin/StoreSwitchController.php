@@ -106,9 +106,10 @@ class StoreSwitchController extends Controller
      * Switch toko dari sidebar (WorkspaceSwitcher).
      * Hanya owner/manager yang boleh switch toko.
      *
-     * Cabang langsung di-auto-pick (cabang pertama yang aktif) tanpa
-     * redirect ke halaman "Pilih Cabang" terpisah — user bisa ganti
-     * cabang kapan saja lewat seksi Cabang di WorkspaceSwitcher yang sama.
+     * `branch_id` opsional: dikirim saat user memilih toko DAN cabang
+     * sekaligus dari modal pemilih workspace, jadi hanya perlu satu request.
+     * Kalau tidak dikirim (atau tidak valid untuk toko tujuan), cabang aktif
+     * pertama yang dipakai — user tetap bisa ganti cabang kapan saja.
      */
     public function switch(Request $request)
     {
@@ -124,6 +125,7 @@ class StoreSwitchController extends Controller
 
         $validated = $request->validate([
             'store_id' => 'required|exists:stores,id',
+            'branch_id' => 'nullable|exists:branches,id',
         ]);
 
         $store = $user->stores()->find($validated['store_id']);
@@ -134,8 +136,18 @@ class StoreSwitchController extends Controller
 
         $this->setStore($user, $store, $request);
 
-        // Auto-pick cabang aktif pertama (kalau ada) — tidak ada halaman perantara
-        $branch = $store
+        $requestedBranchId = $validated['branch_id'] ?? null;
+
+        // Cabang pilihan user (kalau valid untuk toko tujuan), jika tidak
+        // fallback ke cabang aktif pertama.
+        $branch = $requestedBranchId
+            ? $store
+                ->branches()
+                ->where('is_active', true)
+                ->find($requestedBranchId)
+            : null;
+
+        $branch ??= $store
             ->branches()
             ->where('is_active', true)
             ->orderBy('id')

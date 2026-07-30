@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StorePaymentMethodRequest;
 use App\Http\Requests\Admin\UpdatePaymentMethodRequest;
 use App\Models\PaymentMethod;
 use App\Models\Store;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -50,9 +51,9 @@ class PaymentMethodController extends Controller
         $data['store_id'] = session('current_store_id');
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store(
+            $data['image'] = app(ImageService::class)->upload(
+                $request->file('image'),
                 'payment-methods',
-                'public',
             );
         }
 
@@ -95,9 +96,9 @@ class PaymentMethodController extends Controller
             if ($paymentMethod->image) {
                 Storage::disk('public')->delete($paymentMethod->image);
             }
-            $data['image'] = $request->file('image')->store(
+            $data['image'] = app(ImageService::class)->upload(
+                $request->file('image'),
                 'payment-methods',
-                'public',
             );
         } else {
             unset($data['image']);

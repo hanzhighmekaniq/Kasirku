@@ -14,7 +14,7 @@ class Customer extends Model
     protected $fillable = [
         'store_id', 'code', 'name', 'phone', 'email', 'address',
         'birth_date', 'gender',
-        'points', 'tier', 'total_spent', 'last_visit_at',
+        'points', 'tier', 'customer_tier_id', 'total_spent', 'last_visit_at',
         'deposit_balance', 'debt_balance', 'credit_limit', 'notes', 'is_active',
     ];
 
@@ -36,6 +36,11 @@ class Customer extends Model
     public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
+    }
+
+    public function customerTier(): BelongsTo
+    {
+        return $this->belongsTo(CustomerTier::class, 'customer_tier_id');
     }
 
     public function sales(): HasMany
@@ -83,10 +88,34 @@ class Customer extends Model
             ->first();
     }
 
+    /**
+     * Setel ulang tier pelanggan dari membership aktifnya.
+     *
+     * Tier diambil dari benefit `maps_to_tier` milik membership dengan rank
+     * tertinggi. Kalau tidak ada membership aktif yang memetakan tier,
+     * pelanggan jatuh ke tier terendah milik toko — bukan ke nama yang
+     * ditulis mati, karena owner bebas menamai levelnya sendiri.
+     */
     public function syncTierFromMembership(): void
     {
-        $tier = $this->activeMembership()?->membership?->maps_to_tier ?? 'bronze';
+        $highest = $this->memberships()
+            ->active()
+            ->with('membership')
+            ->get()
+            ->map(fn ($cm) => $cm->membership)
+            ->filter()
+            ->sortByDesc(fn ($m) => $m->tierRank())
+            ->first();
 
-        $this->forceFill(['tier' => $tier])->save();
+        $tier = $highest?->mapsToTier()
+            ?? CustomerTier::lowestForStore($this->store_id);
+
+        $this->forceFill([
+            'customer_tier_id' => $tier?->id,
+            // Kolom string lama wajib NOT NULL dengan default 'bronze'.
+            // Kalau toko belum punya tier dinamis (mis. di test), fallback ke
+            // nama tier terendah atau ke 'bronze' supaya constraint tidak gagal.
+            'tier' => $tier ? strtolower($tier->name) : 'bronze',
+        ])->save();
     }
 }

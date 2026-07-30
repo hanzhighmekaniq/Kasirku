@@ -5,6 +5,8 @@ import { ArrowLeft, Check, Trash2, X } from 'lucide-react';
 import StockBucketPicker, { BucketItemLabel } from '@/Components/ui/StockBucketPicker';
 import NumberInput from '@/Components/ui/NumberInput';
 import { purchaseUnitHint, usesUnitConversion } from '@/Utils/unitConversion';
+import DatePicker from "@/Components/ui/DatePicker";
+import { format } from "date-fns";
 
 const FORM_ID = 'stock-opname-form';
 
@@ -116,7 +118,11 @@ export default function Create({ buckets = [], currentBranchId = null }) {
                         <SectionCard title="Informasi Opname">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <Field label="Tanggal" required error={errors.opname_date}>
-                                    <input type="date" required value={data.opname_date} onChange={(e) => setData('opname_date', e.target.value)} className={inputCls(!!errors.opname_date)} />
+                                    <DatePicker
+                                        value={data.opname_date ? new Date(data.opname_date) : null}
+                                        onChange={(d) => setData('opname_date', d ? format(d, 'yyyy-MM-dd') : '')}
+                                        placeholder="Pilih tanggal"
+                                    />
                                 </Field>
                                 <div />
                             </div>

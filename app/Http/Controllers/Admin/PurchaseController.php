@@ -57,7 +57,7 @@ class PurchaseController extends Controller
 
     public function create(Request $request)
     {
-        [$storeId] = $this->storeScope();
+        [$storeId, $branchId] = $this->storeScope();
 
         $store = Store::with('storeType')->find($storeId);
         $storeTypeCode = $store?->getRelation('storeType')?->code ?? 'retail';
@@ -97,12 +97,107 @@ class PurchaseController extends Controller
         return Inertia::render('Admin/Purchases/Create', [
             'suppliers' => Supplier::where('store_id', $storeId)->get(),
             'products' => $this->productsForPurchaseForm($storeId),
+            // Bucket dipakai picker bertingkat produk → varian → satuan,
+            // komponen yang sama dengan form stok & promo.
+            'buckets' => $this->purchaseBucketOptions($storeId),
             'paymentMethods' => PaymentMethod::forStore($storeId)
                 ->where('is_active', true)
                 ->get(),
             'storeType' => $storeTypeCode,
             'prefill' => $prefill,
+            'currentBranchId' => $branchId,
         ]);
+    }
+
+    /**
+     * Bucket produk untuk picker bertingkat di form pembelian.
+     *
+     * Bentuknya sengaja sama dengan BuildsStockBucketOptions supaya bisa
+     * dipakai komponen StockBucketPicker, tapi tanpa filter `track_stock`:
+     * pembelian juga mencatat item yang stoknya tidak dilacak, dan
+     * menyaringnya di sini akan menyembunyikan item yang sah dibeli.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function purchaseBucketOptions(int $storeId): array
+    {
+        $products = Product::where('store_id', $storeId)
+            ->where('is_active', true)
+            ->with([
+                'variants' => fn ($q) => $q->where('is_active', true),
+                'variants.packagingUnits',
+                'packagingUnits' => fn ($q) => $q->whereNull('variant_id'),
+                'stocks' => fn ($q) => $q->where('store_id', $storeId),
+            ])
+            ->orderBy('name')
+            ->get();
+
+        $buckets = [];
+
+        foreach ($products as $product) {
+            $stockByBranch = fn ($variantId, $unitId) => $product->stocks
+                ->where('variant_id', $variantId)
+                ->where('packaging_unit_id', $unitId)
+                ->groupBy(fn ($row) => (string) $row->branch_id)
+                ->map(fn ($rows) => (float) $rows->sum('quantity') - (float) $rows->sum('reserved_quantity'))
+                ->toArray();
+
+            $make = function ($variant, $unit) use ($product, $stockByBranch) {
+                $variantId = $variant?->id;
+                $unitId = $unit?->id;
+
+                $label = $product->name;
+                if ($variant) {
+                    $label .= ' — '.$variant->name;
+                }
+                if ($unit) {
+                    $label .= ' — '.$unit->name;
+                }
+
+                return [
+                    'key' => sprintf('%d-%s-%s', $product->id, $variantId ?? '', $unitId ?? ''),
+                    'product_id' => $product->id,
+                    'variant_id' => $variantId,
+                    'packaging_unit_id' => $unitId,
+                    'label' => $label,
+                    'product_name' => $product->name,
+                    'variant_name' => $variant?->name,
+                    'unit_name' => $unit?->name,
+                    'sku' => $variant?->sku ?: $product->sku,
+                    'product_sku' => $variant?->sku ?: $product->sku,
+                    'conversion_qty' => $unit?->conversion_qty,
+                    'cost_price' => (float) ($variant?->cost_price ?: $product->cost_price ?: 0),
+                    'type' => $product->type,
+                    'unit' => $product->unit,
+                    'base_unit' => $product->base_unit,
+                    'base_unit_conversion' => $product->base_unit_conversion,
+                    'stock_by_branch' => $stockByBranch($variantId, $unitId),
+                ];
+            };
+
+            // Produk bervariant: stok hidup di variant, jadi bucket dasar
+            // produk tidak ditawarkan agar pembelian tidak mendarat di bucket
+            // yang tidak pernah dipakai berjualan.
+            if ($product->variants->isNotEmpty()) {
+                foreach ($product->variants as $variant) {
+                    $buckets[] = $make($variant, null);
+
+                    foreach ($variant->packagingUnits as $unit) {
+                        $buckets[] = $make($variant, $unit);
+                    }
+                }
+
+                continue;
+            }
+
+            $buckets[] = $make(null, null);
+
+            foreach ($product->packagingUnits as $unit) {
+                $buckets[] = $make(null, $unit);
+            }
+        }
+
+        return $buckets;
     }
 
     /**

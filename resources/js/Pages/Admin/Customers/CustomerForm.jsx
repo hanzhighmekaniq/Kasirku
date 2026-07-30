@@ -5,6 +5,8 @@ import Button from "@/Components/ui/Button";
 import Field from "@/Components/ui/Field";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 import { Check, X } from "lucide-react";
+import DatePicker from "@/Components/ui/DatePicker";
+import { format } from "date-fns";
 
 const inp = (err) =>
     `mt-1.5 block w-full rounded-lg border py-2.5 px-3.5 text-sm bg-background text-foreground outline-none transition-all ${
@@ -86,11 +88,11 @@ export default function CustomerForm({
                     />
                 </Field>
                 <Field label="Tanggal Lahir" error={errors.birth_date}>
-                    <input
-                        type="date"
-                        value={data.birth_date ?? ""}
-                        onChange={(e) => setData("birth_date", e.target.value)}
-                        className={inp(errors.birth_date)}
+                    <DatePicker
+                        value={data.birth_date ? new Date(data.birth_date) : null}
+                        onChange={(d) => setData("birth_date", d ? format(d, 'yyyy-MM-dd') : '')}
+                        placeholder="Pilih tanggal lahir"
+                        showMonthYearDropdown
                     />
                 </Field>
                 <Field label="Jenis Kelamin" error={errors.gender}>

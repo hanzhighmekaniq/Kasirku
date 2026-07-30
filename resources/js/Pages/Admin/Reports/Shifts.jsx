@@ -86,7 +86,7 @@ export default function Shifts({ from, to, summary, byCashier = [], shifts = [] 
                 <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h3 className="mb-4 text-sm font-semibold text-foreground">Per Kasir</h3>
                     {byCashier.length > 0 ? byCashier.map((c, i) => (
-                        <div key={i} className="flex items-center justify-between border-b border-slate-50 py-2 last:border-0">
+                        <div key={i} className="flex items-center justify-between border-b border-border py-2 last:border-0">
                             <div>
                                 <span className="text-sm font-medium text-foreground">{c.name}</span>
                                 <span className="ml-2 text-xs text-muted-foreground">{c.count} shift</span>

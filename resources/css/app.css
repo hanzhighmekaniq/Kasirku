@@ -204,6 +204,43 @@
     .sidebar-scroll::-webkit-scrollbar-thumb {
         @apply bg-border rounded-full;
     }
+
+    /*
+     * Checkbox & radio native.
+     *
+     * Plugin @tailwindcss/forms mengisi kotak tercentang dengan `currentColor`
+     * lalu menempelkan tanda centang berupa data-URI SVG dengan `fill="white"`
+     * yang dihardcode. Warna centang itu TIDAK bisa diikat ke token tema karena
+     * nilai `fill` di dalam data-URI tidak bisa membaca CSS variable. Jadi kalau
+     * kotaknya berwarna terang (mis. tema dengan primary putih di mode gelap),
+     * centang putih menempel di latar terang dan nyaris tak terlihat.
+     *
+     * Solusinya di dua lapis:
+     *   1. Di sini — kotak tercentang dipaksa memakai `--primary` sebagai latar
+     *      dan `--primary-foreground` sebagai warna centang lewat `color`,
+     *      supaya kasus paling umum tetap kontras dan tidak bergantung pada
+     *      class `text-*` yang kebetulan menempel di elemennya.
+     *   2. Komponen `ui/Checkbox.jsx` menggambar kotak dan centangnya sendiri
+     *      (bukan native), jadi kontrasnya dijamin benar di semua tema. Pakai
+     *      komponen itu untuk checkbox baru.
+     */
+    input[type="checkbox"],
+    input[type="radio"] {
+        @apply border-input bg-background;
+    }
+
+    input[type="checkbox"]:checked,
+    input[type="radio"]:checked {
+        background-color: rgb(var(--primary));
+        border-color: rgb(var(--primary));
+        color: rgb(var(--primary-foreground));
+    }
+
+    input[type="checkbox"]:focus,
+    input[type="radio"]:focus {
+        --tw-ring-color: rgb(var(--ring) / 0.4);
+        border-color: rgb(var(--ring));
+    }
 }
 
 @layer components {
@@ -224,5 +261,437 @@
     /* Badge */
     .badge {
         @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+    }
+}
+
+/*
+ * ── DEVus.id auth surface ─────────────────────────────────────
+ *
+ * Halaman auth (login) memakai palet PATEN dari landing page DEVus.id,
+ * bukan tema pilihan user. Karena itu token di bawah dideklarasikan pada
+ * scope `.dv-auth` — bukan `:root` — dan sengaja TIDAK punya varian
+ * `.dark`, jadi warnanya tetap sama apa pun tema/mode yang aktif.
+ *
+ * Sumber palet: Kerja/DEVus.id/tokens.css
+ * genre modern-minimal · tema Cobalt · anchor hue 262 (cool)
+ *
+ * Aturan yang dibawa dari sana: paper cool near-white (bukan #fff), ink
+ * cool charcoal (bukan #000), aksen < 5% viewport, garis hairline 1px,
+ * radius kecil (6–12px), satu bayangan tipis, mono hanya untuk wordmark
+ * dan label uppercase.
+ */
+.dv-auth {
+    /* paper & ink */
+    --dv-paper: oklch(98.6% 0.005 250);
+    --dv-paper-2: oklch(96.6% 0.006 252);
+    --dv-paper-3: oklch(94.2% 0.007 252);
+    --dv-rule: oklch(90.5% 0.008 252);
+    --dv-rule-2: oklch(84% 0.01 252);
+    --dv-muted: oklch(48% 0.014 254);
+    --dv-ink-2: oklch(36% 0.016 256);
+    --dv-ink: oklch(22% 0.018 258);
+
+    /* the one signal */
+    --dv-accent: oklch(53% 0.215 262);
+    --dv-accent-text: oklch(43% 0.19 262);
+    --dv-accent-ink: oklch(99% 0.006 250);
+    --dv-accent-tint: oklch(96.2% 0.026 258);
+    --dv-focus: oklch(55% 0.2 262);
+
+    /* aksen versi terangkat — dipakai di atas band graphite, karena aksen
+       light-mode cuma ~2:1 di sana dan gagal kontras */
+    --dv-accent-lift: oklch(76% 0.14 262);
+    --dv-accent-lift-2: oklch(82% 0.115 262);
+
+    /* the single dark band */
+    --dv-graphite: oklch(21% 0.016 260);
+    --dv-graphite-2: oklch(26% 0.016 260);
+    --dv-graphite-ink: oklch(96% 0.006 250);
+    --dv-graphite-mut: oklch(68% 0.012 254);
+    --dv-graphite-rule: oklch(31% 0.014 258);
+
+    --dv-danger: oklch(55% 0.21 27);
+    --dv-danger-tint: oklch(96.5% 0.02 27);
+    --dv-ok: oklch(52% 0.13 158);
+    --dv-ok-tint: oklch(96.5% 0.03 158);
+
+    --dv-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --dv-shadow-whisper: 0 1px 2px oklch(22% 0.018 258 / 0.05);
+    --dv-shadow-lift: 0 2px 4px oklch(22% 0.018 258 / 0.06),
+        0 8px 24px -12px oklch(22% 0.018 258 / 0.1);
+    --dv-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* Kunci ke skema terang: kontrol native (checkbox, scrollbar, autofill)
+       tidak boleh ikut dark mode user, karena paletnya paten. */
+    color-scheme: light;
+
+    background: var(--dv-paper);
+    color: var(--dv-ink-2);
+}
+
+/* Body di bawah halaman auth ikut paper, supaya area overscroll tidak
+   memperlihatkan background tema user (mis. gelap) di tepi layar. */
+body:has(.dv-auth) {
+    background: oklch(98.6% 0.005 250);
+}
+
+@layer components {
+    /* ── Band gelap: satu-satunya area gelap, dengan dot-grid termask ── */
+    .dv-band {
+        position: relative;
+        background: var(--dv-graphite);
+        color: var(--dv-graphite-mut);
+        isolation: isolate;
+    }
+    .dv-band::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background-image: radial-gradient(
+            1px 1px at center,
+            var(--dv-graphite-rule) 0,
+            transparent 100%
+        );
+        background-size: 22px 22px;
+        -webkit-mask-image: radial-gradient(
+            130% 100% at 15% 0%,
+            oklch(0% 0 0) 45%,
+            transparent 100%
+        );
+        mask-image: radial-gradient(
+            130% 100% at 15% 0%,
+            oklch(0% 0 0) 45%,
+            transparent 100%
+        );
+    }
+
+    /* ── Wordmark: mono, titik pakai aksen ── */
+    .dv-wordmark {
+        display: inline-flex;
+        align-items: baseline;
+        white-space: nowrap;
+        font-family: var(--dv-mono);
+        font-weight: 500;
+        letter-spacing: -0.045em;
+        color: var(--dv-ink);
+    }
+    .dv-band .dv-wordmark {
+        color: var(--dv-graphite-ink);
+    }
+    .dv-wordmark__dot {
+        color: var(--dv-accent);
+    }
+    .dv-band .dv-wordmark__dot {
+        color: var(--dv-accent-lift);
+    }
+
+    /* ── Label mikro mono uppercase ── */
+    .dv-label {
+        font-family: var(--dv-mono);
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--dv-muted);
+    }
+    .dv-band .dv-label {
+        color: var(--dv-graphite-mut);
+    }
+
+    /* ── Flag: chip aksen tint ── */
+    .dv-flag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-family: var(--dv-mono);
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        color: var(--dv-accent-text);
+        background: var(--dv-accent-tint);
+    }
+    .dv-band .dv-flag {
+        color: var(--dv-accent-lift-2);
+        background: oklch(26% 0.055 260);
+    }
+
+    /* ── Judul ── */
+    .dv-display {
+        font-size: clamp(2rem, 3.2vw + 0.6rem, 3.25rem);
+        font-weight: 700;
+        line-height: 1.04;
+        letter-spacing: -0.035em;
+        color: var(--dv-graphite-ink);
+    }
+    .dv-title {
+        font-size: 1.375rem;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.03em;
+        color: var(--dv-ink);
+    }
+    .dv-lead {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: var(--dv-graphite-mut);
+        max-width: 46ch;
+    }
+
+    /* ── Kartu hairline ── */
+    .dv-card {
+        background: var(--dv-paper);
+        border: 1px solid var(--dv-rule);
+        border-radius: 12px;
+        box-shadow: var(--dv-shadow-lift);
+    }
+
+    /* ── Field ── */
+    .dv-field-label {
+        display: block;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        letter-spacing: -0.005em;
+        color: var(--dv-ink);
+    }
+
+    .dv-input {
+        display: block;
+        width: 100%;
+        min-height: 44px;
+        padding: 0.625rem 0.75rem;
+        font-family: inherit;
+        font-size: 0.9375rem;
+        line-height: 1.4;
+        color: var(--dv-ink);
+        background: var(--dv-paper);
+        border: 1px solid var(--dv-rule-2);
+        border-radius: 6px;
+        box-shadow: var(--dv-shadow-whisper);
+        transition:
+            border-color 200ms var(--dv-ease),
+            box-shadow 200ms var(--dv-ease);
+    }
+    .dv-input::placeholder {
+        color: var(--dv-muted);
+        opacity: 0.75;
+    }
+    .dv-input:focus {
+        outline: none;
+        border-color: var(--dv-focus);
+        box-shadow: 0 0 0 3px oklch(55% 0.2 262 / 0.18);
+    }
+    .dv-input[aria-invalid="true"] {
+        border-color: var(--dv-danger);
+    }
+    .dv-input[aria-invalid="true"]:focus {
+        border-color: var(--dv-danger);
+        box-shadow: 0 0 0 3px oklch(55% 0.21 27 / 0.18);
+    }
+    /* ruang untuk tombol lihat/sembunyikan password */
+    .dv-input--action {
+        padding-inline-end: 2.75rem;
+    }
+
+    .dv-input-action {
+        position: absolute;
+        inset-block: 0;
+        inset-inline-end: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        color: var(--dv-muted);
+        background: transparent;
+        border: 0;
+        border-radius: 6px;
+        transition: color 200ms var(--dv-ease);
+    }
+    .dv-input-action:hover {
+        color: var(--dv-ink);
+    }
+    .dv-input-action:focus-visible {
+        outline: 2px solid var(--dv-focus);
+        outline-offset: -2px;
+    }
+
+    .dv-error {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.375rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--dv-danger);
+    }
+
+    /* ── Checkbox ── */
+    .dv-check {
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+        color: var(--dv-accent);
+        background: var(--dv-paper);
+        border: 1px solid var(--dv-rule-2);
+        border-radius: 4px;
+        transition: border-color 200ms var(--dv-ease);
+    }
+    .dv-check:checked {
+        background-color: var(--dv-accent);
+        border-color: var(--dv-accent);
+    }
+    .dv-check:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px oklch(55% 0.2 262 / 0.18);
+        border-color: var(--dv-focus);
+    }
+
+    /* ── Tombol ── */
+    .dv-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+        font-family: inherit;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: -0.005em;
+        white-space: nowrap;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        transition:
+            background-color 200ms var(--dv-ease),
+            border-color 200ms var(--dv-ease),
+            color 200ms var(--dv-ease),
+            transform 120ms var(--dv-ease);
+    }
+    .dv-btn--accent {
+        color: var(--dv-accent-ink);
+        background: var(--dv-accent);
+        border-color: var(--dv-accent);
+    }
+    .dv-btn--block {
+        width: 100%;
+    }
+    .dv-btn:focus-visible {
+        outline: 2px solid var(--dv-focus);
+        outline-offset: 2px;
+    }
+    @media (hover: hover) and (pointer: fine) {
+        .dv-btn--accent:hover {
+            background: var(--dv-accent-text);
+            border-color: var(--dv-accent-text);
+            transform: translateY(-1.5px);
+        }
+    }
+    .dv-btn:active {
+        transform: translateY(1px);
+    }
+    /* disabled lewat tiga kanal, bukan opacity saja */
+    .dv-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+        pointer-events: none;
+    }
+
+    /* ── Link tipografis ── */
+    .dv-tlink {
+        display: inline-flex;
+        align-items: baseline;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--dv-accent-text);
+        border-block-end: 1px solid transparent;
+        transition: border-color 200ms var(--dv-ease);
+    }
+    @media (hover: hover) and (pointer: fine) {
+        .dv-tlink:hover {
+            border-block-end-color: var(--dv-accent);
+        }
+    }
+
+    /* ── Alert ── */
+    .dv-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.625rem 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border: 1px solid transparent;
+        border-radius: 6px;
+    }
+    .dv-alert--ok {
+        color: var(--dv-ok);
+        background: var(--dv-ok-tint);
+        border-color: oklch(52% 0.13 158 / 0.25);
+    }
+    .dv-alert--bad {
+        color: var(--dv-danger);
+        background: var(--dv-danger-tint);
+        border-color: oklch(55% 0.21 27 / 0.25);
+    }
+
+    /* ── Quick login (dev only) ── */
+    .dv-quick {
+        display: block;
+        width: 100%;
+        padding: 0.5rem 0.625rem;
+        text-align: start;
+        background: var(--dv-paper-2);
+        border: 1px solid var(--dv-rule);
+        border-radius: 6px;
+        transition:
+            background-color 200ms var(--dv-ease),
+            border-color 200ms var(--dv-ease);
+    }
+    @media (hover: hover) and (pointer: fine) {
+        .dv-quick:hover {
+            background: var(--dv-accent-tint);
+            border-color: var(--dv-accent);
+        }
+    }
+    .dv-quick__name {
+        display: block;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--dv-ink);
+    }
+    .dv-quick__mail {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--dv-mono);
+        font-size: 0.6875rem;
+        color: var(--dv-muted);
+    }
+
+    /* ── Daftar spesifikasi di band, garis tiap baris ── */
+    .dv-spec {
+        border-block-start: 1px solid var(--dv-graphite-rule);
+    }
+    .dv-spec__row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-block: 0.75rem;
+        border-block-end: 1px solid var(--dv-graphite-rule);
+    }
+    .dv-spec__val {
+        font-family: var(--dv-mono);
+        font-variant-numeric: tabular-nums;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--dv-graphite-ink);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Developer;
 
 use App\Http\Controllers\Controller;
+use App\Models\CustomerTier;
 use App\Models\Feature;
 use App\Models\Store;
 use App\Models\StoreType;
@@ -248,6 +249,9 @@ class StoreController extends Controller
                 'is_active' => true,
                 'sort_order' => 1,
             ]);
+
+            // 7. Tier bawaan
+            CustomerTier::seedDefaultsForStore($store->id);
         });
 
         return redirect()

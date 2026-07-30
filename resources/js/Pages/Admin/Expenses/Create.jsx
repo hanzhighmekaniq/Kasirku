@@ -9,6 +9,8 @@ import Select from '@/Components/ui/Select';
 import CurrencyInput from '@/Components/ui/CurrencyInput';
 import Field from '@/Components/ui/Field';
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
+import DatePicker from "@/Components/ui/DatePicker";
+import { format } from "date-fns";
 
 export default function Create({ categories: initialCategories }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -120,11 +122,9 @@ export default function Create({ categories: initialCategories }) {
 
     return (
         <AuthenticatedLayout
-            
+            backUrl={route("admin.expenses.index")}
             header={
-                <div className="leading-tight"
-            
-            backUrl={route("admin.expenses.index")}>
+                <div className="leading-tight">
                     <div className="text-sm font-semibold text-foreground">
                         Pengeluaran
                     </div>
@@ -261,11 +261,11 @@ export default function Create({ categories: initialCategories }) {
                         </div>
 
                         <Field label="Tanggal" required error={errors.expense_date}>
-                            <input
-                                type="date"
-                                value={data.expense_date}
-                                onChange={(e) => setData('expense_date', e.target.value)}
-                                className={inputCls}
+                            <DatePicker
+                                value={data.expense_date ? new Date(data.expense_date) : null}
+                                onChange={(d) => setData('expense_date', d ? format(d, 'yyyy-MM-dd') : '')}
+                                placeholder="Pilih tanggal"
+                                error={errors.expense_date}
                             />
                         </Field>
 

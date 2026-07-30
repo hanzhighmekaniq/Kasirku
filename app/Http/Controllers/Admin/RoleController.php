@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\StoreRoleService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -26,17 +25,39 @@ class RoleController extends Controller
         app(PermissionRegistrar::class)->setPermissionsTeamId($this->currentStoreId());
     }
 
+    /**
+     * Buang permission yang fiturnya tidak didukung tipe toko ini.
+     *
+     * Form hanya menampilkan permission relevan, jadi ini murni penjaga
+     * server-side terhadap request yang dirakit manual.
+     *
+     * @param  array<int, string>  $requested
+     * @return array<int, string>
+     */
+    private function allowedPermissions(int $storeId, array $requested): array
+    {
+        if ($requested === []) {
+            return [];
+        }
+
+        $relevant = StoreRoleService::relevantPermissionsForStore($storeId)->all();
+
+        return array_values(array_intersect($requested, $relevant));
+    }
+
     public function index()
     {
         $this->setTeam();
         $storeId = $this->currentStoreId();
 
-        $roles = \App\Services\StoreRoleService::getRolesForStore($storeId);
+        $roles = StoreRoleService::getRolesForStore($storeId);
 
-        $permissions = Permission::orderBy('name')->get(['id', 'name']);
+        // Hanya permission yang fiturnya didukung tipe toko ini. Tanpa ini
+        // toko retail ikut ditawari akses kitchen/meja yang menunya tidak ada.
+        $permissions = StoreRoleService::relevantPermissionsForStore($storeId);
 
         return Inertia::render('Admin/Roles/Index', [
-            'roles'       => $roles,
+            'roles' => $roles,
             'permissions' => $permissions,
         ]);
     }
@@ -47,7 +68,7 @@ class RoleController extends Controller
         $storeId = $this->currentStoreId();
 
         $validated = $request->validate([
-            'name'        => 'required|string|max:50',
+            'name' => 'required|string|max:50',
             'description' => 'nullable|string|max:255',
             'permissions' => 'array',
             'permissions.*' => 'string|exists:permissions,name',
@@ -64,15 +85,17 @@ class RoleController extends Controller
         }
 
         $role = Role::create([
-            'name'        => $validated['name'],
-            'guard_name'  => 'web',
-            'store_id'    => $storeId,
-            'is_system'   => false,
+            'name' => $validated['name'],
+            'guard_name' => 'web',
+            'store_id' => $storeId,
+            'is_system' => false,
             'description' => $validated['description'] ?? null,
         ]);
 
-        if (!empty($validated['permissions'])) {
-            $role->syncPermissions($validated['permissions']);
+        if (! empty($validated['permissions'])) {
+            $role->syncPermissions(
+                $this->allowedPermissions($storeId, $validated['permissions']),
+            );
         }
 
         return back()->with('success', "Role \"{$role->name}\" berhasil dibuat.");
@@ -94,18 +117,20 @@ class RoleController extends Controller
         }
 
         $validated = $request->validate([
-            'name'          => 'required|string|max:50',
-            'description'   => 'nullable|string|max:255',
-            'permissions'   => 'array',
+            'name' => 'required|string|max:50',
+            'description' => 'nullable|string|max:255',
+            'permissions' => 'array',
             'permissions.*' => 'string|exists:permissions,name',
         ]);
 
         $role->update([
-            'name'        => $validated['name'],
+            'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
         ]);
 
-        $role->syncPermissions($validated['permissions'] ?? []);
+        $role->syncPermissions(
+            $this->allowedPermissions($storeId, $validated['permissions'] ?? []),
+        );
 
         return back()->with('success', "Role \"{$role->name}\" berhasil diperbarui.");
     }
@@ -125,7 +150,7 @@ class RoleController extends Controller
 
         $role->delete();
 
-        return back()->with('success', "Role berhasil dihapus.");
+        return back()->with('success', 'Role berhasil dihapus.');
     }
 
     /**
@@ -142,21 +167,21 @@ class RoleController extends Controller
             abort(403);
         }
 
-        $baseName = $role->name . ' (custom)';
-        $counter  = 1;
-        $newName  = $baseName;
+        $baseName = $role->name.' (custom)';
+        $counter = 1;
+        $newName = $baseName;
 
         // Pastikan nama tidak duplicate
         while (Role::where('name', $newName)->where('store_id', $storeId)->exists()) {
-            $newName = $baseName . ' ' . $counter++;
+            $newName = $baseName.' '.$counter++;
         }
 
         $newRole = Role::create([
-            'name'        => $newName,
-            'guard_name'  => 'web',
-            'store_id'    => $storeId,
-            'is_system'   => false,
-            'description' => 'Duplikat dari role "' . $role->name . '"',
+            'name' => $newName,
+            'guard_name' => 'web',
+            'store_id' => $storeId,
+            'is_system' => false,
+            'description' => 'Duplikat dari role "'.$role->name.'"',
         ]);
 
         // Salin semua permission dari role asal

@@ -34,6 +34,20 @@ export default function PageHeader({
             <section className="mb-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div className="flex items-start gap-3">
+                        {/* Tombol kembali hanya dirender kalau backUrl diisi.
+                            Sebelumnya prop-nya diterima tapi tidak pernah
+                            ditampilkan, jadi halaman form tidak punya jalan
+                            kembali selain tombol Batal di bawah. */}
+                        {backUrl && (
+                            <button
+                                type="button"
+                                onClick={handleBackClick}
+                                aria-label="Kembali"
+                                className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                <ArrowLeft className="h-4 w-4" strokeWidth={2} />
+                            </button>
+                        )}
                         <div>
                             {/* Breadcrumbs */}
                             {breadcrumbs && breadcrumbs.length > 0 && (

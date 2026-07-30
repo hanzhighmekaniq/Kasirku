@@ -15,6 +15,11 @@ export default function SuccessScreen({
     data = {},
     storeName,
     receiptFooter,
+    receiptHeader,
+    storeAddress,
+    storePhone,
+    storeLogo,
+    taxInclusive = false,
     onNewTransaction,
     onSendWa,
     onClose,
@@ -38,6 +43,9 @@ export default function SuccessScreen({
         subtotal: data.subtotal || data.grandTotal || 0,
         discount: Number(data.discount || 0),
         tax: Number(data.tax || 0),
+        taxName: data.taxName ?? null,
+        taxRate: data.taxRate ?? null,
+        taxInclusive: data.taxInclusive ?? taxInclusive,
         totalPromoDisc: Number(data.totalPromoDisc || 0),
         cartPromoDiscount: Number(data.cartPromoDiscount || 0),
         cartPromoName: data.cartPromoName || null,
@@ -192,6 +200,10 @@ export default function SuccessScreen({
                     receipt={receiptPayload}
                     storeName={storeName}
                     footer={receiptFooter || 'Terima kasih telah berbelanja'}
+                    header={receiptHeader}
+                    storeAddress={storeAddress}
+                    storePhone={storePhone}
+                    storeLogo={storeLogo}
                     autoPrint={autoPrint}
                     onClose={() => setShowReceipt(false)}
                     onNewTransaction={onNewTransaction}

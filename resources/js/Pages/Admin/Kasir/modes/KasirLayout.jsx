@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import * as ReactDOM from "react-dom";
@@ -24,10 +24,12 @@ import {
     LayoutGrid,
     MessageSquare,
     Tag,
+    BadgeCheck,
 } from "lucide-react";
 
 import { useStoreModules } from "@/Hooks/useStoreModules";
 import BarcodeScanner from "@/Components/BarcodeScanner";
+import { buildTaxLabel, configureCurrency } from "../components/helpers";
 
 import ModifierModal from "../components/ModifierModal";
 import VariantModal from "../components/legacy/VariantModal";
@@ -66,6 +68,7 @@ export default function KasirLayout({
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [showAdjustModal, setShowAdjustModal] = useState(false);
     const [showHeldModal, setShowHeldModal] = useState(false);
+    const [showMembershipOffer, setShowMembershipOffer] = useState(false);
 
     const {
         tables = [],
@@ -73,8 +76,29 @@ export default function KasirLayout({
         pgMethods = [],
         storeName,
         receiptFooter,
+        receiptHeader,
+        storeAddress,
+        storePhone,
+        storeLogo,
+        defaultTaxRate = 0,
+        taxInclusive = false,
+        currency = "IDR",
+        decimalPlaces = 0,
+        paymentEditLimitMinutes = null,
+        paymentEditLimitLabel = null,
         activeShift,
+        customerTiers = [],
     } = props;
+
+    // Format mata uang di seluruh komponen kasir mengikuti pengaturan toko.
+    // Dijalankan saat render (bukan di useEffect) supaya angka pada render
+    // pertama sudah memakai konfigurasi yang benar.
+    configureCurrency({ currency, decimalPlaces });
+
+    const tierRankMap = useMemo(
+        () => buildTierRankMap(customerTiers),
+        [customerTiers],
+    );
 
     /* ── Shift: tampil sesuai permission user ──────────────────────
      * Sembunyikan seluruh UI shift bila store tidak punya fitur shift
@@ -128,6 +152,22 @@ export default function KasirLayout({
         (c) => String(c.id) === String(k.selectedCustomer),
     );
 
+    // Auto-show membership offer panel saat pelanggan dipilih & ada upgrade
+    useEffect(() => {
+        if (!selectedCustomerObj || !k.sellableMemberships?.length) {
+            setShowMembershipOffer(false);
+            return;
+        }
+        const custRank = customerRank(selectedCustomerObj, tierRankMap);
+        const hasUpgrade = k.sellableMemberships.some(
+            (m) => m.product && membershipTierRank(m, tierRankMap) > custRank
+                && !k.cart.some((c) => c.productId === m.product.id),
+        );
+        if (hasUpgrade) {
+            setShowMembershipOffer(true);
+        }
+    }, [k.selectedCustomer]);
+
     // Enter → buka payment view, kalau cart tidak kosong & tidak ada blocker.
     // Tidak aktif saat sedang mengetik di input/textarea (biar tidak
     // mengganggu form lain), dan tidak aktif saat payment view sudah terbuka
@@ -175,15 +215,10 @@ export default function KasirLayout({
         k.discountType === "percent" && Number(k.discountValue) > 0
             ? `${k.discountValue}%`
             : null;
-    const taxBadge =
-        [
-            k.taxName,
-            k.taxType === "percent" && Number(k.taxValue) > 0
-                ? `${k.taxValue}%`
-                : null,
-        ]
-            .filter(Boolean)
-            .join(" ") || null;
+    const taxBadge = buildTaxLabel({
+        taxName: k.taxName,
+        taxRate: k.taxType === "percent" ? k.taxValue : null,
+    });
     const heldCount = k.heldTransactions?.length ?? 0;
     const noteActive = !!(k.note && k.note.trim());
     const adjustActive = k.discount > 0 || k.tax > 0;
@@ -218,13 +253,7 @@ export default function KasirLayout({
         <div className="flex items-center gap-3">
             <button
                 type="button"
-                onClick={async () => {
-                    if (k.resumeSaleId && !k.receiptData) {
-                        await k.handleCancelPendingSale(k.resumeSaleId);
-                    }
-
-                    k.setShowPayment(false);
-                }}
+                onClick={() => k.requestPaymentBack()}
                 aria-label="Kembali"
                 title="Kembali"
                 className="
@@ -833,6 +862,30 @@ export default function KasirLayout({
 
                 {/* Cart items — satu-satunya area yang scroll */}
                 <div className="flex-1 space-y-1.5 overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+
+                    {/* Tombol kecil buka panel membership — hanya muncul saat ada upgrade tersedia */}
+                    {selectedCustomerObj && k.sellableMemberships?.length > 0 && !showMembershipOffer && (() => {
+                        const r = customerRank(selectedCustomerObj, tierRankMap);
+                        const hasUpgrade = k.sellableMemberships.some(
+                            (m) => m.product && membershipTierRank(m, tierRankMap) > r
+                                && !k.cart.some((c) => c.productId === m.product.id),
+                        );
+                        if (!hasUpgrade) return null;
+                        return (
+                            <button
+                                type="button"
+                                onClick={() => setShowMembershipOffer(true)}
+                                className="flex w-full items-center gap-2 rounded-xl border border-primary/25 bg-primary/8 px-3 py-2 text-left transition hover:bg-primary/15"
+                            >
+                                <BadgeCheck size={14} className="shrink-0 text-primary" strokeWidth={2} />
+                                <span className="flex-1 truncate text-[12px] font-semibold text-primary">
+                                    Ada penawaran upgrade membership
+                                </span>
+                                <span className="shrink-0 text-[10px] font-bold text-primary opacity-60">Lihat →</span>
+                            </button>
+                        );
+                    })()}
+
                     {k.cart.length === 0 ? (
                         <div className="flex h-full flex-col items-center justify-center py-16 text-center">
                             <div className="mb-3 rounded-2xl bg-muted p-4">
@@ -1015,6 +1068,40 @@ export default function KasirLayout({
                                 )}
                             </button>
 
+                            {/* Membership upgrade — hanya muncul saat pelanggan dipilih & ada paket lebih tinggi */}
+                            {selectedCustomerObj && k.sellableMemberships?.length > 0 && (() => {
+                                const customerTierRank = customerRank(selectedCustomerObj, tierRankMap);
+                                const nextUpgrade = [...k.sellableMemberships]
+                                    .sort((a, b) => membershipTierRank(a, tierRankMap) - membershipTierRank(b, tierRankMap))
+                                    .find((m) => {
+                                        if (!m.product) return false;
+                                        if (k.cart.some((c) => c.productId === m.product.id)) return false;
+                                        return membershipTierRank(m, tierRankMap) > customerTierRank;
+                                    });
+                                if (!nextUpgrade) return null;
+                                return (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            k.addToCart({
+                                                id: nextUpgrade.product.id,
+                                                name: nextUpgrade.name,
+                                                sell_price: nextUpgrade.price,
+                                                type: "membership",
+                                                track_stock: false,
+                                                unit: "pcs",
+                                                is_sellable: false,
+                                                stock: 999,
+                                            });
+                                        }}
+                                        className="flex-1 flex justify-center items-center gap-1 rounded-lg border border-primary/30 bg-primary/10 px-1.5 py-1.5 text-[11px] font-medium text-primary transition hover:bg-primary/20"
+                                    >
+                                        <BadgeCheck size={12} />
+                                        <span className="truncate">Member</span>
+                                    </button>
+                                );
+                            })()}
+
                         </div>
 
                     </div>
@@ -1071,7 +1158,7 @@ export default function KasirLayout({
                                 onClick={() => setShowAdjustModal(true)}
                                 className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between rounded-lg px-1 py-0.5 text-[13px] text-muted-foreground transition hover:bg-muted"
                             >
-                                <span>{taxBadge || "Pajak"}</span>
+                                <span>{taxBadge}</span>
                                         <span className="font-medium tabular-nums text-foreground">
                                     {k.fmt(k.tax)}
                                 </span>
@@ -1084,6 +1171,21 @@ export default function KasirLayout({
                                 <span>Ongkir</span>
                                         <span className="font-medium tabular-nums text-foreground">
                                     {k.fmt(Number(k.deliveryFee))}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Subsidi ongkir dari benefit membership */}
+                        {isDelivery && k.shippingWaiver > 0 && (
+                            <div className="flex items-center justify-between text-[13px] text-success">
+                                <span>
+                                    Gratis ongkir
+                                    {k.memberBenefit?.membership_name
+                                        ? ` (${k.memberBenefit.membership_name})`
+                                        : ""}
+                                </span>
+                                <span className="font-medium tabular-nums">
+                                    −{k.fmt(k.shippingWaiver)}
                                 </span>
                             </div>
                         )}
@@ -1192,6 +1294,30 @@ export default function KasirLayout({
 
                 {/* Cart items */}
                 <div className="flex-1 space-y-1.5 overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+
+                    {/* Tombol buka panel membership — mobile */}
+                    {selectedCustomerObj && k.sellableMemberships?.length > 0 && !showMembershipOffer && (() => {
+                        const r = customerRank(selectedCustomerObj, tierRankMap);
+                        const hasUpgrade = k.sellableMemberships.some(
+                            (m) => m.product && membershipTierRank(m, tierRankMap) > r
+                                && !k.cart.some((c) => c.productId === m.product.id),
+                        );
+                        if (!hasUpgrade) return null;
+                        return (
+                            <button
+                                type="button"
+                                onClick={() => setShowMembershipOffer(true)}
+                                className="flex w-full items-center gap-2 rounded-xl border border-primary/25 bg-primary/8 px-3 py-2 text-left transition hover:bg-primary/15"
+                            >
+                                <BadgeCheck size={14} className="shrink-0 text-primary" strokeWidth={2} />
+                                <span className="flex-1 truncate text-[12px] font-semibold text-primary">
+                                    Ada penawaran upgrade membership
+                                </span>
+                                <span className="shrink-0 text-[10px] font-bold text-primary opacity-60">Lihat →</span>
+                            </button>
+                        );
+                    })()}
+
                     {k.cart.length === 0 ? (
                         <div className="flex h-full flex-col items-center justify-center py-12 text-center">
                             <div className="mb-3 rounded-2xl bg-muted p-4">
@@ -1366,6 +1492,40 @@ export default function KasirLayout({
                                 )}
                             </button>
 
+                            {/* Membership upgrade — sejajar Catatan & Diskon */}
+                            {selectedCustomerObj && k.sellableMemberships?.length > 0 && (() => {
+                                const customerTierRank = customerRank(selectedCustomerObj, tierRankMap);
+                                const nextUpgrade = [...k.sellableMemberships]
+                                    .sort((a, b) => membershipTierRank(a, tierRankMap) - membershipTierRank(b, tierRankMap))
+                                    .find((m) => {
+                                        if (!m.product) return false;
+                                        if (k.cart.some((c) => c.productId === m.product.id)) return false;
+                                        return membershipTierRank(m, tierRankMap) > customerTierRank;
+                                    });
+                                if (!nextUpgrade) return null;
+                                return (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            k.addToCart({
+                                                id: nextUpgrade.product.id,
+                                                name: nextUpgrade.name,
+                                                sell_price: nextUpgrade.price,
+                                                type: "membership",
+                                                track_stock: false,
+                                                unit: "pcs",
+                                                is_sellable: false,
+                                                stock: 999,
+                                            });
+                                        }}
+                                        className="inline-flex items-center gap-1 rounded-lg border border-primary/30 bg-primary/10 px-1.5 py-1 text-[11px] font-medium text-primary transition hover:bg-primary/20"
+                                    >
+                                        <BadgeCheck size={12} />
+                                        <span className="truncate">Member</span>
+                                    </button>
+                                );
+                            })()}
+
                         </div>
                     </div>
 
@@ -1394,7 +1554,7 @@ export default function KasirLayout({
                         )}
                         {k.tax > 0 && (
                             <button type="button" onClick={() => setShowAdjustModal(true)} className="-mx-1 flex w-[calc(100%+0.5rem)] items-center justify-between rounded-lg px-1 py-0.5 text-[13px] text-muted-foreground transition hover:bg-muted">
-                                <span>{taxBadge || "Pajak"}</span>
+                                <span>{taxBadge}</span>
                                 <span className="font-medium tabular-nums text-foreground">{k.fmt(k.tax)}</span>
                             </button>
                         )}
@@ -1402,6 +1562,12 @@ export default function KasirLayout({
                             <div className="flex items-center justify-between text-[13px] text-muted-foreground">
                                 <span>Ongkir</span>
                                 <span className="font-medium tabular-nums text-foreground">{k.fmt(Number(k.deliveryFee))}</span>
+                            </div>
+                        )}
+                        {isDelivery && k.shippingWaiver > 0 && (
+                            <div className="flex items-center justify-between text-[13px] text-success">
+                                <span>Gratis ongkir{k.memberBenefit?.membership_name ? ` (${k.memberBenefit.membership_name})` : ""}</span>
+                                <span className="font-medium tabular-nums">−{k.fmt(k.shippingWaiver)}</span>
                             </div>
                         )}
                         <div className="mt-1 flex items-baseline justify-between border-t-2 border-border pt-2.5">
@@ -1533,6 +1699,10 @@ export default function KasirLayout({
                     receipt={k.receiptData}
                     storeName={storeName}
                     footer={receiptFooter}
+                    header={receiptHeader}
+                    storeAddress={storeAddress}
+                    storePhone={storePhone}
+                    storeLogo={storeLogo}
                     onClose={() => k.setShowReceipt(false)}
                     onNewTransaction={() => k.setShowReceipt(false)}
                 />
@@ -1547,6 +1717,8 @@ export default function KasirLayout({
                     onCancelSplit={k.handleCancelSplit}
                     onVoid={k.handleVoidSale}
                     onUpdatePayment={k.handleUpdatePayment}
+                    paymentEditLimitMinutes={paymentEditLimitMinutes}
+                    paymentEditLimitLabel={paymentEditLimitLabel}
                 />
             )}
             <BarcodeScanner
@@ -1583,6 +1755,11 @@ export default function KasirLayout({
             pgMethods={pgMethods}
             storeName={storeName}
             receiptFooter={receiptFooter}
+            receiptHeader={receiptHeader}
+            storeAddress={storeAddress}
+            storePhone={storePhone}
+            storeLogo={storeLogo}
+            taxInclusive={taxInclusive}
             initialSaleId={k.resumeSaleId}
             initialSaleNo={k.resumeSaleNo}
             initialPgTransaction={k.initialPgTransaction}
@@ -1600,6 +1777,11 @@ export default function KasirLayout({
                         data={k.successData}
                         storeName={storeName || 'Toko'}
                         receiptFooter={receiptFooter}
+                        receiptHeader={receiptHeader}
+                        storeAddress={storeAddress}
+                        storePhone={storePhone}
+                        storeLogo={storeLogo}
+                        taxInclusive={taxInclusive}
                         onNewTransaction={() => {
                             k.clearCart();
                             k.setSuccessData(null);
@@ -1629,6 +1811,11 @@ export default function KasirLayout({
                     data={k.successData}
                     storeName={storeName || 'Toko'}
                     receiptFooter={receiptFooter}
+                    receiptHeader={receiptHeader}
+                    storeAddress={storeAddress}
+                    storePhone={storePhone}
+                    storeLogo={storeLogo}
+                    taxInclusive={taxInclusive}
                     onNewTransaction={() => {
                         k.clearCart();
                         k.setSuccessData(null);
@@ -1642,6 +1829,302 @@ export default function KasirLayout({
                     }}
                 />
             )}
+
+            {/* Membership Offer Slide-in Panel */}
+            {showMembershipOffer && selectedCustomerObj && k.sellableMemberships?.length > 0 && (
+                <MembershipOfferSlide
+                    customer={selectedCustomerObj}
+                    memberships={k.sellableMemberships}
+                    cart={k.cart}
+                    sidebarWidth={k.sidebarWidth}
+                    tierRankMap={tierRankMap}
+                    onAdd={(membership) => {
+                        k.addToCart({
+                            id: membership.product.id,
+                            name: membership.name,
+                            sell_price: membership.price,
+                            type: "membership",
+                            track_stock: false,
+                            unit: "pcs",
+                            is_sellable: false,
+                            stock: 999,
+                        });
+                        setShowMembershipOffer(false);
+                    }}
+                    onClose={() => setShowMembershipOffer(false)}
+                />
+            )}
         </AuthenticatedLayout>
+    );
+}
+
+/* ------------------------------------------------------------------ */
+/*  MembershipOfferBar — ditampilkan di bawah panel pelanggan          */
+/* ------------------------------------------------------------------ */
+const TIER_RANK = { bronze: 1, silver: 2, gold: 3, platinum: 4 };
+
+/**
+ * Buat peta rank dari daftar tier dinamis.
+ *
+ * Dipakai di tempat yang sebelumnya memakai `TIER_RANK` hardcoded.
+ * Fallback ke kamus tetap supaya mode kasir tetap jalan meski toko
+ * belum punya data tier (mis. refresh cepat sebelum data terisi).
+ */
+function buildTierRankMap(customerTiers) {
+    if (!customerTiers?.length) return TIER_RANK;
+    const map = {};
+    for (const tier of customerTiers) {
+        map[String(tier.id)] = tier.rank;
+        // Juga mapping nama lowercase supaya data lama yang masih pakai string tetap terbaca.
+        map[tier.name.toLowerCase()] = tier.rank;
+    }
+    return map;
+}
+
+/** Ambil rank tier dari objek customer lewat tier_id (prioritas) atau nama tier lama. */
+function customerRank(customer, tierRankMap) {
+    if (!customer) return 0;
+    if (customer.customer_tier_id) {
+        return tierRankMap[String(customer.customer_tier_id)] ?? 0;
+    }
+    return tierRankMap[(customer.tier ?? "").toLowerCase()] ?? 0;
+}
+
+/** Ambil rank tier dari objek membership lewat maps_to_tier_id atau nama maps_to_tier lama. */
+function membershipTierRank(membership, tierRankMap) {
+    if (membership?.maps_to_tier_id) {
+        return tierRankMap[String(membership.maps_to_tier_id)] ?? 0;
+    }
+    return tierRankMap[(membership?.maps_to_tier ?? "").toLowerCase()] ?? 0;
+}
+
+function MembershipOfferBar({ customer, memberships, cart, tierRankMap = {}, onAdd }) {
+    const custRank = customerRank(customer, tierRankMap);
+
+    const sorted = [...memberships].sort(
+        (a, b) => membershipTierRank(a, tierRankMap) - membershipTierRank(b, tierRankMap),
+    );
+
+    const nextUpgrade = sorted.find((m) => {
+        if (!m.product) return false;
+        if (cart.some((c) => c.productId === m.product.id)) return false;
+        return membershipTierRank(m, tierRankMap) > custRank;
+    });
+
+    // Jika pelanggan sudah di tier tertinggi atau semua paket sudah di keranjang,
+    // tidak tampilkan banner
+    if (!nextUpgrade) return null;
+
+    const fmt = (n) =>
+        new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(n);
+
+    const durationLabel =
+        nextUpgrade.duration_type === "month"
+            ? `${nextUpgrade.duration_value} bln`
+            : nextUpgrade.duration_type === "year"
+              ? `${nextUpgrade.duration_value} thn`
+              : nextUpgrade.duration_type === "day"
+                ? `${nextUpgrade.duration_value} hr`
+                : `${nextUpgrade.duration_value}x kunjungan`;
+
+    const tierLabel = nextUpgrade.maps_to_tier
+        ? nextUpgrade.maps_to_tier.charAt(0).toUpperCase() + nextUpgrade.maps_to_tier.slice(1)
+        : nextUpgrade.name;
+
+    return (
+        <div
+            role="button"
+            tabIndex={0}
+            onClick={() => onAdd(nextUpgrade)}
+            onKeyDown={(e) => e.key === "Enter" && onAdd(nextUpgrade)}
+            className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-left transition hover:bg-primary/10 active:scale-[0.98]"
+        >
+            <BadgeCheck
+                size={15}
+                className="shrink-0 text-primary"
+                strokeWidth={2}
+            />
+            <div className="min-w-0 flex-1 leading-tight">
+                <p className="truncate text-[12px] font-semibold text-primary">
+                    Upgrade ke {nextUpgrade.name}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                    {fmt(nextUpgrade.price)} · {durationLabel}
+                    {tierLabel ? ` · ${tierLabel}` : ""}
+                </p>
+            </div>
+            <span className="shrink-0 rounded-lg bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                + Keranjang
+            </span>
+        </div>
+    );
+}
+
+/* ------------------------------------------------------------------ */
+/*  MembershipOfferSlide — panel slide dari kanan saat pilih pelanggan  */
+/* ------------------------------------------------------------------ */
+function MembershipOfferSlide({ customer, memberships, cart, sidebarWidth, onAdd, onClose, tierRankMap = {} }) {
+    const custRank = customerRank(customer, tierRankMap);
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        const t = requestAnimationFrame(() => setVisible(true));
+        return () => cancelAnimationFrame(t);
+    }, []);
+
+    const handleClose = () => {
+        setVisible(false);
+        setTimeout(onClose, 250);
+    };
+
+    const sorted = [...memberships].sort(
+        (a, b) => membershipTierRank(a, tierRankMap) - membershipTierRank(b, tierRankMap),
+    );
+
+    const nextUpgrade = sorted.find((m) => {
+        if (!m.product) return false;
+        if (cart.some((c) => c.productId === m.product.id)) return false;
+        return membershipTierRank(m, tierRankMap) > custRank;
+    });
+
+    if (!nextUpgrade) return null;
+
+    const fmt = (n) =>
+        new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(n);
+
+    const durationLabel =
+        nextUpgrade.duration_type === "month"
+            ? `${nextUpgrade.duration_value} Bulan`
+            : nextUpgrade.duration_type === "year"
+              ? `${nextUpgrade.duration_value} Tahun`
+              : nextUpgrade.duration_type === "day"
+                ? `${nextUpgrade.duration_value} Hari`
+                : `${nextUpgrade.duration_value}x Kunjungan`;
+
+    const tierLabel =
+        nextUpgrade.maps_to_tier
+            ? nextUpgrade.maps_to_tier.charAt(0).toUpperCase() + nextUpgrade.maps_to_tier.slice(1)
+            : nextUpgrade.name;
+
+    // Posisi: tepat di atas sidebar keranjang pada desktop, bottom sheet di mobile
+    const panelRight = sidebarWidth ? `${sidebarWidth + 8}px` : "340px";
+
+    return ReactDOM.createPortal(
+        <>
+            {/* Backdrop */}
+            <div
+                className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-200 ${visible ? "opacity-100" : "opacity-0"}`}
+                onClick={handleClose}
+            />
+
+            {/* Desktop: slide dari kanan */}
+            <div
+                className={`fixed bottom-24 z-50 w-72 rounded-2xl border border-border bg-card shadow-2xl transition-all duration-200 hidden md:block ${
+                    visible ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+                }`}
+                style={{ right: panelRight }}
+            >
+                <MembershipOfferPanelContent
+                    customer={customer}
+                    nextUpgrade={nextUpgrade}
+                    fmt={fmt}
+                    durationLabel={durationLabel}
+                    tierLabel={tierLabel}
+                    onAdd={onAdd}
+                    onClose={handleClose}
+                />
+            </div>
+
+            {/* Mobile: bottom sheet slide dari bawah */}
+            <div
+                className={`fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-border bg-card shadow-2xl transition-all duration-200 md:hidden ${
+                    visible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+                }`}
+            >
+                {/* Drag handle */}
+                <div className="flex items-center justify-center pt-2 pb-1">
+                    <div className="h-1.5 w-10 rounded-full bg-muted-foreground/20" />
+                </div>
+                <MembershipOfferPanelContent
+                    customer={customer}
+                    nextUpgrade={nextUpgrade}
+                    fmt={fmt}
+                    durationLabel={durationLabel}
+                    tierLabel={tierLabel}
+                    onAdd={onAdd}
+                    onClose={handleClose}
+                />
+            </div>
+        </>,
+        document.body,
+    );
+}
+
+function MembershipOfferPanelContent({ customer, nextUpgrade, fmt, durationLabel, tierLabel, onAdd, onClose }) {
+    return (
+        <>
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border bg-primary/5 px-4 py-3 rounded-t-2xl">
+                <div className="flex items-center gap-2">
+                    <BadgeCheck size={16} className="text-primary" strokeWidth={2} />
+                    <span className="text-[13px] font-bold text-primary">Penawaran Upgrade</span>
+                </div>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="flex h-6 w-6 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition"
+                >
+                    <X size={14} />
+                </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 space-y-3">
+                <p className="text-[11px] text-muted-foreground">
+                    <span className="font-semibold text-foreground">{customer.name}</span> saat ini tier{" "}
+                    <span className="capitalize font-semibold">{customer.tier || "bronze"}</span>.
+                    Tawarkan upgrade:
+                </p>
+
+                {/* Kartu paket */}
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[13px] font-bold text-foreground">{nextUpgrade.name}</span>
+                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary capitalize">
+                            {tierLabel}
+                        </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">{durationLabel}</p>
+                    <p className="text-base font-extrabold text-primary">{fmt(nextUpgrade.price)}</p>
+                </div>
+
+                {/* Tombol aksi */}
+                <button
+                    type="button"
+                    onClick={() => onAdd(nextUpgrade)}
+                    className="w-full rounded-xl bg-primary px-4 py-2.5 text-[13px] font-bold text-primary-foreground transition hover:bg-primary/90 active:scale-[0.98]"
+                >
+                    + Tambah ke Keranjang
+                </button>
+
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-full rounded-xl border border-border px-4 py-2 text-[12px] font-medium text-muted-foreground transition hover:bg-muted"
+                >
+                    Tidak, lanjut belanja
+                </button>
+            </div>
+        </>
     );
 }

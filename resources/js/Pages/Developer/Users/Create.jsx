@@ -1,7 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import UserForm from './UserForm';
 
-export default function Create({ stores }) {
+export default function Create({ stores, rolesByStoreType = {} }) {
     const { data, setData, post, processing, errors } = useForm({
         name:                  '',
         email:                 '',
@@ -22,6 +22,7 @@ export default function Create({ stores }) {
                 processing={processing} onSubmit={submit}
                 cancelHref={route('developer.users.index')}
                 stores={stores}
+                rolesByStoreType={rolesByStoreType}
             />
         </>
     );

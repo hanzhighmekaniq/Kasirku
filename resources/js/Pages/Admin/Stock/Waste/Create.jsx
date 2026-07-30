@@ -3,6 +3,8 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
 import StockBucketPicker, { BucketItemLabel } from '@/Components/ui/StockBucketPicker';
 import { purchaseUnitHint, usesUnitConversion } from '@/Utils/unitConversion';
+import DatePicker from "@/Components/ui/DatePicker";
+import { format } from "date-fns";
 
 const WASTE_CATEGORIES = [
     { value: 'tumpahan', label: 'Tumpahan' },
@@ -104,7 +106,11 @@ export default function Create({ buckets = [], currentBranchId = null }) {
                         <SectionCard title="Informasi Waste">
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <Field label="Tanggal" required error={errors.waste_date}>
-                                    <input type="date" value={data.waste_date} onChange={(e) => setData('waste_date', e.target.value)} className={inputCls(!!errors.waste_date)} />
+                                    <DatePicker
+                                        value={data.waste_date ? new Date(data.waste_date) : null}
+                                        onChange={(d) => setData('waste_date', d ? format(d, 'yyyy-MM-dd') : '')}
+                                        placeholder="Pilih tanggal"
+                                    />
                                 </Field>
                             </div>
                             <div className="mt-4">

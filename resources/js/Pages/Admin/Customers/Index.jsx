@@ -1,18 +1,35 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import LoyaltyTabs from "@/Components/LoyaltyTabs";
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import { formatRupiah } from "@/Utils/currency";
-import { Plus } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
+/**
+ * Kelas warna ditulis lengkap supaya tidak dibuang Tailwind saat build.
+ * Kunci mengikuti CustomerTier::COLORS di backend.
+ */
 const TIER_STYLES = {
-    bronze: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    silver: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
-    gold: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-    platinum: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+    slate: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
+    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    yellow: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
+    indigo: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
+    emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    sky: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+    rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    violet: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
 };
+
+function tierStyle(customer) {
+    return TIER_STYLES[customer.customer_tier?.color] ?? TIER_STYLES.slate;
+}
+
+function tierName(customer) {
+    return customer.customer_tier?.name ?? "—";
+}
 
 function activeMembership(customer) {
     return customer.memberships?.[0] ?? null;
@@ -87,6 +104,8 @@ export default function Index({ customers, storeType = "retail" }) {
                     </Button>
                 }
             />
+
+            <LoyaltyTabs />
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}
@@ -204,42 +223,25 @@ function RowActions({ customer, onDelete }) {
     return (
         <div className="flex items-center justify-end gap-1">
             <Link
+                href={route("admin.customers.show", customer.id)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                title="Detail"
+            >
+                <Eye className="h-4 w-4" strokeWidth={1.7} />
+            </Link>
+            <Link
                 href={route("admin.customers.edit", customer.id)}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-primary/10 hover:text-primary"
                 title="Edit"
             >
-                <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.7}
-                    stroke="currentColor"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-                    />
-                </svg>
+                <Pencil className="h-4 w-4" strokeWidth={1.7} />
             </Link>
             <button
                 onClick={() => onDelete(customer)}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                 title="Hapus"
             >
-                <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.7}
-                    stroke="currentColor"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                    />
-                </svg>
+                <Trash2 className="h-4 w-4" strokeWidth={1.7} />
             </button>
         </div>
     );
@@ -329,9 +331,9 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                 {showLoyalty && (
                                     <td className="px-4 py-4 text-center">
                                         <span
-                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${TIER_STYLES[c.tier] || TIER_STYLES.bronze}`}
+                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${tierStyle(c)}`}
                                         >
-                                            {c.tier || "bronze"}
+                                            {tierName(c)}
                                         </span>
                                     </td>
                                 )}
@@ -376,9 +378,9 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                 </Link>
                                 {showLoyalty && (
                                     <span
-                                        className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${TIER_STYLES[c.tier] || TIER_STYLES.bronze}`}
+                                        className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${tierStyle(c)}`}
                                     >
-                                        {c.tier || "bronze"}
+                                        {tierName(c)}
                                     </span>
                                 )}
                             </div>
@@ -401,44 +403,24 @@ function CustomerList({ items, onDelete, showLoyalty = true }) {
                                 {showLoyalty && <MembershipBadge customer={c} />}
                                 <div className="flex items-center gap-1">
                                     <Link
-                                        href={route(
-                                            "admin.customers.edit",
-                                            c.id,
-                                        )}
+                                        href={route("admin.customers.show", c.id)}
+                                        className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                                    >
+                                        <Eye className="h-3.5 w-3.5" strokeWidth={1.7} />
+                                        Detail
+                                    </Link>
+                                    <Link
+                                        href={route("admin.customers.edit", c.id)}
                                         className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-primary transition hover:bg-primary/10"
                                     >
-                                        <svg
-                                            className="h-3.5 w-3.5"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth={1.7}
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
-                                            />
-                                        </svg>
+                                        <Pencil className="h-3.5 w-3.5" strokeWidth={1.7} />
                                         Edit
                                     </Link>
                                     <button
                                         onClick={() => onDelete(c)}
                                         className="inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-xs font-medium text-destructive transition hover:bg-destructive/10"
                                     >
-                                        <svg
-                                            className="h-3.5 w-3.5"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth={1.7}
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                            />
-                                        </svg>
+                                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.7} />
                                         Hapus
                                     </button>
                                 </div>
