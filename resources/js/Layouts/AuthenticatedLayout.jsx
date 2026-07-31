@@ -1325,8 +1325,27 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
         currentBranch,
         branches = [],
         flash,
+        storePlan,
+        impersonating,
     } = usePage().props;
     const user = auth?.user;
+
+    const stopImpersonating = () => {
+        router.post(route("stop-impersonating"));
+    };
+
+    // Metrik plan yang sudah >= ambang near-limit (default 80%) — dipakai
+    // untuk banner "mendekati limit plan" di bawah topbar.
+    const nearLimitThreshold = storePlan?.near_limit_threshold ?? 80;
+    const metricLabels = {
+        users: "user",
+        branches: "cabang",
+        products: "produk",
+        transactions: "transaksi bulan ini",
+    };
+    const nearLimitMetrics = Object.entries(storePlan?.usage ?? {}).filter(
+        ([, m]) => m.percentage !== null && m.percentage >= nearLimitThreshold,
+    );
 
     // Hanya owner/admin/supervisor yang boleh ganti toko/branch
     // Karyawan biasa (kasir, gudang) false → switcher tersembunyi, branch terkunci
@@ -1585,6 +1604,38 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                 {flash?.warning && (
                     <div className="mx-5 mt-4 rounded-lg border border-warning/20 bg-warning/10 px-4 py-2.5 text-sm text-warning">
                         {flash.warning}
+                    </div>
+                )}
+
+                {/* Banner permanen selama sesi impersonation aktif */}
+                {impersonating && (
+                    <div className="flex items-center justify-between gap-3 bg-warning px-5 py-2.5 text-sm font-medium text-warning-foreground">
+                        <span>
+                            🔍 {impersonating.impersonator_name} sedang login
+                            sebagai akun ini untuk keperluan support.
+                        </span>
+                        <button
+                            onClick={stopImpersonating}
+                            className="shrink-0 rounded-lg bg-warning-foreground/10 px-3 py-1 text-xs font-semibold transition hover:bg-warning-foreground/20"
+                        >
+                            Kembali ke Developer
+                        </button>
+                    </div>
+                )}
+
+                {/* Banner mendekati limit plan (>= near_limit_threshold, default 80%) */}
+                {nearLimitMetrics.length > 0 && (
+                    <div className="mx-5 mt-4 rounded-lg border border-warning/20 bg-warning/10 px-4 py-2.5 text-sm text-warning">
+                        <span className="font-semibold">
+                            Mendekati limit paket {storePlan?.label}:
+                        </span>{" "}
+                        {nearLimitMetrics
+                            .map(
+                                ([key, m]) =>
+                                    `${m.current}/${m.max} ${metricLabels[key] ?? key}`,
+                            )
+                            .join(" · ")}
+                        . Upgrade paket untuk menambah kapasitas.
                     </div>
                 )}
 

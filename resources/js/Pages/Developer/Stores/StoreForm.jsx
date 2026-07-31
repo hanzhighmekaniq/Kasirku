@@ -29,6 +29,7 @@ export default function StoreForm({
     onUpdateBranch,
     onToggleOwner,
     onUpdateNewOwner,
+    showSuspendReason = false,
 }) {
     const [ownerSearch, setOwnerSearch] = useState("");
 
@@ -151,6 +152,31 @@ export default function StoreForm({
                                     Toko Aktif
                                 </label>
                             </div>
+                            {showSuspendReason && (
+                                <div className="col-span-2">
+                                    <label className="mb-1 block text-sm font-medium text-destructive">
+                                        Alasan Nonaktifkan (Suspend) *
+                                    </label>
+                                    <textarea
+                                        value={data.suspend_reason ?? ""}
+                                        onChange={(e) =>
+                                            setData("suspend_reason", e.target.value)
+                                        }
+                                        rows={2}
+                                        className={iCls(errors.suspend_reason)}
+                                        placeholder="cth. Pelanggaran kebijakan, permintaan owner, dsb."
+                                    />
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Wajib diisi — owner akan menerima email
+                                        pemberitahuan berisi alasan ini.
+                                    </p>
+                                    {errors.suspend_reason && (
+                                        <p className="mt-1 text-xs text-destructive">
+                                            {errors.suspend_reason}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </section>
 

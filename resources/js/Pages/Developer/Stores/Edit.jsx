@@ -9,12 +9,18 @@ export default function Edit({ store, storeTypes, plans = [] }) {
         email: store.email ?? "",
         address: store.address ?? "",
         is_active: store.is_active ?? true,
+        suspend_reason: "",
         store_type_id: store.store_type_id ?? null,
         plan_id: store.plan_id ?? null,
         plan_expires_at: store.plan_expires_at ?? "",
         max_users: store.max_users ?? "",
         max_branches: store.max_branches ?? "",
     });
+
+    // Field alasan cuma relevan saat toko DIUBAH dari aktif jadi nonaktif —
+    // dipakai StoreController::update() untuk validasi wajib suspend_reason.
+    const wasActive = store.is_active ?? true;
+    const showSuspendReason = wasActive && !data.is_active;
 
     const submit = (e) => {
         e.preventDefault();
@@ -35,6 +41,7 @@ export default function Edit({ store, storeTypes, plans = [] }) {
                 isEdit
                 plans={plans}
                 storeTypes={storeTypes}
+                showSuspendReason={showSuspendReason}
             />
         </>
     );

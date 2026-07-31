@@ -7,20 +7,25 @@ import {
     Building2,
     CircleCheck,
     CircleParking,
+    Clock,
     Coffee,
     Crown,
     Eye,
     Hotel,
     KeyRound,
+    LogIn,
     Lock,
     Monitor,
     Pencil,
     Plus,
     Scissors,
+    ShieldAlert,
     ShieldCheck,
     Shirt,
+    StickyNote,
     Store,
     Ticket,
+    Trash2,
     UserMinus,
     Users,
     X,
@@ -557,8 +562,297 @@ function PlanDetailSection({ store, planMeta, planFeatures }) {
     );
 }
 
+// ── Section: Usage Plan ───────────────────────────────────────────────────────
+const USAGE_LABEL = {
+    users: "User",
+    branches: "Cabang",
+    products: "Produk",
+    transactions: "Transaksi Bulan Ini",
+};
+
+function PlanUsageSection({ usage = {} }) {
+    const entries = Object.entries(usage);
+    if (entries.length === 0) return null;
+
+    return (
+        <div className="mb-6 rounded-2xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-border">
+                <h3 className="text-sm font-bold text-foreground">
+                    Pemakaian vs Limit Plan
+                </h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4 p-6 sm:grid-cols-4">
+                {entries.map(([key, m]) => {
+                    const pct = m.percentage ?? 0;
+                    const isNear = m.percentage !== null && m.percentage >= 80;
+                    const isFull = m.percentage !== null && m.percentage >= 100;
+                    return (
+                        <div key={key}>
+                            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                                {USAGE_LABEL[key] ?? key}
+                            </p>
+                            <p className="mb-2 text-sm font-bold text-foreground">
+                                {m.current}
+                                {m.max !== null ? ` / ${m.max}` : (
+                                    <span className="text-muted-foreground"> / ∞</span>
+                                )}
+                            </p>
+                            {m.max !== null && (
+                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                                    <div
+                                        className={`h-full rounded-full ${isFull ? "bg-destructive" : isNear ? "bg-warning" : "bg-success"}`}
+                                        style={{ width: `${Math.min(pct, 100)}%` }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+// ── Section: Riwayat Plan ─────────────────────────────────────────────────────
+function PlanHistorySection({ history = [] }) {
+    return (
+        <div className="mb-6 rounded-2xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
+                <Clock className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
+                <h3 className="text-sm font-bold text-foreground">
+                    Riwayat Plan
+                </h3>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                    {history.length}
+                </span>
+            </div>
+            {history.length > 0 ? (
+                <div className="divide-y divide-border">
+                    {history.map((h) => (
+                        <div
+                            key={h.id}
+                            className="flex items-center justify-between gap-3 px-6 py-3.5"
+                        >
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <p className="text-sm font-semibold text-foreground">
+                                        {h.plan_label}
+                                    </p>
+                                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                        {h.reason_label}
+                                    </span>
+                                    {!h.ended_at && (
+                                        <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+                                            Aktif
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                    {new Date(h.started_at).toLocaleDateString("id-ID", {
+                                        day: "numeric",
+                                        month: "short",
+                                        year: "numeric",
+                                    })}
+                                    {h.ended_at
+                                        ? ` — ${new Date(h.ended_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}`
+                                        : " — sekarang"}
+                                    {h.created_by ? ` · oleh ${h.created_by}` : ""}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <p className="px-6 py-6 text-sm text-muted-foreground">
+                    Belum ada riwayat.
+                </p>
+            )}
+        </div>
+    );
+}
+
+// ── Section: Catatan Internal Developer ───────────────────────────────────────
+function StoreNotesSection({ store, notes = [] }) {
+    const [text, setText] = useState("");
+    const [processing, setProcessing] = useState(false);
+
+    const submit = (e) => {
+        e.preventDefault();
+        if (!text.trim()) return;
+        setProcessing(true);
+        router.post(
+            route("developer.stores.notes.store", store.id),
+            { note: text },
+            {
+                preserveScroll: true,
+                onSuccess: () => setText(""),
+                onFinish: () => setProcessing(false),
+            },
+        );
+    };
+
+    const remove = (noteId) => {
+        if (!confirm("Hapus catatan ini?")) return;
+        router.delete(route("developer.stores.notes.destroy", [store.id, noteId]), {
+            preserveScroll: true,
+        });
+    };
+
+    return (
+        <div className="mb-6 rounded-2xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
+                <StickyNote className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
+                <h3 className="text-sm font-bold text-foreground">
+                    Catatan Internal
+                </h3>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                    {notes.length}
+                </span>
+                <span className="ml-auto text-[11px] text-muted-foreground">
+                    Tidak terlihat oleh owner
+                </span>
+            </div>
+            <form onSubmit={submit} className="flex gap-2 px-6 py-4 border-b border-border">
+                <input
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Tambah catatan untuk tim support..."
+                    className="flex-1 rounded-xl border border-input bg-background px-3.5 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
+                />
+                <button
+                    type="submit"
+                    disabled={processing || !text.trim()}
+                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
+                >
+                    Tambah
+                </button>
+            </form>
+            {notes.length > 0 ? (
+                <div className="divide-y divide-border">
+                    {notes.map((n) => (
+                        <div key={n.id} className="flex items-start justify-between gap-3 px-6 py-3.5">
+                            <div className="min-w-0">
+                                <p className="text-sm text-foreground">{n.note}</p>
+                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                    {n.developer_name} ·{" "}
+                                    {new Date(n.created_at).toLocaleString("id-ID", {
+                                        dateStyle: "medium",
+                                        timeStyle: "short",
+                                    })}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => remove(n.id)}
+                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                            >
+                                <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <p className="px-6 py-6 text-sm text-muted-foreground">
+                    Belum ada catatan.
+                </p>
+            )}
+        </div>
+    );
+}
+
+// ── Section: Riwayat Suspend ───────────────────────────────────────────────────
+function SuspensionHistorySection({ history = [] }) {
+    if (history.length === 0) return null;
+
+    return (
+        <div className="mb-6 rounded-2xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
+                <ShieldAlert className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
+                <h3 className="text-sm font-bold text-foreground">
+                    Riwayat Suspend
+                </h3>
+            </div>
+            <div className="divide-y divide-border">
+                {history.map((s) => (
+                    <div key={s.id} className="px-6 py-3.5">
+                        <div className="flex items-center gap-2">
+                            <p className="text-sm text-foreground">{s.reason}</p>
+                            {s.is_active ? (
+                                <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                                    Masih Nonaktif
+                                </span>
+                            ) : (
+                                <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+                                    Sudah Aktif Lagi
+                                </span>
+                            )}
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            Disuspend oleh {s.suspended_by ?? "?"} ·{" "}
+                            {new Date(s.suspended_at).toLocaleDateString("id-ID", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                            })}
+                            {s.reactivated_at &&
+                                ` — diaktifkan kembali oleh ${s.reactivated_by ?? "?"} · ${new Date(s.reactivated_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}`}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ── Section: Impersonate ("Login sebagai") ─────────────────────────────────────
+function ImpersonateSection({ store, users = [] }) {
+    if (users.length === 0) return null;
+
+    const handleImpersonate = (user) => {
+        if (!confirm(`Login sebagai ${user.name}? Kamu akan keluar dari sesi developer sementara.`)) return;
+        router.post(route("developer.stores.impersonate", [store.id, user.id]));
+    };
+
+    return (
+        <div className="mb-6 rounded-2xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
+                <LogIn className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
+                <h3 className="text-sm font-bold text-foreground">
+                    Login Sebagai (Support)
+                </h3>
+            </div>
+            <div className="divide-y divide-border">
+                {users.map((u) => (
+                    <div key={u.id} className="flex items-center justify-between px-6 py-3">
+                        <div>
+                            <p className="text-sm font-medium text-foreground">{u.name}</p>
+                            <p className="text-xs text-muted-foreground">{u.email}</p>
+                        </div>
+                        <button
+                            onClick={() => handleImpersonate(u)}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted"
+                        >
+                            <LogIn className="h-3.5 w-3.5" strokeWidth={2} />
+                            Login sebagai
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function Show({ store, owners, allUsers, planFeatures = [] }) {
+export default function Show({
+    store,
+    owners,
+    allUsers,
+    planFeatures = [],
+    planHistory = [],
+    planUsage = {},
+    notes = [],
+    suspensionHistory = [],
+    impersonatableUsers = [],
+}) {
     const { flash } = usePage().props;
     const [activeBranch, setActiveBranch] = useState(null);
     const [showAddOwner, setShowAddOwner] = useState(false);
@@ -812,6 +1106,21 @@ export default function Show({ store, owners, allUsers, planFeatures = [] }) {
                 planMeta={planMeta}
                 planFeatures={planFeatures}
             />
+
+            {/* Pemakaian vs Limit Plan */}
+            <PlanUsageSection usage={planUsage} />
+
+            {/* Riwayat Plan */}
+            <PlanHistorySection history={planHistory} />
+
+            {/* Login Sebagai (Support) */}
+            <ImpersonateSection store={store} users={impersonatableUsers} />
+
+            {/* Riwayat Suspend */}
+            <SuspensionHistorySection history={suspensionHistory} />
+
+            {/* Catatan Internal Developer */}
+            <StoreNotesSection store={store} notes={notes} />
 
             {/* Cabang */}
             <div className="mb-6 rounded-2xl border border-border bg-card text-card-foreground shadow-sm overflow-hidden">

@@ -49,15 +49,20 @@ use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\WalletController as AdminWalletController;
 use App\Http\Controllers\Admin\WasteController;
+use App\Http\Controllers\Developer\AuditLogController;
 use App\Http\Controllers\Developer\BranchController;
+use App\Http\Controllers\Developer\BusinessTemplateController;
 use App\Http\Controllers\Developer\DashboardController as DevDashboardController;
+use App\Http\Controllers\Developer\FeatureController;
 use App\Http\Controllers\Developer\PaymentGatewayController as DevPaymentGatewayController;
 use App\Http\Controllers\Developer\PlanController;
 use App\Http\Controllers\Developer\RoleTemplateController;
 use App\Http\Controllers\Developer\StoreController as DevStoreController;
+use App\Http\Controllers\Developer\StoreTypeController;
 use App\Http\Controllers\Developer\ThemeController as DevThemeController;
 use App\Http\Controllers\Developer\UserController as DevUserController;
 use App\Http\Controllers\Developer\WalletController as DevWalletController;
+use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SidebarPreferenceController;
 use App\Http\Controllers\ThemePreferenceController;
@@ -117,6 +122,22 @@ Route::middleware(['auth', 'developer', 'single-session'])
             'revokeOwner',
         ])->name('stores.revoke-owner');
 
+        // ── Impersonation ("login sebagai") ─────────────────────────────
+        Route::post('stores/{store}/impersonate/{user}', [
+            ImpersonationController::class,
+            'start',
+        ])->name('stores.impersonate');
+
+        // ── Catatan internal developer per toko ─────────────────────────
+        Route::post('stores/{store}/notes', [
+            DevStoreController::class,
+            'storeNote',
+        ])->name('stores.notes.store');
+        Route::delete('stores/{store}/notes/{note}', [
+            DevStoreController::class,
+            'destroyNote',
+        ])->name('stores.notes.destroy');
+
         // ── Branch management ─────────────────────────────────────────
         Route::resource('branches', BranchController::class)->names('branches');
 
@@ -138,6 +159,27 @@ Route::middleware(['auth', 'developer', 'single-session'])
         Route::post('plans/{plan}/addons', [PlanController::class, 'storeAddon'])->name('plans.addons.store');
         Route::put('plans/{plan}/addons/{addon}', [PlanController::class, 'updateAddon'])->name('plans.addons.update');
         Route::delete('plans/{plan}/addons/{addon}', [PlanController::class, 'destroyAddon'])->name('plans.addons.destroy');
+
+        // Jenis Usaha (Store Type) — full CRUD
+        Route::resource('store-types', StoreTypeController::class)->except(['show']);
+        Route::post('store-types/reorder', [StoreTypeController::class, 'reorder'])->name('store-types.reorder');
+
+        // Template Bisnis — metadata + kategori & produk contoh (nested, data-driven)
+        Route::resource('business-templates', BusinessTemplateController::class)->except(['show']);
+        Route::get('business-templates/{businessTemplate}/categories', [BusinessTemplateController::class, 'categories'])->name('business-templates.categories');
+        Route::post('business-templates/{businessTemplate}/categories', [BusinessTemplateController::class, 'storeCategory'])->name('business-templates.categories.store');
+        Route::put('business-templates/{businessTemplate}/categories/{category}', [BusinessTemplateController::class, 'updateCategory'])->name('business-templates.categories.update');
+        Route::delete('business-templates/{businessTemplate}/categories/{category}', [BusinessTemplateController::class, 'destroyCategory'])->name('business-templates.categories.destroy');
+        Route::post('business-templates/{businessTemplate}/categories/{category}/products', [BusinessTemplateController::class, 'storeProduct'])->name('business-templates.categories.products.store');
+        Route::put('business-templates/{businessTemplate}/categories/{category}/products/{product}', [BusinessTemplateController::class, 'updateProduct'])->name('business-templates.categories.products.update');
+        Route::delete('business-templates/{businessTemplate}/categories/{category}/products/{product}', [BusinessTemplateController::class, 'destroyProduct'])->name('business-templates.categories.products.destroy');
+
+        // Fitur Sistem (Feature) — full CRUD + detail fitur nested
+        Route::resource('features', FeatureController::class)->except(['show']);
+        Route::get('features/{feature}/details', [FeatureController::class, 'details'])->name('features.details');
+        Route::post('features/{feature}/details', [FeatureController::class, 'storeDetail'])->name('features.details.store');
+        Route::put('features/{feature}/details/{detail}', [FeatureController::class, 'updateDetail'])->name('features.details.update');
+        Route::delete('features/{feature}/details/{detail}', [FeatureController::class, 'destroyDetail'])->name('features.details.destroy');
 
         // Fitur per Tipe Toko
         Route::get('/type-features', [
@@ -234,6 +276,9 @@ Route::middleware(['auth', 'developer', 'single-session'])
             ->parameters(['themes' => 'theme'])
             ->except(['show']);
 
+        // Audit Log — aksi developer terhadap data platform
+        Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name(
             'profile.edit',
@@ -245,6 +290,13 @@ Route::middleware(['auth', 'developer', 'single-session'])
             'profile.destroy',
         );
     });
+
+// ── Kembali dari impersonation — diakses saat login sebagai user toko,
+//    jadi harus di luar group middleware 'developer' (guard saat itu bukan
+//    developer). Cukup 'auth' karena impersonation sudah login sebagai user.
+Route::post('/stop-impersonating', [ImpersonationController::class, 'stop'])
+    ->middleware(['auth'])
+    ->name('stop-impersonating');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STORE routes — /app/*

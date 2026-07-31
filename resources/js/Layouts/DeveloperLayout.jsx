@@ -19,7 +19,10 @@ import {
     Sun,
     Menu,
     LogOut,
-    User
+    User,
+    LayoutTemplate,
+    Puzzle,
+    History
 } from "lucide-react";
 
 const navItems = [
@@ -52,6 +55,24 @@ const navItems = [
         href: route("developer.plans.index"),
         current: "developer.plans.*",
         icon: Package,
+    },
+    {
+        name: "Jenis Usaha",
+        href: route("developer.store-types.index"),
+        current: "developer.store-types.*",
+        icon: Store,
+    },
+    {
+        name: "Template Bisnis",
+        href: route("developer.business-templates.index"),
+        current: "developer.business-templates.*",
+        icon: LayoutTemplate,
+    },
+    {
+        name: "Fitur Sistem",
+        href: route("developer.features.index"),
+        current: "developer.features.*",
+        icon: Puzzle,
     },
     {
         name: "Fitur Tipe",
@@ -88,6 +109,12 @@ const navItems = [
         href: route("developer.themes.index"),
         current: "developer.themes.*",
         icon: Palette,
+    },
+    {
+        name: "Audit Log",
+        href: route("developer.audit-log.index"),
+        current: "developer.audit-log.*",
+        icon: History,
     },
 ];
 
@@ -297,6 +324,11 @@ export default function DeveloperLayout({ header, children }) {
                 {flash?.error && (
                     <div className="mx-4 sm:mx-6 mt-4 rounded-xl border border-destructive/20 bg-destructive/10 px-5 py-3 text-sm text-destructive shadow-sm flex items-center gap-2">
                         <span className="text-lg">❌</span> {flash.error}
+                    </div>
+                )}
+                {flash?.warning && (
+                    <div className="mx-4 sm:mx-6 mt-4 rounded-xl border border-warning/20 bg-warning/10 px-5 py-3 text-sm text-warning shadow-sm flex items-center gap-2">
+                        <span className="text-lg">⚠️</span> {flash.warning}
                     </div>
                 )}
 

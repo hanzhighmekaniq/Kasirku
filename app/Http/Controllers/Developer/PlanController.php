@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Developer;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeveloperActionLog;
 use App\Models\Feature;
 use App\Models\Plan;
 use App\Models\PlanAddon;
@@ -61,6 +62,8 @@ class PlanController extends Controller
 
         $plan = Plan::create($validated);
 
+        DeveloperActionLog::record('plan.create', $plan, null, $validated);
+
         return redirect()
             ->route('developer.plans.index')
             ->with('success', 'Paket berhasil dibuat.');
@@ -96,8 +99,11 @@ class PlanController extends Controller
     public function update(Request $request, Plan $plan)
     {
         $validated = $request->validate($this->planRules($plan));
+        $oldValues = $plan->only(array_keys($validated));
 
         $plan->update($validated);
+
+        DeveloperActionLog::record('plan.update', $plan, $oldValues, $validated);
 
         return redirect()
             ->route('developer.plans.index')
@@ -112,6 +118,9 @@ class PlanController extends Controller
                 'Paket masih digunakan oleh toko. Nonaktifkan saja.',
             );
         }
+
+        $snapshot = $plan->only(['id', 'code', 'label']);
+        DeveloperActionLog::record('plan.destroy', $plan, $snapshot, null);
 
         $plan->delete();
 

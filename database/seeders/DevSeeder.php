@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\DatabaseSeeder\BusinessTemplateSeeder;
 use Database\Seeders\DevSeeder\BranchSeeder;
 use Database\Seeders\DevSeeder\FeatureDetailSeeder;
 use Database\Seeders\DevSeeder\FeatureSeeder;
@@ -37,6 +38,7 @@ class DevSeeder extends Seeder
             PlanSeeder::class,
             PlanAddonSeeder::class,
             PermissionSeeder::class,
+            BusinessTemplateSeeder::class,
 
             // ── Struktur ───────────────────────────────────────────
             StoreSeeder::class,

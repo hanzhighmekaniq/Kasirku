@@ -584,6 +584,15 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        $store = Store::with('planModel')->find(session('current_store_id'));
+
+        if ($store && ! $store->canAddProduct()) {
+            return back()->with(
+                'error',
+                "Batas produk plan {$store->planModel?->label} sudah tercapai ({$store->effectiveMaxProducts()} produk). Upgrade plan untuk menambah produk baru.",
+            )->withInput();
+        }
+
         $validated = $request->validate($this->productRules());
 
         $this->validateFnbProductRules($validated);

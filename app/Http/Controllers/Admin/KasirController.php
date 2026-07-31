@@ -747,6 +747,15 @@ class KasirController extends Controller
             }
         }
 
+        // ── Cek limit transaksi bulanan plan SEBELUM buka transaksi DB ──
+        $limitCheckStore = Store::with('planModel')->find(session('current_store_id'));
+        if ($limitCheckStore && ! $limitCheckStore->canAddTransaction()) {
+            return response()->json([
+                'success' => false,
+                'message' => "Batas transaksi bulan ini untuk plan {$limitCheckStore->planModel?->label} sudah tercapai ({$limitCheckStore->effectiveMaxTransactionsPerMonth()} transaksi). Upgrade plan untuk melanjutkan transaksi.",
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
             $user = $request->user();

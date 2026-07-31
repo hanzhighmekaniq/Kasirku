@@ -4,12 +4,19 @@ namespace App\Http\Controllers\Developer;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomerTier;
+use App\Models\DeveloperActionLog;
 use App\Models\Feature;
+use App\Models\Plan;
+use App\Models\PlanSubscription;
 use App\Models\Store;
+use App\Models\StoreNote;
+use App\Models\StoreSuspension;
 use App\Models\StoreType;
 use App\Models\User;
+use App\Notifications\StoreSuspended;
 use App\Services\StoreRoleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -252,6 +259,10 @@ class StoreController extends Controller
 
             // 7. Tier bawaan
             CustomerTier::seedDefaultsForStore($store->id);
+
+            DeveloperActionLog::record('store.create', $store, null, $store->only([
+                'code', 'name', 'store_type_id', 'plan_id', 'is_active',
+            ]));
         });
 
         return redirect()
@@ -360,6 +371,51 @@ class StoreController extends Controller
             'planModel' => $planModelRelation,
         ];
 
+        $planHistory = PlanSubscription::where('store_id', $store->id)
+            ->with(['plan:id,code,label', 'createdBy:id,name'])
+            ->orderByDesc('started_at')
+            ->get()
+            ->map(fn (PlanSubscription $s) => [
+                'id' => $s->id,
+                'plan_label' => $s->plan?->label ?? '—',
+                'plan_code' => $s->plan?->code,
+                'started_at' => $s->started_at,
+                'ended_at' => $s->ended_at,
+                'reason' => $s->reason,
+                'reason_label' => PlanSubscription::REASONS[$s->reason] ?? $s->reason,
+                'created_by' => $s->createdBy?->name,
+            ]);
+
+        $notes = $store->notes()
+            ->with('developer:id,name')
+            ->get()
+            ->map(fn (StoreNote $n) => [
+                'id' => $n->id,
+                'note' => $n->note,
+                'developer_name' => $n->developer?->name ?? 'Sistem',
+                'created_at' => $n->created_at,
+            ]);
+
+        $suspensionHistory = StoreSuspension::where('store_id', $store->id)
+            ->with(['suspendedBy:id,name', 'reactivatedBy:id,name'])
+            ->orderByDesc('suspended_at')
+            ->get()
+            ->map(fn (StoreSuspension $s) => [
+                'id' => $s->id,
+                'reason' => $s->reason,
+                'suspended_at' => $s->suspended_at,
+                'suspended_by' => $s->suspendedBy?->name,
+                'reactivated_at' => $s->reactivated_at,
+                'reactivated_by' => $s->reactivatedBy?->name,
+                'is_active' => $s->isActive(),
+            ]);
+
+        // User yang bisa di-impersonate — non-developer yang terhubung ke toko ini
+        $impersonatableUsers = $store
+            ->users()
+            ->where('is_developer', false)
+            ->get(['users.id', 'users.name', 'users.email']);
+
         return Inertia::render('Developer/Stores/Show', [
             'store' => $storeData,
             'owners' => $owners,
@@ -367,6 +423,11 @@ class StoreController extends Controller
             'storeTypeFeatures' => $storeTypeFeatures,
             'planFeatures' => $planFeatures,
             'activeFeatures' => $activeFeatures,
+            'planHistory' => $planHistory,
+            'planUsage' => $store->planUsageSummary(),
+            'notes' => $notes,
+            'suspensionHistory' => $suspensionHistory,
+            'impersonatableUsers' => $impersonatableUsers,
         ]);
     }
 
@@ -455,6 +516,9 @@ class StoreController extends Controller
             ],
             'address' => 'nullable|string',
             'is_active' => 'boolean',
+            // Wajib diisi kalau is_active diubah dari true jadi false —
+            // divalidasi manual di bawah (butuh tahu nilai lama dulu).
+            'suspend_reason' => 'nullable|string|max:500',
             'plan_id' => ['nullable', 'integer', 'exists:plans,id'],
             'plan_expires_at' => 'nullable|date',
             // Override manual per-toko (opsional, null = ikut plan)
@@ -462,7 +526,77 @@ class StoreController extends Controller
             'max_branches' => 'nullable|integer|min:1',
         ]);
 
+        $oldPlanId = $store->plan_id;
+        $newPlanId = $validated['plan_id'] ?? null;
+        $wasActive = $store->is_active;
+        $willBeActive = $validated['is_active'] ?? true;
+        $suspendReason = $validated['suspend_reason'] ?? null;
+        unset($validated['suspend_reason']);
+
+        // Menonaktifkan toko (suspend) wajib mencantumkan alasan.
+        if ($wasActive && ! $willBeActive && ! $suspendReason) {
+            return back()->withErrors([
+                'suspend_reason' => 'Alasan wajib diisi saat menonaktifkan toko.',
+            ])->withInput();
+        }
+
+        $oldValues = $store->only(array_keys($validated));
+
         $store->update($validated);
+
+        DeveloperActionLog::record('store.update', $store, $oldValues, $validated);
+
+        // ── Suspend: is_active true → false ──────────────────────────
+        if ($wasActive && ! $willBeActive) {
+            StoreSuspension::create([
+                'store_id' => $store->id,
+                'reason' => $suspendReason,
+                'suspended_by' => Auth::id(),
+                'suspended_at' => now(),
+            ]);
+
+            DeveloperActionLog::record('store.suspend', $store, null, ['reason' => $suspendReason]);
+
+            $owner = $store->owner;
+            if ($owner) {
+                $owner->notify(new StoreSuspended($store, $suspendReason));
+            }
+        }
+
+        // ── Reaktivasi: is_active false → true ───────────────────────
+        if (! $wasActive && $willBeActive) {
+            StoreSuspension::where('store_id', $store->id)
+                ->whereNull('reactivated_at')
+                ->update([
+                    'reactivated_at' => now(),
+                    'reactivated_by' => Auth::id(),
+                ]);
+
+            DeveloperActionLog::record('store.reactivate', $store);
+        }
+
+        // Catat riwayat perubahan plan kalau plan_id benar-benar berubah.
+        if ($newPlanId !== $oldPlanId) {
+            PlanSubscription::where('store_id', $store->id)
+                ->whereNull('ended_at')
+                ->update(['ended_at' => now()]);
+
+            if ($newPlanId) {
+                $oldPlan = $oldPlanId ? Plan::find($oldPlanId) : null;
+                $newPlan = Plan::find($newPlanId);
+                $reason = $oldPlan && $newPlan && $newPlan->sort_order < $oldPlan->sort_order
+                    ? 'downgraded'
+                    : 'upgraded';
+
+                PlanSubscription::create([
+                    'store_id' => $store->id,
+                    'plan_id' => $newPlanId,
+                    'started_at' => now(),
+                    'reason' => $reason,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+        }
 
         return redirect()
             ->route('developer.stores.show', $store->id)
@@ -477,11 +611,39 @@ class StoreController extends Controller
                 'store' => 'Toko sudah memiliki data transaksi. Nonaktifkan saja jika tidak digunakan.',
             ]);
         }
+
+        $snapshot = $store->only(['id', 'code', 'name', 'store_type_id', 'plan_id']);
+        DeveloperActionLog::record('store.destroy', $store, $snapshot, null);
+
         $store->delete();
 
         return redirect()
             ->route('developer.stores.index')
             ->with('success', 'Toko berhasil dihapus.');
+    }
+
+    /** Tambah catatan internal developer untuk sebuah toko (tidak terlihat oleh owner). */
+    public function storeNote(Request $request, Store $store)
+    {
+        $validated = $request->validate([
+            'note' => 'required|string|max:2000',
+        ]);
+
+        $store->notes()->create([
+            'developer_id' => Auth::id(),
+            'note' => $validated['note'],
+        ]);
+
+        return back()->with('success', 'Catatan berhasil ditambahkan.');
+    }
+
+    public function destroyNote(Store $store, StoreNote $note)
+    {
+        abort_if($note->store_id !== $store->id, 404);
+
+        $note->delete();
+
+        return back()->with('success', 'Catatan berhasil dihapus.');
     }
 
     /** Assign user owner + Spatie role di store */

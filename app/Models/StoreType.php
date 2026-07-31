@@ -12,22 +12,22 @@ class StoreType extends Model
     use HasFactory;
 
     protected $fillable = [
-        "code",
-        "label",
-        "icon",
-        "description",
-        "order_types",
-        "pos_behavior",
-        "is_active",
-        "sort_order",
+        'code',
+        'label',
+        'icon',
+        'description',
+        'order_types',
+        'pos_behavior',
+        'is_active',
+        'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
-            "order_types" => "array",
-            "is_active" => "boolean",
-            "sort_order" => "integer",
+            'order_types' => 'array',
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 
@@ -38,7 +38,15 @@ class StoreType extends Model
      */
     public function stores(): HasMany
     {
-        return $this->hasMany(Store::class, "store_type_id");
+        return $this->hasMany(Store::class, 'store_type_id');
+    }
+
+    /**
+     * Template bisnis spesifik di bawah tipe toko ini (mis. fnb → Cafe, Warteg)
+     */
+    public function businessTemplates(): HasMany
+    {
+        return $this->hasMany(BusinessTemplate::class);
     }
 
     /**
@@ -48,7 +56,7 @@ class StoreType extends Model
     {
         return $this->belongsToMany(
             Feature::class,
-            "store_type_feature",
+            'store_type_feature',
         )->withTimestamps();
     }
 
@@ -58,8 +66,8 @@ class StoreType extends Model
     public function featureCodes(): array
     {
         return $this->features()
-            ->where("is_active", true)
-            ->pluck("code")
+            ->where('is_active', true)
+            ->pluck('code')
             ->toArray();
     }
 
@@ -69,9 +77,9 @@ class StoreType extends Model
     public function featureList(): array
     {
         return $this->features()
-            ->where("is_active", true)
-            ->orderBy("sort_order")
-            ->pluck("label", "code")
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->pluck('label', 'code')
             ->toArray();
     }
 
@@ -81,12 +89,12 @@ class StoreType extends Model
      */
     public function featureDetailCodes(): array
     {
-        return \App\Models\FeatureDetail::whereIn(
-            "feature_id",
-            $this->features()->pluck("features.id"),
+        return FeatureDetail::whereIn(
+            'feature_id',
+            $this->features()->pluck('features.id'),
         )
-            ->where("is_active", true)
-            ->pluck("code")
+            ->where('is_active', true)
+            ->pluck('code')
             ->toArray();
     }
 
@@ -95,12 +103,12 @@ class StoreType extends Model
      */
     public function hasFeatureDetail(string $detailCode): bool
     {
-        return \App\Models\FeatureDetail::whereIn(
-            "feature_id",
-            $this->features()->pluck("features.id"),
+        return FeatureDetail::whereIn(
+            'feature_id',
+            $this->features()->pluck('features.id'),
         )
-            ->where("code", $detailCode)
-            ->where("is_active", true)
+            ->where('code', $detailCode)
+            ->where('is_active', true)
             ->exists();
     }
 
@@ -111,8 +119,8 @@ class StoreType extends Model
      */
     public static function active(): array
     {
-        return self::where("is_active", true)
-            ->orderBy("sort_order")
+        return self::where('is_active', true)
+            ->orderBy('sort_order')
             ->get()
             ->toArray();
     }
@@ -122,9 +130,9 @@ class StoreType extends Model
      */
     public static function codes(): array
     {
-        return self::where("is_active", true)
-            ->orderBy("sort_order")
-            ->pluck("code")
+        return self::where('is_active', true)
+            ->orderBy('sort_order')
+            ->pluck('code')
             ->toArray();
     }
 }

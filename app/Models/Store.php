@@ -244,6 +244,16 @@ class Store extends Model
         return $this->hasMany(StorePaymentGateway::class);
     }
 
+    public function suspensions(): HasMany
+    {
+        return $this->hasMany(StoreSuspension::class);
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(StoreNote::class)->orderByDesc('created_at');
+    }
+
     // --- Plan config terpusat ---
 
     /**
@@ -325,8 +335,9 @@ class Store extends Model
     /** Ambil config plan aktif toko ini — dari relasi plan_id */
     public function activePlanConfig(): array
     {
-        // Coba dari relasi Plan model
-        $plan = $this->getRelation('planModel');
+        // Ambil dari relasi Plan model — akses properti (bukan getRelation)
+        // supaya otomatis lazy-load kalau belum di-eager-load pemanggilnya.
+        $plan = $this->planModel;
         if (! $plan) {
             // Fallback ke plan "free" di DB
             $plan = Plan::where('code', 'free')->first();
@@ -362,7 +373,7 @@ class Store extends Model
     /** Cek apakah plan mengizinkan fitur tertentu */
     public function planAllowsFeature(string $feature): bool
     {
-        $plan = $this->getRelation('planModel');
+        $plan = $this->planModel;
         if (! $plan) {
             // Fallback ke plan "free" di DB
             $plan = Plan::where('code', 'free')->first();
@@ -463,7 +474,7 @@ class Store extends Model
         }
 
         // 4. Cek apakah plan mengizinkan feature parent
-        $plan = $this->getRelation('planModel');
+        $plan = $this->planModel;
         if (! $plan) {
             $plan = Plan::where('code', 'free')->first();
         }
@@ -504,6 +515,111 @@ class Store extends Model
     {
         return $this->branches()->count() < $this->effectiveMaxBranches();
     }
+
+    /** Limit produk aktif dari plan — null berarti unlimited. */
+    public function effectiveMaxProducts(): ?int
+    {
+        return $this->planModel?->max_products;
+    }
+
+    /** Apakah masih bisa tambah produk baru (null limit = selalu boleh). */
+    public function canAddProduct(): bool
+    {
+        $max = $this->effectiveMaxProducts();
+
+        if ($max === null) {
+            return true;
+        }
+
+        return $this->products()->count() < $max;
+    }
+
+    /** Limit transaksi per bulan dari plan — null berarti unlimited. */
+    public function effectiveMaxTransactionsPerMonth(): ?int
+    {
+        return $this->planModel?->max_transactions_per_month;
+    }
+
+    /** Jumlah transaksi (semua status) toko ini pada bulan berjalan. */
+    public function transactionsThisMonth(): int
+    {
+        return $this->sales()
+            ->whereYear('sale_date', now()->year)
+            ->whereMonth('sale_date', now()->month)
+            ->count();
+    }
+
+    /** Apakah masih bisa membuat transaksi baru bulan ini (null limit = selalu boleh). */
+    public function canAddTransaction(): bool
+    {
+        $max = $this->effectiveMaxTransactionsPerMonth();
+
+        if ($max === null) {
+            return true;
+        }
+
+        return $this->transactionsThisMonth() < $max;
+    }
+
+    /**
+     * Persentase pemakaian salah satu limit plan (users/branches/products/transactions).
+     * Return null kalau limit-nya unlimited (tidak relevan ditampilkan sebagai persentase).
+     */
+    public function usagePercentage(string $metric): ?float
+    {
+        [$current, $max] = match ($metric) {
+            'users' => [$this->users()->count(), $this->effectiveMaxUsers()],
+            'branches' => [$this->branches()->count(), $this->effectiveMaxBranches()],
+            'products' => [$this->products()->count(), $this->effectiveMaxProducts()],
+            'transactions' => [$this->transactionsThisMonth(), $this->effectiveMaxTransactionsPerMonth()],
+            default => [0, null],
+        };
+
+        if ($max === null || $max <= 0) {
+            return null;
+        }
+
+        return round(($current / $max) * 100, 1);
+    }
+
+    /**
+     * Ringkasan pemakaian semua limit plan — dipakai banner peringatan &
+     * halaman detail toko developer. `is_near_limit` true kalau salah satu
+     * metrik sudah >= 80%.
+     *
+     * @return array<string, array{current: int, max: ?int, percentage: ?float}>
+     */
+    public function planUsageSummary(): array
+    {
+        $metrics = ['users', 'branches', 'products', 'transactions'];
+        $summary = [];
+
+        foreach ($metrics as $metric) {
+            $current = match ($metric) {
+                'users' => $this->users()->count(),
+                'branches' => $this->branches()->count(),
+                'products' => $this->products()->count(),
+                'transactions' => $this->transactionsThisMonth(),
+            };
+            $max = match ($metric) {
+                'users' => $this->effectiveMaxUsers(),
+                'branches' => $this->effectiveMaxBranches(),
+                'products' => $this->effectiveMaxProducts(),
+                'transactions' => $this->effectiveMaxTransactionsPerMonth(),
+            };
+
+            $summary[$metric] = [
+                'current' => $current,
+                'max' => $max,
+                'percentage' => $this->usagePercentage($metric),
+            ];
+        }
+
+        return $summary;
+    }
+
+    /** Konstanta ambang warning "mendekati limit" — dipakai frontend & backend. */
+    public const NEAR_LIMIT_THRESHOLD = 80.0;
 
     /** Plan expired? */
     public function isPlanExpired(): bool

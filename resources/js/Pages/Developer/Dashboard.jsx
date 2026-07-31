@@ -19,6 +19,7 @@ export default function Dashboard({
     recentStores,
     storeRevenues,
     storeTypes,
+    businessMetrics,
 }) {
     const { allStoreTypes = [] } = usePage().props;
 
@@ -111,6 +112,98 @@ export default function Dashboard({
                     </div>
                 ))}
             </div>
+
+            {/* Metrik Bisnis Platform */}
+            {businessMetrics && (
+                <div className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <p className="text-xs font-medium text-muted-foreground">
+                            MRR (Toko Aktif)
+                        </p>
+                        <p className="mt-1 text-2xl font-bold text-success">
+                            {fmt(businessMetrics.mrr)}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            per bulan
+                        </p>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <p className="text-xs font-medium text-muted-foreground">
+                            Trial Aktif
+                        </p>
+                        <p className="mt-1 text-2xl font-bold text-primary">
+                            {businessMetrics.trial_active}
+                        </p>
+                        {businessMetrics.trial_expired_not_swept > 0 && (
+                            <p className="mt-0.5 text-xs text-warning">
+                                {businessMetrics.trial_expired_not_swept} expired belum disweep
+                            </p>
+                        )}
+                    </div>
+                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <p className="text-xs font-medium text-muted-foreground">
+                            Konversi Trial → Bayar
+                        </p>
+                        <p className="mt-1 text-2xl font-bold text-foreground">
+                            {businessMetrics.trial_to_paid.conversion_rate !== null
+                                ? `${businessMetrics.trial_to_paid.conversion_rate}%`
+                                : "—"}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            {businessMetrics.trial_to_paid.converted} upgrade ·{" "}
+                            {businessMetrics.trial_to_paid.expired_to_free} turun ke Free
+                        </p>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <p className="mb-2 text-xs font-medium text-muted-foreground">
+                            Distribusi Plan
+                        </p>
+                        <div className="space-y-1">
+                            {businessMetrics.plan_distribution.length === 0 ? (
+                                <p className="text-xs text-muted-foreground">Belum ada data</p>
+                            ) : (
+                                businessMetrics.plan_distribution.map((p) => (
+                                    <div key={p.plan_code} className="flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground">{p.plan_label}</span>
+                                        <span className="font-semibold text-foreground">{p.total}</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Growth toko baru 6 bulan terakhir */}
+            {businessMetrics?.growth && (
+                <div className="mb-5 rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <h3 className="mb-3 text-sm font-semibold text-foreground">
+                        Toko Baru — 6 Bulan Terakhir
+                    </h3>
+                    <div className="flex items-end gap-3">
+                        {businessMetrics.growth.map((g) => {
+                            const max = Math.max(...businessMetrics.growth.map((x) => x.total), 1);
+                            const heightPct = (g.total / max) * 100;
+                            return (
+                                <div key={g.month} className="flex flex-1 flex-col items-center gap-1.5">
+                                    <span className="text-xs font-semibold text-foreground">
+                                        {g.total}
+                                    </span>
+                                    <div className="flex h-20 w-full items-end">
+                                        <div
+                                            className="w-full rounded-t-md bg-primary/70"
+                                            style={{ height: `${Math.max(heightPct, 4)}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground">
+                                        {g.label}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* Store Type Distribution */}
             {storeTypes && Object.keys(storeTypes).length > 0 && (

@@ -72,9 +72,16 @@ class HandleInertiaRequests extends Middleware
         $branchId =
             $request->session()->get('current_branch_id') ??
             $request->session()->get('branch_id');
+        $impersonatorName = $request->session()->get('impersonator_name');
 
         return [
             ...parent::share($request),
+
+            // Diisi ketika developer sedang "login sebagai" user toko —
+            // dipakai AuthenticatedLayout untuk banner "Kembali ke Developer".
+            'impersonating' => $impersonatorName
+                ? ['impersonator_name' => $impersonatorName]
+                : null,
 
             'auth' => [
                 'user' => $user
@@ -402,6 +409,10 @@ class HandleInertiaRequests extends Middleware
             'is_expired' => $store->isPlanExpired(),
             'can_add_user' => $store->canAddUser(),
             'can_add_branch' => $store->canAddBranch(),
+            // Ringkasan pemakaian 4 limit (users/branches/products/transactions)
+            // dipakai frontend untuk banner peringatan mendekati limit (>=80%).
+            'usage' => $store->planUsageSummary(),
+            'near_limit_threshold' => Store::NEAR_LIMIT_THRESHOLD,
         ];
     }
 }

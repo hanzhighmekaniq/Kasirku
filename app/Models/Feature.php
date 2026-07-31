@@ -11,20 +11,36 @@ class Feature extends Model
 {
     use HasFactory;
 
+    /**
+     * Kunci `display_group` yang valid — sinkron dengan
+     * `resources/js/Utils/featureGroups.js` (FEATURE_GROUPS).
+     */
+    public const DISPLAY_GROUPS = [
+        'home' => 'Beranda',
+        'transaction' => 'Penjualan',
+        'operations' => 'Operasional',
+        'catalog' => 'Katalog & Stok',
+        'people' => 'Pelanggan & Tim',
+        'finance' => 'Keuangan & Laporan',
+        'system' => 'Sistem',
+        'other' => 'Lainnya',
+    ];
+
     protected $fillable = [
-        "code",
-        "label",
-        "description",
-        "category",
-        "is_active",
-        "sort_order",
+        'code',
+        'label',
+        'description',
+        'category',
+        'display_group',
+        'is_active',
+        'sort_order',
     ];
 
     protected function casts(): array
     {
         return [
-            "is_active" => "boolean",
-            "sort_order" => "integer",
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 
@@ -35,7 +51,7 @@ class Feature extends Model
      */
     public function plans(): BelongsToMany
     {
-        return $this->belongsToMany(Plan::class, "plan_feature")
+        return $this->belongsToMany(Plan::class, 'plan_feature')
             ->withTimestamps();
     }
 
@@ -46,7 +62,7 @@ class Feature extends Model
     {
         return $this->belongsToMany(
             StoreType::class,
-            "store_type_feature"
+            'store_type_feature'
         )->withTimestamps();
     }
 

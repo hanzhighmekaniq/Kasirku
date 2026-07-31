@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Database\Seeders\DatabaseSeeder\BranchSeeder;
+use Database\Seeders\DatabaseSeeder\BusinessTemplateSeeder;
 use Database\Seeders\DatabaseSeeder\CafeTableSeeder;
 use Database\Seeders\DatabaseSeeder\CashierShiftSeeder;
 use Database\Seeders\DatabaseSeeder\CategorySeeder;
@@ -68,6 +69,7 @@ class DatabaseSeeder extends Seeder
             PlanAddonSeeder::class,
             PermissionSeeder::class,
             RoleTemplateSeeder::class,
+            BusinessTemplateSeeder::class,
             ThemePresetSeeder::class,
 
             // ── Struktur ──────────────────────────────────────────

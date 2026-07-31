@@ -32,6 +32,62 @@ class FeatureSeeder extends Seeder
         'session',
     ];
 
+    /**
+     * feature_code => display_group. Mengikuti persis FEATURE_CODE_TO_GROUP
+     * di resources/js/Utils/featureGroups.js — satu sumber kebenaran yang
+     * disalin di dua tempat (PHP seeder & JS util) karena keduanya jalan di
+     * runtime berbeda. Kode yang tidak terdaftar jatuh ke 'other'.
+     *
+     * @see resources/js/Utils/featureGroups.js
+     */
+    private const DISPLAY_GROUP_MAP = [
+        // Beranda
+        'dashboard' => 'home',
+        'basic_pos' => 'home',
+        // Penjualan
+        'shift' => 'transaction',
+        'sale_return' => 'transaction',
+        'promo' => 'transaction',
+        'expense' => 'transaction',
+        // Operasional
+        'table' => 'operations',
+        'kitchen' => 'operations',
+        'queue' => 'operations',
+        'booking' => 'operations',
+        // Katalog & Stok
+        'product' => 'catalog',
+        'category' => 'catalog',
+        'modifier' => 'catalog',
+        'stock' => 'catalog',
+        'batch_expired' => 'catalog',
+        'stock_adjustment' => 'catalog',
+        'stock_opname' => 'catalog',
+        'stock_transfer' => 'catalog',
+        'waste' => 'catalog',
+        'recipe' => 'catalog',
+        'purchase' => 'catalog',
+        'purchase_return' => 'catalog',
+        'supplier' => 'catalog',
+        // Pelanggan & Tim
+        'customer' => 'people',
+        'membership' => 'people',
+        'employee' => 'people',
+        'commission' => 'people',
+        'debt' => 'people',
+        // Keuangan & Laporan
+        'report' => 'finance',
+        'payment_gateway' => 'finance',
+        'payment_method' => 'finance',
+        'cash_rounding' => 'finance',
+        'deposit' => 'finance',
+        // Sistem
+        'settings' => 'system',
+        'user_management' => 'system',
+        'role_management' => 'system',
+        'activity_log' => 'system',
+        'sidebar_order' => 'system',
+    ];
+
     public function run(): void
     {
         $features = [
@@ -339,6 +395,7 @@ class FeatureSeeder extends Seeder
                     'label' => $f['label'],
                     'description' => $f['description'] ?? null,
                     'category' => $f['category'] ?? null,
+                    'display_group' => self::DISPLAY_GROUP_MAP[$f['code']] ?? 'other',
                     'sort_order' => $f['sort_order'] ?? 0,
                     'is_active' => true,
                 ],

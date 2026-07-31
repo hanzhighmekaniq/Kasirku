@@ -150,4 +150,10 @@ class Plan extends Model
     {
         return $this->max_transactions_per_month === null;
     }
+
+    /** Apakah limit cabang di plan ini unlimited? Konvensi project: 999 = unlimited. */
+    public function isUnlimitedBranches(): bool
+    {
+        return $this->max_branches === null || $this->max_branches >= 999;
+    }
 }
