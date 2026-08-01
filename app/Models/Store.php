@@ -130,9 +130,36 @@ class Store extends Model
         return $this->belongsTo(StoreType::class, 'store_type_id');
     }
 
+    /**
+     * Relasi ke Plan via stores.plan_id — masih dipertahankan untuk
+     * backward compat test lama + seeder (user_id = null).
+     * Gunakan ownerPlan() untuk logika plan yang benar.
+     */
     public function planModel(): BelongsTo
     {
         return $this->belongsTo(Plan::class, 'plan_id');
+    }
+
+    /**
+     * Plan efektif toko — dari owner user, fallback ke stores.plan_id.
+     *
+     * Prioritas:
+     *   1. users.plan_id (arsitektur baru — plan per akun)
+     *   2. stores.plan_id (backward compat: seeder + test lama)
+     *   3. plan "free" dari DB
+     */
+    public function ownerPlan(): ?Plan
+    {
+        if ($this->user_id && $this->owner?->plan_id) {
+            return $this->owner->planModel ?? Plan::where('code', 'free')->first();
+        }
+
+        // Fallback ke stores.plan_id (seeder user_id null, test lama)
+        if ($this->plan_id) {
+            return $this->planModel ?? Plan::where('code', 'free')->first();
+        }
+
+        return Plan::where('code', 'free')->first();
     }
 
     /**
@@ -332,19 +359,12 @@ class Store extends Model
             ->toArray();
     }
 
-    /** Ambil config plan aktif toko ini — dari relasi plan_id */
+    /** Ambil config plan aktif toko ini — dari owner user atau fallback store */
     public function activePlanConfig(): array
     {
-        // Ambil dari relasi Plan model — akses properti (bukan getRelation)
-        // supaya otomatis lazy-load kalau belum di-eager-load pemanggilnya.
-        $plan = $this->planModel;
-        if (! $plan) {
-            // Fallback ke plan "free" di DB
-            $plan = Plan::where('code', 'free')->first();
-        }
+        $plan = $this->ownerPlan();
 
         if (! $plan) {
-            // DB kosong sama sekali — pakai default hardcoded
             return self::defaultPlanConfig();
         }
 
@@ -373,19 +393,12 @@ class Store extends Model
     /** Cek apakah plan mengizinkan fitur tertentu */
     public function planAllowsFeature(string $feature): bool
     {
-        $plan = $this->planModel;
-        if (! $plan) {
-            // Fallback ke plan "free" di DB
-            $plan = Plan::where('code', 'free')->first();
-        }
+        $plan = $this->ownerPlan();
 
         if (! $plan) {
-            // DB kosong — default free plan tidak punya fitur apapun
-            // (defaultPlanConfig().features = [])
             return false;
         }
 
-        // Cek di relasi plan_feature
         return $plan
             ->features()
             ->where('features.code', $feature)
@@ -474,10 +487,7 @@ class Store extends Model
         }
 
         // 4. Cek apakah plan mengizinkan feature parent
-        $plan = $this->planModel;
-        if (! $plan) {
-            $plan = Plan::where('code', 'free')->first();
-        }
+        $plan = $this->ownerPlan();
         if (! $plan) {
             return false;
         }
@@ -519,7 +529,7 @@ class Store extends Model
     /** Limit produk aktif dari plan — null berarti unlimited. */
     public function effectiveMaxProducts(): ?int
     {
-        return $this->planModel?->max_products;
+        return $this->ownerPlan()?->max_products;
     }
 
     /** Apakah masih bisa tambah produk baru (null limit = selalu boleh). */
@@ -537,7 +547,7 @@ class Store extends Model
     /** Limit transaksi per bulan dari plan — null berarti unlimited. */
     public function effectiveMaxTransactionsPerMonth(): ?int
     {
-        return $this->planModel?->max_transactions_per_month;
+        return $this->ownerPlan()?->max_transactions_per_month;
     }
 
     /** Jumlah transaksi (semua status) toko ini pada bulan berjalan. */

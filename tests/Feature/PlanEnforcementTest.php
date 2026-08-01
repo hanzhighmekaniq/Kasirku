@@ -65,14 +65,15 @@ function planEnforcementContext(array $planOverrides = [], array $permissions = 
     ], $planOverrides));
     $plan->features()->syncWithoutDetaching(Feature::pluck('id'));
 
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'plan_id' => $plan->id,
+    ]);
 
     $store = Store::create([
         'user_id' => $user->id,
         'code' => 'PLANTEST'.uniqid(),
         'name' => 'Plan Test Store',
         'store_type_id' => $storeType->id,
-        'plan_id' => $plan->id,
     ]);
     $user->stores()->attach($store->id);
 

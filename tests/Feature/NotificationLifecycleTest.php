@@ -12,6 +12,7 @@
 */
 
 use App\Models\Plan;
+use App\Models\RegistrationOtp;
 use App\Models\Store;
 use App\Models\StoreType;
 use App\Models\User;
@@ -31,12 +32,17 @@ function notificationTestStore(User $owner, array $overrides = []): Store
         ['label' => 'Retail', 'is_active' => true, 'sort_order' => 0],
     );
 
-    return Store::create(array_merge([
+    $store = Store::create(array_merge([
         'user_id' => $owner->id,
         'code' => 'NOTIF'.uniqid(),
         'name' => 'Notif Test Store',
         'store_type_id' => $storeType->id,
     ], $overrides));
+
+    // Attach ke pivot supaya $user->stores()->first() bisa menemukan toko ini
+    $owner->stores()->syncWithoutDetaching([$store->id]);
+
+    return $store;
 }
 
 // ── WelcomeStoreOwner ──────────────────────────────────────────────────────
@@ -48,17 +54,27 @@ test('registration sends welcome notification to the new owner', function () {
     $storeType = StoreType::create(['code' => 'fnb', 'label' => 'F&B', 'is_active' => true, 'sort_order' => 1]);
     $plan = Plan::create(['code' => 'business', 'label' => 'Business', 'price' => 79000, 'trial_days' => 14, 'is_active' => true, 'sort_order' => 1]);
 
+    // Tahap 1 — kirim kode OTP. Akun belum dibuat di sini.
     $this->post('/register', [
         'name' => 'Welcome User',
         'email' => 'welcome@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
+        'password' => 'Password123',
+        'password_confirmation' => 'Password123',
         'store_type_id' => $storeType->id,
         'business_template_code' => null,
         'plan_id' => $plan->id,
     ]);
 
+    // Tahap 2 — verifikasi kode, di sinilah User & Store dibuat dan
+    // welcome notification dikirim.
+    $otp = RegistrationOtp::where('email', 'welcome@example.com')->first();
+    $this->post('/register/verify', [
+        'email' => 'welcome@example.com',
+        'code' => $otp->code,
+    ]);
+
     $user = User::where('email', 'welcome@example.com')->first();
+    expect($user)->not->toBeNull();
 
     Notification::assertSentTo($user, WelcomeStoreOwner::class);
 });
@@ -67,55 +83,47 @@ test('registration sends welcome notification to the new owner', function () {
 
 test('notify-trial-ending sends reminder to owner exactly 3 days before expiry', function () {
     Notification::fake();
-    $owner = User::factory()->create();
-    $store = notificationTestStore($owner, ['plan_expires_at' => now()->addDays(3)]);
+    // plan_expires_at sekarang di USER, bukan store
+    $owner = User::factory()->create(['plan_expires_at' => now()->addDays(3)]);
+    $store = notificationTestStore($owner);
 
     $this->artisan('plan:notify-trial-ending')->assertSuccessful();
 
     Notification::assertSentTo(
         $owner,
         TrialEndingSoon::class,
-        fn ($notification) => $notification->store->id === $store->id && $notification->daysRemaining === 3,
+        fn ($notification) => $notification->daysRemaining === 3,
     );
 });
 
 test('notify-trial-ending sends reminder to owner exactly 1 day before expiry', function () {
     Notification::fake();
-    $owner = User::factory()->create();
-    $store = notificationTestStore($owner, ['plan_expires_at' => now()->addDay()]);
+    $owner = User::factory()->create(['plan_expires_at' => now()->addDay()]);
+    $store = notificationTestStore($owner);
 
     $this->artisan('plan:notify-trial-ending');
 
     Notification::assertSentTo(
         $owner,
         TrialEndingSoon::class,
-        fn ($notification) => $notification->store->id === $store->id && $notification->daysRemaining === 1,
+        fn ($notification) => $notification->daysRemaining === 1,
     );
 });
 
 test('notify-trial-ending does not send reminder outside the H-3/H-1 window', function () {
     Notification::fake();
-    $owner = User::factory()->create();
-    notificationTestStore($owner, ['plan_expires_at' => now()->addDays(5)]);
+    $owner = User::factory()->create(['plan_expires_at' => now()->addDays(5)]);
+    notificationTestStore($owner);
 
     $this->artisan('plan:notify-trial-ending');
 
     Notification::assertNothingSentTo($owner);
 });
 
-test('notify-trial-ending skips store without owner', function () {
+test('notify-trial-ending skips user without stores', function () {
     Notification::fake();
-    $storeType = StoreType::firstOrCreate(
-        ['code' => 'retail'],
-        ['label' => 'Retail', 'is_active' => true, 'sort_order' => 0],
-    );
-    Store::create([
-        'user_id' => null,
-        'code' => 'NOOWNER'.uniqid(),
-        'name' => 'No Owner Store',
-        'store_type_id' => $storeType->id,
-        'plan_expires_at' => now()->addDays(3),
-    ]);
+    // User dengan plan_expires_at tapi tidak punya toko — command skip
+    User::factory()->create(['plan_expires_at' => now()->addDays(3)]);
 
     $this->artisan('plan:notify-trial-ending')->assertSuccessful();
 
@@ -124,47 +132,32 @@ test('notify-trial-ending skips store without owner', function () {
 
 // ── PlanExpiredDowngraded ──────────────────────────────────────────────────
 
-test('check-expired command notifies owner when plan is downgraded', function () {
+test('check-expired command notifies user when plan is downgraded', function () {
     Notification::fake();
     $freePlan = Plan::create(['code' => 'free', 'label' => 'Free', 'is_active' => true, 'sort_order' => 0, 'price' => 0]);
     $proPlan = Plan::create(['code' => 'pro', 'label' => 'Pro', 'is_active' => true, 'sort_order' => 1, 'price' => 29000]);
 
-    $owner = User::factory()->create();
-    $store = notificationTestStore($owner, [
-        'plan_id' => $proPlan->id,
-        'plan_expires_at' => now()->subDay(),
-    ]);
+    $owner = User::factory()->create(['plan_id' => $proPlan->id, 'plan_expires_at' => now()->subDay()]);
+    $store = notificationTestStore($owner);
 
     $this->artisan('plan:check-expired');
 
     Notification::assertSentTo(
         $owner,
         PlanExpiredDowngraded::class,
-        fn ($notification) => $notification->store->id === $store->id && $notification->previousPlanLabel === 'Pro',
+        fn ($notification) => $notification->previousPlanLabel === 'Pro',
     );
 });
 
-test('check-expired command does not fail when store has no owner', function () {
+test('check-expired command does not fail when user has no stores', function () {
     Notification::fake();
     $freePlan = Plan::create(['code' => 'free', 'label' => 'Free', 'is_active' => true, 'sort_order' => 0, 'price' => 0]);
     $proPlan = Plan::create(['code' => 'pro', 'label' => 'Pro', 'is_active' => true, 'sort_order' => 1, 'price' => 29000]);
 
-    $storeType = StoreType::firstOrCreate(
-        ['code' => 'retail'],
-        ['label' => 'Retail', 'is_active' => true, 'sort_order' => 0],
-    );
-    $store = Store::create([
-        'user_id' => null,
-        'code' => 'NOOWNEREXP'.uniqid(),
-        'name' => 'No Owner Expired Store',
-        'store_type_id' => $storeType->id,
-        'plan_id' => $proPlan->id,
-        'plan_expires_at' => now()->subDay(),
-    ]);
+    // User dengan expired plan tapi tidak punya toko
+    $user = User::factory()->create(['plan_id' => $proPlan->id, 'plan_expires_at' => now()->subDay()]);
 
     $this->artisan('plan:check-expired')->assertSuccessful();
 
-    $store->refresh();
-    expect($store->plan_id)->toBe($freePlan->id);
-    Notification::assertNothingSent();
+    expect($user->fresh()->plan_id)->toBe($freePlan->id);
 });

@@ -327,6 +327,24 @@ export default function Login({ status, canResetPassword, isLocal }) {
                                     )}
                                 </button>
                             </form>
+
+                            <div
+                                className="mt-6 border-t pt-5 text-center"
+                                style={{ borderColor: "var(--dv-rule)" }}
+                            >
+                                <p
+                                    className="text-[0.875rem]"
+                                    style={{ color: "var(--dv-muted)" }}
+                                >
+                                    Belum punya akun?{" "}
+                                    <Link
+                                        href={route("register")}
+                                        className="dv-tlink"
+                                    >
+                                        Daftar toko baru
+                                    </Link>
+                                </p>
+                            </div>
                         </div>
 
                         {isLocal && (

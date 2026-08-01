@@ -22,3 +22,7 @@ Schedule::command('membership:sweep-auto-tier')->dailyAt('01:00');
 // lalu kirim reminder H-3/H-1 untuk toko yang belum expired hari ini.
 Schedule::command('plan:check-expired')->dailyAt('00:30');
 Schedule::command('plan:notify-trial-ending')->dailyAt('08:00');
+
+// Registrasi: bersihkan kode OTP kedaluwarsa (>24 jam) supaya tabel
+// tidak menumpuk data form dari pendaftaran yang ditinggalkan.
+Schedule::command('registration-otp:prune')->dailyAt('02:00');

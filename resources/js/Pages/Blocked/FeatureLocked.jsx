@@ -86,14 +86,12 @@ export default function FeatureLocked({ feature, featureLabel, storePlan, storeT
                             >
                                 ← Kembali
                             </Link>
-                            <a
-                                href="https://wa.me/6281234567890?text=Halo%2C+saya+ingin+upgrade+plan+SIM-KASIR"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <Link
+                                href={route("admin.plan.index")}
                                 className="flex-1 rounded-lg bg-gradient-to-r from-amber-400 to-orange-400 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm hover:opacity-90 transition"
                             >
-                                🚀 Upgrade Plan
-                            </a>
+                                🚀 Lihat Paket
+                            </Link>
                         </div>
                     </div>
 
@@ -101,7 +99,7 @@ export default function FeatureLocked({ feature, featureLabel, storePlan, storeT
                     <p className="mt-4 text-center text-xs text-slate-400">
                         Butuh bantuan?{" "}
                         <a
-                            href="mailto:support@simkasir.id"
+                            href={`mailto:${import.meta.env.VITE_BILLING_EMAIL ?? 'support@simkasir.id'}`}
                             className="text-primary-500 hover:underline"
                         >
                             Hubungi tim support kami

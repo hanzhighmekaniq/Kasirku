@@ -55,48 +55,56 @@ const navItems = [
         href: route("developer.plans.index"),
         current: "developer.plans.*",
         icon: Package,
+        superAdminOnly: true,
     },
     {
         name: "Jenis Usaha",
         href: route("developer.store-types.index"),
         current: "developer.store-types.*",
         icon: Store,
+        superAdminOnly: true,
     },
     {
         name: "Template Bisnis",
         href: route("developer.business-templates.index"),
         current: "developer.business-templates.*",
         icon: LayoutTemplate,
+        superAdminOnly: true,
     },
     {
         name: "Fitur Sistem",
         href: route("developer.features.index"),
         current: "developer.features.*",
         icon: Puzzle,
+        superAdminOnly: true,
     },
     {
         name: "Fitur Tipe",
         href: route("developer.type-features"),
         current: "developer.type-features",
         icon: Tags,
+        superAdminOnly: true,
     },
     {
         name: "Role & Permission",
         href: route("developer.roles.index"),
         current: "developer.roles.*",
         icon: ShieldCheck,
+        superAdminOnly: true,
     },
     {
         name: "Template Role",
         href: route("developer.role-templates.index"),
         current: "developer.role-templates.*",
         icon: UserCog,
+        superAdminOnly: true,
     },
     {
         name: "Payment Gateway",
         href: route("developer.payment-gateway.index"),
         current: "developer.payment-gateway.*",
         icon: CreditCard,
+        superAdminOnly: true,
     },
     {
         name: "Wallet Store",
@@ -115,6 +123,12 @@ const navItems = [
         href: route("developer.audit-log.index"),
         current: "developer.audit-log.*",
         icon: History,
+    },
+    {
+        name: "Order Plan",
+        href: route("developer.plan-orders.index"),
+        current: "developer.plan-orders.*",
+        icon: Package,
     },
 ];
 
@@ -159,8 +173,16 @@ function NavItem({ item, onClick }) {
 export default function DeveloperLayout({ header, children }) {
     const { auth, flash } = usePage().props;
     const user = auth?.user;
+    const isSuperAdmin = auth?.isSuperAdmin === true;
     const [mobileOpen, setMobileOpen] = useState(false);
     const { isDark, setMode } = useTheme();
+
+    // Support agent tidak melihat menu konfigurasi platform — route-nya juga
+    // sudah diblok middleware `super-admin`, ini semata agar UI tidak
+    // menawarkan hal yang pasti ditolak.
+    const visibleNavItems = navItems.filter(
+        (item) => !item.superAdminOnly || isSuperAdmin,
+    );
 
     const toggleTheme = () => {
         setMode(isDark ? "light" : "dark");
@@ -180,7 +202,7 @@ export default function DeveloperLayout({ header, children }) {
                             SIM-KASIR
                         </span>
                         <span className="block text-[11px] font-medium text-sidebar-foreground/60 whitespace-nowrap">
-                            Developer Panel
+                            {isSuperAdmin ? "Developer Panel" : "Panel Support"}
                         </span>
                     </div>
                 </div>
@@ -229,7 +251,7 @@ export default function DeveloperLayout({ header, children }) {
                 <p className="mb-2 px-2 text-[11px] font-bold uppercase tracking-wider text-sidebar-foreground/50">
                     Menu Utama
                 </p>
-                {navItems.map((item) => (
+                {visibleNavItems.map((item) => (
                     <NavItem key={item.name} item={item} onClick={() => setMobileOpen(false)} />
                 ))}
             </nav>

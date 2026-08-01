@@ -87,7 +87,7 @@ const ROLE_STYLE = {
 };
 
 // ── Branch Slide Panel ────────────────────────────────────────────────────────
-function BranchPanel({ branch, storeId, onClose }) {
+function BranchPanel({ branch, canManage = false, onClose }) {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -275,18 +275,17 @@ function BranchPanel({ branch, storeId, onClose }) {
                         </div>
                     )}
                 </div>
-                <div className="border-t border-border p-4">
-                    <Link
-                        href={route("developer.stores.branches.edit", [
-                            storeId,
-                            branch.id,
-                        ])}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-                    >
-                        <Pencil className="h-4 w-4" strokeWidth={2} />
-                        Edit Cabang
-                    </Link>
-                </div>
+                {canManage && (
+                    <div className="border-t border-border p-4">
+                        <Link
+                            href={route("developer.branches.edit", branch.id)}
+                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                        >
+                            <Pencil className="h-4 w-4" strokeWidth={2} />
+                            Edit Cabang
+                        </Link>
+                    </div>
+                )}
             </div>
         </>
     );
@@ -360,7 +359,7 @@ function AddOwnerModal({ allUsers, storeId, onClose }) {
 }
 
 // ── Section: Detail Plan ──────────────────────────────────────────────────────
-function PlanDetailSection({ store, planMeta, planFeatures }) {
+function PlanDetailSection({ store, planMeta, planFeatures, canManage = false }) {
     const plan = store.planModel;
     const effectiveMaxUsers = store.max_users ?? plan?.max_users ?? "—";
     const effectiveMaxBranches =
@@ -404,12 +403,14 @@ function PlanDetailSection({ store, planMeta, planFeatures }) {
                         </p>
                     </div>
                 </div>
-                <Link
-                    href={route("developer.stores.edit", store.id)}
-                    className="rounded-xl border border-border bg-card text-card-foreground px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
-                >
-                    Ubah Plan
-                </Link>
+                {canManage && (
+                    <Link
+                        href={route("developer.stores.edit", store.id)}
+                        className="rounded-xl border border-border bg-card text-card-foreground px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
+                    >
+                        Ubah Plan
+                    </Link>
+                )}
             </div>
 
             {/* Plan info grid */}
@@ -538,12 +539,14 @@ function PlanDetailSection({ store, planMeta, planFeatures }) {
                     <p className="text-sm font-medium text-muted-foreground">
                         Paket {planMeta.label} belum punya fitur
                     </p>
-                    <Link
-                        href={route("developer.plans.edit", store.plan_id ?? 0)}
-                        className="mt-2 text-xs text-primary hover:underline"
-                    >
-                        Kelola fitur paket →
-                    </Link>
+                    {canManage && (
+                        <Link
+                            href={route("developer.plans.edit", store.plan_id ?? 0)}
+                            className="mt-2 text-xs text-primary hover:underline"
+                        >
+                            Kelola fitur paket →
+                        </Link>
+                    )}
                 </div>
             )}
 
@@ -853,7 +856,11 @@ export default function Show({
     suspensionHistory = [],
     impersonatableUsers = [],
 }) {
-    const { flash } = usePage().props;
+    const { flash, auth } = usePage().props;
+    // Support agent hanya boleh melihat + impersonate + catatan internal.
+    // Route-nya sudah diblok middleware `super-admin`; ini agar UI tidak
+    // menawarkan aksi yang pasti ditolak.
+    const isSuperAdmin = auth?.isSuperAdmin === true;
     const [activeBranch, setActiveBranch] = useState(null);
     const [showAddOwner, setShowAddOwner] = useState(false);
 
@@ -941,13 +948,15 @@ export default function Show({
                         </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        <Link
-                            href={route("developer.stores.edit", store.id)}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
-                        >
-                            <Pencil className="h-4 w-4" strokeWidth={1.7} />
-                            Edit
-                        </Link>
+                        {isSuperAdmin && (
+                            <Link
+                                href={route("developer.stores.edit", store.id)}
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
+                            >
+                                <Pencil className="h-4 w-4" strokeWidth={1.7} />
+                                Edit
+                            </Link>
+                        )}
                         <Link
                             href={route("developer.stores.index")}
                             className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -1105,6 +1114,7 @@ export default function Show({
                 store={store}
                 planMeta={planMeta}
                 planFeatures={planFeatures}
+                canManage={isSuperAdmin}
             />
 
             {/* Pemakaian vs Limit Plan */}
@@ -1133,13 +1143,15 @@ export default function Show({
                             {store.branches?.length ?? 0}
                         </span>
                     </div>
-                    <Link
-                        href={route("developer.branches.create")}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-                    >
-                        <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                        Tambah Cabang
-                    </Link>
+                    {isSuperAdmin && (
+                        <Link
+                            href={route("developer.branches.create")}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                        >
+                            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                            Tambah Cabang
+                        </Link>
+                    )}
                 </div>
                 {store.branches?.length > 0 ? (
                     <div className="divide-y divide-border">
@@ -1175,16 +1187,18 @@ export default function Show({
                                     >
                                         <Eye className="h-4 w-4" strokeWidth={2} />
                                     </button>
-                                    <Link
-                                        href={route(
-                                            "developer.branches.edit",
-                                            b.id,
-                                        )}
-                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                        title="Edit"
-                                    >
-                                        <Pencil className="h-4 w-4" strokeWidth={2} />
-                                    </Link>
+                                    {isSuperAdmin && (
+                                        <Link
+                                            href={route(
+                                                "developer.branches.edit",
+                                                b.id,
+                                            )}
+                                            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                            title="Edit"
+                                        >
+                                            <Pencil className="h-4 w-4" strokeWidth={2} />
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -1215,13 +1229,15 @@ export default function Show({
                             {owners?.length ?? 0}
                         </span>
                     </div>
-                    <button
-                        onClick={() => setShowAddOwner(true)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-                    >
-                        <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                        Tambah Owner
-                    </button>
+                    {isSuperAdmin && (
+                        <button
+                            onClick={() => setShowAddOwner(true)}
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                        >
+                            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                            Tambah Owner
+                        </button>
+                    )}
                 </div>
                 {owners?.length > 0 ? (
                     <div className="divide-y divide-border">
@@ -1254,13 +1270,15 @@ export default function Show({
                                             </span>
                                         ))}
                                     </div>
-                                    <button
-                                        onClick={() => handleRevokeOwner(u.id)}
-                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/70 opacity-0 transition-colors hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-                                        title="Cabut akses"
-                                    >
-                                        <UserMinus className="h-4 w-4" strokeWidth={2} />
-                                    </button>
+                                    {isSuperAdmin && (
+                                        <button
+                                            onClick={() => handleRevokeOwner(u.id)}
+                                            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/70 opacity-0 transition-colors hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                                            title="Cabut akses"
+                                        >
+                                            <UserMinus className="h-4 w-4" strokeWidth={2} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -1284,7 +1302,7 @@ export default function Show({
             {activeBranch && (
                 <BranchPanel
                     branch={activeBranch}
-                    storeId={store.id}
+                    canManage={isSuperAdmin}
                     onClose={() => setActiveBranch(null)}
                 />
             )}

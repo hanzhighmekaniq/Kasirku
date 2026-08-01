@@ -21,6 +21,7 @@ export default function UserForm({
     cancelHref, isEdit = false, user, stores,
     storeRoles = [], // [{ store_id, role }] untuk edit
     rolesByStoreType = {}, // { retail: [{value,label,desc}], fnb: [...] }
+    developerRoles = {}, // { super_admin: 'Super Admin', support: 'Support' }
 }) {
     const [storeSearch, setStoreSearch] = useState('');
 
@@ -119,11 +120,53 @@ export default function UserForm({
                             <div>
                                 <p className="flex items-center gap-1.5 font-semibold text-foreground">
                                     <Zap className="h-4 w-4 text-primary" strokeWidth={2} />
-                                    Developer / Super Admin
+                                    Developer Platform
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">Akses penuh ke seluruh platform, tidak terikat toko manapun.</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Akses panel developer, tidak terikat toko manapun.</p>
                             </div>
                         </label>
+
+                        {data.is_developer && (
+                            <div className="mt-4">
+                                <label className="mb-1.5 block text-sm font-medium text-foreground">
+                                    Level Akses <span className="text-destructive">*</span>
+                                </label>
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    {Object.entries(developerRoles).map(([value, label]) => {
+                                        const active = (data.developer_role ?? 'super_admin') === value;
+                                        const isSupport = value === 'support';
+
+                                        return (
+                                            <label
+                                                key={value}
+                                                className={`flex cursor-pointer items-start gap-2.5 rounded-xl border-2 p-3.5 transition ${active ? 'border-primary bg-primary/10' : 'border-border hover:border-border'}`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="developer_role"
+                                                    value={value}
+                                                    checked={active}
+                                                    onChange={e => setData('developer_role', e.target.value)}
+                                                    className="mt-0.5 h-4 w-4"
+                                                />
+                                                <div>
+                                                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                                                    <p className="mt-0.5 text-xs text-muted-foreground">
+                                                        {isSupport
+                                                            ? 'Hanya lihat data, login sebagai owner untuk diagnosis, dan tulis catatan internal.'
+                                                            : 'Akses penuh: hapus toko, ubah paket, dan seluruh konfigurasi platform.'}
+                                                    </p>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                                {errors.developer_role && (
+                                    <p className="mt-1 text-xs text-destructive">{errors.developer_role}</p>
+                                )}
+                            </div>
+                        )}
+
                         {!data.is_developer && (
                             <p className="mt-2 text-xs text-muted-foreground">Tanpa akses developer, user hanya bisa masuk ke toko yang di-assign di bawah.</p>
                         )}

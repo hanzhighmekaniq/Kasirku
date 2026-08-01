@@ -1,6 +1,6 @@
 import InputError from '@/Components/InputError';
 import { Transition } from '@headlessui/react';
-import { Link, useForm, usePage } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 
 function inputCls(hasError = false) {
     return `block w-full rounded-xl border text-sm shadow-sm transition focus:ring-2 ${
@@ -10,11 +10,7 @@ function inputCls(hasError = false) {
     }`;
 }
 
-export default function UpdateProfileInformation({
-    mustVerifyEmail,
-    status,
-    className = '',
-}) {
+export default function UpdateProfileInformation({ className = '' }) {
     const user = usePage().props.auth.user;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } =
@@ -62,27 +58,6 @@ export default function UpdateProfileInformation({
                     />
                     <InputError className="mt-1.5" message={errors.email} />
                 </div>
-
-                {mustVerifyEmail && user.email_verified_at === null && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-                        <p className="text-sm text-amber-800">
-                            Email Anda belum terverifikasi.
-                            <Link
-                                href={route('verification.send')}
-                                method="post"
-                                as="button"
-                                className="ml-1 font-medium text-amber-700 underline hover:text-amber-900"
-                            >
-                                Kirim ulang email verifikasi
-                            </Link>
-                        </p>
-                        {status === 'verification-link-sent' && (
-                            <p className="mt-1.5 text-xs font-medium text-green-600">
-                                Link verifikasi baru telah dikirim ke email Anda.
-                            </p>
-                        )}
-                    </div>
-                )}
 
                 <div className="flex items-center gap-4">
                     <button

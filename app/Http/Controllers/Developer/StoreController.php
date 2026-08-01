@@ -371,20 +371,22 @@ class StoreController extends Controller
             'planModel' => $planModelRelation,
         ];
 
-        $planHistory = PlanSubscription::where('store_id', $store->id)
-            ->with(['plan:id,code,label', 'createdBy:id,name'])
-            ->orderByDesc('started_at')
-            ->get()
-            ->map(fn (PlanSubscription $s) => [
-                'id' => $s->id,
-                'plan_label' => $s->plan?->label ?? '—',
-                'plan_code' => $s->plan?->code,
-                'started_at' => $s->started_at,
-                'ended_at' => $s->ended_at,
-                'reason' => $s->reason,
-                'reason_label' => PlanSubscription::REASONS[$s->reason] ?? $s->reason,
-                'created_by' => $s->createdBy?->name,
-            ]);
+        $planHistory = $store->owner
+            ? PlanSubscription::where('user_id', $store->owner->id)
+                ->with(['plan:id,code,label', 'createdBy:id,name'])
+                ->orderByDesc('started_at')
+                ->get()
+                ->map(fn (PlanSubscription $s) => [
+                    'id' => $s->id,
+                    'plan_label' => $s->plan?->label ?? '—',
+                    'plan_code' => $s->plan?->code,
+                    'started_at' => $s->started_at,
+                    'ended_at' => $s->ended_at,
+                    'reason' => $s->reason,
+                    'reason_label' => PlanSubscription::REASONS[$s->reason] ?? $s->reason,
+                    'created_by' => $s->createdBy?->name,
+                ])
+            : collect();
 
         $notes = $store->notes()
             ->with('developer:id,name')
@@ -526,7 +528,9 @@ class StoreController extends Controller
             'max_branches' => 'nullable|integer|min:1',
         ]);
 
-        $oldPlanId = $store->plan_id;
+        // oldPlanId dari owner user (bukan store) — plan sekarang di user
+        $owner = $store->owner;
+        $oldPlanId = $owner?->plan_id;
         $newPlanId = $validated['plan_id'] ?? null;
         $wasActive = $store->is_active;
         $willBeActive = $validated['is_active'] ?? true;
@@ -557,7 +561,6 @@ class StoreController extends Controller
 
             DeveloperActionLog::record('store.suspend', $store, null, ['reason' => $suspendReason]);
 
-            $owner = $store->owner;
             if ($owner) {
                 $owner->notify(new StoreSuspended($store, $suspendReason));
             }
@@ -575,26 +578,33 @@ class StoreController extends Controller
             DeveloperActionLog::record('store.reactivate', $store);
         }
 
-        // Catat riwayat perubahan plan kalau plan_id benar-benar berubah.
+        // Catat riwayat perubahan plan ke USER owner kalau plan berubah.
         if ($newPlanId !== $oldPlanId) {
-            PlanSubscription::where('store_id', $store->id)
-                ->whereNull('ended_at')
-                ->update(['ended_at' => now()]);
+            if ($owner) {
+                PlanSubscription::where('user_id', $owner->id)
+                    ->whereNull('ended_at')
+                    ->update(['ended_at' => now()]);
 
-            if ($newPlanId) {
-                $oldPlan = $oldPlanId ? Plan::find($oldPlanId) : null;
-                $newPlan = Plan::find($newPlanId);
-                $reason = $oldPlan && $newPlan && $newPlan->sort_order < $oldPlan->sort_order
-                    ? 'downgraded'
-                    : 'upgraded';
+                if ($newPlanId) {
+                    $oldPlan = $oldPlanId ? Plan::find($oldPlanId) : null;
+                    $newPlan = Plan::find($newPlanId);
+                    $reason = $oldPlan && $newPlan && $newPlan->sort_order < $oldPlan->sort_order
+                        ? 'downgraded'
+                        : 'upgraded';
 
-                PlanSubscription::create([
-                    'store_id' => $store->id,
-                    'plan_id' => $newPlanId,
-                    'started_at' => now(),
-                    'reason' => $reason,
-                    'created_by' => Auth::id(),
-                ]);
+                    PlanSubscription::create([
+                        'user_id' => $owner->id,
+                        'plan_id' => $newPlanId,
+                        'started_at' => now(),
+                        'reason' => $reason,
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    $owner->update([
+                        'plan_id' => $newPlanId,
+                        'plan_expires_at' => $validated['plan_expires_at'] ?? null,
+                    ]);
+                }
             }
         }
 

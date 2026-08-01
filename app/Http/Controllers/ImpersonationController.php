@@ -36,6 +36,9 @@ class ImpersonationController extends Controller
         DeveloperActionLog::record('store.impersonate', $store, null, [
             'impersonated_user_id' => $user->id,
             'impersonated_user_name' => $user->name,
+            // Level pelaku dicatat supaya jelas siapa bertindak dengan
+            // wewenang apa — support agent juga boleh impersonate.
+            'developer_role' => $developer->developer_role,
         ]);
 
         $request->session()->put('impersonator_id', $developer->id);

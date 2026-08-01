@@ -45,9 +45,11 @@ class UserController extends Controller
                     }),
                     'created_at' => $u->created_at,
                     // Sumber kebenaran akses developer = kolom is_developer,
+                    // levelnya (super admin/support) di developer_role.
                     // sama dengan yang dicek DeveloperMiddleware. hasRole()
                     // selalu false karena role Spatie "developer" tidak ada.
                     'is_developer' => (bool) $u->is_developer,
+                    'developer_role' => $u->developer_role,
                 ],
             );
 
@@ -165,6 +167,7 @@ class UserController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'is_developer' => $user->is_developer,
+            'developer_role' => $user->developer_role,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
             'stores' => $user->stores->map(function ($store) {
@@ -202,6 +205,7 @@ class UserController extends Controller
         return Inertia::render('Developer/Users/Create', [
             'stores' => $stores,
             'rolesByStoreType' => $this->rolesByStoreType(),
+            'developerRoles' => User::DEVELOPER_ROLES,
         ]);
     }
 
@@ -212,16 +216,24 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
             'is_developer' => 'boolean',
+            'developer_role' => ['nullable', Rule::in(array_keys(User::DEVELOPER_ROLES))],
             // store_roles: [{ store_id: 1, role: 'owner' }, ...]
             ...$this->storeRoleRules(),
         ]);
 
         DB::transaction(function () use ($validated) {
+            $isDeveloper = ! empty($validated['is_developer']);
+
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
-                'is_developer' => ! empty($validated['is_developer']),
+                'is_developer' => $isDeveloper,
+                // Level akses hanya relevan untuk developer. Default super
+                // admin supaya perilakunya sama seperti sebelum ada level.
+                'developer_role' => $isDeveloper
+                    ? ($validated['developer_role'] ?? User::DEV_SUPER_ADMIN)
+                    : null,
             ]);
 
             // Akses developer ditentukan kolom is_developer, dicek oleh
@@ -263,6 +275,7 @@ class UserController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'is_developer' => $user->is_developer,
+            'developer_role' => $user->developer_role,
             'created_at' => $user->created_at,
             'stores' => $user->stores->map(function ($store) {
                 return [
@@ -292,6 +305,7 @@ class UserController extends Controller
             'stores' => $stores,
             'storeRoles' => $storeRoles,
             'rolesByStoreType' => $this->rolesByStoreType(),
+            'developerRoles' => User::DEVELOPER_ROLES,
         ]);
     }
 
@@ -306,14 +320,22 @@ class UserController extends Controller
             ],
             'password' => 'nullable|string|min:6|confirmed',
             'is_developer' => 'boolean',
+            'developer_role' => ['nullable', Rule::in(array_keys(User::DEVELOPER_ROLES))],
             ...$this->storeRoleRules(),
         ]);
 
         DB::transaction(function () use ($validated, $user) {
+            $isDeveloper = ! empty($validated['is_developer']);
+
             $data = [
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'is_developer' => ! empty($validated['is_developer']),
+                'is_developer' => $isDeveloper,
+                // Level akses hanya relevan untuk developer. Kalau flag
+                // developer dicabut, levelnya juga dikosongkan.
+                'developer_role' => $isDeveloper
+                    ? ($validated['developer_role'] ?? User::DEV_SUPER_ADMIN)
+                    : null,
             ];
             if (! empty($validated['password'])) {
                 $data['password'] = Hash::make($validated['password']);

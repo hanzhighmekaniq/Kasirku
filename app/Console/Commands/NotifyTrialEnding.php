@@ -2,24 +2,22 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Store;
+use App\Models\User;
 use App\Notifications\TrialEndingSoon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Kirim reminder ke owner toko yang trial/plan-nya akan berakhir H-3 dan
- * H-1. Dijalankan harian — cocok dijalankan setelah `plan:check-expired`
- * supaya toko yang sudah expired hari ini tidak ikut di-reminder lagi.
+ * Kirim reminder ke user yang trial/plan-nya akan berakhir H-3 dan H-1.
+ * Plan sekarang menempel ke User, bukan Store.
  */
 class NotifyTrialEnding extends Command
 {
-    /** Ambang hari sebelum expired untuk dikirim reminder. */
     private const REMINDER_DAYS = [3, 1];
 
     protected $signature = 'plan:notify-trial-ending';
 
-    protected $description = 'Kirim reminder H-3 dan H-1 ke owner toko yang trial/plan-nya akan segera berakhir';
+    protected $description = 'Kirim reminder H-3 dan H-1 ke user yang trial/plan-nya akan segera berakhir';
 
     public function handle(): int
     {
@@ -28,17 +26,23 @@ class NotifyTrialEnding extends Command
         foreach (self::REMINDER_DAYS as $days) {
             $targetDate = now()->addDays($days)->toDateString();
 
-            $stores = Store::whereNotNull('plan_expires_at')
+            $users = User::whereNotNull('plan_expires_at')
                 ->whereDate('plan_expires_at', $targetDate)
-                ->with('owner')
                 ->get();
 
-            foreach ($stores as $store) {
-                if (! $store->owner) {
+            foreach ($users as $user) {
+                // Buat objek Store dummy untuk notifikasi — kirim toko pertama
+                // milik user sebagai konteks, atau null kalau belum punya.
+                $store = $user->stores()->first();
+                if (! $store) {
                     continue;
                 }
 
-                $store->owner->notify(new TrialEndingSoon($store, $days));
+                // Isi store->plan_expires_at dari user supaya TrialEndingSoon
+                // bisa menampilkan tanggal kadaluarsa dengan benar.
+                $store->plan_expires_at = $user->plan_expires_at;
+
+                $user->notify(new TrialEndingSoon($store, $days));
                 $count++;
             }
         }

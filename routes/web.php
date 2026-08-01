@@ -43,6 +43,7 @@ use App\Http\Controllers\Admin\StockAdjustmentController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\StockOpnameController;
 use App\Http\Controllers\Admin\StockTransferController;
+use App\Http\Controllers\Admin\StoreController;
 use App\Http\Controllers\Admin\StoreSwitchController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\ThemeController;
@@ -56,6 +57,7 @@ use App\Http\Controllers\Developer\DashboardController as DevDashboardController
 use App\Http\Controllers\Developer\FeatureController;
 use App\Http\Controllers\Developer\PaymentGatewayController as DevPaymentGatewayController;
 use App\Http\Controllers\Developer\PlanController;
+use App\Http\Controllers\Developer\PlanOrderController;
 use App\Http\Controllers\Developer\RoleTemplateController;
 use App\Http\Controllers\Developer\StoreController as DevStoreController;
 use App\Http\Controllers\Developer\StoreTypeController;
@@ -111,16 +113,19 @@ Route::middleware(['auth', 'developer', 'single-session'])
             'index',
         ])->name('dashboard');
 
-        // Store management
-        Route::resource('stores', DevStoreController::class);
-        Route::post('stores/{store}/assign-owner', [
-            DevStoreController::class,
-            'assignOwner',
-        ])->name('stores.assign-owner');
-        Route::delete('stores/{store}/revoke-owner', [
-            DevStoreController::class,
-            'revokeOwner',
-        ])->name('stores.revoke-owner');
+        /*
+        |--------------------------------------------------------------------
+        | Akses semua level developer (Super Admin & Support)
+        |--------------------------------------------------------------------
+        | Melihat data, impersonate untuk diagnosis, dan menulis catatan
+        | internal — inti pekerjaan support. Semua aksi impersonate tercatat
+        | di audit log.
+        */
+
+        // Daftar (index) — aman didaftarkan lebih dulu, tidak ada wildcard.
+        Route::get('stores', [DevStoreController::class, 'index'])->name('stores.index');
+        Route::get('branches', [BranchController::class, 'index'])->name('branches.index');
+        Route::get('users', [DevUserController::class, 'index'])->name('users.index');
 
         // ── Impersonation ("login sebagai") ─────────────────────────────
         Route::post('stores/{store}/impersonate/{user}', [
@@ -138,100 +143,182 @@ Route::middleware(['auth', 'developer', 'single-session'])
             'destroyNote',
         ])->name('stores.notes.destroy');
 
-        // ── Branch management ─────────────────────────────────────────
-        Route::resource('branches', BranchController::class)->names('branches');
-
-        // ── User management ────────────────────────────────────────────
-        Route::resource('users', DevUserController::class);
         Route::get('stores/{store}/branches-json', [
             DevUserController::class,
             'branches',
         ])->name('users.branches-json');
 
-        // Plan / Paket — full CRUD
-        Route::resource('plans', PlanController::class)->except(['show']);
-        Route::post('plans/reorder', [PlanController::class, 'reorder'])->name('plans.reorder');
+        /*
+        |--------------------------------------------------------------------
+        | Khusus Super Admin
+        |--------------------------------------------------------------------
+        | Aksi destruktif (hapus toko/cabang/user) dan perubahan konfigurasi
+        | platform (plan, jenis usaha, template bisnis, fitur, payment
+        | gateway, role) — di luar wewenang support agent.
+        */
+        Route::middleware('super-admin')->group(function () {
+            // Store — buat, ubah (termasuk plan & suspend), hapus
+            Route::get('stores/create', [DevStoreController::class, 'create'])->name('stores.create');
+            Route::post('stores', [DevStoreController::class, 'store'])->name('stores.store');
+            Route::get('stores/{store}/edit', [DevStoreController::class, 'edit'])->name('stores.edit');
+            Route::match(['put', 'patch'], 'stores/{store}', [DevStoreController::class, 'update'])->name('stores.update');
+            Route::delete('stores/{store}', [DevStoreController::class, 'destroy'])->name('stores.destroy');
 
-        // Kelola fitur dan add-on per plan (halaman terpisah dari form edit)
-        Route::get('plans/{plan}/features', [PlanController::class, 'features'])->name('plans.features');
-        Route::put('plans/{plan}/features', [PlanController::class, 'updateFeatures'])->name('plans.update-features');
-        Route::get('plans/{plan}/addons', [PlanController::class, 'addons'])->name('plans.addons');
-        Route::post('plans/{plan}/addons', [PlanController::class, 'storeAddon'])->name('plans.addons.store');
-        Route::put('plans/{plan}/addons/{addon}', [PlanController::class, 'updateAddon'])->name('plans.addons.update');
-        Route::delete('plans/{plan}/addons/{addon}', [PlanController::class, 'destroyAddon'])->name('plans.addons.destroy');
+            Route::post('stores/{store}/assign-owner', [
+                DevStoreController::class,
+                'assignOwner',
+            ])->name('stores.assign-owner');
+            Route::delete('stores/{store}/revoke-owner', [
+                DevStoreController::class,
+                'revokeOwner',
+            ])->name('stores.revoke-owner');
 
-        // Jenis Usaha (Store Type) — full CRUD
-        Route::resource('store-types', StoreTypeController::class)->except(['show']);
-        Route::post('store-types/reorder', [StoreTypeController::class, 'reorder'])->name('store-types.reorder');
+            // Branch — buat, ubah, hapus
+            Route::get('branches/create', [BranchController::class, 'create'])->name('branches.create');
+            Route::post('branches', [BranchController::class, 'store'])->name('branches.store');
+            Route::get('branches/{branch}/edit', [BranchController::class, 'edit'])->name('branches.edit');
+            Route::match(['put', 'patch'], 'branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
+            Route::delete('branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
 
-        // Template Bisnis — metadata + kategori & produk contoh (nested, data-driven)
-        Route::resource('business-templates', BusinessTemplateController::class)->except(['show']);
-        Route::get('business-templates/{businessTemplate}/categories', [BusinessTemplateController::class, 'categories'])->name('business-templates.categories');
-        Route::post('business-templates/{businessTemplate}/categories', [BusinessTemplateController::class, 'storeCategory'])->name('business-templates.categories.store');
-        Route::put('business-templates/{businessTemplate}/categories/{category}', [BusinessTemplateController::class, 'updateCategory'])->name('business-templates.categories.update');
-        Route::delete('business-templates/{businessTemplate}/categories/{category}', [BusinessTemplateController::class, 'destroyCategory'])->name('business-templates.categories.destroy');
-        Route::post('business-templates/{businessTemplate}/categories/{category}/products', [BusinessTemplateController::class, 'storeProduct'])->name('business-templates.categories.products.store');
-        Route::put('business-templates/{businessTemplate}/categories/{category}/products/{product}', [BusinessTemplateController::class, 'updateProduct'])->name('business-templates.categories.products.update');
-        Route::delete('business-templates/{businessTemplate}/categories/{category}/products/{product}', [BusinessTemplateController::class, 'destroyProduct'])->name('business-templates.categories.products.destroy');
+            // User — buat, ubah, hapus
+            Route::get('users/create', [DevUserController::class, 'create'])->name('users.create');
+            Route::post('users', [DevUserController::class, 'store'])->name('users.store');
+            Route::get('users/{user}/edit', [DevUserController::class, 'edit'])->name('users.edit');
+            Route::match(['put', 'patch'], 'users/{user}', [DevUserController::class, 'update'])->name('users.update');
+            Route::delete('users/{user}', [DevUserController::class, 'destroy'])->name('users.destroy');
+        });
 
-        // Fitur Sistem (Feature) — full CRUD + detail fitur nested
-        Route::resource('features', FeatureController::class)->except(['show']);
-        Route::get('features/{feature}/details', [FeatureController::class, 'details'])->name('features.details');
-        Route::post('features/{feature}/details', [FeatureController::class, 'storeDetail'])->name('features.details.store');
-        Route::put('features/{feature}/details/{detail}', [FeatureController::class, 'updateDetail'])->name('features.details.update');
-        Route::delete('features/{feature}/details/{detail}', [FeatureController::class, 'destroyDetail'])->name('features.details.destroy');
+        // Detail (show) — WAJIB didaftarkan setelah route `create`/`edit` di
+        // atas. Kalau lebih dulu, wildcard {store} akan menangkap URL
+        // `stores/create` dan model binding gagal.
+        Route::get('stores/{store}', [DevStoreController::class, 'show'])->name('stores.show');
+        Route::get('branches/{branch}', [BranchController::class, 'show'])->name('branches.show');
+        Route::get('users/{user}', [DevUserController::class, 'show'])->name('users.show');
 
-        // Fitur per Tipe Toko
-        Route::get('/type-features', [
-            DevStoreController::class,
-            'typeFeatures',
-        ])->name('type-features');
-        Route::post('/type-features', [
-            DevStoreController::class,
-            'updateTypeFeatures',
-        ])->name('type-features.update');
+        /*
+        |--------------------------------------------------------------------
+        | Konfigurasi platform — Super Admin saja
+        |--------------------------------------------------------------------
+        | Plan, jenis usaha, template bisnis, fitur sistem, role, payment
+        | gateway, dan penyesuaian saldo wallet. Semuanya berdampak ke
+        | seluruh toko di platform, jadi di luar wewenang support agent.
+        */
+        Route::middleware('super-admin')->group(function () {
+            // Plan / Paket — full CRUD
+            Route::resource('plans', PlanController::class)->except(['show']);
+            Route::post('plans/reorder', [PlanController::class, 'reorder'])->name('plans.reorder');
 
-        // Role & Permission Management
-        Route::get('/roles', [
-            App\Http\Controllers\Developer\RoleController::class,
-            'index',
-        ])->name('roles.index');
-        Route::post('/roles/update', [
-            App\Http\Controllers\Developer\RoleController::class,
-            'update',
-        ])->name('roles.update');
-        Route::post('/roles/reset', [
-            App\Http\Controllers\Developer\RoleController::class,
-            'reset',
-        ])->name('roles.reset');
+            // Kelola fitur dan add-on per plan (halaman terpisah dari form edit)
+            Route::get('plans/{plan}/features', [PlanController::class, 'features'])->name('plans.features');
+            Route::put('plans/{plan}/features', [PlanController::class, 'updateFeatures'])->name('plans.update-features');
+            Route::get('plans/{plan}/addons', [PlanController::class, 'addons'])->name('plans.addons');
+            Route::post('plans/{plan}/addons', [PlanController::class, 'storeAddon'])->name('plans.addons.store');
+            Route::put('plans/{plan}/addons/{addon}', [PlanController::class, 'updateAddon'])->name('plans.addons.update');
+            Route::delete('plans/{plan}/addons/{addon}', [PlanController::class, 'destroyAddon'])->name('plans.addons.destroy');
 
-        // ── Payment Gateway (platform-level, satu akun untuk semua store) ──
-        Route::get('/payment-gateway', [
-            DevPaymentGatewayController::class,
-            'index',
-        ])->name('payment-gateway.index');
-        Route::post('/payment-gateway', [
-            DevPaymentGatewayController::class,
-            'store',
-        ])->name('payment-gateway.store');
-        Route::put('/payment-gateway/{paymentGateway}', [
-            DevPaymentGatewayController::class,
-            'update',
-        ])->name('payment-gateway.update');
-        Route::delete('/payment-gateway/{paymentGateway}', [
-            DevPaymentGatewayController::class,
-            'destroy',
-        ])->name('payment-gateway.destroy');
-        Route::patch('/payment-gateway/{paymentGateway}/toggle', [
-            DevPaymentGatewayController::class,
-            'toggle',
-        ])->name('payment-gateway.toggle');
-        Route::patch('/payment-gateway/{paymentGateway}/env', [
-            DevPaymentGatewayController::class,
-            'toggleEnv',
-        ])->name('payment-gateway.toggle-env');
+            // Jenis Usaha (Store Type) — full CRUD
+            Route::resource('store-types', StoreTypeController::class)->except(['show']);
+            Route::post('store-types/reorder', [StoreTypeController::class, 'reorder'])->name('store-types.reorder');
 
-        // ── Wallet — saldo semua store dari pembayaran PG ──────────────
+            // Template Bisnis — metadata + kategori & produk contoh (nested, data-driven)
+            Route::resource('business-templates', BusinessTemplateController::class)->except(['show']);
+            Route::get('business-templates/{businessTemplate}/categories', [BusinessTemplateController::class, 'categories'])->name('business-templates.categories');
+            Route::post('business-templates/{businessTemplate}/categories', [BusinessTemplateController::class, 'storeCategory'])->name('business-templates.categories.store');
+            Route::put('business-templates/{businessTemplate}/categories/{category}', [BusinessTemplateController::class, 'updateCategory'])->name('business-templates.categories.update');
+            Route::delete('business-templates/{businessTemplate}/categories/{category}', [BusinessTemplateController::class, 'destroyCategory'])->name('business-templates.categories.destroy');
+            Route::post('business-templates/{businessTemplate}/categories/{category}/products', [BusinessTemplateController::class, 'storeProduct'])->name('business-templates.categories.products.store');
+            Route::put('business-templates/{businessTemplate}/categories/{category}/products/{product}', [BusinessTemplateController::class, 'updateProduct'])->name('business-templates.categories.products.update');
+            Route::delete('business-templates/{businessTemplate}/categories/{category}/products/{product}', [BusinessTemplateController::class, 'destroyProduct'])->name('business-templates.categories.products.destroy');
+
+            // Fitur Sistem (Feature) — full CRUD + detail fitur nested
+            Route::resource('features', FeatureController::class)->except(['show']);
+            Route::get('features/{feature}/details', [FeatureController::class, 'details'])->name('features.details');
+            Route::post('features/{feature}/details', [FeatureController::class, 'storeDetail'])->name('features.details.store');
+            Route::put('features/{feature}/details/{detail}', [FeatureController::class, 'updateDetail'])->name('features.details.update');
+            Route::delete('features/{feature}/details/{detail}', [FeatureController::class, 'destroyDetail'])->name('features.details.destroy');
+
+            // Fitur per Tipe Toko
+            Route::get('/type-features', [
+                DevStoreController::class,
+                'typeFeatures',
+            ])->name('type-features');
+            Route::post('/type-features', [
+                DevStoreController::class,
+                'updateTypeFeatures',
+            ])->name('type-features.update');
+
+            // Role & Permission Management
+            Route::get('/roles', [
+                App\Http\Controllers\Developer\RoleController::class,
+                'index',
+            ])->name('roles.index');
+            Route::post('/roles/update', [
+                App\Http\Controllers\Developer\RoleController::class,
+                'update',
+            ])->name('roles.update');
+            Route::post('/roles/reset', [
+                App\Http\Controllers\Developer\RoleController::class,
+                'reset',
+            ])->name('roles.reset');
+
+            // ── Payment Gateway (platform-level, satu akun untuk semua store) ──
+            Route::get('/payment-gateway', [
+                DevPaymentGatewayController::class,
+                'index',
+            ])->name('payment-gateway.index');
+            Route::post('/payment-gateway', [
+                DevPaymentGatewayController::class,
+                'store',
+            ])->name('payment-gateway.store');
+            Route::put('/payment-gateway/{paymentGateway}', [
+                DevPaymentGatewayController::class,
+                'update',
+            ])->name('payment-gateway.update');
+            Route::delete('/payment-gateway/{paymentGateway}', [
+                DevPaymentGatewayController::class,
+                'destroy',
+            ])->name('payment-gateway.destroy');
+            Route::patch('/payment-gateway/{paymentGateway}/toggle', [
+                DevPaymentGatewayController::class,
+                'toggle',
+            ])->name('payment-gateway.toggle');
+            Route::patch('/payment-gateway/{paymentGateway}/env', [
+                DevPaymentGatewayController::class,
+                'toggleEnv',
+            ])->name('payment-gateway.toggle-env');
+
+            // Penyesuaian saldo wallet — menyentuh uang, super admin saja.
+            Route::post('/wallets/{store}/adjust', [
+                DevWalletController::class,
+                'adjust',
+            ])->name('wallets.adjust');
+
+            // ── Template Role — role default yang dibuat saat toko baru lahir,
+            //    beserta cakupan tipe tokonya. Perubahan langsung disinkron ke
+            //    semua toko yang cocok (tambah/update saja, tidak menghapus).
+            Route::get('/role-templates', [
+                RoleTemplateController::class,
+                'index',
+            ])->name('role-templates.index');
+            Route::post('/role-templates', [
+                RoleTemplateController::class,
+                'store',
+            ])->name('role-templates.store');
+            Route::put('/role-templates/{roleTemplate}', [
+                RoleTemplateController::class,
+                'update',
+            ])->name('role-templates.update');
+            Route::put('/role-templates/{roleTemplate}/permissions', [
+                RoleTemplateController::class,
+                'updatePermissions',
+            ])->name('role-templates.permissions');
+            Route::delete('/role-templates/{roleTemplate}', [
+                RoleTemplateController::class,
+                'destroy',
+            ])->name('role-templates.destroy');
+        });
+
+        // ── Wallet — saldo semua store (lihat saja, support boleh) ──────
         Route::get('/wallets', [
             DevWalletController::class,
             'index',
@@ -240,34 +327,6 @@ Route::middleware(['auth', 'developer', 'single-session'])
             DevWalletController::class,
             'show',
         ])->name('wallets.show');
-        Route::post('/wallets/{store}/adjust', [
-            DevWalletController::class,
-            'adjust',
-        ])->name('wallets.adjust');
-
-        // ── Template Role — role default yang dibuat saat toko baru lahir,
-        //    beserta cakupan tipe tokonya. Perubahan langsung disinkron ke
-        //    semua toko yang cocok (tambah/update saja, tidak menghapus).
-        Route::get('/role-templates', [
-            RoleTemplateController::class,
-            'index',
-        ])->name('role-templates.index');
-        Route::post('/role-templates', [
-            RoleTemplateController::class,
-            'store',
-        ])->name('role-templates.store');
-        Route::put('/role-templates/{roleTemplate}', [
-            RoleTemplateController::class,
-            'update',
-        ])->name('role-templates.update');
-        Route::put('/role-templates/{roleTemplate}/permissions', [
-            RoleTemplateController::class,
-            'updatePermissions',
-        ])->name('role-templates.permissions');
-        Route::delete('/role-templates/{roleTemplate}', [
-            RoleTemplateController::class,
-            'destroy',
-        ])->name('role-templates.destroy');
 
         // ── Tema & Warna — personal per-akun developer ─────────────────
         // Preset sistem (is_system=true) hanya bisa dipakai, tidak bisa
@@ -278,6 +337,14 @@ Route::middleware(['auth', 'developer', 'single-session'])
 
         // Audit Log — aksi developer terhadap data platform
         Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+
+        // Plan Orders — kelola order upgrade plan dari toko
+        // Approve (super admin) dipisah karena berdampak ke plan toko
+        Route::get('/plan-orders', [PlanOrderController::class, 'index'])->name('plan-orders.index');
+        Route::middleware('super-admin')->group(function () {
+            Route::post('/plan-orders/{order}/approve', [PlanOrderController::class, 'approve'])->name('plan-orders.approve');
+            Route::post('/plan-orders/{order}/reject', [PlanOrderController::class, 'reject'])->name('plan-orders.reject');
+        });
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name(
@@ -1167,6 +1234,19 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 'index',
             ])->name('activity-logs.index');
         });
+
+        // ─────────────────────────────────────────────────────────────────
+        // PLAN — pilih & upgrade paket (semua role yang punya akses toko)
+        // ─────────────────────────────────────────────────────────────────
+        Route::get('/plan', [App\Http\Controllers\Admin\PlanController::class, 'index'])->name('plan.index');
+        Route::post('/plan/order', [App\Http\Controllers\Admin\PlanController::class, 'store'])->name('plan.order');
+        Route::get('/plan/confirm/{orderRef}', [App\Http\Controllers\Admin\PlanController::class, 'confirm'])->name('plan.confirm');
+
+        // ─────────────────────────────────────────────────────────────────
+        // STORES — tambah toko baru (self-service, cek max_stores dari plan)
+        // ─────────────────────────────────────────────────────────────────
+        Route::get('/stores/create', [StoreController::class, 'create'])->name('stores.create');
+        Route::post('/stores', [StoreController::class, 'store'])->name('stores.store');
 
         // ─────────────────────────────────────────────────────────────────
         // SETTINGS — permission: setting.edit

@@ -36,4 +36,18 @@ return [
         ],
     ],
 
+    /*
+    | Cloudflare Turnstile — verifikasi bot di halaman registrasi.
+    |
+    | Kalau secret key kosong DAN aplikasi berjalan di environment lokal,
+    | verifikasi dilewati otomatis (lihat App\Rules\Turnstile) supaya
+    | development tidak terblokir sebelum key diisi. Di environment lain
+    | (production/staging) key kosong berarti registrasi ditolak.
+    */
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+        'verify_url' => 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+    ],
+
 ];

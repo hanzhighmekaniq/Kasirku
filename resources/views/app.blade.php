@@ -19,6 +19,11 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|jetbrains-mono:400,500&display=swap" rel="stylesheet" />
 
+        <!-- Cloudflare Turnstile — hanya dimuat di halaman yang butuh captcha -->
+        @if (in_array($page['component'], ['Auth/Register', 'Auth/ForgotPassword'], true))
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        @endif
+
         <!-- Scripts -->
         @routes
         @viteReactRefresh

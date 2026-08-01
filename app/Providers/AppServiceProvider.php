@@ -7,6 +7,7 @@ use App\Observers\SaleObserver;
 use App\Services\Stock\StockService;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\PermissionRegistrar;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +24,15 @@ class AppServiceProvider extends ServiceProvider
         Sale::observe(SaleObserver::class);
 
         Vite::prefetch(concurrency: 3);
+
+        // Aturan password minimum untuk seluruh aplikasi — otomatis berlaku
+        // di registrasi, reset password, dan ubah password (ketiganya sudah
+        // memakai Password::defaults()).
+        //
+        // Simbol khusus sengaja TIDAK diwajibkan: mengikuti panduan NIST,
+        // syarat simbol wajib cenderung mendorong pola yang mudah diduga
+        // (mis. "Password1!") tanpa menambah kekuatan nyata.
+        Password::defaults(fn () => Password::min(8)->mixedCase()->numbers());
 
         // Auto-set Spatie team ID dari session saat request masuk.
         // Ini memastikan semua $user->can() / $user->hasRole() sudah

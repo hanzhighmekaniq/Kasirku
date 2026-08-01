@@ -1,13 +1,14 @@
 import { Head, useForm } from '@inertiajs/react';
 import UserForm from './UserForm';
 
-export default function Edit({ user, stores, storeRoles, rolesByStoreType = {} }) {
+export default function Edit({ user, stores, storeRoles, rolesByStoreType = {}, developerRoles = {} }) {
     const { data, setData, put, processing, errors } = useForm({
         name:                  user.name  ?? '',
         email:                 user.email ?? '',
         password:              '',
         password_confirmation: '',
         is_developer:          user.is_developer ?? false,
+        developer_role:        user.developer_role ?? 'super_admin',
         // storeRoles dari controller: [{ store_id, role }]
         store_roles:           storeRoles ?? [],
     });
@@ -25,6 +26,7 @@ export default function Edit({ user, stores, storeRoles, rolesByStoreType = {} }
                 isEdit user={user} stores={stores}
                 storeRoles={storeRoles}
                 rolesByStoreType={rolesByStoreType}
+                developerRoles={developerRoles}
             />
         </>
     );

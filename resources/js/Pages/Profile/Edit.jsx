@@ -22,7 +22,7 @@ function SectionCard({ title, subtitle, children }) {
     );
 }
 
-export default function Edit({ mustVerifyEmail, status }) {
+export default function Edit() {
     const { auth } = usePage().props;
     const user = auth.user;
     const role = ROLE_LABELS[auth.role] ?? auth.role ?? 'User';
@@ -64,11 +64,7 @@ export default function Edit({ mustVerifyEmail, status }) {
 
                 {/* Profile info */}
                 <SectionCard title="Informasi Profil" subtitle="Perbarui nama dan alamat email akun Anda">
-                    <UpdateProfileInformationForm
-                        mustVerifyEmail={mustVerifyEmail}
-                        status={status}
-                        className="max-w-xl"
-                    />
+                    <UpdateProfileInformationForm className="max-w-xl" />
                 </SectionCard>
 
                 {/* Password */}

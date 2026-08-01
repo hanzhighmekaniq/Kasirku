@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
-import { Head, Link, useForm } from "@inertiajs/react";
+import { useEffect, useMemo, useState } from "react";
+import { Head, Link, router, useForm } from "@inertiajs/react";
+import TurnstileWidget from "@/Components/TurnstileWidget";
 import {
     AlertTriangle,
     ArrowLeft,
@@ -25,16 +26,30 @@ const STEPS = [
     { key: "account", label: "Akun" },
     { key: "business", label: "Jenis usaha" },
     { key: "plan", label: "Plan" },
+    { key: "verify", label: "Verifikasi" },
 ];
 
-export default function Register({ storeTypes = [], plans = [] }) {
-    const [step, setStep] = useState(0);
+const VERIFY_STEP = 3;
+
+/** Jeda sebelum tombol "kirim ulang kode" bisa dipakai lagi. */
+const RESEND_COOLDOWN_SECONDS = 60;
+
+export default function Register({
+    storeTypes = [],
+    plans = [],
+    turnstileSiteKey = null,
+    pendingEmail = null,
+}) {
+    // Kalau ada kode OTP yang masih berlaku dari percobaan sebelumnya,
+    // langsung buka tahap verifikasi — user tidak perlu mengisi form ulang.
+    const [step, setStep] = useState(pendingEmail ? VERIFY_STEP : 0);
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirmation, setShowPasswordConfirmation] =
         useState(false);
     const [activeStoreTypeId, setActiveStoreTypeId] = useState(
         storeTypes[0]?.id ?? null,
     );
+    const [verifyEmail, setVerifyEmail] = useState(pendingEmail ?? "");
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
@@ -44,6 +59,7 @@ export default function Register({ storeTypes = [], plans = [] }) {
         store_type_id: storeTypes[0]?.id ?? "",
         business_template_code: "",
         plan_id: "",
+        cf_turnstile_response: "",
     });
 
     const activeStoreType = useMemo(
@@ -72,10 +88,16 @@ export default function Register({ storeTypes = [], plans = [] }) {
         setData("business_template_code", code === data.business_template_code ? "" : code);
     };
 
+    // Tahap 1 → kirim kode OTP ke email, lanjut ke tahap verifikasi.
+    // Akun & toko belum dibuat di sini.
     const submit = (e) => {
         e.preventDefault();
         post(route("register"), {
-            onFinish: () => reset("password", "password_confirmation"),
+            preserveScroll: true,
+            onSuccess: () => {
+                setVerifyEmail(data.email);
+                setStep(VERIFY_STEP);
+            },
         });
     };
 
@@ -180,110 +202,131 @@ export default function Register({ storeTypes = [], plans = [] }) {
                             ))}
                         </ol>
 
-                        <form onSubmit={submit}>
-                            <div className="dv-card p-7 sm:p-8">
-                                {step === 0 && (
-                                    <AccountStep
-                                        data={data}
-                                        setData={setData}
-                                        errors={errors}
-                                        showPassword={showPassword}
-                                        setShowPassword={setShowPassword}
-                                        showPasswordConfirmation={
-                                            showPasswordConfirmation
-                                        }
-                                        setShowPasswordConfirmation={
-                                            setShowPasswordConfirmation
-                                        }
-                                    />
-                                )}
-
-                                {step === 1 && (
-                                    <BusinessStep
-                                        storeTypes={storeTypes}
-                                        activeStoreType={activeStoreType}
-                                        selectedTemplateCode={
-                                            data.business_template_code
-                                        }
-                                        onSelectStoreType={selectStoreType}
-                                        onSelectTemplate={selectTemplate}
-                                        error={errors.store_type_id}
-                                    />
-                                )}
-
-                                {step === 2 && (
-                                    <PlanStep
-                                        plans={plans}
-                                        selectedPlanId={data.plan_id}
-                                        onSelect={(id) =>
-                                            setData("plan_id", id)
-                                        }
-                                        error={errors.plan_id}
-                                    />
-                                )}
-                            </div>
-
-                            <div className="mt-6 flex items-center justify-between gap-3">
-                                {step > 0 ? (
-                                    <button
-                                        type="button"
-                                        onClick={goBack}
-                                        className="dv-btn"
-                                        style={{
-                                            color: "var(--dv-ink)",
-                                            background: "var(--dv-paper)",
-                                            borderColor: "var(--dv-rule-2)",
-                                        }}
-                                    >
-                                        <ArrowLeft
-                                            size={16}
-                                            strokeWidth={2.5}
+                        {step === VERIFY_STEP ? (
+                            <VerifyStep
+                                email={verifyEmail}
+                                onChangeEmail={() => setStep(0)}
+                            />
+                        ) : (
+                            <form onSubmit={submit}>
+                                <div className="dv-card p-7 sm:p-8">
+                                    {step === 0 && (
+                                        <AccountStep
+                                            data={data}
+                                            setData={setData}
+                                            errors={errors}
+                                            showPassword={showPassword}
+                                            setShowPassword={setShowPassword}
+                                            showPasswordConfirmation={
+                                                showPasswordConfirmation
+                                            }
+                                            setShowPasswordConfirmation={
+                                                setShowPasswordConfirmation
+                                            }
                                         />
-                                        Kembali
-                                    </button>
-                                ) : (
-                                    <Link href={route("login")} className="dv-tlink">
-                                        Sudah punya akun? Masuk
-                                    </Link>
-                                )}
+                                    )}
 
-                                {step < STEPS.length - 1 ? (
-                                    <button
-                                        type="button"
-                                        onClick={goNext}
-                                        disabled={
-                                            (step === 0 &&
-                                                !canContinueFromAccount) ||
-                                            (step === 1 &&
-                                                !canContinueFromBusiness)
-                                        }
-                                        className="dv-btn dv-btn--accent"
-                                    >
-                                        Lanjut
-                                        <ArrowRight
-                                            size={16}
-                                            strokeWidth={2.5}
+                                    {step === 1 && (
+                                        <BusinessStep
+                                            storeTypes={storeTypes}
+                                            activeStoreType={activeStoreType}
+                                            selectedTemplateCode={
+                                                data.business_template_code
+                                            }
+                                            onSelectStoreType={selectStoreType}
+                                            onSelectTemplate={selectTemplate}
+                                            error={errors.store_type_id}
                                         />
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="submit"
-                                        disabled={processing || !data.plan_id}
-                                        className="dv-btn dv-btn--accent"
-                                    >
-                                        {processing
-                                            ? "Membuat toko…"
-                                            : "Buat toko"}
-                                        {!processing && (
+                                    )}
+
+                                    {step === 2 && (
+                                        <PlanStep
+                                            plans={plans}
+                                            selectedPlanId={data.plan_id}
+                                            onSelect={(id) =>
+                                                setData("plan_id", id)
+                                            }
+                                            error={errors.plan_id}
+                                            turnstileSiteKey={turnstileSiteKey}
+                                            onTurnstileToken={(token) =>
+                                                setData(
+                                                    "cf_turnstile_response",
+                                                    token,
+                                                )
+                                            }
+                                            turnstileError={
+                                                errors.cf_turnstile_response
+                                            }
+                                            emailError={errors.email}
+                                        />
+                                    )}
+                                </div>
+
+                                <div className="mt-6 flex items-center justify-between gap-3">
+                                    {step > 0 ? (
+                                        <button
+                                            type="button"
+                                            onClick={goBack}
+                                            className="dv-btn"
+                                            style={{
+                                                color: "var(--dv-ink)",
+                                                background: "var(--dv-paper)",
+                                                borderColor: "var(--dv-rule-2)",
+                                            }}
+                                        >
+                                            <ArrowLeft
+                                                size={16}
+                                                strokeWidth={2.5}
+                                            />
+                                            Kembali
+                                        </button>
+                                    ) : (
+                                        <Link
+                                            href={route("login")}
+                                            className="dv-tlink"
+                                        >
+                                            Sudah punya akun? Masuk
+                                        </Link>
+                                    )}
+
+                                    {step < 2 ? (
+                                        <button
+                                            type="button"
+                                            onClick={goNext}
+                                            disabled={
+                                                (step === 0 &&
+                                                    !canContinueFromAccount) ||
+                                                (step === 1 &&
+                                                    !canContinueFromBusiness)
+                                            }
+                                            className="dv-btn dv-btn--accent"
+                                        >
+                                            Lanjut
                                             <ArrowRight
                                                 size={16}
                                                 strokeWidth={2.5}
                                             />
-                                        )}
-                                    </button>
-                                )}
-                            </div>
-                        </form>
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="submit"
+                                            disabled={processing || !data.plan_id}
+                                            className="dv-btn dv-btn--accent"
+                                        >
+                                            {processing
+                                                ? "Mengirim kode…"
+                                                : "Kirim kode verifikasi"}
+                                            {!processing && (
+                                                <ArrowRight
+                                                    size={16}
+                                                    strokeWidth={2.5}
+                                                />
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+                        )}
 
                         <p className="dv-label mt-10 lg:hidden">
                             &copy; {year} DEVus.id
@@ -305,6 +348,127 @@ function FieldError({ id, message }) {
     );
 }
 
+/**
+ * Tahap 4 — verifikasi kode yang dikirim ke email.
+ *
+ * Punya form sendiri (terpisah dari form 3 langkah pertama) karena
+ * endpoint-nya berbeda: di sinilah User & Store benar-benar dibuat.
+ */
+function VerifyStep({ email, onChangeEmail }) {
+    const { data, setData, post, processing, errors } = useForm({
+        email,
+        code: "",
+    });
+    const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
+    const [resending, setResending] = useState(false);
+
+    useEffect(() => {
+        if (cooldown <= 0) return;
+        const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
+
+        return () => clearTimeout(timer);
+    }, [cooldown]);
+
+    const submit = (e) => {
+        e.preventDefault();
+        post(route("register.verify"));
+    };
+
+    const resend = () => {
+        if (cooldown > 0 || resending) return;
+        setResending(true);
+        router.post(
+            route("register.resend"),
+            { email },
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setResending(false);
+                    setCooldown(RESEND_COOLDOWN_SECONDS);
+                },
+            },
+        );
+    };
+
+    return (
+        <form onSubmit={submit}>
+            <div className="dv-card p-7 sm:p-8">
+                <p className="dv-label">Langkah 4 dari 4</p>
+                <h2 className="dv-title mt-3">Masukkan kode verifikasi</h2>
+                <p
+                    className="mt-2 text-[0.9375rem] leading-relaxed"
+                    style={{ color: "var(--dv-muted)" }}
+                >
+                    Kami mengirim kode 6 angka ke{" "}
+                    <span style={{ color: "var(--dv-ink)", fontWeight: 600 }}>
+                        {email}
+                    </span>
+                    . Kode berlaku 10 menit.
+                </p>
+
+                <div className="mt-7 space-y-1.5">
+                    <label htmlFor="code" className="dv-field-label">
+                        Kode verifikasi
+                    </label>
+                    <input
+                        id="code"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={6}
+                        autoFocus
+                        value={data.code}
+                        onChange={(e) =>
+                            setData(
+                                "code",
+                                e.target.value.replace(/\D/g, "").slice(0, 6),
+                            )
+                        }
+                        aria-invalid={errors.code ? "true" : undefined}
+                        aria-describedby={errors.code ? "code-error" : undefined}
+                        className="dv-input text-center text-[1.5rem] font-semibold tracking-[0.5em]"
+                        placeholder="000000"
+                    />
+                    <FieldError id="code-error" message={errors.code} />
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <button
+                        type="button"
+                        onClick={resend}
+                        disabled={cooldown > 0 || resending}
+                        className="dv-tlink disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        {resending
+                            ? "Mengirim…"
+                            : cooldown > 0
+                              ? `Kirim ulang kode (${cooldown}s)`
+                              : "Kirim ulang kode"}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onChangeEmail}
+                        className="dv-tlink"
+                    >
+                        Ubah email
+                    </button>
+                </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end">
+                <button
+                    type="submit"
+                    disabled={processing || data.code.length !== 6}
+                    className="dv-btn dv-btn--accent"
+                >
+                    {processing ? "Membuat toko…" : "Verifikasi & buat toko"}
+                    {!processing && <ArrowRight size={16} strokeWidth={2.5} />}
+                </button>
+            </div>
+        </form>
+    );
+}
+
 function AccountStep({
     data,
     setData,
@@ -316,7 +480,7 @@ function AccountStep({
 }) {
     return (
         <div>
-            <p className="dv-label">Langkah 1 dari 3</p>
+            <p className="dv-label">Langkah 1 dari 4</p>
             <h2 className="dv-title mt-3">Buat akunmu</h2>
             <p
                 className="mt-2 text-[0.9375rem] leading-relaxed"
@@ -379,7 +543,7 @@ function AccountStep({
                             }
                             onChange={(e) => setData("password", e.target.value)}
                             className="dv-input dv-input--action"
-                            placeholder="Minimal 8 karakter"
+                            placeholder="Min. 8 karakter, huruf besar-kecil & angka"
                         />
                         <button
                             type="button"
@@ -399,6 +563,13 @@ function AccountStep({
                             )}
                         </button>
                     </div>
+                    <p
+                        className="text-[0.75rem]"
+                        style={{ color: "var(--dv-muted)" }}
+                    >
+                        Minimal 8 karakter, mengandung huruf besar, huruf
+                        kecil, dan angka.
+                    </p>
                     <FieldError id="password-error" message={errors.password} />
                 </div>
 
@@ -462,7 +633,7 @@ function BusinessStep({
 }) {
     return (
         <div>
-            <p className="dv-label">Langkah 2 dari 3</p>
+            <p className="dv-label">Langkah 2 dari 4</p>
             <h2 className="dv-title mt-3">Jenis usahamu apa?</h2>
             <p
                 className="mt-2 text-[0.9375rem] leading-relaxed"
@@ -564,10 +735,19 @@ function BusinessStep({
     );
 }
 
-function PlanStep({ plans, selectedPlanId, onSelect, error }) {
+function PlanStep({
+    plans,
+    selectedPlanId,
+    onSelect,
+    error,
+    turnstileSiteKey,
+    onTurnstileToken,
+    turnstileError,
+    emailError,
+}) {
     return (
         <div>
-            <p className="dv-label">Langkah 3 dari 3</p>
+            <p className="dv-label">Langkah 3 dari 4</p>
             <h2 className="dv-title mt-3">Pilih plan</h2>
             <p
                 className="mt-2 text-[0.9375rem] leading-relaxed"
@@ -616,6 +796,16 @@ function PlanStep({ plans, selectedPlanId, onSelect, error }) {
                     );
                 })}
             </div>
+
+            {/* Error email (mis. sudah terpakai / gagal kirim) baru terlihat
+                setelah submit, jadi ditampilkan di langkah ini. */}
+            <FieldError message={emailError} />
+
+            <TurnstileWidget
+                siteKey={turnstileSiteKey}
+                onToken={onTurnstileToken}
+            />
+            <FieldError message={turnstileError} />
         </div>
     );
 }

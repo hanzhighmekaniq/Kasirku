@@ -4,25 +4,22 @@ namespace App\Console\Commands;
 
 use App\Models\Plan;
 use App\Models\PlanSubscription;
-use App\Models\Store;
+use App\Models\User;
 use App\Notifications\PlanExpiredDowngraded;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Downgrade otomatis toko yang plan-nya sudah expired ke plan "free".
+ * Downgrade otomatis user yang plan-nya sudah expired ke plan "free".
  *
- * Sebelum command ini, `Store::isPlanExpired()`/`effectivePlanCode()` hanya
- * menghitung status expired secara computed (on-the-fly) — kolom `plan_id`
- * di database tidak pernah benar-benar berubah. Command ini membuat
- * downgrade itu nyata (persisted) dan mencatat riwayatnya ke
- * `plan_subscriptions`.
+ * Plan sekarang menempel ke User (bukan Store). Command ini meng-query
+ * users.plan_expires_at dan mengupdate users.plan_id ke free.
  */
 class CheckExpiredPlans extends Command
 {
     protected $signature = 'plan:check-expired';
 
-    protected $description = 'Downgrade toko yang plan-nya sudah expired ke plan free, dan catat riwayatnya';
+    protected $description = 'Downgrade user yang plan-nya sudah expired ke plan free, dan catat riwayatnya';
 
     public function handle(): int
     {
@@ -35,46 +32,43 @@ class CheckExpiredPlans extends Command
             return self::FAILURE;
         }
 
-        $expiredStores = Store::whereNotNull('plan_expires_at')
+        $expiredUsers = User::whereNotNull('plan_expires_at')
             ->where('plan_expires_at', '<', now())
             ->where('plan_id', '!=', $freePlan->id)
-            ->with('planModel', 'owner')
+            ->with('planModel')
             ->get();
 
         $count = 0;
 
-        foreach ($expiredStores as $store) {
-            $oldPlanId = $store->plan_id;
-            $previousPlanLabel = $store->planModel?->label ?? 'sebelumnya';
-            $owner = $store->owner;
+        foreach ($expiredUsers as $user) {
+            $oldPlanId = $user->plan_id;
+            $previousPlanLabel = $user->planModel?->label ?? 'sebelumnya';
 
-            $store->update([
+            $user->update([
                 'plan_id' => $freePlan->id,
                 'plan_expires_at' => null,
             ]);
 
-            PlanSubscription::where('store_id', $store->id)
+            PlanSubscription::where('user_id', $user->id)
                 ->whereNull('ended_at')
                 ->update(['ended_at' => now()]);
 
             PlanSubscription::create([
-                'store_id' => $store->id,
+                'user_id' => $user->id,
                 'plan_id' => $freePlan->id,
                 'started_at' => now(),
                 'reason' => 'trial_expired',
                 'created_by' => null,
             ]);
 
-            if ($owner) {
-                $owner->notify(new PlanExpiredDowngraded($store, $previousPlanLabel));
-            }
+            $user->notify(new PlanExpiredDowngraded($previousPlanLabel));
 
             $count++;
 
-            Log::channel('daily')->info("[plan:check-expired] Store #{$store->id} downgrade dari plan #{$oldPlanId} ke free.");
+            Log::channel('daily')->info("[plan:check-expired] User #{$user->id} downgrade dari plan #{$oldPlanId} ke free.");
         }
 
-        $this->info("Done: {$count} toko di-downgrade ke plan free.");
+        $this->info("Done: {$count} user di-downgrade ke plan free.");
 
         return self::SUCCESS;
     }

@@ -8,6 +8,7 @@ use App\Models\Store;
 use App\Models\StoreFeature;
 use App\Models\StoreType;
 use App\Models\ThemePreset;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -115,6 +116,12 @@ class HandleInertiaRequests extends Middleware
                     false,
                 ),
                 'isDeveloper' => fn () => $user?->isDeveloper() ?? false,
+                // Level akses developer — dipakai DeveloperLayout untuk
+                // menyembunyikan menu/tombol yang di luar wewenang support.
+                'isSuperAdmin' => fn () => $user?->isSuperAdmin() ?? false,
+                'developerRole' => fn () => $user?->isDeveloper()
+                    ? ($user->developer_role ?? User::DEV_SUPER_ADMIN)
+                    : null,
                 // Apakah user boleh ganti toko/cabang (owner, admin, supervisor)
                 // Karyawan biasa (kasir, gudang) false → switcher disembunyikan
                 'canSwitch' => fn () => rescue(
@@ -360,22 +367,22 @@ class HandleInertiaRequests extends Middleware
 
     private function getStorePlan(int $storeId): ?array
     {
-        $store = Store::with('planModel.features')->find($storeId);
+        $store = Store::with(['owner.planModel.features', 'planModel.features'])->find($storeId);
         if (! $store) {
             return null;
         }
 
-        $planCode = $store->effectivePlanCode();
-        $planModel = $store->planModel;
+        // Plan sekarang dari owner user — fallback ke stores.plan_id untuk seeder
+        $planModel = $store->ownerPlan();
+        $planCode = $planModel?->code ?? 'free';
+
         $maxUsers = $store->effectiveMaxUsers();
         $maxBranches = $store->effectiveMaxBranches();
 
-        // Fitur dari plan_id (DB) — fallback ke hardcoded
         $featureCodes = $planModel ? $planModel->featureCodes() : [];
 
         if (! empty($featureCodes)) {
             $label = $planModel->label;
-            // Ambil detail codes dari features yang sudah eager-loaded
             $featureIds = $planModel->features
                 ->where('is_active', true)
                 ->pluck('id')
@@ -387,8 +394,6 @@ class HandleInertiaRequests extends Middleware
                     ->toArray()
                 : [];
         } else {
-            // Fallback hardcoded (kalau pivot kosong atau plan_id null).
-            // planConfig() kini selalu punya key "features".
             $planConfig =
                 Store::planConfig()[$planCode] ??
                 Store::planConfig()['free'];
@@ -397,20 +402,24 @@ class HandleInertiaRequests extends Middleware
             $featureDetails = [];
         }
 
+        // Ambil expires_at dan is_expired dari owner user (bukan store)
+        $owner = $store->owner;
+        $expiresAt = $owner?->plan_expires_at ?? null;
+        $isExpired = $owner ? $owner->isPlanExpired() : false;
+
         return [
             'plan' => $planCode,
-            'plan_id' => $store->plan_id,
+            'plan_id' => $owner?->plan_id ?? $store->plan_id,
             'label' => $label,
             'features' => $featureCodes,
             'feature_details' => $featureDetails,
             'max_users' => $maxUsers,
             'max_branches' => $maxBranches,
-            'expires_at' => $store->plan_expires_at,
-            'is_expired' => $store->isPlanExpired(),
+            'expires_at' => $expiresAt,
+            'is_expired' => $isExpired,
             'can_add_user' => $store->canAddUser(),
             'can_add_branch' => $store->canAddBranch(),
-            // Ringkasan pemakaian 4 limit (users/branches/products/transactions)
-            // dipakai frontend untuk banner peringatan mendekati limit (>=80%).
+            // Ringkasan pemakaian 4 limit
             'usage' => $store->planUsageSummary(),
             'near_limit_threshold' => Store::NEAR_LIMIT_THRESHOLD,
         ];

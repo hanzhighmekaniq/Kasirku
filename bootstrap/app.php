@@ -10,6 +10,7 @@ use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PermissionMiddleware;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\StoreMiddleware;
+use App\Http\Middleware\SuperAdminMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'branch' => BranchMiddleware::class,
             'role' => RoleMiddleware::class,
             'developer' => DeveloperMiddleware::class,
+            'super-admin' => SuperAdminMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'active_shift' => EnsureActiveShift::class,
             'ensure.shift' => EnsureActiveShift::class,

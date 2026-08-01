@@ -3,110 +3,89 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\CustomerTier;
-use App\Models\Store;
+use App\Models\StoreType;
+use App\Models\User;
+use App\Services\StoreOnboardingService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class StoreController extends Controller
 {
     /**
-     * List all stores (developer can see all).
+     * Form tambah toko baru untuk user yang sudah punya akun.
+     * Cek limit max_stores dari plan user sebelum menampilkan form.
      */
-    public function index()
+    public function create(): Response|RedirectResponse
     {
-        $stores = Store::withCount('branches')->withCount('users')->get();
+        /** @var User $user */
+        $user = Auth::user();
 
-        return Inertia::render('Admin/Stores/Index', [
-            'stores' => $stores,
+        if (! $user->canAddStore()) {
+            $maxStores = $user->planModel?->max_stores ?? 1;
+            $planLabel = $user->planModel?->label ?? 'kamu';
+
+            return redirect()->route('admin.plan.index')->with(
+                'error',
+                "Paket {$planLabel} hanya mengizinkan {$maxStores} toko. Upgrade paket untuk menambah toko baru.",
+            );
+        }
+
+        $storeTypes = StoreType::where('is_active', true)
+            ->orderBy('sort_order')
+            ->with([
+                'businessTemplates' => fn ($q) => $q->ready()->active()->ordered(),
+            ])
+            ->get()
+            ->map(fn (StoreType $type) => [
+                'id' => $type->id,
+                'code' => $type->code,
+                'label' => $type->label,
+                'icon' => $type->icon,
+                'description' => $type->description,
+                'business_templates' => $type->businessTemplates->map(fn ($t) => [
+                    'code' => $t->code,
+                    'label' => $t->label,
+                    'icon' => $t->icon,
+                ])->values(),
+            ])
+            ->values();
+
+        return Inertia::render('Admin/Stores/Create', [
+            'storeTypes' => $storeTypes,
         ]);
     }
 
     /**
-     * Show form to create a new store.
+     * Buat toko baru untuk user yang sudah login.
      */
-    public function create()
+    public function store(Request $request): RedirectResponse
     {
-        return Inertia::render('Admin/Stores/Create');
-    }
+        /** @var User $user */
+        $user = Auth::user();
 
-    /**
-     * Store a newly created store.
-     */
-    public function store(Request $request)
-    {
+        if (! $user->canAddStore()) {
+            return back()->with('error', 'Batas toko dari paket kamu sudah tercapai. Upgrade paket untuk menambah toko baru.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'store_type_id' => 'required|exists:store_types,id',
-            'address' => 'nullable|string|max:500',
-            'phone' => 'nullable|string|max:20',
+            'store_type_id' => ['required', 'integer', 'exists:store_types,id'],
+            'business_template_code' => ['nullable', 'string', 'exists:business_templates,code'],
         ]);
 
-        $store = Store::create($validated);
-
-        // Tier bawaan dibuat di sini supaya store baru langsung siap tanpa
-        // harus masuk ke menu "Level Tier" lebih dulu.
-        CustomerTier::seedDefaultsForStore($store->id);
-
-        // Auto-seed metode pembayaran wajib (Tunai + Hutang/Kasbon)
-        $store->paymentMethods()->create([
-            'code' => 'CASH_'.$store->id,
-            'name' => 'Tunai',
-            'type' => 'cash',
-            'is_active' => true,
-            'sort_order' => 0,
-        ]);
-        $store->paymentMethods()->create([
-            'code' => 'DEBT_'.$store->id,
-            'name' => 'Hutang / Kasbon',
-            'type' => 'debt',
-            'is_active' => true,
-            'sort_order' => 1,
-        ]);
+        $store = DB::transaction(fn () => app(StoreOnboardingService::class)->addStore(
+            user: $user,
+            storeName: $validated['name'],
+            storeTypeId: $validated['store_type_id'],
+            businessTemplateCode: $validated['business_template_code'] ?? null,
+        ));
 
         return redirect()
-            ->route('admin.stores.index')
-            ->with('success', 'Toko berhasil dibuat.');
-    }
-
-    /**
-     * Edit a store.
-     */
-    public function edit(Store $store)
-    {
-        return Inertia::render('Admin/Stores/Edit', [
-            'store' => $store,
-        ]);
-    }
-
-    /**
-     * Update a store.
-     */
-    public function update(Request $request, Store $store)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'store_type_id' => 'required|exists:store_types,id',
-            'address' => 'nullable|string|max:500',
-            'phone' => 'nullable|string|max:20',
-        ]);
-
-        $store->update($validated);
-
-        return redirect()
-            ->route('admin.stores.index')
-            ->with('success', 'Toko berhasil diupdate.');
-    }
-
-    /**
-     * Remove a store.
-     */
-    public function destroy(Store $store)
-    {
-        $store->delete();
-
-        return redirect()
-            ->route('admin.stores.index')
-            ->with('success', 'Toko berhasil dihapus.');
+            ->route('admin.dashboard')
+            ->with('success', "Toko \"{$store->name}\" berhasil dibuat! Kamu sudah masuk ke toko ini.");
     }
 }

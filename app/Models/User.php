@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -15,10 +16,28 @@ class User extends Authenticatable
 {
     use HasFactory, HasRoles, Notifiable;
 
+    /** Akses penuh ke seluruh panel developer. */
+    public const DEV_SUPER_ADMIN = 'super_admin';
+
+    /**
+     * Hanya baca + impersonate + catatan internal. Tidak boleh menghapus
+     * toko, mengubah plan, atau mengubah data konfigurasi platform.
+     */
+    public const DEV_SUPPORT = 'support';
+
+    /** @var array<string, string> */
+    public const DEVELOPER_ROLES = [
+        self::DEV_SUPER_ADMIN => 'Super Admin',
+        self::DEV_SUPPORT => 'Support',
+    ];
+
     protected $fillable = [
         'name',
         'email',
         'is_developer',
+        'developer_role',
+        'plan_id',
+        'plan_expires_at',
         'password',
         'session_token',
         'theme_preference',
@@ -33,12 +52,29 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_developer' => 'boolean',
+            'plan_expires_at' => 'date',
             'theme_preference' => 'array',
             'sidebar_preference' => 'array',
         ];
     }
 
     // --- Relationships ---
+
+    /** Plan yang dimiliki user — sumber kebenaran billing sekarang. */
+    public function planModel(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class, 'plan_id');
+    }
+
+    public function planOrders(): HasMany
+    {
+        return $this->hasMany(PlanOrder::class);
+    }
+
+    public function planSubscriptions(): HasMany
+    {
+        return $this->hasMany(PlanSubscription::class);
+    }
 
     public function stores(): BelongsToMany
     {
@@ -92,7 +128,36 @@ class User extends Authenticatable
         return $this->hasMany(Purchase::class);
     }
 
-    // --- Helpers ---
+    // --- Plan helpers ---
+
+    /** Plan efektif user — fallback ke free kalau tidak punya plan atau expired. */
+    public function effectivePlanCode(): string
+    {
+        if ($this->isPlanExpired()) {
+            return 'free';
+        }
+
+        return $this->planModel?->code ?? 'free';
+    }
+
+    public function isPlanExpired(): bool
+    {
+        return $this->plan_expires_at !== null
+            && $this->plan_expires_at->isPast();
+    }
+
+    /** Apakah user masih bisa membuat toko baru (cek max_stores). */
+    public function canAddStore(): bool
+    {
+        $max = $this->planModel?->max_stores;
+        if ($max === null || $max >= 999) {
+            return true;
+        }
+
+        return $this->stores()->count() < $max;
+    }
+
+    // --- Developer helpers ---
 
     /**
      * Developer adalah flag kolom, bukan Spatie role.
@@ -102,6 +167,27 @@ class User extends Authenticatable
     public function isDeveloper(): bool
     {
         return (bool) $this->is_developer;
+    }
+
+    /**
+     * Super admin — akses penuh panel developer.
+     *
+     * Developer lama (sebelum kolom developer_role ada) di-backfill jadi
+     * super_admin lewat migrasi. Nilai null pada developer yang aktif
+     * tetap diperlakukan sebagai super admin supaya tidak ada developer
+     * yang tiba-tiba kehilangan akses karena data belum terisi.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->isDeveloper()
+            && $this->developer_role !== self::DEV_SUPPORT;
+    }
+
+    /** Support agent — hanya baca + impersonate + catatan internal. */
+    public function isSupportAgent(): bool
+    {
+        return $this->isDeveloper()
+            && $this->developer_role === self::DEV_SUPPORT;
     }
 
     /** Shortcut: cek apakah user bisa akses operasional (semua kecuali developer) */

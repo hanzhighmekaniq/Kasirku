@@ -24,6 +24,62 @@ use Spatie\Permission\PermissionRegistrar;
 class StoreOnboardingService
 {
     /**
+     * Tambah toko baru untuk user yang sudah ada (self-service).
+     * User sudah login — tidak perlu buat akun baru.
+     * Plan tetap milik user, tidak berubah.
+     */
+    public function addStore(
+        User $user,
+        string $storeName,
+        int $storeTypeId,
+        ?string $businessTemplateCode,
+    ): Store {
+        $storeType = StoreType::findOrFail($storeTypeId);
+
+        $store = Store::create([
+            'user_id' => $user->id,
+            'code' => $this->generateUniqueStoreCode($storeName),
+            'name' => $storeName,
+            'store_type_id' => $storeType->id,
+            'is_active' => true,
+            'max_users' => null,
+            'max_branches' => null,
+        ]);
+
+        $store->branches()->create([
+            'code' => 'PUSAT',
+            'name' => 'Cabang Pusat',
+            'is_active' => true,
+        ]);
+
+        StoreRoleService::createRolesForStore($store->id);
+        $this->assignOwnerRole($user, $store->id);
+        $store->users()->syncWithoutDetaching([$user->id]);
+
+        $store->paymentMethods()->create([
+            'code' => 'CASH_'.$store->id,
+            'name' => 'Tunai',
+            'type' => 'cash',
+            'is_active' => true,
+            'sort_order' => 0,
+        ]);
+        $store->paymentMethods()->create([
+            'code' => 'DEBT_'.$store->id,
+            'name' => 'Hutang / Kasbon',
+            'type' => 'debt',
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        CustomerTier::seedDefaultsForStore($store->id);
+        BusinessTemplateService::apply($store, $businessTemplateCode);
+
+        return $store;
+    }
+
+    /**
+     * Registrasi dengan password plaintext (di-hash di sini).
+     *
      * @param  array{name: string, email: string, password: string}  $account
      */
     public function register(
@@ -32,19 +88,59 @@ class StoreOnboardingService
         ?string $businessTemplateCode,
         int $planId,
     ): User {
+        return $this->createUserAndStore(
+            name: $account['name'],
+            email: $account['email'],
+            hashedPassword: Hash::make($account['password']),
+            storeTypeId: $storeTypeId,
+            businessTemplateCode: $businessTemplateCode,
+            planId: $planId,
+        );
+    }
+
+    /**
+     * Registrasi setelah verifikasi OTP — password sudah di-hash sejak
+     * kode dikirim, jadi TIDAK boleh di-hash ulang di sini.
+     *
+     * @param  array{name: string, email: string, hashed_password: string}  $account
+     */
+    public function registerVerified(
+        array $account,
+        int $storeTypeId,
+        ?string $businessTemplateCode,
+        int $planId,
+    ): User {
+        return $this->createUserAndStore(
+            name: $account['name'],
+            email: $account['email'],
+            hashedPassword: $account['hashed_password'],
+            storeTypeId: $storeTypeId,
+            businessTemplateCode: $businessTemplateCode,
+            planId: $planId,
+        );
+    }
+
+    private function createUserAndStore(
+        string $name,
+        string $email,
+        string $hashedPassword,
+        int $storeTypeId,
+        ?string $businessTemplateCode,
+        int $planId,
+    ): User {
         $storeType = StoreType::findOrFail($storeTypeId);
         $plan = Plan::findOrFail($planId);
 
         $user = User::create([
-            'name' => $account['name'],
-            'email' => $account['email'],
-            'password' => Hash::make($account['password']),
+            'name' => $name,
+            'email' => $email,
+            'password' => $hashedPassword,
         ]);
 
         $store = Store::create([
             'user_id' => $user->id,
-            'code' => $this->generateUniqueStoreCode($account['name']),
-            'name' => $account['name']."'s Store",
+            'code' => $this->generateUniqueStoreCode($name),
+            'name' => $name."'s Store",
             'store_type_id' => $storeType->id,
             'is_active' => true,
             'plan_id' => $plan->id,
@@ -63,7 +159,7 @@ class StoreOnboardingService
         ]);
 
         PlanSubscription::create([
-            'store_id' => $store->id,
+            'user_id' => $user->id,
             'plan_id' => $plan->id,
             'started_at' => now(),
             'reason' => 'initial',

@@ -23,6 +23,9 @@ const NON_SIDEBAR_ROUTES = [
     'admin.branch.select',  // switcher cabang → redirect
     'admin.store.select',  // switcher toko → redirect
     'admin.theme.picker',  // redirect lama ke admin.themes.index
+    'admin.plan.index',    // halaman billing/upgrade plan — diakses dari banner/notifikasi, bukan sidebar
+    'admin.plan.confirm',  // halaman konfirmasi order upgrade — flow billing, bukan sidebar
+    'admin.stores.create', // form tambah toko baru — diakses dari banner/plan, bukan sidebar
 ];
 
 /**

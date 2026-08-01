@@ -61,6 +61,18 @@ class PlatformPaymentGateway extends Model
     // ── Helpers ───────────────────────────────────
 
     /**
+     * Apakah ada minimal satu Payment Gateway aktif di platform?
+     *
+     * Dipakai untuk mendeteksi mode billing:
+     *   - true  → mode otomatis (redirect ke PG)
+     *   - false → mode manual (instruksi transfer + kontak admin)
+     */
+    public static function hasActiveGateway(): bool
+    {
+        return self::where('is_active', true)->exists();
+    }
+
+    /**
      * @return array<string, array{label: string, methods: string[], fields: string[]}>
      */
     public static function availableProviders(): array

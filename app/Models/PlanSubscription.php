@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Riwayat perubahan plan sebuah toko — dicatat setiap kali plan berubah
+ * Riwayat perubahan plan seorang user — dicatat setiap kali plan berubah
  * (registrasi awal, upgrade/downgrade manual oleh developer, atau otomatis
  * saat trial expired via command `plan:check-expired`).
  *
@@ -18,7 +18,7 @@ class PlanSubscription extends Model
     use HasFactory;
 
     public const REASONS = [
-        'initial' => 'Plan awal saat toko dibuat',
+        'initial' => 'Plan awal saat akun dibuat',
         'upgraded' => 'Upgrade plan',
         'downgraded' => 'Downgrade plan',
         'trial_expired' => 'Trial habis, otomatis turun ke Free',
@@ -27,7 +27,7 @@ class PlanSubscription extends Model
     ];
 
     protected $fillable = [
-        'store_id',
+        'user_id',
         'plan_id',
         'started_at',
         'ended_at',
@@ -43,9 +43,9 @@ class PlanSubscription extends Model
         ];
     }
 
-    public function store(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Store::class);
+        return $this->belongsTo(User::class);
     }
 
     public function plan(): BelongsTo
