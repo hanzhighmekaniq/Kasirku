@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 
 class Store extends Model
 {
@@ -33,8 +34,6 @@ class Store extends Model
         'email',
         'address',
         'is_active',
-        'plan_id',
-        'plan_expires_at',
         'max_users',
         'max_branches',
     ];
@@ -143,12 +142,11 @@ class Store extends Model
     }
 
     /**
-     * Plan efektif toko — dari owner user, fallback ke stores.plan_id.
+     * Plan efektif toko — dari owner user, fallback ke plan "free".
      *
      * Prioritas:
      *   1. users.plan_id (arsitektur baru — plan per akun)
-     *   2. stores.plan_id (backward compat: seeder + test lama)
-     *   3. plan "free" dari DB
+     *   2. plan "free" dari DB
      */
     public function ownerPlan(): ?Plan
     {
@@ -156,8 +154,8 @@ class Store extends Model
             return $this->owner->planModel ?? Plan::where('code', 'free')->first();
         }
 
-        // Fallback ke stores.plan_id (seeder user_id null, test lama)
-        if ($this->plan_id) {
+        // Fallback ke stores.plan_id (seeder user_id null) — hanya jika kolom ada
+        if (Schema::hasColumn('stores', 'plan_id') && $this->plan_id) {
             return $this->planModel ?? Plan::where('code', 'free')->first();
         }
 
@@ -636,8 +634,9 @@ class Store extends Model
     /** Plan expired? */
     public function isPlanExpired(): bool
     {
-        return $this->plan_expires_at !== null &&
-            $this->plan_expires_at->isPast();
+        $expiresAt = $this->owner?->plan_expires_at;
+
+        return $expiresAt !== null && $expiresAt->isPast();
     }
 
     /** Kode plan efektif (fallback ke free jika expired) */
@@ -647,7 +646,7 @@ class Store extends Model
             return 'free';
         }
 
-        return $this->planModel?->code ?? 'free';
+        return $this->ownerPlan()?->code ?? 'free';
     }
 
     /** @deprecated Gunakan effectivePlanCode() */

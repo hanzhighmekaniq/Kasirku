@@ -48,9 +48,10 @@ function actAsMembershipOwner(): array
     ]);
     $plan->features()->attach(collect($features)->pluck('id'));
 
+    $user = User::factory()->create(['plan_id' => $plan->id]);
     $store = Store::create([
-        'user_id' => null, 'code' => 'MBRPG'.uniqid(), 'name' => 'Membership Pages Store',
-        'store_type_id' => $storeType->id, 'plan_id' => $plan->id,
+        'user_id' => $user->id, 'code' => 'MBRPG'.uniqid(), 'name' => 'Membership Pages Store',
+        'store_type_id' => $storeType->id,
     ]);
 
     CustomerTier::seedDefaultsForStore($store->id);
@@ -59,7 +60,6 @@ function actAsMembershipOwner(): array
         'store_id' => $store->id, 'code' => 'BR001', 'name' => 'Main', 'is_active' => true,
     ]);
 
-    $user = User::factory()->create();
     $store->users()->attach($user->id);
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
@@ -224,7 +224,6 @@ test('membership milik toko lain tidak bisa dilihat atau diedit', function () {
         'code' => 'OTHER1',
         'name' => 'Toko Lain',
         'store_type_id' => $store->store_type_id,
-        'plan_id' => $store->plan_id,
     ]);
 
     $foreign = makeMembership($otherStore->id, ['code' => 'FRGN01']);

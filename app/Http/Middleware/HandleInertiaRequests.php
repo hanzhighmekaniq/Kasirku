@@ -412,7 +412,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             'plan' => $planCode,
-            'plan_id' => $owner?->plan_id ?? $store->plan_id,
+            'plan_id' => $owner?->plan_id,
             'label' => $label,
             'features' => $featureCodes,
             'feature_details' => $featureDetails,

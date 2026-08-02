@@ -199,8 +199,8 @@ test('correct code creates the account, store, and logs the user in', function (
     expect($store)->not->toBeNull();
     expect($store->user_id)->toBe($user->id);
     expect($store->store_type_id)->toBe($storeType->id);
-    expect($store->plan_id)->toBe($plan->id);
-    expect($store->plan_expires_at->isSameDay(now()->addDays(14)))->toBeTrue();
+    expect($user->fresh()->plan_id)->toBe($plan->id);
+    expect($user->fresh()->plan_expires_at->isSameDay(now()->addDays(14)))->toBeTrue();
     expect($store->branches()->count())->toBe(1);
     expect($store->paymentMethods()->count())->toBe(2);
 

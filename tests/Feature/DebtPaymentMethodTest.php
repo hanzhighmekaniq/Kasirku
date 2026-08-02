@@ -44,12 +44,12 @@ function setupDebtPaymentContext(): array
     $plan = Plan::create(['code' => 'basic', 'label' => 'Basic', 'is_active' => true, 'sort_order' => 0, 'price' => 0]);
     $plan->features()->attach(Feature::pluck('id'));
 
+    $user = User::factory()->create(['plan_id' => $plan->id]);
     $store = Store::create([
-        'user_id' => null,
+        'user_id' => $user->id,
         'code' => 'DBT'.uniqid(),
         'name' => 'Toko Kasbon',
         'store_type_id' => $storeType->id,
-        'plan_id' => $plan->id,
     ]);
 
     $branch = Branch::create([
@@ -71,7 +71,6 @@ function setupDebtPaymentContext(): array
         'type' => 'debt', 'is_active' => true,
     ]);
 
-    $user = User::factory()->create();
     $store->users()->attach($user->id);
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
@@ -167,7 +166,6 @@ test('metode pembayaran milik toko lain ditolak', function () {
         'code' => 'OTHER'.uniqid(),
         'name' => 'Toko Lain',
         'store_type_id' => $store->store_type_id,
-        'plan_id' => $store->plan_id,
     ]);
 
     $foreignMethod = PaymentMethod::create([

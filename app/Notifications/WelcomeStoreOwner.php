@@ -34,8 +34,8 @@ class WelcomeStoreOwner extends Notification implements ShouldQueue
             ->line('Kamu bisa langsung login untuk mulai mengatur produk, kategori, dan mulai berjualan.')
             ->action('Masuk ke Dashboard', route('login'));
 
-        if ($this->store->plan_expires_at) {
-            $mail->line("Kamu sedang menikmati trial sampai {$this->store->plan_expires_at->translatedFormat('d F Y')}. Setelah itu, akun otomatis turun ke plan Free kecuali kamu upgrade.");
+        if ($notifiable->plan_expires_at) {
+            $mail->line("Kamu sedang menikmati trial sampai {$notifiable->plan_expires_at->translatedFormat('d F Y')}. Setelah itu, akun otomatis turun ke plan Free kecuali kamu upgrade.");
         }
 
         return $mail->line('Terima kasih sudah bergabung!');

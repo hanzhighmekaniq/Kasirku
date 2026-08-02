@@ -118,23 +118,27 @@ class DashboardController extends Controller
     private function businessMetrics(): array
     {
         $mrr = Store::query()
-            ->join('plans', 'plans.id', '=', 'stores.plan_id')
+            ->join('users', 'users.id', '=', 'stores.user_id')
+            ->join('plans', 'plans.id', '=', 'users.plan_id')
             ->where('stores.is_active', true)
             ->sum('plans.price');
 
         $planDistribution = Store::query()
-            ->join('plans', 'plans.id', '=', 'stores.plan_id')
+            ->join('users', 'users.id', '=', 'stores.user_id')
+            ->join('plans', 'plans.id', '=', 'users.plan_id')
             ->select('plans.code as plan_code', 'plans.label as plan_label', DB::raw('count(*) as total'))
             ->groupBy('plans.code', 'plans.label')
             ->orderByDesc('total')
             ->get();
 
-        $trialActive = Store::whereNotNull('plan_expires_at')
+        $trialActive = User::whereNotNull('plan_expires_at')
             ->where('plan_expires_at', '>=', now())
+            ->where('is_developer', false)
             ->count();
 
-        $trialExpiredNotSwept = Store::whereNotNull('plan_expires_at')
+        $trialExpiredNotSwept = User::whereNotNull('plan_expires_at')
             ->where('plan_expires_at', '<', now())
+            ->where('is_developer', false)
             ->count();
 
         // Growth toko baru per bulan, 6 bulan terakhir (termasuk bulan ini)

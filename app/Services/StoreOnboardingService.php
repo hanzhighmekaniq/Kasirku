@@ -135,6 +135,10 @@ class StoreOnboardingService
             'name' => $name,
             'email' => $email,
             'password' => $hashedPassword,
+            'plan_id' => $plan->id,
+            'plan_expires_at' => $plan->trial_days > 0
+                ? now()->addDays($plan->trial_days)
+                : null,
         ]);
 
         $store = Store::create([
@@ -143,11 +147,6 @@ class StoreOnboardingService
             'name' => $name."'s Store",
             'store_type_id' => $storeType->id,
             'is_active' => true,
-            'plan_id' => $plan->id,
-            'plan_expires_at' => $plan->trial_days > 0
-                ? now()->addDays($plan->trial_days)
-                : null,
-            // max_users & max_branches null → ikut limit plan
             'max_users' => null,
             'max_branches' => null,
         ]);

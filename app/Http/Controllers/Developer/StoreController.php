@@ -184,9 +184,6 @@ class StoreController extends Controller
         ]);
 
         DB::transaction(function () use ($validated) {
-            // Resolve plan
-            $planId = $validated['plan_id'] ?? null;
-
             // 1. Buat store (modules tidak perlu lagi, fitur diambil dari relasi)
             $store = Store::create([
                 'code' => strtoupper($validated['code']),
@@ -196,7 +193,6 @@ class StoreController extends Controller
                 'email' => $validated['email'] ?? null,
                 'address' => $validated['address'] ?? null,
                 'is_active' => $validated['is_active'] ?? true,
-                'plan_id' => $planId,
                 // max_users & max_branches null → ikut plan
                 'max_users' => null,
                 'max_branches' => null,
@@ -236,6 +232,7 @@ class StoreController extends Controller
                     'name' => $no['name'],
                     'email' => $no['email'],
                     'password' => Hash::make($no['password']),
+                    'plan_id' => $validated['plan_id'] ?? null,
                 ]);
                 $store->users()->syncWithoutDetaching([$newUser->id]);
                 $this->assignOwnerRole($newUser, $store->id);
@@ -261,7 +258,7 @@ class StoreController extends Controller
             CustomerTier::seedDefaultsForStore($store->id);
 
             DeveloperActionLog::record('store.create', $store, null, $store->only([
-                'code', 'name', 'store_type_id', 'plan_id', 'is_active',
+                'code', 'name', 'store_type_id', 'is_active',
             ]));
         });
 
@@ -354,8 +351,8 @@ class StoreController extends Controller
             'store_type' => $storeTypeRelation?->code,
             'store_type_id' => $store->store_type_id,
             'plan' => $planModelRelation?->code,
-            'plan_id' => $store->plan_id,
-            'plan_expires_at' => $store->plan_expires_at,
+            'plan_id' => $store->owner?->plan_id,
+            'plan_expires_at' => $store->owner?->plan_expires_at,
             'max_users' => $store->max_users,
             'max_branches' => $store->max_branches,
             'phone' => $store->phone,
@@ -469,8 +466,8 @@ class StoreController extends Controller
             'store_type' => $storeTypeRelation?->code,
             'store_type_id' => $store->store_type_id,
             'plan' => $planModelRelation?->code,
-            'plan_id' => $store->plan_id,
-            'plan_expires_at' => $store->plan_expires_at,
+            'plan_id' => $store->owner?->plan_id,
+            'plan_expires_at' => $store->owner?->plan_expires_at,
             'max_users' => $store->max_users,
             'max_branches' => $store->max_branches,
             'phone' => $store->phone,
@@ -622,7 +619,8 @@ class StoreController extends Controller
             ]);
         }
 
-        $snapshot = $store->only(['id', 'code', 'name', 'store_type_id', 'plan_id']);
+        $snapshot = $store->only(['id', 'code', 'name', 'store_type_id']);
+        $snapshot['plan_id'] = $store->owner?->plan_id;
         DeveloperActionLog::record('store.destroy', $store, $snapshot, null);
 
         $store->delete();

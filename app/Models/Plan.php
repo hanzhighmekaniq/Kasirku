@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Plan extends Model
 {
@@ -51,11 +52,11 @@ class Plan extends Model
     // --- Relationships ---
 
     /**
-     * Stores yang menggunakan plan ini
+     * Stores yang menggunakan plan ini (via owner user).
      */
-    public function stores(): HasMany
+    public function stores(): HasManyThrough
     {
-        return $this->hasMany(Store::class, 'plan_id');
+        return $this->hasManyThrough(Store::class, User::class, 'plan_id', 'user_id');
     }
 
     /**

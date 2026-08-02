@@ -141,8 +141,9 @@ class PlanOrder extends Model
      */
     public static function calculateActiveUntil(Store $store, string $billingPeriod): Carbon
     {
-        $base = ($store->plan_expires_at && $store->plan_expires_at->isFuture())
-            ? $store->plan_expires_at
+        $expiresAt = $store->owner?->plan_expires_at;
+        $base = ($expiresAt && $expiresAt->isFuture())
+            ? $expiresAt
             : now();
 
         return match ($billingPeriod) {
