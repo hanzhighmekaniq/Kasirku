@@ -73,14 +73,25 @@ class RegisteredUserController extends Controller
             'cf_turnstile_response' => ['nullable', 'string', new Turnstile],
         ]);
 
-        $otp = RegistrationOtp::issueFor($validated['email'], [
-            'name' => $validated['name'],
-            // Password sudah di-hash sejak tahap ini — plaintext tidak pernah
-            // tersimpan, bahkan sementara.
-            'password' => Hash::make($validated['password']),
-        ]);
+        try {
+            $otp = RegistrationOtp::issueFor($validated['email'], [
+                'name' => $validated['name'],
+                'password' => Hash::make($validated['password']),
+            ]);
 
-        $this->sendCode($otp);
+            $this->sendCode($otp);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('[Registrasi] Gagal memproses registrasi: '.$e->getMessage(), [
+                'email' => $validated['email'],
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            throw ValidationException::withMessages([
+                'email' => 'Terjadi kesalahan saat memproses pendaftaran. Silakan coba lagi.',
+            ]);
+        }
 
         $request->session()->put(self::PENDING_EMAIL_KEY, $otp->email);
 
@@ -176,7 +187,19 @@ class RegisteredUserController extends Controller
         // Kode baru + reset percobaan, data form yang ditahan tetap dipakai.
         $otp = RegistrationOtp::issueFor($otp->email, $otp->payload);
 
-        $this->sendCode($otp);
+        try {
+            $this->sendCode($otp);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('[Registrasi] Gagal mengirim ulang kode OTP: '.$e->getMessage(), [
+                'email' => $otp->email,
+            ]);
+
+            throw ValidationException::withMessages([
+                'email' => 'Gagal mengirim kode. Silakan coba lagi.',
+            ]);
+        }
 
         return back()->with('status', 'otp-resent');
     }
