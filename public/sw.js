@@ -1,4 +1,4 @@
-const CACHE_NAME = "simkasir-v4";
+const CACHE_NAME = "simkasir-v5";
 const STATIC_ASSETS = [
     "/manifest.json",
     "/images/icon-192x192.png",
@@ -92,8 +92,9 @@ self.addEventListener("fetch", (event) => {
 
     // ---- 2. Inertia page navigations & same-origin navigations: network-first ----
     if (
-        request.mode === "navigate" ||
-        request.headers.get("X-Inertia") === "true"
+        request.method === "GET" &&
+        (request.mode === "navigate" ||
+        request.headers.get("X-Inertia") === "true")
     ) {
         event.respondWith(networkFirstWithFallback(request));
         return;
@@ -124,7 +125,7 @@ async function cacheFirst(request) {
 async function networkFirstWithFallback(request) {
     try {
         const response = await fetch(request);
-        if (response.ok) {
+        if (response.ok && request.method === "GET") {
             const cache = await caches.open(CACHE_NAME);
             cache.put(request, response.clone());
         }

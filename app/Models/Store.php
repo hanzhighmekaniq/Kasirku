@@ -34,6 +34,8 @@ class Store extends Model
         'email',
         'address',
         'is_active',
+        'plan_id',
+        'plan_expires_at',
         'max_users',
         'max_branches',
     ];
