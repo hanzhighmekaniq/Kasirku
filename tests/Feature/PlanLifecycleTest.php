@@ -12,7 +12,6 @@
 
 use App\Models\Plan;
 use App\Models\PlanSubscription;
-use App\Models\RegistrationOtp;
 use App\Models\Store;
 use App\Models\StoreType;
 use App\Models\User;
@@ -122,35 +121,31 @@ test('command marks previous open subscription entry as ended', function () {
 
 // ── Registrasi mencatat riwayat plan awal ─────────────────────────────────
 
-test('registration creates initial plan subscription history entry', function () {
+test('onboarding creates initial plan subscription history entry', function () {
     $this->seed(PermissionSeeder::class);
 
     $storeType = StoreType::create(['code' => 'fnb', 'label' => 'F&B', 'is_active' => true, 'sort_order' => 1]);
-    $plan = Plan::create(['code' => 'business', 'label' => 'Business', 'price' => 79000, 'trial_days' => 14, 'is_active' => true, 'sort_order' => 1]);
+    $freePlan = Plan::create(['code' => 'free', 'label' => 'Free', 'price' => 0, 'trial_days' => 0, 'is_active' => true, 'sort_order' => 0]);
+    $businessPlan = Plan::create(['code' => 'business', 'label' => 'Business', 'price' => 79000, 'trial_days' => 14, 'is_active' => true, 'sort_order' => 1]);
 
-    $this->post('/register', [
-        'name' => 'Test User',
-        'email' => 'lifecycle@example.com',
-        'password' => 'Password123',
-        'password_confirmation' => 'Password123',
+    // Registrasi hanya buat user (tanpa store). Plan subscription
+    // dicatat saat onboarding, bukan saat registrasi.
+    $user = User::factory()->create(['plan_id' => $freePlan->id]);
+
+    $this->actingAs($user);
+
+    $this->post('/onboarding', [
         'store_type_id' => $storeType->id,
         'business_template_code' => null,
-        'plan_id' => $plan->id,
+        'plan_id' => $businessPlan->id,
+        'store_name' => 'Toko Lifecycle',
     ]);
-
-    $otp = RegistrationOtp::where('email', 'lifecycle@example.com')->first();
-    $this->post('/register/verify', [
-        'email' => 'lifecycle@example.com',
-        'code' => $otp->code,
-    ]);
-
-    $user = User::where('email', 'lifecycle@example.com')->first();
 
     // Riwayat subscription sekarang di user, bukan store
     $history = PlanSubscription::where('user_id', $user->id)->get();
     expect($history)->toHaveCount(1);
     expect($history->first()->reason)->toBe('initial');
-    expect($history->first()->plan_id)->toBe($plan->id);
+    expect($history->first()->plan_id)->toBe($businessPlan->id);
     expect($history->first()->ended_at)->toBeNull();
 });
 

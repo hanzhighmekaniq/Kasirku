@@ -12,7 +12,6 @@
 */
 
 use App\Models\Plan;
-use App\Models\RegistrationOtp;
 use App\Models\Store;
 use App\Models\StoreType;
 use App\Models\User;
@@ -47,34 +46,25 @@ function notificationTestStore(User $owner, array $overrides = []): Store
 
 // ── WelcomeStoreOwner ──────────────────────────────────────────────────────
 
-test('registration sends welcome notification to the new owner', function () {
+test('onboarding sends welcome notification to the new owner', function () {
     Notification::fake();
     $this->seed(PermissionSeeder::class);
 
     $storeType = StoreType::create(['code' => 'fnb', 'label' => 'F&B', 'is_active' => true, 'sort_order' => 1]);
-    $plan = Plan::create(['code' => 'business', 'label' => 'Business', 'price' => 79000, 'trial_days' => 14, 'is_active' => true, 'sort_order' => 1]);
+    $plan = Plan::create(['code' => 'free', 'label' => 'Free', 'price' => 0, 'trial_days' => 0, 'is_active' => true, 'sort_order' => 0]);
 
-    // Tahap 1 — kirim kode OTP. Akun belum dibuat di sini.
-    $this->post('/register', [
-        'name' => 'Welcome User',
-        'email' => 'welcome@example.com',
-        'password' => 'Password123',
-        'password_confirmation' => 'Password123',
+    // Registrasi hanya buat user (tanpa store), welcome notification
+    // dikirim saat onboarding, bukan saat registrasi.
+    $user = User::factory()->create(['plan_id' => $plan->id]);
+
+    $this->actingAs($user);
+
+    $this->post('/onboarding', [
         'store_type_id' => $storeType->id,
         'business_template_code' => null,
         'plan_id' => $plan->id,
+        'store_name' => 'Toko Welcome',
     ]);
-
-    // Tahap 2 — verifikasi kode, di sinilah User & Store dibuat dan
-    // welcome notification dikirim.
-    $otp = RegistrationOtp::where('email', 'welcome@example.com')->first();
-    $this->post('/register/verify', [
-        'email' => 'welcome@example.com',
-        'code' => $otp->code,
-    ]);
-
-    $user = User::where('email', 'welcome@example.com')->first();
-    expect($user)->not->toBeNull();
 
     Notification::assertSentTo($user, WelcomeStoreOwner::class);
 });

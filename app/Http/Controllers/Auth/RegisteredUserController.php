@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Plan;
 use App\Models\RegistrationOtp;
-use App\Models\Store;
-use App\Models\StoreType;
 use App\Models\User;
 use App\Notifications\RegistrationOtpCode;
 use App\Rules\Turnstile;
-use App\Services\StoreOnboardingService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,11 +22,12 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Registrasi mandiri dua tahap.
+ * Registrasi mandiri dua tahap (hanya akun, tanpa toko).
  *
  *  1. store()     — validasi form + captcha, kirim kode OTP ke email.
- *                   User & Store BELUM dibuat di tahap ini.
- *  2. verifyOtp() — kode benar → User & Store baru dibuat, lalu login.
+ *                   User BELUM dibuat di tahap ini.
+ *  2. verifyOtp() — kode benar → User baru dibuat (plan Free), lalu login
+ *                   → redirect ke halaman onboarding untuk buat toko.
  *
  * Verifikasi email bersifat WAJIB: tidak ada jalur yang membuat akun tanpa
  * kode terverifikasi. Data form ditahan sementara di tabel
@@ -41,30 +40,6 @@ class RegisteredUserController extends Controller
 
     public function create(Request $request): Response
     {
-        $storeTypes = StoreType::where('is_active', true)
-            ->orderBy('sort_order')
-            ->with([
-                'businessTemplates' => fn ($q) => $q
-                    ->ready()
-                    ->active()
-                    ->ordered(),
-            ])
-            ->get()
-            ->map(fn (StoreType $type) => [
-                'id' => $type->id,
-                'code' => $type->code,
-                'label' => $type->label,
-                'icon' => $type->icon,
-                'description' => $type->description,
-                'business_templates' => $type->businessTemplates->map(fn ($t) => [
-                    'code' => $t->code,
-                    'label' => $t->label,
-                    'icon' => $t->icon,
-                    'description' => $t->description,
-                ])->values(),
-            ])
-            ->values();
-
         // Kalau user menutup browser di tengah proses lalu kembali, dan kode
         // OTP-nya masih berlaku, biarkan dia langsung lanjut ke tahap
         // verifikasi tanpa mengisi ulang seluruh form.
@@ -79,15 +54,13 @@ class RegisteredUserController extends Controller
         }
 
         return Inertia::render('Auth/Register', [
-            'storeTypes' => $storeTypes,
-            'plans' => Store::allPlans(),
             'turnstileSiteKey' => config('services.turnstile.site_key'),
             'pendingEmail' => $pendingOtp?->email,
         ]);
     }
 
     /**
-     * Tahap 1 — validasi form, tahan datanya, kirim kode ke email.
+     * Tahap 1 — validasi form akun + captcha, tahan datanya, kirim kode ke email.
      *
      * @throws ValidationException
      */
@@ -97,9 +70,6 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'store_type_id' => ['required', 'integer', 'exists:store_types,id'],
-            'business_template_code' => ['nullable', 'string', 'exists:business_templates,code'],
-            'plan_id' => ['required', 'integer', 'exists:plans,id'],
             'cf_turnstile_response' => ['nullable', 'string', new Turnstile],
         ]);
 
@@ -108,9 +78,6 @@ class RegisteredUserController extends Controller
             // Password sudah di-hash sejak tahap ini — plaintext tidak pernah
             // tersimpan, bahkan sementara.
             'password' => Hash::make($validated['password']),
-            'store_type_id' => $validated['store_type_id'],
-            'business_template_code' => $validated['business_template_code'] ?? null,
-            'plan_id' => $validated['plan_id'],
         ]);
 
         $this->sendCode($otp);
@@ -121,7 +88,10 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Tahap 2 — verifikasi kode, lalu buat User & Store.
+     * Tahap 2 — verifikasi kode, lalu buat User (tanpa Store).
+     *
+     * User dibuat dengan plan Free. Store dibuat nanti di halaman onboarding
+     * setelah user login.
      *
      * @throws ValidationException
      */
@@ -163,19 +133,16 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-        // Kode benar — barulah akun & toko dibuat.
+        // Kode benar — barulah akun dibuat (tanpa toko).
         $payload = $otp->payload;
+        $freePlan = Plan::where('code', 'free')->first();
 
-        $user = DB::transaction(fn () => app(StoreOnboardingService::class)->registerVerified(
-            account: [
-                'name' => $payload['name'],
-                'email' => $otp->email,
-                'hashed_password' => $payload['password'],
-            ],
-            storeTypeId: (int) $payload['store_type_id'],
-            businessTemplateCode: $payload['business_template_code'] ?? null,
-            planId: (int) $payload['plan_id'],
-        ));
+        $user = DB::transaction(fn () => User::create([
+            'name' => $payload['name'],
+            'email' => $otp->email,
+            'password' => $payload['password'],
+            'plan_id' => $freePlan?->id,
+        ]));
 
         $otp->delete();
         $request->session()->forget(self::PENDING_EMAIL_KEY);
@@ -184,7 +151,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('admin.dashboard', absolute: false));
+        return redirect()->route('onboarding');
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -17,25 +18,27 @@ class StoreMiddleware
 {
     /** Route names yang boleh diakses tanpa store dipilih */
     private const STORE_EXEMPT_ROUTES = [
-        "admin.store.select",
-        "admin.store.select.post",
-        "admin.store.switch",
-        "admin.branch.select",
-        "admin.branch.select.post",
-        "admin.branch.switch",
-        "admin.profile.edit",
-        "admin.profile.update",
-        "admin.profile.destroy",
-        "admin.activity-logs.index",
-        "sidebar-order",
+        'admin.store.select',
+        'admin.store.select.post',
+        'admin.store.switch',
+        'admin.branch.select',
+        'admin.branch.select.post',
+        'admin.branch.switch',
+        'admin.profile.edit',
+        'admin.profile.update',
+        'admin.profile.destroy',
+        'admin.activity-logs.index',
+        'sidebar-order',
+        'onboarding',
+        'onboarding.store',
     ];
 
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        if (!$user) {
-            return redirect()->route("login");
+        if (! $user) {
+            return redirect()->route('login');
         }
 
         // Developer tidak perlu store context
@@ -43,17 +46,17 @@ class StoreMiddleware
             return $next($request);
         }
 
-        $storeId = $request->session()->get("current_store_id");
+        $storeId = $request->session()->get('current_store_id');
 
         // Cek apakah route saat ini exempt dari store requirement
-        $currentRoute = $request->route()?->getName() ?? "";
+        $currentRoute = $request->route()?->getName() ?? '';
         $isExempt =
             in_array($currentRoute, self::STORE_EXEMPT_ROUTES, true) ||
-            str_starts_with($currentRoute, "admin.store.") ||
-            str_starts_with($currentRoute, "admin.branch.");
+            str_starts_with($currentRoute, 'admin.store.') ||
+            str_starts_with($currentRoute, 'admin.branch.');
 
         // ── Tidak ada store di session ──────────────────────────────
-        if (!$storeId) {
+        if (! $storeId) {
             // Route exempt → biarkan lewat tanpa store
             if ($isExempt) {
                 return $next($request);
@@ -63,35 +66,36 @@ class StoreMiddleware
 
             if ($storeCount === 0) {
                 return redirect()
-                    ->route("login")
+                    ->route('login')
                     ->with(
-                        "error",
-                        "Akun kamu belum terhubung ke toko mana pun.",
+                        'error',
+                        'Akun kamu belum terhubung ke toko mana pun.',
                     );
             }
 
             if ($storeCount > 1) {
                 // Multi store → suruh pilih toko dulu
-                $request->session()->put("url.intended", $request->url());
-                return redirect()->route("admin.store.select");
+                $request->session()->put('url.intended', $request->url());
+
+                return redirect()->route('admin.store.select');
             }
 
             // Single store → auto-set
             $storeId = $user->stores()->first()->id;
-            $request->session()->put("current_store_id", $storeId);
+            $request->session()->put('current_store_id', $storeId);
         }
 
         // ── Validasi store masih bisa diakses ───────────────────────
         if ($storeId) {
             $hasAccess = $user
                 ->stores()
-                ->where("stores.id", $storeId)
+                ->where('stores.id', $storeId)
                 ->exists();
 
-            if (!$hasAccess) {
+            if (! $hasAccess) {
                 $request
                     ->session()
-                    ->forget(["current_store_id", "current_branch_id"]);
+                    ->forget(['current_store_id', 'current_branch_id']);
 
                 // Route exempt → biarkan lewat
                 if ($isExempt) {
@@ -101,26 +105,26 @@ class StoreMiddleware
                 $storeCount = $user->stores()->count();
 
                 if ($storeCount > 1) {
-                    return redirect()->route("admin.store.select");
+                    return redirect()->route('admin.store.select');
                 }
 
                 $first = $user->stores()->first();
                 if ($first) {
                     $storeId = $first->id;
-                    $request->session()->put("current_store_id", $storeId);
+                    $request->session()->put('current_store_id', $storeId);
                 } else {
                     return redirect()
-                        ->route("login")
+                        ->route('login')
                         ->with(
-                            "error",
-                            "Akun kamu belum terhubung ke toko mana pun.",
+                            'error',
+                            'Akun kamu belum terhubung ke toko mana pun.',
                         );
                 }
             }
 
             // Set Spatie team context → semua permission check pakai store ini
             app(
-                \Spatie\Permission\PermissionRegistrar::class,
+                PermissionRegistrar::class,
             )->setPermissionsTeamId($storeId);
         }
 

@@ -5,73 +5,42 @@
 | Registrasi Mandiri — Dua Tahap dengan Verifikasi OTP Wajib
 |--------------------------------------------------------------------------
 |
-| Alur:
-|   1. POST /register        → validasi form, kirim kode OTP. Akun & toko
-|                              BELUM dibuat.
-|   2. POST /register/verify → kode benar, baru User + Store dibuat.
+| Alur baru:
+|   1. POST /register        → validasi form akun + captcha, kirim kode OTP.
+|                              User BELUM dibuat.
+|   2. POST /register/verify → kode benar, User dibuat (plan Free), login,
+|                              redirect ke onboarding.
+|   3. POST /onboarding      → user pilih plan, jenis usaha, nama toko.
+|                              Store baru dibuat di sini.
 |
 | Verifikasi bersifat WAJIB: tidak ada jalur yang membuat akun tanpa kode
 | terverifikasi.
 |
 */
 
-use App\Models\BusinessTemplate;
-use App\Models\Category;
 use App\Models\Plan;
-use App\Models\Product;
 use App\Models\RegistrationOtp;
-use App\Models\Store;
-use App\Models\StoreType;
 use App\Models\User;
 use App\Notifications\RegistrationOtpCode;
 use Database\Seeders\DatabaseSeeder\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
-use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
-function registrationPrerequisites(): array
+function registrationPrerequisites(): void
 {
     test()->seed(PermissionSeeder::class);
 
-    $storeType = StoreType::create([
-        'code' => 'fnb',
-        'label' => 'F&B',
-        'icon' => '☕',
+    Plan::create([
+        'code' => 'free',
+        'label' => 'Free',
+        'price' => 0,
+        'trial_days' => 0,
         'is_active' => true,
-        'sort_order' => 1,
+        'sort_order' => 0,
     ]);
-
-    $template = BusinessTemplate::create([
-        'store_type_id' => $storeType->id,
-        'code' => 'fnb_cafe',
-        'label' => 'Cafe / Coffee Shop',
-        'icon' => '☕',
-        'is_active' => true,
-        'sort_order' => 1,
-    ]);
-    $category = $template->categories()->create(['name' => 'Minuman Kopi', 'sort_order' => 1]);
-    $category->products()->create([
-        'sku' => 'FC-001',
-        'name' => 'Espresso',
-        'unit' => 'cup',
-        'cost_price' => 5000,
-        'sell_price' => 18000,
-    ]);
-    $template->syncIsReady();
-
-    $plan = Plan::create([
-        'code' => 'business',
-        'label' => 'Business',
-        'price' => 79000,
-        'trial_days' => 14,
-        'is_active' => true,
-        'sort_order' => 1,
-    ]);
-
-    return [$storeType, $template, $plan];
 }
 
 /**
@@ -79,21 +48,18 @@ function registrationPrerequisites(): array
  */
 function submitRegistrationForm(array $overrides = []): array
 {
-    [$storeType, $template, $plan] = registrationPrerequisites();
+    registrationPrerequisites();
 
     $payload = array_merge([
         'name' => 'Test User',
         'email' => 'test@example.com',
         'password' => 'Password123',
         'password_confirmation' => 'Password123',
-        'store_type_id' => $storeType->id,
-        'business_template_code' => $template->code,
-        'plan_id' => $plan->id,
     ], $overrides);
 
     $response = test()->post('/register', $payload);
 
-    return [$response, $payload, $storeType, $template, $plan];
+    return [$response, $payload];
 }
 
 // ── Tahap 1: kirim kode ────────────────────────────────────────────────────
@@ -111,9 +77,8 @@ test('submitting the form sends an otp and does NOT create the account yet', fun
 
     $response->assertSessionHasNoErrors();
 
-    // Akun & toko belum ada — verifikasi dulu.
+    // Akun belum ada — verifikasi dulu.
     expect(User::where('email', $payload['email'])->exists())->toBeFalse();
-    expect(Store::count())->toBe(0);
     $this->assertGuest();
 
     $otp = RegistrationOtp::where('email', $payload['email'])->first();
@@ -127,30 +92,14 @@ test('submitting the form sends an otp and does NOT create the account yet', fun
     Notification::assertSentOnDemand(RegistrationOtpCode::class);
 });
 
-test('registration requires store type and plan', function () {
-    registrationPrerequisites();
-
-    $response = $this->post('/register', [
-        'name' => 'Test User',
-        'email' => 'test2@example.com',
-        'password' => 'Password123',
-        'password_confirmation' => 'Password123',
-    ]);
-
-    $response->assertSessionHasErrors(['store_type_id', 'plan_id']);
-    expect(RegistrationOtp::count())->toBe(0);
-});
-
 test('weak password is rejected by the password policy', function () {
-    [$storeType, $template, $plan] = registrationPrerequisites();
+    registrationPrerequisites();
 
     $response = $this->post('/register', [
         'name' => 'Weak Password User',
         'email' => 'weak@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
-        'store_type_id' => $storeType->id,
-        'plan_id' => $plan->id,
     ]);
 
     $response->assertSessionHasErrors('password');
@@ -158,7 +107,7 @@ test('weak password is rejected by the password policy', function () {
 });
 
 test('duplicate email is rejected before sending a code', function () {
-    [$storeType, , $plan] = registrationPrerequisites();
+    registrationPrerequisites();
     User::factory()->create(['email' => 'taken@example.com']);
 
     $response = $this->post('/register', [
@@ -166,8 +115,6 @@ test('duplicate email is rejected before sending a code', function () {
         'email' => 'taken@example.com',
         'password' => 'Password123',
         'password_confirmation' => 'Password123',
-        'store_type_id' => $storeType->id,
-        'plan_id' => $plan->id,
     ]);
 
     $response->assertSessionHasErrors('email');
@@ -176,10 +123,10 @@ test('duplicate email is rejected before sending a code', function () {
 
 // ── Tahap 2: verifikasi kode ───────────────────────────────────────────────
 
-test('correct code creates the account, store, and logs the user in', function () {
+test('correct code creates the account (without store) and logs the user in', function () {
     Notification::fake();
 
-    [, $payload, $storeType, , $plan] = submitRegistrationForm();
+    [, $payload] = submitRegistrationForm();
     $otp = RegistrationOtp::where('email', $payload['email'])->first();
 
     $response = $this->post('/register/verify', [
@@ -187,7 +134,8 @@ test('correct code creates the account, store, and logs the user in', function (
         'code' => $otp->code,
     ]);
 
-    $response->assertRedirect(route('admin.dashboard', absolute: false));
+    // Redirect ke onboarding, bukan dashboard.
+    $response->assertRedirect(route('onboarding'));
     $this->assertAuthenticated();
 
     $user = User::where('email', $payload['email'])->first();
@@ -195,44 +143,15 @@ test('correct code creates the account, store, and logs the user in', function (
     // Password hasil hash tahap 1 tetap dipakai (tidak di-hash dua kali).
     expect(Hash::check($payload['password'], $user->password))->toBeTrue();
 
-    $store = Store::whereIn('id', $user->stores()->pluck('stores.id'))->first();
-    expect($store)->not->toBeNull();
-    expect($store->user_id)->toBe($user->id);
-    expect($store->store_type_id)->toBe($storeType->id);
-    expect($user->fresh()->plan_id)->toBe($plan->id);
-    expect($user->fresh()->plan_expires_at->isSameDay(now()->addDays(14)))->toBeTrue();
-    expect($store->branches()->count())->toBe(1);
-    expect($store->paymentMethods()->count())->toBe(2);
+    // User dibuat dengan plan Free.
+    $freePlan = Plan::where('code', 'free')->first();
+    expect($user->plan_id)->toBe($freePlan?->id);
 
-    expect(Category::where('store_id', $store->id)->count())->toBeGreaterThan(0);
-    expect(Product::where('store_id', $store->id)->count())->toBeGreaterThan(0);
-
-    app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
-    expect(User::find($user->id)->hasRole('owner'))->toBeTrue();
+    // Store BELUM dibuat — user harus onboarding dulu.
+    expect($user->stores()->count())->toBe(0);
 
     // OTP dibersihkan setelah dipakai.
     expect(RegistrationOtp::where('email', $payload['email'])->exists())->toBeFalse();
-});
-
-test('registration without a business template creates an empty store', function () {
-    Notification::fake();
-
-    [, $payload] = submitRegistrationForm([
-        'email' => 'empty@example.com',
-        'business_template_code' => null,
-    ]);
-    $otp = RegistrationOtp::where('email', $payload['email'])->first();
-
-    $this->post('/register/verify', [
-        'email' => $payload['email'],
-        'code' => $otp->code,
-    ])->assertRedirect(route('admin.dashboard', absolute: false));
-
-    $user = User::where('email', $payload['email'])->first();
-    $store = Store::whereIn('id', $user->stores()->pluck('stores.id'))->first();
-
-    expect(Category::where('store_id', $store->id)->count())->toBe(0);
-    expect(Product::where('store_id', $store->id)->count())->toBe(0);
 });
 
 test('wrong code is rejected and increments the attempt counter', function () {
@@ -333,7 +252,7 @@ test('resending for an unknown email is rejected', function () {
 test('submitting the form again replaces the pending code instead of stacking rows', function () {
     Notification::fake();
 
-    [, $payload, $storeType, $template, $plan] = submitRegistrationForm();
+    [, $payload] = submitRegistrationForm();
     $firstCode = RegistrationOtp::where('email', $payload['email'])->first()->code;
 
     $this->post('/register', [
@@ -341,9 +260,6 @@ test('submitting the form again replaces the pending code instead of stacking ro
         'email' => $payload['email'],
         'password' => 'Password456',
         'password_confirmation' => 'Password456',
-        'store_type_id' => $storeType->id,
-        'business_template_code' => $template->code,
-        'plan_id' => $plan->id,
     ])->assertSessionHasNoErrors();
 
     expect(RegistrationOtp::where('email', $payload['email'])->count())->toBe(1);

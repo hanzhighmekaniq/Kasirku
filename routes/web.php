@@ -67,6 +67,7 @@ use App\Http\Controllers\Developer\ThemeController as DevThemeController;
 use App\Http\Controllers\Developer\UserController as DevUserController;
 use App\Http\Controllers\Developer\WalletController as DevWalletController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SidebarPreferenceController;
 use App\Http\Controllers\ThemePreferenceController;
@@ -366,6 +367,16 @@ Route::middleware(['auth', 'developer', 'single-session'])
 Route::post('/stop-impersonating', [ImpersonationController::class, 'stop'])
     ->middleware(['auth'])
     ->name('stop-impersonating');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ONBOARDING — buat toko pertama setelah registrasi
+// Middleware: auth + single-session (TANPA store/branch — user belum punya toko)
+// ─────────────────────────────────────────────────────────────────────────────
+Route::middleware(['auth', 'single-session'])
+    ->group(function () {
+        Route::get('/onboarding', [OnboardingController::class, 'create'])->name('onboarding');
+        Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
+    });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STORE routes — /app/*
