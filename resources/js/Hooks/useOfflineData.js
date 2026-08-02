@@ -43,8 +43,15 @@ export default function useOfflineData(storeName, options = {}) {
             const now = Date.now();
 
             // Try server first (unless offline or skipServer)
+            // Also skip on guest pages (login, register, etc.) — user not authenticated
+            const guestPaths = ["/login", "/register", "/forgot-password", "/reset-password"];
+            const isGuestPage = guestPaths.some((p) =>
+                window.location.pathname.startsWith(p),
+            );
+
             if (
                 !skipServer &&
+                !isGuestPage &&
                 navigator.onLine &&
                 now - lastFetchRef.current > staleMs
             ) {

@@ -44,6 +44,17 @@ export async function syncAll() {
             };
         }
 
+        // Skip sync for guest pages (login, register, etc.) — user not authenticated
+        const guestPaths = ["/login", "/register", "/forgot-password", "/reset-password"];
+        if (guestPaths.some((p) => window.location.pathname.startsWith(p))) {
+            syncing = false;
+            return {
+                success: false,
+                reason: "guest_page",
+                syncedAt: lastSyncAt,
+            };
+        }
+
         const response = await fetch("/app/master-data", {
             headers: {
                 Accept: "application/json",
