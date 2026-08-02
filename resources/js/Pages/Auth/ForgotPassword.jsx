@@ -17,6 +17,8 @@ export default function ForgotPassword({ status, turnstileSiteKey = null }) {
     });
     const [sent, setSent] = useState(false);
 
+    const turnstileOk = !turnstileSiteKey || !!data.cf_turnstile_response;
+
     const submit = (e) => {
         e.preventDefault();
         post(route("password.email"), {
@@ -161,7 +163,7 @@ export default function ForgotPassword({ status, turnstileSiteKey = null }) {
 
                                 <button
                                     type="submit"
-                                    disabled={processing || !data.email}
+                                    disabled={processing || !data.email || !turnstileOk}
                                     className="dv-btn dv-btn--accent dv-btn--block"
                                 >
                                     {processing

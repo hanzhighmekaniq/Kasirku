@@ -52,11 +52,15 @@ export default function Register({
         cf_turnstile_response: "",
     });
 
+    // Token Turnstile wajib ada kalau siteKey dikonfigurasi.
+    const turnstileOk = !turnstileSiteKey || !!data.cf_turnstile_response;
+
     const canSubmit =
         data.name.trim() &&
         data.email.trim() &&
         data.password &&
-        data.password_confirmation;
+        data.password_confirmation &&
+        turnstileOk;
 
     // Kirim kode OTP ke email, lanjut ke tahap verifikasi.
     // Akun belum dibuat di sini.
@@ -207,6 +211,14 @@ export default function Register({
                                     <FieldError
                                         message={errors.cf_turnstile_response}
                                     />
+                                    {turnstileSiteKey && !turnstileOk && (
+                                        <p
+                                            className="mt-2 text-[0.75rem]"
+                                            style={{ color: "var(--dv-muted)" }}
+                                        >
+                                            Selesaikan verifikasi anti-bot untuk melanjutkan.
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="mt-6 flex items-center justify-between gap-3">

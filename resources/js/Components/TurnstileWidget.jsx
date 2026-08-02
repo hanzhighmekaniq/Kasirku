@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
  * sebelum key didaftarkan), widget tidak dirender dan verifikasi dilewati
  * di sisi server — lihat App\Rules\Turnstile.
  */
-export default function TurnstileWidget({ siteKey, onToken, className = "mt-6" }) {
+export default function TurnstileWidget({ siteKey, onToken, onReady, className = "mt-6" }) {
     const ref = useRef(null);
     const widgetId = useRef(null);
 
@@ -27,6 +27,8 @@ export default function TurnstileWidget({ siteKey, onToken, className = "mt-6" }
                 "expired-callback": () => onToken(""),
                 "error-callback": () => onToken(""),
             });
+
+            if (onReady) onReady();
         };
 
         // Script dimuat async — tunggu sampai global `turnstile` tersedia.
@@ -44,6 +46,10 @@ export default function TurnstileWidget({ siteKey, onToken, className = "mt-6" }
         return () => {
             cancelled = true;
             if (interval) clearInterval(interval);
+            if (widgetId.current !== null && window.turnstile) {
+                window.turnstile.remove(widgetId.current);
+                widgetId.current = null;
+            }
         };
     }, [siteKey, onToken]);
 
