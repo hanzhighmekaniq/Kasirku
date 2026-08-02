@@ -12,6 +12,7 @@ use App\Models\CashierShift;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\CustomerDebtLog;
+use App\Models\CustomerPointLog;
 use App\Models\CustomerTier;
 use App\Models\Employee;
 use App\Models\EmployeeCommission;
@@ -453,6 +454,8 @@ class KasirController extends Controller
                     ?? $pendingPgTransaction->raw_response['payment_url']
                     ?? null,
             ] : null,
+            'pointValue' => (float) ($store->point_value ?? 1000),
+            'pointsPerAmount' => (float) ($store->points_per_amount ?? 0),
         ]);
     }
 
@@ -681,6 +684,7 @@ class KasirController extends Controller
             'order_type' => 'required|string|max:30',
             'discount_amount' => 'nullable|numeric|min:0',
             'tax_amount' => 'nullable|numeric|min:0',
+            'redeem_points' => 'nullable|integer|min:1',
             'notes' => 'nullable|string|max:500',
             'payments' => 'required|array|min:1',
             'payments.*.method_id' => 'required|exists:payment_methods,id',
@@ -867,8 +871,25 @@ class KasirController extends Controller
                 (float) $subtotal,
             );
 
+            // ── Redeem Points ──
+            $pointsRedeemed = 0;
+            $pointsDiscount = 0;
+            if (! empty($validated['redeem_points']) && $customerForPromo) {
+                $pointsRedeemed = (int) $validated['redeem_points'];
+                if ($pointsRedeemed > $customerForPromo->points) {
+                    throw new \RuntimeException("Poin tidak cukup. Poin tersedia: {$customerForPromo->points}");
+                }
+                $pointValue = (float) ($store->point_value ?? 1000);
+                $pointsDiscount = $pointsRedeemed * $pointValue;
+                // Cannot discount more than subtotal
+                if ($pointsDiscount > $subtotal) {
+                    $pointsDiscount = $subtotal;
+                    $pointsRedeemed = ceil($pointsDiscount / $pointValue);
+                }
+            }
+
             // ── Grand total sebelum rounding ──
-            $grandTotal = max(0, $subtotal - $discount - $cartPromoDiscount + $tax
+            $grandTotal = max(0, $subtotal - $discount - $cartPromoDiscount - $pointsDiscount + $tax
                 + $shippingAmount);
 
             // ── Rounding: recalculate server-side (trust CashRoundingService, not client) ──
@@ -936,7 +957,7 @@ class KasirController extends Controller
                 'pos_mode' => $storeTypeCode,
                 'order_type' => $validated['order_type'],
                 'subtotal' => $subtotal,
-                'discount_amount' => $discount + $cartPromoDiscount,
+                'discount_amount' => $discount + $cartPromoDiscount + ($pointsDiscount ?? 0),
                 'tax_amount' => $tax,
                 'shipping_amount' => $shippingAmount,
                 'rounding_adjustment' => $roundingAdjustment,
@@ -1220,6 +1241,21 @@ class KasirController extends Controller
                 }
             }
 
+            // Catat redeem poin jika ada
+            if (isset($pointsRedeemed) && $pointsRedeemed > 0 && $customerForPromo) {
+                $customerForPromo->decrement('points', $pointsRedeemed);
+                CustomerPointLog::create([
+                    'store_id' => $storeId,
+                    'customer_id' => $customerForPromo->id,
+                    'sale_id' => $sale->id,
+                    'type' => 'redeem',
+                    'points' => -$pointsRedeemed,
+                    'balance_after' => $customerForPromo->points, // points after decrement
+                    'notes' => "Redeem pada transaksi {$saleNo}",
+                    'created_by' => $user->id,
+                ]);
+            }
+
             // Only create SalePayment for non-PG payments (PG creates it on callback)
             $debtTotal = 0;
             foreach ($validated['payments'] as $pay) {
@@ -1402,6 +1438,7 @@ class KasirController extends Controller
             'room_number' => 'nullable|string|max:50',
             'guest_count' => 'nullable|integer|min:1',
             'employee_id' => 'nullable|exists:employees,id',
+            'redeem_points' => 'nullable|integer|min:1',
         ]);
 
         if (! empty($validated['idempotency_key'])) {
@@ -1504,7 +1541,23 @@ class KasirController extends Controller
                 (float) $subtotal,
             );
 
-            $preRoundingTotal = max(0, $subtotal - $discount - $cartPromoDiscount + $tax + $shippingAmount);
+            // ── Redeem Points ──
+            $pointsRedeemed = 0;
+            $pointsDiscount = 0;
+            if (! empty($validated['redeem_points']) && $customerForPromo) {
+                $pointsRedeemed = (int) $validated['redeem_points'];
+                if ($pointsRedeemed > $customerForPromo->points) {
+                    throw new \RuntimeException("Poin tidak cukup. Poin tersedia: {$customerForPromo->points}");
+                }
+                $pointValue = (float) ($store->point_value ?? 1000);
+                $pointsDiscount = $pointsRedeemed * $pointValue;
+                if ($pointsDiscount > $subtotal) {
+                    $pointsDiscount = $subtotal;
+                    $pointsRedeemed = (int) ceil($pointsDiscount / $pointValue);
+                }
+            }
+
+            $preRoundingTotal = max(0, $subtotal - $discount - $cartPromoDiscount - $pointsDiscount + $tax + $shippingAmount);
 
             // Rounding — only if store feature enabled AND has cash payment in the (future) payment
             // We defer the full rounding check to finalize(), but pre-calculate from frontend hints
@@ -1530,7 +1583,7 @@ class KasirController extends Controller
                 'pos_mode' => $storeTypeCode,
                 'order_type' => $validated['order_type'],
                 'subtotal' => $subtotal,
-                'discount_amount' => $discount + $cartPromoDiscount,
+                'discount_amount' => $discount + $cartPromoDiscount + ($pointsDiscount ?? 0),
                 'tax_amount' => $tax,
                 'shipping_amount' => $shippingAmount,
                 'rounding_adjustment' => $roundingAdjustment,
@@ -1545,7 +1598,7 @@ class KasirController extends Controller
                 'customer_name' => $validated['customer_name'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'idempotency_key' => $validated['idempotency_key'] ?? null,
-                'extra_data' => $this->buildExtraData($validated, $storeTypeCode),
+                'extra_data' => array_merge($this->buildExtraData($validated, $storeTypeCode) ?? [], $pointsRedeemed > 0 ? ['points_redeemed' => $pointsRedeemed, 'points_discount' => $pointsDiscount] : []),
             ]);
 
             if (! empty($validated['employee_id'])) {
@@ -1727,6 +1780,26 @@ class KasirController extends Controller
                 'paid_amount' => $paidTotal,
                 'change_amount' => $change,
             ]);
+
+            // Deduct loyalty points if redeemed during start()
+            $extraData = $sale->extra_data ?? [];
+            if (! empty($extraData['points_redeemed']) && $sale->customer_id && $saleStatus === 'completed') {
+                $customerForPoints = Customer::find($sale->customer_id);
+                if ($customerForPoints) {
+                    $ptsRedeemed = (int) $extraData['points_redeemed'];
+                    $customerForPoints->decrement('points', $ptsRedeemed);
+                    CustomerPointLog::create([
+                        'store_id' => $storeId,
+                        'customer_id' => $customerForPoints->id,
+                        'sale_id' => $sale->id,
+                        'type' => 'redeem',
+                        'points' => -$ptsRedeemed,
+                        'balance_after' => $customerForPoints->fresh()->points,
+                        'notes' => "Redeem pada transaksi {$sale->sale_no}",
+                        'created_by' => $user->id,
+                    ]);
+                }
+            }
 
             // Order FnB yang dibuat lewat jalur lama bisa saja belum punya
             // kitchen_status — pastikan tetap masuk antrian dapur.

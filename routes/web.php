@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\BarcodeLabelController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\BranchSelectController;
 use App\Http\Controllers\Admin\CafeTableController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Admin\KitchenController;
 use App\Http\Controllers\Admin\MasterDataController;
 use App\Http\Controllers\Admin\MembershipController;
 use App\Http\Controllers\Admin\MutationController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PaymentGatewayController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProductBarcodeController;
@@ -678,6 +680,8 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 ProductController::class,
                 'show',
             ])->name('products.show');
+            Route::get('/products/export/template', [ProductController::class, 'exportTemplate'])->name('products.export-template');
+            Route::get('/barcode-labels', [BarcodeLabelController::class, 'index'])->name('barcode-labels.index');
         });
 
         // 3. Edit produk
@@ -690,6 +694,7 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 ProductController::class,
                 'update',
             ])->name('products.update');
+            Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
 
             // Variant
             Route::resource(
@@ -947,6 +952,8 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
                 ->middleware(['feature:membership', 'permission:customer.edit'])
                 ->name('customer-memberships.revoke');
             Route::post('/customers/{customer}/pay-debt', [CustomerController::class, 'payDebt'])->name('customers.pay-debt');
+            Route::get('/customers/{customer}/points', [CustomerController::class, 'pointHistory'])->name('customers.points');
+            Route::post('/customers/{customer}/points/adjust', [CustomerController::class, 'adjustPoints'])->name('customers.points.adjust')->middleware('permission:customer.edit');
         });
 
         // ─────────────────────────────────────────────────────────────────
@@ -957,6 +964,7 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
             'permission:debt.view',
         ])->group(function () {
             Route::get('/debts', [DebtController::class, 'index'])->name('debts.index');
+            Route::get('/debts/aging', [DebtController::class, 'aging'])->name('debts.aging');
             Route::post('/debts/{customer}/pay', [DebtController::class, 'pay'])->name('debts.pay');
         });
 
@@ -1207,6 +1215,8 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
             },
         );
         Route::middleware(['feature:report', 'permission:report.purchase'])->group(function () {
+            Route::get('/reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
+            Route::get('/reports/sales-by-employee', [ReportController::class, 'salesByEmployee'])->name('reports.sales-by-employee');
             Route::get('/reports/purchases', [ReportController::class, 'purchases'])->name('reports.purchases');
         });
         Route::middleware(['feature:report', 'permission:report.stock'])->group(function () {
@@ -1272,6 +1282,13 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
             ])->name('settings.branch.update');
 
         });
+
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+
         Route::middleware([
             'feature:sidebar_order',
             'permission:setting.edit',

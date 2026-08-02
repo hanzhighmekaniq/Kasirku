@@ -85,6 +85,8 @@ export default function useKasir({
     storeFeatureSettings = {},
     pendingSale = null,
     pendingPgTransaction = null,
+    pointValue = 1000,
+    pointsPerAmount = 0,
     _success = null,
 }) {
     /* ── stok lokal ──────────────────────────────────────
@@ -357,6 +359,8 @@ export default function useKasir({
     const [selectedCustomer, setSelectedCustomer] = useState(
         initialDraft?.selectedCustomer || "",
     );
+    const [redeemPoints, setRedeemPoints] = useState(0);
+    const [usePoints, setUsePoints] = useState(false);
     const [customerSearch, setCustomerSearch] = useState("");
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
     const [customerDropdownPos, setCustomerDropdownPos] = useState({
@@ -1452,12 +1456,19 @@ export default function useKasir({
         Number(deliveryFee || 0) - shippingWaiver,
     );
 
+    // Points redemption
+    const selectedCustomerObj = customers.find(c => String(c.id) === String(selectedCustomer));
+    const customerPoints = selectedCustomerObj?.points ?? 0;
+    const maxRedeemablePoints = usePoints ? Math.min(customerPoints, Math.floor(subtotal / pointValue)) : 0;
+    const pointsDiscount = usePoints && redeemPoints > 0 ? redeemPoints * pointValue : 0;
+
     const grandTotal = Math.max(
         0,
         subtotal -
             totalPromoDisc -
             cartPromoDiscount -
-            discount +
+            discount -
+            pointsDiscount +
             tax +
             effectiveDeliveryFee,
     );
@@ -2013,6 +2024,7 @@ export default function useKasir({
                     modifiers: c.modifiers,
                     notes: c.note || null,
                 })),
+                redeem_points: redeemPoints > 0 ? redeemPoints : null,
                 idempotency_key: crypto.randomUUID(),
             });
             if (!data.success) throw new Error(data.message);
@@ -2066,6 +2078,7 @@ export default function useKasir({
                     modifiers: c.modifiers,
                     notes: c.note || null,
                 })),
+                redeem_points: redeemPoints > 0 ? redeemPoints : null,
                 idempotency_key: crypto.randomUUID(),
             });
             if (!data.success) throw new Error(data.message);
@@ -2617,6 +2630,16 @@ export default function useKasir({
         setRoundingOverrideMode,
         roundingCustomValue,
         setRoundingCustomValue,
+        /* points */
+        usePoints,
+        setUsePoints,
+        redeemPoints,
+        setRedeemPoints,
+        customerPoints,
+        maxRedeemablePoints,
+        pointsDiscount,
+        pointValue,
+        selectedCustomerObj,
         missingRequiredField,
         rentalInfo: isRental && rentalDuration > 0 ? {
             duration: rentalDuration,

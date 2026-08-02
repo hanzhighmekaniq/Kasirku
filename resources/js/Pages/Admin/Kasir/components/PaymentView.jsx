@@ -1079,6 +1079,15 @@ export default function PaymentView({
                                     </div>
                                 )}
 
+                                {k.pointsDiscount > 0 && (
+                                    <div className="flex justify-between gap-4 text-primary">
+                                        <span>Tukar Poin ({k.redeemPoints} poin)</span>
+                                        <span className="shrink-0">
+                                            -{fmt(k.pointsDiscount)}
+                                        </span>
+                                    </div>
+                                )}
+
                                 {Number(k.tax ?? 0) > 0 && (
                                     <div className="flex justify-between gap-4 text-muted-foreground">
                                         <span>Pajak</span>
@@ -1099,6 +1108,42 @@ export default function PaymentView({
                                                 : ""}
                                             {fmt(roundingAdjustment)}
                                         </span>
+                                    </div>
+                                )}
+
+                                {k.customerPoints > 0 && k.pointValue > 0 && (
+                                    <div className="flex items-center justify-between gap-4 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={k.usePoints}
+                                                onChange={(e) => {
+                                                    k.setUsePoints(e.target.checked);
+                                                    if (!e.target.checked) {
+                                                        k.setRedeemPoints(0);
+                                                    } else {
+                                                        k.setRedeemPoints(k.maxRedeemablePoints);
+                                                    }
+                                                }}
+                                                className="rounded border-primary"
+                                            />
+                                            <span className="text-xs font-medium text-primary">
+                                                Tukar Poin ({k.customerPoints} poin tersedia)
+                                            </span>
+                                        </label>
+                                        {k.usePoints && (
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    max={k.maxRedeemablePoints}
+                                                    value={k.redeemPoints}
+                                                    onChange={(e) => k.setRedeemPoints(Math.min(Number(e.target.value) || 0, k.maxRedeemablePoints))}
+                                                    className="w-20 rounded border border-border bg-card px-2 py-1 text-right text-xs text-foreground"
+                                                />
+                                                <span className="text-xs text-muted-foreground">poin</span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 

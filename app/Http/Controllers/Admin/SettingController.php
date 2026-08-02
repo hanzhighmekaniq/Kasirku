@@ -149,6 +149,7 @@ class SettingController extends Controller
             'tax_inclusive' => 'boolean',
             'default_tax_rate' => 'nullable|numeric|min:0|max:100',
             'points_per_amount' => 'nullable|numeric|min:0',
+            'point_value' => 'nullable|numeric|min:1',
             'payment_edit_limit_value' => 'nullable|integer|min:1|max:9999',
             'payment_edit_limit_unit' => 'nullable|in:minutes,hours,days',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -181,6 +182,7 @@ class SettingController extends Controller
             'tax_inclusive' => $validated['tax_inclusive'] ?? false,
             'default_tax_rate' => $validated['default_tax_rate'] ?? 0,
             'points_per_amount' => $validated['points_per_amount'] ?? null,
+            'point_value' => $validated['point_value'] ?? 1000,
             // Nilai kosong berarti pembayaran boleh diubah kapan saja, jadi
             // unit ikut dikosongkan supaya tidak ada sisa data yang menyesatkan.
             'payment_edit_limit_value' => $paymentEditLimitValue,

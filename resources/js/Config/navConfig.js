@@ -358,6 +358,13 @@ export function buildNavGroups(modules) {
             icon: "product",
             current: "admin.products.*",
         });
+        add(items, hasProduct || lockedProduct, hasProduct, {
+            key: "barcode-labels",
+            name: "Label Barcode",
+            href: r("admin.barcode-labels.index"),
+            icon: "tag",
+            current: "admin.barcode-labels.*",
+        });
         add(items, hasCategory || lockedCategory, hasCategory, {
             key: "categories",
             name: "Kategori",

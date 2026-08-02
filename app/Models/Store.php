@@ -24,6 +24,7 @@ class Store extends Model
         'tax_inclusive',
         'default_tax_rate',
         'points_per_amount',
+        'point_value',
         'payment_edit_limit_value',
         'payment_edit_limit_unit',
         'receipt_header',
@@ -45,6 +46,7 @@ class Store extends Model
             'tax_inclusive' => 'boolean',
             'default_tax_rate' => 'decimal:2',
             'points_per_amount' => 'decimal:2',
+            'point_value' => 'decimal:2',
             'payment_edit_limit_value' => 'integer',
             'plan_expires_at' => 'date',
         ];

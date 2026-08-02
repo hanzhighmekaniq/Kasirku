@@ -2,6 +2,7 @@ import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useRef, useState } from "react";
 import Dropdown from "@/Components/Dropdown";
 import OfflineIndicator from "@/Components/OfflineIndicator";
+import NotificationBell from "@/Components/NotificationBell";
 import { useStoreModules } from "@/Hooks/useStoreModules";
 import { buildNavGroups } from "@/Config/navConfig";
 import {
@@ -1508,6 +1509,7 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
 
                         {/* Toko & cabang kini dikelola dari sidebar (WorkspaceSwitcher) */}
                         <OfflineIndicator />
+                        <NotificationBell />
 
                         {/* User menu */}
                         <Dropdown>

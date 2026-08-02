@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\CustomerDebtLog;
 use App\Models\CustomerMembership;
+use App\Models\CustomerPointLog;
 use App\Models\CustomerTier;
 use App\Models\Membership;
 use App\Models\Store;
@@ -190,6 +191,53 @@ class CustomerController extends Controller
             ->with('success', 'Pelanggan berhasil dihapus.');
     }
 
+    public function pointHistory(Customer $customer)
+    {
+        $this->ensureSameStore($customer);
+
+        $logs = CustomerPointLog::where('customer_id', $customer->id)
+            ->with('creator:id,name', 'sale:id,sale_no')
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        return Inertia::render('Admin/Customers/PointHistory', [
+            'customer' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'code' => $customer->code,
+                'points' => $customer->points,
+            ],
+            'pointLogs' => $logs,
+        ]);
+    }
+
+    public function adjustPoints(Request $request, Customer $customer)
+    {
+        $this->ensureSameStore($customer);
+
+        $validated = $request->validate([
+            'adjustment' => 'required|integer|not_in:0',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        $newBalance = max(0, $customer->points + $validated['adjustment']);
+        $actualAdjustment = $newBalance - $customer->points; // handle if negative goes below 0
+
+        $customer->update(['points' => $newBalance]);
+
+        CustomerPointLog::create([
+            'customer_id' => $customer->id,
+            'store_id' => $customer->store_id,
+            'type' => 'adjust',
+            'points' => $actualAdjustment,
+            'balance_after' => $newBalance,
+            'notes' => $validated['notes'],
+            'created_by' => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Poin berhasil disesuaikan.');
+    }
+
     public function payDebt(Request $request, Customer $customer)
     {
         $this->ensureSameStore($customer);
@@ -311,7 +359,7 @@ class CustomerController extends Controller
     private function ensureSameStore(Customer $customer): void
     {
         abort_if(
-            $customer->store_id !== (int) session('current_store_id'),
+            (int) $customer->store_id !== (int) session('current_store_id'),
             403,
         );
     }

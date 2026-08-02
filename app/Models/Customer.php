@@ -75,6 +75,11 @@ class Customer extends Model
 
     // --- Helpers ---
 
+    public function pointLogs(): HasMany
+    {
+        return $this->hasMany(CustomerPointLog::class);
+    }
+
     public function activeMembership(): ?CustomerMembership
     {
         return $this->memberships()

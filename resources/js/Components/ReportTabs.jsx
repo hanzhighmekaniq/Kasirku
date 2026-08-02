@@ -1,4 +1,4 @@
-import { TrendingUp, ShoppingBag, Boxes, Receipt, Clock, BadgeDollarSign } from 'lucide-react';
+import { TrendingUp, ShoppingBag, Boxes, Receipt, Clock, BadgeDollarSign, Wallet, UserCheck } from 'lucide-react';
 import PageTabs from '@/Components/PageTabs';
 
 export default function ReportTabs() {
@@ -8,6 +8,18 @@ export default function ReportTabs() {
             href: route("admin.reports.index"),
             active: route().current("admin.reports.index"),
             icon: <TrendingUp className="h-4 w-4" />,
+        },
+        {
+            name: "Laba Rugi",
+            href: route("admin.reports.profit-loss"),
+            active: route().current("admin.reports.profit-loss"),
+            icon: <Wallet className="h-4 w-4" />,
+        },
+        {
+            name: "Per Kasir",
+            href: route("admin.reports.sales-by-employee"),
+            active: route().current("admin.reports.sales-by-employee"),
+            icon: <UserCheck className="h-4 w-4" />,
         },
         {
             name: "Pembelian",

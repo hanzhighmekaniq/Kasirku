@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ProductsExport;
 use App\Http\Controllers\Controller;
+use App\Imports\ProductsImport;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
@@ -18,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -832,5 +835,33 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil dihapus.');
+    }
+
+    public function exportTemplate()
+    {
+        $storeId = session('current_store_id');
+        $export = new ProductsExport($storeId, includeExamples: true);
+
+        return Excel::download($export, 'template-produk.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        $storeId = session('current_store_id');
+        $import = new ProductsImport($storeId);
+        Excel::import($import, $request->file('file'));
+
+        $results = $import->getResults();
+
+        $message = "Import selesai: {$results['created']} ditambah, {$results['updated']} diperbarui, {$results['skipped']} dilewati.";
+        if (! empty($results['errors'])) {
+            $message .= ' '.count($results['errors']).' error: '.implode(' | ', array_slice($results['errors'], 0, 5));
+        }
+
+        return back()->with('success', $message);
     }
 }

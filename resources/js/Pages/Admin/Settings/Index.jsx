@@ -338,6 +338,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
         tax_inclusive: store?.tax_inclusive ?? false,
         default_tax_rate: store?.default_tax_rate ?? 0,
         points_per_amount: store?.points_per_amount ?? "",
+        point_value: store?.point_value ?? 1000,
         payment_edit_limit_value: store?.payment_edit_limit_value ?? "",
         payment_edit_limit_unit: store?.payment_edit_limit_unit ?? "minutes",
         logo: null,
@@ -648,6 +649,30 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
                                     </p>
                                     {errors.points_per_amount && (
                                         <p className={errorClass}>{errors.points_per_amount}</p>
+                                    )}
+                                </div>
+                                
+                                <div>
+                                    <label className={labelClass}>Nilai Tukar 1 Poin (Rp)</label>
+                                    <div className="relative mt-1">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                            <span className="text-muted-foreground sm:text-sm">Rp</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            value={data.point_value}
+                                            onChange={(e) => setData("point_value", e.target.value)}
+                                            className={`${inp(errors.point_value)} pl-10`}
+                                            placeholder="1000"
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Nilai diskon dalam Rupiah untuk setiap 1 poin yang ditukarkan (redeem) oleh pelanggan.
+                                    </p>
+                                    {errors.point_value && (
+                                        <p className={errorClass}>{errors.point_value}</p>
                                     )}
                                 </div>
                             </Section>

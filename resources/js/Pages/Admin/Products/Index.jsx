@@ -6,6 +6,7 @@ import Button from "@/Components/ui/Button";
 import {
     ArrowDownUp,
     ChevronDown,
+    Download,
     Eye,
     Pencil,
     Plus,
@@ -13,6 +14,7 @@ import {
     SlidersHorizontal,
     Trash2,
     ArrowUpDown,
+    Upload,
 } from "lucide-react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import QuickStockModal from "@/Pages/Admin/Products/QuickStockModal";
@@ -965,6 +967,34 @@ export default function Index({
                                         </svg>
                                         Tambah {pageTitle}
                                     </Link>
+                                )}
+                                <a
+                                    href={route("admin.products.export-template")}
+                                    className="hidden lg:inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted"
+                                >
+                                    <Download className="h-4 w-4" />
+                                    Template
+                                </a>
+                                {canCreate && (
+                                    <label className="hidden lg:inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted cursor-pointer">
+                                        <Upload className="h-4 w-4" />
+                                        Import
+                                        <input
+                                            type="file"
+                                            accept=".xlsx,.xls,.csv"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+                                                const formData = new FormData();
+                                                formData.append("file", file);
+                                                router.post(route("admin.products.import"), formData, {
+                                                    forceFormData: true,
+                                                    onFinish: () => { e.target.value = ""; },
+                                                });
+                                            }}
+                                        />
+                                    </label>
                                 )}
                             </div>
                         </div>

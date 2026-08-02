@@ -131,6 +131,9 @@ class HandleInertiaRequests extends Middleware
                     false,
                     false,
                 ),
+                'unreadNotifications' => fn () => $user
+                    ? $user->unreadNotifications()->count()
+                    : 0,
             ],
 
             'currentStore' => fn () => rescue(
