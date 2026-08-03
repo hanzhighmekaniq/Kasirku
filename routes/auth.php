@@ -17,6 +17,10 @@ Route::middleware('guest')->group(function () {
     Route::post('register', [RegisteredUserController::class, 'store'])
         ->middleware('throttle:5,1');
 
+    // Halaman verifikasi OTP (GET)
+    Route::get('register/verify', [RegisteredUserController::class, 'showVerify'])
+        ->name('register.verify.show');
+
     // Tahap 2: verifikasi kode → baru User + Store dibuat.
     Route::post('register/verify', [RegisteredUserController::class, 'verifyOtp'])
         ->middleware('throttle:5,1')

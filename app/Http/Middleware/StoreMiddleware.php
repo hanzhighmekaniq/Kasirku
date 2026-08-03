@@ -29,6 +29,7 @@ class StoreMiddleware
         'admin.profile.destroy',
         'admin.activity-logs.index',
         'sidebar-order',
+        'welcome',
         'onboarding',
         'onboarding.store',
     ];
@@ -66,10 +67,10 @@ class StoreMiddleware
 
             if ($storeCount === 0) {
                 return redirect()
-                    ->route('login')
+                    ->route('welcome')
                     ->with(
-                        'error',
-                        'Akun kamu belum terhubung ke toko mana pun.',
+                        'warning',
+                        'Kamu belum punya toko. Buat toko dulu untuk mulai menggunakan kasir.',
                     );
             }
 

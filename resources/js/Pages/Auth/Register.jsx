@@ -1,48 +1,24 @@
-import { useEffect, useState } from "react";
-import { Head, Link, router, useForm } from "@inertiajs/react";
+import { useState } from "react";
+import { Head, Link, useForm } from "@inertiajs/react";
 import TurnstileWidget from "@/Components/TurnstileWidget";
-import {
-    AlertTriangle,
-    ArrowRight,
-    Check,
-    Eye,
-    EyeOff,
-} from "lucide-react";
+import { AlertTriangle, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 /**
- * Halaman registrasi mandiri (self-service), 2 langkah:
- *   1. Data akun (nama, email, password) + Turnstile captcha
- *   2. Verifikasi kode OTP yang dikirim ke email
- *
- * Setelah verifikasi berhasil, user dibuat (plan Free) dan diarahkan
- * ke halaman onboarding untuk membuat toko.
+ * Halaman registrasi mandiri (self-service), langkah 1:
+ *   - Data akun (nama, email, password) + Turnstile captcha
+ *   - Setelah submit, redirect ke halaman verifikasi OTP terpisah
  *
  * Palet & bahasa visualnya PATEN mengikuti Login.jsx (tema `.dv-auth`,
  * bukan theme engine user) — jangan pakai utility yang terikat tema di
  * file ini, pakai kelas `dv-*` atau nilai eksplisit.
  */
 
-const STEPS = [
-    { key: "account", label: "Akun" },
-    { key: "verify", label: "Verifikasi" },
-];
-
-const VERIFY_STEP = 1;
-
-/** Jeda sebelum tombol "kirim ulang kode" bisa dipakai lagi. */
-const RESEND_COOLDOWN_SECONDS = 60;
-
 export default function Register({
     turnstileSiteKey = null,
-    pendingEmail = null,
 }) {
-    // Kalau ada kode OTP yang masih berlaku dari percobaan sebelumnya,
-    // langsung buka tahap verifikasi — user tidak perlu mengisi form ulang.
-    const [step, setStep] = useState(pendingEmail ? VERIFY_STEP : 0);
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirmation, setShowPasswordConfirmation] =
         useState(false);
-    const [verifyEmail, setVerifyEmail] = useState(pendingEmail ?? "");
 
     const { data, setData, post, processing, errors } = useForm({
         name: "",
@@ -62,17 +38,11 @@ export default function Register({
         data.password_confirmation &&
         turnstileOk;
 
-    // Kirim kode OTP ke email, lanjut ke tahap verifikasi.
+    // Kirim kode OTP ke email, redirect ke halaman verifikasi.
     // Akun belum dibuat di sini.
     const submit = (e) => {
         e.preventDefault();
-        post(route("register"), {
-            preserveScroll: true,
-            onSuccess: () => {
-                setVerifyEmail(data.email);
-                setStep(VERIFY_STEP);
-            },
-        });
+        post(route("register"));
     };
 
     const year = new Date().getFullYear();
@@ -93,11 +63,6 @@ export default function Register({
                     </a>
 
                     <div className="max-w-xl space-y-6 py-10">
-                        <p className="dv-flag">
-                            <Check size={13} strokeWidth={2.5} />
-                            Gratis untuk 1 kasir, selamanya
-                        </p>
-
                         <h1 className="dv-display">
                             Daftar sekarang,
                             <br />
@@ -127,128 +92,108 @@ export default function Register({
                             DEVus<span className="dv-wordmark__dot">.</span>id
                         </a>
 
-                        {/* Step indicator */}
-                        <ol className="mb-6 flex items-center gap-2">
-                            {STEPS.map((s, index) => (
-                                <li
-                                    key={s.key}
-                                    className="flex flex-1 items-center gap-2"
+                        {/* Step indicator - hanya 1 step karena verifikasi di halaman terpisah */}
+                        <div className="mb-6 flex items-center gap-2">
+                            <span
+                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.6875rem] font-semibold"
+                                style={{
+                                    background: "var(--dv-accent)",
+                                    color: "var(--dv-accent-ink)",
+                                }}
+                            >
+                                1
+                            </span>
+                            <span
+                                className="text-[0.8125rem] font-medium"
+                                style={{ color: "var(--dv-ink)" }}
+                            >
+                                Buat Akun
+                            </span>
+                            <span
+                                className="h-px flex-1"
+                                style={{ background: "var(--dv-rule)" }}
+                            />
+                            <span
+                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.6875rem] font-semibold"
+                                style={{
+                                    background: "var(--dv-paper-3)",
+                                    color: "var(--dv-muted)",
+                                }}
+                            >
+                                2
+                            </span>
+                            <span
+                                className="text-[0.8125rem] font-medium"
+                                style={{ color: "var(--dv-muted)" }}
+                            >
+                                Verifikasi
+                            </span>
+                        </div>
+
+                        <form onSubmit={submit}>
+                            <div className="dv-card p-7 sm:p-8">
+                                <AccountStep
+                                    data={data}
+                                    setData={setData}
+                                    errors={errors}
+                                    showPassword={showPassword}
+                                    setShowPassword={setShowPassword}
+                                    showPasswordConfirmation={
+                                        showPasswordConfirmation
+                                    }
+                                    setShowPasswordConfirmation={
+                                        setShowPasswordConfirmation
+                                    }
+                                />
+
+                                <TurnstileWidget
+                                    siteKey={turnstileSiteKey}
+                                    onToken={(token) =>
+                                        setData(
+                                            "cf_turnstile_response",
+                                            token,
+                                        )
+                                    }
+                                    className="mt-6"
+                                />
+                                <FieldError
+                                    message={errors.cf_turnstile_response}
+                                />
+                                {turnstileSiteKey && !turnstileOk && (
+                                    <p
+                                        className="mt-2 text-[0.75rem]"
+                                        style={{ color: "var(--dv-muted)" }}
+                                    >
+                                        Selesaikan verifikasi anti-bot untuk
+                                        melanjutkan.
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="mt-6 flex items-center justify-between gap-3">
+                                <Link href={route("login")} className="dv-tlink">
+                                    Sudah punya akun? Masuk
+                                </Link>
+
+                                <button
+                                    type="submit"
+                                    disabled={processing || !canSubmit}
+                                    className="dv-btn dv-btn--accent"
                                 >
-                                    <span
-                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[0.6875rem] font-semibold"
-                                        style={{
-                                            background:
-                                                index <= step
-                                                    ? "var(--dv-accent)"
-                                                    : "var(--dv-paper-3)",
-                                            color:
-                                                index <= step
-                                                    ? "var(--dv-accent-ink)"
-                                                    : "var(--dv-muted)",
-                                        }}
-                                    >
-                                        {index < step ? (
-                                            <Check size={12} strokeWidth={3} />
-                                        ) : (
-                                            index + 1
-                                        )}
-                                    </span>
-                                    <span
-                                        className="text-[0.8125rem] font-medium"
-                                        style={{
-                                            color:
-                                                index <= step
-                                                    ? "var(--dv-ink)"
-                                                    : "var(--dv-muted)",
-                                        }}
-                                    >
-                                        {s.label}
-                                    </span>
-                                    {index < STEPS.length - 1 && (
-                                        <span
-                                            className="h-px flex-1"
-                                            style={{
-                                                background: "var(--dv-rule)",
-                                            }}
+                                    {processing
+                                        ? "Mengirim kode…"
+                                        : "Kirim kode verifikasi"}
+                                    {!processing && (
+                                        <ArrowRight
+                                            size={16}
+                                            strokeWidth={2.5}
                                         />
                                     )}
-                                </li>
-                            ))}
-                        </ol>
+                                </button>
+                            </div>
 
-                        {step === VERIFY_STEP ? (
-                            <VerifyStep
-                                email={verifyEmail}
-                                onChangeEmail={() => setStep(0)}
-                            />
-                        ) : (
-                            <form onSubmit={submit}>
-                                <div className="dv-card p-7 sm:p-8">
-                                    <AccountStep
-                                        data={data}
-                                        setData={setData}
-                                        errors={errors}
-                                        showPassword={showPassword}
-                                        setShowPassword={setShowPassword}
-                                        showPasswordConfirmation={
-                                            showPasswordConfirmation
-                                        }
-                                        setShowPasswordConfirmation={
-                                            setShowPasswordConfirmation
-                                        }
-                                    />
-
-                                    <TurnstileWidget
-                                        siteKey={turnstileSiteKey}
-                                        onToken={(token) =>
-                                            setData(
-                                                "cf_turnstile_response",
-                                                token,
-                                            )
-                                        }
-                                        className="mt-6"
-                                    />
-                                    <FieldError
-                                        message={errors.cf_turnstile_response}
-                                    />
-                                    {turnstileSiteKey && !turnstileOk && (
-                                        <p
-                                            className="mt-2 text-[0.75rem]"
-                                            style={{ color: "var(--dv-muted)" }}
-                                        >
-                                            Selesaikan verifikasi anti-bot untuk melanjutkan.
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="mt-6 flex items-center justify-between gap-3">
-                                    <Link
-                                        href={route("login")}
-                                        className="dv-tlink"
-                                    >
-                                        Sudah punya akun? Masuk
-                                    </Link>
-
-                                    <button
-                                        type="submit"
-                                        disabled={processing || !canSubmit}
-                                        className="dv-btn dv-btn--accent"
-                                    >
-                                        {processing
-                                            ? "Mengirim kode…"
-                                            : "Kirim kode verifikasi"}
-                                        {!processing && (
-                                            <ArrowRight
-                                                size={16}
-                                                strokeWidth={2.5}
-                                            />
-                                        )}
-                                    </button>
-                                </div>
-
-                                <FieldError message={errors.email} />
-                            </form>
-                        )}
+                            <FieldError message={errors.email} />
+                        </form>
 
                         <p className="dv-label mt-10 lg:hidden">
                             &copy; {year} DEVus.id
@@ -271,131 +216,6 @@ function FieldError({ id, message }) {
             />
             <span>{message}</span>
         </p>
-    );
-}
-
-/**
- * Tahap 2 — verifikasi kode yang dikirim ke email.
- *
- * Punya form sendiri (terpisah dari form akun) karena
- * endpoint-nya berbeda: di sinilah User benar-benar dibuat.
- */
-function VerifyStep({ email, onChangeEmail }) {
-    const { data, setData, post, processing, errors } = useForm({
-        email,
-        code: "",
-    });
-    const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
-    const [resending, setResending] = useState(false);
-
-    useEffect(() => {
-        if (cooldown <= 0) return;
-        const timer = setTimeout(() => setCooldown((c) => c - 1), 1000);
-
-        return () => clearTimeout(timer);
-    }, [cooldown]);
-
-    const submit = (e) => {
-        e.preventDefault();
-        post(route("register.verify"));
-    };
-
-    const resend = () => {
-        if (cooldown > 0 || resending) return;
-        setResending(true);
-        router.post(
-            route("register.resend"),
-            { email },
-            {
-                preserveScroll: true,
-                onFinish: () => {
-                    setResending(false);
-                    setCooldown(RESEND_COOLDOWN_SECONDS);
-                },
-            },
-        );
-    };
-
-    return (
-        <form onSubmit={submit}>
-            <div className="dv-card p-7 sm:p-8">
-                <p className="dv-label">Langkah 2 dari 2</p>
-                <h2 className="dv-title mt-3">Masukkan kode verifikasi</h2>
-                <p
-                    className="mt-2 text-[0.9375rem] leading-relaxed"
-                    style={{ color: "var(--dv-muted)" }}
-                >
-                    Kami mengirim kode 6 angka ke{" "}
-                    <span style={{ color: "var(--dv-ink)", fontWeight: 600 }}>
-                        {email}
-                    </span>
-                    . Kode berlaku 10 menit.
-                </p>
-
-                <div className="mt-7 space-y-1.5">
-                    <label htmlFor="code" className="dv-field-label">
-                        Kode verifikasi
-                    </label>
-                    <input
-                        id="code"
-                        type="text"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        maxLength={6}
-                        autoFocus
-                        value={data.code}
-                        onChange={(e) =>
-                            setData(
-                                "code",
-                                e.target.value.replace(/\D/g, "").slice(0, 6),
-                            )
-                        }
-                        aria-invalid={errors.code ? "true" : undefined}
-                        aria-describedby={
-                            errors.code ? "code-error" : undefined
-                        }
-                        className="dv-input text-center text-[1.5rem] font-semibold tracking-[0.5em]"
-                        placeholder="000000"
-                    />
-                    <FieldError id="code-error" message={errors.code} />
-                </div>
-
-                <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <button
-                        type="button"
-                        onClick={resend}
-                        disabled={cooldown > 0 || resending}
-                        className="dv-tlink disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {resending
-                            ? "Mengirim…"
-                            : cooldown > 0
-                              ? `Kirim ulang kode (${cooldown}s)`
-                              : "Kirim ulang kode"}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onChangeEmail}
-                        className="dv-tlink"
-                    >
-                        Ubah email
-                    </button>
-                </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-end">
-                <button
-                    type="submit"
-                    disabled={processing || data.code.length !== 6}
-                    className="dv-btn dv-btn--accent"
-                >
-                    {processing ? "Membuat akun…" : "Verifikasi & buat akun"}
-                    {!processing && (
-                        <ArrowRight size={16} strokeWidth={2.5} />
-                    )}
-                </button>
-            </div>
-        </form>
     );
 }
 

@@ -23,13 +23,15 @@ class Turnstile implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        // Di environment lokal, Turnstile selalu dilewati — baik key ada
+        // maupun tidak — supaya development tidak terblokir.
+        if (app()->environment('local')) {
+            return;
+        }
+
         $secret = config('services.turnstile.secret_key');
 
         if (blank($secret)) {
-            if (app()->environment('local')) {
-                return;
-            }
-
             Log::warning('[Turnstile] Secret key belum dikonfigurasi — registrasi ditolak.');
             $fail('Verifikasi anti-bot belum dikonfigurasi. Hubungi administrator.');
 

@@ -20,7 +20,9 @@ class PasswordResetLinkController extends Controller
     {
         return Inertia::render('Auth/ForgotPassword', [
             'status' => session('status'),
-            'turnstileSiteKey' => config('services.turnstile.site_key'),
+            'turnstileSiteKey' => app()->environment('local')
+                ? null
+                : config('services.turnstile.site_key'),
         ]);
     }
 

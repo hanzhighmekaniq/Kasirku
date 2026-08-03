@@ -134,8 +134,8 @@ test('correct code creates the account (without store) and logs the user in', fu
         'code' => $otp->code,
     ]);
 
-    // Redirect ke onboarding, bukan dashboard.
-    $response->assertRedirect(route('onboarding'));
+    // Redirect ke welcome, bukan dashboard.
+    $response->assertRedirect(route('welcome'));
     $this->assertAuthenticated();
 
     $user = User::where('email', $payload['email'])->first();
@@ -244,7 +244,7 @@ test('resending for an unknown email is rejected', function () {
     registrationPrerequisites();
 
     $this->post('/register/resend', ['email' => 'nobody@example.com'])
-        ->assertSessionHasErrors('code');
+        ->assertSessionHasErrors('email');
 });
 
 // ── Re-submit menggantikan kode lama, bukan menumpuk ──────────────────────

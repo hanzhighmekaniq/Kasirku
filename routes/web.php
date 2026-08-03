@@ -73,6 +73,7 @@ use App\Http\Controllers\SidebarPreferenceController;
 use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\ThemePresetController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\WelcomeController;
 use App\Models\Branch;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Auth;
@@ -369,11 +370,12 @@ Route::post('/stop-impersonating', [ImpersonationController::class, 'stop'])
     ->name('stop-impersonating');
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ONBOARDING — buat toko pertama setelah registrasi
+// WELCOME & ONBOARDING — user tanpa toko
 // Middleware: auth + single-session (TANPA store/branch — user belum punya toko)
 // ─────────────────────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'single-session'])
     ->group(function () {
+        Route::get('/welcome', WelcomeController::class)->name('welcome');
         Route::get('/onboarding', [OnboardingController::class, 'create'])->name('onboarding');
         Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
     });

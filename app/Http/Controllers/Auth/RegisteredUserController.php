@@ -40,22 +40,10 @@ class RegisteredUserController extends Controller
 
     public function create(Request $request): Response
     {
-        // Kalau user menutup browser di tengah proses lalu kembali, dan kode
-        // OTP-nya masih berlaku, biarkan dia langsung lanjut ke tahap
-        // verifikasi tanpa mengisi ulang seluruh form.
-        $pendingEmail = $request->session()->get(self::PENDING_EMAIL_KEY);
-        $pendingOtp = $pendingEmail
-            ? RegistrationOtp::where('email', $pendingEmail)->first()
-            : null;
-
-        if ($pendingOtp && ($pendingOtp->isExpired() || $pendingOtp->hasReachedMaxAttempts())) {
-            $pendingOtp = null;
-            $request->session()->forget(self::PENDING_EMAIL_KEY);
-        }
-
         return Inertia::render('Auth/Register', [
-            'turnstileSiteKey' => config('services.turnstile.site_key'),
-            'pendingEmail' => $pendingOtp?->email,
+            'turnstileSiteKey' => app()->environment('local')
+                ? null
+                : config('services.turnstile.site_key'),
         ]);
     }
 
@@ -79,6 +67,7 @@ class RegisteredUserController extends Controller
                 'password' => Hash::make($validated['password']),
             ]);
 
+            // Kirim kode OTP ke email di semua environment
             $this->sendCode($otp);
         } catch (ValidationException $e) {
             throw $e;
@@ -95,7 +84,48 @@ class RegisteredUserController extends Controller
 
         $request->session()->put(self::PENDING_EMAIL_KEY, $otp->email);
 
-        return back()->with('status', 'otp-sent');
+        // Di environment local, kirim kode juga di response untuk mempermudah development
+        $flashData = ['otp_code' => null];
+        if (app()->environment('local')) {
+            $flashData['otp_code'] = $otp->code;
+        }
+
+        // Redirect ke halaman verifikasi terpisah
+        return redirect()->route('register.verify.show')->with($flashData);
+    }
+
+    /**
+     * Tampilkan halaman verifikasi OTP.
+     */
+    public function showVerify(Request $request): Response|RedirectResponse
+    {
+        $pendingEmail = $request->session()->get(self::PENDING_EMAIL_KEY);
+
+        if (! $pendingEmail) {
+            return redirect()->route('register')
+                ->with('error', 'Sesi pendaftaran tidak ditemukan. Silakan daftar ulang.');
+        }
+
+        $otp = RegistrationOtp::where('email', $pendingEmail)->first();
+
+        if (! $otp) {
+            $request->session()->forget(self::PENDING_EMAIL_KEY);
+
+            return redirect()->route('register')
+                ->with('error', 'Sesi pendaftaran kedaluwarsa. Silakan daftar ulang.');
+        }
+
+        if ($otp->isExpired() || $otp->hasReachedMaxAttempts()) {
+            $otp->delete();
+            $request->session()->forget(self::PENDING_EMAIL_KEY);
+
+            return redirect()->route('register')
+                ->with('error', 'Kode sudah kedaluwarsa atau percobaan habis. Silakan daftar ulang.');
+        }
+
+        return Inertia::render('Auth/VerifyRegistration', [
+            'email' => $otp->email,
+        ]);
     }
 
     /**
@@ -108,6 +138,15 @@ class RegisteredUserController extends Controller
      */
     public function verifyOtp(Request $request): RedirectResponse
     {
+        // Pastikan user belum ter-authenticate
+        if (Auth::check()) {
+            Log::warning('[Registrasi] User sudah login saat verifikasi OTP', [
+                'user_id' => Auth::id(),
+                'email' => $request->input('email'),
+            ]);
+            Auth::logout();
+        }
+
         $validated = $request->validate([
             'email' => 'required|string|email',
             'code' => 'required|string|size:6',
@@ -162,7 +201,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('onboarding');
+        return redirect()->route('welcome');
     }
 
     /**
@@ -180,13 +219,14 @@ class RegisteredUserController extends Controller
 
         if (! $otp) {
             throw ValidationException::withMessages([
-                'code' => 'Sesi pendaftaran tidak ditemukan. Silakan daftar ulang.',
+                'email' => 'Sesi pendaftaran tidak ditemukan. Silakan daftar ulang.',
             ]);
         }
 
         // Kode baru + reset percobaan, data form yang ditahan tetap dipakai.
         $otp = RegistrationOtp::issueFor($otp->email, $otp->payload);
 
+        // Kirim kode OTP ke email di semua environment
         try {
             $this->sendCode($otp);
         } catch (ValidationException $e) {
@@ -201,7 +241,13 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-        return back()->with('status', 'otp-resent');
+        // Di environment local, kirim kode juga di response untuk mempermudah development
+        $flashData = ['success' => 'Kode verifikasi baru telah dikirim ke email Anda.'];
+        if (app()->environment('local')) {
+            $flashData['otp_code'] = $otp->code;
+        }
+
+        return back()->with($flashData);
     }
 
     /**

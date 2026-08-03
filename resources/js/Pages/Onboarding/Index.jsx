@@ -36,7 +36,7 @@ export default function OnboardingIndex({
     );
 
     const { data, setData, post, processing, errors } = useForm({
-        plan_id: "",
+        plan_id: null,
         store_type_id: storeTypes[0]?.id ?? "",
         business_template_code: "",
         store_name: "",
@@ -307,8 +307,9 @@ function PlanStep({ plans, selectedPlanId, onSelect, error }) {
 
             <div className="mt-6 space-y-2">
                 {plans.map((plan) => {
-                    const isActive =
-                        String(selectedPlanId) === String(plan.id);
+                    // Ensure type consistency - convert both to numbers for comparison
+                    const isActive = Number(selectedPlanId) === Number(plan.id);
+                    
                     return (
                         <button
                             key={plan.id}

@@ -26,9 +26,9 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('developer.dashboard');
             }
 
-            // User tanpa toko → redirect ke onboarding
+            // User tanpa toko → redirect ke welcome
             if ($user->stores()->count() === 0) {
-                return redirect()->route('onboarding');
+                return redirect()->route('welcome');
             }
 
             // Jangan auto-pick store — biarkan StoreMiddleware yang handle
@@ -66,7 +66,7 @@ class AuthenticatedSessionController extends Controller
         $storeCount = $stores->count();
 
         if ($storeCount === 0) {
-            return redirect()->route('onboarding');
+            return redirect()->route('welcome');
         }
 
         $firstStore = $stores->first();
