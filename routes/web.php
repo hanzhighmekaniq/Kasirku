@@ -73,7 +73,6 @@ use App\Http\Controllers\SidebarPreferenceController;
 use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\ThemePresetController;
 use App\Http\Controllers\WebhookController;
-use App\Http\Controllers\WelcomeController;
 use App\Models\Branch;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Auth;
@@ -87,7 +86,7 @@ Route::get('/', function () {
         /** @var User $user */
         $user = Auth::user();
 
-        if ($user->hasRole('developer')) {
+        if ($user->isDeveloper()) {
             return redirect()->route('developer.dashboard');
         }
 
@@ -290,6 +289,10 @@ Route::middleware(['auth', 'developer', 'single-session'])
                 DevPaymentGatewayController::class,
                 'toggleEnv',
             ])->name('payment-gateway.toggle-env');
+            Route::patch('/payment-gateway/plan-order-mode', [
+                DevPaymentGatewayController::class,
+                'togglePlanOrderMode',
+            ])->name('payment-gateway.toggle-plan-order-mode');
 
             // Penyesuaian saldo wallet — menyentuh uang, super admin saja.
             Route::post('/wallets/{store}/adjust', [
@@ -370,12 +373,13 @@ Route::post('/stop-impersonating', [ImpersonationController::class, 'stop'])
     ->name('stop-impersonating');
 
 // ─────────────────────────────────────────────────────────────────────────────
-// WELCOME & ONBOARDING — user tanpa toko
-// Middleware: auth + single-session (TANPA store/branch — user belum punya toko)
+// ONBOARDING — user tanpa toko
+// Middleware: auth + single-session saja. Verifikasi email TIDAK memblokir
+// alur ini — toko langsung dibuat dengan plan Free, verifikasi jadi
+// pengingat pasif di dashboard (lihat banner di AuthenticatedLayout).
 // ─────────────────────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'single-session'])
     ->group(function () {
-        Route::get('/welcome', WelcomeController::class)->name('welcome');
         Route::get('/onboarding', [OnboardingController::class, 'create'])->name('onboarding');
         Route::post('/onboarding', [OnboardingController::class, 'store'])->name('onboarding.store');
     });
@@ -386,7 +390,7 @@ Route::middleware(['auth', 'single-session'])
 // Middleware: auth + store (set Spatie team) + branch
 // Permission check dilakukan per route group / controller.
 // ─────────────────────────────────────────────────────────────────────────────
-Route::middleware(['auth', 'single-session', 'store', 'branch'])
+Route::middleware(['auth', 'single-session', 'store', 'branch', 'verified-mutations'])
     ->prefix('app')
     ->name('admin.')
     ->group(function () {
@@ -1263,6 +1267,12 @@ Route::middleware(['auth', 'single-session', 'store', 'branch'])
         // ─────────────────────────────────────────────────────────────────
         Route::get('/plan', [App\Http\Controllers\Admin\PlanController::class, 'index'])->name('plan.index');
         Route::post('/plan/order', [App\Http\Controllers\Admin\PlanController::class, 'store'])->name('plan.order');
+        Route::get('/plan/orders', [App\Http\Controllers\Admin\PlanController::class, 'orders'])->name('plan.orders');
+        Route::post('/plan/orders/{order}/cancel', [App\Http\Controllers\Admin\PlanController::class, 'cancel'])->name('plan.orders.cancel');
+        Route::post('/plan/orders/{order}/resume', [App\Http\Controllers\Admin\PlanController::class, 'resume'])->name('plan.orders.resume');
+        Route::post('/plan/orders/{order}/pay', [App\Http\Controllers\Admin\PlanController::class, 'payWithGateway'])->name('plan.orders.pay');
+        Route::get('/plan/orders/{order}/status', [App\Http\Controllers\Admin\PlanController::class, 'checkStatus'])->name('plan.orders.status');
+        Route::post('/plan/orders/{order}/change-method', [App\Http\Controllers\Admin\PlanController::class, 'changePaymentMethod'])->name('plan.orders.change-method');
         Route::get('/plan/confirm/{orderRef}', [App\Http\Controllers\Admin\PlanController::class, 'confirm'])->name('plan.confirm');
 
         // ─────────────────────────────────────────────────────────────────

@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Http\Controllers\Admin\PaymentGatewayController;
 use App\Models\PaymentGatewayTransaction;
 use App\Services\PaymentGateway\PaymentGatewayFactory;
+use App\Services\PlanOrderService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -16,7 +17,7 @@ class CheckPendingPgPayments extends Command
 
     public function handle(): int
     {
-        $trxs = PaymentGatewayTransaction::with('sale.store')
+        $trxs = PaymentGatewayTransaction::with(['sale.store', 'planOrder.user.stores'])
             ->whereIn('status', ['pending', 'unknown'])
             ->where('created_at', '>=', now()->subHours(2))
             ->get();
@@ -33,8 +34,11 @@ class CheckPendingPgPayments extends Command
 
         foreach ($trxs as $pgTrx) {
             $sale = $pgTrx->sale;
-            if (! $sale || ! $sale->store_id) {
-                $this->warn("  Skip pg_trx #{$pgTrx->id}: no sale/store found");
+            $planOrder = $pgTrx->planOrder;
+
+            // Skip jika tidak ada sale DAN tidak ada plan_order
+            if (! $sale?->store_id && ! $planOrder) {
+                $this->warn("  Skip pg_trx #{$pgTrx->id}: no sale/store/plan_order found");
 
                 continue;
             }
@@ -48,7 +52,7 @@ class CheckPendingPgPayments extends Command
 
                     if (! $result['found']) {
                         // Still not found after reconciliation attempts — safe to mark
-                        // failed so the cashier can retry with a fresh attempt.
+                        // failed so the user can retry with a fresh attempt.
                         $pgTrx->update(['status' => 'failed']);
                         $this->line("  → #{$pgTrx->id} ({$pgTrx->external_id}) → not found at provider, marked failed");
 
@@ -66,14 +70,24 @@ class CheckPendingPgPayments extends Command
                 }
 
                 if ($result['status'] === 'paid') {
-                    $pgController = new PaymentGatewayController;
-                    if ($pgTrx->sale_split_payer_id) {
-                        $pgController->finalizeSplitPayerPayment($pgTrx);
-                    } else {
-                        $pgController->finalizeSale($sale, $pgTrx);
+                    // Finalize plan order
+                    if ($planOrder) {
+                        $planOrderService = app(PlanOrderService::class);
+                        $planOrderService->finalize($planOrder, $pgTrx->external_id);
+                        $finalized++;
+                        $this->info("  ✓ #{$pgTrx->id} ({$pgTrx->external_id}) → PAID & plan order finalized");
                     }
-                    $finalized++;
-                    $this->info("  ✓ #{$pgTrx->id} ({$pgTrx->external_id}) → PAID & finalized");
+                    // Finalize sale
+                    elseif ($sale) {
+                        $pgController = new PaymentGatewayController;
+                        if ($pgTrx->sale_split_payer_id) {
+                            $pgController->finalizeSplitPayerPayment($pgTrx);
+                        } else {
+                            $pgController->finalizeSale($sale, $pgTrx);
+                        }
+                        $finalized++;
+                        $this->info("  ✓ #{$pgTrx->id} ({$pgTrx->external_id}) → PAID & finalized");
+                    }
                 } else {
                     $this->line("  → #{$pgTrx->id} ({$pgTrx->external_id}) → {$result['status']}");
                 }

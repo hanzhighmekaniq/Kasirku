@@ -121,12 +121,14 @@ test('command marks previous open subscription entry as ended', function () {
 
 // ── Registrasi mencatat riwayat plan awal ─────────────────────────────────
 
-test('onboarding creates initial plan subscription history entry', function () {
+test('onboarding creates initial plan subscription history entry with the free plan', function () {
     $this->seed(PermissionSeeder::class);
 
     $storeType = StoreType::create(['code' => 'fnb', 'label' => 'F&B', 'is_active' => true, 'sort_order' => 1]);
     $freePlan = Plan::create(['code' => 'free', 'label' => 'Free', 'price' => 0, 'trial_days' => 0, 'is_active' => true, 'sort_order' => 0]);
-    $businessPlan = Plan::create(['code' => 'business', 'label' => 'Business', 'price' => 79000, 'trial_days' => 14, 'is_active' => true, 'sort_order' => 1]);
+    // Plan lain sengaja dibuat untuk memastikan onboarding TIDAK memakainya —
+    // onboarding tidak lagi menerima plan_id, plan awal selalu Free.
+    Plan::create(['code' => 'business', 'label' => 'Business', 'price' => 79000, 'trial_days' => 14, 'is_active' => true, 'sort_order' => 1]);
 
     // Registrasi hanya buat user (tanpa store). Plan subscription
     // dicatat saat onboarding, bukan saat registrasi.
@@ -137,7 +139,6 @@ test('onboarding creates initial plan subscription history entry', function () {
     $this->post('/onboarding', [
         'store_type_id' => $storeType->id,
         'business_template_code' => null,
-        'plan_id' => $businessPlan->id,
         'store_name' => 'Toko Lifecycle',
     ]);
 
@@ -145,7 +146,7 @@ test('onboarding creates initial plan subscription history entry', function () {
     $history = PlanSubscription::where('user_id', $user->id)->get();
     expect($history)->toHaveCount(1);
     expect($history->first()->reason)->toBe('initial');
-    expect($history->first()->plan_id)->toBe($businessPlan->id);
+    expect($history->first()->plan_id)->toBe($freePlan->id);
     expect($history->first()->ended_at)->toBeNull();
 });
 

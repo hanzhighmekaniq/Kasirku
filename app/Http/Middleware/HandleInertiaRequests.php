@@ -95,6 +95,8 @@ class HandleInertiaRequests extends Middleware
                     ]
                     : null,
 
+                'emailVerified' => fn () => $user?->hasVerifiedEmail() ?? false,
+
                 'role' => fn () => rescue(
                     function () use ($user, $storeId) {
                         if (! $user || ! $storeId) {

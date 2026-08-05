@@ -1,0 +1,255 @@
+<!doctype html>
+<!--
+  LAYAR 3 — dashboard.html
+  State: TOKO AKTIF (plan Free) + EMAIL BELUM TERVERIFIKASI.
+  Dashboard full aktif, banner verifikasi permanen tapi tidak memblokir apapun.
+-->
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard — Kasirku</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      @keyframes popIn { from { opacity:0; transform: scale(.97);} to {opacity:1; transform: scale(1);} }
+      .pop-in { animation: popIn 150ms ease-out; }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800 antialiased">
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      <aside class="w-64 shrink-0 bg-white border-r border-slate-200 hidden lg:flex flex-col">
+        <div class="h-16 flex items-center gap-2 px-5 border-b border-slate-100">
+          <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+            <i data-lucide="store" class="h-4 w-4"></i>
+          </div>
+          <span class="font-semibold tracking-tight">Kasirku</span>
+        </div>
+        <nav id="nav" class="flex-1 overflow-y-auto py-3 text-sm"></nav>
+      </aside>
+
+      <div class="flex-1 min-w-0 flex flex-col">
+        <!-- Topbar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-5 sticky top-0 z-20">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="font-semibold truncate">Kasirku — <span id="storeName">Laundry Bersih Dinda</span></span>
+            <span class="rounded-md bg-slate-100 text-slate-600 px-2 py-0.5 text-xs font-medium">Free</span>
+          </div>
+          <div class="relative">
+            <button id="userBtn" aria-expanded="false"
+              class="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-colors duration-150 ease-out">
+              <span class="h-8 w-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-semibold" id="avatar">DA</span>
+              <span class="hidden sm:block text-sm font-medium" id="ownerName">Dinda Ayu</span>
+              <i data-lucide="chevron-down" class="h-4 w-4 text-slate-400"></i>
+            </button>
+            <div id="userMenu" class="hidden absolute right-0 mt-2 w-60 rounded-xl border border-slate-200 bg-white shadow-xl p-1.5 pop-in">
+              <div class="px-3 py-2 border-b border-slate-100 mb-1">
+                <p class="text-sm font-medium" id="menuName">Dinda Ayu</p>
+                <p class="text-xs text-slate-500 truncate" id="menuEmail">dinda@gmail.com</p>
+              </div>
+              <button class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"><i data-lucide="user" class="h-4 w-4 text-slate-400"></i>Profil Saya</button>
+              <button class="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"><i data-lucide="log-out" class="h-4 w-4"></i>Keluar</button>
+            </div>
+          </div>
+        </header>
+
+        <!-- Banner verifikasi (permanen) -->
+        <div class="sticky top-16 z-10 bg-amber-50 border-b border-amber-200 px-5 py-3">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-amber-800">
+            <i data-lucide="mail" class="h-4 w-4 shrink-0"></i>
+            <p class="flex-1 min-w-[16rem]">
+              Verifikasi email kamu untuk keamanan akun. Kami sudah kirim link ke
+              <span class="font-medium" id="bannerEmail">dinda@gmail.com</span>.
+            </p>
+            <button id="resendBtn"
+              class="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 transition-all duration-150 ease-out hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
+              Kirim Ulang Link
+            </button>
+            <button id="changeEmailBtn" class="text-xs text-amber-800 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500/30 rounded">
+              Email salah? Ubah di sini
+            </button>
+          </div>
+        </div>
+
+        <!-- Konten -->
+        <main class="p-6 flex-1">
+          <h1 class="text-xl font-semibold">Dashboard</h1>
+          <p class="text-sm text-slate-500 mt-1">Ringkasan toko hari ini.</p>
+
+          <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-xl bg-white border border-slate-200 shadow-sm p-5">
+              <div class="flex items-center justify-between"><span class="text-sm text-slate-500">Penjualan Hari Ini</span><i data-lucide="receipt" class="h-4 w-4 text-slate-300"></i></div>
+              <p class="mt-2 text-2xl font-bold">Rp0</p><p class="text-xs text-slate-400 mt-1">0 transaksi</p>
+            </div>
+            <div class="rounded-xl bg-white border border-slate-200 shadow-sm p-5">
+              <div class="flex items-center justify-between"><span class="text-sm text-slate-500">Produk</span><i data-lucide="package" class="h-4 w-4 text-slate-300"></i></div>
+              <p class="mt-2 text-2xl font-bold">0</p><p class="text-xs text-slate-400 mt-1">Belum ada produk</p>
+            </div>
+            <div class="rounded-xl bg-white border border-slate-200 shadow-sm p-5">
+              <div class="flex items-center justify-between"><span class="text-sm text-slate-500">Pelanggan</span><i data-lucide="user-check" class="h-4 w-4 text-slate-300"></i></div>
+              <p class="mt-2 text-2xl font-bold">0</p><p class="text-xs text-slate-400 mt-1">Mulai catat pelanggan</p>
+            </div>
+            <div class="rounded-xl bg-white border border-slate-200 shadow-sm p-5">
+              <div class="flex items-center justify-between"><span class="text-sm text-slate-500">Shift Aktif</span><i data-lucide="clock" class="h-4 w-4 text-slate-300"></i></div>
+              <p class="mt-2 text-2xl font-bold">—</p><p class="text-xs text-slate-400 mt-1">Belum ada shift dibuka</p>
+            </div>
+          </div>
+
+          <div class="mt-5 grid gap-4 lg:grid-cols-3">
+            <div class="lg:col-span-2 rounded-xl bg-white border border-slate-200 shadow-sm p-5">
+              <div class="flex items-center justify-between">
+                <h2 class="text-sm font-semibold">Grafik Penjualan</h2>
+                <span class="text-xs text-slate-400">7 hari terakhir</span>
+              </div>
+              <div class="mt-6 h-56 flex items-end gap-3">
+                <div class="flex-1 h-full flex items-end gap-3">
+                  <div class="flex-1 rounded-t-md bg-slate-100" style="height: 4px"></div>
+                  <div class="flex-1 rounded-t-md bg-slate-100" style="height: 4px"></div>
+                  <div class="flex-1 rounded-t-md bg-slate-100" style="height: 4px"></div>
+                  <div class="flex-1 rounded-t-md bg-slate-100" style="height: 4px"></div>
+                  <div class="flex-1 rounded-t-md bg-slate-100" style="height: 4px"></div>
+                  <div class="flex-1 rounded-t-md bg-slate-100" style="height: 4px"></div>
+                  <div class="flex-1 rounded-t-md bg-slate-100" style="height: 4px"></div>
+                </div>
+              </div>
+              <p class="text-center text-xs text-slate-400 mt-4">Belum ada data penjualan.</p>
+            </div>
+            <div class="rounded-xl bg-white border border-slate-200 shadow-sm p-5">
+              <h2 class="text-sm font-semibold">Aksi Cepat</h2>
+              <div class="mt-4 space-y-2">
+                <button class="quick w-full flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-indigo-500/30"><i data-lucide="plus" class="h-4 w-4 text-indigo-600"></i>Tambah Produk</button>
+                <button class="quick w-full flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-indigo-500/30"><i data-lucide="folder-tree" class="h-4 w-4 text-indigo-600"></i>Tambah Kategori</button>
+                <button class="quick w-full flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-indigo-500/30"><i data-lucide="shopping-cart" class="h-4 w-4 text-indigo-600"></i>Buka Kasir</button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Modal Ubah Email -->
+    <div id="modal" class="hidden fixed inset-0 z-40 bg-slate-900/40 flex items-center justify-center p-4">
+      <div class="w-full max-w-md rounded-xl bg-white shadow-xl p-6 pop-in">
+        <h3 class="text-lg font-semibold">Ubah Email</h3>
+        <p class="text-sm text-slate-500 mt-1">Kami akan mengirim link verifikasi baru ke email ini.</p>
+        <label for="newEmail" class="block text-sm font-medium mt-5 mb-1.5">Email baru</label>
+        <input id="newEmail" type="email"
+          class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition-all duration-150 ease-out focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" />
+        <div class="mt-6 flex justify-end gap-2">
+          <button id="cancelModal" class="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">Batal</button>
+          <button id="saveEmail" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">Simpan &amp; Kirim Ulang Verifikasi</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toastWrap" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+      const $ = (s) => document.querySelector(s);
+      const params = new URLSearchParams(location.search);
+      const store = params.get("toko") || "Laundry Bersih Dinda";
+      const owner = params.get("pemilik") || "Dinda Ayu";
+      let email = params.get("email") || "dinda@gmail.com";
+      $("#storeName").textContent = store;
+      $("#ownerName").textContent = owner;
+      $("#menuName").textContent = owner;
+      $("#menuEmail").textContent = email;
+      $("#bannerEmail").textContent = email;
+      $("#avatar").textContent = owner.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+      document.title = "Dashboard — " + store;
+
+      const MENU = [
+        { group: "Beranda", items: [
+          { n: "Dashboard", i: "layout-dashboard", active: true },
+          { n: "Kasir/POS", i: "shopping-cart" }]},
+        { group: "Penjualan", items: [
+          { n: "Penjualan", i: "receipt" }, { n: "Shift Kasir", i: "clock" },
+          { n: "Promo & Diskon", i: "percent" }, { n: "Pengeluaran", i: "wallet" }]},
+        { group: "Operasional", items: [
+          { n: "Manajemen Meja", i: "table-2", badge: "F&B" }, { n: "Kitchen Display", i: "chef-hat", badge: "F&B" },
+          { n: "Antrian", i: "list-ordered", badge: "Service" }, { n: "Booking/Reservasi", i: "calendar-check", badge: "Service" }]},
+        { group: "Katalog & Stok", items: [
+          { n: "Produk", i: "package" }, { n: "Label Barcode", i: "barcode" }, { n: "Kategori", i: "folder-tree" },
+          { n: "Modifier/Topping", i: "layers" }, { n: "Manajemen Stok", i: "boxes" }, { n: "Pembelian", i: "truck" }]},
+        { group: "Pelanggan & Tim", items: [
+          { n: "Pelanggan & Loyalitas", i: "user-check" }, { n: "Karyawan", i: "users" }, { n: "Hutang/Kasbon", i: "credit-card" }]},
+        { group: "Laporan", items: [{ n: "Laporan", i: "bar-chart-3" }, { n: "Log Aktivitas", i: "file-text" }]},
+        { group: "Pengaturan", items: [
+          { n: "Pengaturan Toko", i: "settings" },
+          { n: "Plan & Billing", i: "zap", href: "pengaturan-plan.html" },
+          { n: "Metode Pembayaran", i: "wallet" }, { n: "Tema", i: "palette" }]},
+      ];
+
+      $("#nav").innerHTML = MENU.map((g) =>
+        '<div class="px-3 mb-3"><p class="px-2 mb-1 text-[11px] uppercase tracking-wide text-slate-400">' + g.group + "</p>" +
+        g.items.map((it) =>
+          '<a href="' + (it.href || "#") + '" class="navitem flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ' +
+          (it.active ? "bg-indigo-50 text-indigo-700 font-medium" : "text-slate-600 hover:bg-slate-50") + '">' +
+          '<i data-lucide="' + it.i + '" class="h-4 w-4"></i><span class="flex-1 truncate">' + it.n + "</span>" +
+          (it.badge ? '<span class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">' + it.badge + "</span>" : "") +
+          "</a>").join("") + "</div>").join("");
+
+      function toast(msg, tone = "green") {
+        const el = document.createElement("div");
+        el.className = "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm shadow-xl " + (tone === "green" ? "bg-green-600 text-white" : "bg-slate-900 text-white");
+        el.innerHTML = '<i data-lucide="check-circle" class="h-4 w-4"></i><span>' + msg + "</span>";
+        $("#toastWrap").appendChild(el);
+        lucide.createIcons();
+        setTimeout(() => el.remove(), 3000);
+      }
+
+      // Sidebar navigasi dummy (tanpa penolakan)
+      document.addEventListener("click", (e) => {
+        const a = e.target.closest(".navitem");
+        if (a && a.getAttribute("href") === "#") {
+          e.preventDefault();
+          document.querySelectorAll(".navitem").forEach((x) => x.className = x.className.replace("bg-indigo-50 text-indigo-700 font-medium", "text-slate-600 hover:bg-slate-50"));
+          a.className = a.className.replace("text-slate-600 hover:bg-slate-50", "bg-indigo-50 text-indigo-700 font-medium");
+          document.querySelector("main h1").textContent = a.textContent.trim();
+        }
+        if (!e.target.closest("#userBtn") && !e.target.closest("#userMenu")) $("#userMenu").classList.add("hidden");
+      });
+      document.querySelectorAll(".quick").forEach((b) => b.addEventListener("click", () => toast(b.textContent.trim() + " — form dibuka")));
+
+      $("#userBtn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const m = $("#userMenu");
+        m.classList.toggle("hidden");
+        $("#userBtn").setAttribute("aria-expanded", String(!m.classList.contains("hidden")));
+      });
+
+      $("#resendBtn").addEventListener("click", () => {
+        const b = $("#resendBtn");
+        b.disabled = true;
+        b.innerHTML = '<span class="flex items-center gap-1.5"><i data-lucide="loader-circle" class="h-3.5 w-3.5 animate-spin"></i>Mengirim…</span>';
+        lucide.createIcons();
+        setTimeout(() => {
+          b.innerHTML = '<span class="flex items-center gap-1.5 text-green-700"><i data-lucide="check-circle" class="h-3.5 w-3.5"></i>Link terkirim!</span>';
+          lucide.createIcons();
+          setTimeout(() => { b.textContent = "Kirim Ulang Link"; b.disabled = false; }, 3000);
+        }, 1000);
+      });
+
+      $("#changeEmailBtn").addEventListener("click", () => {
+        $("#newEmail").value = email;
+        $("#modal").classList.remove("hidden");
+        $("#newEmail").focus();
+      });
+      $("#cancelModal").addEventListener("click", () => $("#modal").classList.add("hidden"));
+      $("#saveEmail").addEventListener("click", () => {
+        const v = $("#newEmail").value.trim();
+        if (!v) return;
+        email = v;
+        $("#bannerEmail").textContent = email;
+        $("#menuEmail").textContent = email;
+        $("#modal").classList.add("hidden");
+        toast("Email diubah. Link verifikasi baru sudah dikirim.");
+      });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("#modal").classList.add("hidden"); });
+
+      window.addEventListener("DOMContentLoaded", () => lucide.createIcons());
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

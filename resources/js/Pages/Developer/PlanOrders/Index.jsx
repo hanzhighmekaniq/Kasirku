@@ -4,6 +4,8 @@ import { useState } from "react";
 import {
     AlertTriangle,
     Check,
+    ChevronDown,
+    ChevronUp,
     CircleCheck,
     Clock,
     Search,
@@ -169,12 +171,99 @@ function RejectModal({ order, onClose }) {
     );
 }
 
+function OrderHistoryRow({ order }) {
+    const isPaid = order.status === "paid";
+    const isCancelled = order.status === "cancelled";
+    const isFailed = order.status === "failed";
+
+    return (
+        <div className="border-t border-border bg-muted/30 px-5 py-4">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                Riwayat
+            </p>
+            <div className="space-y-3">
+                {/* Step 1: Dibuat */}
+                <div className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground">
+                            Dibuat
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            {order.user_name
+                                ? `oleh ${order.user_name} (Owner)`
+                                : "Otomatis (PG)"}
+                            {order.is_manual && order.created_by_name && (
+                                <span> · diproses manual oleh {order.created_by_name}</span>
+                            )}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            {fmtDate(order.created_at)}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Step 2: Diproses (jika ada) */}
+                {(isPaid || isCancelled || isFailed) && (
+                    <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                            isPaid ? "bg-success/10" : "bg-destructive/10"
+                        }`}>
+                            <div className={`h-2 w-2 rounded-full ${
+                                isPaid ? "bg-success" : "bg-destructive"
+                            }`} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-foreground">
+                                {isPaid ? "Disetujui" : isCancelled ? "Ditolak" : "Gagal"}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                {order.processed_by_name
+                                    ? `oleh ${order.processed_by_name}`
+                                    : "Sistem (webhook PG)"}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                {fmtDate(order.paid_at || order.created_at)}
+                            </p>
+                            {order.notes && (
+                                <p className="mt-1.5 rounded-lg bg-background px-3 py-2 text-xs text-muted-foreground italic">
+                                    "{order.notes}"
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 3: Pending (belum diproses) */}
+                {order.status === "pending" && (
+                    <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warning/10">
+                            <div className="h-2 w-2 rounded-full bg-warning" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-foreground">
+                                Menunggu Persetujuan
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                Belum diproses oleh developer
+                            </p>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
 export default function PlanOrdersIndex({ orders, filters = {}, statusOptions = {} }) {
     const { flash } = usePage().props;
     const [approveTarget, setApproveTarget] = useState(null);
     const [rejectTarget, setRejectTarget] = useState(null);
     const [search, setSearch] = useState(filters.search ?? "");
     const [status, setStatus] = useState(filters.status ?? "");
+    const [expandedId, setExpandedId] = useState(null);
 
     const applyFilter = () => {
         router.get(route("developer.plan-orders.index"), { search, status }, {
@@ -265,62 +354,84 @@ export default function PlanOrdersIndex({ orders, filters = {}, statusOptions = 
                 ) : (
                     <div className="divide-y divide-border">
                         {orders.data?.map((order) => (
-                            <div key={order.id} className="flex items-center gap-4 px-5 py-4 hover:bg-muted/40 transition">
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="text-sm font-semibold text-foreground">
-                                            {order.store_name}
-                                        </p>
-                                        <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                                            {order.store_code}
-                                        </span>
-                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${STATUS_COLOR[order.status] ?? STATUS_COLOR.expired}`}>
-                                            {order.status_label}
-                                        </span>
-                                        {order.is_manual && (
-                                            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                                                Manual
+                            <div key={order.id}>
+                                <div
+                                    className={`flex items-center gap-4 px-5 py-4 transition hover:bg-muted/40 ${expandedId === order.id ? "bg-muted/20" : ""}`}
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <p className="text-sm font-semibold text-foreground">
+                                                {order.store_name}
+                                            </p>
+                                            <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                                {order.store_code}
                                             </span>
+                                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${STATUS_COLOR[order.status] ?? STATUS_COLOR.expired}`}>
+                                                {order.status_label}
+                                            </span>
+                                            {order.is_manual && (
+                                                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                                    Manual
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                            {order.idempotency_key} · {order.plan_label} · {order.period_label} · {fmt(order.amount)}
+                                        </p>
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                            {fmtDate(order.created_at)}
+                                            {order.processed_by_name && ` · diproses oleh ${order.processed_by_name}`}
+                                        </p>
+                                        {order.notes && (
+                                            <p className="mt-0.5 text-xs text-muted-foreground italic">
+                                                {order.notes}
+                                            </p>
                                         )}
                                     </div>
-                                    <p className="mt-0.5 text-xs text-muted-foreground">
-                                        {order.idempotency_key} · {order.plan_label} · {order.period_label} · {fmt(order.amount)}
-                                    </p>
-                                    <p className="mt-0.5 text-xs text-muted-foreground">
-                                        {fmtDate(order.created_at)}
-                                        {order.processed_by_name && ` · diproses oleh ${order.processed_by_name}`}
-                                    </p>
-                                    {order.notes && (
-                                        <p className="mt-0.5 text-xs text-muted-foreground italic">
-                                            {order.notes}
-                                        </p>
+
+                                    {order.status === "pending" && (
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setApproveTarget(order); }}
+                                                className="inline-flex items-center gap-1.5 rounded-xl bg-success/10 px-3 py-1.5 text-xs font-semibold text-success transition hover:bg-success/20"
+                                            >
+                                                <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                                Approve
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setRejectTarget(order); }}
+                                                className="inline-flex items-center gap-1.5 rounded-xl bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                                            >
+                                                Tolak
+                                            </button>
+                                        </div>
                                     )}
+
+                                    {order.store_id && (
+                                        <Link
+                                            href={route("developer.stores.show", { store: order.store_id })}
+                                            className="shrink-0 text-xs text-muted-foreground hover:text-primary transition"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            Lihat Toko →
+                                        </Link>
+                                    )}
+
+                                    <button
+                                        onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
+                                        className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-muted transition"
+                                    >
+                                        {expandedId === order.id ? (
+                                            <ChevronUp className="h-4 w-4" strokeWidth={2} />
+                                        ) : (
+                                            <ChevronDown className="h-4 w-4" strokeWidth={2} />
+                                        )}
+                                    </button>
                                 </div>
 
-                                {order.status === "pending" && (
-                                    <div className="flex items-center gap-1 shrink-0">
-                                        <button
-                                            onClick={() => setApproveTarget(order)}
-                                            className="inline-flex items-center gap-1.5 rounded-xl bg-success/10 px-3 py-1.5 text-xs font-semibold text-success transition hover:bg-success/20"
-                                        >
-                                            <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                            Approve
-                                        </button>
-                                        <button
-                                            onClick={() => setRejectTarget(order)}
-                                            className="inline-flex items-center gap-1.5 rounded-xl bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-                                        >
-                                            Tolak
-                                        </button>
-                                    </div>
+                                {expandedId === order.id && (
+                                    <OrderHistoryRow order={order} />
                                 )}
-
-                                <Link
-                                    href={route("developer.stores.show", order.store_id)}
-                                    className="shrink-0 text-xs text-muted-foreground hover:text-primary transition"
-                                >
-                                    Lihat Toko →
-                                </Link>
                             </div>
                         ))}
                     </div>

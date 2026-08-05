@@ -120,6 +120,7 @@ const ICONS = {
     clipboardList: ClipboardList,
     filter: Filter,
     package: Package,
+    zap: Zap,
 };
 
 const GROUP_ICONS = {

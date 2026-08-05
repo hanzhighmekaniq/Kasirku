@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, HasRoles, Notifiable;
 
@@ -42,6 +43,7 @@ class User extends Authenticatable
         'session_token',
         'theme_preference',
         'sidebar_preference',
+        'password_changed_at',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -55,6 +57,7 @@ class User extends Authenticatable
             'plan_expires_at' => 'date',
             'theme_preference' => 'array',
             'sidebar_preference' => 'array',
+            'password_changed_at' => 'datetime',
         ];
     }
 
@@ -144,6 +147,17 @@ class User extends Authenticatable
     {
         return $this->plan_expires_at !== null
             && $this->plan_expires_at->isPast();
+    }
+
+    /**
+     * Periode billing aktif user berdasarkan order terakhir yang sudah dibayar.
+     */
+    public function currentBillingPeriod(): ?string
+    {
+        return PlanOrder::where('user_id', $this->id)
+            ->where('status', PlanOrder::STATUS_PAID)
+            ->latest('paid_at')
+            ->value('billing_period');
     }
 
     /** Apakah user masih bisa membuat toko baru (cek max_stores). */

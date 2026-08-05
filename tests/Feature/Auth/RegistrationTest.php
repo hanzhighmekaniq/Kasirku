@@ -2,30 +2,25 @@
 
 /*
 |--------------------------------------------------------------------------
-| Registrasi Mandiri — Dua Tahap dengan Verifikasi OTP Wajib
+| Registrasi Mandiri — Langsung Buat Akun
 |--------------------------------------------------------------------------
 |
 | Alur baru:
-|   1. POST /register        → validasi form akun + captcha, kirim kode OTP.
-|                              User BELUM dibuat.
-|   2. POST /register/verify → kode benar, User dibuat (plan Free), login,
-|                              redirect ke onboarding.
-|   3. POST /onboarding      → user pilih plan, jenis usaha, nama toko.
-|                              Store baru dibuat di sini.
-|
-| Verifikasi bersifat WAJIB: tidak ada jalur yang membuat akun tanpa kode
-| terverifikasi.
+|   1. POST /register → email + password → akun langsung dibuat, login,
+|      redirect ke /onboarding (pilih jenis usaha + nama toko).
+|   2. Nama user di-generate otomatis dari email + timestamp.
+|   3. Tidak ada OTP, tidak ada captcha.
+|   4. Password wajib huruf besar, huruf kecil, dan angka (simbol
+|      opsional) — divalidasi via Password::min(8)->mixedCase()->numbers().
+|   5. Verifikasi email TIDAK memblokir apapun — toko langsung dibuat
+|      dengan plan Free begitu onboarding selesai.
 |
 */
 
 use App\Models\Plan;
-use App\Models\RegistrationOtp;
 use App\Models\User;
-use App\Notifications\RegistrationOtpCode;
 use Database\Seeders\DatabaseSeeder\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 
@@ -43,228 +38,149 @@ function registrationPrerequisites(): void
     ]);
 }
 
-/**
- * Selesaikan tahap 1 dan kembalikan baris OTP-nya.
- */
-function submitRegistrationForm(array $overrides = []): array
-{
-    registrationPrerequisites();
-
-    $payload = array_merge([
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-        'password' => 'Password123',
-        'password_confirmation' => 'Password123',
-    ], $overrides);
-
-    $response = test()->post('/register', $payload);
-
-    return [$response, $payload];
-}
-
-// ── Tahap 1: kirim kode ────────────────────────────────────────────────────
+// ── Registrasi ──────────────────────────────────────────────────────────────
 
 test('registration screen can be rendered', function () {
     registrationPrerequisites();
 
-    $this->get('/register')->assertStatus(200);
+    $this->get('/register')->assertSuccessful();
 });
 
-test('submitting the form sends an otp and does NOT create the account yet', function () {
-    Notification::fake();
-
-    [$response, $payload] = submitRegistrationForm();
-
-    $response->assertSessionHasNoErrors();
-
-    // Akun belum ada — verifikasi dulu.
-    expect(User::where('email', $payload['email'])->exists())->toBeFalse();
-    $this->assertGuest();
-
-    $otp = RegistrationOtp::where('email', $payload['email'])->first();
-    expect($otp)->not->toBeNull();
-    expect($otp->code)->toHaveLength(6);
-
-    // Password disimpan sudah ter-hash, bukan plaintext.
-    expect($otp->payload['password'])->not->toBe($payload['password']);
-    expect(Hash::check($payload['password'], $otp->payload['password']))->toBeTrue();
-
-    Notification::assertSentOnDemand(RegistrationOtpCode::class);
-});
-
-test('weak password is rejected by the password policy', function () {
+test('submitting the form creates the account and logs the user in', function () {
     registrationPrerequisites();
 
     $response = $this->post('/register', [
-        'name' => 'Weak Password User',
-        'email' => 'weak@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
+        'email' => 'test@example.com',
+        'password' => 'Password123',
+        'password_confirmation' => 'Password123',
     ]);
 
-    $response->assertSessionHasErrors('password');
-    expect(RegistrationOtp::count())->toBe(0);
+    $response->assertRedirect(route('onboarding'));
+    $this->assertAuthenticated();
+
+    $user = User::where('email', 'test@example.com')->first();
+    expect($user)->not->toBeNull();
+
+    // Nama di-generate otomatis dari email
+    expect($user->name)->toContain('test_');
+    expect($user->name)->toMatch('/^test_\d{8}_\d{6}$/');
+
+    // User dibuat dengan plan Free
+    $freePlan = Plan::where('code', 'free')->first();
+    expect($user->plan_id)->toBe($freePlan?->id);
+
+    // Store BELUM dibuat — user harus onboarding dulu
+    expect($user->stores()->count())->toBe(0);
 });
 
-test('duplicate email is rejected before sending a code', function () {
+test('generated name is unique even with same email timestamp', function () {
+    registrationPrerequisites();
+
+    $this->post('/register', [
+        'email' => 'test@example.com',
+        'password' => 'Password123',
+        'password_confirmation' => 'Password123',
+    ])->assertRedirect(route('onboarding'));
+
+    // Logout untuk register lagi
+    Auth::logout();
+
+    $this->post('/register', [
+        'email' => 'test@example.com',
+        'password' => 'Password456',
+        'password_confirmation' => 'Password456',
+    ])->assertSessionHasErrors('email');
+});
+
+test('duplicate email is rejected', function () {
     registrationPrerequisites();
     User::factory()->create(['email' => 'taken@example.com']);
 
     $response = $this->post('/register', [
-        'name' => 'Duplicate',
         'email' => 'taken@example.com',
         'password' => 'Password123',
         'password_confirmation' => 'Password123',
     ]);
 
     $response->assertSessionHasErrors('email');
-    expect(RegistrationOtp::count())->toBe(0);
 });
 
-// ── Tahap 2: verifikasi kode ───────────────────────────────────────────────
+test('weak password is rejected', function () {
+    registrationPrerequisites();
 
-test('correct code creates the account (without store) and logs the user in', function () {
-    Notification::fake();
-
-    [, $payload] = submitRegistrationForm();
-    $otp = RegistrationOtp::where('email', $payload['email'])->first();
-
-    $response = $this->post('/register/verify', [
-        'email' => $payload['email'],
-        'code' => $otp->code,
+    $response = $this->post('/register', [
+        'email' => 'weak@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
     ]);
 
-    // Redirect ke welcome, bukan dashboard.
-    $response->assertRedirect(route('welcome'));
+    $response->assertSessionHasErrors('password');
+});
+
+test('password without uppercase letter is rejected', function () {
+    registrationPrerequisites();
+
+    $response = $this->post('/register', [
+        'email' => 'nolower@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ]);
+
+    $response->assertSessionHasErrors('password');
+});
+
+test('password without number is rejected', function () {
+    registrationPrerequisites();
+
+    $response = $this->post('/register', [
+        'email' => 'nonumber@example.com',
+        'password' => 'PasswordOnly',
+        'password_confirmation' => 'PasswordOnly',
+    ]);
+
+    $response->assertSessionHasErrors('password');
+});
+
+test('password with uppercase, lowercase, and number but no symbol is accepted', function () {
+    registrationPrerequisites();
+
+    $response = $this->post('/register', [
+        'email' => 'nosymbol@example.com',
+        'password' => 'Password123',
+        'password_confirmation' => 'Password123',
+    ]);
+
+    $response->assertRedirect(route('onboarding'));
+    $this->assertAuthenticated();
+});
+
+test('password confirmation must match', function () {
+    registrationPrerequisites();
+
+    $response = $this->post('/register', [
+        'email' => 'test@example.com',
+        'password' => 'Password123',
+        'password_confirmation' => 'DifferentPassword',
+    ]);
+
+    $response->assertSessionHasErrors('password');
+    $this->assertGuest();
+});
+
+test('name and captcha are not required for registration', function () {
+    registrationPrerequisites();
+
+    // Tidak mengirim name atau cf_turnstile_response — tetap berhasil
+    $response = $this->post('/register', [
+        'email' => 'simple@example.com',
+        'password' => 'Password123',
+        'password_confirmation' => 'Password123',
+    ]);
+
+    $response->assertRedirect(route('onboarding'));
     $this->assertAuthenticated();
 
-    $user = User::where('email', $payload['email'])->first();
+    $user = User::where('email', 'simple@example.com')->first();
     expect($user)->not->toBeNull();
-    // Password hasil hash tahap 1 tetap dipakai (tidak di-hash dua kali).
-    expect(Hash::check($payload['password'], $user->password))->toBeTrue();
-
-    // User dibuat dengan plan Free.
-    $freePlan = Plan::where('code', 'free')->first();
-    expect($user->plan_id)->toBe($freePlan?->id);
-
-    // Store BELUM dibuat — user harus onboarding dulu.
-    expect($user->stores()->count())->toBe(0);
-
-    // OTP dibersihkan setelah dipakai.
-    expect(RegistrationOtp::where('email', $payload['email'])->exists())->toBeFalse();
-});
-
-test('wrong code is rejected and increments the attempt counter', function () {
-    Notification::fake();
-
-    [, $payload] = submitRegistrationForm();
-
-    $response = $this->post('/register/verify', [
-        'email' => $payload['email'],
-        'code' => '000000',
-    ]);
-
-    $response->assertSessionHasErrors('code');
-    $this->assertGuest();
-    expect(User::where('email', $payload['email'])->exists())->toBeFalse();
-    expect(RegistrationOtp::where('email', $payload['email'])->first()->attempts)->toBe(1);
-});
-
-test('code is rejected after max attempts are exhausted', function () {
-    Notification::fake();
-
-    [, $payload] = submitRegistrationForm();
-    $otp = RegistrationOtp::where('email', $payload['email'])->first();
-    $otp->update(['attempts' => RegistrationOtp::MAX_ATTEMPTS]);
-
-    // Bahkan kode yang benar ditolak setelah percobaan habis.
-    $response = $this->post('/register/verify', [
-        'email' => $payload['email'],
-        'code' => $otp->code,
-    ]);
-
-    $response->assertSessionHasErrors('code');
-    expect(User::where('email', $payload['email'])->exists())->toBeFalse();
-});
-
-test('expired code is rejected and the pending registration is discarded', function () {
-    Notification::fake();
-
-    [, $payload] = submitRegistrationForm();
-    RegistrationOtp::where('email', $payload['email'])
-        ->update(['expires_at' => now()->subMinute()]);
-
-    $otp = RegistrationOtp::where('email', $payload['email'])->first();
-
-    $response = $this->post('/register/verify', [
-        'email' => $payload['email'],
-        'code' => $otp->code,
-    ]);
-
-    $response->assertSessionHasErrors('code');
-    expect(User::where('email', $payload['email'])->exists())->toBeFalse();
-    expect(RegistrationOtp::where('email', $payload['email'])->exists())->toBeFalse();
-});
-
-test('verifying an unknown email is rejected', function () {
-    registrationPrerequisites();
-
-    $response = $this->post('/register/verify', [
-        'email' => 'nobody@example.com',
-        'code' => '123456',
-    ]);
-
-    $response->assertSessionHasErrors('code');
-    $this->assertGuest();
-});
-
-// ── Kirim ulang kode ───────────────────────────────────────────────────────
-
-test('resending issues a new code and resets the attempt counter', function () {
-    Notification::fake();
-
-    [, $payload] = submitRegistrationForm();
-    $original = RegistrationOtp::where('email', $payload['email'])->first();
-    $original->update(['attempts' => 3]);
-    $originalCode = $original->code;
-
-    $this->post('/register/resend', ['email' => $payload['email']])
-        ->assertSessionHasNoErrors();
-
-    $fresh = RegistrationOtp::where('email', $payload['email'])->first();
-    expect($fresh->attempts)->toBe(0);
-    expect($fresh->code)->not->toBe($originalCode);
-    // Data form yang ditahan tetap sama.
-    expect($fresh->payload['name'])->toBe($payload['name']);
-
-    Notification::assertSentOnDemandTimes(RegistrationOtpCode::class, 2);
-});
-
-test('resending for an unknown email is rejected', function () {
-    registrationPrerequisites();
-
-    $this->post('/register/resend', ['email' => 'nobody@example.com'])
-        ->assertSessionHasErrors('email');
-});
-
-// ── Re-submit menggantikan kode lama, bukan menumpuk ──────────────────────
-
-test('submitting the form again replaces the pending code instead of stacking rows', function () {
-    Notification::fake();
-
-    [, $payload] = submitRegistrationForm();
-    $firstCode = RegistrationOtp::where('email', $payload['email'])->first()->code;
-
-    $this->post('/register', [
-        'name' => 'Test User Updated',
-        'email' => $payload['email'],
-        'password' => 'Password456',
-        'password_confirmation' => 'Password456',
-    ])->assertSessionHasNoErrors();
-
-    expect(RegistrationOtp::where('email', $payload['email'])->count())->toBe(1);
-
-    $otp = RegistrationOtp::where('email', $payload['email'])->first();
-    expect($otp->code)->not->toBe($firstCode);
-    expect($otp->payload['name'])->toBe('Test User Updated');
+    expect($user->name)->toContain('simple_');
 });

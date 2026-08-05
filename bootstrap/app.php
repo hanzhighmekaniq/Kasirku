@@ -5,6 +5,7 @@ use App\Http\Middleware\CheckFeatureAccess;
 use App\Http\Middleware\CheckFeatureDetailAccess;
 use App\Http\Middleware\DeveloperMiddleware;
 use App\Http\Middleware\EnsureActiveShift;
+use App\Http\Middleware\EnsureEmailVerifiedForMutations;
 use App\Http\Middleware\EnsureSingleSession;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PermissionMiddleware;
@@ -50,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'ensure.shift' => EnsureActiveShift::class,
             'feature' => CheckFeatureAccess::class,
             'feature-detail' => CheckFeatureDetailAccess::class,
+            'verified-mutations' => EnsureEmailVerifiedForMutations::class,
         ]);
 
         // CSRF exception for payment gateway webhooks + offline transaction sync

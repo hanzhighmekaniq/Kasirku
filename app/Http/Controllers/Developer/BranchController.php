@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Developer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\DeveloperActionLog;
 use App\Models\Store;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -91,7 +92,7 @@ class BranchController extends Controller
             return back()->withErrors(['code' => 'Kode sudah dipakai di toko ini.']);
         }
 
-        Branch::create([
+        $branch = Branch::create([
             'store_id' => $validated['store_id'],
             'code' => strtoupper($validated['code']),
             'name' => $validated['name'],
@@ -99,6 +100,8 @@ class BranchController extends Controller
             'address' => $validated['address'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ]);
+
+        DeveloperActionLog::record('branch.create', $branch, $branch->toArray(), null);
 
         // Developer tidak diblokir menambah cabang (butuh override manual,
         // mis. bonus cabang tanpa upgrade plan) — tapi tetap diberi peringatan
@@ -142,7 +145,7 @@ class BranchController extends Controller
                 'name' => $e->name,
                 'position' => $e->position,
                 'phone' => $e->phone,
-                'is_active' => $e->is_active,
+                'status' => $e->status,
                 'user' => $e->user ? [
                     'id' => $e->user->id,
                     'name' => $e->user->name,
@@ -201,6 +204,8 @@ class BranchController extends Controller
             return back()->withErrors(['code' => 'Kode sudah dipakai di toko ini.']);
         }
 
+        $snapshot = $branch->only(['id', 'code', 'name', 'store_id', 'is_active']);
+
         $branch->update([
             'store_id' => $storeId,
             'code' => strtoupper($validated['code']),
@@ -209,6 +214,8 @@ class BranchController extends Controller
             'address' => $validated['address'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ]);
+
+        DeveloperActionLog::record('branch.update', $branch, $snapshot, $branch->fresh()->toArray());
 
         return redirect()->route('developer.branches.index')->with('success', 'Cabang berhasil diperbarui.');
     }
@@ -220,6 +227,9 @@ class BranchController extends Controller
         if ($branch->employees_count || $branch->sales_count || $branch->purchases_count) {
             return back()->with('error', 'Cabang sudah dipakai. Nonaktifkan saja.');
         }
+
+        $snapshot = $branch->only(['id', 'code', 'name', 'store_id', 'is_active']);
+        DeveloperActionLog::record('branch.destroy', $branch, $snapshot, null);
 
         $branch->delete();
 

@@ -24,7 +24,7 @@ class PaymentGatewayTransaction extends Model
     public const MAX_ATTEMPTS = 3;
 
     protected $fillable = [
-        'sale_id', 'sale_split_payer_id', 'provider', 'external_id',
+        'sale_id', 'sale_split_payer_id', 'plan_order_id', 'provider', 'external_id',
         'idempotency_key', 'attempt_no',
         'payment_type', 'status', 'gateway_http_status', 'amount',
         'raw_response', 'status_checked_at', 'error_message', 'gateway_error_code',
@@ -39,6 +39,11 @@ class PaymentGatewayTransaction extends Model
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    public function planOrder(): BelongsTo
+    {
+        return $this->belongsTo(PlanOrder::class);
     }
 
     public function splitPayer(): BelongsTo

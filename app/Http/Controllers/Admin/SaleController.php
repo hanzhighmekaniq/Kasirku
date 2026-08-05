@@ -109,6 +109,9 @@ class SaleController extends Controller
 
     public function show(Sale $sale)
     {
+        $storeId = session('current_store_id');
+        abort_if((int) $sale->store_id !== (int) $storeId, 404);
+
         $sale->load([
             'customer',
             'user',
@@ -205,6 +208,16 @@ class SaleController extends Controller
 
     public function destroy(Sale $sale)
     {
+        /** @var User $user */
+        $user = Auth::user();
+        $storeId = session('current_store_id');
+
+        // Authorization: harus punya permission sale.void
+        abort_unless($user->can('sale.void'), 403, 'Tidak punya izin menghapus transaksi.');
+
+        // Store scope: pastikan sale milik toko aktif
+        abort_if((int) $sale->store_id !== (int) $storeId, 404);
+
         if ($sale->status === 'completed') {
             // Reverse stock for completed sales — bucket-aware
             foreach ($sale->items as $item) {

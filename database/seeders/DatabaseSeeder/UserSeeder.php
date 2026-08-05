@@ -5,6 +5,7 @@ namespace Database\Seeders\DatabaseSeeder;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -18,6 +19,7 @@ class UserSeeder extends Seeder
                 'name' => 'Dev Admin',
                 'password' => Hash::make('password'),
                 'is_developer' => true,
+                ...self::readyToUseAttributes(),
             ],
         );
 
@@ -28,6 +30,7 @@ class UserSeeder extends Seeder
                 'name' => 'Budi Santoso',
                 'password' => Hash::make('password'),
                 'is_developer' => false,
+                ...self::readyToUseAttributes(),
             ],
         );
 
@@ -47,8 +50,27 @@ class UserSeeder extends Seeder
                     'name' => $k['name'],
                     'password' => Hash::make('password'),
                     'is_developer' => false,
+                    ...self::readyToUseAttributes(),
                 ],
             );
         }
+    }
+
+    /**
+     * Akun seed harus langsung bisa dipakai.
+     *
+     * Tanpa `email_verified_at`, middleware EnsureEmailVerifiedForMutations
+     * memblokir semua POST/PUT/PATCH/DELETE. Tanpa `password_changed_at`,
+     * middleware EnsurePasswordChangedAfterVerification memaksa ke
+     * /password/setup. Keduanya harus diisi bersamaan.
+     *
+     * @return array{email_verified_at: Carbon, password_changed_at: Carbon}
+     */
+    private static function readyToUseAttributes(): array
+    {
+        return [
+            'email_verified_at' => now(),
+            'password_changed_at' => now(),
+        ];
     }
 }

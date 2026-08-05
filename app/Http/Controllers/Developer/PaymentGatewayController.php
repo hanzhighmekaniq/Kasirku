@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PlatformPaymentGateway;
 use App\Services\PaymentGateway\PaymentGatewayFactory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class PaymentGatewayController extends Controller
@@ -42,6 +43,7 @@ class PaymentGatewayController extends Controller
 
         return Inertia::render('Developer/PaymentGateway/Index', [
             'providers' => $providers,
+            'planOrderMode' => PlatformPaymentGateway::getPlanOrderMode(),
         ]);
     }
 
@@ -149,5 +151,35 @@ class PaymentGatewayController extends Controller
         PaymentGatewayFactory::flushCache($paymentGateway->provider);
 
         return back()->with('success', "{$paymentGateway->provider} beralih ke ".($newEnv === 'production' ? 'Production' : 'Sandbox').'.');
+    }
+
+    /**
+     * Toggle mode pembayaran plan order (manual vs auto/PG).
+     *
+     * Setting global ini menentukan apakah user yang upgrade plan
+     * diarahkan ke Payment Gateway atau ditampilkan instruksi
+     * transfer manual.
+     */
+    public function togglePlanOrderMode()
+    {
+        $current = PlatformPaymentGateway::getPlanOrderMode();
+        $newMode = $current === 'auto' ? 'manual' : 'auto';
+
+        // Simpan ke baris pertama yang ada, atau buat baru jika belum ada
+        $gateway = PlatformPaymentGateway::first();
+        if ($gateway) {
+            $gateway->update(['plan_order_mode' => $newMode]);
+            // Flush cache gateway config
+            Cache::forget("platform_pg_config:{$gateway->provider}");
+        } else {
+            PlatformPaymentGateway::create([
+                'provider' => 'midtrans',
+                'plan_order_mode' => $newMode,
+            ]);
+        }
+
+        $label = $newMode === 'manual' ? 'Manual (Transfer Bank)' : 'Otomatis (Payment Gateway)';
+
+        return back()->with('success', "Mode pembayaran plan order diubah ke {$label}.");
     }
 }

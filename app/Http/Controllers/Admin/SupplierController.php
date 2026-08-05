@@ -46,15 +46,15 @@ class SupplierController extends Controller
         abort_unless($storeId, 403);
 
         $validated = $request->validate([
-            'name'           => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
-            'phone'          => 'nullable|string|max:30',
-            'email'          => ['nullable', 'email', Rule::unique('suppliers', 'email')->where('store_id', $storeId)],
-            'address'        => 'nullable|string',
+            'phone' => 'nullable|string|max:30',
+            'email' => ['nullable', 'email', Rule::unique('suppliers', 'email')->where('store_id', $storeId)],
+            'address' => 'nullable|string',
         ]);
 
         $validated['store_id'] = $storeId;
-        $validated['code']     = $this->nextCode($storeId);
+        $validated['code'] = $this->nextCode($storeId);
 
         Supplier::create($validated);
 
@@ -111,11 +111,11 @@ class SupplierController extends Controller
         $storeId = session('current_store_id');
 
         $validated = $request->validate([
-            'name'           => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
-            'phone'          => 'nullable|string|max:30',
-            'email'          => ['nullable', 'email', Rule::unique('suppliers', 'email')->ignore($supplier->id)->where('store_id', $storeId)],
-            'address'        => 'nullable|string',
+            'phone' => 'nullable|string|max:30',
+            'email' => ['nullable', 'email', Rule::unique('suppliers', 'email')->ignore($supplier->id)->where('store_id', $storeId)],
+            'address' => 'nullable|string',
         ]);
 
         $supplier->update($validated);
@@ -133,6 +133,7 @@ class SupplierController extends Controller
         }
 
         $supplier->delete();
+
         return redirect()->route('admin.suppliers.index')->with('success', 'Supplier berhasil dihapus.');
     }
 
@@ -145,14 +146,23 @@ class SupplierController extends Controller
 
     private function nextCode(int $storeId): string
     {
-        $last = Supplier::where('store_id', $storeId)
-            ->orderByDesc('id')
-            ->value('code');
+        $maxRetries = 5;
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            $last = Supplier::where('store_id', $storeId)
+                ->orderByDesc('id')
+                ->value('code');
 
-        if ($last && preg_match('/(\d+)$/', $last, $m)) {
-            return 'SUP' . str_pad((int) $m[1] + 1, 4, '0', STR_PAD_LEFT);
+            if ($last && preg_match('/(\d+)$/', $last, $m)) {
+                $code = 'SUP'.str_pad((int) $m[1] + 1, 4, '0', STR_PAD_LEFT);
+            } else {
+                $code = 'SUP0001';
+            }
+
+            if (! Supplier::where('store_id', $storeId)->where('code', $code)->exists()) {
+                return $code;
+            }
         }
 
-        return 'SUP0001';
+        return 'SUP'.str_pad((string) mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
     }
 }

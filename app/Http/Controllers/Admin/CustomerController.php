@@ -125,16 +125,12 @@ class CustomerController extends Controller
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:male,female',
             'notes' => 'nullable|string|max:500',
-            'deposit_balance' => 'nullable|numeric|min:0',
             'credit_limit' => 'nullable|numeric|min:0',
         ]);
 
         $validated['store_id'] = $storeId;
         $validated['code'] = $this->nextCode($storeId);
-
-        if (isset($validated['deposit_balance'])) {
-            $validated['deposit_balance'] = $validated['deposit_balance'] ?: 0;
-        }
+        $validated['deposit_balance'] = 0;
 
         $customer = Customer::create($validated);
 
@@ -169,7 +165,6 @@ class CustomerController extends Controller
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:male,female',
             'notes' => 'nullable|string|max:500',
-            'deposit_balance' => 'nullable|numeric|min:0',
             'credit_limit' => 'nullable|numeric|min:0',
         ]);
 
@@ -183,6 +178,14 @@ class CustomerController extends Controller
     public function destroy(Customer $customer)
     {
         $this->ensureSameStore($customer);
+
+        if ($customer->debt_balance > 0) {
+            return back()->withErrors(['customer' => 'Pelanggan masih memiliki hutang sebesar Rp'.number_format($customer->debt_balance).'. Lunasi terlebih dahulu.']);
+        }
+
+        if ($customer->sales()->exists()) {
+            return back()->withErrors(['customer' => 'Pelanggan sudah memiliki riwayat transaksi. Nonaktifkan saja agar data tetap aman.']);
+        }
 
         $customer->delete();
 
@@ -220,22 +223,27 @@ class CustomerController extends Controller
             'notes' => 'nullable|string|max:255',
         ]);
 
-        $newBalance = max(0, $customer->points + $validated['adjustment']);
-        $actualAdjustment = $newBalance - $customer->points; // handle if negative goes below 0
+        return DB::transaction(function () use ($validated, $customer) {
+            // Lock customer row untuk mencegah race condition
+            $lockedCustomer = Customer::lockForUpdate()->find($customer->id);
 
-        $customer->update(['points' => $newBalance]);
+            $newBalance = max(0, $lockedCustomer->points + $validated['adjustment']);
+            $actualAdjustment = $newBalance - $lockedCustomer->points;
 
-        CustomerPointLog::create([
-            'customer_id' => $customer->id,
-            'store_id' => $customer->store_id,
-            'type' => 'adjust',
-            'points' => $actualAdjustment,
-            'balance_after' => $newBalance,
-            'notes' => $validated['notes'],
-            'created_by' => Auth::id(),
-        ]);
+            $lockedCustomer->update(['points' => $newBalance]);
 
-        return back()->with('success', 'Poin berhasil disesuaikan.');
+            CustomerPointLog::create([
+                'customer_id' => $lockedCustomer->id,
+                'store_id' => $lockedCustomer->store_id,
+                'type' => 'adjust',
+                'points' => $actualAdjustment,
+                'balance_after' => $newBalance,
+                'notes' => $validated['notes'],
+                'created_by' => Auth::id(),
+            ]);
+
+            return back()->with('success', 'Poin berhasil disesuaikan.');
+        });
     }
 
     public function payDebt(Request $request, Customer $customer)
@@ -244,8 +252,6 @@ class CustomerController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            // Opsional di sini: endpoint ini juga dipakai jalur lain yang tidak
-            // selalu menyertakan metode. Halaman Kasbon mewajibkannya sendiri.
             'payment_method_id' => [
                 'nullable',
                 Rule::exists('payment_methods', 'id')
@@ -256,41 +262,43 @@ class CustomerController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $amount = (float) $validated['amount'];
-        $currentDebt = (float) $customer->debt_balance;
+        return DB::transaction(function () use ($request, $customer, $validated) {
+            // Lock customer row untuk mencegah race condition
+            $lockedCustomer = Customer::lockForUpdate()->find($customer->id);
 
-        // Ditolak sebagai error validasi, bukan back()->with('error'):
-        // pesannya menempel di field dan klien JSON menerima 422, bukan 302
-        // yang terlihat seolah berhasil.
-        if ($amount > $currentDebt) {
-            throw ValidationException::withMessages([
-                'amount' => 'Jumlah pelunasan melebihi hutang. Hutang saat ini: Rp'.number_format($currentDebt),
+            $amount = (float) $validated['amount'];
+            $currentDebt = (float) $lockedCustomer->debt_balance;
+
+            if ($amount > $currentDebt) {
+                throw ValidationException::withMessages([
+                    'amount' => 'Jumlah pelunasan melebihi hutang. Hutang saat ini: Rp'.number_format($currentDebt),
+                ]);
+            }
+
+            $newBalance = $currentDebt - $amount;
+
+            CustomerDebtLog::create([
+                'customer_id' => $lockedCustomer->id,
+                'store_id' => $lockedCustomer->store_id,
+                'type' => 'payment',
+                'amount' => $amount,
+                'payment_method_id' => $validated['payment_method_id'] ?? null,
+                'balance_after' => $newBalance,
+                'notes' => $validated['notes'] ?? 'Pelunasan hutang',
+                'created_by' => Auth::id(),
             ]);
-        }
 
-        $newBalance = $currentDebt - $amount;
+            $lockedCustomer->update(['debt_balance' => $newBalance]);
 
-        CustomerDebtLog::create([
-            'customer_id' => $customer->id,
-            'store_id' => $customer->store_id,
-            'type' => 'payment',
-            'amount' => $amount,
-            'payment_method_id' => $validated['payment_method_id'] ?? null,
-            'balance_after' => $newBalance,
-            'notes' => $validated['notes'] ?? 'Pelunasan hutang',
-            'created_by' => Auth::id(),
-        ]);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'debt_balance' => $newBalance,
+                ]);
+            }
 
-        $customer->update(['debt_balance' => $newBalance]);
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'debt_balance' => $newBalance,
-            ]);
-        }
-
-        return back()->with('success', 'Pelunasan berhasil. Sisa hutang: Rp'.number_format($newBalance));
+            return back()->with('success', 'Pelunasan berhasil. Sisa hutang: Rp'.number_format($newBalance));
+        });
     }
 
     public function assignMembership(Request $request, Customer $customer)
@@ -366,14 +374,24 @@ class CustomerController extends Controller
 
     private function nextCode(int $storeId): string
     {
-        $last = Customer::where('store_id', $storeId)
-            ->orderByDesc('id')
-            ->value('code');
+        $maxRetries = 5;
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            $last = Customer::where('store_id', $storeId)
+                ->orderByDesc('id')
+                ->value('code');
 
-        if ($last && preg_match('/(\d+)$/', $last, $m)) {
-            return 'CST'.str_pad((int) $m[1] + 1, 3, '0', STR_PAD_LEFT);
+            if ($last && preg_match('/(\d+)$/', $last, $m)) {
+                $code = 'CST'.str_pad((int) $m[1] + 1, 3, '0', STR_PAD_LEFT);
+            } else {
+                $code = 'CST001';
+            }
+
+            if (! Customer::where('store_id', $storeId)->where('code', $code)->exists()) {
+                return $code;
+            }
         }
 
-        return 'CST001';
+        // Fallback: gunakan timestamp untuk uniqueness
+        return 'CST'.str_pad((string) mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
     }
 }

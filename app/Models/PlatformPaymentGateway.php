@@ -10,7 +10,7 @@ class PlatformPaymentGateway extends Model
     protected $fillable = [
         'provider', 'is_active', 'environment',
         'server_key', 'client_key', 'merchant_id',
-        'enabled_methods', 'config_json',
+        'enabled_methods', 'config_json', 'plan_order_mode',
     ];
 
     protected $casts = [
@@ -99,5 +99,29 @@ class PlatformPaymentGateway extends Model
                 'fields' => ['server_key', 'merchant_id'],
             ],
         ];
+    }
+
+    // ── Plan Order Mode (global setting) ────────────────
+
+    /**
+     * Mode pembayaran untuk order upgrade plan.
+     *   'auto'   → redirect ke Payment Gateway
+     *   'manual' → instruksi transfer manual + kontak admin
+     *
+     * Setting ini global — diambil dari baris pertama di tabel ini.
+     */
+    public static function getPlanOrderMode(): string
+    {
+        $first = self::orderBy('id')->first();
+
+        return $first?->plan_order_mode ?? 'auto';
+    }
+
+    /**
+     * Apakah mode plan order adalah manual?
+     */
+    public static function isPlanOrderManual(): bool
+    {
+        return self::getPlanOrderMode() === 'manual';
     }
 }

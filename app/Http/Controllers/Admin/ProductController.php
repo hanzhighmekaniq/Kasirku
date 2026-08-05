@@ -33,6 +33,16 @@ class ProductController extends Controller
         'time_based' => 'Berbasis Waktu',
     ];
 
+    /**
+     * Resolve Product scoped ke store aktif (mencegah cross-tenant access).
+     */
+    private function resolveProduct($id): Product
+    {
+        $storeId = session('current_store_id');
+
+        return Product::forStore($storeId)->findOrFail($id);
+    }
+
     public function index(Request $request)
     {
         $storeId = session('current_store_id');
@@ -198,8 +208,9 @@ class ProductController extends Controller
         ]);
     }
 
-    public function show(Product $product)
+    public function show($productId)
     {
+        $product = $this->resolveProduct($productId);
         $product->load([
             'category',
             'supplier',
@@ -675,8 +686,9 @@ class ProductController extends Controller
             ->with('success', 'Produk berhasil ditambahkan.');
     }
 
-    public function edit(Product $product)
+    public function edit($productId)
     {
+        $product = $this->resolveProduct($productId);
         $storeId = session('current_store_id');
         $store = Store::with('storeType')->find($storeId);
 
@@ -725,8 +737,9 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(Request $request, Product $product)
+    public function update(Request $request, $productId)
     {
+        $product = $this->resolveProduct($productId);
         $validated = $request->validate($this->productRules($product));
 
         $this->validateFnbProductRules($validated);
@@ -820,8 +833,10 @@ class ProductController extends Controller
             ->with('success', 'Produk berhasil diperbarui.');
     }
 
-    public function destroy(Product $product)
+    public function destroy($productId)
     {
+        $product = $this->resolveProduct($productId);
+
         if ($product->type === 'membership') {
             return back()->with('error',
                 'Produk membership tidak bisa dihapus langsung. Nonaktifkan lewat halaman Membership.');

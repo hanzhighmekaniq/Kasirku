@@ -54,12 +54,13 @@ abstract class BasePaymentGateway implements PaymentGatewayInterface
 
     // ── Persistence helpers ────────────────────────
 
-    protected function saveTransaction(int $saleId, string $externalId, string $paymentType, float $amount, string $status, array $raw): PaymentGatewayTransaction
+    protected function saveTransaction(?int $saleId, string $externalId, string $paymentType, float $amount, string $status, array $raw, ?int $planOrderId = null): PaymentGatewayTransaction
     {
         return PaymentGatewayTransaction::updateOrCreate(
             ['external_id' => $externalId],
             [
                 'sale_id' => $saleId,
+                'plan_order_id' => $planOrderId,
                 'provider' => $this->provider,
                 'payment_type' => $paymentType,
                 'status' => $status,
@@ -78,6 +79,21 @@ abstract class BasePaymentGateway implements PaymentGatewayInterface
             'expire', 'expired' => 'expired',
             default => 'pending',
         };
+    }
+
+    /**
+     * Default reconcile: gunakan getStatus sebagai fallback.
+     * Gateway yang punya API reconcile khusus (seperti Midtrans) sebaiknya override method ini.
+     */
+    public function reconcile(string $externalId): array
+    {
+        try {
+            $result = $this->getStatus($externalId);
+
+            return ['found' => true, 'status' => $result['status'], 'raw' => $result['raw'] ?? null];
+        } catch (\Throwable) {
+            return ['found' => false, 'status' => 'not_found', 'raw' => null];
+        }
     }
 
     protected function log(string $level, string $message, array $context = []): void

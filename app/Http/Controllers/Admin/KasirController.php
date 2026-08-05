@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Concerns\FinalizesSaleStock;
 use App\Http\Controllers\Concerns\HasStoreScope;
 use App\Http\Controllers\Concerns\ManagesTableStatus;
+use App\Http\Controllers\Concerns\ResolvesPgMethods;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\CafeTable;
@@ -19,7 +20,6 @@ use App\Models\EmployeeCommission;
 use App\Models\Membership;
 use App\Models\PaymentGatewayTransaction;
 use App\Models\PaymentMethod;
-use App\Models\PlatformPaymentGateway;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\Promotion;
@@ -41,7 +41,7 @@ use Inertia\Inertia;
 
 class KasirController extends Controller
 {
-    use FinalizesSaleStock, HasStoreScope, ManagesTableStatus;
+    use FinalizesSaleStock, HasStoreScope, ManagesTableStatus, ResolvesPgMethods;
 
     public function index()
     {
@@ -531,27 +531,6 @@ class KasirController extends Controller
         }
     }
 
-    /**
-     * Ambil daftar metode PG aktif dari config platform (dikelola developer),
-     * dengan label user-friendly. Semua store memakai akun PG yang sama.
-     */
-    private function getActivePgMethods(int $storeId): array
-    {
-        $gateways = PlatformPaymentGateway::where('is_active', true)->get();
-
-        $methods = [];
-        foreach ($gateways as $gw) {
-            foreach ($gw->enabled_methods ?? [] as $method) {
-                $methods[] = [
-                    'provider' => $gw->provider,
-                    'payment_type' => $method,
-                ];
-            }
-        }
-
-        return $methods;
-    }
-
     /** Dapatkan ID shift aktif user saat ini, atau null */
     private function getActiveShiftId(int $storeId, int $userId): ?int
     {
@@ -763,8 +742,7 @@ class KasirController extends Controller
         DB::beginTransaction();
         try {
             $user = $request->user();
-            $storeId = session('current_store_id');
-            $branchId = session('branch_id');
+            [$storeId, $branchId] = $this->storeScope();
             $store = Store::with('storeType')->find($storeId);
             $storeTypeCode =
                 $store?->getRelation('storeType')?->code ?? 'retail';
@@ -786,12 +764,7 @@ class KasirController extends Controller
             $store?->load(['planModel.features', 'storeFeatures.feature']);
             $now = now();
 
-            $prefix = 'SL-'.$now->format('Ymd').'-';
-            $last = Sale::where('sale_no', 'like', $prefix.'%')
-                ->orderByDesc('sale_no')
-                ->first();
-            $seq = $last ? (int) substr($last->sale_no, -3) + 1 : 1;
-            $saleNo = $prefix.str_pad($seq, 3, '0', STR_PAD_LEFT);
+            $saleNo = $this->generateUniqueSaleNo($now);
 
             $items = $validated['items'];
 
@@ -1241,16 +1214,20 @@ class KasirController extends Controller
                 }
             }
 
-            // Catat redeem poin jika ada
+            // Catat redeem poin jika ada — gunakan lockForUpdate untuk mencegah race condition
             if (isset($pointsRedeemed) && $pointsRedeemed > 0 && $customerForPromo) {
-                $customerForPromo->decrement('points', $pointsRedeemed);
+                $lockedCustomer = Customer::lockForUpdate()->find($customerForPromo->id);
+                if ($lockedCustomer->points < $pointsRedeemed) {
+                    throw new \RuntimeException("Poin tidak cukup. Poin tersedia: {$lockedCustomer->points}");
+                }
+                $lockedCustomer->decrement('points', $pointsRedeemed);
                 CustomerPointLog::create([
                     'store_id' => $storeId,
-                    'customer_id' => $customerForPromo->id,
+                    'customer_id' => $lockedCustomer->id,
                     'sale_id' => $sale->id,
                     'type' => 'redeem',
                     'points' => -$pointsRedeemed,
-                    'balance_after' => $customerForPromo->points, // points after decrement
+                    'balance_after' => $lockedCustomer->fresh()->points,
                     'notes' => "Redeem pada transaksi {$saleNo}",
                     'created_by' => $user->id,
                 ]);
@@ -1287,7 +1264,8 @@ class KasirController extends Controller
                     throw new \Exception('Anda tidak memiliki izin untuk menerima pembayaran hutang.');
                 }
 
-                $customer = Customer::find($validated['customer_id'] ?? null);
+                $customerId = $validated['customer_id'] ?? null;
+                $customer = Customer::where('store_id', $storeId)->lockForUpdate()->find($customerId);
                 if (! $customer) {
                     throw new \Exception('Pilih pelanggan terlebih dahulu untuk pembayaran hutang.');
                 }
@@ -1421,7 +1399,7 @@ class KasirController extends Controller
             'customer_name' => 'nullable|string|max:200',
             'notes' => 'nullable|string|max:500',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|integer',
+            'items.*.product_id' => 'required|exists:products,id',
             'items.*.variant_id' => 'nullable|integer',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
@@ -1477,12 +1455,7 @@ class KasirController extends Controller
             $store?->load(['planModel.features', 'storeFeatures.feature']);
             $now = now();
 
-            $prefix = 'SL-'.$now->format('Ymd').'-';
-            $last = Sale::where('sale_no', 'like', $prefix.'%')
-                ->orderByDesc('sale_no')
-                ->first();
-            $seq = $last ? (int) substr($last->sale_no, -3) + 1 : 1;
-            $saleNo = $prefix.str_pad($seq, 3, '0', STR_PAD_LEFT);
+            $saleNo = $this->generateUniqueSaleNo($now);
 
             $items = $validated['items'];
 
@@ -1735,7 +1708,7 @@ class KasirController extends Controller
                 }
                 // Use customer_id from request if provided (kasbon flow), fallback to sale's customer_id
                 $customerId = $validated['customer_id'] ?? $sale->customer_id;
-                $customer = Customer::find($customerId);
+                $customer = Customer::where('store_id', $storeId)->lockForUpdate()->find($customerId);
                 if (! $customer) {
                     throw new \Exception('Pilih pelanggan terlebih dahulu untuk pembayaran hutang.');
                 }
@@ -2002,5 +1975,30 @@ class KasirController extends Controller
         }
 
         return response()->json(['success' => true, 'message' => 'Metode pembayaran berhasil diubah.']);
+    }
+
+    /**
+     * Generate nomor penjualan unik secara atomik.
+     * Retry otomatis jika terjadi race condition (unique constraint violation).
+     */
+    private function generateUniqueSaleNo(Carbon $now): string
+    {
+        $maxRetries = 5;
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            $prefix = 'SL-'.$now->format('Ymd').'-';
+            $last = Sale::where('sale_no', 'like', $prefix.'%')
+                ->orderByDesc('sale_no')
+                ->first();
+            $seq = $last ? (int) substr($last->sale_no, -3) + 1 : 1;
+            $saleNo = $prefix.str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
+
+            // Cek duplikat sebelum insert (optimistic check)
+            if (! Sale::where('sale_no', $saleNo)->exists()) {
+                return $saleNo;
+            }
+        }
+
+        // Fallback: gunakan timestamp untuk uniqueness
+        return $prefix.str_pad((string) mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
     }
 }

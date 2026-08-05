@@ -17,7 +17,17 @@ class PaymentMethodController extends Controller
     /** Ambil store_id dari session. */
     private function getStoreId(): int
     {
-        return session('current_store_id') ?? Store::first()->id;
+        return session('current_store_id');
+    }
+
+    /** Resolve PaymentMethod yang di-scope ke store aktif. */
+    private function resolvePaymentMethod(int $id): PaymentMethod
+    {
+        $storeId = $this->getStoreId();
+
+        abort_unless($storeId, 403);
+
+        return PaymentMethod::where('store_id', $storeId)->findOrFail($id);
     }
 
     public function index()
@@ -64,8 +74,10 @@ class PaymentMethodController extends Controller
             ->with('success', 'Metode pembayaran berhasil ditambahkan.');
     }
 
-    public function edit(PaymentMethod $paymentMethod)
+    public function edit(int $paymentMethod)
     {
+        $paymentMethod = $this->resolvePaymentMethod($paymentMethod);
+
         return Inertia::render('Admin/PaymentMethods/Edit', [
             'paymentMethod' => $paymentMethod,
             'types' => PaymentMethod::types(),
@@ -74,8 +86,9 @@ class PaymentMethodController extends Controller
 
     public function update(
         UpdatePaymentMethodRequest $request,
-        PaymentMethod $paymentMethod,
+        int $paymentMethod,
     ) {
+        $paymentMethod = $this->resolvePaymentMethod($paymentMethod);
         $data = $request->validated();
 
         // Tunai & Hutang wajib — tipe tidak bisa diubah
@@ -112,8 +125,9 @@ class PaymentMethodController extends Controller
             ->with('success', 'Metode pembayaran berhasil diperbarui.');
     }
 
-    public function destroy(PaymentMethod $paymentMethod)
+    public function destroy(int $paymentMethod)
     {
+        $paymentMethod = $this->resolvePaymentMethod($paymentMethod);
         // Tunai & Hutang wajib — tidak bisa dihapus
         $lockedTypes = ['cash', 'debt'];
         if (in_array($paymentMethod->type, $lockedTypes, true)) {
@@ -150,8 +164,9 @@ class PaymentMethodController extends Controller
     /**
      * Toggle active status (PATCH) — used from index table toggle.
      */
-    public function toggleActive(PaymentMethod $paymentMethod)
+    public function toggleActive(int $paymentMethod)
     {
+        $paymentMethod = $this->resolvePaymentMethod($paymentMethod);
         $paymentMethod->update(['is_active' => ! $paymentMethod->is_active]);
 
         return back()->with(
@@ -163,8 +178,9 @@ class PaymentMethodController extends Controller
     }
 
     /** Update sort_order via AJAX dari index table. */
-    public function updateSort(Request $request, PaymentMethod $paymentMethod)
+    public function updateSort(Request $request, int $paymentMethod)
     {
+        $paymentMethod = $this->resolvePaymentMethod($paymentMethod);
         $validated = $request->validate([
             'sort_order' => 'required|integer|min:0',
         ]);

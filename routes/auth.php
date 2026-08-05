@@ -6,29 +6,17 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 
-    // Tahap 1: validasi form + captcha → kirim kode OTP ke email.
-    // Akun & toko BELUM dibuat di tahap ini.
     Route::post('register', [RegisteredUserController::class, 'store'])
         ->middleware('throttle:5,1');
-
-    // Halaman verifikasi OTP (GET)
-    Route::get('register/verify', [RegisteredUserController::class, 'showVerify'])
-        ->name('register.verify.show');
-
-    // Tahap 2: verifikasi kode → baru User + Store dibuat.
-    Route::post('register/verify', [RegisteredUserController::class, 'verifyOtp'])
-        ->middleware('throttle:5,1')
-        ->name('register.verify');
-
-    Route::post('register/resend', [RegisteredUserController::class, 'resendOtp'])
-        ->middleware('throttle:3,1')
-        ->name('register.resend');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
@@ -61,4 +49,23 @@ Route::middleware('auth')->group(function () {
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+
+    // Email verification routes
+    Route::get('email/verify', fn () => Inertia::render('Auth/VerifyEmail'))
+        ->name('verification.notice');
+
+    Route::get('email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+
+        // Toko sudah dibuat sejak awal (onboarding tidak butuh email
+        // terverifikasi) — arahkan ke profil supaya user lihat konfirmasi
+        // "Email Terverifikasi".
+        return redirect()->route('admin.profile.edit');
+    })->middleware(['signed'])->name('verification.verify');
+
+    Route::post('email/verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('success', 'Link verifikasi baru telah dikirim ke email kamu.');
+    })->middleware('throttle:6,1')->name('verification.send');
 });

@@ -1,7 +1,7 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
-import { Head, useForm, usePage } from "@inertiajs/react";
+import { Head, router, useForm, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import { Check, ChevronDown, CreditCard } from "lucide-react";
+import { Check, ChevronDown, CreditCard, Receipt, ArrowRightLeft } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import Field from "@/Components/ui/Field";
 
@@ -236,8 +236,19 @@ function ProviderCard({ provider }) {
     );
 }
 
-export default function Index({ providers = [] }) {
+export default function Index({ providers = [], planOrderMode = "auto" }) {
     const { flash } = usePage().props;
+    const [processing, setProcessing] = useState(false);
+
+    const togglePlanOrderMode = () => {
+        setProcessing(true);
+        router.patch(route("developer.payment-gateway.toggle-plan-order-mode"), {}, {
+            preserveScroll: true,
+            onFinish: () => setProcessing(false),
+        });
+    };
+
+    const isManualMode = planOrderMode === "manual";
 
     return (
         <DeveloperLayout header="Payment Gateway Platform">
@@ -266,6 +277,58 @@ export default function Index({ providers = [] }) {
                         </a>{" "}
                         untuk memantau saldo tiap store.
                     </p>
+                </div>
+            </div>
+
+            {/* Toggle Mode Pembayaran Plan Order */}
+            <div className="mb-5 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="flex items-center gap-4 px-5 py-4">
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                        isManualMode
+                            ? "bg-warning/10 text-warning"
+                            : "bg-success/10 text-success"
+                    }`}>
+                        <Receipt className="h-5 w-5" strokeWidth={1.8} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-bold text-foreground">Mode Pembayaran Plan</h3>
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                isManualMode
+                                    ? "bg-warning/10 text-warning"
+                                    : "bg-success/10 text-success"
+                            }`}>
+                                {isManualMode ? "Manual" : "Otomatis (PG)"}
+                            </span>
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            {isManualMode
+                                ? "User yang upgrade plan akan mendapat instruksi transfer manual. Developer menyetujui secara manual."
+                                : "User yang upgrade plan akan diarahkan ke Payment Gateway untuk pembayaran otomatis."}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={!isManualMode}
+                        disabled={processing}
+                        onClick={togglePlanOrderMode}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring/20 focus:ring-offset-2 disabled:opacity-50 ${
+                            !isManualMode ? "bg-success" : "bg-warning"
+                        }`}
+                    >
+                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg transition duration-200 ${
+                            !isManualMode ? "translate-x-5" : "translate-x-0"
+                        }`} />
+                    </button>
+                </div>
+                <div className="flex items-center gap-2 border-t border-border bg-muted/40 px-5 py-3 text-[11px] text-muted-foreground">
+                    <ArrowRightLeft className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                    <span>
+                        {isManualMode
+                            ? "Mode ini terpisah dari Payment Gateway transaksi toko. Kamu bisa tetap mengaktifkan PG untuk transaksi POS."
+                            : "Memerlukan minimal satu Payment Gateway aktif di bawah ini."}
+                    </span>
                 </div>
             </div>
 

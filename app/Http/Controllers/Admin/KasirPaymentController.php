@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\HasStoreScope;
+use App\Http\Controllers\Concerns\ResolvesPgMethods;
 use App\Http\Controllers\Controller as BaseController;
 use App\Models\CafeTable;
 use App\Models\Category;
@@ -10,7 +11,6 @@ use App\Models\Customer;
 use App\Models\Employee;
 use App\Models\PaymentGatewayTransaction;
 use App\Models\PaymentMethod;
-use App\Models\PlatformPaymentGateway;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Sale;
@@ -25,7 +25,7 @@ use Inertia\Inertia;
 
 class KasirPaymentController extends BaseController
 {
-    use HasStoreScope;
+    use HasStoreScope, ResolvesPgMethods;
 
     public function show(Request $request, string $saleNo)
     {
@@ -375,25 +375,5 @@ class KasirPaymentController extends BaseController
             'pendingPgTransaction' => $pendingPgTransaction,
             'initialPgTransaction' => $initialPgTransaction,
         ]);
-    }
-
-    /**
-     * Ambil daftar metode PG aktif dari config platform.
-     */
-    private function getActivePgMethods(int $storeId): array
-    {
-        $gateways = PlatformPaymentGateway::where('is_active', true)->get();
-
-        $methods = [];
-        foreach ($gateways as $gw) {
-            foreach ($gw->enabled_methods ?? [] as $method) {
-                $methods[] = [
-                    'provider' => $gw->provider,
-                    'payment_type' => $method,
-                ];
-            }
-        }
-
-        return $methods;
     }
 }

@@ -617,35 +617,37 @@ class PurchaseController extends Controller
 
     public function destroy(Purchase $purchase)
     {
-        if ($purchase->status === 'completed') {
-            $stockService = app(StockService::class);
+        DB::transaction(function () use ($purchase) {
+            if ($purchase->status === 'completed') {
+                $stockService = app(StockService::class);
 
-            foreach ($purchase->items as $item) {
-                $product = $item->product;
-                if ($product?->track_stock) {
-                    $stockQty = $item->stockQuantity();
-                    $stockCost = $item->stockUnitCost();
+                foreach ($purchase->items as $item) {
+                    $product = $item->product;
+                    if ($product?->track_stock) {
+                        $stockQty = $item->stockQuantity();
+                        $stockCost = $item->stockUnitCost();
 
-                    $stockService->decrease(new StockMutation(
-                        productId: $item->product_id,
-                        variantId: $item->variant_id,
-                        packagingUnitId: $item->packaging_unit_id,
-                        storeId: $purchase->store_id,
-                        branchId: $purchase->branch_id,
-                        quantity: $stockQty,
-                        unitCost: $stockCost,
-                        movementType: 'purchase_out',
-                        referenceType: Purchase::class,
-                        referenceId: $purchase->id,
-                        referenceNo: $purchase->purchase_no,
-                        notes: "Pembelian #{$purchase->purchase_no} — dihapus",
-                        revertAvgCost: true,
-                    ));
+                        $stockService->decrease(new StockMutation(
+                            productId: $item->product_id,
+                            variantId: $item->variant_id,
+                            packagingUnitId: $item->packaging_unit_id,
+                            storeId: $purchase->store_id,
+                            branchId: $purchase->branch_id,
+                            quantity: $stockQty,
+                            unitCost: $stockCost,
+                            movementType: 'purchase_out',
+                            referenceType: Purchase::class,
+                            referenceId: $purchase->id,
+                            referenceNo: $purchase->purchase_no,
+                            notes: "Pembelian #{$purchase->purchase_no} — dihapus",
+                            revertAvgCost: true,
+                        ));
+                    }
                 }
             }
-        }
 
-        $purchase->delete();
+            $purchase->delete();
+        });
 
         return redirect()
             ->route('admin.purchases.index')
@@ -671,6 +673,20 @@ class PurchaseController extends Controller
                 foreach ($purchase->items as $item) {
                     $product = $item->product;
                     if ($product?->track_stock) {
+                        // Guard: jangan tambah stok ganda jika sudah pernah dicatat
+                        $alreadyRecorded = StockMovement::where([
+                            'reference_type' => Purchase::class,
+                            'reference_id' => $purchase->id,
+                            'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'packaging_unit_id' => $item->packaging_unit_id,
+                            'movement_type' => 'purchase_in',
+                        ])->exists();
+
+                        if ($alreadyRecorded) {
+                            continue;
+                        }
+
                         $stockService->increase(new StockMutation(
                             productId: $item->product_id,
                             variantId: $item->variant_id,

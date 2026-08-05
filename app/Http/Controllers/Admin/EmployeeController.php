@@ -27,30 +27,26 @@ class EmployeeController extends Controller
         ])
             ->where('store_id', $storeId)
             ->orderBy('name')
-            ->get()
-            ->map(function ($emp) use ($storeId) {
-                // Ambil role user di store ini
-                $roles = $emp->user_id
-                    ? DB::table('model_has_roles')
-                        ->join(
-                            'roles',
-                            'roles.id',
-                            '=',
-                            'model_has_roles.role_id',
-                        )
-                        ->where('model_has_roles.model_id', $emp->user_id)
-                        ->where(
-                            'model_has_roles.model_type',
-                            User::class,
-                        )
-                        ->where('model_has_roles.store_id', $storeId)
-                        ->pluck('roles.name')
-                    : collect();
+            ->get();
 
-                return array_merge($emp->toArray(), [
-                    'user_roles' => $roles,
-                ]);
-            });
+        // Batch query: ambil semua role untuk user di store ini sekaligus
+        $userIds = $employees->pluck('user_id')->filter()->values();
+        $roleRows = DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->whereIn('model_has_roles.model_id', $userIds)
+            ->where('model_has_roles.model_type', User::class)
+            ->where('model_has_roles.store_id', $storeId)
+            ->select('model_has_roles.model_id', 'roles.name')
+            ->get()
+            ->groupBy('model_id');
+
+        $employees = $employees->map(function ($emp) use ($roleRows) {
+            return array_merge($emp->toArray(), [
+                'user_roles' => $emp->user_id && $roleRows->has($emp->user_id)
+                    ? $roleRows->get($emp->user_id)->pluck('name')
+                    : collect(),
+            ]);
+        });
 
         return Inertia::render('Admin/Employees/Index', [
             'employees' => $employees,
@@ -391,9 +387,23 @@ class EmployeeController extends Controller
             return 'EMP0001';
         }
 
-        $nextId = (int) Employee::where('store_id', $storeId)->max('id') + 1;
+        $maxId = (int) Employee::where('store_id', $storeId)->max('id');
 
-        return 'EMP'.str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
+        // Retry loop untuk handle race condition
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $code = 'EMP'.str_pad((string) ($maxId + $attempt + 1), 4, '0', STR_PAD_LEFT);
+
+            $exists = Employee::where('store_id', $storeId)
+                ->where('employee_code', $code)
+                ->exists();
+
+            if (! $exists) {
+                return $code;
+            }
+        }
+
+        // Fallback: gunakan timestamp
+        return 'EMP'.str_pad((string) time(), 4, '0', STR_PAD_LEFT);
     }
 
     private function ensureSameStore(Request $request, Employee $employee): void

@@ -20,6 +20,9 @@ class CashierShiftController extends Controller
 {
     use HasStoreScope;
 
+    /** Threshold selisih kas yang membutuhkan konfirmasi saat tutup shift (Rp) */
+    private const CASH_DISCREPANCY_THRESHOLD = 50000;
+
     /* ─────────────────────────────────────────────────────────
      * INDEX
      * Permission: shift.view
@@ -358,7 +361,7 @@ class CashierShiftController extends Controller
             ],
         ]);
 
-        // Cek transaksi tertunda
+        // Cek transaksi tertunda (hold/draft) DAN in-flight PG payments (pending)
         $pendingCount = Sale::where(
             'cashier_shift_id',
             $cashierShift->id,
@@ -366,13 +369,26 @@ class CashierShiftController extends Controller
             ->whereIn('status', ['hold', 'draft'])
             ->count();
 
+        // Cek PG in-flight: sale dengan status pending yang punya transaksi PG
+        $pendingPgCount = Sale::where('cashier_shift_id', $cashierShift->id)
+            ->where('status', 'pending')
+            ->whereHas('pgTransactions', fn ($q) => $q->where('status', 'pending'))
+            ->count();
+
+        if ($pendingPgCount > 0) {
+            return back()->with(
+                'error',
+                "Ada {$pendingPgCount} transaksi pembayaran gateway yang masih diproses. Tunggu hingga selesai atau dibatalkan sebelum menutup shift.",
+            );
+        }
+
         $summary = $this->buildSummary($cashierShift);
 
-        // Cek selisih besar (threshold Rp 50.000)
+        // Cek selisih besar
         $discrepancy = abs(
             (float) $data['actual_cash'] - (float) $summary['expected_cash'],
         );
-        $discrepancyThreshold = 50000;
+        $discrepancyThreshold = self::CASH_DISCREPANCY_THRESHOLD;
 
         if (
             $discrepancy > $discrepancyThreshold &&

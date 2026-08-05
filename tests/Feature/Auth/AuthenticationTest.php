@@ -17,8 +17,8 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    // User tanpa store → redirect ke welcome
-    $response->assertRedirect(route('welcome', absolute: false));
+    // User tanpa store → redirect ke onboarding untuk setup toko
+    $response->assertRedirect(route('onboarding', absolute: false));
 });
 
 test('users can not authenticate with invalid password', function () {

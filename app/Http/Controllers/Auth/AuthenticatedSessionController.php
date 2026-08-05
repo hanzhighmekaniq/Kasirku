@@ -26,9 +26,9 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('developer.dashboard');
             }
 
-            // User tanpa toko → redirect ke welcome
+            // User tanpa toko → redirect ke onboarding untuk setup toko
             if ($user->stores()->count() === 0) {
-                return redirect()->route('welcome');
+                return redirect()->route('onboarding');
             }
 
             // Jangan auto-pick store — biarkan StoreMiddleware yang handle
@@ -66,7 +66,7 @@ class AuthenticatedSessionController extends Controller
         $storeCount = $stores->count();
 
         if ($storeCount === 0) {
-            return redirect()->route('welcome');
+            return redirect()->route('onboarding');
         }
 
         $firstStore = $stores->first();
@@ -120,6 +120,14 @@ class AuthenticatedSessionController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
+        /** @var User $user */
+        $user = Auth::user();
+
+        // Clear session token dari database agar session lama tidak valid
+        if ($user) {
+            $user->update(['session_token' => null]);
+        }
+
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

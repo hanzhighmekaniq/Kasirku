@@ -25,13 +25,10 @@ class AppServiceProvider extends ServiceProvider
 
         Vite::prefetch(concurrency: 3);
 
-        // Aturan password minimum untuk seluruh aplikasi — otomatis berlaku
-        // di registrasi, reset password, dan ubah password (ketiganya sudah
-        // memakai Password::defaults()).
-        //
-        // Simbol khusus sengaja TIDAK diwajibkan: mengikuti panduan NIST,
-        // syarat simbol wajib cenderung mendorong pola yang mudah diduga
-        // (mis. "Password1!") tanpa menambah kekuatan nyata.
+        // Default fallback aturan password (tidak dipakai langsung —
+        // semua controller registrasi/ganti password sudah eksplisit
+        // pakai Password::min(8)->mixedCase()->numbers()). Diselaraskan
+        // di sini juga supaya konsisten jika ada pemanggilan defaults().
         Password::defaults(fn () => Password::min(8)->mixedCase()->numbers());
 
         // Auto-set Spatie team ID dari session saat request masuk.

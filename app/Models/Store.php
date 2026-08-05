@@ -328,35 +328,47 @@ class Store extends Model
         ];
     }
 
-    /** Ambil semua plan dari database (dengan fallback ke hardcoded) */
+    /**
+     * Ambil semua plan aktif dari database untuk ditampilkan sebagai pilihan.
+     *
+     * Selalu hanya berisi plan yang punya `id` asli dari tabel `plans`.
+     * Tidak ada fallback ke `planConfig()` di sini: plan hardcoded tidak
+     * memiliki `id`, sehingga tidak bisa dipilih maupun disimpan
+     * (validasi `exists:plans,id` pasti gagal) dan membuat semua kartu
+     * plan tampak ter-select bersamaan di UI karena `id`-nya sama-sama null.
+     *
+     * Jika tabel `plans` kosong, mengembalikan array kosong supaya UI bisa
+     * menampilkan empty state yang jujur.
+     *
+     * @return array<int, array{
+     *     id: int,
+     *     key: string,
+     *     label: string,
+     *     description: ?string,
+     *     max_users: ?int,
+     *     max_branches: ?int,
+     *     price: float,
+     *     trial_days: int,
+     *     features: array<int, string>
+     * }>
+     */
     public static function allPlans(): array
     {
-        $dbPlans = Plan::with('features')
+        return Plan::with('features')
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->get();
-        if ($dbPlans->isNotEmpty()) {
-            return $dbPlans
-                ->map(
-                    fn ($p) => [
-                        'id' => $p->id,
-                        'key' => $p->code,
-                        'label' => $p->label,
-                        'description' => $p->description,
-                        'max_users' => $p->max_users,
-                        'max_branches' => $p->max_branches,
-                        'price' => (float) $p->price,
-                        'trial_days' => $p->trial_days,
-                        'features' => $p->featureCodes(),
-                    ],
-                )
-                ->values()
-                ->toArray();
-        }
-
-        // Fallback ke hardcoded (tanpa id)
-        return collect(self::planConfig())
-            ->map(fn ($p, $k) => array_merge($p, ['id' => null, 'key' => $k]))
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'key' => $p->code,
+                'label' => $p->label,
+                'description' => $p->description,
+                'max_users' => $p->max_users,
+                'max_branches' => $p->max_branches,
+                'price' => (float) $p->price,
+                'trial_days' => (int) $p->trial_days,
+                'features' => $p->featureCodes(),
+            ])
             ->values()
             ->toArray();
     }

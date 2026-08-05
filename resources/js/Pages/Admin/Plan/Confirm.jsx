@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from "@inertiajs/react";
+import { Head, Link, router, usePage } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import {
     AlertTriangle,
@@ -6,8 +6,10 @@ import {
     Check,
     Clock,
     Copy,
+    CreditCard,
+    QrCode,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const fmt = (n) =>
     new Intl.NumberFormat("id-ID", {
@@ -24,6 +26,18 @@ const fmtDate = (d) =>
               year: "numeric",
           })
         : null;
+
+const PAYMENT_TYPES = [
+    { key: "qris", label: "QRIS", icon: QrCode },
+    { key: "bca_va", label: "VA BCA", icon: CreditCard },
+    { key: "mandiri_va", label: "VA Mandiri", icon: CreditCard },
+    { key: "bri_va", label: "VA BRI", icon: CreditCard },
+    { key: "bni_va", label: "VA BNI", icon: CreditCard },
+    { key: "gopay", label: "GoPay", icon: CreditCard },
+    { key: "shopeepay", label: "ShopeePay", icon: CreditCard },
+    { key: "dana", label: "DANA", icon: CreditCard },
+    { key: "ovo", label: "OVO", icon: CreditCard },
+];
 
 function CopyButton({ text }) {
     const [copied, setCopied] = useState(false);
@@ -56,7 +70,267 @@ function CopyButton({ text }) {
     );
 }
 
-export default function PlanConfirm({ order, billingConfig = {} }) {
+function PgCheckoutPanel({ order, pgData: initialPgData }) {
+    // Jika pgData ada tapi tidak punya QR/VA/URL (transaksi lama sebelum fix),
+    // fallback ke null supaya user bisa memilih metode baru
+    const hasDisplayablePayment = (d) =>
+        d && (d.qr_code || d.qr_image_url || d.va_number || d.payment_url);
+
+    const [paymentType, setPaymentType] = useState(
+        initialPgData?.payment_type ?? "qris"
+    );
+    const [pgData, setPgData] = useState(
+        hasDisplayablePayment(initialPgData) ? initialPgData : null
+    );
+    const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState(null);
+    const pollRef = useRef(null);
+
+    const handlePay = async () => {
+        setProcessing(true);
+        setError(null);
+
+        try {
+            const res = await fetch(route("admin.plan.orders.pay", order.id), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-XSRF-TOKEN": decodeURIComponent(
+                        document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? ""
+                    ),
+                },
+                body: JSON.stringify({ payment_type: paymentType }),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                setPgData(data);
+            } else {
+                setError(data.message || "Gagal membuat transaksi pembayaran.");
+            }
+        } catch (e) {
+            setError("Terjadi kesalahan. Silakan coba lagi.");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleChangeMethod = async () => {
+        if (!confirm("Ganti metode pembayaran? Kamu hanya bisa mengganti 1 kali.")) return;
+        setProcessing(true);
+        setError(null);
+
+        try {
+            const res = await fetch(route("admin.plan.orders.change-method", order.id), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-XSRF-TOKEN": decodeURIComponent(
+                        document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? ""
+                    ),
+                },
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                setPgData(null);
+            } else {
+                setError(data.message || "Gagal mengganti metode pembayaran.");
+            }
+        } catch (e) {
+            setError("Terjadi kesalahan. Silakan coba lagi.");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    // Auto-poll status
+    useEffect(() => {
+        if (!pgData || pgData.status === "paid") return;
+
+        pollRef.current = setInterval(async () => {
+            try {
+                const res = await fetch(route("admin.plan.orders.status", order.id), {
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                });
+                const data = await res.json();
+
+                if (data.order_status === "paid") {
+                    clearInterval(pollRef.current);
+                    router.visit(route("admin.plan.index"), {
+                        only: ["flash"],
+                        data: { success: "Pembayaran berhasil! Paket kamu sudah aktif." },
+                    });
+                }
+            } catch (e) {
+                // Biarkan polling coba lagi
+            }
+        }, 3000);
+
+        return () => {
+            if (pollRef.current) clearInterval(pollRef.current);
+        };
+    }, [pgData, order.id]);
+
+    // Redirect ke payment URL jika ada (hanya untuk e-wallet yang butuh redirect)
+    useEffect(() => {
+        if (pgData?.payment_url && !pgData?.qr_code && !pgData?.qr_image_url && !pgData?.va_number) {
+            window.open(pgData.payment_url, "_blank");
+        }
+    }, [pgData]);
+
+    return (
+        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="border-b border-border bg-muted/60 px-6 py-4">
+                <h3 className="text-sm font-bold text-foreground">Pembayaran Online</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                    Pilih metode pembayaran dan selesaikan transaksi
+                </p>
+            </div>
+
+            <div className="p-6 space-y-4">
+                {error && (
+                    <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                        {error}
+                    </div>
+                )}
+
+                {!pgData ? (
+                    <>
+                        {/* Payment type selector */}
+                        <div>
+                            <p className="mb-2 text-xs font-medium text-muted-foreground">Metode Pembayaran</p>
+                            <div className="grid grid-cols-3 gap-2">
+                                {PAYMENT_TYPES.map((pt) => {
+                                    const Icon = pt.icon;
+                                    return (
+                                        <button
+                                            key={pt.key}
+                                            type="button"
+                                            onClick={() => setPaymentType(pt.key)}
+                                            className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition ${
+                                                paymentType === pt.key
+                                                    ? "border-primary bg-primary/10 text-primary"
+                                                    : "border-border text-muted-foreground hover:border-muted-foreground/30 hover:bg-muted"
+                                            }`}
+                                        >
+                                            <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                                            {pt.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Pay button */}
+                        <button
+                            onClick={handlePay}
+                            disabled={processing}
+                            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+                        >
+                            {processing ? (
+                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            ) : (
+                                <CreditCard className="h-4 w-4" strokeWidth={2.5} />
+                            )}
+                            {processing ? "Memproses..." : `Bayar ${fmt(order.amount)}`}
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        {/* QR Code display - support qr_image_url (Midtrans QRIS) */}
+                        {(pgData.qr_image_url || pgData.qr_code) && (
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="rounded-xl border border-border bg-white p-4">
+                                    <img
+                                        src={pgData.qr_image_url || pgData.qr_code}
+                                        alt="QR Code Pembayaran"
+                                        className="h-48 w-48"
+                                    />
+                                </div>
+                                <p className="text-center text-xs text-muted-foreground">
+                                    Scan QR Code di atas menggunakan aplikasi bank atau e-wallet kamu
+                                </p>
+                            </div>
+                        )}
+
+                        {/* VA Number display */}
+                        {pgData.va_number && (
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="rounded-xl border border-border bg-muted p-4 text-center">
+                                    <p className="text-xs text-muted-foreground mb-1">Virtual Account</p>
+                                    <p className="text-lg font-bold font-mono text-foreground">
+                                        {pgData.va_number}
+                                    </p>
+                                    {pgData.va_bank && (
+                                        <p className="text-xs text-muted-foreground mt-1">{pgData.va_bank}</p>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-xs text-muted-foreground">Salin nomor VA:</p>
+                                    <CopyButton text={pgData.va_number} />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Payment URL */}
+                        {pgData.payment_url && !pgData.qr_code && !pgData.va_number && (
+                            <div className="flex flex-col items-center gap-3">
+                                <a
+                                    href={pgData.payment_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                                >
+                                    Buka Halaman Pembayaran
+                                </a>
+                                <p className="text-xs text-muted-foreground">
+                                    Halaman pembayaran akan terbuka di tab baru
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Status */}
+                        <div className="flex items-center justify-center gap-2 rounded-xl bg-warning/10 px-4 py-3">
+                            <Clock className="h-4 w-4 text-warning animate-pulse" strokeWidth={2} />
+                            <p className="text-sm font-medium text-warning">
+                                Menunggu pembayaran...
+                            </p>
+                        </div>
+
+                        <p className="text-center text-xs text-muted-foreground">
+                            Status akan diperiksa otomatis setiap 3 detik. Kamu juga bisa memuat ulang halaman ini.
+                        </p>
+
+                        {/* Tombol Ganti Pembayaran */}
+                        {order.can_change_payment_method && (
+                            <button
+                                onClick={handleChangeMethod}
+                                disabled={processing}
+                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-60"
+                            >
+                                Ganti Metode Pembayaran
+                            </button>
+                        )}
+                        {!order.can_change_payment_method && (
+                            <p className="text-center text-xs text-destructive/80">
+                                Batas ganti metode pembayaran sudah tercapai.
+                            </p>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export default function PlanConfirm({ order, pgData = null, billingConfig = {} }) {
     const { flash } = usePage().props;
 
     const waUrl = billingConfig.whatsapp
@@ -101,6 +375,24 @@ export default function PlanConfirm({ order, billingConfig = {} }) {
                         {[
                             { label: "Paket", value: order.plan_label },
                             { label: "Periode", value: order.period_label },
+                            ...(order.is_prorated && order.original_amount ? [
+                                {
+                                    label: "Harga Penuh",
+                                    value: (
+                                        <span className="line-through text-muted-foreground">
+                                            {fmt(order.original_amount)}
+                                        </span>
+                                    ),
+                                },
+                                {
+                                    label: "Harga Prorasi",
+                                    value: (
+                                        <span className="text-success font-semibold">
+                                            Hemat {fmt(order.original_amount - order.amount)}
+                                        </span>
+                                    ),
+                                },
+                            ] : []),
                             { label: "Total", value: fmt(order.amount), bold: true },
                             {
                                 label: "Aktif sampai",
@@ -139,6 +431,11 @@ export default function PlanConfirm({ order, billingConfig = {} }) {
                         ))}
                     </div>
                 </div>
+
+                {/* PG Checkout (mode auto) */}
+                {!order.is_manual && order.status === "pending" && (
+                    <PgCheckoutPanel order={order} pgData={pgData} />
+                )}
 
                 {/* Instruksi pembayaran manual */}
                 {order.is_manual && order.status === "pending" && (
@@ -233,7 +530,7 @@ export default function PlanConfirm({ order, billingConfig = {} }) {
                     )}
                 </div>
 
-                {order.status === "pending" && (
+                {order.status === "pending" && order.is_manual && (
                     <p className="text-center text-xs text-muted-foreground">
                         <Clock className="inline h-3 w-3 mr-0.5" strokeWidth={2} />
                         Setelah pembayaran dikonfirmasi admin, paket kamu langsung aktif secara otomatis.

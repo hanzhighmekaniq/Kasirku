@@ -8,6 +8,7 @@ use App\Models\CustomerDebtLog;
 use App\Models\PaymentMethod;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -67,9 +68,7 @@ class DebtController extends Controller
 
             if ($oldestDue) {
                 $dueObj = Carbon::parse($oldestDue)->startOfDay();
-                $diffDays = $dueObj->diffInDays($today, false); // If today > due, it's negative. So we reverse it or do today->diffInDays($dueObj, false).
-                // diffInDays($today) is positive if $today > $dueObj (past due)
-                $daysPastDue = Carbon::today()->diffInDays($dueObj, false) * -1;
+                $daysPastDue = (int) $today->diffInDays($dueObj, false) * -1;
 
                 if ($daysPastDue <= 30) {
                     $bucketKey = '30';
@@ -137,15 +136,10 @@ class DebtController extends Controller
     {
         $storeId = session('current_store_id');
 
-        // Session menyimpan store_id sebagai string, sedangkan kolomnya
-        // integer. Perbandingan strict tanpa cast membuat 1 !== "1" selalu
-        // benar sehingga setiap pelunasan ditolak.
         abort_if($customer->store_id !== (int) $storeId, 403);
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            // Metode dibatasi ke milik toko ini dan bukan tipe hutang, supaya
-            // pelunasan tidak bisa dicatat sebagai hutang baru.
             'payment_method_id' => [
                 'required',
                 Rule::exists('payment_methods', 'id')
@@ -156,33 +150,35 @@ class DebtController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $amount = (float) $validated['amount'];
-        $currentDebt = (float) $customer->debt_balance;
+        return DB::transaction(function () use ($storeId, $validated, $customer) {
+            // Lock customer row untuk mencegah race condition
+            $lockedCustomer = Customer::lockForUpdate()->find($customer->id);
 
-        // Ditolak sebagai error validasi, bukan back()->with('error'):
-        // pesannya menempel di field dan klien JSON menerima 422, bukan 302
-        // yang terlihat seolah berhasil.
-        if ($amount > $currentDebt) {
-            throw ValidationException::withMessages([
-                'amount' => 'Jumlah pelunasan melebihi hutang. Sisa: Rp'.number_format($currentDebt),
+            $amount = (float) $validated['amount'];
+            $currentDebt = (float) $lockedCustomer->debt_balance;
+
+            if ($amount > $currentDebt) {
+                throw ValidationException::withMessages([
+                    'amount' => 'Jumlah pelunasan melebihi hutang. Sisa: Rp'.number_format($currentDebt),
+                ]);
+            }
+
+            $newBalance = $currentDebt - $amount;
+
+            CustomerDebtLog::create([
+                'customer_id' => $lockedCustomer->id,
+                'store_id' => $storeId,
+                'type' => 'payment',
+                'amount' => $amount,
+                'payment_method_id' => $validated['payment_method_id'],
+                'balance_after' => $newBalance,
+                'notes' => $validated['notes'] ?? 'Pelunasan hutang',
+                'created_by' => Auth::id(),
             ]);
-        }
 
-        $newBalance = $currentDebt - $amount;
+            $lockedCustomer->update(['debt_balance' => $newBalance]);
 
-        CustomerDebtLog::create([
-            'customer_id' => $customer->id,
-            'store_id' => $storeId,
-            'type' => 'payment',
-            'amount' => $amount,
-            'payment_method_id' => $validated['payment_method_id'],
-            'balance_after' => $newBalance,
-            'notes' => $validated['notes'] ?? 'Pelunasan hutang',
-            'created_by' => Auth::id(),
-        ]);
-
-        $customer->update(['debt_balance' => $newBalance]);
-
-        return back()->with('success', 'Pelunasan berhasil. Sisa: Rp'.number_format($newBalance));
+            return back()->with('success', 'Pelunasan berhasil. Sisa: Rp'.number_format($newBalance));
+        });
     }
 }

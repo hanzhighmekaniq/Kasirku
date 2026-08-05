@@ -67,8 +67,19 @@ class PurchaseReturnController extends Controller
 
     public function store(Request $request)
     {
+        $storeId = session('current_store_id');
+
         $validated = $request->validate([
-            'purchase_id' => 'required|exists:purchases,id',
+            'purchase_id' => [
+                'required',
+                'exists:purchases,id',
+                function ($attribute, $value, $fail) use ($storeId) {
+                    $purchase = Purchase::find($value);
+                    if (! $purchase || $purchase->store_id != $storeId) {
+                        $fail('Pembelian tidak ditemukan di toko ini.');
+                    }
+                },
+            ],
             'return_date' => 'required|date',
             'notes' => 'nullable|string|max:1000',
             'items' => 'required|array|min:1',
@@ -188,6 +199,9 @@ class PurchaseReturnController extends Controller
 
     public function show(PurchaseReturn $purchaseReturn)
     {
+        $storeId = session('current_store_id');
+        abort_unless($purchaseReturn->purchase->store_id == $storeId, 404);
+
         $purchaseReturn->load([
             'purchase',
             'supplier',
@@ -206,11 +220,13 @@ class PurchaseReturnController extends Controller
 
     public function destroy(PurchaseReturn $purchaseReturn)
     {
-        if ($purchaseReturn->status === 'completed') {
-            return back()->withErrors(['error' => 'Retur yang sudah selesai tidak dapat dihapus. Batalkan terlebih dahulu.']);
+        $storeId = session('current_store_id');
+        abort_unless($purchaseReturn->purchase->store_id == $storeId, 404);
+
+        if ($purchaseReturn->status !== 'draft') {
+            return back()->withErrors(['error' => 'Hanya retur draft yang dapat dihapus. Retur selesai harus dibatalkan terlebih dahulu.']);
         }
 
-        // Only cancelled returns can be deleted — stock already reversed on cancellation
         $purchaseReturn->items()->delete();
         $purchaseReturn->delete();
 
@@ -266,6 +282,9 @@ class PurchaseReturnController extends Controller
      */
     public function getPurchaseItems(Purchase $purchase)
     {
+        $storeId = session('current_store_id');
+        abort_unless($purchase->store_id == $storeId, 404);
+
         $purchase->load(['items.product', 'items.variant', 'items.packagingUnit', 'supplier']);
 
         return response()->json([

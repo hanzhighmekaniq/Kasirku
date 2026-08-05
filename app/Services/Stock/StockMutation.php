@@ -30,7 +30,11 @@ final class StockMutation
         // Bila true, decrease() akan merevisi average_cost bucket seolah
         // qty ini tidak pernah masuk — dipakai saat membatalkan pembelian.
         public readonly bool $revertAvgCost = false,
-    ) {}
+    ) {
+        if ($this->quantity <= 0) {
+            throw new \InvalidArgumentException("StockMutation quantity harus lebih dari 0, diterima: {$this->quantity}");
+        }
+    }
 
     /**
      * Kunci bucket lengkap — selalu lima kolom.

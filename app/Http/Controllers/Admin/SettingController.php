@@ -29,32 +29,29 @@ class SettingController extends Controller
         // Ambil semua user di store ini beserta role mereka
         $storeUsers = collect();
         if ($store) {
-            $storeUsers = $store
-                ->users()
-                ->get()
-                ->map(function ($u) use ($store) {
-                    $roles = DB::table('model_has_roles')
-                        ->join(
-                            'roles',
-                            'roles.id',
-                            '=',
-                            'model_has_roles.role_id',
-                        )
-                        ->where('model_has_roles.model_id', $u->id)
-                        ->where(
-                            'model_has_roles.model_type',
-                            User::class,
-                        )
-                        ->where('model_has_roles.store_id', $store->id)
-                        ->pluck('roles.name');
+            $users = $store->users()->get(['users.id', 'users.name', 'users.email']);
 
-                    return [
-                        'id' => $u->id,
-                        'name' => $u->name,
-                        'email' => $u->email,
-                        'roles' => $roles,
-                    ];
-                });
+            // Batch query: ambil semua role untuk user di store ini sekaligus
+            $userIds = $users->pluck('id')->values();
+            $roleRows = DB::table('model_has_roles')
+                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                ->whereIn('model_has_roles.model_id', $userIds)
+                ->where('model_has_roles.model_type', User::class)
+                ->where('model_has_roles.store_id', $store->id)
+                ->select('model_has_roles.model_id', 'roles.name')
+                ->get()
+                ->groupBy('model_id');
+
+            $storeUsers = $users->map(function ($u) use ($roleRows) {
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'roles' => $roleRows->has($u->id)
+                        ? $roleRows->get($u->id)->pluck('name')
+                        : collect(),
+                ];
+            });
         }
 
         // Ambil fitur yang tersedia untuk toko ini (lolos gate type + plan)

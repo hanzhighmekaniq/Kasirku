@@ -1,0 +1,253 @@
+<!doctype html>
+<!--
+  LAYAR 2 — pilih-jenis-toko.html
+  State: satu layar gabungan (bukan wizard) — pilih template jenis usaha + nama toko.
+-->
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ceritakan tentang tokomu — Kasirku</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      @keyframes popIn { from { opacity: 0; transform: scale(.97) translateY(-4px);} to {opacity:1; transform: scale(1) translateY(0);} }
+      .pop-in { animation: popIn 150ms ease-out; }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800 antialiased">
+    <div class="min-h-screen flex items-center justify-center p-4">
+      <div class="w-full max-w-xl">
+        <div class="flex items-center justify-center gap-2 mb-6">
+          <div class="h-9 w-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+            <i data-lucide="store" class="h-5 w-5"></i>
+          </div>
+          <span class="font-semibold tracking-tight">Kasirku</span>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+          <h1 class="text-2xl font-bold tracking-tight">Ceritakan tentang tokomu</h1>
+          <p class="text-sm text-slate-500 mt-1.5">
+            Kami siapkan kategori &amp; produk contoh sesuai pilihanmu. Bisa diubah kapan saja nanti.
+          </p>
+
+          <div class="mt-7 space-y-5">
+            <!-- Combobox -->
+            <div>
+              <label class="block text-sm font-medium mb-1.5">Jenis Usaha</label>
+              <div class="relative" id="combo">
+                <button type="button" id="trigger" aria-expanded="false" aria-haspopup="listbox"
+                  class="w-full flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3.5 text-left transition-all duration-150 ease-out hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
+                  <span id="triggerIcon" class="h-10 w-10 shrink-0 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                    <i data-lucide="layout-grid" class="h-5 w-5"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="flex items-center gap-2">
+                      <span id="triggerLabel" class="block text-sm font-medium text-slate-400">Pilih jenis usaha</span>
+                      <span id="triggerBadge" class="hidden rounded-md px-1.5 py-0.5 text-[10px] font-medium"></span>
+                    </span>
+                    <span id="triggerDesc" class="block text-xs text-slate-400 mt-0.5">Template kategori &amp; produk contoh</span>
+                  </span>
+                  <i data-lucide="chevron-down" id="chev" class="h-4 w-4 text-slate-400 transition-transform duration-150 ease-out"></i>
+                </button>
+
+                <div id="panel" class="hidden absolute z-30 mt-2 w-full rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+                  <div class="p-2 border-b border-slate-100">
+                    <div class="relative">
+                      <i data-lucide="search" class="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                      <input id="search" type="text" placeholder="Cari jenis usaha…"
+                        class="w-full rounded-lg bg-slate-50 pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/30" />
+                    </div>
+                  </div>
+                  <div id="list" class="max-h-96 overflow-y-auto" role="listbox"></div>
+                  <button type="button" id="emptyToggle"
+                    class="w-full border-t border-slate-100 bg-white px-4 py-3 text-left text-xs text-slate-500 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
+                    Tidak ada yang cocok? <span class="text-indigo-600 font-medium">Mulai kosong dari tipe usaha</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label for="storeName" class="block text-sm font-medium mb-1.5">Nama Toko</label>
+              <input id="storeName" type="text" placeholder="Contoh: Laundry Bersih Dinda"
+                class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition-all duration-150 ease-out focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" />
+            </div>
+
+            <div>
+              <label for="ownerName" class="block text-sm font-medium mb-1.5">Nama Pemilik <span class="text-slate-400 font-normal">(opsional)</span></label>
+              <input id="ownerName" type="text" placeholder="Nama lengkap pemilik toko"
+                class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition-all duration-150 ease-out focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" />
+            </div>
+
+            <p class="flex items-start gap-1.5 text-xs text-slate-400">
+              <i data-lucide="sparkles" class="h-3.5 w-3.5 mt-0.5 shrink-0"></i>
+              Toko kamu otomatis mulai dengan plan Gratis. Upgrade kapan saja dari Pengaturan &gt; Plan.
+            </p>
+
+            <button id="submitBtn" type="button" disabled
+              class="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-medium text-white transition-all duration-150 ease-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed">
+              <span id="btnText">Buat Toko Sekarang</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const $ = (s) => document.querySelector(s);
+      const TYPES = [
+        { id: "retail", name: "Retail", icon: "store", badge: "bg-blue-50 text-blue-600" },
+        { id: "fnb", name: "F&B", icon: "coffee", badge: "bg-orange-50 text-orange-600" },
+        { id: "service", name: "Service", icon: "scissors", badge: "bg-violet-50 text-violet-600" },
+        { id: "rental", name: "Rental", icon: "key-round", badge: "bg-teal-50 text-teal-600" },
+        { id: "ticket", name: "Ticket", icon: "ticket", badge: "bg-pink-50 text-pink-600" },
+        { id: "hospitality", name: "Hospitality", icon: "hotel", badge: "bg-amber-50 text-amber-600" },
+      ];
+      const TEMPLATES = [
+        { id: "minimarket", name: "Minimarket / Toko Kelontong", type: "retail", icon: "shopping-basket" },
+        { id: "apotek", name: "Apotek", type: "retail", icon: "pill" },
+        { id: "pakaian", name: "Toko Pakaian", type: "retail", icon: "shirt" },
+        { id: "cafe", name: "Cafe / Coffee Shop", type: "fnb", icon: "coffee" },
+        { id: "resto", name: "Restoran", type: "fnb", icon: "utensils" },
+        { id: "warteg", name: "Warteg", type: "fnb", icon: "soup" },
+        { id: "bakery", name: "Bakery", type: "fnb", icon: "cake" },
+        { id: "salon", name: "Salon & Barbershop", type: "service", icon: "scissors" },
+        { id: "laundry", name: "Laundry", type: "service", icon: "washing-machine" },
+        { id: "bengkel", name: "Bengkel", type: "service", icon: "wrench" },
+        { id: "rental-kendaraan", name: "Rental Motor & Mobil", type: "rental", icon: "car" },
+        { id: "rental-kamera", name: "Rental Kamera", type: "rental", icon: "camera" },
+        { id: "event", name: "Tiket Event", type: "ticket", icon: "ticket" },
+        { id: "hotel", name: "Penginapan / Homestay", type: "hospitality", icon: "hotel" },
+      ];
+
+      let open = false, selected = null, emptyMode = false, highlight = 0, flat = [];
+
+      const typeOf = (id) => TYPES.find((t) => t.id === id);
+
+      function renderList() {
+        const q = $("#search").value.trim().toLowerCase();
+        const list = $("#list");
+        flat = [];
+        let html = "";
+
+        if (emptyMode) {
+          html += '<div class="sticky top-0 bg-white px-4 py-2 text-xs uppercase tracking-wide text-slate-400">Mulai kosong — pilih tipe usaha</div>';
+          TYPES.filter((t) => t.name.toLowerCase().includes(q)).forEach((t) => {
+            const isSel = selected && selected.empty && selected.type === t.id;
+            flat.push({ empty: true, type: t.id, name: t.name, icon: "package-open" });
+            html += optionRow(flat.length - 1, "package-open", "Mulai kosong — " + t.name, t, isSel, true);
+          });
+        } else {
+          TYPES.forEach((t) => {
+            const items = TEMPLATES.filter(
+              (x) => x.type === t.id && (x.name.toLowerCase().includes(q) || t.name.toLowerCase().includes(q))
+            );
+            if (!items.length) return;
+            html += '<div class="sticky top-0 z-10 bg-white/95 backdrop-blur px-4 py-2 text-xs uppercase tracking-wide text-slate-400 flex items-center gap-1.5"><i data-lucide="' + t.icon + '" class="h-3.5 w-3.5"></i>' + t.name + "</div>";
+            items.forEach((it) => {
+              const isSel = selected && !selected.empty && selected.id === it.id;
+              flat.push(it);
+              html += optionRow(flat.length - 1, it.icon, it.name, t, isSel, false);
+            });
+          });
+          if (!flat.length) html = '<div class="px-4 py-8 text-center text-sm text-slate-400">Tidak ada hasil untuk “' + q + '”</div>';
+        }
+        list.innerHTML = html;
+        if (highlight >= flat.length) highlight = 0;
+        paintHighlight();
+        lucide.createIcons();
+      }
+
+      function optionRow(i, icon, name, t, isSel, dashed) {
+        return (
+          '<button type="button" data-i="' + i + '" role="option" aria-selected="' + isSel + '" ' +
+          'class="opt w-full flex items-center gap-3 px-3 py-2.5 mx-0 text-left transition-colors duration-150 ease-out ' +
+          (dashed ? "border border-dashed border-slate-200 rounded-lg my-1 mx-2 w-[calc(100%-1rem)] " : "") +
+          (isSel ? "bg-indigo-50 " : "hover:bg-slate-50 ") + '">' +
+          '<span class="h-8 w-8 shrink-0 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500"><i data-lucide="' + icon + '" class="h-4 w-4"></i></span>' +
+          '<span class="flex-1 text-sm">' + name + "</span>" +
+          '<span class="rounded-md px-1.5 py-0.5 text-[10px] font-medium ' + t.badge + '">' + t.name + "</span>" +
+          (isSel ? '<i data-lucide="check" class="h-4 w-4 text-indigo-600"></i>' : "") +
+          "</button>"
+        );
+      }
+
+      function paintHighlight() {
+        document.querySelectorAll(".opt").forEach((el, i) => {
+          el.classList.toggle("ring-2", i === highlight);
+          el.classList.toggle("ring-indigo-500/30", i === highlight);
+        });
+      }
+
+      function setOpen(v) {
+        open = v;
+        $("#panel").classList.toggle("hidden", !v);
+        $("#panel").classList.toggle("pop-in", v);
+        $("#trigger").setAttribute("aria-expanded", String(v));
+        $("#chev").style.transform = v ? "rotate(180deg)" : "rotate(0deg)";
+        if (v) { $("#search").value = ""; highlight = 0; renderList(); setTimeout(() => $("#search").focus(), 10); }
+      }
+
+      function select(item) {
+        selected = item;
+        const t = typeOf(item.type);
+        $("#triggerIcon").innerHTML = '<i data-lucide="' + item.icon + '" class="h-5 w-5"></i>';
+        $("#triggerLabel").textContent = item.empty ? "Mulai kosong — " + t.name : item.name;
+        $("#triggerLabel").className = "block text-sm font-medium text-slate-800";
+        $("#triggerDesc").textContent = item.empty ? "Tanpa produk contoh" : "Termasuk kategori & produk contoh";
+        const b = $("#triggerBadge");
+        b.textContent = t.name;
+        b.className = "rounded-md px-1.5 py-0.5 text-[10px] font-medium " + t.badge;
+        setOpen(false);
+        lucide.createIcons();
+        $("#storeName").focus();
+        validate();
+      }
+
+      function validate() {
+        $("#submitBtn").disabled = !(selected && $("#storeName").value.trim());
+      }
+
+      $("#trigger").addEventListener("click", () => setOpen(!open));
+      $("#search").addEventListener("input", () => { highlight = 0; renderList(); });
+      $("#emptyToggle").addEventListener("click", () => { emptyMode = !emptyMode; highlight = 0; renderList(); $("#search").focus(); });
+      $("#list").addEventListener("click", (e) => {
+        const b = e.target.closest(".opt");
+        if (b) select(flat[+b.dataset.i]);
+      });
+      $("#storeName").addEventListener("input", validate);
+      document.addEventListener("click", (e) => { if (open && !$("#combo").contains(e.target)) setOpen(false); });
+      document.addEventListener("keydown", (e) => {
+        if (!open) return;
+        if (e.key === "Escape") { setOpen(false); $("#trigger").focus(); }
+        else if (e.key === "ArrowDown") { e.preventDefault(); highlight = Math.min(highlight + 1, flat.length - 1); paintHighlight(); document.querySelector('.opt[data-i="' + highlight + '"]')?.scrollIntoView({ block: "nearest" }); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); highlight = Math.max(highlight - 1, 0); paintHighlight(); document.querySelector('.opt[data-i="' + highlight + '"]')?.scrollIntoView({ block: "nearest" }); }
+        else if (e.key === "Enter") { e.preventDefault(); if (flat[highlight]) select(flat[highlight]); }
+      });
+
+      $("#submitBtn").addEventListener("click", () => {
+        const data = {
+          template: selected,
+          namaToko: $("#storeName").value.trim(),
+          namaPemilik: $("#ownerName").value.trim(),
+          plan: "free",
+        };
+        console.log(data);
+        const btn = $("#submitBtn");
+        btn.disabled = true;
+        $("#btnText").outerHTML =
+          '<span id="btnText" class="flex items-center justify-center gap-2"><i data-lucide="loader-circle" class="h-4 w-4 animate-spin"></i>Membuat toko…</span>';
+        lucide.createIcons();
+        const params = new URLSearchParams(location.search);
+        setTimeout(() => {
+          location.href = "dashboard.html?toko=" + encodeURIComponent(data.namaToko) +
+            "&email=" + encodeURIComponent(params.get("email") || "dinda@gmail.com") +
+            "&pemilik=" + encodeURIComponent(data.namaPemilik || "Pemilik Toko");
+        }, 1500);
+      });
+
+      window.addEventListener("DOMContentLoaded", () => { lucide.createIcons(); renderList(); });
+    </script>
+  </body>
+</html>

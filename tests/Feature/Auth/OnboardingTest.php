@@ -6,8 +6,11 @@
 |--------------------------------------------------------------------------
 |
 | User yang baru registrasi (belum punya toko) diarahkan ke halaman
-| onboarding. Di sini user memilih plan, jenis usaha, dan nama toko.
-| Setelah submit, store dibuat dan user masuk dashboard.
+| onboarding. Satu layar saja: pilih template bisnis (atau tipe toko
+| kosong) + nama toko + nama pemilik. Tidak ada langkah pilih plan —
+| toko otomatis dibuat dengan plan Free, upgrade dilakukan belakangan
+| dari halaman Plan & Billing. Verifikasi email BUKAN syarat untuk
+| mengakses halaman ini atau submit toko.
 |
 */
 
@@ -75,9 +78,9 @@ function onboardingPrerequisites(): array
     return [$storeType, $template, $freePlan, $businessPlan];
 }
 
-function createFreshUser(Plan $plan): User
+function createFreshUser(?Plan $plan = null): User
 {
-    return User::factory()->create(['plan_id' => $plan->id]);
+    return User::factory()->create(['plan_id' => $plan?->id]);
 }
 
 // ── Halaman onboarding ─────────────────────────────────────────────────────
@@ -86,13 +89,47 @@ test('onboarding page requires authentication', function () {
     $this->get('/onboarding')->assertRedirect('/login');
 });
 
-test('onboarding page renders for authenticated user without store', function () {
-    [, , $freePlan] = onboardingPrerequisites();
-    $user = createFreshUser($freePlan);
+test('onboarding page renders even for a user with unverified email', function () {
+    onboardingPrerequisites();
+    $user = createFreshUser();
+    $user->forceFill(['email_verified_at' => null])->save();
 
     $this->actingAs($user)
         ->get('/onboarding')
         ->assertStatus(200);
+});
+
+test('onboarding page renders for user without store', function () {
+    onboardingPrerequisites();
+    $user = createFreshUser();
+
+    $this->actingAs($user)
+        ->get('/onboarding')
+        ->assertStatus(200);
+});
+
+test('onboarding page exposes business templates with their store type', function () {
+    [, $template] = onboardingPrerequisites();
+    $user = createFreshUser();
+
+    $this->actingAs($user)
+        ->get('/onboarding')
+        ->assertInertia(
+            fn ($page) => $page
+                ->component('Onboarding/Index')
+                ->has('businessTemplates', 1)
+                ->where('businessTemplates.0.code', $template->code)
+                ->where('businessTemplates.0.store_type_id', $template->store_type_id)
+        );
+});
+
+test('onboarding page does not expose a plans prop anymore', function () {
+    onboardingPrerequisites();
+    $user = createFreshUser();
+
+    $this->actingAs($user)
+        ->get('/onboarding')
+        ->assertInertia(fn ($page) => $page->component('Onboarding/Index')->missing('plans'));
 });
 
 // ── Submit onboarding ──────────────────────────────────────────────────────
@@ -100,15 +137,14 @@ test('onboarding page renders for authenticated user without store', function ()
 test('onboarding creates store, branch, roles, and redirects to dashboard', function () {
     Notification::fake();
 
-    [$storeType, , $freePlan] = onboardingPrerequisites();
-    $user = createFreshUser($freePlan);
+    [$storeType] = onboardingPrerequisites();
+    $user = createFreshUser();
 
     $this->actingAs($user);
 
     $response = $this->post('/onboarding', [
         'store_type_id' => $storeType->id,
         'business_template_code' => null,
-        'plan_id' => $freePlan->id,
         'store_name' => 'Toko Test',
     ]);
 
@@ -137,18 +173,35 @@ test('onboarding creates store, branch, roles, and redirects to dashboard', func
     $this->assertEquals($store->id, session('current_store_id'));
 });
 
+test('onboarding automatically assigns the free plan without requiring plan_id', function () {
+    Notification::fake();
+
+    [$storeType, , $freePlan] = onboardingPrerequisites();
+    $user = createFreshUser();
+
+    $this->actingAs($user);
+
+    $this->post('/onboarding', [
+        'store_type_id' => $storeType->id,
+        'business_template_code' => null,
+        'store_name' => 'Toko Test',
+    ])->assertRedirect(route('admin.dashboard'));
+
+    $user->refresh();
+    expect($user->plan_id)->toBe($freePlan->id);
+});
+
 test('onboarding with business template creates categories and products', function () {
     Notification::fake();
 
-    [$storeType, $template, $freePlan] = onboardingPrerequisites();
-    $user = createFreshUser($freePlan);
+    [$storeType, $template] = onboardingPrerequisites();
+    $user = createFreshUser();
 
     $this->actingAs($user);
 
     $this->post('/onboarding', [
         'store_type_id' => $storeType->id,
         'business_template_code' => $template->code,
-        'plan_id' => $freePlan->id,
         'store_name' => 'Cafe Test',
     ])->assertRedirect(route('admin.dashboard'));
 
@@ -161,15 +214,14 @@ test('onboarding with business template creates categories and products', functi
 test('onboarding without business template creates empty store', function () {
     Notification::fake();
 
-    [$storeType, , $freePlan] = onboardingPrerequisites();
-    $user = createFreshUser($freePlan);
+    [$storeType] = onboardingPrerequisites();
+    $user = createFreshUser();
 
     $this->actingAs($user);
 
     $this->post('/onboarding', [
         'store_type_id' => $storeType->id,
         'business_template_code' => null,
-        'plan_id' => $freePlan->id,
         'store_name' => 'Toko Kosong',
     ])->assertRedirect(route('admin.dashboard'));
 
@@ -179,33 +231,26 @@ test('onboarding without business template creates empty store', function () {
     expect(Product::where('store_id', $store->id)->count())->toBe(0);
 });
 
-test('onboarding updates user plan when selecting non-free plan', function () {
+test('onboarding works for a user with unverified email', function () {
     Notification::fake();
 
-    [$storeType, , $freePlan, $businessPlan] = onboardingPrerequisites();
-    $user = createFreshUser($freePlan);
+    [$storeType] = onboardingPrerequisites();
+    $user = createFreshUser();
+    $user->forceFill(['email_verified_at' => null])->save();
 
-    // User awalnya plan Free.
-    expect($user->plan_id)->toBe($freePlan->id);
+    $this->actingAs($user)
+        ->post('/onboarding', [
+            'store_type_id' => $storeType->id,
+            'store_name' => 'Toko Test',
+        ])
+        ->assertRedirect(route('admin.dashboard'));
 
-    $this->actingAs($user);
-
-    $this->post('/onboarding', [
-        'store_type_id' => $storeType->id,
-        'business_template_code' => null,
-        'plan_id' => $businessPlan->id,
-        'store_name' => 'Toko Business',
-    ])->assertRedirect(route('admin.dashboard'));
-
-    // Plan user berubah ke Business.
-    $user->refresh();
-    expect($user->plan_id)->toBe($businessPlan->id);
-    expect($user->plan_expires_at)->not->toBeNull();
+    expect(Store::where('user_id', $user->id)->exists())->toBeTrue();
 });
 
-test('onboarding requires store type and plan', function () {
-    [, , $freePlan] = onboardingPrerequisites();
-    $user = createFreshUser($freePlan);
+test('onboarding requires store type', function () {
+    onboardingPrerequisites();
+    $user = createFreshUser();
 
     $this->actingAs($user);
 
@@ -213,19 +258,43 @@ test('onboarding requires store type and plan', function () {
         'store_name' => 'Toko Test',
     ]);
 
-    $response->assertSessionHasErrors(['store_type_id', 'plan_id']);
+    $response->assertSessionHasErrors(['store_type_id']);
 });
 
 test('onboarding requires store name', function () {
-    [$storeType, , $freePlan] = onboardingPrerequisites();
-    $user = createFreshUser($freePlan);
+    [$storeType] = onboardingPrerequisites();
+    $user = createFreshUser();
 
     $this->actingAs($user);
 
     $response = $this->post('/onboarding', [
         'store_type_id' => $storeType->id,
-        'plan_id' => $freePlan->id,
     ]);
 
     $response->assertSessionHasErrors('store_name');
+});
+
+test('onboarding rejects a business template that does not belong to the chosen store type', function () {
+    [$storeType, $template] = onboardingPrerequisites();
+    $user = createFreshUser();
+
+    // Tipe toko lain, tapi template tetap dari store type yang benar —
+    // pasangan ini tidak konsisten dan harus ditolak.
+    $otherStoreType = StoreType::create([
+        'code' => 'retail',
+        'label' => 'Retail',
+        'icon' => '🏪',
+        'is_active' => true,
+        'sort_order' => 2,
+    ]);
+
+    $this->actingAs($user)
+        ->post('/onboarding', [
+            'store_type_id' => $otherStoreType->id,
+            'business_template_code' => $template->code,
+            'store_name' => 'Toko Test',
+        ])
+        ->assertSessionHasErrors('business_template_code');
+
+    expect(Store::where('user_id', $user->id)->exists())->toBeFalse();
 });

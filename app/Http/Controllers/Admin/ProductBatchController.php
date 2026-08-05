@@ -162,6 +162,8 @@ class ProductBatchController extends Controller
 
     public function update(Request $request, ProductBatch $productBatch)
     {
+        [$storeId, $branchId] = $this->storeScope();
+
         $validated = $request->validate(
             [
                 'product_id' => 'required|exists:products,id',

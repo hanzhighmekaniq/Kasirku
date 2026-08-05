@@ -34,6 +34,9 @@ class ProductsImport implements SkipsOnError, SkipsOnFailure, ToCollection, With
         foreach ($rows as $i => $row) {
             $rowNum = $i + 2; // +2 because row 1 is heading, arrays are 0-indexed
 
+            // Sanitize CSV injection characters
+            $row = $this->sanitizeRow($row);
+
             // Skip example rows
             $name = trim($row['nama_produk'] ?? '');
             if (empty($name) || str_starts_with($name, '[CONTOH]')) {
@@ -117,5 +120,25 @@ class ProductsImport implements SkipsOnError, SkipsOnFailure, ToCollection, With
             'skipped' => $this->skipped,
             'errors' => $this->errors,
         ];
+    }
+
+    /**
+     * Sanitize baris dari CSV injection characters.
+     * Prefix cell yang dimulai dengan =, +, -, @, \t, \r dengan single quote.
+     */
+    private function sanitizeRow(array $row): array
+    {
+        $dangerous = ['=', '+', '-', '@', "\t", "\r"];
+
+        foreach ($row as $key => $value) {
+            if (is_string($value)) {
+                $trimmed = ltrim($value);
+                if ($trimmed !== '' && in_array($trimmed[0], $dangerous, true)) {
+                    $row[$key] = "'".$value;
+                }
+            }
+        }
+
+        return $row;
     }
 }

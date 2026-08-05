@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductBatch;
 use App\Models\ProductStock;
 use App\Models\StockMovement;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Pintu tunggal untuk semua mutasi stok.
@@ -32,32 +33,37 @@ final class StockService
      *
      * Juga memperbarui moving average cost bucket (pola yang sama dengan
      * PurchaseController yang sudah benar).
+     *
+     * Menggunakan DB::transaction + lockForUpdate untuk mencegah race condition
+     * pada perhitungan moving average cost.
      */
     public function increase(StockMutation $m): void
     {
-        $stock = $this->resolveBucket($m);
+        DB::transaction(function () use ($m) {
+            $stock = $this->resolveBucketLocked($m);
 
-        $oldQty = (float) $stock->quantity;
-        $oldCost = (float) $stock->average_cost;
-        $newQty = $oldQty + $m->quantity;
+            $oldQty = (float) $stock->quantity;
+            $oldCost = (float) $stock->average_cost;
+            $newQty = $oldQty + $m->quantity;
 
-        // Moving average: ((oldQty × oldCost) + (newQty × newCost)) ÷ totalQty
-        if ($newQty > 0 && $m->unitCost > 0) {
-            $avg = ($oldQty * $oldCost + $m->quantity * $m->unitCost) / $newQty;
-            $stock->update(['quantity' => $newQty, 'average_cost' => round($avg, 2)]);
-        } else {
-            $stock->increment('quantity', $m->quantity);
-        }
-
-        $product = Product::find($m->productId);
-        if ($product && $product->track_batch && $m->productBatchId) {
-            $batch = ProductBatch::find($m->productBatchId);
-            if ($batch) {
-                $batch->increment('quantity', $m->quantity);
+            // Moving average: ((oldQty × oldCost) + (newQty × newCost)) ÷ totalQty
+            if ($newQty > 0 && $m->unitCost > 0) {
+                $avg = ($oldQty * $oldCost + $m->quantity * $m->unitCost) / $newQty;
+                $stock->update(['quantity' => $newQty, 'average_cost' => round($avg, 2)]);
+            } else {
+                $stock->increment('quantity', $m->quantity);
             }
-        }
 
-        $this->recordMovement($m);
+            $product = Product::find($m->productId);
+            if ($product && $product->track_batch && $m->productBatchId) {
+                $batch = ProductBatch::lockForUpdate()->find($m->productBatchId);
+                if ($batch) {
+                    $batch->increment('quantity', $m->quantity);
+                }
+            }
+
+            $this->recordMovement($m);
+        });
     }
 
     /**
@@ -76,70 +82,79 @@ final class StockService
      */
     public function decrease(StockMutation $m): array
     {
-        $stock = $this->resolveBucket($m);
+        return DB::transaction(function () use ($m) {
+            $stock = $this->resolveBucketLocked($m);
 
-        $oldQty = (float) $stock->quantity;
-        $stock->decrement('quantity', $m->quantity);
+            $oldQty = (float) $stock->quantity;
 
-        if ($m->revertAvgCost && $m->unitCost > 0) {
-            $remainingQty = $oldQty - $m->quantity;
-            $oldCost = (float) $stock->fresh()->average_cost;
-
-            if ($remainingQty <= 0) {
-                $stock->update(['average_cost' => 0]);
-            } else {
-                $revertCost = ($oldQty * $oldCost - $m->quantity * $m->unitCost) / $remainingQty;
-                $stock->update(['average_cost' => round(max(0, $revertCost), 2)]);
+            if ($oldQty < $m->quantity) {
+                $product = Product::find($m->productId);
+                $productName = $product?->name ?? "ID#{$m->productId}";
+                throw new \RuntimeException(
+                    "Stok \"{$productName}\" tidak cukup. Dibutuhkan {$m->quantity}, tersedia {$oldQty}."
+                );
             }
-        }
 
-        $batchDeductions = [];
+            $stock->decrement('quantity', $m->quantity);
 
-        $product = Product::find($m->productId);
-        if ($product && $product->track_batch) {
-            if ($m->productBatchId) {
-                // Potong batch spesifik (mis. retur pembelian, adjustment manual)
-                $specificBatch = ProductBatch::lockForUpdate()->find($m->productBatchId);
-                if ($specificBatch) {
-                    $take = min((float) $specificBatch->quantity, (float) $m->quantity);
-                    if ($take > 0) {
-                        $specificBatch->decrement('quantity', $take);
-                        $batchDeductions[] = ['batch_id' => $specificBatch->id, 'quantity' => $take];
-                    }
-                }
-            } else {
-                // FEFO otomatis: potong dari batch paling dekat kadaluarsa
-                $remainingQty = (float) $m->quantity;
+            if ($m->revertAvgCost && $m->unitCost > 0) {
+                $remainingQty = $oldQty - $m->quantity;
+                $oldCost = (float) $stock->fresh()->average_cost;
 
-                $batches = ProductBatch::where([
-                    'product_id' => $m->productId,
-                    'variant_id' => $m->variantId,
-                    'packaging_unit_id' => $m->packagingUnitId,
-                    'store_id' => $m->storeId,
-                    'branch_id' => $m->branchId,
-                ])
-                    ->where('quantity', '>', 0)
-                    ->orderByRaw('expiry_date IS NULL ASC, expiry_date ASC')
-                    ->orderBy('purchase_date', 'asc')
-                    ->lockForUpdate()
-                    ->get();
-
-                foreach ($batches as $batch) {
-                    if ($remainingQty <= 0) {
-                        break;
-                    }
-
-                    $take = min((float) $batch->quantity, $remainingQty);
-                    $batch->decrement('quantity', $take);
-                    $remainingQty -= $take;
-                    $batchDeductions[] = ['batch_id' => $batch->id, 'quantity' => $take];
+                if ($remainingQty <= 0) {
+                    $stock->update(['average_cost' => 0]);
+                } else {
+                    $revertCost = ($oldQty * $oldCost - $m->quantity * $m->unitCost) / $remainingQty;
+                    $stock->update(['average_cost' => round(max(0, $revertCost), 2)]);
                 }
             }
-        }
 
-        $this->recordMovement($m);
+            $batchDeductions = [];
 
-        return $batchDeductions;
+            $product = Product::find($m->productId);
+            if ($product && $product->track_batch) {
+                if ($m->productBatchId) {
+                    $specificBatch = ProductBatch::lockForUpdate()->find($m->productBatchId);
+                    if ($specificBatch) {
+                        $take = min((float) $specificBatch->quantity, (float) $m->quantity);
+                        if ($take > 0) {
+                            $specificBatch->decrement('quantity', $take);
+                            $batchDeductions[] = ['batch_id' => $specificBatch->id, 'quantity' => $take];
+                        }
+                    }
+                } else {
+                    $remainingQty = (float) $m->quantity;
+
+                    $batches = ProductBatch::where([
+                        'product_id' => $m->productId,
+                        'variant_id' => $m->variantId,
+                        'packaging_unit_id' => $m->packagingUnitId,
+                        'store_id' => $m->storeId,
+                        'branch_id' => $m->branchId,
+                    ])
+                        ->where('quantity', '>', 0)
+                        ->orderByRaw('expiry_date IS NULL ASC, expiry_date ASC')
+                        ->orderBy('purchase_date', 'asc')
+                        ->lockForUpdate()
+                        ->get();
+
+                    foreach ($batches as $batch) {
+                        if ($remainingQty <= 0) {
+                            break;
+                        }
+
+                        $take = min((float) $batch->quantity, $remainingQty);
+                        $batch->decrement('quantity', $take);
+                        $remainingQty -= $take;
+                        $batchDeductions[] = ['batch_id' => $batch->id, 'quantity' => $take];
+                    }
+                }
+            }
+
+            $this->recordMovement($m);
+
+            return $batchDeductions;
+        });
     }
 
     /**
@@ -182,7 +197,7 @@ final class StockService
                 'packaging_unit_id' => $item['packaging_unit_id'] ?? null,
                 'store_id' => $storeId,
                 'branch_id' => $branchId,
-            ])->value('quantity') ?? 0;
+            ])->sum('quantity');
 
             if ($available < $item['quantity']) {
                 $unitLabel = ! empty($item['unit_name']) ? " ({$item['unit_name']})" : '';
@@ -270,7 +285,7 @@ final class StockService
     // ── Private ──────────────────────────────────────────────────────────
 
     /**
-     * Temukan atau buat baris stok untuk bucket ini.
+     * Temukan atau buat baris stok untuk bucket ini (tanpa lock).
      *
      * Satu-satunya tempat di codebase yang boleh membuat baris ProductStock
      * baru. Ini menjamin kunci selalu lengkap — tidak ada lagi baris hantu
@@ -279,6 +294,17 @@ final class StockService
     private function resolveBucket(StockMutation $m): ProductStock
     {
         return ProductStock::firstOrCreate(
+            $m->bucketKey(),
+            ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
+        );
+    }
+
+    /**
+     * Resolve bucket dengan row-level lock (untuk decrease atomic).
+     */
+    private function resolveBucketLocked(StockMutation $m): ProductStock
+    {
+        return ProductStock::lockForUpdate()->firstOrCreate(
             $m->bucketKey(),
             ['quantity' => 0, 'reserved_quantity' => 0, 'average_cost' => 0],
         );

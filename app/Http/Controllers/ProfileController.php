@@ -29,11 +29,20 @@ class ProfileController extends Controller
     {
         $request->user()->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
+        $emailChanged = $request->user()->isDirty('email');
+
+        if ($emailChanged) {
             $request->user()->email_verified_at = null;
         }
 
         $request->user()->save();
+
+        // Email berubah → kirim ulang link verifikasi ke alamat baru.
+        // Dipakai juga oleh modal "Ubah Email" di banner verifikasi
+        // dashboard, yang POST ke endpoint ini.
+        if ($emailChanged) {
+            $request->user()->sendEmailVerificationNotification();
+        }
 
         return Redirect::route($this->profileEditRoute($request));
     }

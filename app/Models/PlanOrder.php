@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
@@ -46,11 +47,25 @@ class PlanOrder extends Model
         'yearly' => 'Tahunan',
     ];
 
+    public const PRORATION_FULL = 'full';
+
+    public const PRORATION_SAME_PERIOD = 'prorated_same_period';
+
+    public const PRORATION_CROSS_PERIOD = 'prorated_cross_period';
+
+    public const PRORATION_LABELS = [
+        'full' => 'Harga Penuh',
+        'prorated_same_period' => 'Prorasi Sama Periode',
+        'prorated_cross_period' => 'Prorasi Lintas Periode',
+    ];
+
     protected $fillable = [
-        'store_id',
+        'user_id',
         'plan_id',
         'billing_period',
         'amount',
+        'original_amount',
+        'proration_type',
         'status',
         'paid_at',
         'plan_active_until',
@@ -61,22 +76,28 @@ class PlanOrder extends Model
         'created_by',
         'processed_by',
         'notes',
+        'cancel_count',
+        'resume_count',
+        'payment_method_change_count',
+        'expires_at',
     ];
 
     protected function casts(): array
     {
         return [
             'amount' => 'decimal:2',
+            'original_amount' => 'decimal:2',
             'paid_at' => 'datetime',
             'plan_active_until' => 'date',
+            'expires_at' => 'datetime',
         ];
     }
 
     // --- Relationships ---
 
-    public function store(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Store::class);
+        return $this->belongsTo(User::class);
     }
 
     public function plan(): BelongsTo
@@ -94,6 +115,11 @@ class PlanOrder extends Model
         return $this->belongsTo(User::class, 'processed_by');
     }
 
+    public function pgTransactions(): HasMany
+    {
+        return $this->hasMany(PaymentGatewayTransaction::class);
+    }
+
     // --- Helpers ---
 
     public function isPending(): bool
@@ -109,6 +135,35 @@ class PlanOrder extends Model
     public function isManual(): bool
     {
         return $this->payment_gateway === null;
+    }
+
+    public function canChangePaymentMethod(): bool
+    {
+        return $this->payment_method_change_count < 1;
+    }
+
+    public function isExpiredByTime(): bool
+    {
+        return $this->expires_at !== null && $this->expires_at->isPast();
+    }
+
+    public function isProrated(): bool
+    {
+        return $this->proration_type !== null && $this->proration_type !== self::PRORATION_FULL;
+    }
+
+    public function prorationDiscountPercent(): float
+    {
+        if (! $this->original_amount || $this->original_amount <= 0 || ! $this->isProrated()) {
+            return 0;
+        }
+
+        return round((1 - $this->amount / $this->original_amount) * 100, 1);
+    }
+
+    public function prorationLabel(): ?string
+    {
+        return self::PRORATION_LABELS[$this->proration_type] ?? null;
     }
 
     public function statusLabel(): string

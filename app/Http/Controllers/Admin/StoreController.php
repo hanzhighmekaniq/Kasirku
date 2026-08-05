@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -61,28 +62,37 @@ class StoreController extends Controller
 
     /**
      * Buat toko baru untuk user yang sudah login.
+     * Gunakan lockForUpdate untuk mencegah race condition.
      */
     public function store(Request $request): RedirectResponse
     {
         /** @var User $user */
         $user = Auth::user();
 
-        if (! $user->canAddStore()) {
-            return back()->with('error', 'Batas toko dari paket kamu sudah tercapai. Upgrade paket untuk menambah toko baru.');
-        }
+        $store = DB::transaction(function () use ($user, $request) {
+            // Lock user row untuk serialisasi concurrent request
+            User::lockForUpdate()->find($user->id);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'store_type_id' => ['required', 'integer', 'exists:store_types,id'],
-            'business_template_code' => ['nullable', 'string', 'exists:business_templates,code'],
-        ]);
+            // Re-check setelah lock — pastikan belum ada request lain yang membuat toko
+            if (! $user->fresh()->canAddStore()) {
+                throw ValidationException::withMessages([
+                    'name' => 'Batas toko dari paket kamu sudah tercapai. Upgrade paket untuk menambah toko baru.',
+                ]);
+            }
 
-        $store = DB::transaction(fn () => app(StoreOnboardingService::class)->addStore(
-            user: $user,
-            storeName: $validated['name'],
-            storeTypeId: $validated['store_type_id'],
-            businessTemplateCode: $validated['business_template_code'] ?? null,
-        ));
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'store_type_id' => ['required', 'integer', 'exists:store_types,id'],
+                'business_template_code' => ['nullable', 'string', 'exists:business_templates,code'],
+            ]);
+
+            return app(StoreOnboardingService::class)->addStore(
+                user: $user,
+                storeName: $validated['name'],
+                storeTypeId: $validated['store_type_id'],
+                businessTemplateCode: $validated['business_template_code'] ?? null,
+            );
+        });
 
         return redirect()
             ->route('admin.dashboard')

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Dropdown from "@/Components/Dropdown";
 import OfflineIndicator from "@/Components/OfflineIndicator";
 import NotificationBell from "@/Components/NotificationBell";
+import ChangeEmailModal from "@/Components/ChangeEmailModal";
 import { useStoreModules } from "@/Hooks/useStoreModules";
 import { buildNavGroups } from "@/Config/navConfig";
 import {
@@ -30,7 +31,10 @@ import {
     Gamepad2,
     MapPin,
     Check,
+    CheckCircle,
     ChevronRight,
+    Mail,
+    RefreshCw,
     X,
 } from "lucide-react";
 
@@ -1359,6 +1363,31 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
         if (flash?.typeBlock) setTypeBlock(flash.typeBlock);
     }, [flash?.typeBlock]);
 
+    // Banner verifikasi email — permanen (tidak bisa ditutup) selama
+    // email belum diverifikasi, tapi TIDAK memblokir apapun di baliknya.
+    const isEmailVerified = auth?.emailVerified ?? true;
+    const [resendState, setResendState] = useState("idle"); // idle | sending | sent
+    const [changeEmailOpen, setChangeEmailOpen] = useState(false);
+    const [bannerEmail, setBannerEmail] = useState(user?.email ?? "");
+
+    useEffect(() => {
+        if (user?.email) setBannerEmail(user.email);
+    }, [user?.email]);
+
+    const resendVerification = () => {
+        setResendState("sending");
+        router.post(
+            route("verification.send"),
+            {},
+            {
+                onFinish: () => {
+                    setResendState("sent");
+                    setTimeout(() => setResendState("idle"), 3000);
+                },
+            },
+        );
+    };
+
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(() => {
         try {
@@ -1387,6 +1416,15 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
             <TypeMismatchModal
                 data={typeBlock}
                 onClose={() => setTypeBlock(null)}
+            />
+
+            {/* Modal ubah email — dipicu dari banner verifikasi */}
+            <ChangeEmailModal
+                open={changeEmailOpen}
+                currentEmail={bannerEmail}
+                userName={user?.name ?? ""}
+                onClose={() => setChangeEmailOpen(false)}
+                onSaved={(newEmail) => setBannerEmail(newEmail)}
             />
 
             {/* Desktop sidebar */}
@@ -1621,6 +1659,44 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                             className="shrink-0 rounded-lg bg-warning-foreground/10 px-3 py-1 text-xs font-semibold transition hover:bg-warning-foreground/20"
                         >
                             Kembali ke Developer
+                        </button>
+                    </div>
+                )}
+
+                {/* Banner verifikasi email — permanen, tidak memblokir apapun,
+                    tetap tampil sampai user benar-benar verifikasi. */}
+                {!isEmailVerified && (
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-warning/20 bg-warning/10 px-5 py-3 text-sm text-warning">
+                        <Mail size={16} className="shrink-0" />
+                        <p className="min-w-[16rem] flex-1">
+                            Verifikasi email kamu untuk keamanan akun. Kami
+                            sudah kirim link ke{" "}
+                            <span className="font-medium">{bannerEmail}</span>.
+                        </p>
+                        <button
+                            onClick={resendVerification}
+                            disabled={resendState !== "idle"}
+                            className="shrink-0 rounded-lg border border-warning/30 bg-background px-3 py-1.5 text-xs font-medium text-warning transition hover:bg-warning/10 disabled:opacity-70"
+                        >
+                            {resendState === "sending" ? (
+                                <span className="flex items-center gap-1.5">
+                                    <RefreshCw size={13} className="animate-spin" />
+                                    Mengirim…
+                                </span>
+                            ) : resendState === "sent" ? (
+                                <span className="flex items-center gap-1.5">
+                                    <CheckCircle size={13} />
+                                    Link terkirim!
+                                </span>
+                            ) : (
+                                "Kirim Ulang Link"
+                            )}
+                        </button>
+                        <button
+                            onClick={() => setChangeEmailOpen(true)}
+                            className="shrink-0 rounded text-xs text-warning underline-offset-2 hover:underline"
+                        >
+                            Email salah? Ubah di sini
                         </button>
                     </div>
                 )}

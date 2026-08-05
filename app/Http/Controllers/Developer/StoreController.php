@@ -613,9 +613,9 @@ class StoreController extends Controller
     public function destroy(Store $store)
     {
         $store->loadCount(['sales', 'purchases']);
-        if ($store->sales_count > 0) {
+        if ($store->sales_count > 0 || $store->purchases_count > 0) {
             return back()->withErrors([
-                'store' => 'Toko sudah memiliki data transaksi. Nonaktifkan saja jika tidak digunakan.',
+                'store' => 'Toko sudah memiliki data transaksi (penjualan/pembelian). Nonaktifkan saja jika tidak digunakan.',
             ]);
         }
 
@@ -763,42 +763,44 @@ class StoreController extends Controller
             'features.*.feature_code' => 'required|string|exists:features,code',
         ]);
 
-        // Hapus semua mapping lama
-        DB::table('store_type_feature')->delete();
+        DB::transaction(function () use ($validated) {
+            // Hapus semua mapping lama
+            DB::table('store_type_feature')->delete();
 
-        // Insert mapping baru
-        if (! empty($validated['features'])) {
-            // Ambil feature IDs by code
-            $featureIds = Feature::whereIn(
-                'code',
-                array_column($validated['features'], 'feature_code'),
-            )->pluck('id', 'code');
+            // Insert mapping baru
+            if (! empty($validated['features'])) {
+                // Ambil feature IDs by code
+                $featureIds = Feature::whereIn(
+                    'code',
+                    array_column($validated['features'], 'feature_code'),
+                )->pluck('id', 'code');
 
-            // Ambil store type IDs by code
-            $storeTypeIds = StoreType::whereIn(
-                'code',
-                array_column($validated['features'], 'store_type'),
-            )->pluck('id', 'code');
+                // Ambil store type IDs by code
+                $storeTypeIds = StoreType::whereIn(
+                    'code',
+                    array_column($validated['features'], 'store_type'),
+                )->pluck('id', 'code');
 
-            $inserts = [];
-            foreach ($validated['features'] as $item) {
-                $featureId = $featureIds[$item['feature_code']] ?? null;
-                $storeTypeId = $storeTypeIds[$item['store_type']] ?? null;
+                $inserts = [];
+                foreach ($validated['features'] as $item) {
+                    $featureId = $featureIds[$item['feature_code']] ?? null;
+                    $storeTypeId = $storeTypeIds[$item['store_type']] ?? null;
 
-                if ($featureId && $storeTypeId) {
-                    $inserts[] = [
-                        'store_type_id' => $storeTypeId,
-                        'feature_id' => $featureId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
+                    if ($featureId && $storeTypeId) {
+                        $inserts[] = [
+                            'store_type_id' => $storeTypeId,
+                            'feature_id' => $featureId,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+                }
+
+                if (! empty($inserts)) {
+                    DB::table('store_type_feature')->insert($inserts);
                 }
             }
-
-            if (! empty($inserts)) {
-                DB::table('store_type_feature')->insert($inserts);
-            }
-        }
+        });
 
         return back()->with(
             'success',

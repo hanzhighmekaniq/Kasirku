@@ -1,0 +1,315 @@
+<!--
+  LAYAR 1 — register.html
+  State: form registrasi awal (belum ada akun).
+  Alur: isi email + password → strength meter live → submit → redirect ke
+  pilih-jenis-toko.html
+-->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Daftar — Kasirku</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .transition-fast { transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1); }
+</style>
+</head>
+<body class="min-h-screen bg-slate-50">
+
+  <div class="grid min-h-screen lg:grid-cols-[1.15fr_1fr] xl:grid-cols-[1.35fr_1fr]">
+
+    <!-- ── Band gelap ── -->
+    <div class="hidden lg:flex flex-col justify-between bg-slate-900 p-10 xl:p-14 relative overflow-hidden">
+      <div class="absolute inset-0 opacity-[0.07]" style="background-image: radial-gradient(1px 1px at center, #fff 0, transparent 100%); background-size: 22px 22px; mask-image: radial-gradient(130% 100% at 15% 0%, #000 45%, transparent 100%);"></div>
+
+      <a href="#" class="relative z-10 inline-flex items-baseline font-mono text-2xl font-medium text-white">
+        Kasir<span class="text-indigo-400">ku</span>
+      </a>
+
+      <div class="relative z-10 max-w-xl space-y-6 py-10">
+        <h1 class="text-4xl xl:text-5xl font-bold text-white leading-tight tracking-tight">
+          Daftar sekarang,<br />buat tokomu setelahnya.
+        </h1>
+        <p class="text-lg text-slate-400 leading-relaxed">
+          Buat akun dalam hitungan detik. Pilih jenis usaha dan langsung
+          dapat plan Gratis begitu tokomu siap.
+        </p>
+      </div>
+
+      <p class="relative z-10 text-xs font-mono text-slate-500">
+        &copy; 2026 Kasirku — Seluruh hak dilindungi
+      </p>
+    </div>
+
+    <!-- ── Panel form ── -->
+    <div class="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-12">
+      <div class="mx-auto w-full max-w-[30rem]">
+
+        <a href="#" class="lg:hidden mb-8 inline-flex items-baseline font-mono text-2xl font-medium text-slate-900">
+          Kasir<span class="text-indigo-500">ku</span>
+        </a>
+
+        <form id="registerForm" novalidate>
+          <div class="rounded-2xl border border-slate-200 bg-white p-7 sm:p-8 shadow-sm">
+            <h2 class="text-xl font-bold text-slate-900">Buat akunmu</h2>
+            <p class="mt-2 text-[0.9375rem] leading-relaxed text-slate-500">
+              Cukup email dan password. Nama toko diisi di langkah
+              berikutnya.
+            </p>
+
+            <div class="mt-7 space-y-5">
+
+              <!-- Email -->
+              <div class="space-y-1.5">
+                <label for="email" class="block text-xs font-semibold text-slate-700">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  autocomplete="username"
+                  autofocus
+                  placeholder="nama@email.com"
+                  class="block w-full min-h-[44px] px-3 py-2.5 text-[0.9375rem] rounded-lg border border-slate-300 bg-white shadow-sm outline-none transition-fast focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                />
+                <p id="emailError" class="hidden items-start gap-1.5 text-[0.8125rem] font-medium text-red-600">
+                  <i data-lucide="alert-triangle" class="w-3.5 h-3.5 mt-0.5 shrink-0"></i>
+                  <span>Email wajib diisi.</span>
+                </p>
+              </div>
+
+              <!-- Password -->
+              <div class="space-y-1.5">
+                <label for="password" class="block text-xs font-semibold text-slate-700">Password</label>
+                <div class="relative">
+                  <input
+                    id="password"
+                    type="password"
+                    autocomplete="new-password"
+                    placeholder="Min. 8 karakter"
+                    class="block w-full min-h-[44px] px-3 py-2.5 pr-11 text-[0.9375rem] rounded-lg border border-slate-300 bg-white shadow-sm outline-none transition-fast focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                  <button
+                    type="button"
+                    id="togglePassword"
+                    aria-label="Tampilkan password"
+                    aria-pressed="false"
+                    class="absolute inset-y-0 right-0 w-11 inline-flex items-center justify-center text-slate-400 hover:text-slate-700 transition-fast rounded-lg"
+                  >
+                    <i data-lucide="eye" class="w-4 h-4"></i>
+                  </button>
+                </div>
+
+                <!-- Strength meter -->
+                <div class="space-y-2.5 pt-1">
+                  <div class="space-y-1">
+                    <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="4" id="strengthBar">
+                      <div id="strengthFill" class="h-full rounded-full transition-fast" style="width: 0%; background: #cbd5e1;"></div>
+                    </div>
+                    <p id="strengthLabel" class="text-[0.75rem] font-medium hidden"></p>
+                  </div>
+
+                  <ul class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                    <li class="flex items-center gap-1.5 text-[0.75rem] text-slate-400" data-check="length">
+                      <i data-lucide="x" class="w-3.5 h-3.5 shrink-0"></i>
+                      <span>Minimal 8 karakter</span>
+                    </li>
+                    <li class="flex items-center gap-1.5 text-[0.75rem] text-slate-400" data-check="upper">
+                      <i data-lucide="x" class="w-3.5 h-3.5 shrink-0"></i>
+                      <span>Huruf besar (A-Z)</span>
+                    </li>
+                    <li class="flex items-center gap-1.5 text-[0.75rem] text-slate-400" data-check="lower">
+                      <i data-lucide="x" class="w-3.5 h-3.5 shrink-0"></i>
+                      <span>Huruf kecil (a-z)</span>
+                    </li>
+                    <li class="flex items-center gap-1.5 text-[0.75rem] text-slate-400" data-check="number">
+                      <i data-lucide="x" class="w-3.5 h-3.5 shrink-0"></i>
+                      <span>Angka (0-9)</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Konfirmasi password -->
+              <div class="space-y-1.5">
+                <label for="password_confirmation" class="block text-xs font-semibold text-slate-700">Konfirmasi password</label>
+                <div class="relative">
+                  <input
+                    id="password_confirmation"
+                    type="password"
+                    autocomplete="new-password"
+                    placeholder="Ulangi password"
+                    aria-invalid="false"
+                    class="block w-full min-h-[44px] px-3 py-2.5 pr-11 text-[0.9375rem] rounded-lg border border-slate-300 bg-white shadow-sm outline-none transition-fast focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+                <p id="confirmError" class="hidden items-start gap-1.5 text-[0.8125rem] font-medium text-red-600">
+                  <i data-lucide="alert-triangle" class="w-3.5 h-3.5 mt-0.5 shrink-0"></i>
+                  <span>Password tidak cocok.</span>
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="mt-6 flex items-center justify-between gap-3">
+            <a href="#" class="text-[0.8125rem] font-semibold text-indigo-600 hover:text-indigo-700 border-b border-transparent hover:border-indigo-600 transition-fast">
+              Sudah punya akun? Masuk
+            </a>
+
+            <button
+              type="submit"
+              id="submitBtn"
+              disabled
+              class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-fast hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span id="submitLabel">Daftar</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </form>
+
+        <p class="mt-10 lg:hidden text-center text-xs font-mono text-slate-400">&copy; 2026 Kasirku</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 translate-y-4 opacity-0 transition-fast pointer-events-none">
+    <div class="flex items-center gap-2 rounded-lg bg-slate-900 text-white px-4 py-3 shadow-lg text-sm font-medium">
+      <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+      <span id="toastMsg">Akun dibuat!</span>
+    </div>
+  </div>
+
+<script>
+  lucide.createIcons();
+
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const confirmInput = document.getElementById('password_confirmation');
+  const toggleBtn = document.getElementById('togglePassword');
+  const submitBtn = document.getElementById('submitBtn');
+  const strengthFill = document.getElementById('strengthFill');
+  const strengthLabel = document.getElementById('strengthLabel');
+  const confirmError = document.getElementById('confirmError');
+
+  const LEVELS = {
+    0: { color: '#cbd5e1', width: '0%', label: '' },
+    1: { color: '#ef4444', width: '25%', label: 'Lemah' },
+    2: { color: '#f59e0b', width: '50%', label: 'Cukup' },
+    3: { color: '#f59e0b', width: '75%', label: 'Cukup' },
+    4: { color: '#22c55e', width: '100%', label: 'Kuat' },
+  };
+
+  function getChecks(password) {
+    return {
+      length: password.length >= 8,
+      upper: /[A-Z]/.test(password),
+      lower: /[a-z]/.test(password),
+      number: /\d/.test(password),
+    };
+  }
+
+  function updateStrength() {
+    const password = passwordInput.value;
+    const checks = getChecks(password);
+    const metCount = Object.values(checks).filter(Boolean).length;
+
+    Object.entries(checks).forEach(([key, met]) => {
+      const li = document.querySelector(`[data-check="${key}"]`);
+      const icon = li.querySelector('i');
+      li.className = `flex items-center gap-1.5 text-[0.75rem] ${met ? 'text-emerald-600 font-medium' : 'text-slate-400'}`;
+      icon.setAttribute('data-lucide', met ? 'check' : 'x');
+    });
+    lucide.createIcons();
+
+    const level = password ? LEVELS[metCount] : LEVELS[0];
+    strengthFill.style.width = level.width;
+    strengthFill.style.background = level.color;
+
+    if (password) {
+      strengthLabel.textContent = `Kekuatan password: ${level.label}`;
+      strengthLabel.style.color = level.color;
+      strengthLabel.classList.remove('hidden');
+    } else {
+      strengthLabel.classList.add('hidden');
+    }
+
+    return metCount === 4;
+  }
+
+  function checkConfirmMatch() {
+    const password = passwordInput.value;
+    const confirmVal = confirmInput.value;
+    const matches = !confirmVal || confirmVal === password;
+
+    if (confirmVal && !matches) {
+      confirmInput.classList.add('border-red-500');
+      confirmInput.setAttribute('aria-invalid', 'true');
+      confirmError.classList.remove('hidden');
+      confirmError.classList.add('flex');
+    } else {
+      confirmInput.classList.remove('border-red-500');
+      confirmInput.setAttribute('aria-invalid', 'false');
+      confirmError.classList.add('hidden');
+      confirmError.classList.remove('flex');
+    }
+
+    return confirmVal && matches;
+  }
+
+  function updateSubmitState() {
+    const emailOk = emailInput.value.trim().length > 0;
+    const passwordOk = updateStrength();
+    const confirmOk = checkConfirmMatch();
+    submitBtn.disabled = !(emailOk && passwordOk && confirmOk);
+  }
+
+  emailInput.addEventListener('input', updateSubmitState);
+  passwordInput.addEventListener('input', updateSubmitState);
+  confirmInput.addEventListener('input', updateSubmitState);
+
+  toggleBtn.addEventListener('click', () => {
+    const isPassword = passwordInput.type === 'password';
+    passwordInput.type = isPassword ? 'text' : 'password';
+    confirmInput.type = isPassword ? 'text' : 'password';
+    toggleBtn.setAttribute('aria-pressed', String(isPassword));
+    toggleBtn.querySelector('i').setAttribute('data-lucide', isPassword ? 'eye-off' : 'eye');
+    lucide.createIcons();
+  });
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    toast.classList.remove('translate-y-4', 'opacity-0', 'pointer-events-none');
+  }
+
+  document.getElementById('registerForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (submitBtn.disabled) return;
+
+    const formData = {
+      email: emailInput.value,
+      password: passwordInput.value,
+      password_confirmation: confirmInput.value,
+    };
+    console.log('register submit', formData);
+
+    // simpan email untuk dipakai di layar dashboard (prototype only)
+    sessionStorage.setItem('kasirku_email', formData.email);
+
+    submitBtn.disabled = true;
+    document.getElementById('submitLabel').textContent = 'Membuat akun…';
+
+    showToast('Akun dibuat!');
+
+    setTimeout(() => {
+      window.location.href = 'pilih-jenis-toko.html';
+    }, 900);
+  });
+</script>
+
+</body>
+</html>

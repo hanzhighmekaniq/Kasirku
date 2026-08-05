@@ -312,6 +312,8 @@
 
     --dv-danger: oklch(55% 0.21 27);
     --dv-danger-tint: oklch(96.5% 0.02 27);
+    --dv-warning: oklch(62% 0.16 75);
+    --dv-warning-tint: oklch(96.5% 0.04 75);
     --dv-ok: oklch(52% 0.13 158);
     --dv-ok-tint: oklch(96.5% 0.03 158);
 

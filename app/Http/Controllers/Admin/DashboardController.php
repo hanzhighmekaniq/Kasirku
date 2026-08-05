@@ -164,51 +164,71 @@ class DashboardController extends Controller
             ->limit(5)
             ->get(['id', 'sale_no', 'sale_date', 'grand_total', 'payment_status', 'user_id']);
 
-        // ── Per-branch breakdown ──────────────────────────────
+        // ── Per-branch breakdown (single grouped query) ───────
         $branchBreakdown = [];
         if ($canViewAll) {
-            $store = Store::find($storeId);
-            if ($store) {
-                $branchBreakdown = $store->branches()
-                    ->where('is_active', true)
-                    ->get(['id', 'name', 'code'])
-                    ->map(function ($branch) use ($storeId, $today, $monthStart, $monthEnd) {
-                        $q = Sale::where('store_id', $storeId)
-                            ->where('branch_id', $branch->id)
-                            ->where('status', 'completed');
+            $branchStats = Sale::where('store_id', $storeId)
+                ->where('status', 'completed')
+                ->where(function ($q) use ($today, $monthStart, $monthEnd) {
+                    $q->whereDate('sale_date', $today)
+                        ->orWhereBetween('sale_date', [$monthStart, $monthEnd]);
+                })
+                ->select(
+                    'branch_id',
+                    DB::raw('SUM(CASE WHEN DATE(sale_date) = "'.$today->toDateString().'" THEN grand_total ELSE 0 END) as today_sales'),
+                    DB::raw('SUM(CASE WHEN sale_date >= "'.$monthStart->toDateTimeString().'" AND sale_date <= "'.$monthEnd->toDateTimeString().'" THEN grand_total ELSE 0 END) as month_sales'),
+                    DB::raw('COUNT(CASE WHEN DATE(sale_date) = "'.$today->toDateString().'" THEN 1 END) as today_count'),
+                )
+                ->groupBy('branch_id')
+                ->get()
+                ->keyBy('branch_id');
 
-                        return [
-                            'id' => $branch->id,
-                            'name' => $branch->name,
-                            'code' => $branch->code,
-                            'today_sales' => (float) (clone $q)->whereDate('sale_date', $today)->sum('grand_total'),
-                            'month_sales' => (float) (clone $q)->whereBetween('sale_date', [$monthStart, $monthEnd])->sum('grand_total'),
-                            'today_count' => (clone $q)->whereDate('sale_date', $today)->count(),
-                        ];
-                    })
-                    ->toArray();
-            }
+            $branchBreakdown = Branch::where('store_id', $storeId)
+                ->where('is_active', true)
+                ->get(['id', 'name', 'code'])
+                ->map(fn ($branch) => [
+                    'id' => $branch->id,
+                    'name' => $branch->name,
+                    'code' => $branch->code,
+                    'today_sales' => (float) ($branchStats[$branch->id]->today_sales ?? 0),
+                    'month_sales' => (float) ($branchStats[$branch->id]->month_sales ?? 0),
+                    'today_count' => (int) ($branchStats[$branch->id]->today_count ?? 0),
+                ])
+                ->toArray();
         }
 
-        // ── Multi-store overview ──────────────────────────────
+        // ── Multi-store overview (single grouped query) ───────
         $storeOverview = [];
         if ($canViewAll) {
             $userStores = $user->stores()->with('storeType')
                 ->get(['stores.id', 'stores.name', 'stores.store_type_id', 'stores.code']);
             if ($userStores->count() > 1) {
-                $storeOverview = $userStores->map(function ($store) use ($today, $monthStart, $monthEnd) {
-                    $q = Sale::where('store_id', $store->id)->where('status', 'completed');
+                $storeIds = $userStores->pluck('id')->toArray();
+                $storeStats = Sale::whereIn('store_id', $storeIds)
+                    ->where('status', 'completed')
+                    ->where(function ($q) use ($today, $monthStart, $monthEnd) {
+                        $q->whereDate('sale_date', $today)
+                            ->orWhereBetween('sale_date', [$monthStart, $monthEnd]);
+                    })
+                    ->select(
+                        'store_id',
+                        DB::raw('SUM(CASE WHEN DATE(sale_date) = "'.$today->toDateString().'" THEN grand_total ELSE 0 END) as today_sales'),
+                        DB::raw('SUM(CASE WHEN sale_date >= "'.$monthStart->toDateTimeString().'" AND sale_date <= "'.$monthEnd->toDateTimeString().'" THEN grand_total ELSE 0 END) as month_sales'),
+                        DB::raw('COUNT(CASE WHEN DATE(sale_date) = "'.$today->toDateString().'" THEN 1 END) as today_count'),
+                    )
+                    ->groupBy('store_id')
+                    ->get()
+                    ->keyBy('store_id');
 
-                    return [
-                        'id' => $store->id,
-                        'name' => $store->name,
-                        'code' => $store->code,
-                        'store_type' => $store->getRelation('storeType')?->code,
-                        'today_sales' => (float) (clone $q)->whereDate('sale_date', $today)->sum('grand_total'),
-                        'month_sales' => (float) (clone $q)->whereBetween('sale_date', [$monthStart, $monthEnd])->sum('grand_total'),
-                        'today_count' => (clone $q)->whereDate('sale_date', $today)->count(),
-                    ];
-                })->toArray();
+                $storeOverview = $userStores->map(fn ($store) => [
+                    'id' => $store->id,
+                    'name' => $store->name,
+                    'code' => $store->code,
+                    'store_type' => $store->getRelation('storeType')?->code,
+                    'today_sales' => (float) ($storeStats[$store->id]->today_sales ?? 0),
+                    'month_sales' => (float) ($storeStats[$store->id]->month_sales ?? 0),
+                    'today_count' => (int) ($storeStats[$store->id]->today_count ?? 0),
+                ])->toArray();
             }
         }
 
@@ -231,18 +251,30 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // ── Weekly trend (last 7 days, always) ───────────────
+        // ── Weekly trend (last 7 days, single grouped query) ──
+        $weekStart7 = Carbon::today()->subDays(6)->startOfDay();
+        $weekEnd7 = Carbon::today()->endOfDay();
+
+        $weeklyStats = Sale::where($saleScope)
+            ->whereBetween('sale_date', [$weekStart7, $weekEnd7])
+            ->select(
+                DB::raw('DATE(sale_date) as sale_date'),
+                DB::raw('SUM(grand_total) as total'),
+                DB::raw('COUNT(*) as count'),
+            )
+            ->groupBy('sale_date')
+            ->get()
+            ->keyBy(fn ($r) => Carbon::parse($r->sale_date)->toDateString());
+
         $weeklySales = collect();
         for ($i = 6; $i >= 0; $i--) {
             $day = Carbon::today()->subDays($i);
-            $shortName = $day->isoFormat('dd');
-            $total = Sale::where($saleScope)->whereDate('sale_date', $day)->sum('grand_total');
-            $count = Sale::where($saleScope)->whereDate('sale_date', $day)->count();
+            $dateKey = $day->toDateString();
             $weeklySales->push([
-                'day' => $shortName,
+                'day' => $day->isoFormat('dd'),
                 'fullDate' => $day->isoFormat('D MMM'),
-                'total' => (float) $total,
-                'count' => $count,
+                'total' => (float) ($weeklyStats[$dateKey]->total ?? 0),
+                'count' => (int) ($weeklyStats[$dateKey]->count ?? 0),
             ]);
         }
 

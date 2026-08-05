@@ -23,9 +23,8 @@ Schedule::command('membership:sweep-auto-tier')->dailyAt('01:00');
 Schedule::command('plan:check-expired')->dailyAt('00:30');
 Schedule::command('plan:notify-trial-ending')->dailyAt('08:00');
 
-// Registrasi: bersihkan kode OTP kedaluwarsa (>24 jam) supaya tabel
-// tidak menumpuk data form dari pendaftaran yang ditinggalkan.
-Schedule::command('registration-otp:prune')->dailyAt('02:00');
+// Plan: expire pending plan orders setiap jam
+Schedule::command('plan:expire-pending')->hourly();
 
 // Alerts: stok menipis & produk kadaluarsa
 Schedule::command('alerts:low-stock')->dailyAt('07:00');

@@ -82,6 +82,7 @@ class StoreSwitchController extends Controller
             // Hanya 1 cabang → auto-pick
             $branch = $store->branches()->where('is_active', true)->first();
             $request->session()->put('current_branch_id', $branch->id);
+            $request->session()->put('branch_id', $branch->id);
         } elseif ($branchCount > 1) {
             // Banyak cabang → suruh pilih
             $request->session()->forget(['current_branch_id', 'branch_id']);

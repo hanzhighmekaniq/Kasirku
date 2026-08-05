@@ -1,0 +1,161 @@
+<!doctype html>
+<!--
+  LAYAR 4 — pengaturan-plan.html
+  State: plan aktif = Free, upgrade tersedia (Business / Pro).
+-->
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plan &amp; Billing — Kasirku</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      @keyframes popIn { from { opacity:0; transform: scale(.97);} to {opacity:1; transform: scale(1);} }
+      .pop-in { animation: popIn 150ms ease-out; }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-800 antialiased">
+    <div class="flex min-h-screen">
+      <aside class="w-64 shrink-0 bg-white border-r border-slate-200 hidden lg:flex flex-col">
+        <div class="h-16 flex items-center gap-2 px-5 border-b border-slate-100">
+          <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white"><i data-lucide="store" class="h-4 w-4"></i></div>
+          <span class="font-semibold tracking-tight">Kasirku</span>
+        </div>
+        <nav id="nav" class="flex-1 overflow-y-auto py-3 text-sm"></nav>
+      </aside>
+
+      <div class="flex-1 min-w-0">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-5 sticky top-0 z-20">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="font-semibold truncate">Kasirku — <span id="storeName">Laundry Bersih Dinda</span></span>
+            <span id="topbarPlan" class="rounded-md bg-slate-100 text-slate-600 px-2 py-0.5 text-xs font-medium">Free</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="h-8 w-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-semibold">DA</span>
+            <span class="hidden sm:block text-sm font-medium">Dinda Ayu</span>
+          </div>
+        </header>
+
+        <main class="p-6 max-w-5xl">
+          <a href="dashboard.html" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700"><i data-lucide="arrow-left" class="h-3.5 w-3.5"></i>Kembali ke Dashboard</a>
+          <h1 class="mt-3 text-xl font-semibold">Plan &amp; Billing</h1>
+          <p class="text-sm text-slate-500 mt-1">Kelola langganan toko kamu.</p>
+
+          <!-- Plan aktif -->
+          <div class="mt-5 rounded-xl bg-white border border-slate-200 shadow-sm p-6">
+            <p class="text-sm text-slate-500">Plan Aktif</p>
+            <div class="mt-1 flex flex-wrap items-center gap-3">
+              <h2 id="activePlanName" class="text-3xl font-bold">Free</h2>
+              <span class="rounded-md bg-green-50 text-green-700 px-2 py-0.5 text-xs font-medium">Aktif</span>
+              <span id="trialBadge" class="hidden rounded-md bg-amber-50 text-amber-700 px-2 py-0.5 text-xs font-medium">Trial 14 hari</span>
+            </div>
+            <p id="activePlanDetail" class="mt-2 text-sm text-slate-500">Maks. 1 pengguna, 1 cabang</p>
+          </div>
+
+          <!-- Grid plan -->
+          <div id="planGrid" class="mt-6 grid gap-5 md:grid-cols-3"></div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Modal konfirmasi -->
+    <div id="modal" class="hidden fixed inset-0 z-40 bg-slate-900/40 flex items-center justify-center p-4">
+      <div class="w-full max-w-md rounded-xl bg-white shadow-xl p-6 pop-in">
+        <h3 class="text-lg font-semibold">Konfirmasi Upgrade</h3>
+        <p id="modalText" class="text-sm text-slate-500 mt-2"></p>
+        <div class="mt-6 flex justify-end gap-2">
+          <button id="cancelModal" class="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">Batal</button>
+          <button id="confirmUpgrade" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">Konfirmasi Upgrade</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toastWrap" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+      const $ = (s) => document.querySelector(s);
+      const MENU = [
+        { group: "Beranda", items: [{ n: "Dashboard", i: "layout-dashboard", href: "dashboard.html" }, { n: "Kasir/POS", i: "shopping-cart" }] },
+        { group: "Penjualan", items: [{ n: "Penjualan", i: "receipt" }, { n: "Shift Kasir", i: "clock" }, { n: "Promo & Diskon", i: "percent" }, { n: "Pengeluaran", i: "wallet" }] },
+        { group: "Operasional", items: [{ n: "Manajemen Meja", i: "table-2" }, { n: "Kitchen Display", i: "chef-hat" }, { n: "Antrian", i: "list-ordered" }, { n: "Booking/Reservasi", i: "calendar-check" }] },
+        { group: "Katalog & Stok", items: [{ n: "Produk", i: "package" }, { n: "Label Barcode", i: "barcode" }, { n: "Kategori", i: "folder-tree" }, { n: "Modifier/Topping", i: "layers" }, { n: "Manajemen Stok", i: "boxes" }, { n: "Pembelian", i: "truck" }] },
+        { group: "Pelanggan & Tim", items: [{ n: "Pelanggan & Loyalitas", i: "user-check" }, { n: "Karyawan", i: "users" }, { n: "Hutang/Kasbon", i: "credit-card" }] },
+        { group: "Laporan", items: [{ n: "Laporan", i: "bar-chart-3" }, { n: "Log Aktivitas", i: "file-text" }] },
+        { group: "Pengaturan", items: [{ n: "Pengaturan Toko", i: "settings" }, { n: "Plan & Billing", i: "zap", active: true }, { n: "Metode Pembayaran", i: "wallet" }, { n: "Tema", i: "palette" }] },
+      ];
+      $("#nav").innerHTML = MENU.map((g) =>
+        '<div class="px-3 mb-3"><p class="px-2 mb-1 text-[11px] uppercase tracking-wide text-slate-400">' + g.group + "</p>" +
+        g.items.map((it) =>
+          '<a href="' + (it.href || "#") + '" class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ' +
+          (it.active ? "bg-indigo-50 text-indigo-700 font-medium" : "text-slate-600 hover:bg-slate-50") + '">' +
+          '<i data-lucide="' + it.i + '" class="h-4 w-4"></i><span class="truncate">' + it.n + "</span></a>").join("") + "</div>").join("");
+
+      const PLANS = [
+        { id: "free", name: "Free", price: "Gratis", sub: "Selamanya", detail: "Maks. 1 pengguna, 1 cabang",
+          features: ["1 pengguna, 1 cabang", "Kasir & produk tanpa batas dasar", "Laporan harian", "Support komunitas"] },
+        { id: "business", name: "Business", price: "Rp 79.000", sub: "/bulan", trial: "Trial 14 hari", popular: true,
+          detail: "Maks. 5 pengguna, 2 cabang · Trial 14 hari",
+          features: ["5 pengguna, 2 cabang", "Manajemen stok & pembelian", "Promo & diskon", "Laporan lengkap", "Support prioritas"] },
+        { id: "pro", name: "Pro", price: "Rp 199.000", sub: "/bulan", detail: "Pengguna & cabang tanpa batas",
+          features: ["Pengguna & cabang tanpa batas", "Kitchen display & antrian", "Loyalitas pelanggan", "API & integrasi", "Support 24/7"] },
+      ];
+      let current = "free";
+
+      function renderPlans() {
+        $("#planGrid").innerHTML = PLANS.map((p) => {
+          const isCurrent = p.id === current;
+          return (
+            '<div class="relative rounded-xl bg-white border shadow-sm p-6 ' + (isCurrent ? "border-indigo-300 ring-2 ring-indigo-500/20" : "border-slate-200") + '">' +
+            (p.popular ? '<span class="absolute -top-2 left-6 rounded-md bg-indigo-500 px-2 py-0.5 text-[11px] font-medium text-white">Paling Populer</span>' : "") +
+            '<div class="flex items-center gap-2"><h3 class="font-semibold">' + p.name + "</h3>" +
+            (isCurrent ? '<span class="rounded-md bg-slate-100 text-slate-600 px-2 py-0.5 text-[11px] font-medium">Plan Saat Ini</span>' : "") +
+            (p.trial && !isCurrent ? '<span class="rounded-md bg-amber-50 text-amber-700 px-2 py-0.5 text-[11px] font-medium">' + p.trial + "</span>" : "") +
+            "</div>" +
+            '<p class="mt-3"><span class="text-2xl font-bold">' + p.price + '</span><span class="text-sm text-slate-500">' + (p.sub || "") + "</span></p>" +
+            '<ul class="mt-4 space-y-2 text-sm text-slate-600">' +
+            p.features.map((f) => '<li class="flex items-start gap-2"><i data-lucide="check" class="h-4 w-4 text-green-500 mt-0.5 shrink-0"></i><span>' + f + "</span></li>").join("") +
+            "</ul>" +
+            (isCurrent
+              ? '<button disabled class="mt-5 w-full rounded-lg bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-400 cursor-not-allowed">Plan Aktif</button>'
+              : '<button data-plan="' + p.id + '" class="upg mt-5 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 ease-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">Upgrade ke ' + p.name + "</button>") +
+            "</div>"
+          );
+        }).join("");
+        lucide.createIcons();
+      }
+
+      let pending = null;
+      document.addEventListener("click", (e) => {
+        const b = e.target.closest(".upg");
+        if (!b) return;
+        pending = PLANS.find((p) => p.id === b.dataset.plan);
+        $("#modalText").textContent = "Upgrade ke " + pending.name + " seharga " + pending.price + (pending.sub || "") + "?";
+        $("#modal").classList.remove("hidden");
+      });
+      $("#cancelModal").addEventListener("click", () => $("#modal").classList.add("hidden"));
+      $("#confirmUpgrade").addEventListener("click", () => {
+        current = pending.id;
+        $("#activePlanName").textContent = pending.name;
+        $("#activePlanDetail").textContent = pending.detail;
+        $("#topbarPlan").textContent = pending.name;
+        $("#trialBadge").classList.toggle("hidden", !pending.trial);
+        $("#modal").classList.add("hidden");
+        renderPlans();
+        toast("Berhasil upgrade ke " + pending.name + "!");
+      });
+
+      function toast(msg) {
+        const el = document.createElement("div");
+        el.className = "flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm text-white shadow-xl";
+        el.innerHTML = '<i data-lucide="check-circle" class="h-4 w-4"></i><span>' + msg + "</span>";
+        $("#toastWrap").appendChild(el);
+        lucide.createIcons();
+        setTimeout(() => el.remove(), 3000);
+      }
+
+      window.addEventListener("DOMContentLoaded", () => { renderPlans(); lucide.createIcons(); });
+      renderPlans();
+    </script>
+  </body>
+</html>

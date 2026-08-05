@@ -67,6 +67,12 @@ class SaleReturnController extends Controller
     {
         $storeId = session('current_store_id');
 
+        /** @var User $user */
+        $user = Auth::user();
+
+        // Authorization: harus punya permission sale.void
+        abort_unless($user->can('sale.void'), 403, 'Tidak punya izin membuat retur.');
+
         $validated = $request->validate([
             'sale_id' => [
                 'required',
@@ -171,6 +177,7 @@ class SaleReturnController extends Controller
 
             // Reduce paid_amount on sale (refund)
             $sale->decrement('paid_amount', $subtotal);
+            $sale->refresh(); // Refresh model setelah decrement
             $sale->change_amount = max(
                 0,
                 $sale->paid_amount - $sale->grand_total,
@@ -215,6 +222,16 @@ class SaleReturnController extends Controller
 
     public function destroy(SaleReturn $saleReturn)
     {
+        $storeId = session('current_store_id');
+        /** @var User $user */
+        $user = Auth::user();
+
+        // Authorization: harus punya permission sale.void
+        abort_unless($user->can('sale.void'), 403, 'Tidak punya izin menghapus retur.');
+
+        // Store scope: pastikan retur milik toko aktif
+        abort_if((int) $saleReturn->sale->store_id !== (int) $storeId, 404);
+
         if ($saleReturn->status === 'completed') {
             return back()->with(
                 'error',
@@ -232,6 +249,16 @@ class SaleReturnController extends Controller
 
     public function updateStatus(Request $request, SaleReturn $saleReturn)
     {
+        $storeId = session('current_store_id');
+        /** @var User $user */
+        $user = Auth::user();
+
+        // Authorization: harus punya permission sale.void
+        abort_unless($user->can('sale.void'), 403, 'Tidak punya izin membatalkan retur.');
+
+        // Store scope: pastikan retur milik toko aktif
+        abort_if((int) $saleReturn->sale->store_id !== (int) $storeId, 404);
+
         $validated = $request->validate([
             'status' => 'required|in:cancelled',
         ]);
@@ -258,6 +285,7 @@ class SaleReturnController extends Controller
 
             // Restore sale payment
             $sale->increment('paid_amount', $saleReturn->total_amount);
+            $sale->refresh(); // Refresh model setelah increment
             $sale->change_amount = max(
                 0,
                 $sale->paid_amount - $sale->grand_total,

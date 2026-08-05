@@ -499,6 +499,16 @@ export function buildNavGroups(modules) {
         // wallet. Dulu bernama "Keuangan" dan tinggal di grup Laporan, padahal
         // isinya konfigurasi cara bayar, jadi tempatnya di Pengaturan.
         // Key-nya ikut diganti supaya tidak mewarisi urutan/penempatan lama.
+        // Plan & Billing — pilih/upgrade plan akun. Tidak digating oleh
+        // fitur/plan (semua user berhak lihat & upgrade plannya sendiri),
+        // cukup permission setting.edit seperti item Pengaturan lainnya.
+        items.push({
+            key: "plan-billing",
+            name: "Plan & Billing",
+            href: r("admin.plan.index"),
+            icon: "zap",
+            current: "admin.plan.*",
+        });
         smartGroup(
             {
                 key: "payment-methods",

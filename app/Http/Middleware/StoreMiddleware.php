@@ -67,7 +67,7 @@ class StoreMiddleware
 
             if ($storeCount === 0) {
                 return redirect()
-                    ->route('welcome')
+                    ->route('onboarding')
                     ->with(
                         'warning',
                         'Kamu belum punya toko. Buat toko dulu untuk mulai menggunakan kasir.',
@@ -81,19 +81,25 @@ class StoreMiddleware
                 return redirect()->route('admin.store.select');
             }
 
-            // Single store → auto-set
-            $storeId = $user->stores()->first()->id;
+            // Single store → auto-set (hanya store aktif)
+            $firstActive = $user->stores()->where('is_active', true)->first();
+            if (! $firstActive) {
+                return redirect()
+                    ->route('login')
+                    ->with(
+                        'error',
+                        'Semua toko kamu sudah tidak aktif. Hubungi admin.',
+                    );
+            }
+            $storeId = $firstActive->id;
             $request->session()->put('current_store_id', $storeId);
         }
 
-        // ── Validasi store masih bisa diakses ───────────────────────
+        // ── Validasi store masih bisa diakses + aktif ─────────────────
         if ($storeId) {
-            $hasAccess = $user
-                ->stores()
-                ->where('stores.id', $storeId)
-                ->exists();
+            $store = $user->stores()->where('stores.id', $storeId)->first();
 
-            if (! $hasAccess) {
+            if (! $store || ! $store->is_active) {
                 $request
                     ->session()
                     ->forget(['current_store_id', 'current_branch_id']);
@@ -103,13 +109,14 @@ class StoreMiddleware
                     return $next($request);
                 }
 
-                $storeCount = $user->stores()->count();
+                // Jika store inactive, force redirect ke store select
+                $activeStores = $user->stores()->where('is_active', true)->get();
 
-                if ($storeCount > 1) {
+                if ($activeStores->count() > 1) {
                     return redirect()->route('admin.store.select');
                 }
 
-                $first = $user->stores()->first();
+                $first = $activeStores->first();
                 if ($first) {
                     $storeId = $first->id;
                     $request->session()->put('current_store_id', $storeId);
@@ -118,7 +125,7 @@ class StoreMiddleware
                         ->route('login')
                         ->with(
                             'error',
-                            'Akun kamu belum terhubung ke toko mana pun.',
+                            'Semua toko kamu sudah tidak aktif. Hubungi admin.',
                         );
                 }
             }

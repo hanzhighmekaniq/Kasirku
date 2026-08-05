@@ -1,0 +1,173 @@
+<!doctype html>
+<!--
+  LAYAR 1 — register.html
+  State: form registrasi kosong, tombol submit disabled sampai valid.
+-->
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Daftar — Kasirku</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-800 antialiased">
+    <div class="min-h-screen flex items-center justify-center p-4">
+      <div class="w-full max-w-4xl grid md:grid-cols-2 bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+        <!-- Band gelap -->
+        <div class="bg-slate-900 text-white p-10 flex flex-col justify-between">
+          <div class="flex items-center gap-2">
+            <div class="h-9 w-9 rounded-lg bg-indigo-500 flex items-center justify-center">
+              <i data-lucide="store" class="h-5 w-5"></i>
+            </div>
+            <span class="font-semibold tracking-tight">Kasirku</span>
+          </div>
+          <div class="my-10">
+            <h1 class="text-3xl font-bold leading-tight">Daftar sekarang, buat tokomu setelahnya</h1>
+            <p class="mt-3 text-slate-400 text-sm">
+              Satu akun untuk mengelola kasir, stok, laporan, dan tim kamu.
+            </p>
+          </div>
+          <ul class="space-y-3 text-sm text-slate-300">
+            <li class="flex items-center gap-2"><i data-lucide="check-circle" class="h-4 w-4 text-green-400"></i> Gratis selamanya untuk 1 toko</li>
+            <li class="flex items-center gap-2"><i data-lucide="check-circle" class="h-4 w-4 text-green-400"></i> Template kategori & produk contoh</li>
+            <li class="flex items-center gap-2"><i data-lucide="check-circle" class="h-4 w-4 text-green-400"></i> Tanpa kartu kredit</li>
+          </ul>
+        </div>
+
+        <!-- Form -->
+        <div class="p-8 md:p-10">
+          <h2 class="text-xl font-semibold">Buat akun</h2>
+          <p class="text-sm text-slate-500 mt-1">Isi data di bawah untuk memulai.</p>
+
+          <form id="form" class="mt-6 space-y-5" novalidate>
+            <div>
+              <label for="email" class="block text-sm font-medium mb-1.5">Email</label>
+              <input id="email" type="email" placeholder="nama@email.com" autocomplete="email"
+                class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition-all duration-150 ease-out focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" />
+            </div>
+
+            <div>
+              <label for="password" class="block text-sm font-medium mb-1.5">Password</label>
+              <div class="relative">
+                <input id="password" type="password" placeholder="Minimal 8 karakter"
+                  class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 pr-10 text-sm outline-none transition-all duration-150 ease-out focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" />
+                <button type="button" id="togglePw" aria-label="Tampilkan password"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30">
+                  <i data-lucide="eye" class="h-4 w-4"></i>
+                </button>
+              </div>
+
+              <!-- Strength meter -->
+              <div class="mt-3">
+                <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                  <div id="bar" class="h-full w-0 rounded-full bg-red-500 transition-all duration-200 ease-out"></div>
+                </div>
+                <p id="strengthLabel" class="mt-1.5 text-xs text-slate-400">Kekuatan password</p>
+                <ul id="criteria" class="mt-2 space-y-1 text-xs text-slate-500">
+                  <li data-c="len" class="flex items-center gap-1.5"><i data-lucide="x" class="h-3.5 w-3.5 text-slate-300"></i> Minimal 8 karakter</li>
+                  <li data-c="upper" class="flex items-center gap-1.5"><i data-lucide="x" class="h-3.5 w-3.5 text-slate-300"></i> Huruf besar (A-Z)</li>
+                  <li data-c="lower" class="flex items-center gap-1.5"><i data-lucide="x" class="h-3.5 w-3.5 text-slate-300"></i> Huruf kecil (a-z)</li>
+                  <li data-c="digit" class="flex items-center gap-1.5"><i data-lucide="x" class="h-3.5 w-3.5 text-slate-300"></i> Angka (0-9)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div>
+              <label for="confirm" class="block text-sm font-medium mb-1.5">Konfirmasi Password</label>
+              <input id="confirm" type="password" placeholder="Ulangi password"
+                class="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm outline-none transition-all duration-150 ease-out focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" />
+              <p id="confirmErr" class="hidden mt-1.5 text-xs text-red-600">Password tidak cocok</p>
+            </div>
+
+            <button id="submitBtn" type="submit" disabled
+              class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 ease-out hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed">
+              Daftar
+            </button>
+            <p class="text-xs text-slate-400 text-center">Sudah punya akun? <a href="#" class="text-indigo-600 hover:underline">Masuk</a></p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="toastWrap" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+      const $ = (s) => document.querySelector(s);
+      const email = $("#email"), pw = $("#password"), cf = $("#confirm");
+      const bar = $("#bar"), btn = $("#submitBtn"), cfErr = $("#confirmErr");
+
+      function checks(v) {
+        return { len: v.length >= 8, upper: /[A-Z]/.test(v), lower: /[a-z]/.test(v), digit: /[0-9]/.test(v) };
+      }
+
+      function renderStrength() {
+        const c = checks(pw.value);
+        const score = Object.values(c).filter(Boolean).length;
+        bar.style.width = (score / 4) * 100 + "%";
+        bar.className = "h-full rounded-full transition-all duration-200 ease-out " +
+          (score <= 1 ? "bg-red-500" : score <= 3 ? "bg-amber-400" : "bg-green-500");
+        $("#strengthLabel").textContent =
+          pw.value === "" ? "Kekuatan password" : score <= 1 ? "Lemah (" + score + "/4)" : score <= 3 ? "Sedang (" + score + "/4)" : "Kuat (4/4)";
+        $("#strengthLabel").className = "mt-1.5 text-xs " +
+          (pw.value === "" ? "text-slate-400" : score <= 1 ? "text-red-600" : score <= 3 ? "text-amber-600" : "text-green-600");
+
+        document.querySelectorAll("#criteria li").forEach((li) => {
+          const ok = c[li.dataset.c];
+          li.className = "flex items-center gap-1.5 " + (ok ? "text-green-600" : "text-slate-500");
+          li.querySelector("i,svg").outerHTML =
+            '<i data-lucide="' + (ok ? "check" : "x") + '" class="h-3.5 w-3.5 ' + (ok ? "text-green-500" : "text-slate-300") + '"></i>';
+        });
+        lucide.createIcons();
+        return score === 4;
+      }
+
+      function validate() {
+        const strong = renderStrength();
+        const match = cf.value !== "" && cf.value === pw.value;
+        const bad = cf.value !== "" && !match;
+        cfErr.classList.toggle("hidden", !bad);
+        cf.setAttribute("aria-invalid", bad ? "true" : "false");
+        cf.classList.toggle("border-red-400", bad);
+        cf.classList.toggle("border-slate-200", !bad);
+        btn.disabled = !(email.value.trim() && strong && match);
+      }
+
+      [email, pw, cf].forEach((el) => el.addEventListener("input", validate));
+
+      $("#togglePw").addEventListener("click", () => {
+        const show = pw.type === "password";
+        pw.type = show ? "text" : "password";
+        cf.type = show ? "text" : "password";
+        $("#togglePw").innerHTML = '<i data-lucide="' + (show ? "eye-off" : "eye") + '" class="h-4 w-4"></i>';
+        lucide.createIcons();
+      });
+
+      function toast(msg, tone = "green") {
+        const el = document.createElement("div");
+        el.className =
+          "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm shadow-xl transition-all duration-200 ease-out " +
+          (tone === "green" ? "bg-green-600 text-white" : "bg-slate-900 text-white");
+        el.innerHTML = '<i data-lucide="check-circle" class="h-4 w-4"></i><span>' + msg + "</span>";
+        $("#toastWrap").appendChild(el);
+        lucide.createIcons();
+        setTimeout(() => el.remove(), 2500);
+      }
+
+      $("#form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const formData = { email: email.value.trim(), password: pw.value };
+        console.log(formData);
+        toast("Akun dibuat!");
+        setTimeout(() => {
+          location.href = "pilih-jenis-toko.html?email=" + encodeURIComponent(formData.email);
+        }, 900);
+      });
+
+      window.addEventListener("DOMContentLoaded", () => {
+        lucide.createIcons();
+        renderStrength();
+      });
+    </script>
+  </body>
+</html>
