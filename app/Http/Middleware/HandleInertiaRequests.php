@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Branch;
 use App\Models\FeatureDetail;
+use App\Models\PlatformPaymentGateway;
 use App\Models\Store;
 use App\Models\StoreFeature;
 use App\Models\StoreType;
@@ -356,6 +357,15 @@ class HandleInertiaRequests extends Middleware
                         ->get(['id', 'slug', 'name', 'description', 'tokens']);
                 }),
                 collect(),
+                false,
+            ),
+
+            // Flag global: apakah PG aktif dalam mode sandbox.
+            // Dipakai DeveloperLayout untuk banner peringatan dan halaman
+            // terkait uang (wallet, penarikan) untuk disable aksi nyata.
+            'isSandbox' => fn () => rescue(
+                fn () => PlatformPaymentGateway::isSandbox(),
+                false,
                 false,
             ),
 

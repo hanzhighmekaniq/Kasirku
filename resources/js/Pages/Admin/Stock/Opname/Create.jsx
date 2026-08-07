@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { ArrowLeft, Check, Trash2, X } from 'lucide-react';
 import StockBucketPicker, { BucketItemLabel } from '@/Components/ui/StockBucketPicker';
@@ -11,8 +11,6 @@ import { format } from "date-fns";
 const FORM_ID = 'stock-opname-form';
 
 export default function Create({ buckets = [], currentBranchId = null }) {
-    const { flash } = usePage().props;
-
     const { data, setData, post, processing, errors } = useForm({
         opname_date: new Date().toISOString().split('T')[0],
         notes: '',
@@ -106,10 +104,6 @@ export default function Create({ buckets = [], currentBranchId = null }) {
             }
         >
             <Head title="Buat Opname Stok" />
-
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
-            )}
 
             <form id={FORM_ID} onSubmit={submit}>
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

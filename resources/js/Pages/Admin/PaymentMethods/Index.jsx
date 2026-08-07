@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Link, router, usePage } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import axios from "axios";
 import {
@@ -175,7 +175,6 @@ function PaymentMethodRow({ method, idx, toggling, onToggle, onDelete, isDragOve
 
 /* ── Main component ─────────────────────────────────── */
 export default function Index({ paymentMethods: initialMethods }) {
-    const { flash } = usePage().props;
     const [search, setSearch] = useState("");
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
@@ -294,13 +293,6 @@ export default function Index({ paymentMethods: initialMethods }) {
                     </div>
                 }
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
-            )}
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

@@ -94,7 +94,7 @@ function SummaryCard({ label, value, color = "slate", icon }) {
 }
 
 export default function Index({ employees, storeType = "retail" }) {
-    const { flash, storeTypeFeatures = [], currentBranch = null } =
+    const { storeTypeFeatures = [], currentBranch = null } =
         usePage().props;
     const has = (f) => storeTypeFeatures.includes(f);
     const [search, setSearch] = useState("");
@@ -222,17 +222,6 @@ export default function Index({ employees, storeType = "retail" }) {
             />
 
             <EmployeeTabs />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    {flash.error}
-                </div>
-            )}
 
             {/* Stats */}
             <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

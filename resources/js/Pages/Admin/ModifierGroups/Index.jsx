@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import Button from '@/Components/ui/Button';
@@ -11,7 +11,6 @@ const SELECTION_LABEL = {
 };
 
 export default function Index({ groups }) {
-    const { flash } = usePage().props;
     const [search, setSearch] = useState('');
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
@@ -48,13 +47,6 @@ export default function Index({ groups }) {
             }
         >
             <Head title="Grup Modifier" />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
-            )}
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar */}

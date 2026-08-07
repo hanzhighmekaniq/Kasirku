@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Head, router, usePage } from "@inertiajs/react";
+import { toast } from "sonner";
+import Toaster from "@/Components/ui/sonner";
 import {
     AlertTriangle,
     ArrowRight,
@@ -62,6 +64,11 @@ export default function SelectStore({ stores = [] }) {
 
     const showSearch = stores.length > SEARCH_THRESHOLD;
 
+    useEffect(() => {
+        if (flash?.success) toast.success(flash.success);
+        if (flash?.error) toast.error(flash.error);
+    }, [flash]);
+
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
         if (!q) return stores;
@@ -100,6 +107,7 @@ export default function SelectStore({ stores = [] }) {
     return (
         <>
             <Head title="Pilih Toko" />
+            <Toaster />
 
             <div className="dv-auth grid min-h-screen lg:grid-cols-[1.15fr_1fr] xl:grid-cols-[1.35fr_1fr]">
                 {/* ── Band gelap: satu-satunya area gelap di halaman ── */}
@@ -171,20 +179,6 @@ export default function SelectStore({ stores = [] }) {
                             >
                                 Kamu punya akses ke {stores.length} toko.
                             </p>
-
-                            {flash?.error && (
-                                <div
-                                    className="dv-alert dv-alert--bad mt-6"
-                                    role="alert"
-                                >
-                                    <AlertTriangle
-                                        size={15}
-                                        strokeWidth={2.5}
-                                        className="mt-px shrink-0"
-                                    />
-                                    <span>{flash.error}</span>
-                                </div>
-                            )}
 
                             {errors.store_id && (
                                 <div

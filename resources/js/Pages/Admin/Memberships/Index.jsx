@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import LoyaltyTabs from "@/Components/LoyaltyTabs";
 import PageHeader from "@/Components/PageHeader";
-import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import Button from "@/Components/ui/Button";
@@ -59,7 +59,6 @@ function tierRankOf(membership, customerTiers) {
 }
 
 export default function Index({ memberships, customerTiers = [] }) {
-    const { flash } = usePage().props;
     const [search, setSearch] = useState("");
     const [deleting, setDeleting] = useState(null);
     const [processing, setProcessing] = useState(false);
@@ -111,18 +110,6 @@ export default function Index({ memberships, customerTiers = [] }) {
             />
 
             <LoyaltyTabs />
-
-            {/* Flash */}
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    {flash.error}
-                </div>
-            )}
 
             {/* Main Content Area */}
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">

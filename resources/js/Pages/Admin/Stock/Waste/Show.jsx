@@ -1,9 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Show({ waste }) {
-    const { flash } = usePage().props;
     const [confirmingStatus, setConfirmingStatus] = useState(null);
     const [processing, setProcessing] = useState(false);
 
@@ -46,10 +45,6 @@ export default function Show({ waste }) {
             }
         >
             <Head title={`Waste ${waste.waste_no}`} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
 
             {/* Status badge + actions */}
             <div className="mb-5 flex flex-wrap items-center gap-3">

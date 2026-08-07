@@ -8,6 +8,8 @@ use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\User;
+use App\Services\ImageService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -64,11 +66,23 @@ class ExpenseController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'expense_category_id' => 'nullable|exists:expense_categories,id',
+            'expense_category_id' => 'required|exists:expense_categories,id',
             'expense_date' => 'required|date',
             'amount' => 'required|numeric|min:0.01',
             'notes' => 'nullable|string|max:1000',
+            'receipt_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'is_recurring' => 'boolean',
+            'recurrence_type' => 'nullable|required_if:is_recurring,true|in:weekly,monthly,yearly',
         ]);
+
+        // Handle receipt image upload
+        $receiptPath = null;
+        if ($request->hasFile('receipt_image')) {
+            $receiptPath = app(ImageService::class)->upload(
+                $request->file('receipt_image'),
+                'expenses/receipts',
+            );
+        }
 
         // Generate expense number
         $dateStr = now()->format('Ymd');
@@ -89,12 +103,28 @@ class ExpenseController extends Controller
         $validated['branch_id'] =
             session('current_branch_id') ?? session('branch_id');
         $validated['status'] = 'draft';
+        $validated['is_recurring'] = $validated['is_recurring'] ?? false;
+        $validated['receipt_image'] = $receiptPath;
+
+        // Hitung next_due_date jika recurring
+        if ($validated['is_recurring'] && ! empty($validated['recurrence_type'])) {
+            $validated['next_due_date'] = match ($validated['recurrence_type']) {
+                'weekly' => Carbon::parse($validated['expense_date'])->addWeek(),
+                'monthly' => Carbon::parse($validated['expense_date'])->addMonth(),
+                'yearly' => Carbon::parse($validated['expense_date'])->addYear(),
+            };
+        }
 
         Expense::create($validated);
 
+        $message = 'Pengeluaran berhasil dicatat.';
+        if ($validated['is_recurring']) {
+            $message .= ' Akan otomatis dibuat ulang setiap '.($validated['recurrence_type'] ?? 'bulan').'.';
+        }
+
         return redirect()
             ->route('admin.expenses.index')
-            ->with('success', 'Pengeluaran berhasil dicatat.');
+            ->with('success', $message);
     }
 
     public function show(Expense $expense)
@@ -133,5 +163,42 @@ class ExpenseController extends Controller
             'success',
             'Status pengeluaran berhasil diperbarui.',
         );
+    }
+
+    public function approve(Request $request, Expense $expense)
+    {
+        abort_unless($request->user()->can('expense.approve'), 403);
+
+        if ($expense->status !== 'pending_approval') {
+            return back()->withErrors(['error' => 'Hanya pengeluaran pending approval yang bisa di-approve.']);
+        }
+
+        $expense->update([
+            'status' => 'posted',
+            'approved_by' => $request->user()->id,
+            'approved_at' => now(),
+        ]);
+
+        return back()->with('success', 'Pengeluaran berhasil di-approve.');
+    }
+
+    public function reject(Request $request, Expense $expense)
+    {
+        abort_unless($request->user()->can('expense.approve'), 403);
+
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        if ($expense->status !== 'pending_approval') {
+            return back()->withErrors(['error' => 'Hanya pengeluaran pending approval yang bisa ditolak.']);
+        }
+
+        $expense->update([
+            'status' => 'draft',
+            'rejection_reason' => $validated['rejection_reason'],
+        ]);
+
+        return back()->with('success', 'Pengeluaran ditolak. Alasan: '.$validated['rejection_reason']);
     }
 }

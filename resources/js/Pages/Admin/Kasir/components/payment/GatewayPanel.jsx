@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { MousePointerClick } from 'lucide-react';
+import { MousePointerClick, AlertTriangle } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
 import axios from 'axios';
 import Button from '@/Components/ui/Button';
 import { PG_METHOD_LABELS, fmt } from '../helpers';
@@ -50,6 +51,7 @@ export default function GatewayPanel({
     onPgSuccess,     // dipanggil saat polling lancar → paid
     onRetryPg,       // dipanggil saat user klik "Coba Lagi"
 }) {
+    const { isSandbox } = usePage().props;
     // ── State ───────────────────────────────────────
     const [pendingMethod, setPendingMethod] = useState(null);
     const [error, setError] = useState(null);
@@ -185,6 +187,16 @@ export default function GatewayPanel({
                 </div>
 
                 <div className="flex-1 overflow-auto px-4 py-4 space-y-4">
+                    {/* Sandbox warning */}
+                    {isSandbox && (
+                        <div className="flex items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2.5">
+                            <AlertTriangle size={16} className="shrink-0 text-warning" strokeWidth={2.5} />
+                            <p className="text-xs font-semibold text-warning">
+                                Mode Sandbox — Transaksi ini tidak menggunakan uang asli
+                            </p>
+                        </div>
+                    )}
+
                     {/* Amount */}
                     <div className="text-center">
                         <p className="text-xs text-muted-foreground">Total Pembayaran</p>
@@ -293,7 +305,15 @@ export default function GatewayPanel({
     return (
         <div className="flex flex-1 flex-col">
             <div className="shrink-0 border-b border-border px-5 py-3.5">
-                <h3 className="font-semibold text-foreground">Payment Gateway</h3>
+                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    Payment Gateway
+                    {isSandbox && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-warning">
+                            <AlertTriangle size={10} />
+                            Sandbox
+                        </span>
+                    )}
+                </h3>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                     Total <span className="font-semibold text-foreground">{fmt(displayTotal)}</span>
                 </p>

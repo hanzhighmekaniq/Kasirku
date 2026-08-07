@@ -31,7 +31,9 @@ class RegisteredUserController extends Controller
 {
     public function create(Request $request): Response
     {
-        return Inertia::render('Auth/Register');
+        return Inertia::render('Auth/Register', [
+            'honeypot_token' => encrypt(now()->timestamp),
+        ]);
     }
 
     /**
@@ -41,6 +43,18 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Anti-spam: honeypot check
+        if (! empty($request->website)) {
+            return redirect()->route('register');
+        }
+
+        // Anti-spam: time check (< 3 detik = bot)
+        $startTime = $request->get('honeypot_token');
+        if ($startTime && now()->timestamp - decrypt($startTime) < 3) {
+            return redirect()->route('register')
+                ->withErrors(['email' => 'Registrasi terlalu cepat. Silakan coba lagi.']);
+        }
+
         $validated = $request->validate([
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::min(8)->mixedCase()->numbers()],

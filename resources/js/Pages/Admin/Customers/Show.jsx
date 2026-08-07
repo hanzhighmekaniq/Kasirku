@@ -3,7 +3,7 @@ import PageHeader from "@/Components/PageHeader";
 import Button from "@/Components/ui/Button";
 import SearchableSelect from "@/Components/ui/SearchableSelect";
 import { formatRupiah } from "@/Utils/currency";
-import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, router, useForm } from "@inertiajs/react";
 import { ArrowLeft, Pencil, X } from "lucide-react";
 
 /**
@@ -45,8 +45,6 @@ export default function Show({
     recentSales,
     customerTiers = [],
 }) {
-    const { flash } = usePage().props;
-
     const { data, setData, post, processing, errors, reset } = useForm({
         membership_id: "",
         notes: "",
@@ -145,17 +143,6 @@ export default function Show({
                     </Button>
                 }
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    {flash.error}
-                </div>
-            )}
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <div className="space-y-6 lg:col-span-2">

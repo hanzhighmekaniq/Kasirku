@@ -2,9 +2,9 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import LoyaltyTabs from "@/Components/LoyaltyTabs";
 import PageHeader from "@/Components/PageHeader";
 import { Head, Link, router } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { formatRupiah } from "@/Utils/currency";
-import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { Plus, Eye, Pencil, Trash2, Download, Upload } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
@@ -39,6 +39,8 @@ export default function Index({ customers, storeType = "retail" }) {
     const [search, setSearch] = useState("");
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const fileInputRef = useRef(null);
 
     // Poin & Tier hanya relevan untuk retail, fnb, service (membership/loyalty)
     const showLoyalty = ["retail", "fnb", "service", "hospitality"].includes(
@@ -65,6 +67,26 @@ export default function Index({ customers, storeType = "retail" }) {
             onFinish: () => {
                 setDeleting(false);
                 setTarget(null);
+            },
+        });
+    };
+
+    const handleExport = () => {
+        window.location.href = route("admin.customers.export");
+    };
+
+    const handleImport = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setImporting(true);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        router.post(route("admin.customers.import"), formData, {
+            onFinish: () => {
+                setImporting(false);
+                if (fileInputRef.current) fileInputRef.current.value = "";
             },
         });
     };
@@ -129,7 +151,7 @@ export default function Index({ customers, storeType = "retail" }) {
                             className="w-full py-2.5 pl-10 pr-3 rounded-lg border border-input bg-background text-sm text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 transition-all"
                         />
                     </div>
-                    <div className="pt-4 flex items-center ">
+                    <div className="pt-4 flex items-center gap-2">
                         <p className="text-xs text-muted-foreground">
                             Menampilkan{" "}
                             <span className="font-semibold text-foreground">
@@ -141,6 +163,16 @@ export default function Index({ customers, storeType = "retail" }) {
                             </span>{" "}
                             pelanggan
                         </p>
+                        <div className="ml-auto flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5">
+                                <Download className="h-4 w-4" /> Export
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={importing} className="gap-1.5">
+                                <Upload className="h-4 w-4" /> {importing ? "Importing..." : "Import"}
+                            </Button>
+                            <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleImport} className="hidden" />
+                            <a href={route("admin.customers.import.template")} className="text-xs text-primary hover:underline">Download Template</a>
+                        </div>
                     </div>
                 </div>
 

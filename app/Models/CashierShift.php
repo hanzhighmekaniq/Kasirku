@@ -13,35 +13,42 @@ class CashierShift extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        "store_id",
-        "branch_id",
-        "user_id",
-        "shift_no",
-        "opened_at",
-        "closed_at",
-        "opening_cash",
-        "expected_cash",
-        "actual_cash",
-        "cash_difference",
-        "total_sales",
-        "total_refunds",
-        "status",
-        "opening_note",
-        "closing_note",
-        "deleted_by",
+        'store_id',
+        'branch_id',
+        'user_id',
+        'shift_no',
+        'opened_at',
+        'closed_at',
+        'opening_cash',
+        'expected_cash',
+        'actual_cash',
+        'mid_count_cash',
+        'mid_count_at',
+        'mid_count_note',
+        'cash_difference',
+        'total_sales',
+        'total_refunds',
+        'total_expenses',
+        'status',
+        'opening_note',
+        'closing_note',
+        'deleted_by',
     ];
 
     protected function casts(): array
     {
         return [
-            "opened_at" => "datetime",
-            "closed_at" => "datetime",
-            "opening_cash" => "decimal:2",
-            "expected_cash" => "decimal:2",
-            "actual_cash" => "decimal:2",
-            "cash_difference" => "decimal:2",
-            "total_sales" => "decimal:2",
-            "total_refunds" => "decimal:2",
+            'opened_at' => 'datetime',
+            'closed_at' => 'datetime',
+            'mid_count_at' => 'datetime',
+            'opening_cash' => 'decimal:2',
+            'expected_cash' => 'decimal:2',
+            'actual_cash' => 'decimal:2',
+            'mid_count_cash' => 'decimal:2',
+            'cash_difference' => 'decimal:2',
+            'total_sales' => 'decimal:2',
+            'total_refunds' => 'decimal:2',
+            'total_expenses' => 'decimal:2',
         ];
     }
 
@@ -67,11 +74,11 @@ class CashierShift extends Model
 
     public function deletedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, "deleted_by");
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 
     public function isOpen(): bool
     {
-        return $this->status === "open";
+        return $this->status === 'open';
     }
 }

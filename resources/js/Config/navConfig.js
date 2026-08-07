@@ -104,6 +104,7 @@ function salesCandidates(hasPos, hasSR) {
 function loyaltyCandidates(hasCust, hasMemb) {
     return [
         { href: r("admin.customers.index"), locked: !hasCust, current: "admin.customers.*" },
+        { href: r("admin.customer-deposits.index"), locked: !hasCust, current: "admin.customer-deposits.*" },
         { href: r("admin.memberships.index"), locked: !hasMemb, current: "admin.memberships.*" },
         { href: r("admin.customer-tiers.index"), locked: !hasMemb, current: "admin.customer-tiers.*" },
     ];
@@ -125,7 +126,6 @@ function financeCandidates(can, hasPM, hasDebt, hasPG) {
         // menyala sekaligus.
         { href: r("admin.debts.index"), locked: !(hasDebt && can("debt.view")), current: null },
         { href: r("admin.payment-gateway.index"), locked: !(hasPG && can("setting.edit")), current: "admin.payment-gateway.*" },
-        { href: r("admin.wallet.index"), locked: !(hasPG && can("setting.view")), current: "admin.wallet.*" },
     ];
 }
 
@@ -362,7 +362,7 @@ export function buildNavGroups(modules) {
             key: "barcode-labels",
             name: "Label Barcode",
             href: r("admin.barcode-labels.index"),
-            icon: "tag",
+            icon: "barcode",
             current: "admin.barcode-labels.*",
         });
         add(items, hasCategory || lockedCategory, hasCategory, {
@@ -509,6 +509,20 @@ export function buildNavGroups(modules) {
             icon: "zap",
             current: "admin.plan.*",
         });
+        // Wallet — menu terpisah, selalu terlihat untuk semua owner.
+        // Berisi saldo dari pembayaran online + pengajuan penarikan dana.
+        add(
+            items,
+            true,
+            can("setting.view"),
+            {
+                key: "wallet",
+                name: "Wallet",
+                href: r("admin.wallet.index"),
+                icon: "wallet",
+                current: ["admin.wallet.*", "admin.withdrawals.*"],
+            },
+        );
         smartGroup(
             {
                 key: "payment-methods",
@@ -539,6 +553,34 @@ export function buildNavGroups(modules) {
             // tidak cocok dengan satu pun, jadi item ini dulu tidak pernah aktif.
             current: "admin.themes.*",
         });
+        add(
+            items,
+            (hasSettings || lockedSettings) && can("setting.view"),
+            hasSettings && can("setting.view"),
+            {
+                key: "business-hours",
+                name: "Jam Operasional",
+                href: r("admin.business-hours.index"),
+                icon: "clock",
+                current: "admin.business-hours.*",
+            },
+        );
+        // Field Kustom disembunyikan dari sidebar — fitur ini belum
+        // terintegrasi ke form Produk/Pelanggan. Aktifkan kembali saat
+        // integrasi selesai.
+        //
+        // add(
+        //     items,
+        //     (hasSettings || lockedSettings) && can("setting.view"),
+        //     hasSettings && can("setting.view"),
+        //     {
+        //         key: "custom-fields",
+        //         name: "Field Kustom",
+        //         href: r("admin.custom-fields.index"),
+        //         icon: "list",
+        //         current: "admin.custom-fields.*",
+        //     },
+        // );
         if (items.length > 0)
             groups.push({
                 key: "system",

@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import ReportTabs from "@/Components/ReportTabs";
+import ExportButton from "./components/ExportButton";
 import { Head, router } from "@inertiajs/react";
 import SummaryCards from "./components/SummaryCards";
 import DateRangeFilter from "./components/DateRangeFilter";
@@ -99,9 +100,12 @@ export default function ProfitLoss({
                     )}
                 </div>
 
-                {/* <Button variant="outline" size="sm" onClick={handleExport}>
-                    <Download className="mr-2 h-4 w-4" /> Export Excel
-                </Button> */}
+                <ExportButton
+                    routeName="admin.reports.export.profit-loss"
+                    from={from}
+                    to={to}
+                    branchIds={branchIds}
+                />
             </div>
 
             <SummaryCards

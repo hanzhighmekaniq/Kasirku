@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useMemo } from 'react';
 import { Check, Loader2, Trash2, X } from 'lucide-react';
 import StockBucketPicker, { BucketItemLabel } from '@/Components/ui/StockBucketPicker';
@@ -10,8 +10,6 @@ import DatePicker from "@/Components/ui/DatePicker";
 import { format } from "date-fns";
 
 export default function Create({ buckets = [], currentBranchId = null }) {
-    const { flash } = usePage().props;
-
     const { data, setData, post, processing, errors } = useForm({
         adjustment_date: new Date().toISOString().split('T')[0],
         reason: '',
@@ -124,10 +122,6 @@ export default function Create({ buckets = [], currentBranchId = null }) {
                 description="Cocokkan stok sistem dengan hasil hitung fisik."
                 backUrl={route('admin.stock-adjustments.index')}
             />
-
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
-            )}
 
             <form onSubmit={submit}>
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

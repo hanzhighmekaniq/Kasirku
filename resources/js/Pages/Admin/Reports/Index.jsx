@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import ReportTabs from "@/Components/ReportTabs";
+import ExportButton from "./components/ExportButton";
 import { router, usePage } from "@inertiajs/react";
 import { useState, useMemo } from "react";
 import Button from "@/Components/ui/Button";
@@ -189,6 +190,11 @@ export default function Index({
                             <span className="sm:hidden">Cari</span>
                             <span className="hidden sm:inline">Tampilkan</span>
                         </Button>
+                        <ExportButton
+                            routeName="admin.reports.export.sales"
+                            from={startDate ? format(startDate, "yyyy-MM-dd") : null}
+                            to={endDate ? format(endDate, "yyyy-MM-dd") : null}
+                        />
                     </div>
                 </div>
 

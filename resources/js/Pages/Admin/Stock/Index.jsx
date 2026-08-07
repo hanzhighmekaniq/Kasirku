@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
 import StockTabs from "@/Components/StockTabs";
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Clock, Boxes, ChevronDown, ChevronRight, X, Search, Trash2 } from 'lucide-react';
 import { useStoreModules } from '@/Hooks/useStoreModules';
@@ -15,7 +15,6 @@ const unitSuffix = (product) =>
     usesUnitConversion(product) ? ` ${product.base_unit}` : '';
 
 export default function Index({ stocks, stats, storeType = 'retail' }) {
-    const { flash } = usePage().props;
     const { needsWaste } = useStoreModules();
     const [search, setSearch] = useState('');
     const [selectedProductId, setSelectedProductId] = useState('');
@@ -128,10 +127,6 @@ export default function Index({ stocks, stats, storeType = 'retail' }) {
             <StockTabs />
 
             <Head title={PAGE_TITLE} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

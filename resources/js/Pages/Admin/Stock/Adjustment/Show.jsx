@@ -1,11 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
 
 export default function Show({ adjustment }) {
-    const { flash } = usePage().props;
     const [confirmingStatus, setConfirmingStatus] = useState(null);
     const [processing, setProcessing] = useState(false);
 
@@ -62,10 +61,6 @@ export default function Show({ adjustment }) {
                 description="Rincian selisih stok sistem terhadap hasil hitung fisik."
                 backUrl={route('admin.stock-adjustments.index')}
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
 
             {/* Status badge + actions */}
             <div className="mb-4 flex flex-wrap items-center gap-3">

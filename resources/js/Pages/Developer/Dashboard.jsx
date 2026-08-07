@@ -1,6 +1,7 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
 import { Head, Link, usePage } from "@inertiajs/react";
 import {
+    AlertTriangle,
     Building2,
     Package,
     Store,
@@ -20,6 +21,7 @@ export default function Dashboard({
     storeRevenues,
     storeTypes,
     businessMetrics,
+    isSandbox = false,
 }) {
     const { allStoreTypes = [] } = usePage().props;
 
@@ -69,8 +71,14 @@ export default function Dashboard({
     return (
         <DeveloperLayout
             header={
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                     Developer Dashboard
+                    {isSandbox && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning">
+                            <AlertTriangle className="h-3 w-3" />
+                            Sandbox
+                        </span>
+                    )}
                 </h2>
             }
         >

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class WalletTransaction extends Model
 {
     protected $fillable = [
-        'store_id', 'wallet_id', 'type', 'amount', 'balance_after',
+        'store_id', 'wallet_id', 'type', 'environment', 'amount', 'balance_after',
         'referenceable_type', 'referenceable_id', 'description', 'created_by',
     ];
 

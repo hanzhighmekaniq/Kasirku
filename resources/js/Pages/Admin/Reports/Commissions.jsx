@@ -1,7 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
 import ReportTabs from "@/Components/ReportTabs";
-import { Head, Link, usePage } from '@inertiajs/react';
+import ExportButton from './components/ExportButton';
+import { Head } from '@inertiajs/react';
 import DateRangeFilter from './components/DateRangeFilter';
 import SummaryCards from './components/SummaryCards';
 
@@ -15,7 +16,6 @@ const STATUS_META = {
 };
 
 export default function Commissions({ from, to, summary, byEmployee = [], commissions = [] }) {
-    const { flash } = usePage().props;
 
     return (
         <AuthenticatedLayout
@@ -45,10 +45,9 @@ export default function Commissions({ from, to, summary, byEmployee = [], commis
 
             <ReportTabs />
 
-            {flash?.success && <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>}
-
             <div className="mb-5 flex items-center justify-between">
                 <DateRangeFilter from={from} to={to} routeName="admin.reports.commissions" />
+                <ExportButton routeName="admin.reports.export.commissions" from={from} to={to} />
             </div>
 
             <SummaryCards items={[

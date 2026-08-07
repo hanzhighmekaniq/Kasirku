@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { useState } from "react";
 import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import Button from "@/Components/ui/Button";
@@ -42,7 +42,6 @@ function StatCard({ label, value, accent }) {
 }
 
 export default function Index({ suppliers, stats }) {
-    const { flash } = usePage().props;
     const [search, setSearch] = useState("");
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [processing, setProcessing] = useState(false);
@@ -107,19 +106,6 @@ export default function Index({ suppliers, stats }) {
                 }
                 description="Manajemen data pemasok barang dan riwayat pembelian."
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.errors && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    {typeof flash.errors === "object"
-                        ? Object.values(flash.errors).flat().join(". ")
-                        : flash.errors}
-                </div>
-            )}
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

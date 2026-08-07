@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import ReportTabs from "@/Components/ReportTabs";
+import ExportButton from "./components/ExportButton";
 import { Head, router } from "@inertiajs/react";
 import SummaryCards from "./components/SummaryCards";
 import DateRangeFilter from "./components/DateRangeFilter";
@@ -79,6 +80,12 @@ export default function SalesByEmployee({
                         </>
                     )}
                 </div>
+                <ExportButton
+                    routeName="admin.reports.export.sales-by-employee"
+                    from={from}
+                    to={to}
+                    branchIds={branchIds}
+                />
             </div>
 
             <SummaryCards

@@ -1,6 +1,6 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
 import { Head, Link, usePage } from "@inertiajs/react";
-import { ArrowRight, Wallet } from "lucide-react";
+import { ArrowRight, Wallet, AlertTriangle } from "lucide-react";
 
 const fmt = (n) =>
     new Intl.NumberFormat("id-ID", {
@@ -9,18 +9,30 @@ const fmt = (n) =>
         maximumFractionDigits: 0,
     }).format(n ?? 0);
 
-export default function Index({ wallets = [], stats }) {
+export default function Index({ wallets = [], stats, isSandbox = false }) {
     const { flash } = usePage().props;
 
     const statCards = [
-        { label: "Total Saldo Store", value: fmt(stats.total_balance), color: "text-success" },
+        { label: isSandbox ? "Total Saldo (Sandbox)" : "Total Saldo Store", value: fmt(stats.total_balance), color: "text-success" },
         { label: "Saldo Pending", value: fmt(stats.total_pending), color: "text-warning" },
         { label: "Total Ditarik", value: fmt(stats.total_withdrawn), color: "text-muted-foreground" },
         { label: "Jumlah Store", value: stats.store_count, color: "text-foreground" },
     ];
 
     return (
-        <DeveloperLayout header="Wallet Store">
+        <DeveloperLayout
+            header={
+                <span className="flex items-center gap-2">
+                    Wallet Store
+                    {isSandbox && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning">
+                            <AlertTriangle className="h-3 w-3" />
+                            Sandbox
+                        </span>
+                    )}
+                </span>
+            }
+        >
             <Head title="Wallet Store" />
 
             {flash?.success && (

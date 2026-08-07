@@ -84,6 +84,79 @@ class PaymentMethodSeeder extends Seeder
                 'type' => 'debt',
                 'provider' => null,
             ],
+            // Midtrans — Payment Gateway
+            [
+                'code' => 'MIDTRANS_QRIS',
+                'name' => 'Midtrans QRIS',
+                'type' => 'digital',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_CREDIT',
+                'name' => 'Midtrans Kartu Kredit',
+                'type' => 'card',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_DEBIT',
+                'name' => 'Midtrans Kartu Debit',
+                'type' => 'card',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_BCA',
+                'name' => 'Midtrans Transfer BCA',
+                'type' => 'transfer',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_BRI',
+                'name' => 'Midtrans Transfer BRI',
+                'type' => 'transfer',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_MANDIRI',
+                'name' => 'Midtrans Transfer Mandiri',
+                'type' => 'transfer',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_BNI',
+                'name' => 'Midtrans Transfer BNI',
+                'type' => 'transfer',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_GOPAY',
+                'name' => 'Midtrans GoPay',
+                'type' => 'ewallet',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_OVO',
+                'name' => 'Midtrans OVO',
+                'type' => 'ewallet',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_DANA',
+                'name' => 'Midtrans DANA',
+                'type' => 'ewallet',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_SHOPEEPAY',
+                'name' => 'Midtrans ShopeePay',
+                'type' => 'ewallet',
+                'provider' => 'Midtrans',
+            ],
+            [
+                'code' => 'MIDTRANS_VA',
+                'name' => 'Midtrans Virtual Account',
+                'type' => 'transfer',
+                'provider' => 'Midtrans',
+            ],
         ];
 
         // Tambahan per tipe

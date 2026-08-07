@@ -1,5 +1,7 @@
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import Toaster from "@/Components/ui/sonner";
 import Dropdown from "@/Components/Dropdown";
 import OfflineIndicator from "@/Components/OfflineIndicator";
 import NotificationBell from "@/Components/NotificationBell";
@@ -1363,6 +1365,13 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
         if (flash?.typeBlock) setTypeBlock(flash.typeBlock);
     }, [flash?.typeBlock]);
 
+    // Flash → toast notification (auto-dismiss via Sonner)
+    useEffect(() => {
+        if (flash?.success) toast.success(flash.success);
+        if (flash?.error) toast.error(flash.error);
+        if (flash?.warning) toast.warning(flash.warning);
+    }, [flash?.success, flash?.error, flash?.warning]);
+
     // Banner verifikasi email — permanen (tidak bisa ditutup) selama
     // email belum diverifikasi, tapi TIDAK memblokir apapun di baliknya.
     const isEmailVerified = auth?.emailVerified ?? true;
@@ -1630,22 +1639,7 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                     </div>
                 </header>
 
-                {/* Flash — pesan sukses/error statis */}
-                {flash?.success && (
-                    <div className="mx-5 mt-4 rounded-lg border border-success/20 bg-success/10 px-4 py-2.5 text-sm text-success">
-                        {flash.success}
-                    </div>
-                )}
-                {flash?.error && (
-                    <div className="mx-5 mt-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2.5 text-sm text-destructive">
-                        {flash.error}
-                    </div>
-                )}
-                {flash?.warning && (
-                    <div className="mx-5 mt-4 rounded-lg border border-warning/20 bg-warning/10 px-4 py-2.5 text-sm text-warning">
-                        {flash.warning}
-                    </div>
-                )}
+                {/* Flash → toast (handled via useEffect above) */}
 
                 {/* Banner permanen selama sesi impersonation aktif */}
                 {impersonating && (
@@ -1725,6 +1719,7 @@ export default function AuthenticatedLayout({ header, children, noPadding = fals
                     )}
                 </main>
             </div>
+            <Toaster />
         </div>
     );
 }

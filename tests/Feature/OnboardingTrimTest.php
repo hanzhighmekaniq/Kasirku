@@ -45,7 +45,7 @@ test('onboarding trim owner_name dari spasi di awal dan akhir', function () {
     $this->post(route('onboarding.store'), [
         'store_name' => '  Toko Trim  ',
         'owner_name' => '  Nama Pemilik  ',
-        'store_type' => 'retail',
+        'store_type_id' => $storeType->id,
     ])->assertRedirect();
 
     $store = Store::where('user_id', $user->id)->first();
@@ -78,7 +78,7 @@ test('onboarding trim store_name dari spasi di awal dan akhir', function () {
     $this->post(route('onboarding.store'), [
         'store_name' => '  Toko Trim  ',
         'owner_name' => '  Nama Pemilik  ',
-        'store_type' => 'retail',
+        'store_type_id' => $storeType->id,
     ])->assertRedirect();
 
     $store = Store::where('user_id', $user->id)->first();
@@ -110,7 +110,7 @@ test('onboarding whitespace-only owner_name menjadi null', function () {
     $this->post(route('onboarding.store'), [
         'store_name' => 'Toko Valid',
         'owner_name' => '   ',
-        'store_type' => 'retail',
+        'store_type_id' => $storeType->id,
     ])->assertRedirect();
 
     $store = Store::where('user_id', $user->id)->first();

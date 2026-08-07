@@ -12,7 +12,7 @@ class ProductStock extends Model
 
     protected $fillable = [
         'product_id', 'variant_id', 'packaging_unit_id', 'store_id', 'branch_id',
-        'quantity', 'reserved_quantity', 'average_cost',
+        'quantity', 'reserved_quantity', 'average_cost', 'lot_number',
     ];
 
     protected function casts(): array

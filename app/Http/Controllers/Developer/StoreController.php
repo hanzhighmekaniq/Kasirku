@@ -8,6 +8,7 @@ use App\Models\DeveloperActionLog;
 use App\Models\Feature;
 use App\Models\Plan;
 use App\Models\PlanSubscription;
+use App\Models\PlatformPaymentGateway;
 use App\Models\Store;
 use App\Models\StoreNote;
 use App\Models\StoreSuspension;
@@ -110,6 +111,7 @@ class StoreController extends Controller
         return Inertia::render('Developer/Stores/Index', [
             'stores' => $stores,
             'storeTypes' => $allStoreTypes,
+            'isSandbox' => PlatformPaymentGateway::isSandbox(),
         ]);
     }
 

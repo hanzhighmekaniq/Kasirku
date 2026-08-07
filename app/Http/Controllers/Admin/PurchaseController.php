@@ -571,6 +571,21 @@ class PurchaseController extends Controller
                                 notes: "Pembelian #{$purchase->purchase_no}",
                             ));
                         }
+
+                        // Sync products.cost_price dengan average_cost terbaru
+                        $updatedStock = ProductStock::where([
+                            'product_id' => $item->product_id,
+                            'variant_id' => $item->variant_id,
+                            'packaging_unit_id' => $item->packaging_unit_id,
+                            'store_id' => $storeId,
+                            'branch_id' => $purchase->branch_id,
+                        ])->first();
+
+                        if ($updatedStock && $updatedStock->average_cost > 0) {
+                            Product::where('id', $item->product_id)
+                                ->where('cost_price', '<>', $updatedStock->average_cost)
+                                ->update(['cost_price' => $updatedStock->average_cost]);
+                        }
                     }
 
                     if ($product?->track_batch) {
@@ -848,5 +863,254 @@ class PurchaseController extends Controller
                 'cost_price' => $item->cost_price,
             ],
         );
+    }
+
+    // ── Partial Goods Receipt ───────────────────────────────
+
+    /**
+     * Terima barang parsial untuk PO draft.
+     *
+     * Memungkinkan penerimaan sebagian dari total yang dipesan.
+     * Setelah semua item diterima sepenuhnya, status PO otomatis
+     * berubah ke completed dan stok di-update.
+     */
+    public function receivePartial(Request $request, Purchase $purchase)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:purchase_items,id',
+            'items.*.quantity' => 'required|numeric|min:0',
+        ]);
+
+        $storeId = session('current_store_id');
+        abort_unless((int) $purchase->store_id === (int) $storeId, 403);
+
+        if ($purchase->status !== 'draft') {
+            return back()->withErrors(['error' => 'Hanya PO draft yang bisa menerima barang parsial.']);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $allFullyReceived = true;
+
+            foreach ($request->input('items') as $itemData) {
+                $item = PurchaseItem::findOrFail($itemData['id']);
+                $receiveQty = (float) $itemData['quantity'];
+                $currentReceived = (float) $item->received_quantity;
+                $maxReceive = (float) $item->quantity - $currentReceived;
+
+                if ($receiveQty > $maxReceive) {
+                    DB::rollBack();
+
+                    return back()->withErrors([
+                        'error' => "Qty terima ({$receiveQty}) melebihi sisa yang belum diterima ({$maxReceive}) untuk item {$item->product?->name}.",
+                    ]);
+                }
+
+                $item->update(['received_quantity' => $currentReceived + $receiveQty]);
+
+                if (! $item->isFullyReceived()) {
+                    $allFullyReceived = false;
+                }
+            }
+
+            // Jika semua item sudah diterima, ubah status ke completed
+            if ($allFullyReceived) {
+                $purchase->update(['status' => 'completed']);
+                $this->stockIn($purchase);
+            }
+
+            DB::commit();
+
+            $message = $allFullyReceived
+                ? 'Semua barang sudah diterima. PO status: completed.'
+                : 'Penerimaan parsial berhasil dicatat.';
+
+            return redirect()
+                ->route('admin.purchases.show', $purchase->id)
+                ->with('success', $message);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->withErrors(['error' => 'Gagal memproses penerimaan: '.$e->getMessage()]);
+        }
+    }
+
+    /**
+     * Tambah pembayaran baru ke PO.
+     * Mendukung multi-payment (bayar sebagian dulu, sisa nanti).
+     */
+    public function storePayment(Request $request, Purchase $purchase)
+    {
+        $storeId = session('current_store_id');
+        abort_unless((int) $purchase->store_id === (int) $storeId, 403);
+
+        if ($purchase->status === 'draft') {
+            return back()->withErrors(['error' => 'PO draft belum bisa menerima pembayaran.']);
+        }
+
+        $validated = $request->validate([
+            'payment_method_id' => 'required|exists:payment_methods,id',
+            'amount' => 'required|numeric|min:0.01',
+            'paid_at' => 'required|date',
+            'reference_no' => 'nullable|string|max:100',
+            'note' => 'nullable|string|max:500',
+        ]);
+
+        $totalPaid = (float) $purchase->payments()->sum('amount');
+        $remaining = (float) $purchase->grand_total - $totalPaid;
+
+        if ($validated['amount'] > $remaining + 0.01) {
+            return back()->withErrors([
+                'error' => "Jumlah pembayaran ({$validated['amount']}) melebihi sisa yang belum dibayar ({$remaining}).",
+            ]);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            PurchasePayment::create([
+                'purchase_id' => $purchase->id,
+                'payment_method_id' => $validated['payment_method_id'],
+                'paid_at' => $validated['paid_at'],
+                'amount' => $validated['amount'],
+                'reference_no' => $validated['reference_no'] ?? null,
+                'note' => $validated['note'] ?? null,
+            ]);
+
+            // Update paid_amount dan payment_status
+            $newTotalPaid = $totalPaid + $validated['amount'];
+            $paymentStatus = 'unpaid';
+            if ($newTotalPaid >= $purchase->grand_total - 0.01) {
+                $paymentStatus = 'paid';
+            } elseif ($newTotalPaid > 0) {
+                $paymentStatus = 'partial';
+            }
+
+            $purchase->update([
+                'paid_amount' => $newTotalPaid,
+                'payment_status' => $paymentStatus,
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.purchases.show', $purchase->id)
+                ->with('success', 'Pembayaran berhasil dicatat. Sisa: Rp '.number_format(max(0, $remaining - $validated['amount']), 0, ',', '.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->withErrors(['error' => 'Gagal mencatat pembayaran: '.$e->getMessage()]);
+        }
+    }
+
+    /**
+     * Hapus pembayaran dari PO.
+     */
+    public function destroyPayment(PurchasePayment $purchasePayment)
+    {
+        $purchase = $purchasePayment->purchase;
+        $storeId = session('current_store_id');
+        abort_unless((int) $purchase->store_id === (int) $storeId, 403);
+
+        if ($purchase->status === 'draft') {
+            return back()->withErrors(['error' => 'PO draft belum bisa menghapus pembayaran.']);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $amount = (float) $purchasePayment->amount;
+            $purchasePayment->delete();
+
+            // Update paid_amount dan payment_status
+            $totalPaid = (float) $purchase->payments()->sum('amount');
+            $paymentStatus = 'unpaid';
+            if ($totalPaid >= $purchase->grand_total - 0.01) {
+                $paymentStatus = 'paid';
+            } elseif ($totalPaid > 0) {
+                $paymentStatus = 'partial';
+            }
+
+            $purchase->update([
+                'paid_amount' => $totalPaid,
+                'payment_status' => $paymentStatus,
+            ]);
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.purchases.show', $purchase->id)
+                ->with('success', 'Pembayaran berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->withErrors(['error' => 'Gagal menghapus pembayaran: '.$e->getMessage()]);
+        }
+    }
+
+    /**
+     * Update stok untuk PO yang baru saja completed.
+     */
+    private function stockIn(Purchase $purchase): void
+    {
+        $storeId = session('current_store_id');
+        $stockService = app(StockService::class);
+
+        foreach ($purchase->items as $item) {
+            $product = Product::find($item->product_id);
+            if (! $product?->track_stock) {
+                continue;
+            }
+
+            $stockQty = $item->stockQuantity();
+            $stockCost = $item->stockUnitCost();
+
+            $alreadyRecorded = StockMovement::where([
+                'reference_type' => Purchase::class,
+                'reference_id' => $purchase->id,
+                'product_id' => $item->product_id,
+                'variant_id' => $item->variant_id,
+                'packaging_unit_id' => $item->packaging_unit_id,
+                'movement_type' => 'purchase_in',
+            ])->exists();
+
+            if (! $alreadyRecorded) {
+                $stockService->increase(new StockMutation(
+                    productId: $item->product_id,
+                    variantId: $item->variant_id,
+                    packagingUnitId: $item->packaging_unit_id,
+                    storeId: $storeId,
+                    branchId: $purchase->branch_id,
+                    quantity: $stockQty,
+                    unitCost: $stockCost,
+                    movementType: 'purchase_in',
+                    referenceType: Purchase::class,
+                    referenceId: $purchase->id,
+                    referenceNo: $purchase->purchase_no,
+                    notes: "Pembelian #{$purchase->purchase_no}",
+                ));
+            }
+
+            // Sync cost_price
+            $updatedStock = ProductStock::where([
+                'product_id' => $item->product_id,
+                'variant_id' => $item->variant_id,
+                'packaging_unit_id' => $item->packaging_unit_id,
+                'store_id' => $storeId,
+                'branch_id' => $purchase->branch_id,
+            ])->first();
+
+            if ($updatedStock && $updatedStock->average_cost > 0) {
+                Product::where('id', $item->product_id)
+                    ->where('cost_price', '<>', $updatedStock->average_cost)
+                    ->update(['cost_price' => $updatedStock->average_cost]);
+            }
+
+            if ($product->track_batch) {
+                $this->createBatchFromPurchaseItem($item, $purchase, $storeId, $purchase->branch_id);
+            }
+        }
     }
 }

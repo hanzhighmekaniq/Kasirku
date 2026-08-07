@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, router, useForm } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import {
-    AlertTriangle,
     ArrowRight,
     Check,
     ChevronDown,
@@ -207,7 +206,6 @@ export default function PlanIndex({
     billingConfig = {},
     pendingOrder = null,
 }) {
-    const { flash } = usePage().props;
     const [billingPeriod, setBillingPeriod] = useState("monthly");
     const { data, setData, post, processing, errors } = useForm({
         plan_id: "",
@@ -246,19 +244,6 @@ export default function PlanIndex({
             }
         >
             <Head title="Paket & Billing" />
-
-            {flash?.success && (
-                <div className="mb-5 rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success flex items-center gap-2">
-                    <Check className="h-4 w-4 shrink-0" strokeWidth={2} />
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-5 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 shrink-0" strokeWidth={2} />
-                    {flash.error}
-                </div>
-            )}
 
             {/* Info paket saat ini */}
             {currentPlan && (

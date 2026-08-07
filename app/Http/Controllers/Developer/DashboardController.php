@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Developer;
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\PlanSubscription;
+use App\Models\PlatformPaymentGateway;
 use App\Models\Sale;
 use App\Models\Store;
 use App\Models\User;
@@ -103,6 +104,7 @@ class DashboardController extends Controller
             'storeRevenues' => $storeRevenues,
             'storeTypes' => $storeTypes,
             'businessMetrics' => $this->businessMetrics(),
+            'isSandbox' => PlatformPaymentGateway::isSandbox(),
         ]);
     }
 

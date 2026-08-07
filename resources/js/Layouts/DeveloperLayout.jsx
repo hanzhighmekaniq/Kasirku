@@ -1,7 +1,9 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
 import { Link, usePage } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { toast } from "sonner";
+import Toaster from "@/Components/ui/sonner";
 import { useTheme } from "@/Theme/ThemeProvider";
 import {
     LayoutDashboard,
@@ -13,6 +15,7 @@ import {
     ShieldCheck,
     CreditCard,
     Wallet,
+    ArrowDownToLine,
     Palette,
     UserCog,
     Moon,
@@ -22,116 +25,154 @@ import {
     User,
     LayoutTemplate,
     Puzzle,
-    History
+    History,
+    ChevronDown,
+    ShoppingCart,
+    Settings,
+    Receipt,
+    AlertTriangle,
 } from "lucide-react";
 
-const navItems = [
+/* ─── Navigation Groups ───────────────────────────────────────── */
+const navGroups = [
     {
-        name: "Dashboard",
-        href: route("developer.dashboard"),
-        current: "developer.dashboard",
-        icon: LayoutDashboard,
+        key: "home",
+        label: "Beranda",
+        items: [
+            {
+                name: "Dashboard",
+                href: route("developer.dashboard"),
+                current: "developer.dashboard",
+                icon: LayoutDashboard,
+            },
+        ],
     },
     {
-        name: "Kelola Toko",
-        href: route("developer.stores.index"),
-        current: "developer.stores.*",
-        icon: Store,
+        key: "stores",
+        label: "Manajemen Toko",
+        items: [
+            {
+                name: "Kelola Toko",
+                href: route("developer.stores.index"),
+                current: "developer.stores.*",
+                icon: Store,
+            },
+            {
+                name: "Semua Cabang",
+                href: route("developer.branches.index"),
+                current: "developer.branches.*",
+                icon: GitBranch,
+            },
+            {
+                name: "Kelola User",
+                href: route("developer.users.index"),
+                current: "developer.users.*",
+                icon: Users,
+            },
+        ],
     },
     {
-        name: "Semua Cabang",
-        href: route("developer.branches.index"),
-        current: "developer.branches.*",
-        icon: GitBranch,
-    },
-    {
-        name: "Kelola User",
-        href: route("developer.users.index"),
-        current: "developer.users.*",
-        icon: Users,
-    },
-    {
-        name: "Paket",
-        href: route("developer.plans.index"),
-        current: "developer.plans.*",
-        icon: Package,
+        key: "platform",
+        label: "Platform",
         superAdminOnly: true,
+        items: [
+            {
+                name: "Paket",
+                href: route("developer.plans.index"),
+                current: "developer.plans.*",
+                icon: Package,
+            },
+            {
+                name: "Jenis Usaha",
+                href: route("developer.store-types.index"),
+                current: "developer.store-types.*",
+                icon: Tags,
+            },
+            {
+                name: "Template Bisnis",
+                href: route("developer.business-templates.index"),
+                current: "developer.business-templates.*",
+                icon: LayoutTemplate,
+            },
+            {
+                name: "Fitur Sistem",
+                href: route("developer.features.index"),
+                current: "developer.features.*",
+                icon: Puzzle,
+            },
+            {
+                name: "Fitur Tipe",
+                href: route("developer.type-features"),
+                current: "developer.type-features",
+                icon: Tags,
+            },
+            {
+                name: "Role & Permission",
+                href: route("developer.roles.index"),
+                current: "developer.roles.*",
+                icon: ShieldCheck,
+            },
+            {
+                name: "Template Role",
+                href: route("developer.role-templates.index"),
+                current: "developer.role-templates.*",
+                icon: UserCog,
+            },
+        ],
     },
     {
-        name: "Jenis Usaha",
-        href: route("developer.store-types.index"),
-        current: "developer.store-types.*",
-        icon: Store,
-        superAdminOnly: true,
+        key: "finance",
+        label: "Keuangan",
+        items: [
+            {
+                name: "Payment Gateway",
+                href: route("developer.payment-gateway.index"),
+                current: "developer.payment-gateway.*",
+                icon: CreditCard,
+                superAdminOnly: true,
+            },
+            {
+                name: "Wallet Store",
+                href: route("developer.wallets.index"),
+                current: "developer.wallets.*",
+                icon: Wallet,
+            },
+            {
+                name: "Penarikan Dana",
+                href: route("developer.withdrawals.index"),
+                current: "developer.withdrawals.*",
+                icon: ArrowDownToLine,
+            },
+            {
+                name: "Order Plan",
+                href: route("developer.plan-orders.index"),
+                current: "developer.plan-orders.*",
+                icon: ShoppingCart,
+            },
+        ],
     },
     {
-        name: "Template Bisnis",
-        href: route("developer.business-templates.index"),
-        current: "developer.business-templates.*",
-        icon: LayoutTemplate,
-        superAdminOnly: true,
-    },
-    {
-        name: "Fitur Sistem",
-        href: route("developer.features.index"),
-        current: "developer.features.*",
-        icon: Puzzle,
-        superAdminOnly: true,
-    },
-    {
-        name: "Fitur Tipe",
-        href: route("developer.type-features"),
-        current: "developer.type-features",
-        icon: Tags,
-        superAdminOnly: true,
-    },
-    {
-        name: "Role & Permission",
-        href: route("developer.roles.index"),
-        current: "developer.roles.*",
-        icon: ShieldCheck,
-        superAdminOnly: true,
-    },
-    {
-        name: "Template Role",
-        href: route("developer.role-templates.index"),
-        current: "developer.role-templates.*",
-        icon: UserCog,
-        superAdminOnly: true,
-    },
-    {
-        name: "Payment Gateway",
-        href: route("developer.payment-gateway.index"),
-        current: "developer.payment-gateway.*",
-        icon: CreditCard,
-        superAdminOnly: true,
-    },
-    {
-        name: "Wallet Store",
-        href: route("developer.wallets.index"),
-        current: "developer.wallets.*",
-        icon: Wallet,
-    },
-    {
-        name: "Tema & Warna",
-        href: route("developer.themes.index"),
-        current: "developer.themes.*",
-        icon: Palette,
-    },
-    {
-        name: "Audit Log",
-        href: route("developer.audit-log.index"),
-        current: "developer.audit-log.*",
-        icon: History,
-    },
-    {
-        name: "Order Plan",
-        href: route("developer.plan-orders.index"),
-        current: "developer.plan-orders.*",
-        icon: Package,
+        key: "system",
+        label: "Pengaturan",
+        pinned: true,
+        items: [
+            {
+                name: "Tema & Warna",
+                href: route("developer.themes.index"),
+                current: "developer.themes.*",
+                icon: Palette,
+            },
+            {
+                name: "Audit Log",
+                href: route("developer.audit-log.index"),
+                current: "developer.audit-log.*",
+                icon: History,
+            },
+        ],
     },
 ];
 
+/* ─── Nav Item ───────────────────────────────────────────────── */
 function NavItem({ item, onClick }) {
     const active = route().current(item.current);
     const Icon = item.icon;
@@ -170,25 +211,109 @@ function NavItem({ item, onClick }) {
     );
 }
 
+/* ─── Nav Group (collapsible) ────────────────────────────────── */
+function NavGroup({ group, onNavigate, isSuperAdmin }) {
+    // Skip groups that are entirely superAdminOnly when user is not super admin
+    if (group.superAdminOnly && !isSuperAdmin) return null;
+
+    // Filter items by superAdminOnly
+    const visibleItems = group.items.filter(
+        (item) => !item.superAdminOnly || isSuperAdmin,
+    );
+
+    if (visibleItems.length === 0) return null;
+
+    const hasActive = visibleItems.some((item) => route().current(item.current));
+
+    const [open, setOpen] = useState(() => {
+        if (hasActive) return true;
+        try {
+            const s = localStorage.getItem("dsg-" + group.key);
+            return s !== null ? JSON.parse(s) : true;
+        } catch {
+            return true;
+        }
+    });
+
+    const toggle = () => {
+        const next = !open;
+        setOpen(next);
+        try {
+            localStorage.setItem("dsg-" + group.key, JSON.stringify(next));
+        } catch { }
+    };
+
+    return (
+        <div className="pb-1">
+            <button
+                onClick={toggle}
+                className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${hasActive
+                    ? "text-primary"
+                    : "text-sidebar-foreground/50 hover:bg-muted hover:text-foreground"
+                    }`}
+            >
+                <span className="flex-1 text-left">{group.label}</span>
+                <span
+                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${hasActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                >
+                    {visibleItems.length}
+                </span>
+                <ChevronDown
+                    className={`h-3 w-3 shrink-0 transition-transform ${hasActive ? "text-primary" : "text-sidebar-foreground/50"} ${open ? "rotate-180" : ""}`}
+                    strokeWidth={2}
+                />
+            </button>
+            {open && (
+                <div className="mt-1 space-y-0.5 ml-2 pl-3 border-l-2 border-border">
+                    {visibleItems.map((item) => (
+                        <NavItem key={item.name} item={item} onClick={onNavigate} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ─── Main Layout ────────────────────────────────────────────── */
 export default function DeveloperLayout({ header, children }) {
-    const { auth, flash } = usePage().props;
+    const { auth, flash, isSandbox } = usePage().props;
     const user = auth?.user;
     const isSuperAdmin = auth?.isSuperAdmin === true;
     const [mobileOpen, setMobileOpen] = useState(false);
     const { isDark, setMode } = useTheme();
 
-    // Support agent tidak melihat menu konfigurasi platform — route-nya juga
-    // sudah diblok middleware `super-admin`, ini semata agar UI tidak
-    // menawarkan hal yang pasti ditolak.
-    const visibleNavItems = navItems.filter(
-        (item) => !item.superAdminOnly || isSuperAdmin,
-    );
+    // Flash → toast notification
+    useEffect(() => {
+        if (flash?.success) toast.success(flash.success);
+        if (flash?.error) toast.error(flash.error);
+        if (flash?.warning) toast.warning(flash.warning);
+    }, [flash?.success, flash?.error, flash?.warning]);
 
     const toggleTheme = () => {
         setMode(isDark ? "light" : "dark");
     };
 
-    const Sidebar = () => (
+    const onNavigate = () => setMobileOpen(false);
+
+    const Sidebar = () => {
+        const navRef = useRef(null);
+
+        // Restore scroll position on mount
+        useEffect(() => {
+            if (navRef.current) {
+                const saved = localStorage.getItem("dev-sidebar-scroll");
+                if (saved) navRef.current.scrollTop = parseInt(saved, 10);
+            }
+        }, []);
+
+        // Save scroll position on scroll
+        const handleScroll = useCallback(() => {
+            if (navRef.current) {
+                localStorage.setItem("dev-sidebar-scroll", navRef.current.scrollTop);
+            }
+        }, []);
+
+        return (
         <div className="flex flex-col h-full overflow-hidden border-r bg-sidebar border-border">
             {/* Brand */}
             <div className="flex h-[68px] shrink-0 items-center border-b border-border bg-sidebar px-5">
@@ -247,23 +372,30 @@ export default function DeveloperLayout({ header, children }) {
             </div>
 
             {/* Nav */}
-            <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <p className="mb-2 px-2 text-[11px] font-bold uppercase tracking-wider text-sidebar-foreground/50">
-                    Menu Utama
-                </p>
-                {visibleNavItems.map((item) => (
-                    <NavItem key={item.name} item={item} onClick={() => setMobileOpen(false)} />
+            <nav
+                ref={navRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+                {navGroups.map((group) => (
+                    <NavGroup
+                        key={group.key}
+                        group={group}
+                        onNavigate={onNavigate}
+                        isSuperAdmin={isSuperAdmin}
+                    />
                 ))}
             </nav>
 
             {/* Footer */}
             <div className="shrink-0 border-t border-border px-5 py-4">
                 <span className="text-[11px] text-sidebar-foreground/50 font-medium">
-                    © {new Date().getFullYear()} SIM-KASIR Dev
+                    &copy; {new Date().getFullYear()} SIM-KASIR Dev
                 </span>
             </div>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="min-h-screen bg-background flex">
@@ -299,7 +431,7 @@ export default function DeveloperLayout({ header, children }) {
                         <Menu className="w-4 h-4" />
                     </button>
                     <div className="h-4 w-px bg-border lg:hidden" />
-                    
+
                     <div className="flex-1 min-w-0">
                         <div className="truncate text-[15px] font-semibold text-sidebar-foreground">
                             {header}
@@ -337,25 +469,24 @@ export default function DeveloperLayout({ header, children }) {
                     </div>
                 </header>
 
-                {/* Flash Messages */}
-                {flash?.success && (
-                    <div className="mx-4 sm:mx-6 mt-4 rounded-xl border border-success/20 bg-success/10 px-5 py-3 text-sm text-success shadow-sm flex items-center gap-2">
-                        <span className="text-lg">✅</span> {flash.success}
-                    </div>
-                )}
-                {flash?.error && (
-                    <div className="mx-4 sm:mx-6 mt-4 rounded-xl border border-destructive/20 bg-destructive/10 px-5 py-3 text-sm text-destructive shadow-sm flex items-center gap-2">
-                        <span className="text-lg">❌</span> {flash.error}
-                    </div>
-                )}
-                {flash?.warning && (
-                    <div className="mx-4 sm:mx-6 mt-4 rounded-xl border border-warning/20 bg-warning/10 px-5 py-3 text-sm text-warning shadow-sm flex items-center gap-2">
-                        <span className="text-lg">⚠️</span> {flash.warning}
+                {/* Sandbox warning banner */}
+                {isSandbox && (
+                    <div className="flex items-center gap-3 border-b border-warning/30 bg-warning/10 px-4 py-3 sm:px-6">
+                        <AlertTriangle className="h-5 w-5 shrink-0 text-warning" strokeWidth={2} />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-semibold text-warning">
+                                Mode Sandbox Aktif
+                            </p>
+                            <p className="text-[12px] text-warning/80">
+                                Semua transaksi menggunakan uang test. Penarikan dana dan penyesuaian saldo dinonaktifkan.
+                            </p>
+                        </div>
                     </div>
                 )}
 
                 <main className="flex-1 p-4 sm:p-6">{children}</main>
             </div>
+            <Toaster />
         </div>
     );
 }

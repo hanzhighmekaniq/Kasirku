@@ -13,7 +13,7 @@ class PurchaseItem extends Model
     protected $fillable = [
         'purchase_id', 'product_id', 'variant_id', 'packaging_unit_id', 'unit_name',
         'batch_no', 'expiry_date',
-        'product_batch_id', 'quantity', 'cost_price', 'subtotal',
+        'product_batch_id', 'quantity', 'received_quantity', 'cost_price', 'subtotal',
     ];
 
     public function purchase(): BelongsTo
@@ -81,5 +81,21 @@ class PurchaseItem extends Model
         }
 
         return ((float) $this->quantity * (float) $this->cost_price) / $stockQuantity;
+    }
+
+    /**
+     * Qty yang masih perlu diterima.
+     */
+    public function remainingQuantity(): float
+    {
+        return max(0, (float) $this->quantity - (float) $this->received_quantity);
+    }
+
+    /**
+     * Apakah item sudah diterima sepenuhnya.
+     */
+    public function isFullyReceived(): bool
+    {
+        return $this->remainingQuantity() <= 0;
     }
 }

@@ -124,4 +124,16 @@ class PlatformPaymentGateway extends Model
     {
         return self::getPlanOrderMode() === 'manual';
     }
+
+    /**
+     * Apakah semua gateway aktif berada di mode sandbox?
+     * Dipakai untuk memblokir penarikan dana (withdrawal) karena
+     * saldo dari transaksi sandbox bukan uang asli.
+     */
+    public static function isSandbox(): bool
+    {
+        $active = self::where('is_active', true)->first();
+
+        return ! $active || $active->environment === 'sandbox';
+    }
 }

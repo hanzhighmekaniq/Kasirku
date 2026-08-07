@@ -165,6 +165,19 @@ trait FinalizesSaleStock
                 $recipeSnapshot = $snapshot;
             }
 
+            // Lookup unit_cost dari product_stocks untuk reverse stok akurat
+            $existingStock = ProductStock::where([
+                'product_id' => $item['product_id'],
+                'variant_id' => $item['variant_id'] ?? null,
+                'packaging_unit_id' => $item['packaging_unit_id'] ?? null,
+                'store_id' => $storeId,
+                'branch_id' => $branchId,
+            ])->first();
+
+            $unitCostAtSale = $existingStock && $existingStock->average_cost > 0
+                ? $existingStock->average_cost
+                : ($product?->cost_price ?? 0);
+
             SaleItem::create([
                 'sale_id' => $sale->id,
                 'product_id' => $item['product_id'],
@@ -175,6 +188,7 @@ trait FinalizesSaleStock
                 'promotion_id' => $item['promotion_id'] ?? null,
                 'quantity' => $item['quantity'],
                 'price' => $unitPrice,
+                'unit_cost' => $unitCostAtSale,
                 'discount_amount' => $item['discount_amount'] ?? 0,
                 'promo_discount' => $item['promo_discount'] ?? 0,
                 'subtotal' => $item['quantity'] * $unitPrice

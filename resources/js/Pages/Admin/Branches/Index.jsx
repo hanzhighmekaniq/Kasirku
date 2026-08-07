@@ -1,13 +1,12 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
-import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 export default function Index({ branches }) {
-    const { flash } = usePage().props;
     const [search, setSearch] = useState("");
     const [target, setTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
@@ -76,17 +75,6 @@ export default function Index({ branches }) {
                     </Button>
                 }
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    {flash.error}
-                </div>
-            )}
 
             <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <StatCard label="Total Cabang" value={branches.length} />

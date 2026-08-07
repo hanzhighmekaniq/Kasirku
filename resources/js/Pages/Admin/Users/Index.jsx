@@ -3,7 +3,7 @@ import PageHeader from "@/Components/PageHeader";
 import EmployeeTabs from "@/Components/EmployeeTabs";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import Dropdown from "@/Components/Dropdown";
-import { Head, router, useForm, usePage } from "@inertiajs/react";
+import { Head, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import {
     Building2,
@@ -183,7 +183,6 @@ export default function Index({
     planInfo,
     unlinkedEmployees,
 }) {
-    const { flash } = usePage().props;
     const [showInvite, setShowInvite] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
 
@@ -284,18 +283,6 @@ export default function Index({
             <EmployeeTabs />
 
             <Head title="Pengguna Aplikasi" />
-
-            {/* Flash */}
-            {flash?.success && (
-                <div className="mb-5 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-5 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
-                    {flash.error}
-                </div>
-            )}
 
             <div className="space-y-5">
                 {/* ── Stats Bar ── */}

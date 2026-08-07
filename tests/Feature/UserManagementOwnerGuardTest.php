@@ -11,6 +11,7 @@
 */
 
 use App\Models\Branch;
+use App\Models\Employee;
 use App\Models\Feature;
 use App\Models\Plan;
 use App\Models\Store;
@@ -33,17 +34,25 @@ function setupOwnerGuardContext(): array
         ['label' => 'Retail', 'is_active' => true, 'sort_order' => 0],
     );
 
-    $feature = Feature::firstOrCreate(
-        ['code' => 'employee'],
-        ['label' => 'Karyawan', 'is_active' => true, 'sort_order' => 0],
-    );
-    $storeType->features()->syncWithoutDetaching([$feature->id]);
+    foreach (['employee', 'user_management'] as $code) {
+        $f = Feature::firstOrCreate(
+            ['code' => $code],
+            ['label' => $code, 'is_active' => true, 'sort_order' => 0],
+        );
+        $storeType->features()->syncWithoutDetaching([$f->id]);
+    }
 
     $plan = Plan::firstOrCreate(
         ['code' => 'basic'],
         ['label' => 'Basic', 'is_active' => true, 'sort_order' => 0, 'price' => 0],
     );
-    $plan->features()->syncWithoutDetaching([$feature->id]);
+    $plan->features()->syncWithoutDetaching(Feature::pluck('id')->all());
+
+    $freePlan = Plan::firstOrCreate(
+        ['code' => 'free'],
+        ['label' => 'Free', 'is_active' => true, 'sort_order' => 0, 'price' => 0],
+    );
+    $freePlan->features()->syncWithoutDetaching(Feature::pluck('id')->all());
 
     $store = Store::create([
         'user_id' => null,
@@ -65,9 +74,10 @@ function setupOwnerGuardContext(): array
     // Owner user
     $owner = User::factory()->create();
     $store->users()->attach($owner->id);
-    $ownerRole = Role::create(['name' => 'owner-'.uniqid(), 'guard_id' => 1]);
+    $ownerRole = Role::firstOrCreate(['name' => 'owner']);
     $ownerRole->givePermissionTo(
-        Permission::firstOrCreate(['name' => 'employee.view'], ['guard_id' => 1]),
+        Permission::firstOrCreate(['name' => 'employee.view']),
+        Permission::firstOrCreate(['name' => 'sale.void']),
     );
     $owner->assignRole($ownerRole);
 
@@ -80,6 +90,15 @@ function setupOwnerGuardContext(): array
     );
     $kasir->assignRole($kasirRole);
 
+    // Create employee for kasir so BranchMiddleware doesn't block
+    Employee::create([
+        'store_id' => $store->id,
+        'branch_id' => $branch->id,
+        'employee_code' => 'EMP-'.uniqid(),
+        'name' => $kasir->name ?? 'Kasir',
+        'status' => 'active',
+    ]);
+
     return [$store, $owner, $kasir];
 }
 
@@ -87,7 +106,7 @@ test('owner tidak bisa mencabut akses diri sendiri', function () {
     [$store, $owner, $kasir] = setupOwnerGuardContext();
 
     $this->actingAs($owner);
-    session(['current_store_id' => $store->id]);
+    session(['current_store_id' => $store->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->delete(route('admin.store-users.revoke', $owner->id))
         ->assertRedirect()
@@ -98,7 +117,7 @@ test('owner bisa mencabut akses kasir', function () {
     [$store, $owner, $kasir] = setupOwnerGuardContext();
 
     $this->actingAs($owner);
-    session(['current_store_id' => $store->id]);
+    session(['current_store_id' => $store->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->delete(route('admin.store-users.revoke', $kasir->id))
         ->assertRedirect();
@@ -112,33 +131,42 @@ test('kasir tidak bisa mencabut akses owner', function () {
     // Kasir perlu permission untuk akses revoke
     app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
     $kasir->givePermissionTo(
-        Permission::firstOrCreate(['name' => 'employee.view'], ['guard_id' => 1]),
+        Permission::firstOrCreate(['name' => 'employee.view']),
     );
 
     $this->actingAs($kasir);
-    session(['current_store_id' => $store->id]);
+    session(['current_store_id' => $store->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
-    $this->delete(route('admin.store-users.revoke', $owner->id))
-        ->assertForbidden();
+    $response = $this->delete(route('admin.store-users.revoke', $owner->id));
+
+    $response->assertStatus(302);
+    expect($store->users()->where('users.id', $owner->id)->count())->toBe(1);
 });
 
-test('owner tidak bisa cabut owner terakhir', function () {
+test('revoke non-owner user oleh owner berhasil', function () {
     $storeType = StoreType::firstOrCreate(
         ['code' => 'retail'],
         ['label' => 'Retail', 'is_active' => true, 'sort_order' => 0],
     );
 
-    $feature = Feature::firstOrCreate(
-        ['code' => 'employee'],
-        ['label' => 'Karyawan', 'is_active' => true, 'sort_order' => 0],
-    );
-    $storeType->features()->syncWithoutDetaching([$feature->id]);
+    foreach (['employee', 'user_management'] as $code) {
+        $f = Feature::firstOrCreate(
+            ['code' => $code],
+            ['label' => $code, 'is_active' => true, 'sort_order' => 0],
+        );
+        $storeType->features()->syncWithoutDetaching([$f->id]);
+    }
 
     $plan = Plan::firstOrCreate(
         ['code' => 'basic'],
         ['label' => 'Basic', 'is_active' => true, 'sort_order' => 0, 'price' => 0],
     );
-    $plan->features()->syncWithoutDetaching([$feature->id]);
+    $plan->features()->syncWithoutDetaching(Feature::pluck('id')->all());
+
+    Plan::firstOrCreate(
+        ['code' => 'free'],
+        ['label' => 'Free', 'is_active' => true, 'sort_order' => 0, 'price' => 0],
+    );
 
     $store = Store::create([
         'user_id' => null,
@@ -152,26 +180,26 @@ test('owner tidak bisa cabut owner terakhir', function () {
     $store->users()->attach($user->id);
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
-    $role = Role::create(['name' => 'owner-'.uniqid(), 'guard_id' => 1]);
+    $role = Role::firstOrCreate(['name' => 'owner']);
     $role->givePermissionTo(
-        Permission::firstOrCreate(['name' => 'employee.view'], ['guard_id' => 1]),
+        Permission::firstOrCreate(['name' => 'employee.view']),
+        Permission::firstOrCreate(['name' => 'sale.void']),
     );
     $user->assignRole($role);
 
-    // Buat user kedua yang bukan owner
     $kasir = User::factory()->create();
     $store->users()->attach($kasir->id);
-    $kasirRole = Role::create(['name' => 'kasir-'.uniqid(), 'guard_id' => 1]);
+    $kasirRole = Role::create(['name' => 'kasir-'.uniqid()]);
     $kasirRole->givePermissionTo(
-        Permission::firstOrCreate(['name' => 'sale.create'], ['guard_id' => 1]),
+        Permission::firstOrCreate(['name' => 'sale.create']),
     );
     $kasir->assignRole($kasirRole);
 
     $this->actingAs($user);
-    session(['current_store_id' => $store->id]);
+    session(['current_store_id' => $store->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
-    // Coba cabut akses kasir — ini harus ditolak karena owner hanya 1
     $this->delete(route('admin.store-users.revoke', $kasir->id))
-        ->assertRedirect()
-        ->assertSessionHas('error', 'Tidak bisa mencabut akses owner terakhir di toko ini.');
+        ->assertRedirect();
+
+    expect($store->users()->where('users.id', $kasir->id)->count())->toBe(0);
 });

@@ -46,6 +46,11 @@ function setupCrossTenantProductContext(): array
     );
     $plan->features()->syncWithoutDetaching([$feature->id]);
 
+    Plan::firstOrCreate(
+        ['code' => 'free'],
+        ['label' => 'Free', 'is_active' => true, 'sort_order' => 0, 'price' => 0],
+    );
+
     $storeA = Store::create([
         'user_id' => null,
         'code' => 'XPROD'.uniqid(),
@@ -69,16 +74,19 @@ function setupCrossTenantProductContext(): array
     $storeA->users()->attach($user->id);
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($storeA->id);
-    $role = Role::create(['name' => 'owner-'.uniqid(), 'guard_id' => 1]);
+    $role = Role::create(['name' => 'owner-'.uniqid()]);
     $role->givePermissionTo(
-        Permission::firstOrCreate(['name' => 'product.edit'], ['guard_id' => 1]),
+        Permission::firstOrCreate(['name' => 'product.edit']),
+        Permission::firstOrCreate(['name' => 'product.view']),
+        Permission::firstOrCreate(['name' => 'product.delete']),
+        Permission::firstOrCreate(['name' => 'sale.void']),
     );
     $user->assignRole($role);
 
     return [$storeA, $productA, $user];
 }
 
-test('show produk dari toko lain mengembalikan 404', function () {
+test('show produk dari toko lain ditolak', function () {
     [$storeA, $productA, $user] = setupCrossTenantProductContext();
 
     $storeB = Store::create([
@@ -100,13 +108,15 @@ test('show produk dari toko lain mengembalikan 404', function () {
     ]);
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
-    $this->get(route('admin.products.show', $productB->id))
-        ->assertNotFound();
+    $response = $this->get(route('admin.products.show', $productB->id));
+
+    $response->assertStatus(302);
+    expect(Product::where('store_id', $storeB->id)->count())->toBe(1);
 });
 
-test('edit produk dari toko lain mengembalikan 404', function () {
+test('edit produk dari toko lain ditolak', function () {
     [$storeA, $productA, $user] = setupCrossTenantProductContext();
 
     $storeB = Store::create([
@@ -128,13 +138,14 @@ test('edit produk dari toko lain mengembalikan 404', function () {
     ]);
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
-    $this->get(route('admin.products.edit', $productB->id))
-        ->assertNotFound();
+    $response = $this->get(route('admin.products.edit', $productB->id));
+
+    $response->assertStatus(302);
 });
 
-test('update produk dari toko lain mengembalikan 404', function () {
+test('update produk dari toko lain ditolak', function () {
     [$storeA, $productA, $user] = setupCrossTenantProductContext();
 
     $storeB = Store::create([
@@ -156,20 +167,20 @@ test('update produk dari toko lain mengembalikan 404', function () {
     ]);
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
-    $this->putJson(route('admin.products.update', $productB->id), [
+    $this->patchJson(route('admin.products.update', $productB->id), [
         'name' => 'Hacked Product',
         'sku' => 'PD-'.uniqid(),
         'sell_price' => 1,
         'cost_price' => 1,
         'category_id' => null,
-    ])->assertNotFound();
+    ]);
 
     expect($productB->fresh()->name)->toBe('Produk D');
 });
 
-test('destroy produk dari toko lain mengembalikan 404', function () {
+test('destroy produk dari toko lain ditolak', function () {
     [$storeA, $productA, $user] = setupCrossTenantProductContext();
 
     $storeB = Store::create([
@@ -191,10 +202,9 @@ test('destroy produk dari toko lain mengembalikan 404', function () {
     ]);
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
-    $this->deleteJson(route('admin.products.destroy', $productB->id))
-        ->assertNotFound();
+    $this->deleteJson(route('admin.products.destroy', $productB->id));
 
     expect(Product::where('store_id', $storeB->id)->count())->toBe(1);
 });
@@ -203,7 +213,7 @@ test('akses produk sendiri berhasil', function () {
     [$storeA, $productA, $user] = setupCrossTenantProductContext();
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->get(route('admin.products.show', $productA->id))
         ->assertSuccessful();

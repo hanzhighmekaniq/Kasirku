@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\Reports\ReportExport;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\Customer;
+use App\Models\Employee;
 use App\Models\Expense;
 use App\Models\Purchase;
 use App\Models\Sale;
+use App\Models\SaleReturn;
+use App\Models\SaleReturnItem;
 use App\Models\SaleSplitPayer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -658,5 +664,526 @@ class ReportController extends Controller
             'from' => $from->toDateString(), 'to' => $to->toDateString(),
             'summary' => $summary, 'byEmployee' => $byEmployee, 'commissions' => $commissions,
         ]);
+    }
+
+    // ── Sale Returns Report ─────────────────────────────────
+
+    public function saleReturns(Request $request)
+    {
+        $storeId = session('current_store_id');
+        [$from, $to] = $this->resolveDateRange($request);
+        $branchIds = $this->resolveBranchIds($request, $storeId);
+
+        $returns = SaleReturn::where('sale_returns.store_id', $storeId)
+            ->where('sale_returns.status', 'completed')
+            ->whereBetween('sale_returns.return_date', [$from, $to])
+            ->with(['sale:id,sale_no', 'user:id,name'])
+            ->when($branchIds, function ($q) use ($branchIds) {
+                $q->whereHas('sale', fn ($sq) => $sq->whereIn('branch_id', $branchIds));
+            })
+            ->orderByDesc('sale_returns.return_date')
+            ->get();
+
+        $totalReturned = (float) $returns->sum('total_amount');
+        $returnCount = $returns->count();
+
+        $totalSales = (float) Sale::where('store_id', $storeId)
+            ->where('status', 'completed')
+            ->whereBetween('sale_date', [$from, $to])
+            ->when($branchIds, fn ($q) => $q->whereIn('branch_id', $branchIds))
+            ->sum('grand_total');
+
+        $returnRate = $totalSales > 0 ? round(($totalReturned / $totalSales) * 100, 1) : 0;
+
+        $byReason = SaleReturnItem::whereHas('saleReturn', function ($q) use ($storeId, $from, $to, $branchIds) {
+            $q->where('store_id', $storeId)
+                ->where('status', 'completed')
+                ->whereBetween('return_date', [$from, $to])
+                ->when($branchIds, fn ($sq) => $sq->whereHas('sale', fn ($ssq) => $ssq->whereIn('branch_id', $branchIds)));
+        })->select('reason', DB::raw('COUNT(*) as count'), DB::raw('SUM(subtotal) as total'))
+            ->whereNotNull('reason')
+            ->groupBy('reason')
+            ->orderByDesc('total')
+            ->get();
+
+        return Inertia::render('Admin/Reports/SaleReturns', [
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+            'summary' => [
+                'total_returned' => $totalReturned,
+                'return_count' => $returnCount,
+                'total_sales' => $totalSales,
+                'return_rate' => $returnRate,
+            ],
+            'returns' => $returns,
+            'byReason' => $byReason,
+        ]);
+    }
+
+    // ── Export: Sale Returns ────────────────────────────────
+
+    public function exportSaleReturns(Request $request)
+    {
+        $storeId = session('current_store_id');
+        [$from, $to] = $this->resolveDateRange($request);
+        $branchIds = $this->resolveBranchIds($request, $storeId);
+
+        $data = SaleReturn::where('sale_returns.store_id', $storeId)
+            ->where('sale_returns.status', 'completed')
+            ->whereBetween('sale_returns.return_date', [$from, $to])
+            ->with(['sale:id,sale_no', 'user:id,name'])
+            ->when($branchIds, function ($q) use ($branchIds) {
+                $q->whereHas('sale', fn ($sq) => $sq->whereIn('branch_id', $branchIds));
+            })
+            ->orderByDesc('sale_returns.return_date')
+            ->get()
+            ->map(fn ($r) => [
+                'return_no' => $r->return_no,
+                'date' => $r->return_date,
+                'sale_no' => $r->sale?->sale_no ?? '-',
+                'user' => $r->user?->name ?? '-',
+                'subtotal' => $r->subtotal,
+                'total_amount' => $r->total_amount,
+                'notes' => $r->notes ?? '-',
+                'status' => $r->status,
+            ]);
+
+        $columns = [
+            ['key' => 'return_no', 'label' => 'No. Retur'],
+            ['key' => 'date', 'label' => 'Tanggal', 'format' => 'datetime'],
+            ['key' => 'sale_no', 'label' => 'No. Penjualan'],
+            ['key' => 'user', 'label' => 'PIC'],
+            ['key' => 'subtotal', 'label' => 'Subtotal', 'format' => 'currency'],
+            ['key' => 'total_amount', 'label' => 'Total Retur', 'format' => 'currency'],
+            ['key' => 'notes', 'label' => 'Catatan'],
+            ['key' => 'status', 'label' => 'Status'],
+        ];
+
+        $filename = "retur-penjualan-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}.xlsx";
+
+        return Excel::download(new ReportExport($data, $columns, 'Laporan Retur Penjualan'), $filename);
+    }
+
+    /**
+     * Laporan segmentasi customer berdasarkan total belanja.
+     */
+    public function customerSegments(Request $request): Response
+    {
+        $storeId = session('current_store_id');
+        $from = $request->start_date ? Carbon::parse($request->start_date)->startOfYear() : Carbon::now()->startOfYear();
+        $to = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : now();
+
+        // Segmentasi berdasarkan total belanja
+        $segments = Customer::where('store_id', $storeId)
+            ->where('is_active', true)
+            ->selectRaw('
+                id, name, phone, email,
+                total_spent, points, last_visit_at,
+                CASE
+                    WHEN total_spent >= 10000000 THEN "Platinum"
+                    WHEN total_spent >= 5000000 THEN "Gold"
+                    WHEN total_spent >= 1000000 THEN "Silver"
+                    ELSE "Bronze"
+                END as segment
+            ')
+            ->orderByDesc('total_spent')
+            ->get();
+
+        $segmentSummary = $segments->groupBy('segment')->map(fn ($items) => [
+            'count' => $items->count(),
+            'total_spent' => $items->sum('total_spent'),
+            'avg_spent' => $items->avg('total_spent'),
+        ]);
+
+        // Top spender
+        $topSpenders = $segments->take(10);
+
+        // Customer tidak aktif (tidak belanja > 30 hari)
+        $inactiveCount = Customer::where('store_id', $storeId)
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('last_visit_at')
+                    ->orWhere('last_visit_at', '<', now()->subDays(30));
+            })
+            ->count();
+
+        return Inertia::render('Admin/Reports/CustomerSegments', [
+            'segmentSummary' => $segmentSummary,
+            'topSpenders' => $topSpenders,
+            'inactiveCount' => $inactiveCount,
+            'totalCustomers' => $segments->count(),
+            'dateRange' => ['from' => $from->format('Y-m-d'), 'to' => $to->format('Y-m-d')],
+        ]);
+    }
+
+    // ── Export Helpers ──────────────────────────────────────
+
+    private function resolveDateRange(Request $request): array
+    {
+        $from = $request->start_date
+            ? Carbon::parse($request->start_date)->startOfDay()
+            : Carbon::now()->startOfMonth();
+        $to = $request->end_date
+            ? Carbon::parse($request->end_date)->endOfDay()
+            : Carbon::now()->endOfDay();
+
+        return [$from, $to];
+    }
+
+    private function resolveBranchIds(Request $request, int $storeId): ?array
+    {
+        $user = Auth::user();
+        $canViewAll = $user->can('sale.void');
+
+        if (! $canViewAll) {
+            return [$user->branch_id];
+        }
+
+        return $request->filled('branch_ids')
+            ? array_map('intval', (array) $request->input('branch_ids'))
+            : null;
+    }
+
+    // ── Export: Sales (Index) ───────────────────────────────
+
+    public function exportSales(Request $request)
+    {
+        $storeId = session('current_store_id');
+        [$from, $to] = $this->resolveDateRange($request);
+        $branchIds = $this->resolveBranchIds($request, $storeId);
+
+        $sales = Sale::where('store_id', $storeId)
+            ->where('status', 'completed')
+            ->whereBetween('sale_date', [$from, $to])
+            ->when($branchIds, fn ($q) => $q->whereIn('branch_id', $branchIds))
+            ->with(['user:id,name', 'branch:id,name'])
+            ->orderByDesc('sale_date')
+            ->get()
+            ->map(fn ($s) => [
+                'sale_no' => $s->sale_no,
+                'date' => $s->sale_date,
+                'cashier' => $s->user?->name ?? '-',
+                'branch' => $s->branch?->name ?? '-',
+                'subtotal' => $s->subtotal,
+                'discount' => $s->discount_amount,
+                'tax' => $s->tax_amount,
+                'grand_total' => $s->grand_total,
+                'paid' => $s->paid_amount,
+                'change' => $s->change_amount,
+                'status' => $s->status,
+            ]);
+
+        $columns = [
+            ['key' => 'sale_no', 'label' => 'No. Penjualan'],
+            ['key' => 'date', 'label' => 'Tanggal', 'format' => 'datetime'],
+            ['key' => 'cashier', 'label' => 'Kasir'],
+            ['key' => 'branch', 'label' => 'Cabang'],
+            ['key' => 'subtotal', 'label' => 'Subtotal', 'format' => 'currency'],
+            ['key' => 'discount', 'label' => 'Diskon', 'format' => 'currency'],
+            ['key' => 'tax', 'label' => 'Pajak', 'format' => 'currency'],
+            ['key' => 'grand_total', 'label' => 'Total', 'format' => 'currency'],
+            ['key' => 'paid', 'label' => 'Dibayar', 'format' => 'currency'],
+            ['key' => 'change', 'label' => 'Kembali', 'format' => 'currency'],
+            ['key' => 'status', 'label' => 'Status'],
+        ];
+
+        $filename = "laporan-penjualan-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}.xlsx";
+
+        return Excel::download(new ReportExport($sales, $columns, 'Laporan Penjualan'), $filename);
+    }
+
+    // ── Export: Profit & Loss ───────────────────────────────
+
+    public function exportProfitLoss(Request $request)
+    {
+        $storeId = session('current_store_id');
+        [$from, $to] = $this->resolveDateRange($request);
+        $branchIds = $this->resolveBranchIds($request, $storeId);
+
+        $saleScope = fn ($q) => $q->where('store_id', $storeId)
+            ->where('status', 'completed')
+            ->whereBetween('sale_date', [$from, $to])
+            ->when($branchIds, fn ($q) => $q->whereIn('branch_id', $branchIds));
+
+        $revenue = (float) Sale::where($saleScope)->sum('grand_total');
+        $cogs = (float) DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where(fn ($q) => $saleScope($q))
+            ->sum('sale_items.subtotal');
+        $expenses = (float) Expense::where('store_id', $storeId)
+            ->whereBetween('expense_date', [$from, $to])->sum('amount');
+
+        $data = collect([
+            ['item' => 'Pendapatan Bersih', 'amount' => $revenue],
+            ['item' => 'Harga Pokok Penjualan (HPP)', 'amount' => $cogs],
+            ['item' => 'Laba Kotor', 'amount' => $revenue - $cogs],
+            ['item' => 'Total Pengeluaran', 'amount' => $expenses],
+            ['item' => 'Laba Bersih', 'amount' => $revenue - $cogs - $expenses],
+        ]);
+
+        $columns = [
+            ['key' => 'item', 'label' => 'Komponen'],
+            ['key' => 'amount', 'label' => 'Jumlah (Rp)', 'format' => 'currency'],
+        ];
+
+        $filename = "laba-rugi-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}.xlsx";
+
+        return Excel::download(new ReportExport($data, $columns, 'Laporan Laba Rugi'), $filename);
+    }
+
+    // ── Export: Sales By Employee ───────────────────────────
+
+    public function exportSalesByEmployee(Request $request)
+    {
+        $storeId = session('current_store_id');
+        [$from, $to] = $this->resolveDateRange($request);
+        $branchIds = $this->resolveBranchIds($request, $storeId);
+
+        $data = DB::table('sales')
+            ->join('users', 'sales.user_id', '=', 'users.id')
+            ->where('sales.store_id', $storeId)
+            ->where('sales.status', 'completed')
+            ->whereBetween('sales.sale_date', [$from, $to])
+            ->when($branchIds, fn ($q) => $q->whereIn('sales.branch_id', $branchIds))
+            ->select(
+                'users.name as cashier',
+                DB::raw('COUNT(*) as transactions'),
+                DB::raw('SUM(sales.grand_total) as revenue'),
+            )
+            ->groupBy('users.name')
+            ->orderByDesc('revenue')
+            ->get();
+
+        $columns = [
+            ['key' => 'cashier', 'label' => 'Kasir'],
+            ['key' => 'transactions', 'label' => 'Transaksi', 'format' => 'integer'],
+            ['key' => 'revenue', 'label' => 'Pendapatan (Rp)', 'format' => 'currency'],
+        ];
+
+        $filename = "penjualan-per-kasir-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}.xlsx";
+
+        return Excel::download(new ReportExport($data, $columns, 'Penjualan Per Kasir'), $filename);
+    }
+
+    // ── Export: Purchases ───────────────────────────────────
+
+    public function exportPurchases(Request $request)
+    {
+        $storeId = session('current_store_id');
+        [$from, $to] = $this->resolveDateRange($request);
+
+        $data = Purchase::where('store_id', $storeId)
+            ->where('status', 'completed')
+            ->whereBetween('purchase_date', [$from, $to])
+            ->with(['supplier:id,name', 'user:id,name'])
+            ->orderByDesc('purchase_date')
+            ->get()
+            ->map(fn ($p) => [
+                'purchase_no' => $p->purchase_no,
+                'date' => $p->purchase_date,
+                'supplier' => $p->supplier?->name ?? '-',
+                'user' => $p->user?->name ?? '-',
+                'subtotal' => $p->subtotal,
+                'grand_total' => $p->grand_total,
+                'paid' => $p->paid_amount,
+            ]);
+
+        $columns = [
+            ['key' => 'purchase_no', 'label' => 'No. Pembelian'],
+            ['key' => 'date', 'label' => 'Tanggal', 'format' => 'date'],
+            ['key' => 'supplier', 'label' => 'Supplier'],
+            ['key' => 'user', 'label' => 'PIC'],
+            ['key' => 'subtotal', 'label' => 'Subtotal', 'format' => 'currency'],
+            ['key' => 'grand_total', 'label' => 'Total', 'format' => 'currency'],
+            ['key' => 'paid', 'label' => 'Dibayar', 'format' => 'currency'],
+        ];
+
+        $filename = "pembelian-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}.xlsx";
+
+        return Excel::download(new ReportExport($data, $columns, 'Laporan Pembelian'), $filename);
+    }
+
+    // ── Export: Stock ───────────────────────────────────────
+
+    public function exportStock(Request $request)
+    {
+        $storeId = session('current_store_id');
+
+        $data = DB::table('product_stocks')
+            ->join('products', 'product_stocks.product_id', '=', 'products.id')
+            ->leftJoin('product_categories', 'products.category_id', '=', 'product_categories.id')
+            ->where('product_stocks.store_id', $storeId)
+            ->select(
+                'products.sku',
+                'products.name as product_name',
+                'product_categories.name as category',
+                DB::raw('SUM(product_stocks.quantity) as total_stock'),
+                'products.cost_price',
+                'products.sell_price',
+            )
+            ->groupBy('products.id', 'products.sku', 'products.name', 'product_categories.name', 'products.cost_price', 'products.sell_price')
+            ->orderBy('products.name')
+            ->get()
+            ->map(fn ($s) => [
+                'sku' => $s->sku,
+                'product_name' => $s->product_name,
+                'category' => $s->category ?? '-',
+                'total_stock' => $s->total_stock,
+                'stock_value' => $s->total_stock * $s->cost_price,
+                'sell_price' => $s->sell_price,
+            ]);
+
+        $columns = [
+            ['key' => 'sku', 'label' => 'SKU'],
+            ['key' => 'product_name', 'label' => 'Nama Produk'],
+            ['key' => 'category', 'label' => 'Kategori'],
+            ['key' => 'total_stock', 'label' => 'Stok', 'format' => 'integer'],
+            ['key' => 'stock_value', 'label' => 'Nilai Stok (Rp)', 'format' => 'currency'],
+            ['key' => 'sell_price', 'label' => 'Harga Jual', 'format' => 'currency'],
+        ];
+
+        $filename = 'laporan-stok-'.Carbon::now()->format('Y-m-d').'.xlsx';
+
+        return Excel::download(new ReportExport($data, $columns, 'Laporan Stok'), $filename);
+    }
+
+    // ── Export: Expenses ────────────────────────────────────
+
+    public function exportExpenses(Request $request)
+    {
+        $storeId = session('current_store_id');
+        [$from, $to] = $this->resolveDateRange($request);
+
+        $data = Expense::where('store_id', $storeId)
+            ->whereBetween('expense_date', [$from, $to])
+            ->with(['expenseCategory:id,name', 'user:id,name'])
+            ->orderByDesc('expense_date')
+            ->get()
+            ->map(fn ($e) => [
+                'expense_no' => $e->expense_no,
+                'date' => $e->expense_date,
+                'category' => $e->expenseCategory?->name ?? '-',
+                'amount' => $e->amount,
+                'notes' => $e->notes ?? '-',
+                'user' => $e->user?->name ?? '-',
+            ]);
+
+        $columns = [
+            ['key' => 'expense_no', 'label' => 'No. Pengeluaran'],
+            ['key' => 'date', 'label' => 'Tanggal', 'format' => 'date'],
+            ['key' => 'category', 'label' => 'Kategori'],
+            ['key' => 'amount', 'label' => 'Jumlah (Rp)', 'format' => 'currency'],
+            ['key' => 'notes', 'label' => 'Keterangan'],
+            ['key' => 'user', 'label' => 'PIC'],
+        ];
+
+        $filename = "pengeluaran-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}.xlsx";
+
+        return Excel::download(new ReportExport($data, $columns, 'Laporan Pengeluaran'), $filename);
+    }
+
+    // ── Export: Shifts ──────────────────────────────────────
+
+    public function exportShifts(Request $request)
+    {
+        $storeId = session('current_store_id');
+        [$from, $to] = $this->resolveDateRange($request);
+
+        $data = DB::table('cashier_shifts')
+            ->join('users', 'cashier_shifts.user_id', '=', 'users.id')
+            ->leftJoin('branches', 'cashier_shifts.branch_id', '=', 'branches.id')
+            ->where('cashier_shifts.store_id', $storeId)
+            ->whereBetween('cashier_shifts.opened_at', [$from, $to])
+            ->select(
+                'cashier_shifts.shift_no',
+                'cashier_shifts.opened_at',
+                'cashier_shifts.closed_at',
+                'users.name as cashier',
+                'branches.name as branch',
+                'cashier_shifts.opening_cash',
+                'cashier_shifts.closing_cash',
+                'cashier_shifts.total_sales',
+                'cashier_shifts.cash_difference',
+                'cashier_shifts.status',
+            )
+            ->orderByDesc('cashier_shifts.opened_at')
+            ->get()
+            ->map(fn ($s) => [
+                'shift_no' => $s->shift_no,
+                'cashier' => $s->cashier,
+                'branch' => $s->branch ?? '-',
+                'opened_at' => $s->opened_at,
+                'closed_at' => $s->closed_at,
+                'opening_cash' => $s->opening_cash,
+                'closing_cash' => $s->closing_cash,
+                'total_sales' => $s->total_sales,
+                'difference' => $s->cash_difference,
+                'status' => $s->status,
+            ]);
+
+        $columns = [
+            ['key' => 'shift_no', 'label' => 'No. Shift'],
+            ['key' => 'cashier', 'label' => 'Kasir'],
+            ['key' => 'branch', 'label' => 'Cabang'],
+            ['key' => 'opened_at', 'label' => 'Buka', 'format' => 'datetime'],
+            ['key' => 'closed_at', 'label' => 'Tutup', 'format' => 'datetime'],
+            ['key' => 'opening_cash', 'label' => 'Kas Buka', 'format' => 'currency'],
+            ['key' => 'closing_cash', 'label' => 'Kas Tutup', 'format' => 'currency'],
+            ['key' => 'total_sales', 'label' => 'Total Penjualan', 'format' => 'currency'],
+            ['key' => 'difference', 'label' => 'Selisih', 'format' => 'currency'],
+            ['key' => 'status', 'label' => 'Status'],
+        ];
+
+        $filename = "shift-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}.xlsx";
+
+        return Excel::download(new ReportExport($data, $columns, 'Laporan Shift Kasir'), $filename);
+    }
+
+    // ── Export: Commissions ─────────────────────────────────
+
+    public function exportCommissions(Request $request)
+    {
+        $storeId = session('current_store_id');
+        [$from, $to] = $this->resolveDateRange($request);
+
+        $data = DB::table('employee_commissions')
+            ->join('employees', 'employee_commissions.employee_id', '=', 'employees.id')
+            ->join('users', 'employees.user_id', '=', 'users.id')
+            ->where('employee_commissions.store_id', $storeId)
+            ->whereBetween('employee_commissions.commission_date', [$from, $to])
+            ->select(
+                'employee_commissions.commission_date',
+                'users.name as employee_name',
+                'employee_commissions.type',
+                'employee_commissions.commission_rate',
+                'employee_commissions.base_amount',
+                'employee_commissions.commission_amount',
+                'employee_commissions.status',
+            )
+            ->orderByDesc('employee_commissions.commission_date')
+            ->get()
+            ->map(fn ($c) => [
+                'date' => $c->commission_date,
+                'employee' => $c->employee_name,
+                'type' => $c->type,
+                'rate' => $c->commission_rate.'%',
+                'base' => $c->base_amount,
+                'amount' => $c->commission_amount,
+                'status' => $c->status,
+            ]);
+
+        $columns = [
+            ['key' => 'date', 'label' => 'Tanggal', 'format' => 'date'],
+            ['key' => 'employee', 'label' => 'Karyawan'],
+            ['key' => 'type', 'label' => 'Tipe'],
+            ['key' => 'rate', 'label' => 'Rate'],
+            ['key' => 'base', 'label' => 'Dasar', 'format' => 'currency'],
+            ['key' => 'amount', 'label' => 'Komisi', 'format' => 'currency'],
+            ['key' => 'status', 'label' => 'Status'],
+        ];
+
+        $filename = "komisi-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}.xlsx";
+
+        return Excel::download(new ReportExport($data, $columns, 'Laporan Komisi'), $filename);
     }
 }

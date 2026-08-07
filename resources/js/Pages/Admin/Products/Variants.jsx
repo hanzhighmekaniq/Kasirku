@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 import Button from "@/Components/ui/Button";
@@ -565,7 +565,6 @@ const fmt = (n) =>
     }).format(n ?? 0);
 
 export default function Variants({ product, storeType = "retail" }) {
-    const { flash } = usePage().props;
     const [showForm, setShowForm] = useState(false);
     const [editVariant, setEditVariant] = useState(null);
     const [target, setTarget] = useState(null);
@@ -649,17 +648,6 @@ export default function Variants({ product, storeType = "retail" }) {
                     </div>
                 </div>
             </section>
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    {flash.error}
-                </div>
-            )}
 
             {/* Product summary card */}
             <div className="mb-4 rounded-2xl border border-border bg-card p-5 shadow-sm">

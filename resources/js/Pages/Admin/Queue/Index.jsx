@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useCallback, useState } from 'react';
 import { Clock, Hash, Phone, Plus, User, X } from 'lucide-react';
 import Button from '@/Components/ui/Button';
@@ -175,7 +175,6 @@ function QueueCard({ queue, onStatusChange, onDelete }) {
 }
 
 export default function Index({ queues = [], stats = {} }) {
-    const { flash } = usePage().props;
     const [showAdd, setShowAdd] = useState(false);
     const [processing, setProcessing] = useState(false);
 
@@ -206,12 +205,6 @@ export default function Index({ queues = [], stats = {} }) {
             }
         >
             <Head title="Antrian" />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
 
             {/* Stats */}
             <div className="mb-5 grid grid-cols-3 gap-3">

@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import Select from "@/Components/ui/Select";
 import AnchoredPanel from '@/Components/ui/AnchoredPanel';
@@ -31,7 +31,6 @@ const MOVEMENT_TYPES = {
 };
 
 export default function Movements({ movements, products, filters: serverFilters = {} }) {
-    const { flash } = usePage().props;
     const toDate = (s) => s ? new Date(s) : null;
     const toStr = (d) => d ? format(d, 'yyyy-MM-dd') : '';
 
@@ -121,10 +120,6 @@ export default function Movements({ movements, products, filters: serverFilters 
                 description="Catatan setiap perubahan jumlah stok di gudang ini."
                 backUrl={route('admin.stock.index')}
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
 
             {/* Info Box */}
             <div className="mb-5 rounded-2xl border border-primary/20 bg-primary/10 px-5 py-4">

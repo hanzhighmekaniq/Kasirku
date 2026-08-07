@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import { Head, Link, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, useForm } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import {
-    AlertTriangle,
     ArrowRight,
     Check,
     Sparkles,
@@ -16,7 +15,6 @@ const iCls = (err) =>
     }`;
 
 export default function CreateStore({ storeTypes = [] }) {
-    const { flash } = usePage().props;
     const [activeStoreTypeId, setActiveStoreTypeId] = useState(storeTypes[0]?.id ?? null);
 
     const { data, setData, post, processing, errors } = useForm({
@@ -57,13 +55,6 @@ export default function CreateStore({ storeTypes = [] }) {
             }
         >
             <Head title="Tambah Toko Baru" />
-
-            {flash?.error && (
-                <div className="mb-5 flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    <AlertTriangle className="h-4 w-4 shrink-0" strokeWidth={2} />
-                    {flash.error}
-                </div>
-            )}
 
             <form onSubmit={submit} className="mx-auto max-w-2xl space-y-5">
                 {/* Nama toko */}

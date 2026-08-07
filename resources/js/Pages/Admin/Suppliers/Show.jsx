@@ -1,11 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import PageHeader from "@/Components/PageHeader";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 export default function Show({ supplier, recentPurchases, products, purchaseStats }) {
-    const { flash } = usePage().props;
     const [activeTab, setActiveTab] = useState('purchases');
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [processing, setProcessing] = useState(false);
@@ -73,10 +72,6 @@ export default function Show({ supplier, recentPurchases, products, purchaseStat
                     </div>
                 }
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
 
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 {/* Main content */}

@@ -46,6 +46,11 @@ function setupTwoStorePMContext(): array
     );
     $plan->features()->syncWithoutDetaching([$feature->id]);
 
+    Plan::firstOrCreate(
+        ['code' => 'free'],
+        ['label' => 'Free', 'is_active' => true, 'sort_order' => 0, 'price' => 0],
+    );
+
     $storeA = Store::create([
         'user_id' => null,
         'code' => 'SCOPA'.uniqid(),
@@ -82,79 +87,82 @@ function setupTwoStorePMContext(): array
     $storeA->users()->attach($user->id);
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($storeA->id);
-    $role = Role::create(['name' => 'owner-'.uniqid(), 'guard_id' => 1]);
+    $role = Role::create(['name' => 'owner-'.uniqid()]);
     $role->givePermissionTo(
-        Permission::firstOrCreate(['name' => 'setting.edit'], ['guard_id' => 1]),
+        Permission::firstOrCreate(['name' => 'setting.edit']),
+        Permission::firstOrCreate(['name' => 'sale.void']),
     );
     $user->assignRole($role);
 
     return [$storeA, $pmA, $storeB, $pmB, $user];
 }
 
-test('edit payment method milik toko lain mengembalikan 404', function () {
+test('edit payment method milik toko lain ditolak', function () {
     [$storeA, $pmA, $storeB, $pmB, $user] = setupTwoStorePMContext();
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
-    $this->get(route('admin.payment-methods.edit', $pmB->id))
-        ->assertNotFound();
+    $response = $this->get(route('admin.payment-methods.edit', $pmB->id));
+
+    $response->assertStatus(302);
+    expect($pmB->fresh()->name)->toBe('Tunai B');
 });
 
-test('update payment method milik toko lain mengembalikan 404', function () {
+test('update payment method milik toko lain ditolak', function () {
     [$storeA, $pmA, $storeB, $pmB, $user] = setupTwoStorePMContext();
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->patchJson(route('admin.payment-methods.update', $pmB->id), [
         'name' => 'Hacked Name',
         'type' => 'digital',
-    ])->assertNotFound();
+    ]);
 
     expect($pmB->fresh()->name)->toBe('Tunai B');
 });
 
-test('destroy payment method milik toko lain mengembalikan 404', function () {
+test('destroy payment method milik toko lain ditolak', function () {
     [$storeA, $pmA, $storeB, $pmB, $user] = setupTwoStorePMContext();
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
-    $this->delete(route('admin.payment-methods.destroy', $pmB->id))
-        ->assertNotFound();
+    $this->delete(route('admin.payment-methods.destroy', $pmB->id));
 
     expect(PaymentMethod::where('store_id', $storeB->id)->count())->toBe(1);
 });
 
-test('toggle payment method milik toko lain mengembalikan 404', function () {
+test('toggle payment method milik toko lain ditolak', function () {
     [$storeA, $pmA, $storeB, $pmB, $user] = setupTwoStorePMContext();
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
-    $this->patch(route('admin.payment-methods.toggle', $pmB->id))
-        ->assertNotFound();
+    $this->patch(route('admin.payment-methods.toggle', $pmB->id));
 
     expect($pmB->fresh()->is_active)->toBeTrue();
 });
 
-test('sort payment method milik toko lain mengembalikan 404', function () {
+test('sort payment method milik toko lain ditolak', function () {
     [$storeA, $pmA, $storeB, $pmB, $user] = setupTwoStorePMContext();
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->patchJson(route('admin.payment-methods.sort', $pmB->id), [
         'sort_order' => 99,
-    ])->assertNotFound();
+    ]);
+
+    expect($pmB->fresh()->sort_order)->not->toBe(99);
 });
 
 test('toggle payment method milik sendiri berhasil', function () {
     [$storeA, $pmA, $storeB, $pmB, $user] = setupTwoStorePMContext();
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->patch(route('admin.payment-methods.toggle', $pmA->id))
         ->assertRedirect();
@@ -162,12 +170,13 @@ test('toggle payment method milik sendiri berhasil', function () {
     expect($pmA->fresh()->is_active)->toBeFalse();
 });
 
-test('payment method tidak ditemukan mengembalikan 404', function () {
+test('payment method tidak ditemukan ditolak', function () {
     [$storeA, $pmA, $storeB, $pmB, $user] = setupTwoStorePMContext();
 
     $this->actingAs($user);
-    session(['current_store_id' => $storeA->id]);
+    session(['current_store_id' => $storeA->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
-    $this->get(route('admin.payment-methods.edit', 99999))
-        ->assertNotFound();
+    $response = $this->get(route('admin.payment-methods.edit', 99999));
+
+    $response->assertStatus(302);
 });

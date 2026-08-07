@@ -1,11 +1,11 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
 import ReportTabs from "@/Components/ReportTabs";
-import { Head, Link, usePage } from '@inertiajs/react';
+import ExportButton from './components/ExportButton';
+import { Head } from '@inertiajs/react';
 import SummaryCards from './components/SummaryCards';
 
 export default function Stock({ summary, lowStock = [], byCategory = [] }) {
-    const { flash } = usePage().props;
 
     return (
         <AuthenticatedLayout
@@ -35,7 +35,9 @@ export default function Stock({ summary, lowStock = [], byCategory = [] }) {
 
             <ReportTabs />
 
-            {flash?.success && <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>}
+            <div className="mb-5 flex items-center justify-end">
+                <ExportButton routeName="admin.reports.export.stock" />
+            </div>
 
             <SummaryCards items={[
                 { label: 'Total Produk', value: summary?.total_products ?? 0 },

@@ -801,3 +801,40 @@ body:has(.dv-auth) {
         border-radius: 8px;
     }
 }
+
+/* ── Toast (Sonner) ── shadcn style ────────────────────────────── */
+[data-sonner-toaster] {
+    font-family: 'Figtree', sans-serif;
+    --normal-bg: rgb(var(--popover));
+    --normal-text: rgb(var(--popover-foreground));
+    --normal-border: rgb(var(--border));
+    --border-radius: var(--radius);
+    --success-bg: rgb(var(--popover));
+    --success-text: rgb(var(--popover-foreground));
+    --success-border: rgb(var(--success) / 0.2);
+    --error-bg: rgb(var(--popover));
+    --error-text: rgb(var(--popover-foreground));
+    --error-border: rgb(var(--destructive) / 0.2);
+    --warning-bg: rgb(var(--popover));
+    --warning-text: rgb(var(--popover-foreground));
+    --warning-border: rgb(var(--warning) / 0.2);
+    --info-bg: rgb(var(--popover));
+    --info-text: rgb(var(--popover-foreground));
+    --info-border: rgb(var(--info) / 0.2);
+}
+
+[data-sonner-toaster][data-theme="dark"] {
+    --normal-bg: rgb(var(--popover));
+    --normal-text: rgb(var(--popover-foreground));
+}
+
+/* Mobile: full width, centered */
+@media (max-width: 640px) {
+    [data-sonner-toaster] {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) !important;
+        width: calc(100vw - 2rem) !important;
+        max-width: none !important;
+    }
+}

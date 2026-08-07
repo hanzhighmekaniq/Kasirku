@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
-import { Head, Link, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, useForm } from "@inertiajs/react";
 import { useMemo, useRef, useState } from "react";
 import Field from "@/Components/ui/Field";
 import SectionCard from "@/Components/ui/SectionCard";
@@ -31,8 +31,6 @@ export default function Edit({
     paymentMethods,
     storeType,
 }) {
-    const { flash } = usePage().props;
-
     // Pending item
     const [pendingProduct, setPendingProduct] = useState(null);
     const [pendingVariantId, setPendingVariantId] = useState("");
@@ -244,25 +242,6 @@ export default function Edit({
                     backUrl={route("admin.purchases.show", purchase.id)}
                     className="mb-0"
                 />
-
-            {flash?.error && (
-                <div className="mb-4 flex items-center gap-3 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    <svg
-                        className="h-5 w-5 shrink-0"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.8}
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-                        />
-                    </svg>
-                    {flash.error}
-                </div>
-            )}
 
             <form onSubmit={submit}>
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

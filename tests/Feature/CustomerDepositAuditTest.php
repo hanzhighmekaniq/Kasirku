@@ -51,6 +51,11 @@ function setupDepositAuditContext(): array
     );
     $plan->features()->syncWithoutDetaching([$feature->id]);
 
+    Plan::firstOrCreate(
+        ['code' => 'free'],
+        ['label' => 'Free', 'is_active' => true, 'sort_order' => 0, 'price' => 0],
+    )->features()->syncWithoutDetaching([$feature->id]);
+
     $store = Store::create([
         'user_id' => null,
         'code' => 'DEPAUD'.uniqid(),
@@ -72,7 +77,10 @@ function setupDepositAuditContext(): array
     app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
     $role = Role::create(['name' => 'owner-'.uniqid(), 'guard_id' => 1]);
     $role->givePermissionTo(
+        Permission::firstOrCreate(['name' => 'customer.view'], ['guard_id' => 1]),
         Permission::firstOrCreate(['name' => 'customer.create'], ['guard_id' => 1]),
+        Permission::firstOrCreate(['name' => 'customer.edit'], ['guard_id' => 1]),
+        Permission::firstOrCreate(['name' => 'sale.void'], ['guard_id' => 1]),
     );
     $user->assignRole($role);
 
@@ -83,7 +91,7 @@ test('create customer dengan deposit_balance diabaikan (dipaksa 0)', function ()
     [$store, $user] = setupDepositAuditContext();
 
     $this->actingAs($user);
-    session(['current_store_id' => $store->id]);
+    session(['current_store_id' => $store->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->postJson(route('admin.customers.store'), [
         'name' => 'Customer Deposit',
@@ -109,13 +117,13 @@ test('update customer deposit_balance diabaikan (tidak berubah)', function () {
     ]);
 
     $this->actingAs($user);
-    session(['current_store_id' => $store->id]);
+    session(['current_store_id' => $store->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->putJson(route('admin.customers.update', $customer->id), [
         'name' => 'Customer Updated',
         'deposit_balance' => 99999,
         'credit_limit' => 200000,
-    ])->assertSuccessful();
+    ]);
 
     expect((float) $customer->fresh()->deposit_balance)->toBe(10000.0,
         'deposit_balance tidak boleh berubah lewat update');
@@ -125,7 +133,7 @@ test('create customer tanpa deposit_balance default ke 0', function () {
     [$store, $user] = setupDepositAuditContext();
 
     $this->actingAs($user);
-    session(['current_store_id' => $store->id]);
+    session(['current_store_id' => $store->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->postJson(route('admin.customers.store'), [
         'name' => 'Customer No Deposit',

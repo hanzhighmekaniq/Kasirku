@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\CustomerExport;
 use App\Http\Controllers\Controller;
+use App\Imports\CustomerImport;
 use App\Models\Customer;
 use App\Models\CustomerDebtLog;
 use App\Models\CustomerMembership;
@@ -16,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CustomerController extends Controller
 {
@@ -393,5 +396,60 @@ class CustomerController extends Controller
 
         // Fallback: gunakan timestamp untuk uniqueness
         return 'CST'.str_pad((string) mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+    }
+
+    // ── Export ──────────────────────────────────────────────
+
+    public function export(Request $request)
+    {
+        $storeId = session('current_store_id');
+        abort_unless($storeId, 403);
+
+        $filename = 'pelanggan-'.now()->format('Y-m-d').'.xlsx';
+
+        return Excel::download(
+            new CustomerExport($storeId),
+            $filename,
+        );
+    }
+
+    // ── Import ──────────────────────────────────────────────
+
+    public function import(Request $request)
+    {
+        $storeId = session('current_store_id');
+        abort_unless($storeId, 403);
+
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            $import = new CustomerImport($storeId);
+            Excel::import($import, $request->file('file'));
+            $results = $import->getResults();
+
+            $message = "Import selesai: {$results['created']} baru, {$results['updated']} diperbarui, {$results['skipped']} dilewati.";
+            if (! empty($results['errors'])) {
+                $message .= ' '.count($results['errors']).' error.';
+            }
+
+            return back()->with('success', $message);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal import: '.$e->getMessage());
+        }
+    }
+
+    // ── Download Template ───────────────────────────────────
+
+    public function importTemplate()
+    {
+        $storeId = session('current_store_id');
+        abort_unless($storeId, 403);
+
+        return Excel::download(
+            new CustomerExport($storeId, includeExamples: true),
+            'template-import-pelanggan.xlsx',
+        );
     }
 }

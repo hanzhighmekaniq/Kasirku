@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
-import { Head, Link, useForm, usePage, router } from "@inertiajs/react";
+import { Head, Link, useForm, router } from "@inertiajs/react";
 import { useState } from "react";
 import { Upload, X, Store, Receipt, Image, Puzzle, MapPin, Settings, Clock, Check } from "lucide-react";
 import Button from "@/Components/ui/Button";
@@ -322,7 +322,6 @@ function BranchSwitcherBar({ branches, currentBranch }) {
 }
 
 export default function Index({ store, storeTypes, storeUsers, storeFeatures, branches = [], currentBranch = null }) {
-    const { flash } = usePage().props;
     const [activeTab, setActiveTab] = useState("umum");
 
     const { data, setData, post, processing, errors } = useForm({
@@ -401,19 +400,7 @@ export default function Index({ store, storeTypes, storeUsers, storeFeatures, br
 
             {/* Pemilih cabang — di atas, terpisah dari tab, karena berlaku
                 untuk seluruh halaman ini (bukan bagian dari data toko). */}
-            <BranchSwitcherBar branches={branches} currentBranch={currentBranch} />
-
-            {/* Flash messages */}
-            {flash?.success && (
-                <div className="mb-5 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-5 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
-                    {flash.error}
-                </div>
-            )}
+            <BranchSwitcherBar branches={branches} currentBranch={currentBranch}             />
 
             {/* Tabs */}
             <div className="mb-4 inline-flex gap-1 rounded-xl bg-background border border-border">

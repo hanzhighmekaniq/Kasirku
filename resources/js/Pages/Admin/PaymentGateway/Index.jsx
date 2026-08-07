@@ -1,5 +1,5 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, usePage } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import { CreditCard, Wallet } from "lucide-react";
 import Button from "@/Components/ui/Button";
 
@@ -11,8 +11,6 @@ const PROVIDER_META = {
 };
 
 export default function Index({ providers = [] }) {
-    const { flash } = usePage().props;
-
     return (
         <AuthenticatedLayout
             header={
@@ -23,12 +21,6 @@ export default function Index({ providers = [] }) {
             }
         >
             <Head title="Payment Gateway" />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
 
             <div className="mb-5 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/10 p-4">
                 <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-primary" strokeWidth={1.8} />

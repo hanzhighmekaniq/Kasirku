@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useMemo } from 'react';
 import StockBucketPicker, { BucketItemLabel } from '@/Components/ui/StockBucketPicker';
 import { purchaseUnitHint, usesUnitConversion } from '@/Utils/unitConversion';
@@ -15,8 +15,6 @@ const WASTE_CATEGORIES = [
 ];
 
 export default function Create({ buckets = [], currentBranchId = null }) {
-    const { flash } = usePage().props;
-
     const { data, setData, post, processing, errors } = useForm({
         waste_date: new Date().toISOString().split('T')[0],
         notes: '',
@@ -93,10 +91,6 @@ export default function Create({ buckets = [], currentBranchId = null }) {
             }
         >
             <Head title="Catat Waste" />
-
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
-            )}
 
             <form onSubmit={submit}>
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

@@ -1,12 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { Check, Loader2, X } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import PageHeader from "@/Components/PageHeader";
 
 export default function Create() {
-    const { flash } = usePage().props;
-
     const { data, setData, post, processing, errors } = useForm({
         name:           '',
         contact_person: '',
@@ -49,10 +47,6 @@ export default function Create() {
                 description="Isi data pemasok baru."
                 backUrl={route("admin.suppliers.index")}
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
 
             <form onSubmit={submit}>
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

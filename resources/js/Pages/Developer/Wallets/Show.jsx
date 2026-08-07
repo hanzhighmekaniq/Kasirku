@@ -1,7 +1,7 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import { ArrowLeft, Plus, Wallet } from "lucide-react";
+import { ArrowLeft, Plus, Wallet, AlertTriangle, ShieldOff } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import Field from "@/Components/ui/Field";
 
@@ -23,7 +23,7 @@ const dt = (iso) =>
           })
         : "-";
 
-export default function Show({ store, wallet, transactions }) {
+export default function Show({ store, wallet, transactions, isSandbox = false }) {
     const { flash } = usePage().props;
     const [showAdjust, setShowAdjust] = useState(false);
 
@@ -53,7 +53,15 @@ export default function Show({ store, wallet, transactions }) {
                     >
                         <ArrowLeft className="h-5 w-5" strokeWidth={1.8} />
                     </Link>
-                    <h2 className="text-lg font-semibold text-foreground">Wallet — {store.name}</h2>
+                    <h2 className="text-lg font-semibold text-foreground">
+                        Wallet — {store.name}
+                        {isSandbox && (
+                            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning align-middle">
+                                <AlertTriangle className="h-3 w-3" />
+                                Sandbox
+                            </span>
+                        )}
+                    </h2>
                 </div>
             }
         >
@@ -80,6 +88,17 @@ export default function Show({ store, wallet, transactions }) {
                 </div>
             </div>
 
+            {isSandbox ? (
+                <div className="mb-5 rounded-2xl border border-warning/30 bg-warning/5 shadow-sm">
+                    <div className="flex items-center gap-3 px-5 py-4">
+                        <ShieldOff className="h-5 w-5 shrink-0 text-warning" strokeWidth={2} />
+                        <div>
+                            <p className="text-sm font-semibold text-warning">Penyesuaian Saldo Dinonaktifkan</p>
+                            <p className="text-xs text-warning/80">Tidak dapat menyesuaikan saldo saat payment gateway dalam mode sandbox.</p>
+                        </div>
+                    </div>
+                </div>
+            ) : (
             <div className="mb-5 rounded-2xl border border-border bg-card shadow-sm">
                 <div className="flex items-center justify-between border-b border-border px-5 py-4">
                     <h3 className="font-semibold text-foreground">Penyesuaian Saldo Manual</h3>
@@ -116,6 +135,7 @@ export default function Show({ store, wallet, transactions }) {
                     </form>
                 )}
             </div>
+            )}
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 <div className="border-b border-border px-5 py-4">

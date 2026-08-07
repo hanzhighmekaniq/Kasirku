@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Developer;
 
 use App\Http\Controllers\Controller;
+use App\Models\PlatformPaymentGateway;
 use App\Models\Store;
 use App\Models\StoreWallet;
 use App\Models\WalletTransaction;
@@ -41,6 +42,7 @@ class WalletController extends Controller
         return Inertia::render('Developer/Wallets/Index', [
             'wallets' => $wallets,
             'stats' => $stats,
+            'isSandbox' => PlatformPaymentGateway::isSandbox(),
         ]);
     }
 
@@ -78,6 +80,7 @@ class WalletController extends Controller
                 'withdrawn' => (float) $wallet->withdrawn,
             ],
             'transactions' => $transactions,
+            'isSandbox' => PlatformPaymentGateway::isSandbox(),
         ]);
     }
 
@@ -86,6 +89,10 @@ class WalletController extends Controller
      */
     public function adjust(Request $request, Store $store)
     {
+        if (PlatformPaymentGateway::isSandbox()) {
+            return back()->with('error', 'Penyesuaian saldo dinonaktifkan saat payment gateway dalam mode sandbox.');
+        }
+
         $validated = $request->validate([
             'amount' => 'required|numeric',
             'description' => 'required|string|max:500',

@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
 import EmployeeTabs from "@/Components/EmployeeTabs";
-import { Head, router, usePage, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 import Button from '@/Components/ui/Button';
@@ -303,7 +303,6 @@ function RoleFormModal({ title, form, onClose, onSubmit, isCreate = false }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function Index({ roles = [], permissions = [] }) {
-    const { flash } = usePage().props;
     const [permModal,   setPermModal]   = useState(null); // role object
     const [createModal, setCreateModal] = useState(false);
     const [editModal,   setEditModal]   = useState(null); // role object
@@ -413,13 +412,6 @@ export default function Index({ roles = [], permissions = [] }) {
             <EmployeeTabs />
 
             <Head title="Role & Permission" />
-
-            {flash?.success && (
-                <div className="mb-4 flex items-center gap-2 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                    {flash.success}
-                </div>
-            )}
 
             <div className="w-full max-w-[1920px] space-y-8">
 

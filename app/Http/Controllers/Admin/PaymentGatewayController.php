@@ -788,11 +788,15 @@ class PaymentGatewayController extends Controller
             ['balance' => 0, 'pending_balance' => 0, 'withdrawn' => 0],
         );
 
+        $environment = PlatformPaymentGateway::isSandbox() ? 'sandbox' : 'production';
+
         $wallet->credit(
             $amount,
             'sale_credit',
             $sale,
             "Pembayaran PG #{$sale->sale_no} ({$pgTrx->provider}/{$pgTrx->payment_type})",
+            null,
+            $environment,
         );
     }
 }

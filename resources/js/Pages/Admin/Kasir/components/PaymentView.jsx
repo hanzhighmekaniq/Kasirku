@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import {
+    AlertTriangle,
     ArrowLeft,
     ChevronDown,
     ChevronUp,
@@ -62,6 +63,7 @@ export default function PaymentView({
     const [isStarting, setIsStarting] = useState(false);
     const [successData, setSuccessData] = useState(null);
     const [showMobileOrder, setShowMobileOrder] = useState(false);
+    const { isSandbox } = usePage().props;
     // PG transaction active in the GatewayPanel — null when grid is shown
     const [activePgTrx, setActivePgTrx] = useState(initialPgTransaction || null);
 
@@ -387,6 +389,16 @@ export default function PaymentView({
     return (
         <div className="flex h-full min-h-0 w-full flex-1 flex-col bg-background">
             <Head title="Pembayaran" />
+
+            {/* Sandbox warning banner */}
+            {isSandbox && (
+                <div className="flex items-center gap-2.5 border-b border-warning/30 bg-warning/10 px-4 py-2">
+                    <AlertTriangle size={14} className="shrink-0 text-warning" strokeWidth={2.5} />
+                    <p className="text-[12px] font-semibold text-warning">
+                        Mode Sandbox — Pembayaran menggunakan uang test
+                    </p>
+                </div>
+            )}
 
             {/* =========================================================
             MOBILE — FLOATING EXIT FULLSCREEN

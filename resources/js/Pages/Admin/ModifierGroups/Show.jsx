@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import Button from '@/Components/ui/Button';
@@ -145,7 +145,6 @@ function AttachProductModal({ group, products, onClose }) {
 
 /* ─── Main Show Page ─── */
 export default function Show({ group, allProducts }) {
-    const { flash } = usePage().props;
     const [showModForm, setShowModForm] = useState(false);
     const [editModifier, setEditModifier] = useState(null);
     const [showAttach, setShowAttach] = useState(false);
@@ -211,13 +210,6 @@ export default function Show({ group, allProducts }) {
             }
         >
             <Head title={`${group.name} - Grup Modifier`} />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
-            )}
 
             <div className="grid gap-6 lg:grid-cols-3">
                 {/* ─── Modifiers Panel ─── */}

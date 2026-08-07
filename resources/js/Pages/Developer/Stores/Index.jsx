@@ -3,6 +3,7 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import SelectDropdown from "@/Components/ui/SelectDropdown";
 import {
+    AlertTriangle,
     Building2,
     CircleCheck,
     CircleParking,
@@ -86,7 +87,7 @@ const PLAN_BADGE = {
     },
 };
 
-export default function Index({ stores, storeTypes }) {
+export default function Index({ stores, storeTypes, isSandbox = false }) {
     const { flash } = usePage().props;
     const [deleting, setDeleting] = useState(null);
     const [search, setSearch] = useState("");
@@ -167,8 +168,14 @@ export default function Index({ stores, storeTypes }) {
             header={
                 <div className="flex w-full items-center justify-between gap-3">
                     <div>
-                        <h2 className="text-lg font-bold text-foreground">
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                             Kelola Toko
+                            {isSandbox && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning">
+                                    <AlertTriangle className="h-3 w-3" />
+                                    Sandbox
+                                </span>
+                            )}
                         </h2>
                         <p className="text-xs text-muted-foreground">
                             {stores.length} toko

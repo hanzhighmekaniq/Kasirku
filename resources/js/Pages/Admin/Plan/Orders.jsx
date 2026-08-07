@@ -1,9 +1,7 @@
-import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import {
-    AlertTriangle,
     ArrowLeft,
-    Check,
     Clock,
     History,
     RotateCcw,
@@ -42,8 +40,6 @@ const STATUS_LABEL = {
 };
 
 export default function PlanOrders({ orders }) {
-    const { flash } = usePage().props;
-
     const handleCancel = (orderId) => {
         if (!confirm("Batalkan order ini?")) return;
         router.post(route("admin.plan.orders.cancel", orderId));
@@ -74,19 +70,6 @@ export default function PlanOrders({ orders }) {
             }
         >
             <Head title="Riwayat Order Plan" />
-
-            {flash?.success && (
-                <div className="mb-5 rounded-2xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success flex items-center gap-2">
-                    <Check className="h-4 w-4 shrink-0" strokeWidth={2} />
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-5 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 shrink-0" strokeWidth={2} />
-                    {flash.error}
-                </div>
-            )}
 
             <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
                 {orders.data.length === 0 ? (

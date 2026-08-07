@@ -3,11 +3,10 @@ import PageHeader from "@/Components/PageHeader";
 import StockTabs from "@/Components/StockTabs";
 import Button from "@/Components/ui/Button";
 import { Plus } from "lucide-react";
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 export default function Index({ wastes, stats }) {
-    const { flash } = usePage().props;
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [confirmDelete, setConfirmDelete] = useState(null);
@@ -85,10 +84,6 @@ export default function Index({ wastes, stats }) {
             <StockTabs />
 
             <Head title="Catat Waste" />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
 
             {/* Stats */}
             <div className="mb-5 grid grid-cols-2 gap-4 sm:grid-cols-4">

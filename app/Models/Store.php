@@ -30,6 +30,12 @@ class Store extends Model
         'payment_edit_limit_unit',
         'receipt_header',
         'receipt_footer',
+        'printer_ip',
+        'printer_port',
+        'paper_width',
+        'weighing_scale_enabled',
+        'weighing_scale_port',
+        'weighing_scale_baud_rate',
         'phone',
         'email',
         'address',
@@ -45,6 +51,7 @@ class Store extends Model
         return [
             'is_active' => 'boolean',
             'tax_inclusive' => 'boolean',
+            'weighing_scale_enabled' => 'boolean',
             'default_tax_rate' => 'decimal:2',
             'points_per_amount' => 'decimal:2',
             'point_value' => 'decimal:2',
@@ -266,11 +273,6 @@ class Store extends Model
     public function customerTiers(): HasMany
     {
         return $this->hasMany(CustomerTier::class);
-    }
-
-    public function paymentGateways(): HasMany
-    {
-        return $this->hasMany(StorePaymentGateway::class);
     }
 
     public function suspensions(): HasMany

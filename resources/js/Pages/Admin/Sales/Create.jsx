@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import Button from "@/Components/ui/Button";
 import DatePicker from "@/Components/ui/DatePicker";
@@ -51,7 +51,6 @@ const ORDER_TYPE_OPTIONS = {
 };
 
 export default function Create({ products, customers, paymentMethods, tables, storeType = 'retail' }) {
-    const { flash } = usePage().props;
     const [selectedProduct, setSelectedProduct] = useState('');
     const [selectedQty, setSelectedQty] = useState(1);
     const [selectedPrice, setSelectedPrice] = useState('');
@@ -169,10 +168,6 @@ export default function Create({ products, customers, paymentMethods, tables, st
                 description="Catat transaksi penjualan baru."
                 
             />
-
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
-            )}
 
             <form onSubmit={submit}>
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">

@@ -13,7 +13,7 @@ class SaleItem extends Model
     protected $fillable = [
         'sale_id', 'product_id', 'variant_id', 'packaging_unit_id',
         'unit_name', 'unit_conversion_qty', 'product_batch_id',
-        'promotion_id', 'quantity', 'price', 'discount_amount', 'promo_discount', 'subtotal',
+        'promotion_id', 'quantity', 'price', 'unit_cost', 'tax_rate', 'discount_amount', 'promo_discount', 'subtotal',
         'modifiers', 'recipe_snapshot', 'ingredient_cost', 'notes',
     ];
 
@@ -22,6 +22,7 @@ class SaleItem extends Model
         'recipe_snapshot' => 'array',
         'ingredient_cost' => 'decimal:2',
         'promo_discount' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
     ];
 
     public function sale(): BelongsTo

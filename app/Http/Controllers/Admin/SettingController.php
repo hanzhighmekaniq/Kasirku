@@ -151,6 +151,9 @@ class SettingController extends Controller
             'payment_edit_limit_unit' => 'nullable|in:minutes,hours,days',
             'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'remove_logo' => 'boolean',
+            'printer_ip' => 'nullable|string|max:45',
+            'printer_port' => 'nullable|integer|min:1|max:65535',
+            'paper_width' => 'nullable|in:58,80',
         ]);
 
         // Handle logo
@@ -187,6 +190,9 @@ class SettingController extends Controller
                 ? ($validated['payment_edit_limit_unit'] ?? 'minutes')
                 : null,
             'logo' => $logoPath,
+            'printer_ip' => $validated['printer_ip'] ?? null,
+            'printer_port' => $validated['printer_port'] ?? 9100,
+            'paper_width' => $validated['paper_width'] ?? '80',
         ]);
 
         return back()->with('success', 'Pengaturan toko berhasil disimpan.');

@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useMemo } from 'react';
 import { AlertTriangle, Check, Loader2, Trash2, X } from 'lucide-react';
 import Select from '@/Components/ui/Select';
@@ -11,8 +11,6 @@ import DatePicker from "@/Components/ui/DatePicker";
 import { format } from "date-fns";
 
 export default function Create({ buckets = [], branches, currentBranchId = null }) {
-    const { flash } = usePage().props;
-
     const { data, setData, post, processing, errors } = useForm({
         from_branch_id: currentBranchId ? String(currentBranchId) : '',
         to_branch_id: '',
@@ -137,10 +135,6 @@ export default function Create({ buckets = [], branches, currentBranchId = null 
                 description="Pindahkan stok dari satu cabang ke cabang lain."
                 backUrl={route('admin.stock-transfers.index')}
             />
-
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{flash.error}</div>
-            )}
 
             {errors.items && (
                 <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">

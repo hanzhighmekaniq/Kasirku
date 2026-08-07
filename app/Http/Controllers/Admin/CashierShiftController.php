@@ -237,6 +237,55 @@ class CashierShiftController extends Controller
     }
 
     /* ─────────────────────────────────────────────────────────
+     * MID-COUNT — Hitung cash tengah shift
+     * Permission: shift.view (kasir bisa hitung shift sendiri)
+     * ──────────────────────────────────────────────────────── */
+    public function midCount(Request $request, CashierShift $cashierShift)
+    {
+        $storeId = session('current_store_id');
+        abort_unless((int) $cashierShift->store_id === (int) $storeId, 403);
+
+        $user = $request->user();
+        if (! $user->can('shift.manage') && $cashierShift->user_id !== $user->id) {
+            return back()->withErrors(['error' => 'Bukan shift kamu.']);
+        }
+
+        if ($cashierShift->status !== 'open') {
+            return back()->withErrors(['error' => 'Hanya shift open yang bisa dihitung.']);
+        }
+
+        $validated = $request->validate([
+            'mid_count_cash' => 'required|numeric|min:0',
+            'mid_count_note' => 'nullable|string|max:500',
+        ]);
+
+        $cashierShift->update([
+            'mid_count_cash' => $validated['mid_count_cash'],
+            'mid_count_at' => now(),
+            'mid_count_note' => $validated['mid_count_note'] ?? null,
+        ]);
+
+        $this->log(
+            $storeId,
+            $cashierShift->branch_id,
+            $user->id,
+            $cashierShift->id,
+            'Hitung tengah shift: Rp '.number_format($validated['mid_count_cash'], 0, ',', '.'),
+            ['action' => 'mid_count', 'mid_count_cash' => $validated['mid_count_cash']],
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Hitung tengah shift berhasil dicatat.',
+                'mid_count_cash' => $validated['mid_count_cash'],
+            ]);
+        }
+
+        return back()->with('success', 'Hitung tengah shift berhasil dicatat.');
+    }
+
+    /* ─────────────────────────────────────────────────────────
      * SHOW — detail shift
      * Permission: shift.view
      * - shift.manage → bisa lihat shift siapapun

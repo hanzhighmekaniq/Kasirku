@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import { useTheme } from "@/Theme/ThemeProvider";
-import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import {
     Check,
     Eye,
@@ -537,7 +537,6 @@ function PreviewModal({ theme: t, isDark, onClose }) {
 
 /* ── Page ── */
 export default function Index({ userThemes = [] }) {
-    const { flash } = usePage().props;
     const {
         preference,
         theme: activeTheme,
@@ -646,12 +645,6 @@ export default function Index({ userThemes = [] }) {
                 }
                 description="Kelola tampilan visual aplikasi dengan tema dan skema warna pilihan."
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
 
             {/* Info bar */}
             <div className="mb-6 flex items-center gap-4 border-y border-border py-3 text-xs text-muted-foreground">

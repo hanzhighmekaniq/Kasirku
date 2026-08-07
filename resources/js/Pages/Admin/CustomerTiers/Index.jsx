@@ -4,7 +4,7 @@ import PageHeader from "@/Components/PageHeader";
 import Button from "@/Components/ui/Button";
 import Checkbox from "@/Components/ui/Checkbox";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
-import { Head, router, useForm, usePage } from "@inertiajs/react";
+import { Head, router, useForm } from "@inertiajs/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import {
@@ -171,7 +171,6 @@ function TierRow({
 }
 
 export default function Index({ tiers: initialTiers, colors }) {
-    const { flash } = usePage().props;
     const [tiers, setTiers] = useState(initialTiers);
     const [activeId, setActiveId] = useState(null);
     const [saving, setSaving] = useState(false);
@@ -283,18 +282,7 @@ export default function Index({ tiers: initialTiers, colors }) {
                 description="Tier menentukan hierarki pelanggan. Urutan di sini yang dipakai sistem untuk menilai upgrade atau downgrade."
             />
 
-            <LoyaltyTabs />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    {flash.error}
-                </div>
-            )}
+            <LoyaltyTabs             />
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar — tombol tambah dipindah ke sini dari PageHeader.

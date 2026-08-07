@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
-import { Head, router, usePage } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import { useState } from "react";
 import { Search } from "lucide-react";
 import Button from "@/Components/ui/Button";
@@ -16,7 +16,6 @@ const fmt = (n) =>
     });
 
 export default function Index({ customers, paymentMethods = [] }) {
-    const { flash } = usePage().props;
     const [search, setSearch] = useState("");
     const [payModal, setPayModal] = useState(null);
     const [payAmount, setPayAmount] = useState("");
@@ -113,13 +112,6 @@ export default function Index({ customers, paymentMethods = [] }) {
                 }
                 description="Pantau dan catat pembayaran hutang / kasbon pelanggan."
             />
-
-            {flash?.success && (
-                <div className="mb-5 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm font-medium text-success">{flash.success}</div>
-            )}
-            {flash?.error && (
-                <div className="mb-5 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">{flash.error}</div>
-            )}
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* Toolbar disamakan dengan halaman tabel lain: search selebar

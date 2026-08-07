@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PageHeader from "@/Components/PageHeader";
 import StockTabs from "@/Components/StockTabs";
 import Button from "@/Components/ui/Button";
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Eye, Plus, Search, Trash2 } from 'lucide-react';
 import Select from '@/Components/ui/Select';
@@ -17,7 +17,6 @@ const STATUS_OPTS = [
 ];
 
 export default function Index({ transfers, stats }) {
-    const { flash } = usePage().props;
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [confirmDelete, setConfirmDelete] = useState(null);
@@ -72,10 +71,6 @@ export default function Index({ transfers, stats }) {
             <StockTabs />
 
             <Head title="Transfer Stok" />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">{flash.success}</div>
-            )}
 
             {/* Stats */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

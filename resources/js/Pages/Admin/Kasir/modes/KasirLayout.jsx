@@ -25,6 +25,7 @@ import {
     MessageSquare,
     Tag,
     BadgeCheck,
+    AlertTriangle,
 } from "lucide-react";
 
 import { useStoreModules } from "@/Hooks/useStoreModules";
@@ -42,7 +43,7 @@ import CartRow from "../components/CartRow";
 import ModeSpecificPanel from "../components/ModeSpecificPanel";
 import StockAlertModal from "../components/StockAlertModal";
 import ScanNotFoundModal from "../components/ScanNotFoundModal";
-import ApiErrorToast from "../components/ApiErrorToast";
+import { toast } from "sonner";
 
 import Tooltip from "../components/ui/Tooltip";
 import TipButton from "../components/ui/TipButton";
@@ -153,6 +154,14 @@ export default function KasirLayout({
     );
 
     // Auto-show membership offer panel saat pelanggan dipilih & ada upgrade
+    // API error → toast notification (replaces ApiErrorToast component)
+    useEffect(() => {
+        if (k.apiError) {
+            toast.error(k.apiError);
+            k.setApiError(null);
+        }
+    }, [k.apiError]);
+
     useEffect(() => {
         if (!selectedCustomerObj || !k.sellableMemberships?.length) {
             setShowMembershipOffer(false);
@@ -304,6 +313,17 @@ export default function KasirLayout({
         }
         return null;
     })();
+
+    /* ── sandbox banner ── */
+    const { isSandbox } = usePage().props;
+    const sandboxBanner = isSandbox ? (
+        <div className="flex items-center gap-2.5 border-b border-warning/20 bg-warning/10 px-4 py-2">
+            <AlertTriangle size={14} className="shrink-0 text-warning" strokeWidth={2.5} />
+            <p className="text-[12px] font-semibold text-warning">
+                Mode Sandbox — Pembayaran menggunakan uang test
+            </p>
+        </div>
+    ) : null;
 
     /* ── order context row: order type + customer/table/delivery ── */
     const orderContextRow = (
@@ -737,6 +757,7 @@ export default function KasirLayout({
                 {/* LEFT: product panel */}
                 <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden p-4">
                     {shiftBanner}
+                    {sandboxBanner}
                     {showSearch && (searchBar || defaultSearchBar)}
                     {categoryChips}
                     {mainContent}
@@ -1741,10 +1762,7 @@ export default function KasirLayout({
                     onClose={() => k.setScanNotFound(null)}
                 />
             )}
-            <ApiErrorToast
-                message={k.apiError}
-                onClose={() => k.setApiError(null)}
-            />
+            {/* ApiErrorToast replaced with Sonner toast — see useEffect above */}
         </>
     );
 

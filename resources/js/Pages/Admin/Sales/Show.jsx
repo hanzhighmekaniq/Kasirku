@@ -1,12 +1,11 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
-import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import axios from "axios";
 import { useState } from "react";
 import Button from "@/Components/ui/Button";
 
 export default function Show({ sale, paymentMethods, pgConfigs, canUpdateServiceStatus, canUpdateRentalStatus, canCheckInTicket, canCheckOutHospitality, canExitParking, canEndSession, storeType = "retail" }) {
-    const { flash } = usePage().props;
     const [confirmingStatus, setConfirmingStatus] = useState(null);
     const [processing, setProcessing] = useState(false);
 
@@ -320,12 +319,6 @@ export default function Show({ sale, paymentMethods, pgConfigs, canUpdateService
                 description={`Lihat rincian transaksi ${pageTitle.toLowerCase()}.`}
                 
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
 
             {/* Status badges + actions */}
             <div className="mb-5 flex flex-wrap items-center gap-3">

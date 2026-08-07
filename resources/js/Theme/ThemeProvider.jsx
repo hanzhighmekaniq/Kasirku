@@ -26,7 +26,7 @@ import {
     SHADE_KEYS,
 } from './tokens';
 import { generateColorScale, hexToRgbString } from './generateShades';
-import ThemeSaveToast from './ThemeSaveToast';
+import { toast } from 'sonner';
 
 const STORAGE_KEY = 'simkasir-theme-preference';
 
@@ -178,15 +178,9 @@ export function ThemeProvider({ children }) {
 
     const defaultTemplateId = systemThemesList[0]?.id ?? FALLBACK_THEME.id;
 
-    const [saveStatus, setSaveStatus] = useState('idle');
-    const toastTimerRef = useRef(null);
-
     const showToast = useCallback((status) => {
-        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-        setSaveStatus(status);
-        if (status === 'saved' || status === 'error') {
-            toastTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2500);
-        }
+        if (status === 'saved') toast.success('Tersimpan');
+        if (status === 'error') toast.error('Gagal simpan');
     }, []);
 
     const [preference, setPreference] = useState(() => {
@@ -302,7 +296,6 @@ export function ThemeProvider({ children }) {
     return (
         <ThemeContext.Provider value={value}>
             {children}
-            <ThemeSaveToast status={saveStatus} onDismiss={() => setSaveStatus('idle')} />
         </ThemeContext.Provider>
     );
 }

@@ -13,6 +13,7 @@ export default function ReceiptModal({
     autoPrint = false,
     onClose,
     onNewTransaction,
+    isSandbox = false,
 }) {
     useEffect(() => {
         if (autoPrint) {
@@ -48,6 +49,29 @@ export default function ReceiptModal({
                     </p>
                     <p className="mt-0.5 text-[10px] font-medium text-white/80">
                         Akan diganti dengan struk asli setelah sinkron
+                    </p>
+                </div>
+            )}
+            {isSandbox && (
+                <div className="-mx-6 -mt-5 mb-4 rounded-t-2xl bg-gradient-to-r from-yellow-400 to-amber-500 px-6 py-3 text-center">
+                    <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-black">
+                        <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+                            />
+                        </svg>
+                        MODE SANDBOX
+                    </p>
+                    <p className="mt-0.5 text-[10px] font-medium text-black/70">
+                        Transaksi ini menggunakan uang test, bukan uang asli
                     </p>
                 </div>
             )}

@@ -383,6 +383,11 @@ class SaleReturnController extends Controller
             ? $saleItem->product_batch_id
             : null;
 
+        // unitCost sengaja tidak diisi (default 0.0) agar StockService::increase()
+        // tidak mengubah average_cost. Alasan: retur barang seharusnya tidak
+        // mempengaruhi harga rata-rata karena barang dikembalikan dalam kondisi
+        // bekas pakai/rusak, bukan pembelian baru. Average cost hanya berubah
+        // saat pembelian baru (purchase_in) atau penyesuaian manual.
         $mutation = new StockMutation(
             productId: $saleItem->product_id,
             variantId: $saleItem->variant_id,

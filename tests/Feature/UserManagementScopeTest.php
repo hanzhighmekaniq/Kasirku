@@ -35,17 +35,24 @@ function setupUserMgmtContext(): array
         ['label' => 'Retail', 'is_active' => true, 'sort_order' => 0],
     );
 
-    $feature = Feature::firstOrCreate(
-        ['code' => 'employee'],
-        ['label' => 'Karyawan', 'is_active' => true, 'sort_order' => 0],
-    );
-    $storeType->features()->syncWithoutDetaching([$feature->id]);
+    foreach (['employee', 'user_management'] as $code) {
+        $f = Feature::firstOrCreate(
+            ['code' => $code],
+            ['label' => $code, 'is_active' => true, 'sort_order' => 0],
+        );
+        $storeType->features()->syncWithoutDetaching([$f->id]);
+    }
 
     $plan = Plan::firstOrCreate(
         ['code' => 'basic'],
-        ['label' => 'Basic', 'is_active' => true, 'sort_order' => 0, 'price' => 0],
+        ['label' => 'Basic', 'is_active' => true, 'sort_order' => 0, 'price' => 0, 'max_users' => 10],
     );
-    $plan->features()->syncWithoutDetaching([$feature->id]);
+    $plan->features()->syncWithoutDetaching(Feature::pluck('id')->all());
+
+    Plan::firstOrCreate(
+        ['code' => 'free'],
+        ['label' => 'Free', 'is_active' => true, 'sort_order' => 0, 'price' => 0],
+    );
 
     $store = Store::create([
         'user_id' => null,
@@ -53,6 +60,7 @@ function setupUserMgmtContext(): array
         'name' => 'User Mgmt Store',
         'store_type_id' => $storeType->id,
         'plan_id' => $plan->id,
+        'max_users' => 10,
     ]);
 
     $branch = Branch::create([
@@ -66,11 +74,14 @@ function setupUserMgmtContext(): array
     $store->users()->attach($user->id);
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($store->id);
-    $role = Role::create(['name' => 'owner-'.uniqid(), 'guard_id' => 1]);
+    $role = Role::firstOrCreate(['name' => 'owner']);
     $role->givePermissionTo(
-        Permission::firstOrCreate(['name' => 'employee.create'], ['guard_id' => 1]),
+        Permission::firstOrCreate(['name' => 'employee.create']),
+        Permission::firstOrCreate(['name' => 'sale.void']),
     );
     $user->assignRole($role);
+
+    Role::firstOrCreate(['name' => 'kasir']);
 
     return [$store, $branch, $user];
 }
@@ -93,7 +104,7 @@ test('invite dengan branch_id dari store lain ditolak', function () {
     ]);
 
     $this->actingAs($user);
-    session(['current_store_id' => $store->id]);
+    session(['current_store_id' => $store->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->post(route('admin.store-users.invite'), [
         'name' => 'Test User',
@@ -122,7 +133,7 @@ test('invite dengan employee_id dari store lain ditolak', function () {
     ]);
 
     $this->actingAs($user);
-    session(['current_store_id' => $store->id]);
+    session(['current_store_id' => $store->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->post(route('admin.store-users.invite'), [
         'name' => 'Test User',
@@ -136,16 +147,18 @@ test('invite dengan employee_id dari store lain ditolak', function () {
 test('invite dengan branch_id dari store sendiri berhasil', function () {
     [$store, $branch, $user] = setupUserMgmtContext();
 
+    $email = 'valid-'.uniqid().'@example.com';
+
     $this->actingAs($user);
-    session(['current_store_id' => $store->id]);
+    session(['current_store_id' => $store->id, 'current_branch_id' => 0, 'branch_id' => 0]);
 
     $this->post(route('admin.store-users.invite'), [
         'name' => 'Valid User',
-        'email' => 'valid-'.uniqid().'@example.com',
+        'email' => $email,
         'password' => 'password123',
         'role' => 'kasir',
         'branch_id' => $branch->id,
     ])->assertRedirect();
 
-    $this->assertDatabaseHas('users', ['email' => 'valid-'.uniqid().'@example.com'] ? [] : ['name' => 'Valid User']);
+    $this->assertDatabaseHas('users', ['email' => $email]);
 });

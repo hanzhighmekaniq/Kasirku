@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PlatformPaymentGateway;
 use App\Models\Store;
 use App\Models\StoreWallet;
 use App\Models\WalletTransaction;
@@ -36,6 +37,7 @@ class WalletController extends Controller
                 'id' => $t->id,
                 'type' => $t->type,
                 'type_label' => WalletTransaction::typeLabels()[$t->type] ?? $t->type,
+                'environment' => $t->environment ?? 'production',
                 'amount' => (float) $t->amount,
                 'balance_after' => (float) $t->balance_after,
                 'description' => $t->description,
@@ -47,8 +49,10 @@ class WalletController extends Controller
                 'balance' => (float) $wallet->balance,
                 'pending_balance' => (float) $wallet->pending_balance,
                 'withdrawn' => (float) $wallet->withdrawn,
+                'withdrawable_balance' => $wallet->withdrawableBalance(),
             ],
             'transactions' => $transactions,
+            'isSandbox' => PlatformPaymentGateway::isSandbox(),
         ]);
     }
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Check, Eye, Plus, Printer, Send } from 'lucide-react';
+import { AlertTriangle, Check, Eye, Plus, Printer, Send } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
 import { fmt } from '../helpers';
 import ReceiptModal from '../ReceiptModal';
 
@@ -26,6 +27,7 @@ export default function SuccessScreen({
 }) {
     const [showReceipt, setShowReceipt] = useState(false);
     const [autoPrint, setAutoPrint] = useState(false);
+    const { isSandbox } = usePage().props;
 
     const now = new Date();
     const time =
@@ -103,6 +105,12 @@ export default function SuccessScreen({
                         <p className="mt-1 font-mono text-sm text-muted-foreground">
                             {receiptPayload.saleNo}
                         </p>
+                    )}
+                    {isSandbox && (
+                        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-warning/15 px-3 py-1 text-[11px] font-semibold text-warning">
+                            <AlertTriangle size={12} />
+                            Mode Sandbox — Struk ini dari transaksi test
+                        </div>
                     )}
                 </div>
 
@@ -207,6 +215,7 @@ export default function SuccessScreen({
                     autoPrint={autoPrint}
                     onClose={() => setShowReceipt(false)}
                     onNewTransaction={onNewTransaction}
+                    isSandbox={isSandbox}
                 />
             )}
         </div>

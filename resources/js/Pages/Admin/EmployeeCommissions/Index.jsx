@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
-import { Head, router, usePage } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import { useState } from "react";
 import Button from "@/Components/ui/Button";
 import SelectDropdown from "@/Components/ui/SelectDropdown";
@@ -51,7 +51,6 @@ export default function Index({
     filters,
     canApprove,
 }) {
-    const { flash } = usePage().props;
     const [updating, setUpdating] = useState(null);
 
     const applyFilter = (newFilters) => {
@@ -104,12 +103,6 @@ export default function Index({
             />
 
             <div className="space-y-5">
-                {flash?.success && (
-                    <div className="rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                        {flash.success}
-                    </div>
-                )}
-
                 {/* Stat Cards */}
                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                     <StatCard

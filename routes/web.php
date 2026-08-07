@@ -4,11 +4,14 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BarcodeLabelController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Admin\BranchSelectController;
+use App\Http\Controllers\Admin\BusinessHourController;
 use App\Http\Controllers\Admin\CafeTableController;
 use App\Http\Controllers\Admin\CashierShiftController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\CustomerDepositController;
 use App\Http\Controllers\Admin\CustomerTierController;
+use App\Http\Controllers\Admin\CustomFieldController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DebtController;
 use App\Http\Controllers\Admin\EmployeeCommissionController;
@@ -52,6 +55,7 @@ use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\WalletController as AdminWalletController;
 use App\Http\Controllers\Admin\WasteController;
+use App\Http\Controllers\Admin\WithdrawalController as AdminWithdrawalController;
 use App\Http\Controllers\Developer\AuditLogController;
 use App\Http\Controllers\Developer\BranchController;
 use App\Http\Controllers\Developer\BusinessTemplateController;
@@ -66,6 +70,7 @@ use App\Http\Controllers\Developer\StoreTypeController;
 use App\Http\Controllers\Developer\ThemeController as DevThemeController;
 use App\Http\Controllers\Developer\UserController as DevUserController;
 use App\Http\Controllers\Developer\WalletController as DevWalletController;
+use App\Http\Controllers\Developer\WithdrawalController as DevWithdrawalController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ProfileController;
@@ -335,6 +340,20 @@ Route::middleware(['auth', 'developer', 'single-session'])
             'show',
         ])->name('wallets.show');
 
+        // ── Withdrawal — developer approve/reject ─────────────────
+        Route::get('/withdrawals', [
+            DevWithdrawalController::class,
+            'index',
+        ])->name('withdrawals.index');
+        Route::post('/withdrawals/{withdrawalRequest}/approve', [
+            DevWithdrawalController::class,
+            'approve',
+        ])->name('withdrawals.approve');
+        Route::post('/withdrawals/{withdrawalRequest}/reject', [
+            DevWithdrawalController::class,
+            'reject',
+        ])->name('withdrawals.reject');
+
         // ── Tema & Warna — personal per-akun developer ─────────────────
         // Preset sistem (is_system=true) hanya bisa dipakai, tidak bisa
         // diubah/hapus dari sini — diblok di controller.
@@ -515,8 +534,22 @@ Route::middleware(['auth', 'single-session', 'store', 'branch', 'verified-mutati
                     'retryTransaction',
                 ])->name('payment-gateway.retry');
             });
+
+            // PLU Shortcuts — Top produk paling sering terjual
+            Route::get('/kasir/top-products', [
+                KasirController::class,
+                'topProducts',
+            ])->name('kasir.top-products');
+
+            // Customer Search — cari by nama, kode, atau HP
+            Route::get('/kasir/search-customer', [
+                KasirController::class,
+                'searchCustomer',
+            ])->name('kasir.search-customer');
         });
 
+        // ─────────────────────────────────────────────────────────────────
+        // RIWAYAT PENJUALAN — read-only, permission: sale.view
         // ─────────────────────────────────────────────────────────────────
         // PAYMENT URL ROUTE — deep link untuk pending sale payment
         // ─────────────────────────────────────────────────────────────────
@@ -554,6 +587,10 @@ Route::middleware(['auth', 'single-session', 'store', 'branch', 'verified-mutati
                     CashierShiftController::class,
                     'show',
                 ])->name('cashier-shifts.show');
+                Route::post('/cashier-shifts/{cashierShift}/mid-count', [
+                    CashierShiftController::class,
+                    'midCount',
+                ])->name('cashier-shifts.midCount');
             },
         );
         Route::middleware(['feature:shift', 'permission:shift.close'])->group(
@@ -937,6 +974,32 @@ Route::middleware(['auth', 'single-session', 'store', 'branch', 'verified-mutati
                 'destroy',
             ])->name('purchases.destroy');
         });
+
+        // 5. Penerimaan parsial
+        Route::middleware([
+            'feature:purchase',
+            'permission:purchase.edit',
+        ])->group(function () {
+            Route::post('/purchases/{purchase}/receive-partial', [
+                PurchaseController::class,
+                'receivePartial',
+            ])->name('purchases.receivePartial');
+        });
+
+        // 6. Pembayaran PO (multi-payment)
+        Route::middleware([
+            'feature:purchase',
+            'permission:purchase.edit',
+        ])->group(function () {
+            Route::post('/purchases/{purchase}/payments', [
+                PurchaseController::class,
+                'storePayment',
+            ])->name('purchases.storePayment');
+            Route::delete('/purchase-payments/{purchasePayment}', [
+                PurchaseController::class,
+                'destroyPayment',
+            ])->name('purchases.destroyPayment');
+        });
         Route::middleware([
             'feature:purchase',
             'permission:purchase.return',
@@ -971,6 +1034,66 @@ Route::middleware(['auth', 'single-session', 'store', 'branch', 'verified-mutati
             Route::post('/customers/{customer}/pay-debt', [CustomerController::class, 'payDebt'])->name('customers.pay-debt');
             Route::get('/customers/{customer}/points', [CustomerController::class, 'pointHistory'])->name('customers.points');
             Route::post('/customers/{customer}/points/adjust', [CustomerController::class, 'adjustPoints'])->name('customers.points.adjust')->middleware('permission:customer.edit');
+            Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+            Route::post('/customers/import', [CustomerController::class, 'import'])->name('customers.import');
+            Route::get('/customers/import/template', [CustomerController::class, 'importTemplate'])->name('customers.import.template');
+
+            // Customer Deposits (Uang Muka)
+            Route::get('/customer-deposits', [CustomerDepositController::class, 'index'])->name('customer-deposits.index');
+            Route::get('/customer-deposits/balance', [CustomerDepositController::class, 'balance'])->name('customer-deposits.balance');
+        });
+        Route::middleware([
+            'feature:customer',
+            'permission:customer.edit',
+        ])->group(function () {
+            Route::post('/customer-deposits', [CustomerDepositController::class, 'store'])->name('customer-deposits.store');
+            Route::post('/customer-deposits/usage', [CustomerDepositController::class, 'usage'])->name('customer-deposits.usage');
+        });
+
+        // ─────────────────────────────────────────────────────────────────
+        // JAM OPERASIONAL — permission: setting.view / setting.edit
+        // ─────────────────────────────────────────────────────────────────
+        Route::middleware([
+            'feature:settings',
+            'permission:setting.view',
+        ])->group(function () {
+            Route::get('/business-hours', [BusinessHourController::class, 'index'])
+                ->name('business-hours.index');
+            Route::get('/business-hours/check', [BusinessHourController::class, 'checkOpen'])
+                ->name('business-hours.check');
+        });
+        Route::middleware([
+            'feature:settings',
+            'permission:setting.edit',
+        ])->group(function () {
+            Route::put('/business-hours', [BusinessHourController::class, 'update'])
+                ->name('business-hours.update');
+        });
+
+        // ─────────────────────────────────────────────────────────────────
+        // CUSTOM FIELDS — permission: setting.view / setting.edit
+        // ─────────────────────────────────────────────────────────────────
+        Route::middleware([
+            'feature:settings',
+            'permission:setting.view',
+        ])->group(function () {
+            Route::get('/custom-fields', [CustomFieldController::class, 'index'])
+                ->name('custom-fields.index');
+            Route::get('/custom-fields/values', [CustomFieldController::class, 'getValues'])
+                ->name('custom-fields.values');
+        });
+        Route::middleware([
+            'feature:settings',
+            'permission:setting.edit',
+        ])->group(function () {
+            Route::post('/custom-fields', [CustomFieldController::class, 'store'])
+                ->name('custom-fields.store');
+            Route::put('/custom-fields/{customField}', [CustomFieldController::class, 'update'])
+                ->name('custom-fields.update');
+            Route::delete('/custom-fields/{customField}', [CustomFieldController::class, 'destroy'])
+                ->name('custom-fields.destroy');
+            Route::post('/custom-fields/values', [CustomFieldController::class, 'saveValues'])
+                ->name('custom-fields.saveValues');
         });
 
         // ─────────────────────────────────────────────────────────────────
@@ -1147,6 +1270,14 @@ Route::middleware(['auth', 'single-session', 'store', 'branch', 'verified-mutati
                 ExpenseController::class,
                 'updateStatus',
             ])->name('expenses.updateStatus');
+            Route::post('/expenses/{expense}/approve', [
+                ExpenseController::class,
+                'approve',
+            ])->name('expenses.approve');
+            Route::post('/expenses/{expense}/reject', [
+                ExpenseController::class,
+                'reject',
+            ])->name('expenses.reject');
             Route::resource(
                 'expense-categories',
                 ExpenseCategoryController::class,
@@ -1225,6 +1356,14 @@ Route::middleware(['auth', 'single-session', 'store', 'branch', 'verified-mutati
                     ReportController::class,
                     'index',
                 ])->name('reports.index');
+                Route::get('/reports/sale-returns', [
+                    ReportController::class,
+                    'saleReturns',
+                ])->name('reports.sale-returns');
+                Route::get('/reports/customer-segments', [
+                    ReportController::class,
+                    'customerSegments',
+                ])->name('reports.customer-segments');
                 Route::post('/reports/ask-ai', [
                     ReportAIController::class,
                     'ask',
@@ -1247,6 +1386,19 @@ Route::middleware(['auth', 'single-session', 'store', 'branch', 'verified-mutati
         });
         Route::middleware(['feature:report', 'permission:report.commission'])->group(function () {
             Route::get('/reports/commissions', [ReportController::class, 'commissions'])->name('reports.commissions');
+        });
+
+        // ── Report Exports ────────────────────────────────────────
+        Route::middleware(['feature:report'])->group(function () {
+            Route::get('/reports/export/sales', [ReportController::class, 'exportSales'])->name('reports.export.sales');
+            Route::get('/reports/export/profit-loss', [ReportController::class, 'exportProfitLoss'])->name('reports.export.profit-loss');
+            Route::get('/reports/export/sales-by-employee', [ReportController::class, 'exportSalesByEmployee'])->name('reports.export.sales-by-employee');
+            Route::get('/reports/export/purchases', [ReportController::class, 'exportPurchases'])->name('reports.export.purchases');
+            Route::get('/reports/export/stock', [ReportController::class, 'exportStock'])->name('reports.export.stock');
+            Route::get('/reports/export/expenses', [ReportController::class, 'exportExpenses'])->name('reports.export.expenses');
+            Route::get('/reports/export/shifts', [ReportController::class, 'exportShifts'])->name('reports.export.shifts');
+            Route::get('/reports/export/commissions', [ReportController::class, 'exportCommissions'])->name('reports.export.commissions');
+            Route::get('/reports/export/sale-returns', [ReportController::class, 'exportSaleReturns'])->name('reports.export.sale-returns');
         });
 
         // ─────────────────────────────────────────────────────────────────
@@ -1379,6 +1531,27 @@ Route::middleware(['auth', 'single-session', 'store', 'branch', 'verified-mutati
                 AdminWalletController::class,
                 'index',
             ])->name('wallet.index');
+        });
+
+        // ── Withdrawal — admin store ──────────────────────────────
+        Route::middleware([
+            'feature:payment_gateway',
+            'permission:setting.view',
+        ])->group(function () {
+            Route::get('/withdrawals', [
+                AdminWithdrawalController::class,
+                'index',
+            ])->name('withdrawals.index');
+
+            Route::post('/withdrawals', [
+                AdminWithdrawalController::class,
+                'store',
+            ])->name('withdrawals.store');
+
+            Route::post('/withdrawals/{withdrawalRequest}/cancel', [
+                AdminWithdrawalController::class,
+                'cancel',
+            ])->name('withdrawals.cancel');
         });
 
         // ─────────────────────────────────────────────────────────────────

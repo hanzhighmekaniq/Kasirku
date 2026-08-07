@@ -2001,4 +2001,69 @@ class KasirController extends Controller
         // Fallback: gunakan timestamp untuk uniqueness
         return $prefix.str_pad((string) mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
     }
+
+    /**
+     * Top 20 produk paling sering terjual untuk PLU shortcuts.
+     */
+    public function topProducts(Request $request)
+    {
+        $storeId = session('current_store_id');
+        $branchId = session('current_branch_id') ?? session('branch_id');
+        $limit = min((int) $request->get('limit', 20), 50);
+
+        $topProductIds = SaleItem::select('product_id', DB::raw('SUM(quantity) as total_qty'))
+            ->whereHas('sale', function ($q) use ($storeId, $branchId) {
+                $q->where('store_id', $storeId)
+                    ->where('status', 'final')
+                    ->when($branchId, fn ($sq) => $sq->where('branch_id', $branchId));
+            })
+            ->groupBy('product_id')
+            ->orderByDesc('total_qty')
+            ->limit($limit)
+            ->pluck('product_id');
+
+        $products = Product::forStore($storeId)
+            ->where('is_active', true)
+            ->where('is_sellable', true)
+            ->whereIn('id', $topProductIds)
+            ->select([
+                'id', 'name', 'sku', 'barcode', 'sell_price', 'image',
+            ])
+            ->get()
+            ->sortBy(fn ($p) => $topProductIds->search($p->id))
+            ->values();
+
+        return response()->json([
+            'products' => $products,
+        ]);
+    }
+
+    /**
+     * Cari customer berdasarkan nama, kode, atau nomor HP.
+     */
+    public function searchCustomer(Request $request)
+    {
+        $storeId = session('current_store_id');
+        $query = $request->get('q', '');
+
+        if (strlen($query) < 2) {
+            return response()->json(['customers' => []]);
+        }
+
+        $customers = Customer::where('store_id', $storeId)
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('code', 'like', "%{$query}%")
+                    ->orWhere('phone', 'like', "%{$query}%");
+            })
+            ->with('customerTier:id,name,rank,color')
+            ->select([
+                'id', 'code', 'name', 'phone', 'tier', 'customer_tier_id',
+                'points', 'total_spent', 'debt_balance', 'credit_limit',
+            ])
+            ->limit(20)
+            ->get();
+
+        return response()->json(['customers' => $customers]);
+    }
 }

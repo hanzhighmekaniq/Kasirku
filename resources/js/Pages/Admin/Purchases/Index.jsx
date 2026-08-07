@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import PageHeader from "@/Components/PageHeader";
 import PageTabs from "@/Components/PageTabs";
-import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 import { ChevronDown, Eye, Plus, ShoppingBag, Trash2, Undo2 } from "lucide-react";
 import Button from "@/Components/ui/Button";
@@ -9,7 +9,6 @@ import Dropdown from "@/Components/Dropdown";
 import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal";
 
 export default function Index({ purchases, stats, storeType = "retail" }) {
-    const { flash } = usePage().props;
     const [search, setSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
     const [deleteTarget, setDeleteTarget] = useState(null);
@@ -96,17 +95,6 @@ export default function Index({ purchases, stats, storeType = "retail" }) {
                     }
                 ]}
             />
-
-            {flash?.success && (
-                <div className="mb-4 rounded-xl border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    {flash.error}
-                </div>
-            )}
 
             {/* Summary cards */}
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

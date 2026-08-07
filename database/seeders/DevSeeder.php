@@ -6,11 +6,11 @@ use Database\Seeders\DatabaseSeeder\BusinessTemplateSeeder;
 use Database\Seeders\DevSeeder\BranchSeeder;
 use Database\Seeders\DevSeeder\FeatureDetailSeeder;
 use Database\Seeders\DevSeeder\FeatureSeeder;
-use Database\Seeders\DevSeeder\PaymentGatewaySeeder;
 use Database\Seeders\DevSeeder\PaymentMethodSeeder;
 use Database\Seeders\DevSeeder\PermissionSeeder;
 use Database\Seeders\DevSeeder\PlanAddonSeeder;
 use Database\Seeders\DevSeeder\PlanSeeder;
+use Database\Seeders\DevSeeder\PlatformPaymentGatewaySeeder;
 use Database\Seeders\DevSeeder\RoleSeeder;
 use Database\Seeders\DevSeeder\StoreSeeder;
 use Database\Seeders\DevSeeder\StoreTypeSeeder;
@@ -46,7 +46,7 @@ class DevSeeder extends Seeder
             UserSeeder::class,
             RoleSeeder::class,
             PaymentMethodSeeder::class,
-            PaymentGatewaySeeder::class,
+            PlatformPaymentGatewaySeeder::class,
         ]);
     }
 }

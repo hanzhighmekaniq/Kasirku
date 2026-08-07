@@ -219,7 +219,8 @@ class SaleController extends Controller
         abort_if((int) $sale->store_id !== (int) $storeId, 404);
 
         if ($sale->status === 'completed') {
-            // Reverse stock for completed sales — bucket-aware
+            // Reverse stock for completed sales — pakai unit_cost historis dari sale_items
+            // untuk reverse stok akurat (bukan average_cost saat ini)
             foreach ($sale->items as $item) {
                 $product = $item->product;
                 if ($product && $product->track_stock) {
@@ -232,8 +233,11 @@ class SaleController extends Controller
                     ])->first();
 
                     if ($existing) {
-                        // Mengembalikan stok: gunakan increase supaya tetap
-                        // lewat pintu tunggal StockService.
+                        // Prioritas: unit_cost dari sale_item > average_cost dari stock > cost_price dari product
+                        $historicalCost = $item->unit_cost > 0
+                            ? $item->unit_cost
+                            : ((float) ($existing->average_cost) ?: ($product->cost_price ?? 0));
+
                         app(StockService::class)->increase(new StockMutation(
                             productId: $item->product_id,
                             variantId: $item->variant_id,
@@ -241,7 +245,7 @@ class SaleController extends Controller
                             storeId: $sale->store_id,
                             branchId: $sale->branch_id,
                             quantity: (float) $item->quantity,
-                            unitCost: (float) ($existing->average_cost ?: $product->cost_price ?? 0),
+                            unitCost: (float) $historicalCost,
                             movementType: 'sale_cancel',
                             referenceType: Sale::class,
                             referenceId: $sale->id,

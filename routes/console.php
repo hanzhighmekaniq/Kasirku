@@ -29,3 +29,12 @@ Schedule::command('plan:expire-pending')->hourly();
 // Alerts: stok menipis & produk kadaluarsa
 Schedule::command('alerts:low-stock')->dailyAt('07:00');
 Schedule::command('alerts:expiry')->dailyAt('07:00');
+
+// Recurring expenses: buat pengeluaran berulang yang sudah jatuh tempo
+Schedule::command('expenses:create-recurring')->dailyAt('06:00');
+
+// Birthday greetings: kirim notifikasi ulang tahun customer
+Schedule::command('app:send-birthday-greetings')->dailyAt('08:00');
+
+// Expense budget alerts: cek apakah ada kategori yang melebihi budget
+Schedule::command('app:check-expense-budgets')->dailyAt('18:00');
