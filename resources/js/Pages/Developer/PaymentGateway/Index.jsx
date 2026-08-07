@@ -1,7 +1,7 @@
 import DeveloperLayout from "@/Layouts/DeveloperLayout";
 import { Head, router, useForm, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import { Check, ChevronDown, CreditCard, Receipt, ArrowRightLeft } from "lucide-react";
+import { Check, ChevronDown, CreditCard, Receipt, ArrowRightLeft, Banknote } from "lucide-react";
 import Button from "@/Components/ui/Button";
 import Field from "@/Components/ui/Field";
 
@@ -236,7 +236,7 @@ function ProviderCard({ provider }) {
     );
 }
 
-export default function Index({ providers = [], planOrderMode = "auto" }) {
+export default function Index({ providers = [], planOrderMode = "auto", payoutMode = "manual" }) {
     const { flash } = usePage().props;
     const [processing, setProcessing] = useState(false);
 
@@ -248,7 +248,16 @@ export default function Index({ providers = [], planOrderMode = "auto" }) {
         });
     };
 
+    const togglePayoutMode = () => {
+        setProcessing(true);
+        router.patch(route("developer.payment-gateway.toggle-payout-mode"), {}, {
+            preserveScroll: true,
+            onFinish: () => setProcessing(false),
+        });
+    };
+
     const isManualMode = planOrderMode === "manual";
+    const isPayoutAuto = payoutMode === "auto";
 
     return (
         <DeveloperLayout header="Payment Gateway Platform">
@@ -328,6 +337,58 @@ export default function Index({ providers = [], planOrderMode = "auto" }) {
                         {isManualMode
                             ? "Mode ini terpisah dari Payment Gateway transaksi toko. Kamu bisa tetap mengaktifkan PG untuk transaksi POS."
                             : "Memerlukan minimal satu Payment Gateway aktif di bawah ini."}
+                    </span>
+                </div>
+            </div>
+
+            {/* Toggle Mode Payout — manual atau auto */}
+            <div className="mb-5 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="flex items-center gap-4 px-5 py-4">
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                        isPayoutAuto
+                            ? "bg-success/10 text-success"
+                            : "bg-muted text-muted-foreground"
+                    }`}>
+                        <Banknote className="h-5 w-5" strokeWidth={1.8} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-bold text-foreground">Mode Payout</h3>
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                isPayoutAuto
+                                    ? "bg-success/10 text-success"
+                                    : "bg-muted text-muted-foreground"
+                            }`}>
+                                {isPayoutAuto ? "Otomatis" : "Manual"}
+                            </span>
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            {isPayoutAuto
+                                ? "Penarikan dana dari store akan otomatis ditransfer via Payment Gateway Payout API."
+                                : "Developer transfer manual ke rekening store, lalu klik 'Sudah Dibayar' di halaman Withdrawal."}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        role="switch"
+                        aria-checked={isPayoutAuto}
+                        disabled={processing}
+                        onClick={togglePayoutMode}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring/20 focus:ring-offset-2 disabled:opacity-50 ${
+                            isPayoutAuto ? "bg-success" : "bg-muted-foreground/40"
+                        }`}
+                    >
+                        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow-lg transition duration-200 ${
+                            isPayoutAuto ? "translate-x-5" : "translate-x-0"
+                        }`} />
+                    </button>
+                </div>
+                <div className="flex items-center gap-2 border-t border-border bg-muted/40 px-5 py-3 text-[11px] text-muted-foreground">
+                    <Banknote className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                    <span>
+                        {isPayoutAuto
+                            ? "Saat ini mode otomatis masih dalam pengembangan. Aktifkan untuk mempersiapkan integrasi PG Payout API."
+                            : "Mode default — developer transfer manual dari rekening platform ke rekening store."}
                     </span>
                 </div>
             </div>

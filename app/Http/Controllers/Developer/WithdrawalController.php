@@ -30,6 +30,7 @@ class WithdrawalController extends Controller
         return Inertia::render('Developer/Withdrawals/Index', [
             'withdrawals' => $withdrawals,
             'isSandbox' => PlatformPaymentGateway::isSandbox(),
+            'payoutMode' => PlatformPaymentGateway::getPayoutMode(),
         ]);
     }
 
@@ -59,13 +60,27 @@ class WithdrawalController extends Controller
             $wallet->increment('withdrawn', $withdrawalRequest->amount);
 
             $withdrawalRequest->update([
-                'status' => WithdrawalRequest::STATUS_COMPLETED,
+                'status' => WithdrawalRequest::STATUS_APPROVED,
                 'processed_by' => auth()->id(),
                 'processed_at' => now(),
             ]);
         });
 
-        return back()->with('success', 'Penarikan dana berhasil disetujui.');
+        return back()->with('success', 'Penarikan dana berhasil disetujui. Transfer manual ke rekening store.');
+    }
+
+    public function markPaid(WithdrawalRequest $withdrawalRequest)
+    {
+        if ($withdrawalRequest->status !== WithdrawalRequest::STATUS_APPROVED) {
+            return back()->withErrors(['status' => 'Hanya permintaan yang sudah disetujui yang bisa ditandai sebagai dibayar.']);
+        }
+
+        $withdrawalRequest->update([
+            'status' => WithdrawalRequest::STATUS_COMPLETED,
+            'paid_at' => now(),
+        ]);
+
+        return back()->with('success', 'Penarikan dana ditandai sebagai sudah dibayar.');
     }
 
     public function reject(Request $request, WithdrawalRequest $withdrawalRequest)

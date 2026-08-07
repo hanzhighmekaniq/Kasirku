@@ -298,6 +298,10 @@ Route::middleware(['auth', 'developer', 'single-session'])
                 DevPaymentGatewayController::class,
                 'togglePlanOrderMode',
             ])->name('payment-gateway.toggle-plan-order-mode');
+            Route::patch('/payment-gateway/payout-mode', [
+                DevPaymentGatewayController::class,
+                'togglePayoutMode',
+            ])->name('payment-gateway.toggle-payout-mode');
 
             // Penyesuaian saldo wallet — menyentuh uang, super admin saja.
             Route::post('/wallets/{store}/adjust', [
@@ -349,6 +353,10 @@ Route::middleware(['auth', 'developer', 'single-session'])
             DevWithdrawalController::class,
             'approve',
         ])->name('withdrawals.approve');
+        Route::post('/withdrawals/{withdrawalRequest}/mark-paid', [
+            DevWithdrawalController::class,
+            'markPaid',
+        ])->name('withdrawals.mark-paid');
         Route::post('/withdrawals/{withdrawalRequest}/reject', [
             DevWithdrawalController::class,
             'reject',

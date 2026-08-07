@@ -10,7 +10,7 @@ class PlatformPaymentGateway extends Model
     protected $fillable = [
         'provider', 'is_active', 'environment',
         'server_key', 'client_key', 'merchant_id',
-        'enabled_methods', 'config_json', 'plan_order_mode',
+        'enabled_methods', 'config_json', 'plan_order_mode', 'payout_mode',
     ];
 
     protected $casts = [
@@ -135,5 +135,19 @@ class PlatformPaymentGateway extends Model
         $active = self::where('is_active', true)->first();
 
         return ! $active || $active->environment === 'sandbox';
+    }
+
+    // ── Payout Mode (manual vs auto) ──────────────
+
+    public static function getPayoutMode(): string
+    {
+        $first = self::orderBy('id')->first();
+
+        return $first?->payout_mode ?? 'manual';
+    }
+
+    public static function isPayoutManual(): bool
+    {
+        return self::getPayoutMode() === 'manual';
     }
 }

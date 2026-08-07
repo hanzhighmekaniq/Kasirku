@@ -13,12 +13,15 @@ class WithdrawalRequest extends Model
 
     public const STATUS_PENDING = 'pending';
 
+    public const STATUS_APPROVED = 'approved';
+
     public const STATUS_COMPLETED = 'completed';
 
     public const STATUS_REJECTED = 'rejected';
 
     public const STATUS_LABELS = [
         self::STATUS_PENDING => 'Menunggu',
+        self::STATUS_APPROVED => 'Disetujui',
         self::STATUS_COMPLETED => 'Selesai',
         self::STATUS_REJECTED => 'Ditolak',
     ];
@@ -37,11 +40,13 @@ class WithdrawalRequest extends Model
         'admin_notes',
         'processed_by',
         'processed_at',
+        'paid_at',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'processed_at' => 'datetime',
+        'paid_at' => 'datetime',
     ];
 
     // ── Relationships ────────────────────────────
@@ -61,6 +66,11 @@ class WithdrawalRequest extends Model
     public function scopePending(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_PENDING);
+    }
+
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_APPROVED);
     }
 
     public function scopeCompleted(Builder $query): Builder

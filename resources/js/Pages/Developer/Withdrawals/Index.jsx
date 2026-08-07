@@ -31,17 +31,19 @@ const fmtDate = (d) =>
 
 const STATUS_COLOR = {
     pending: "bg-warning/10 text-warning ring-warning/20",
+    approved: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     completed: "bg-success/10 text-success ring-success/20",
     rejected: "bg-destructive/10 text-destructive ring-destructive/20",
 };
 
 const STATUS_LABEL = {
     pending: "Menunggu",
+    approved: "Disetujui",
     completed: "Selesai",
     rejected: "Ditolak",
 };
 
-export default function WithdrawalsIndex({ withdrawals = [], isSandbox = false }) {
+export default function WithdrawalsIndex({ withdrawals = [], isSandbox = false, payoutMode = 'manual' }) {
     const { flash } = usePage().props;
     const [processing, setProcessing] = useState(false);
     const [rejectTarget, setRejectTarget] = useState(null);
@@ -93,6 +95,20 @@ export default function WithdrawalsIndex({ withdrawals = [], isSandbox = false }
         );
     };
 
+    const handleMarkPaid = (id) => {
+        if (processing) return;
+        if (!confirm("Tandai penarikan ini sebagai sudah dibayar? Pastikan Anda sudah melakukan transfer ke rekening store.")) return;
+        setProcessing(true);
+        router.post(
+            route("developer.withdrawals.mark-paid", id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setProcessing(false),
+            },
+        );
+    };
+
     const applyStatusFilter = (value) => {
         setStatusFilter(value);
         router.get(
@@ -139,14 +155,22 @@ export default function WithdrawalsIndex({ withdrawals = [], isSandbox = false }
             )}
 
             {/* Stat cards */}
-            <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
                 <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                    <p className="text-xs text-muted-foreground">Semua Pengajuan</p>
+                    <p className="text-xs text-muted-foreground">Semua</p>
                     <p className="mt-1 text-lg font-semibold text-foreground">{withdrawals.length}</p>
                 </div>
                 <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                     <p className="text-xs text-muted-foreground">Menunggu</p>
-                    <p className="mt-1 text-lg font-semibold text-warning">{pendingCount}</p>
+                    <p className="mt-1 text-lg font-semibold text-warning">
+                        {withdrawals.filter((w) => w.status === "pending").length}
+                    </p>
+                </div>
+                <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <p className="text-xs text-muted-foreground">Disetujui</p>
+                    <p className="mt-1 text-lg font-semibold text-blue-600">
+                        {withdrawals.filter((w) => w.status === "approved").length}
+                    </p>
                 </div>
                 <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                     <p className="text-xs text-muted-foreground">Selesai</p>
@@ -185,6 +209,7 @@ export default function WithdrawalsIndex({ withdrawals = [], isSandbox = false }
                     >
                         <option value="">Semua</option>
                         <option value="pending">Menunggu</option>
+                        <option value="approved">Disetujui</option>
                         <option value="completed">Selesai</option>
                         <option value="rejected">Ditolak</option>
                     </select>
@@ -242,7 +267,7 @@ export default function WithdrawalsIndex({ withdrawals = [], isSandbox = false }
                                             </span>
                                         </td>
                                         <td className="px-5 py-3">
-                                            {w.status === "pending" ? (
+                                            {w.status === "pending" && (
                                                 <div className="flex items-center justify-center gap-1.5">
                                                     <button
                                                         onClick={() => handleApprove(w.id)}
@@ -262,7 +287,18 @@ export default function WithdrawalsIndex({ withdrawals = [], isSandbox = false }
                                                         Tolak
                                                     </button>
                                                 </div>
-                                            ) : (
+                                            )}
+                                            {w.status === "approved" && (
+                                                <button
+                                                    onClick={() => handleMarkPaid(w.id)}
+                                                    disabled={processing}
+                                                    className="inline-flex items-center gap-1 rounded-xl bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground transition hover:bg-success/90 disabled:opacity-50"
+                                                >
+                                                    <CheckCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                                    Sudah Dibayar
+                                                </button>
+                                            )}
+                                            {w.status !== "pending" && w.status !== "approved" && (
                                                 <span className="text-xs text-muted-foreground">—</span>
                                             )}
                                         </td>

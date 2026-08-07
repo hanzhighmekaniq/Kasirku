@@ -44,6 +44,7 @@ class PaymentGatewayController extends Controller
         return Inertia::render('Developer/PaymentGateway/Index', [
             'providers' => $providers,
             'planOrderMode' => PlatformPaymentGateway::getPlanOrderMode(),
+            'payoutMode' => PlatformPaymentGateway::getPayoutMode(),
         ]);
     }
 
@@ -181,5 +182,26 @@ class PaymentGatewayController extends Controller
         $label = $newMode === 'manual' ? 'Manual (Transfer Bank)' : 'Otomatis (Payment Gateway)';
 
         return back()->with('success', "Mode pembayaran plan order diubah ke {$label}.");
+    }
+
+    public function togglePayoutMode()
+    {
+        $current = PlatformPaymentGateway::getPayoutMode();
+        $newMode = $current === 'manual' ? 'auto' : 'manual';
+
+        $gateway = PlatformPaymentGateway::first();
+        if ($gateway) {
+            $gateway->update(['payout_mode' => $newMode]);
+            Cache::forget("platform_pg_config:{$gateway->provider}");
+        } else {
+            PlatformPaymentGateway::create([
+                'provider' => 'midtrans',
+                'payout_mode' => $newMode,
+            ]);
+        }
+
+        $label = $newMode === 'manual' ? 'Manual (Transfer Sendiri)' : 'Otomatis (Auto Payout)';
+
+        return back()->with('success', "Mode payout diubah ke {$label}.");
     }
 }
